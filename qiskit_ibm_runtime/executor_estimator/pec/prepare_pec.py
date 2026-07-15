@@ -34,8 +34,13 @@ from samplomatic import build
 from ...exceptions import IBMInputValueError
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
-from ..trex_utils import create_trex_calibration_circuit
-from ..utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
+from ..utils import (
+    box_circuit,
+    compute_samplex_arguments,
+    make_samplex_arguments,
+    options_to_boxing_pm_kwargs,
+)
 from .utils import calculate_gamma, calculate_pec_twirling_shots
 
 logger = logging.getLogger(__name__)
@@ -48,6 +53,7 @@ def prepare_pec(
     pec_options: PecOptions,
     noise_model_mapping: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program with PEC mitigation.
 
@@ -62,7 +68,12 @@ def prepare_pec(
         pec_options: The options for PEC mitigation.
         noise_model_mapping: Mapping between layer ref to a noise model to use for PEC mitigation
             method. The dict contains layers from all pubs. Assumes that the unique layers
-            used for noise learning were extracted using the ``get_layers`` method.
+            used for noise learning were extracted using the ``find_unique_layers`` method.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
+            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
+            (using the "unique_box" value of the relevant attribute). These tags can help
+            injecting noise in simulators.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -76,11 +87,20 @@ def prepare_pec(
         IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
             the pubs layers.
     """
+    if not twirling_options.enable_gates:
+        raise ValueError("PEC requires enabling twirling for gates.")
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
+
     num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
     )
+    # Preserve the twirling randomization count: ``num_randomizations`` is scaled
+    # per-pub by the PEC sampling overhead below, but the TREX calibration should
+    # follow the (unscaled) twirling value.
+    twirling_num_randomizations = num_randomizations
 
     # set max_overhead
     max_overhead = pec_options.max_overhead
@@ -96,12 +116,16 @@ def prepare_pec(
     param_shapes_list = []
     pec_gamma_list = []
 
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise=True,
+        add_tags=add_tags,
+    )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None, True
-        )
+        boxed_circuit = box_circuit(circuit=pub.circuit, **pm_kwargs)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
@@ -181,6 +205,7 @@ def prepare_pec(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": "False",
+            "mitigation": "pec",
             "pec_gammas": pec_gamma_list,
         },
     }
@@ -201,7 +226,10 @@ def prepare_pec(
             raise IBMInputValueError(
                 "shots_per_randomization must be the same for twirling and measure_noise_learning"
             )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        trex_num_randomizations = resolve_trex_num_randomizations(
+            measure_noise_learning, twirling_num_randomizations
+        )
+        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
         passthrough_data["post_processor"]["measure_mitigation"] = "True"
 

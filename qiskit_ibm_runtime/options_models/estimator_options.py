@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from typing import Literal
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -25,6 +26,7 @@ from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
 from .resilience_options import ResilienceOptions
+from .simulator_options import SimulatorOptions
 from .twirling_options import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
 
@@ -80,6 +82,12 @@ class EstimatorOptions:
     See :class:`~.DynamicalDecouplingOptions` for all available options.
     """
 
+    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
+    """Simulator options.
+
+    See :class:`~.SimulatorOptions` for all available options.
+    """
+
     experimental: dict = Field(default_factory=dict)
     """Experimental options."""
 
@@ -95,8 +103,27 @@ class EstimatorOptions:
     See :class:`.~ResilienceOptions` for all available options.
     """
 
+    resilience_level: Literal[0, 1, 2] = 1
+    """How much resilience to build against errors.
+
+    Higher levels generate more accurate results, at the expense of longer processing times.
+    The supported values are:
+    * 0: No mitigation.
+    * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
+    * 2: Medium mitigation costs. Typically reduces bias in estimators but is not guaranteed to be
+        zero bias.
+
+    Refer to the
+    `Configure error mitigation for Qiskit Runtime
+    <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide
+    for more information about the error mitigation methods used at each level.
+    """
+
     def to_executor_options(self) -> ExecutorOptions:
         """Map EstimatorOptions to ExecutorOptions, ignoring all irrelevant fields.
+
+        .. note::
+            Simulator options are ignored as executor does not support local mode.
 
         Returns:
             Mapped executor options.

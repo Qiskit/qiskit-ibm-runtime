@@ -35,8 +35,13 @@ from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..options_models.zne_options import PEA_DEFAULT_NOISE_FACTORS
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
-from .trex_utils import create_trex_calibration_circuit
-from .utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from .trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
+from .utils import (
+    box_circuit,
+    compute_samplex_arguments,
+    make_samplex_arguments,
+    options_to_boxing_pm_kwargs,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +53,7 @@ def prepare_pea(
     zne_options: ZneOptions,
     noise_model_mapping: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -62,7 +68,12 @@ def prepare_pea(
         zne_options: The options for PEA mitigation (which have the same options as ZNE).
         noise_model_mapping: Mapping between layer ref to a noise model to use for noise
             amplification. The dict contains layers from all pubs. Assumes that the unique
-            layers used for noise learning were extracted using the ``get_layers`` method.
+            layers used for noise learning were extracted using the ``find_unique_layers`` method.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
+            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
+            (using the "unique_box" value of the relevant attribute). These tags can help
+            injecting noise in simulators.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -77,6 +88,10 @@ def prepare_pea(
             the pubs layers.
 
     """
+    if not twirling_options.enable_gates:
+        raise ValueError("PEA requires enabling twirling for gates.")
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
     if zne_options.amplifier != "pea":
         raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")
 
@@ -97,12 +112,16 @@ def prepare_pea(
     param_basis_pairs_list = []
     param_shapes_list = []
 
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise=True,
+        add_tags=add_tags,
+    )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None, True
-        )
+        boxed_circuit = box_circuit(circuit=pub.circuit, **pm_kwargs)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
@@ -155,6 +174,7 @@ def prepare_pea(
     passthrough_data = {
         "post_processor": {
             "version": "v0.1",
+            "mitigation": "pea",
             "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
@@ -180,7 +200,10 @@ def prepare_pea(
             raise IBMInputValueError(
                 "shots_per_randomization must be the same for twirling and measure_noise_learning"
             )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        trex_num_randomizations = resolve_trex_num_randomizations(
+            measure_noise_learning, num_randomizations
+        )
+        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
         passthrough_data["post_processor"]["measure_mitigation"] = "True"
 

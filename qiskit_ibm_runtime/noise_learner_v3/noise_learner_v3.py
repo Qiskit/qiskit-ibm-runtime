@@ -103,6 +103,20 @@ class NoiseLearnerV3:
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
+        Two protocols are supported:
+
+        - Lindblad: for boxed instructions which content can be cast to
+            :class:`~.qiskit.quantum_info.Clifford` and contain a single layer of
+            (up to) two qubit gates.
+
+        - TREX: for boxed instructions which content can contain exactly one measurement per qubit.
+
+        .. note::
+
+            To minimize the number of noise learning experiments, call
+            :meth:`~samplomatic.utils.find_unique_box_instructions` before
+            running the noise learning job.
+
         Args:
             instructions: The instructions to learn the noise of.
 

@@ -1,5 +1,0 @@
-Added a ``use_fractional_gates`` parameter to :meth:`.QiskitRuntimeService.least_busy`,
-matching the behavior of the same parameter in :meth:`.QiskitRuntimeService.backend`.
-When set to ``True``, only backends that include fractional gates in their basis gates are
-considered; backends without it are skipped in favor of the next least busy qualifying
-backend.

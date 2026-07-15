@@ -1,9 +1,0 @@
-All classes that represent results are now available via the ``qiskit_ibm_runtime.results`` package,
-resulting in the following classes being moved to the results package:
-
-* ``PauliLindbladError``, ``LayerError``, ``NoiseLearnerResult`` (previously part of
-  ``qiskit_ibm_runtime.utils.noise_learner_result``)
-* ``EstimatorPubResult`` (previously part of ``qiskit_ibm_runtime.utils.estimator_pub_result``)
-
-Importing from the previous locations is deprecated, and the references will be removed in a future
-release.

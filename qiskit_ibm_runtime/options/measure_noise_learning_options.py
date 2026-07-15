@@ -14,6 +14,9 @@
 
 from typing import Literal
 
+from pydantic import field_validator
+
+from ..utils.deprecation import issue_deprecation_msg
 from .utils import Unset, UnsetType, make_constraint_validator, primitive_dataclass
 
 
@@ -46,3 +49,19 @@ class MeasureNoiseLearningOptions:
         "shots_per_randomization",
         ge=1,  # type: ignore[arg-type]
     )
+
+    @field_validator("shots_per_randomization")
+    @classmethod
+    def _warn_shots_per_randomization_int(
+        cls, value: UnsetType | int | Literal["auto"]
+    ) -> UnsetType | int | Literal["auto"]:
+        """Warn when shots per randomization is set to a deprecated integer value."""
+        if isinstance(value, int):
+            issue_deprecation_msg(
+                msg="Specifying 'measure_noise_learning.shots_per_randomization' as an integer "
+                "is deprecated",
+                version="0.48.0",
+                remedy='Use "auto" instead.',
+                stacklevel=3,
+            )
+        return value

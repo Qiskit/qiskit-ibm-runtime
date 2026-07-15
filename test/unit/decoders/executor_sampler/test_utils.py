@@ -256,7 +256,7 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
         self.assertEqual(spans, expected_spans)
 
     def test_incorrect_pub_shapes_raises(self):
-        """Test that an error is raised when pub shapes is of incorrect lenght."""
+        """Test that an error is raised when pub shapes is of incorrect length."""
         chunk_timing = [
             ChunkSpan(
                 start=datetime(2025, 12, 30, 14, 10),

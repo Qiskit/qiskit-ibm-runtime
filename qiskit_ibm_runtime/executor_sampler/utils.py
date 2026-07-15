@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
+    from ..options_models.twirling_options import TwirlingOptions
+
 
 def validate_no_boxes(circuit: QuantumCircuit) -> None:
     """Validate that a circuit contains no :class:`~qiskit.circuit.BoxOp` instructions.
@@ -64,6 +66,21 @@ def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | No
             f"'meas_type={meas_type}' and measurement twirling are not compatible. "
             "Set `twirling.enable_measure=False` or `execution.meas_type='classified'`"
         )
+
+
+def validate_twirling_option_fileds_are_not_none(options: TwirlingOptions) -> None:
+    """Validate that twirling options fields are not ``None``.
+
+    Args:
+        options: The options to validate
+
+    Raises:
+        IBMInputValueError: If ``options.enable_gates`` or ``options.enable_measure`` are ``None``.
+    """
+    if options.enable_gates is None:
+        raise IBMInputValueError("``enable_gates`` is ``None``, expected ``True`` or ``False``.")
+    if options.enable_measure is None:
+        raise IBMInputValueError("``enable_measure`` is ``None``, expected ``True`` or ``False``.")
 
 
 def extract_shots_from_pubs(pubs: Sequence[SamplerPub], default_shots: int | None = None) -> int:

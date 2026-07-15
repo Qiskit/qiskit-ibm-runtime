@@ -78,11 +78,8 @@ class FakeRuntimeService(QiskitRuntimeService):
         ):
             super().__init__(*args, **kwargs)
 
-        # Use default if api client is somehow not set.
-        if not isinstance(self._active_api_client, BaseFakeRuntimeClient):
-            self._active_api_client = self._fake_runtime_client or BaseFakeRuntimeClient(
-                backend_specs=self._backend_specs, instance=instance
-            )
+        # Populate ._active_api_client and ._api_clients.
+        self._discover_backends_from_instance(instance)
 
     def instances(self):
         """Return a list of instances."""
@@ -97,6 +94,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         self._active_api_client = self._fake_runtime_client
         self._set_api_client(crns=[None] * self._test_num_crns, channel="ibm_quantum_platform")
         self._active_api_client._job_classes = job_class  # type: ignore
+        self._api_clients[instance] = self._active_api_client
         return self._active_api_client.list_backends()  # type: ignore
 
     def _create_new_cloud_api_client(self, instance: str) -> None:

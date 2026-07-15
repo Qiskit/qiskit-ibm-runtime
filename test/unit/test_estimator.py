@@ -13,7 +13,7 @@
 """Tests for estimator class."""
 
 import numpy as np
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -300,3 +300,31 @@ class TestEstimatorV2(IBMTestCase):
 
         with self.assertRaisesRegex(IBMInputValueError, " h "):
             estimator.run(pubs=[(circ, observable)])
+
+    @data(
+        ([None, None], 0.01, 0),
+        ([0.01, 0.01], 0.01, 0),
+        ([0.02, 0.02], 0.01, 0),
+        ([0.02, None], 0.02, 0),
+        ([0.02, None], 0.01, 1),
+        ([0.01, 0.02, 0.03], 0.04, 1),
+    )
+    @unpack
+    def test_deprecate_pub_level_precision(self, pub_precisions, run_precision, num_appearances):
+        """Conflicting pub-level precision emits one DeprecationWarning."""
+        backend = get_mocked_backend()
+        circ = QuantumCircuit(1)
+        t_circ = transpile(circ, backend=backend)
+        observable = remap_observables("Z", t_circ)
+        inst = EstimatorV2(mode=backend)
+
+        warning_msg = "Specifying different 'precision' across pubs is deprecated"
+        pubs = [
+            (t_circ, observable, None, precision)
+            if precision is not None
+            else EstimatorPub.coerce((t_circ, observable))
+            for precision in pub_precisions
+        ]
+
+        with self.assert_warning_appears(DeprecationWarning, warning_msg, num_appearances):
+            inst.run(pubs, precision=run_precision)

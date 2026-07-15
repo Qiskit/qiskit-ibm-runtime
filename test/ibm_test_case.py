@@ -19,7 +19,7 @@ import logging
 import os
 import warnings
 from collections import defaultdict
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from typing import TYPE_CHECKING
 from unittest import TestCase
 from unittest.util import safe_repr
@@ -33,6 +33,8 @@ from .decorators import integration_test_setup
 from .utils import bell, setup_test_logging
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from plotly.graph_objects import Figure as PlotlyFigure
 
     from qiskit_ibm_runtime import QiskitRuntimeService
@@ -183,6 +185,61 @@ class IBMTestCase(TestCase):
             return error_msg[:-2] + msg_suffix
         else:
             return ""
+
+    @contextmanager
+    def assert_warning_appears(
+        self,
+        warning: type[Warning],
+        msg: str,
+        num_appearances: int,
+        attributed_to_caller: bool = True,
+    ) -> Iterator[None]:
+        """Assert that a warning matching the category and message appears a set number of times.
+
+        Args:
+            warning: The warning category to match.
+            msg: A substring that must appear in the warning message.
+            num_appearances: The exact number of matching warnings expected.
+            attributed_to_caller: When ``True`` (default), also assert that each matching
+                warning is blamed on this method's caller -- the frame that opened the
+                ``with`` block. This verifies the emitting call sets ``stacklevel`` so the warning
+                points at the user's own code, which is what makes it visible in scripts and
+                Jupyter notebooks. Assumes the warning-emitting call is made directly inside the
+                ``with`` block; set to ``False`` when the call is wrapped in a helper defined in
+                another file.
+        """
+        # The caller is the frame that opened the ``with`` block: this generator frame (0),
+        # contextlib's ``_GeneratorContextManager`` wrapper (1), then the caller (2).
+        caller = inspect.stack()[2]
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", warning)
+            yield
+
+        matching_warnings = [
+            w for w in caught if issubclass(w.category, warning) and msg in str(w.message)
+        ]
+        all_warnings = [
+            f"{w.category.__name__}: {w.message}" for w in caught if issubclass(w.category, Warning)
+        ]
+        self.assertEqual(
+            len(matching_warnings),
+            num_appearances,
+            f"Expected {num_appearances} {warning.__name__} warnings containing "
+            f"{msg!r}, found {len(matching_warnings)}. All warnings: {all_warnings}",
+        )
+
+        if attributed_to_caller:
+            caller_file = os.path.abspath(caller.filename)
+            for w in matching_warnings:
+                self.assertEqual(
+                    os.path.abspath(w.filename),
+                    caller_file,
+                    f"Warning {msg!r} was blamed on {w.filename}:{w.lineno}, not the caller's "
+                    f"frame ({caller.filename}:{caller.lineno}). Its stacklevel must point at "
+                    f"the user's code -- past any qiskit_ibm_runtime or pydantic internals -- "
+                    f"so the warning is visible in scripts and Jupyter notebooks.",
+                )
 
     def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
         """Save a Plotly figure as an HTML artifact."""
