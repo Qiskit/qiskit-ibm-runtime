@@ -540,7 +540,7 @@ def calculate_extrapolated_expectation_values(
 
         # each item should contain results for each point in extrapolated_noise_factors
         exp_vals_extrapolated = np.zeros(len(extrapolated_noise_factors), dtype=float)
-        ensemble_std_extrapolated = np.zeros(len(extrapolated_noise_factors), dtype=float)
+        ensemble_var_extrapolated = np.zeros(len(extrapolated_noise_factors), dtype=float)
         twirl_variance_extrapolated = np.zeros(len(extrapolated_noise_factors), dtype=float)
         selected_extrapolators_per_term = []
 
@@ -591,17 +591,17 @@ def calculate_extrapolated_expectation_values(
             ):
                 # Accumulate with coefficient
                 exp_vals_extrapolated[extrap_index] += coeff * extrap_exp_val * term_scale_factor
-                # failed extrapolation might return NaN as std
+                # failed extrapolation might return NaN as std; accumulate variance
                 if not np.isnan(extrap_std):
-                    ensemble_std_extrapolated[extrap_index] += (
-                        coeff * extrap_std * term_scale_factor
+                    ensemble_var_extrapolated[extrap_index] += (
+                        (coeff**2) * (extrap_std**2) * (term_scale_factor**2)
                     )
                 twirl_variance_extrapolated[extrap_index] += (
                     (coeff**2) * non_amplified_twirl_var * (term_scale_factor**2)
                 )
 
         exp_vals[(slice(None), *bcast_index)] = exp_vals_extrapolated
-        ensemble_stds[(slice(None), *bcast_index)] = ensemble_std_extrapolated
+        ensemble_stds[(slice(None), *bcast_index)] = np.sqrt(ensemble_var_extrapolated)
         # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
         if num_randomizations == 1:
             stds[(slice(None), *bcast_index)] = ensemble_stds[(slice(None), *bcast_index)]
