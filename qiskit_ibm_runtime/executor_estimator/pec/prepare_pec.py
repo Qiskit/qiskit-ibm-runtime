@@ -140,8 +140,9 @@ def prepare_pec(
         if pec_options.noise_gain == "auto":
             # calculate the gamma factor without scaling it by noise_factor
             gamma = calculate_gamma(boxed_circuit, noise_model_mapping, 1)
-            # calculate the noise factor based on gamma and max_overhead
-            noise_gain = 1 - np.log(max_overhead) / np.log(gamma**2)
+            # calculate the noise factor based on gamma and max_overhead, setting it to ``1``
+            # if ``gamma`` is ``1``--i.e., if there is no noise to mitigate.
+            noise_gain = 1 if gamma == 1 else 1 - np.log(max_overhead) / np.log(gamma**2)
             # Truncate noise_gain to [0, 1]
             noise_gain = min(1, max(0, noise_gain))
         else:
