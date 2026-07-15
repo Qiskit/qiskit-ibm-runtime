@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
 
-    from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
+    from ....base_primitive import BasePrimitiveV2
 
 
 class FoldRzzAngle(TransformationPass):

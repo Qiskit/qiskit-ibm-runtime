@@ -24,11 +24,7 @@ from ...execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from qiskit_ibm_runtime.results.quantum_program import (
-        ChunkSpan,
-        Metadata,
-        QuantumProgramItemResult,
-    )
+    from ...results.quantum_program import ChunkSpan, Metadata, QuantumProgramItemResult
 
 TWIRLING_PREFIX = "measurement_flips."
 """The prefix used to store the twirling bitflips."""

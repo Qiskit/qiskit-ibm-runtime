@@ -469,7 +469,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 try:
                     # importing here and not at the top of the file,
                     # to prevent circular imports
-                    from qiskit_ibm_runtime.noise_learner_v3.params_converters import (
+                    from .noise_learner_v3.params_converters import (
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
 

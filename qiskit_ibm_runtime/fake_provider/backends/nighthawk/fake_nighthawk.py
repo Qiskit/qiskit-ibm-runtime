@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from ...fake_backend import FakeBackendV2
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import QiskitRuntimeService
+    from ....qiskit_runtime_service import QiskitRuntimeService
 
 DISPLAY_WARNING = True
 
