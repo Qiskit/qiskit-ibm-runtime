@@ -1,4 +1,0 @@
-When using backends from different instances, the service used by :meth:`.Sampler.run``,
-:meth:`.Estimator.run`` and other primitives' ``.run()`` methods now ensures that the API client
-used for submitting the job is the one belonging to the backend, instead of always using the
-active API client.

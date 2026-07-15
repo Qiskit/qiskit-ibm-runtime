@@ -30,8 +30,34 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from ..quantum_program.quantum_program import SamplexItem
 
 
+def resolve_trex_num_randomizations(
+    measure_noise_learning: MeasureNoiseLearningOptions,
+    twirling_num_randomizations: int,
+) -> int:
+    """Resolve the number of TREX calibration randomizations.
+
+    ``measure_noise_learning.num_randomizations`` may be an explicit ``int`` or
+    ``"auto"``. When ``"auto"``, the TREX calibration uses the same
+    number of randomizations as the estimation twirling
+    (``twirling_num_randomizations``); an explicit ``int`` is used as-is.
+
+    Args:
+        measure_noise_learning: Measure noise learning options.
+        twirling_num_randomizations: The number of randomizations used by the
+            estimation twirling.
+
+    Returns:
+        The number of TREX calibration randomizations to use.
+    """
+    num_randomizations = measure_noise_learning.num_randomizations
+    if num_randomizations == "auto":
+        return twirling_num_randomizations
+    return num_randomizations
+
+
 def create_trex_calibration_circuit(
-    pubs: Sequence[EstimatorPub], measure_noise_learning: MeasureNoiseLearningOptions
+    pubs: Sequence[EstimatorPub],
+    num_randomizations: int,
 ) -> SamplexItem:
     """Creates a TREX calibration circuit.
 
@@ -39,7 +65,8 @@ def create_trex_calibration_circuit(
 
     Args:
         pubs: List of estimator pubs to extract relevant qubits from.
-        measure_noise_learning: Measure noise learning options.
+        num_randomizations: The number of TREX calibration randomizations (already
+            resolved, see :func:`~.resolve_trex_num_randomizations`).
 
     Returns:
         Samplex item containing calibration circuit for TREX factors calculation.
@@ -62,7 +89,7 @@ def create_trex_calibration_circuit(
     trex_calibration_item = SamplexItem(
         circuit=template_trex_circuit,
         samplex=trex_samplex,
-        shape=(measure_noise_learning.num_randomizations,),
+        shape=(num_randomizations,),
     )
 
     return trex_calibration_item

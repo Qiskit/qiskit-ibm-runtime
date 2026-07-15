@@ -100,9 +100,10 @@ def prepare(
             logger.info("Processing pub %d/%d", i + 1, len(pubs))
             validate_no_boxes(pub.circuit)
 
-            # Convert parameter values to numpy array
+            # Convert parameter values to numpy array. Pass the circuit's
+            # parameters so the columns are ordered to match ``circuit.parameters``.
             if pub.parameter_values.num_parameters > 0:
-                param_values = pub.parameter_values.as_array()
+                param_values = pub.parameter_values.as_array(pub.circuit.parameters)
             else:
                 param_values = None
 
@@ -136,7 +137,7 @@ def prepare(
 
             # Prepare samplex_arguments
             if pub.parameter_values.num_parameters > 0:
-                param_array = pub.parameter_values.as_array()
+                param_array = pub.parameter_values.as_array(pub.circuit.parameters)
                 samplex_args = {"parameter_values": param_array}
                 # Shape should be (num_rand,) + parameter_sweep_shape
                 param_shape = param_array.shape[:-1]  # Remove last dimension (num_parameters)

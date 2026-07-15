@@ -1,1 +1,0 @@
-Switched default schema version for executor to `1.1`.

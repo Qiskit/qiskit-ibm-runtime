@@ -1,1 +1,0 @@
-Added a user warning when a user sets `pub.shots` in SamplerV2, and `pub.precision` in EstimatorV2.

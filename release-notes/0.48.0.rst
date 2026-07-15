@@ -1,0 +1,84 @@
+0.48.0 (2026-07-14)
+===================
+
+Upgrade Notes
+-------------
+
+- The minimal version of Qiskit required is now ``2.3.0``, and that of Samplomatic is ``0.18.0``.
+  Users of ``Executor`` can now twirl their circuits with the ``"local_c1"`` twirling group, which is
+  supported by Samplomatic version ``0.17.0`` and above. (`2925 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2925>`__)
+
+Deprecation Notes
+-----------------
+
+- All classes that represent results are now available via the ``qiskit_ibm_runtime.results`` package;
+  consequently, the following classes moved to the results package:
+
+  * ``PauliLindbladError``, ``LayerError``, ``NoiseLearnerResult`` (previously part of
+    ``qiskit_ibm_runtime.utils.noise_learner_result``)
+  * ``EstimatorPubResult`` (previously part of ``qiskit_ibm_runtime.utils.estimator_pub_result``)
+
+  Importing from the previous locations is deprecated, and the references will be removed in a future
+  release. (`2835 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2835>`__)
+- Running a :class:`.SamplerV2` job with different ``pub.shots`` values across PUBs is deprecated. Similarly, running an
+  :class:`.EstimatorV2` job with different ``pub.precision`` values across PUBs is deprecated. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
+- Setting :attr:`.MeasureNoiseLearningOptions.shots_per_randomization` to an ``int`` value is deprecated and will be removed
+  in future releases. Please use ``"auto"`` instead. (`3004 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3004>`__)
+
+
+New Features
+------------
+
+- The :meth:`.RuntimeJobV2.usage` method now supports an optional ``partial``
+  parameter (`2884 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2884>`__):
+
+  * if the ``partial`` flag is ``False``, the method will return ``0`` until the job usage
+    calculation is completed.
+  * if the ``partial`` flag is ``True``, the method will return the incremential partial job usage
+    regardless of the calculation being completed.
+- Added options to request circuit schedule timing and to return numeric resolutions of
+  stretches for individual circuits when running Executor jobs. (`2790 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2790>`__) (`2789 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2789>`__)
+- Added support for ``instance="auto"`` in :class:`.QiskitRuntimeService` and
+  :meth:`.QiskitRuntimeService.save_account`. Passing ``instance="auto"`` explicitly
+  opts in to automatic instance selection without triggering the "instance was not set"
+  warning or the "Loading/Using instance" warnings during backend retrieval. The value
+  can be saved to the account file so it takes effect on every subsequent instantiation. (`2854 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2854>`__)
+- Added a ``use_fractional_gates`` parameter to :meth:`.QiskitRuntimeService.least_busy`,
+  matching the behavior of the same parameter in :meth:`.QiskitRuntimeService.backend`.
+  When set to ``True``, only backends that include fractional gates in their basis gates are
+  considered; backends without it are skipped in favor of the next least-busy qualifying
+  backend. (`2855 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2855>`__)
+- Support for passing multiple result decoders to :class:`.RuntimeJobV2` and
+  :meth:`.RuntimeJobV2.result` has been reintroduced. (`2899 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2899>`__)
+- Added support for ``QuantumProgram.meas_level = "both"``, which can be used to request that
+  both classified and kerneled measurements be present in the quantum program results. (`2973 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2973>`__)
+
+
+Bug Fixes
+---------
+
+- Fixed a bug in the :class:`.FoldRzzAngle` transpiler pass where ``Rzz`` gates whose angle
+  wraps exactly onto the ``+-pi`` boundary (for example ``3*pi``, ``-3*pi``, ``7*pi``) were
+  folded into a circuit that differed from the original by a global phase of ``pi``. The
+  pass now derives the dropped ``2*pi`` winding parity directly from the wrapped angle, so
+  the folded circuit preserves the full unitary (including global phase) for all angles. (`2856 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2856>`__)
+- When using backends from different instances, the service used by :meth:`.SamplerV2.run`,
+  :meth:`.EstimatorV2.run`, and other primitives' ``.run()`` methods now ensures that the API client
+  used for submitting the job is the one belonging to the backend, instead of always using the
+  active API client. (`2931 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2931>`__)
+- Fixed the folding of out-of-bounds ``rzz`` angles during transpilation.
+  With the previous setting there was a bug, where translation passes that ran
+  after the `FoldRzzAngle` pass could modify angles and make them negative or
+  greater than ``pi/2``. The bug is fixed by setting the ``angle_bounds`` in the backend's
+  target to ``(0, pi/2)`` for the ``rzz`` gate, and
+  registering an ``rzz`` wrapper with the transpiler's ``WrapAngles`` pass.
+  This mechanism replaces the usage of the ``IBMDynamicFractionalTranslationPlugin``
+  plugin and the :class:`.FoldRzzAngle` transpiler pass. (`2960 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2960>`__)
+
+
+Other Notes
+-----------
+
+- The library now uses the version ``2026-04-15`` of the Qiskit Runtime REST API. (`2845 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2845>`__)
+- The deprecated transpiler plugin ``IBMFractionalTranslationPlugin`` has been removed. (`2880 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2880>`__)
+- The default schema version for Executor is now ``1.1``. (`2911 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2911>`__)

@@ -75,6 +75,44 @@ class TestPrepare(unittest.TestCase):
 
         self.assertIsNotNone(executor_options)
 
+    def test_binding_array_key_order_bound_by_circuit_parameters(self):
+        """Parameter values must be ordered by ``circuit.parameters``.
+
+        Regression: ``prepare`` used to call ``as_array()`` without passing the
+        circuit's parameters, so a dict/BindingsArray whose key order differed
+        from ``circuit.parameters`` bound values to the wrong parameters silently.
+        """
+        a = Parameter("a")
+        b = Parameter("b")
+        circuit = QuantumCircuit(1, 1)
+        circuit.rx(a, 0)
+        circuit.rz(b, 0)
+        circuit.measure(0, 0)
+        # circuit.parameters is canonically sorted -> (a, b).
+        self.assertEqual([p.name for p in circuit.parameters], ["a", "b"])
+
+        # Key the bindings in the opposite order (b, a); intended a=0.1, b=0.7.
+        pub = SamplerPub.coerce((circuit, {("b", "a"): [0.7, 0.1]}), shots=1024)
+
+        # No-twirling path -> CircuitItem.circuit_arguments ordered (a, b).
+        options = options = SamplerOptions(
+            **{"twirling": {"enable_gates": False, "enable_measure": False}}
+        )
+        program, _ = prepare([pub], options, default_shots=1024)
+        self.assertIsInstance(program.items[0], CircuitItem)
+        np.testing.assert_array_equal(program.items[0].circuit_arguments, [0.1, 0.7])
+
+        # Twirling path -> SamplexItem parameter_values ordered (a, b).
+        options = options = SamplerOptions(
+            **{"twirling": {"enable_gates": True, "enable_measure": True}}
+        )
+        program_tw, _ = prepare([pub], options, default_shots=1024)
+        self.assertIsInstance(program_tw.items[0], SamplexItem)
+        np.testing.assert_array_equal(
+            np.asarray(program_tw.items[0].samplex_arguments["parameter_values"]).reshape(-1),
+            [0.1, 0.7],
+        )
+
     def test_default_shots(self):
         """Test that default shots are used when not specified in pub."""
         circuit = QuantumCircuit(1, 1)
