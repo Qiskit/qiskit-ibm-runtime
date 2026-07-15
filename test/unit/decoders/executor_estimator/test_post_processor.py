@@ -23,7 +23,6 @@ from qiskit.quantum_info import random_pauli_list
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     _process_expectation_values_pea,
     create_pub_result,
-    create_pub_result_pea,
     create_pub_result_pec,
     estimator_v2_post_processor_v0_1,
 )

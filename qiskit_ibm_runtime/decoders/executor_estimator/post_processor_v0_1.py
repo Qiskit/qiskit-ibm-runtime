@@ -142,6 +142,16 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 pec_gamma=pec_gammas[idx],
             )
         elif mitigation == "pea":
+            if (
+                pea_noise_factors is None
+                or extrapolated_noise_factors is None
+                or extrapolator is None
+            ):
+                raise ValueError(
+                    "Mitigation method is PEA, while at least one of the required "
+                    "parameters (pea_noise_factors, extrapolated_noise_factors and "
+                    "extrapolator) in the passthrough_data is None."
+                )
             pub_result = create_pub_result_pea(
                 item_result,
                 observables,
@@ -508,7 +518,7 @@ def create_pub_result_pea(
     Returns:
         An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
     """
-    # The last returned value is the selected extrapolators, that should be saved in the
+    # TODO: The last returned value is the selected extrapolators, that should be saved in the
     # metadata
     exp_vals, stds, ensemble_stds, _ = _process_expectation_values_pea(
         item_result,
@@ -574,9 +584,14 @@ def _process_expectation_values_pea(
         raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
 
     if data.ndim != 5:
-        # Shape: (num_randomizations, num_noise_scales, num_configs, shots, num_bits)
+        # Shape: (num_noise_scales, num_randomizations, num_configs, shots, num_bits)
         # where num_configs is the total number of (param_index, basis) pairs
         raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``5``.")
+
+    if data.shape[0] != len(noise_factors):
+        raise ValueError(
+            "Number of noise factors in the data do not match the length of ``noise_factors``."
+        )
 
     # Apply measurement flips if present
     if "measurement_flips._meas" in item_result:
