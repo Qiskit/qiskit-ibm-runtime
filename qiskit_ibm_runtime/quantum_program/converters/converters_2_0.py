@@ -33,7 +33,7 @@ from ibm_quantum_schemas.executor.version_2_0 import (
 )
 from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
 
-from ...options_models.executor_options import ExecutorOptions
+from ...options_models.executor import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 

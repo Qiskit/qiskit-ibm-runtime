@@ -47,7 +47,7 @@ class BaseOptionsModel(BaseModel):
         """Update the options."""
         warn(
             "The `update` method of the option models is deprecated as of qiskit_ibm_runtime "
-            "v0.48.0 and will be removed in a future release. Please update the model fields "
+            "v0.49.0 and will be removed in a future release. Please update the model fields "
             "directly (`options.foo = bar`) or create a copy of the options "
             '(`options.model_copy(update={"foo": "bar"})`).',
             DeprecationWarning,
@@ -73,7 +73,7 @@ class BaseOptionsModel(BaseModel):
         """
         warn(
             "Using `dataclasses.asdict()` on option models is deprecated as of qiskit_ibm_runtime "
-            "v0.48.0 and will be removed in a future release. Please use Pydantic features for "
+            "v0.49.0 and will be removed in a future release. Please use Pydantic features for "
             "converting to dict (`options.model_dump()`) instead.",
             DeprecationWarning,
             stacklevel=2,
