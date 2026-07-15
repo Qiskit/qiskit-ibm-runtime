@@ -43,7 +43,6 @@ class TestEstimatorOptions(unittest.TestCase):
         self.assertIsInstance(options.environment, EnvironmentOptions)
         self.assertIsNone(options.resilience.measure_mitigation)
         self.assertEqual(options.resilience.measure_noise_learning.num_randomizations, "auto")
-        self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, "auto")
 
     def test_set_default_precision(self):
         """Test setting default_precision."""

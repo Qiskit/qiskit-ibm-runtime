@@ -29,7 +29,6 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
         opts = ResilienceOptions()
         self.assertIsNone(opts.measure_mitigation)
         self.assertEqual(opts.measure_noise_learning.num_randomizations, "auto")
-        self.assertEqual(opts.measure_noise_learning.shots_per_randomization, "auto")
         self.assertFalse(opts.pec_mitigation)
         self.assertEqual(opts.pec.max_overhead, 100)
         self.assertEqual(opts.pec.noise_gain, "auto")
@@ -46,7 +45,7 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
         }
         opts = ResilienceOptions(
             measure_mitigation=False,
-            measure_noise_learning={"num_randomizations": 64, "shots_per_randomization": 1024},
+            measure_noise_learning={"num_randomizations": 64},
             pec_mitigation=True,
             pec={"max_overhead": 50, "noise_gain": 0.5},
             zne_mitigation=True,
@@ -55,7 +54,6 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
         )
         self.assertFalse(opts.measure_mitigation)
         self.assertEqual(opts.measure_noise_learning.num_randomizations, 64)
-        self.assertEqual(opts.measure_noise_learning.shots_per_randomization, 1024)
         self.assertTrue(opts.pec_mitigation)
         self.assertEqual(opts.pec.max_overhead, 50)
         self.assertEqual(opts.pec.noise_gain, 0.5)
