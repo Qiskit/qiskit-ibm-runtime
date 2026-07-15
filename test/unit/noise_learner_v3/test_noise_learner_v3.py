@@ -23,9 +23,9 @@ from qiskit_ibm_runtime.options_models import (
     NoiseLearnerV3Options,
     PostSelectionOptions,
 )
-from test.utils import get_mocked_backend, get_mocked_session
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend, get_mocked_session
 
 
 class TestNoiseLearnerV3Options(IBMTestCase):

@@ -22,7 +22,8 @@ from qiskit.transpiler import CouplingMap
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.options_models.simulator_options import SimulatorOptions
-from test.utils import get_mocked_backend
+
+from ...utils import get_mocked_backend
 
 
 @ddt
