@@ -22,8 +22,6 @@ from urllib.parse import quote
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from qiskit_ibm_runtime import ibm_backend
-
 from .accounts import Account, AccountManager
 from .api.client_parameters import ClientParameters
 from .api.clients.runtime import RuntimeClient
@@ -34,6 +32,7 @@ from .exceptions import (
     RuntimeJobNotFound,
     RuntimeProgramNotFound,
 )
+from .ibm_backend import IBMBackend, IBMRetiredBackend
 from .proxies import ProxyConfiguration
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
@@ -48,7 +47,6 @@ if TYPE_CHECKING:
 
     from .accounts import ChannelType, PlanType, RegionType
     from .decoders.result_decoder import ResultDecoder
-    from .ibm_backend import IBMBackend
     from .models import QasmBackendConfiguration
 
 logger = logging.getLogger(__name__)
@@ -544,12 +542,12 @@ class QiskitRuntimeService:
         min_num_qubits: int | None = None,
         instance: str | None = None,
         dynamic_circuits: bool | None = None,
-        filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
+        filters: Callable[[IBMBackend], bool] | None = None,
         *,
         use_fractional_gates: bool | None = False,
         calibration_id: str | None = None,
         **kwargs: Any,
-    ) -> list[ibm_backend.IBMBackend]:
+    ) -> list[IBMBackend]:
         """Return all backends accessible via this account, subject to optional filtering.
 
         Args:
@@ -781,7 +779,7 @@ class QiskitRuntimeService:
             return None
 
         if config:
-            return ibm_backend.IBMBackend(
+            return IBMBackend(
                 instance=instance,
                 configuration=config,
                 service=self,
@@ -1287,7 +1285,7 @@ class QiskitRuntimeService:
             else:
                 backend = None
         except QiskitBackendNotFoundError:
-            backend = ibm_backend.IBMRetiredBackend.from_name(
+            backend = IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
                 api=None,
             )
@@ -1309,10 +1307,10 @@ class QiskitRuntimeService:
         self,
         min_num_qubits: int | None = None,
         instance: str | None = None,
-        filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
+        filters: Callable[[IBMBackend], bool] | None = None,
         use_fractional_gates: bool | None = False,
         **kwargs: Any,
-    ) -> ibm_backend.IBMBackend:
+    ) -> IBMBackend:
         """Return the least busy available backend.
 
         Args:

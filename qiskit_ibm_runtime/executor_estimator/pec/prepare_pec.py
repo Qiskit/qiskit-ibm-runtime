@@ -140,8 +140,9 @@ def prepare_pec(
         if pec_options.noise_gain == "auto":
             # calculate the gamma factor without scaling it by noise_factor
             gamma = calculate_gamma(boxed_circuit, noise_model_mapping, 1)
-            # calculate the noise factor based on gamma and max_overhead
-            noise_gain = 1 - np.log(max_overhead) / np.log(gamma**2)
+            # calculate the noise factor based on gamma and max_overhead, setting it to ``1``
+            # if ``gamma`` is ``1``--i.e., if there is no noise to mitigate.
+            noise_gain = 1 if gamma == 1 else 1 - np.log(max_overhead) / np.log(gamma**2)
             # Truncate noise_gain to [0, 1]
             noise_gain = min(1, max(0, noise_gain))
         else:
@@ -166,9 +167,7 @@ def prepare_pec(
             try:
                 pub_noise_model[ref] = noise_model_mapping[ref]
             except KeyError:
-                raise IBMInputValueError(
-                    f"noise_model_mapping is missing noise map for layer reference {ref}"
-                )
+                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
             # noise_scales and pauli_lindblad_maps should have the same refs
             samplex_arguments[f"noise_scales.{ref}"] = noise_scale
 

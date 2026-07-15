@@ -18,12 +18,11 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
-from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
-from qiskit_ibm_runtime.api.rest.program_job import ProgramJob
-from qiskit_ibm_runtime.utils import local_to_utc
-
 from ...json import RuntimeEncoder
+from ...utils import local_to_utc
+from .base import RestAdapterBase
 from .cloud_backend import CloudBackend
+from .program_job import ProgramJob
 from .runtime_session import RuntimeSession
 
 if TYPE_CHECKING:

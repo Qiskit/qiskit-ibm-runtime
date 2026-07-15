@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Any, get_args
 import dateutil.parser
 import numpy as np
 
-from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
+from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 
 try:
     from qiskit.quantum_info import PauliLindbladMap
@@ -58,16 +58,15 @@ from qiskit.result import Result
 from qiskit.transpiler import CouplingMap
 from qiskit.utils import LazyImportTester
 
-from qiskit_ibm_runtime.execution_span import (
+from .execution_span import (
     DoubleSliceSpan,
     ExecutionSpans,
     SliceSpan,
     TwirledSliceSpan,
     TwirledSliceSpanV2,
 )
-from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
-from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
-
+from .options.zne_options import ExtrapolatorType
+from .results.estimator_pub import EstimatorPubResult
 from .results.noise_learner import NoiseLearnerResult
 
 if TYPE_CHECKING:
@@ -470,7 +469,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 try:
                     # importing here and not at the top of the file,
                     # to prevent circular imports
-                    from qiskit_ibm_runtime.noise_learner_v3.params_converters import (
+                    from .noise_learner_v3.params_converters import (
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
 

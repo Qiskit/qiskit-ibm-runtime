@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
+from .base import RestAdapterBase
 
 if TYPE_CHECKING:
     from datetime import datetime as python_datetime

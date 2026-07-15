@@ -18,15 +18,15 @@ import os
 import warnings
 from typing import TYPE_CHECKING
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import QiskitRuntimeService
+    from ....qiskit_runtime_service import QiskitRuntimeService
 
 DISPLAY_WARNING = True
 
 
-class FakeNighthawk(fake_backend.FakeBackendV2):
+class FakeNighthawk(FakeBackendV2):
     """A fake 120 qubit backend.
 
     Its coupling map and basis gates match those of a real Nighthawk backend, but the properties

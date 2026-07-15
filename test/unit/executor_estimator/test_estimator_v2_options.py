@@ -18,9 +18,9 @@ from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
-from test.utils import get_mocked_backend
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend
 
 
 class TestEstimatorUsingOptions(IBMTestCase):

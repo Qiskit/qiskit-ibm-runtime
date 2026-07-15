@@ -14,7 +14,7 @@
 
 import warnings
 
-from qiskit_ibm_runtime.json import (  # noqa: F401
+from ..json import (  # noqa: F401
     CURRENT_NOISE_LEARNER_MODULE,
     LEGACY_NOISE_LEARNER_MODULE,
     SERVICE_MAX_SUPPORTED_QPY_VERSION,

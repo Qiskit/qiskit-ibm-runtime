@@ -23,7 +23,7 @@ from qiskit.transpiler.preset_passmanagers import common
 from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
 from qiskit.version import __version__ as _terra_version_string
 
-from qiskit_ibm_runtime.transpiler.passes.basis import ConvertIdToDelay, FoldRzzAngle
+from .passes.basis import ConvertIdToDelay, FoldRzzAngle
 
 if TYPE_CHECKING:
     from qiskit.transpiler.passmanager_config import PassManagerConfig
