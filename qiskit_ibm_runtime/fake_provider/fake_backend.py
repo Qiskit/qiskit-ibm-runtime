@@ -448,9 +448,7 @@ class FakeBackendV2(BackendV2):
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
 
-            # Explicitly clean up and drop any temporary directory left over from a previous
-            # ``persist=False`` call so it is removed now rather than being left to garbage
-            # collection, and ``_load_json`` reads the files written by this call.
+            # Clean up and drop any temporary directory left over from a previous call.
             if self._tmp_data_dir is not None:
                 self._tmp_data_dir.cleanup()
                 self._tmp_data_dir = None
@@ -459,12 +457,7 @@ class FakeBackendV2(BackendV2):
                 # Persist to (and read back from) the bundled ``dirname``.
                 snapshots_dir = self.dirname
             else:
-                # Write to a temporary directory so that refresh() succeeds even when the
-                # package is installed in a read-only location. Keep a reference to the
-                # directory on the instance so it lives as long as the backend and is cleaned
-                # up automatically when the backend is garbage collected. ``_load_json`` reads
-                # from ``_tmp_data_dir`` while it is set, so ``dirname`` is left unchanged and a
-                # later ``refresh()`` with ``persist=True`` still targets the bundled files.
+                # Use a temporary directory instead of persisting to ``dirname``.
                 self._tmp_data_dir = tempfile.TemporaryDirectory(prefix="qiskit_fake_backend_")
                 snapshots_dir = self._tmp_data_dir.name
 
