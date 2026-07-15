@@ -503,3 +503,32 @@ class TestPreparePecFunction(unittest.TestCase):
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
         self.assertIn("pec_gammas", passthrough["post_processor"])
+
+    def test_prepare_pec_with_trivial_noise_maps(self):
+        """Test ``prepare_pec`` with noise maps set to identity."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        # Create a simple noise model
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = ""
+        for layer in layers:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref = annot.ref
+        noise_model_mapping = {noise_layer_ref: PauliLindbladMap.identity(num_qubits=2)}
+
+        pec_options = PecOptions()
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
+        shots = 1024
+        quantum_program = prepare_pec(
+            [pub], twirling_options, shots, pec_options, noise_model_mapping
+        )
+        item = cast("SamplexItem", quantum_program.items[0])
+        self.assertEqual(item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], 0)
