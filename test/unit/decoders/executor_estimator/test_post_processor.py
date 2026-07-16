@@ -1251,4 +1251,3 @@ class TestProcessExpectationValuesPEA(IBMTestCase):
 
         # Both orderings resolve to "linear" and give the same extrapolated value
         self.assertAlmostEqual(float(evs_first[0]), float(evs_second[0]), places=5)
-
