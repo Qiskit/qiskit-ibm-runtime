@@ -27,10 +27,9 @@ from unittest.util import safe_repr
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.utils.logging import QISKIT_IBM_RUNTIME_LOGGER_NAME
 
 from .decorators import integration_test_setup
-from .utils import bell, setup_test_logging
+from .utils import bell
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -46,7 +45,6 @@ class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
     ARTIFACT_DIR = ".test_artifacts"
-    log: logging.Logger
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
     program_ids: dict[str, str]
@@ -55,10 +53,6 @@ class IBMTestCase(TestCase):
     def setUpClass(cls):
         """Initial class level setup."""
         super().setUpClass()
-        cls.log = logging.getLogger(cls.__name__)
-        filename = f"{os.path.splitext(inspect.getfile(cls))[0]}.log"
-        setup_test_logging(cls.log, filename)
-        cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
 
         # ignore deprecation warnings for .unit and .duration coming from qiskit
         # as no suitable migration alternative has been found yet
@@ -74,27 +68,6 @@ class IBMTestCase(TestCase):
 
         # Ensure the artifact directory exists
         os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
-
-    @classmethod
-    def _set_logging_level(cls, logger: logging.Logger) -> None:
-        """Set logging level for the input logger.
-
-        Args:
-            logger: Logger whose level is to be set.
-        """
-        if logger.level is logging.NOTSET:
-            try:
-                logger.setLevel(cls.log.level)
-            except Exception as ex:
-                logger.warning(
-                    'Error while trying to set the level for the "%s" logger to %s. %s.',
-                    logger,
-                    os.getenv("LOG_LEVEL"),
-                    str(ex),
-                )
-        if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
-            logger.addHandler(logging.StreamHandler())
-            logger.propagate = False
 
     def assert_dict_almost_equal(
         self, dict1, dict2, delta=None, msg=None, places=None, default_value=0
@@ -286,10 +259,13 @@ class IBMIntegrationTestCase(IBMTestCase):
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
+    log: logging.Logger
+
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
         super().setUpClass()
+        cls.log = logging.getLogger(cls.__name__)
         cls.program_ids = {}
         cls.sim_backends = {}
         service = cls.service
