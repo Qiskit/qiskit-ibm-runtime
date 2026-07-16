@@ -909,7 +909,7 @@ class TestEstimatorV2PostProcessorPEC(unittest.TestCase):
 
 
 @ddt
-class TestProcessExpectationValuesPEA(unittest.TestCase):
+class TestProcessExpectationValuesPEA(IBMTestCase):
     """Tests for the ``_process_expectation_values_pea`` method."""
 
     def get_param_basis_pairs(self, observables, param_shape):
