@@ -43,7 +43,6 @@ if TYPE_CHECKING:
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
-    ARTIFACT_DIR = ".test_artifacts"
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
     program_ids: dict[str, str]
@@ -64,9 +63,6 @@ class IBMTestCase(TestCase):
 
         # fail test on deprecation warnings from qiskit
         warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
-
-        # Ensure the artifact directory exists
-        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
 
     @contextmanager
     def assert_warning_appears(
@@ -122,6 +118,20 @@ class IBMTestCase(TestCase):
                     f"the user's code -- past any qiskit_ibm_runtime or pydantic internals -- "
                     f"so the warning is visible in scripts and Jupyter notebooks.",
                 )
+
+
+class IBMVisualizationTestCase(IBMTestCase):
+    """Test case for use with visualization-related features."""
+
+    ARTIFACT_DIR = ".test_artifacts"
+
+    @classmethod
+    def setUpClass(cls):
+        """Initial class level setup."""
+        super().setUpClass()
+
+        # Ensure the artifact directory exists
+        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
 
     def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
         """Save a Plotly figure as an HTML artifact."""

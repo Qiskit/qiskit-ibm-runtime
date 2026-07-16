@@ -26,7 +26,7 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpanV2,
 )
 
-from ..ibm_test_case import IBMTestCase
+from ..ibm_test_case import IBMTestCase, IBMVisualizationTestCase
 
 
 @ddt.ddt
@@ -369,7 +369,7 @@ class TestTwirledSliceSpan(IBMTestCase):
 
 
 @ddt.ddt
-class TestExecutionSpans(IBMTestCase):
+class TestExecutionSpans(IBMVisualizationTestCase):
     """Class for testing ExecutionSpans."""
 
     def setUp(self) -> None:

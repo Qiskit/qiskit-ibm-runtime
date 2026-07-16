@@ -25,7 +25,7 @@ from qiskit_ibm_runtime.results.quantum_program import (
 )
 from qiskit_ibm_runtime.visualization import draw_chunk_timings
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMVisualizationTestCase
 
 
 def _make_chunk_timings(n: int = 5) -> ChunkTiming:
@@ -41,7 +41,7 @@ def _make_chunk_timings(n: int = 5) -> ChunkTiming:
 
 
 @ddt.ddt
-class TestDrawChunkTiming(IBMTestCase):
+class TestDrawChunkTiming(IBMVisualizationTestCase):
     """Tests for ``draw_chunk_timings`` and ``ChunkTiming``."""
 
     def setUp(self):
