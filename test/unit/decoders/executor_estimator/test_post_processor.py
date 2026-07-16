@@ -1252,6 +1252,3 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         # Both orderings resolve to "linear" and give the same extrapolated value
         self.assertAlmostEqual(float(evs_first[0]), float(evs_second[0]), places=5)
 
-
-if __name__ == "__main__":
-    unittest.main()
