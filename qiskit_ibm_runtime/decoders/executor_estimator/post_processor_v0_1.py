@@ -590,7 +590,7 @@ def _process_expectation_values_pea(
 
     if data.shape[0] != len(noise_factors):
         raise ValueError(
-            "Number of noise factors in the data do not match the length of ``noise_factors``."
+            "Number of noise factors in the data does not match the length of ``noise_factors``."
         )
 
     # Apply measurement flips if present
