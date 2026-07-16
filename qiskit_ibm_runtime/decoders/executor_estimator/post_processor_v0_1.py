@@ -142,16 +142,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 pec_gamma=pec_gammas[idx],
             )
         elif mitigation == "pea":
-            if (
-                pea_noise_factors is None
-                or extrapolated_noise_factors is None
-                or extrapolator is None
-            ):
-                raise ValueError(
-                    "Mitigation method is PEA, while at least one of the required "
-                    "parameters (pea_noise_factors, extrapolated_noise_factors and "
-                    "extrapolator) in the passthrough_data is None."
-                )
             pub_result = create_pub_result_pea(
                 item_result,
                 observables,
@@ -518,6 +508,12 @@ def create_pub_result_pea(
     Returns:
         An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
     """
+    if noise_factors is None or extrapolated_noise_factors is None or extrapolator is None:
+        raise ValueError(
+            "Mitigation method is PEA, while at least one of the required "
+            "parameters ``(pea_noise_factors, extrapolated_noise_factors, "
+            "extrapolator)`` in the ``passthrough_data`` is ``None``."
+        )
     # TODO: The last returned value is the selected extrapolators, that should be saved in the
     # metadata
     exp_vals, stds, ensemble_stds, _ = _process_expectation_values_pea(
