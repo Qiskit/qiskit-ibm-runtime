@@ -43,8 +43,78 @@ if TYPE_CHECKING:
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
+    def assertDictPartiallyEqual(self, a: dict, b: dict) -> None:
+        """Assert that all keys in ``b`` are in ``a`` and have the same values."""
+
+        def _dict_partially_equal(dict1: dict, dict2: dict) -> bool:
+            """Determine whether all keys in dict2 are in dict1 and have same values."""
+            for key, val in dict2.items():
+                if isinstance(val, dict):
+                    if not _dict_partially_equal(dict1.get(key, {}), val):
+                        return False
+                elif key not in dict1 or val != dict1[key]:
+                    return False
+
+            return True
+
+        if not _dict_partially_equal(a, b):
+            raise AssertionError(f"Dicts are not partially equal: {a}, {b}")
+
+    def assertDictFlatPartiallyEqual(self, a: dict, b: dict) -> None:
+        """Assert that (when flattened) all keys in ``b`` are in ``a`` and have the same values."""
+
+        def _flat_dict(in_dict, out_dict):
+            """Flat the dictionaries, and compare.
+
+            Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have
+            the same values.
+            """
+            for key_, val_ in in_dict.items():
+                if isinstance(val_, dict):
+                    _flat_dict(val_, out_dict)
+                else:
+                    out_dict[key_] = val_
+
+        flat_dict1: dict = {}
+        flat_dict2: dict = {}
+        _flat_dict(a, flat_dict1)
+        _flat_dict(b, flat_dict2)
+
+        for key, val in flat_dict2.items():
+            if key not in flat_dict1 or flat_dict1[key] != val:
+                raise AssertionError(f"Dicts are not partially equal when flattened: {a}, {b}")
+
+    def assertDictKeysEqual(self, a: dict, b: dict, exclude_keys: list | None = None) -> None:
+        """Assert recursively that ``a`` and ``b`` have the same keys, optionally excluding keys."""
+
+        def _dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
+            """Recursively determine whether the dictionaries have the same keys.
+
+            Args:
+                dict1: First dictionary.
+                dict2: Second dictionary.
+                exclude_keys: A list of keys in dictionary 1 to be excluded.
+
+            Returns:
+                Whether the two dictionaries have the same keys.
+            """
+            exclude_keys = exclude_keys or []
+            for key, val in dict1.items():
+                if key in exclude_keys:
+                    continue
+                if key not in dict2:
+                    return False
+                if isinstance(val, dict):
+                    if not _dict_keys_equal(val, dict2[key]):
+                        return False
+
+            return True
+
+        if not _dict_keys_equal(a, b, exclude_keys):
+            raise AssertionError(f"Dicts don't have the same keys: {a}, {b}")
+
     @contextmanager
-    def assert_warning_appears(
+    def assertWarnsStrict(
         self,
         warning: type[Warning],
         msg: str,

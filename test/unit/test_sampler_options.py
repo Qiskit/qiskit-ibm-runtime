@@ -22,13 +22,7 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import (
-    dict_keys_equal,
-    dict_paritally_equal,
-    flat_dict_partially_equal,
-    get_mocked_backend,
-    get_primitive_inputs,
-)
+from ..utils import get_mocked_backend, get_primitive_inputs
 
 
 @ddt
@@ -106,13 +100,9 @@ class TestSamplerOptions(IBMTestCase):
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
         options = asdict(SamplerOptions(**opts_dict))
-        self.assertTrue(
-            dict_paritally_equal(options, opts_dict),
-            f"options={options}, opts_dict={opts_dict}",
-        )
-
+        self.assertDictPartiallyEqual(options, opts_dict)
         # Make sure the structure didn't change.
-        self.assertTrue(dict_keys_equal(asdict(SamplerOptions()), options), f"options={options}")
+        self.assertDictKeysEqual(asdict(SamplerOptions()), options)
 
     @data(
         {"default_shots": 4000},
@@ -130,12 +120,9 @@ class TestSamplerOptions(IBMTestCase):
         options.update(**new_opts)
 
         # Make sure the values are equal.
-        self.assertTrue(
-            flat_dict_partially_equal(asdict(options), new_opts),
-            f"new_opts={new_opts}, combined={options}",
-        )
+        self.assertDictFlatPartiallyEqual(asdict(options), new_opts)
         # Make sure the structure didn't change.
-        self.assertTrue(dict_keys_equal(asdict(options), asdict(SamplerOptions())))
+        self.assertDictKeysEqual(asdict(options), asdict(SamplerOptions()))
 
     @data(
         {"default_shots": 0},
