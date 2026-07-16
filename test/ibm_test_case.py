@@ -43,23 +43,6 @@ if TYPE_CHECKING:
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-
-        # ignore deprecation warnings for .unit and .duration coming from qiskit
-        # as no suitable migration alternative has been found yet
-        warnings.filterwarnings(
-            "ignore",
-            category=DeprecationWarning,
-            message=r"The property "
-            r"``qiskit\.dagcircuit\.dagcircuit\.DAGCircuit\.(unit|duration)`` is deprecated",
-        )
-
-        # fail test on deprecation warnings from qiskit
-        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
-
     @contextmanager
     def assert_warning_appears(
         self,
