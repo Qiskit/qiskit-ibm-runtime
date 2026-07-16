@@ -29,9 +29,16 @@ from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Se
 from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import MockSession, get_mocked_backend, transpile_pubs
+from ..utils import get_mocked_backend, transpile_pubs
 from .mock.fake_api_backend import FakeApiBackendSpecs
 from .mock.fake_runtime_service import FakeRuntimeService
+
+
+class MockSession(Session):
+    """Mock for session class."""
+
+    _circuits_map: dict[str, QuantumCircuit] = {}
+    _instance = None
 
 
 def _measured(n):

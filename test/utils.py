@@ -366,10 +366,3 @@ def remap_observables(observables, isa_circuit):
             raise ValueError(f"Observable of type {type(obs)} is not supported.")
 
     return out_obs
-
-
-class MockSession(Session):
-    """Mock for session class."""
-
-    _circuits_map: dict[str, QuantumCircuit] = {}
-    _instance = None

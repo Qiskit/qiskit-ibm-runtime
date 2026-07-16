@@ -12,14 +12,13 @@
 
 """Test of generated fake backends."""
 
-import math
 import os
 import shutil
 import tempfile
 import unittest
 from unittest import mock
 
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
+from qiskit import QuantumCircuit, transpile
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
@@ -31,18 +30,6 @@ from qiskit_ibm_runtime.fake_provider import (
 )
 
 from ...ibm_test_case import IBMTestCase
-
-
-def get_test_circuit():
-    """Generates simple circuit for tests."""
-    desired_vector = [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)]
-    qreg = QuantumRegister(2, "qr")
-    creg = ClassicalRegister(2, "cr")
-    qc = QuantumCircuit(qreg, creg)
-    qc.initialize(desired_vector, [qreg[0], qreg[1]])
-    qc.measure(qreg[0], creg[0])
-    qc.measure(qreg[1], creg[1])
-    return qc
 
 
 class FakeBackendsTest(IBMTestCase):
