@@ -135,7 +135,7 @@ def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> Quantum
 
 
 def quantum_program_result_from_1_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
-    """Convert a V1.0 model to a :class:`QuantumProgramResult`."""
+    """Convert a V1.1 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[
             ChunkSpan(
