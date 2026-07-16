@@ -203,7 +203,7 @@ def prepare_pec(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
-            "measure_mitigation": "False",
+            "measure_mitigation": False,
             "mitigation": "pec",
             "pec_gammas": pec_gamma_list,
         },
@@ -223,7 +223,7 @@ def prepare_pec(
         )
         trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
-        passthrough_data["post_processor"]["measure_mitigation"] = "True"
+        passthrough_data["post_processor"]["measure_mitigation"] = True
 
     # Set semantic role for post-processing dispatch
     quantum_program._semantic_role = "estimator_v2"

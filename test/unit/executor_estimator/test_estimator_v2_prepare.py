@@ -281,7 +281,7 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertIsInstance(trex_item, SamplexItem)
 
         passthrough = cast("dict[str, Any]", quantum_program_with_mitigation.passthrough_data)
-        self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
+        self.assertTrue(passthrough["post_processor"]["measure_mitigation"])
 
     def test_prepare_with_measure_noise_learning_trex_circuit_has_only_measurements(self):
         """Test that TREX calibration circuit is based on measurement-only operations.

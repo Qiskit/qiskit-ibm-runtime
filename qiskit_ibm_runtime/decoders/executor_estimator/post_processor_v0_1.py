@@ -87,7 +87,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
-    if measure_mitigation == "True":
+    if measure_mitigation:
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
         try:

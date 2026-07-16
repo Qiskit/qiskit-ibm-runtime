@@ -282,7 +282,7 @@ class TestPrepareZneFunction(unittest.TestCase):
 
         # Check passthrough data
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-        self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
+        self.assertTrue(passthrough["post_processor"]["measure_mitigation"])
 
     def test_prepare_zne_multiple_pubs_with_measure_noise_learning(self):
         """Test prepare_zne with multiple pubs and TREX."""

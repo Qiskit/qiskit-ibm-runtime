@@ -340,7 +340,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         # Check passthrough data
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-        self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
+        self.assertTrue(passthrough["post_processor"]["measure_mitigation"])
         self.assertIn("pea_noise_factors", passthrough["post_processor"])
         self.assertTrue(
             np.array_equal(
