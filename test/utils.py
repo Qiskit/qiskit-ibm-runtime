@@ -68,25 +68,6 @@ def most_busy_backend(
     )
 
 
-def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
-    """Return a slightly larger circuit that would run a bit longer.
-
-    Args:
-        backend: Backend on which the circuit will run.
-
-    Returns:
-        A larger circuit.
-    """
-    n_qubits = min(backend.configuration().n_qubits, 20)
-    circuit = QuantumCircuit(n_qubits, n_qubits)
-    for qubit in range(n_qubits - 1):
-        circuit.h(qubit)
-        circuit.cx(qubit, qubit + 1)
-    circuit.measure(list(range(n_qubits)), list(range(n_qubits)))
-
-    return circuit
-
-
 def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
     """Cancel a runtime job."""
     try:
