@@ -193,13 +193,6 @@ def prepare_pea(
 
     # Add TREX calibration circuit
     if measure_noise_learning is not None:
-        if (
-            isinstance(measure_noise_learning.shots_per_randomization, int)
-            and measure_noise_learning.shots_per_randomization != shots_per_randomization
-        ):
-            raise IBMInputValueError(
-                "shots_per_randomization must be the same for twirling and measure_noise_learning"
-            )
         trex_num_randomizations = resolve_trex_num_randomizations(
             measure_noise_learning, num_randomizations
         )
