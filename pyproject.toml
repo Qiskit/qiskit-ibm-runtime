@@ -92,6 +92,7 @@ select = [
     "RUF013", # implicit-optional
     "S101",   # flake8-bandit assert
     "T10",    # flake8-debugger
+    "TID251", # flake8-dity-imports banned-api
     "TC",     # flake8-type-checking
     "UP",     # pyupgrade
 ]
@@ -100,6 +101,9 @@ ignore = [
     "D105",   # undocumented-magic-method
     "D107",   # undocumented-public-init
 ]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"unittest.TestCase".msg = "Inherit from one of the existing classes at test/ibm_test_case."
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [

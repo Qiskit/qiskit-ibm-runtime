@@ -12,7 +12,6 @@
 
 """Unit tests for SamplerV2 post-processor and static conversion method."""
 
-import unittest
 from dataclasses import asdict
 
 import numpy as np
@@ -35,9 +34,11 @@ from qiskit_ibm_runtime.results.quantum_program import (
     StretchValues,
 )
 
+from ....ibm_test_case import IBMTestCase
+
 
 @ddt
-class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
+class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
     """Test ``quantum_program_item_result_to_sampler_pub_result``."""
 
     def test_single_pub_multiple_registers(self):
@@ -156,7 +157,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
 
 
 @ddt
-class TestSamplerV2PostProcessor(unittest.TestCase):
+class TestSamplerV2PostProcessor(IBMTestCase):
     """Test SamplerV2 post-processor function.
 
     This class contains basic smoke tests to verify the post-processor function
@@ -455,7 +456,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertEqual(result.metadata, {})
 
 
-class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
+class TestSamplerV2PostProcessorFlattening(IBMTestCase):
     """Test that sampler_v2_post_processor_v0_1 flattens twirling axes correctly.
 
     When twirling is enabled, the executor returns data with shape

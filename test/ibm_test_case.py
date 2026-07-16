@@ -21,7 +21,7 @@ import warnings
 from collections import defaultdict
 from contextlib import contextmanager, suppress
 from typing import TYPE_CHECKING
-from unittest import TestCase
+from unittest import TestCase  # noqa: TID251 -- IBMTestCase legitimatelly inherits from it.
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 

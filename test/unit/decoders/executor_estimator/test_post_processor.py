@@ -12,8 +12,6 @@
 
 """Unit tests for EstimatorV2 post-processor."""
 
-import unittest
-
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit.primitives import PrimitiveResult
@@ -31,8 +29,10 @@ from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramResult,
 )
 
+from ....ibm_test_case import IBMTestCase
 
-class TestEstimatorV2PostProcessor(unittest.TestCase):
+
+class TestEstimatorV2PostProcessor(IBMTestCase):
     """Tests for ``estimator_v2_post_processor_v0_1``."""
 
     def _create_result(
@@ -360,7 +360,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
 
 @ddt
-class TestCreatePubResult(unittest.TestCase):
+class TestCreatePubResult(IBMTestCase):
     """Tests for the ``create_pub_result`` function."""
 
     def get_param_basis_pairs(self, observables, param_shape):
@@ -548,7 +548,7 @@ class TestCreatePubResult(unittest.TestCase):
 
 
 @ddt
-class TestCreatePubResultPec(unittest.TestCase):
+class TestCreatePubResultPec(IBMTestCase):
     """Tests for the ``create_pub_result_pec`` function."""
 
     def get_param_basis_pairs(self, observables, param_shape):
@@ -760,7 +760,7 @@ class TestCreatePubResultPec(unittest.TestCase):
 
 
 @ddt
-class TestEstimatorV2PostProcessorPEC(unittest.TestCase):
+class TestEstimatorV2PostProcessorPEC(IBMTestCase):
     """Integration tests for PEC dispatch in ``estimator_v2_post_processor_v0_1``."""
 
     def _create_pec_result(

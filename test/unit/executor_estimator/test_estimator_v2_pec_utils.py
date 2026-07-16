@@ -13,7 +13,6 @@
 """Unit tests for EstimatorV2 PEC helper functions."""
 
 import math
-import unittest
 from typing import Any, cast
 
 import numpy as np
@@ -36,8 +35,10 @@ from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
+from ...ibm_test_case import IBMTestCase
 
-class TestCalculateGamma(unittest.TestCase):
+
+class TestCalculateGamma(IBMTestCase):
     """Tests for calculate_gamma function."""
 
     def test_calculates_gamma_for_single_noisy_gate(self):
@@ -215,7 +216,7 @@ class TestCalculateGamma(unittest.TestCase):
 
 
 @ddt
-class TestPreparePecFunction(unittest.TestCase):
+class TestPreparePecFunction(IBMTestCase):
     """Tests for the prepare_pec function."""
 
     def test_prepare_pec_basic(self):

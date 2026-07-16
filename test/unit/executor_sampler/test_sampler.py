@@ -12,7 +12,6 @@
 
 """Tests for executor-based SamplerV2."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -26,6 +25,8 @@ from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.options_models import SamplerOptions
+
+from ...ibm_test_case import IBMTestCase
 
 
 def create_mock_backend():
@@ -60,7 +61,7 @@ def create_sampler_for_prepare_tests(options=None):
     return sampler
 
 
-class TestSamplerV2SimpleCircuits(unittest.TestCase):
+class TestSamplerV2SimpleCircuits(IBMTestCase):
     """Tests for SamplerV2 with simple (non-parametric) circuits."""
 
     def setUp(self):
@@ -116,7 +117,7 @@ class TestSamplerV2SimpleCircuits(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 4096)
 
 
-class TestSamplerV2ParametricCircuits(unittest.TestCase):
+class TestSamplerV2ParametricCircuits(IBMTestCase):
     """Tests for SamplerV2 with parametric circuits."""
 
     def setUp(self):
@@ -205,7 +206,7 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         np.testing.assert_array_almost_equal(item2.circuit_arguments, [[0.5], [1.0]])
 
 
-class TestSamplerV2CircuitValidation(unittest.TestCase):
+class TestSamplerV2CircuitValidation(IBMTestCase):
     """Tests for circuit validation in SamplerV2."""
 
     def setUp(self):
@@ -235,7 +236,7 @@ class TestSamplerV2CircuitValidation(unittest.TestCase):
         mock_run.assert_not_called()
 
 
-class TestSamplerV2ShotsHandling(unittest.TestCase):
+class TestSamplerV2ShotsHandling(IBMTestCase):
     """Tests for shots handling in SamplerV2."""
 
     def setUp(self):
@@ -279,7 +280,7 @@ class TestSamplerV2ShotsHandling(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 2048)
 
 
-class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
+class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
     """Tests verifying the integrity of QuantumProgram objects created by SamplerV2."""
 
     def setUp(self):
@@ -381,7 +382,7 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         self.assertEqual(item.size(), 3)
 
 
-class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
+class TestSamplerV2DynamicalDecoupling(IBMTestCase):
     """Tests for SamplerV2 with dynamical decoupling enabled."""
 
     def setUp(self):
@@ -491,7 +492,7 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         )
 
 
-class TestSamplerV2SimulatorMode(unittest.TestCase):
+class TestSamplerV2SimulatorMode(IBMTestCase):
     """Tests for SamplerV2 with simulator backends (local mode)."""
 
     def test_simulator_mode_uses_backend_sampler(self):

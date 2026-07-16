@@ -12,15 +12,15 @@
 
 """Tests for calculate twirling shots function."""
 
-import unittest
-
 from ddt import data, ddt, unpack
 
 from qiskit_ibm_runtime.executor.calculate_twirling_shots import calculate_twirling_shots
 
+from ...ibm_test_case import IBMTestCase
+
 
 @ddt
-class TestCalculateTwirlingShots(unittest.TestCase):
+class TestCalculateTwirlingShots(IBMTestCase):
     """Tests for calculate_twirling_shots function."""
 
     @data(

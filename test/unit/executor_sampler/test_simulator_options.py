@@ -12,7 +12,6 @@
 
 """Tests for SimulatorOptions in executor-based SamplerV2."""
 
-import unittest
 from unittest.mock import patch
 
 from ddt import data, ddt
@@ -23,11 +22,12 @@ from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.options_models.simulator_options import SimulatorOptions
 
+from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
 
 
 @ddt
-class TestSimulatorOptions(unittest.TestCase):
+class TestSimulatorOptions(IBMTestCase):
     """Tests for SimulatorOptions in SamplerOptions."""
 
     def test_simulator_options_default(self):
