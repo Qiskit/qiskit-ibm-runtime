@@ -19,11 +19,11 @@ from pydantic import ValidationError
 from qiskit.transpiler import CouplingMap
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.fake_provider import FakeBrisbane
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.options_models.simulator_options import SimulatorOptions
 
 from ...ibm_test_case import IBMTestCase
-from ...utils import get_mocked_backend
 
 
 @ddt
@@ -79,7 +79,7 @@ class TestSimulatorOptions(IBMTestCase):
                 "coupling_map": [[0, 1], [1, 2]],
             }
         }
-        sampler = SamplerV2(mode=get_mocked_backend(), options=opts_dict)
+        sampler = SamplerV2(mode=FakeBrisbane(), options=opts_dict)
 
         self.assertEqual(sampler.options.simulator.seed_simulator, 123)
         self.assertEqual(sampler.options.simulator.basis_gates, ["h", "cx", "rz"])
