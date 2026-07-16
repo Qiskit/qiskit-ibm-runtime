@@ -17,7 +17,6 @@ import os
 import uuid
 from contextlib import ContextDecorator
 from tempfile import NamedTemporaryFile
-from unittest.mock import patch
 
 from qiskit_ibm_runtime.accounts import management
 from qiskit_ibm_runtime.accounts.account import IBM_QUANTUM_PLATFORM_API_URL
@@ -66,28 +65,6 @@ class no_envs(ContextDecorator):
 
     def __exit__(self, *exc):
         os.environ = self.os_environ_original
-
-
-class no_file(ContextDecorator):
-    """Context manager that disallows access to a file."""
-
-    def __init__(self, filename):
-        self.filename = filename
-        # Store the original `os.path.isfile` function, for mocking.
-        self.isfile_original = os.path.isfile
-        self.patcher = patch("os.path.isfile", side_effect=self.side_effect)
-
-    def __enter__(self):
-        self.patcher.start()
-
-    def __exit__(self, *exc):
-        self.patcher.stop()
-
-    def side_effect(self, filename_):
-        """Return False for the specified file."""
-        if filename_ == self.filename:
-            return False
-        return self.isfile_original(filename_)
 
 
 class temporary_account_config_file(ContextDecorator):

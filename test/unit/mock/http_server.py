@@ -59,19 +59,6 @@ class BaseHandler(BaseHTTPRequestHandler):
         self._respond()
 
 
-class ServerErrorOnceHandler(BaseHandler):
-    """Request handler that returns a server error once then a good response."""
-
-    bad_status_given: dict[str, Any] = {}
-
-    def _get_code(self):
-        """Return 200 if the path was seen before, otherwise 504."""
-        if self.bad_status_given.get(self.path):
-            return 200
-        self.bad_status_given[self.path] = True
-        return 504
-
-
 class ClientErrorHandler(BaseHandler):
     """Request handler that returns a client error."""
 

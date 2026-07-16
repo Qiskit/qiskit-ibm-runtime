@@ -23,11 +23,11 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound, RuntimeJobTimeoutError
 
-from ..ibm_test_case import IBMIntegrationTestCase
+from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..utils import bell, cancel_job_safe, most_busy_backend, submit_and_cancel
 
 
-class TestIBMJob(IBMIntegrationTestCase):
+class TestIBMJob(IBMIntegrationJobTestCase):
     """Test ibm_job module."""
 
     def setUp(self):

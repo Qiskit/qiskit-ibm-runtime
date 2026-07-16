@@ -12,7 +12,6 @@
 
 """Unit tests for EstimatorV2 run method."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -30,11 +29,12 @@ from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
+from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
 
 
 @ddt
-class TestEstimatorV2Run(unittest.TestCase):
+class TestEstimatorV2Run(IBMTestCase):
     """Tests for the EstimatorV2.run() method."""
 
     def setUp(self):
@@ -493,7 +493,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         self.assertEqual(call_kwargs.kwargs["noise_model_mapping"], noise_model_mapping)
 
 
-class TestEstimatorV2SimulatorMode(unittest.TestCase):
+class TestEstimatorV2SimulatorMode(IBMTestCase):
     """Tests for EstimatorV2 with local simulator backends."""
 
     def test_simulator_mode_skips_executor(self):
@@ -573,7 +573,7 @@ class TestEstimatorV2SimulatorMode(unittest.TestCase):
 
 
 @ddt
-class TestFinalizeOptions(unittest.TestCase):
+class TestFinalizeOptions(IBMTestCase):
     """Tests for ``finalize_options``."""
 
     def setUp(self):

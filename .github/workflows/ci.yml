@@ -82,10 +82,8 @@ jobs:
           - os: "macos-latest"
             python-version: '3.10'
     env:
-      LOG_LEVEL: DEBUG
-      STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
-      PYTEST_ADDOPTS: "--durations=10"
+      PYTEST_ADDOPTS: "--durations=10 --log-level=DEBUG"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -127,10 +125,8 @@ jobs:
       QISKIT_IBM_URL: ${{ secrets.QISKIT_IBM_URL }}
       QISKIT_IBM_INSTANCE: ${{ secrets.QISKIT_IBM_INSTANCE }}
       QISKIT_IBM_QPU: ${{ secrets.QISKIT_IBM_QPU }}
-      LOG_LEVEL: DEBUG
-      STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
-      PYTEST_ADDOPTS: "-v -s --durations=0"
+      PYTEST_ADDOPTS: "-v -s --durations=0 --log-level=DEBUG"
     steps:
       - uses: actions/checkout@v6
         with:

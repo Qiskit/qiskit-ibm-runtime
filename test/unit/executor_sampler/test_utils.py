@@ -12,8 +12,6 @@
 
 """Tests for executor-based SamplerV2 utility functions."""
 
-import unittest
-
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -21,8 +19,10 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.utils import extract_shots_from_pubs, validate_no_boxes
 
+from ...ibm_test_case import IBMTestCase
 
-class TestValidateNoBoxes(unittest.TestCase):
+
+class TestValidateNoBoxes(IBMTestCase):
     """Tests for validate_no_boxes function."""
 
     def test_valid_circuit_no_boxes(self):
@@ -52,7 +52,7 @@ class TestValidateNoBoxes(unittest.TestCase):
         self.assertIn("not supported", str(context.exception))
 
 
-class TestExtractShotsFromPubs(unittest.TestCase):
+class TestExtractShotsFromPubs(IBMTestCase):
     """Tests for extract_shots_from_pubs function."""
 
     def test_single_pub_with_shots(self):

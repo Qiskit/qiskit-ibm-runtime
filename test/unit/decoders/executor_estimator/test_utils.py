@@ -12,8 +12,6 @@
 
 """Tests for executor estimator decoder utils."""
 
-import unittest
-
 import numpy as np
 from qiskit.quantum_info import Pauli
 
@@ -23,8 +21,10 @@ from qiskit_ibm_runtime.decoders.executor_estimator.utils import (
     project_to_z,
 )
 
+from ....ibm_test_case import IBMTestCase
 
-class TestProjectToZ(unittest.TestCase):
+
+class TestProjectToZ(IBMTestCase):
     """Tests for project_to_z function."""
 
     def test_single_qubit_projections(self):
@@ -47,7 +47,7 @@ class TestProjectToZ(unittest.TestCase):
         np.testing.assert_array_equal(result, np.array(["Z", "Z", "0", "I"]))
 
 
-class TestIdentifyMeasureBasis(unittest.TestCase):
+class TestIdentifyMeasureBasis(IBMTestCase):
     """Tests for identify_measure_basis function."""
 
     def test_identify_measure_basis(self):
@@ -85,7 +85,7 @@ class TestIdentifyMeasureBasis(unittest.TestCase):
                     identify_measure_basis(pauli, bases_with_indices)
 
 
-class TestComputeExpVal(unittest.TestCase):
+class TestComputeExpVal(IBMTestCase):
     """Tests for compute_exp_val function."""
 
     def test_observable_combinations(self):

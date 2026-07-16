@@ -12,7 +12,6 @@
 
 """Unit tests for the ZNE :class:`GateFolding` transpiler pass."""
 
-import unittest
 from typing import Any
 
 import ddt
@@ -30,6 +29,8 @@ from qiskit_ibm_runtime.executor_estimator.zne.gate_folding import (
     GateFolding,
 )
 
+from ...ibm_test_case import IBMTestCase
+
 
 def fold(circuit: QuantumCircuit, noise_factor: float, **kwargs: Any) -> QuantumCircuit:
     """Test helper: run ``GateFolding`` via a one-pass PassManager."""
@@ -37,7 +38,7 @@ def fold(circuit: QuantumCircuit, noise_factor: float, **kwargs: Any) -> Quantum
 
 
 @ddt.ddt
-class TestGateFolding(unittest.TestCase):
+class TestGateFolding(IBMTestCase):
     """Tests for ``GateFolding``."""
 
     def test_default_gate_set(self):

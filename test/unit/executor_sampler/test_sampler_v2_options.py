@@ -12,8 +12,6 @@
 
 """Tests for SamplerOptions.to_executor_options() mapping method."""
 
-import unittest
-
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -25,7 +23,7 @@ from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
 
 
-class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
+class TestSamplerOptionsToExecutorOptions(IBMTestCase):
     """Tests for SamplerOptions.to_executor_options() method."""
 
     def test_default_options_mapping(self):

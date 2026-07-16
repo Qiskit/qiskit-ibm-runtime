@@ -60,13 +60,3 @@ class SerializableClassDecoder(ResultDecoder):
                 decoded["serializable_class"]
             )
         return decoded
-
-
-class UnserializableClass:
-    """Custom class without serialization methods."""
-
-    def __init__(self, value):
-        self.value = value
-
-    def __eq__(self, other):
-        return self.value == other.value

@@ -13,7 +13,6 @@
 """Unit tests for EstimatorV2 PEA helper functions."""
 
 import math
-import unittest
 from typing import Any, cast
 
 import numpy as np
@@ -35,9 +34,11 @@ from qiskit_ibm_runtime.options_models.zne_options import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
+from ...ibm_test_case import IBMTestCase
+
 
 @ddt
-class TestPreparePeaFunction(unittest.TestCase):
+class TestPreparePeaFunction(IBMTestCase):
     """Tests for the prepare_pea function."""
 
     def test_prepare_pea_basic(self):

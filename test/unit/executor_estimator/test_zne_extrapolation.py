@@ -12,7 +12,6 @@
 
 """Unit tests for the ZNE extrapolation module."""
 
-import unittest
 import warnings
 
 import numpy as np
@@ -33,9 +32,11 @@ from qiskit_ibm_runtime.executor_estimator.zne.extrapolation import (
     select_zne_extrapolated_result,
 )
 
+from ...ibm_test_case import IBMTestCase
+
 
 @ddt
-class TestPolyDegree(unittest.TestCase):
+class TestPolyDegree(IBMTestCase):
     """Tests for ``poly_degree``."""
 
     @data(*[(f"polynomial_degree_{k}", k) for k in range(1, 8)], ("linear", 1))
@@ -66,7 +67,7 @@ class TestPolyDegree(unittest.TestCase):
 
 
 @ddt
-class TestPoly(unittest.TestCase):
+class TestPoly(IBMTestCase):
     """Tests for ``poly`` (polynomial model with ascending-order coefficients)."""
 
     @data(1, 2, 3, 4, 5, 6, 7)
@@ -79,7 +80,7 @@ class TestPoly(unittest.TestCase):
 
 
 @ddt
-class TestMultiExp(unittest.TestCase):
+class TestMultiExp(IBMTestCase):
     """Tests for ``multi_exp`` (sum of ``amp * exp(rate * x)`` over ``[amp, rate, ...]`` pairs)."""
 
     @data(
@@ -95,7 +96,7 @@ class TestMultiExp(unittest.TestCase):
 
 
 @ddt
-class TestSeedExpFromLogFit(unittest.TestCase):
+class TestSeedExpFromLogFit(IBMTestCase):
     """Tests for ``seed_exp_from_log_fit`` (seed parameters for an exponential ``curve_fit``)."""
 
     @data(
@@ -128,7 +129,7 @@ class TestSeedExpFromLogFit(unittest.TestCase):
 
 
 @ddt
-class TestEvaluateModelWithStderr(unittest.TestCase):
+class TestEvaluateModelWithStderr(IBMTestCase):
     """Tests for ``evaluate_model_with_stderr`` (model values + delta-method standard errors)."""
 
     @data(
@@ -160,7 +161,7 @@ class TestEvaluateModelWithStderr(unittest.TestCase):
 
 
 @ddt
-class TestBuildModelSpec(unittest.TestCase):
+class TestBuildModelSpec(IBMTestCase):
     """Tests for ``build_model_spec`` (model name -> ``(fit function, p0, bounds)``)."""
 
     @data(("linear", 1), *[(f"polynomial_degree_{k}", k) for k in range(1, 8)])
@@ -206,7 +207,7 @@ class TestBuildModelSpec(unittest.TestCase):
 
 
 @ddt
-class TestSelectZneExtrapolatedResult(unittest.TestCase):
+class TestSelectZneExtrapolatedResult(IBMTestCase):
     """Tests for ``select_zne_extrapolated_result`` (per-column model selection heuristic)."""
 
     @data(
@@ -287,7 +288,7 @@ class TestSelectZneExtrapolatedResult(unittest.TestCase):
 
 
 @ddt
-class TestExtrapolate(unittest.TestCase):
+class TestExtrapolate(IBMTestCase):
     """Tests for ``extrapolate`` (one model's extrapolated values + stderrs)."""
 
     def test_fallback_broadcasts_lowest_noise_data(self):
@@ -324,7 +325,7 @@ class TestExtrapolate(unittest.TestCase):
         self.assertTrue(np.all(np.isnan(stderrs)))
 
 
-class TestAsNoiseFactors(unittest.TestCase):
+class TestAsNoiseFactors(IBMTestCase):
     """Tests for ``as_noise_factors`` (coerce the noise-factor argument to a 1D float array)."""
 
     def test_none_returns_empty(self):
@@ -339,7 +340,7 @@ class TestAsNoiseFactors(unittest.TestCase):
 
 
 @ddt
-class TestClampDegenerateStds(unittest.TestCase):
+class TestClampDegenerateStds(IBMTestCase):
     """Tests for ``clamp_degenerate_stds``."""
 
     @data(
@@ -364,7 +365,7 @@ class TestClampDegenerateStds(unittest.TestCase):
         self.assertIsNone(result)
 
 
-class TestFitExtrapolationModels(unittest.TestCase):
+class TestFitExtrapolationModels(IBMTestCase):
     """Tests for ``fit_extrapolation_models`` (fit every model and assemble the fit arrays)."""
 
     _NOISE_FACTORS = np.array([1.0, 3.0, 5.0])
@@ -399,7 +400,7 @@ class TestFitExtrapolationModels(unittest.TestCase):
             )
 
 
-class TestProcessExtrapolatedExpectationValues(unittest.TestCase):
+class TestProcessExtrapolatedExpectationValues(IBMTestCase):
     """Tests for ``process_extrapolated_expectation_values`` (public entry point, end-to-end)."""
 
     # Measured values are exactly linear in the noise factors -> intercept 0.65 at x=0.

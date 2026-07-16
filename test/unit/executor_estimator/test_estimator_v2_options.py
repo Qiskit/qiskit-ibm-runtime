@@ -12,8 +12,6 @@
 
 """Unit tests for EstimatorV2 options."""
 
-import unittest
-
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
@@ -29,7 +27,7 @@ from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
 
 
-class TestEstimatorOptions(unittest.TestCase):
+class TestEstimatorOptions(IBMTestCase):
     """Tests for EstimatorOptions."""
 
     def test_default_values(self):

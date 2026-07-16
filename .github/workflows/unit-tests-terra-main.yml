@@ -21,10 +21,8 @@ jobs:
     name: Run unit tests with latest code of Qiskit
     runs-on: "ubuntu-latest"
     env:
-      LOG_LEVEL: DEBUG
-      STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
-      PYTEST_ADDOPTS: "-v -s"
+      PYTEST_ADDOPTS: "-v -s --log-level=DEBUG"
     steps:
       - uses: actions/checkout@v6
         with:

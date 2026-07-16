@@ -12,8 +12,6 @@
 
 """Unit tests for EstimatorV2 helper functions."""
 
-import unittest
-
 import numpy as np
 from ddt import data, ddt
 from qiskit import ClassicalRegister, QuantumCircuit
@@ -33,8 +31,10 @@ from qiskit_ibm_runtime.executor_estimator.utils import (
     resolve_precision,
 )
 
+from ...ibm_test_case import IBMTestCase
 
-class TestComputeSamplexArguments(unittest.TestCase):
+
+class TestComputeSamplexArguments(IBMTestCase):
     """Tests for compute_samplex_arguments function."""
 
     def test_binding_array_key_order_bound_by_circuit_parameters(self):
@@ -63,7 +63,7 @@ class TestComputeSamplexArguments(unittest.TestCase):
         np.testing.assert_array_equal(flat_parameter_values, [[0.1, 0.7]])
 
 
-class TestGetPauliBasis(unittest.TestCase):
+class TestGetPauliBasis(IBMTestCase):
     """Tests for get_pauli_basis function."""
 
     def test_single_qubit_bases(self):
@@ -88,7 +88,7 @@ class TestGetPauliBasis(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-class TestPauliToInts(unittest.TestCase):
+class TestPauliToInts(IBMTestCase):
     """Tests for pauli_to_ints function."""
 
     def test_single_qubit_paulis(self):
@@ -109,7 +109,7 @@ class TestPauliToInts(unittest.TestCase):
         self.assertEqual(result, [3, 2, 1, 0])
 
 
-class TestResolvePrecision(unittest.TestCase):
+class TestResolvePrecision(IBMTestCase):
     """Tests for resolve_precision function."""
 
     def setUp(self):
@@ -197,7 +197,7 @@ class TestResolvePrecision(unittest.TestCase):
 
 
 @ddt
-class TestBoxCircuit(unittest.TestCase):
+class TestBoxCircuit(IBMTestCase):
     """Tests for ``box_circuit``."""
 
     @data(True, False)
