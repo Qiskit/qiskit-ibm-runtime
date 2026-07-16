@@ -43,10 +43,6 @@ if TYPE_CHECKING:
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
-    dependencies: IntegrationTestDependencies
-    service: QiskitRuntimeService
-    program_ids: dict[str, str]
-
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
@@ -150,6 +146,9 @@ class IBMVisualizationTestCase(IBMTestCase):
 class IBMIntegrationTestCase(IBMTestCase):
     """Custom integration test case for use with qiskit-ibm-runtime."""
 
+    dependencies: IntegrationTestDependencies
+    service: QiskitRuntimeService
+
     @classmethod
     @integration_test_setup()
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
@@ -179,6 +178,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
     log: logging.Logger
+    program_ids: dict[str, str]
 
     @classmethod
     def setUpClass(cls):
@@ -190,11 +190,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         service = cls.service
         cls.program_ids[service.channel] = "sampler"
         cls._find_sim_backends()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        """Class level teardown."""
-        super().tearDownClass()
 
     @classmethod
     def _find_sim_backends(cls):
