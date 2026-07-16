@@ -196,6 +196,23 @@ class TestCalculateGamma(unittest.TestCase):
         # Gamma should be 1.0 when noise is scaled to zero
         self.assertAlmostEqual(result, 1.0)
 
+    def test_missing_map_raises(self):
+        """Test that gamma calculation raises if maps are missing from ``noise_model_mapping``."""
+        # Create a simple circuit with one two-qubit gate annotated with noise
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[InjectNoise(ref="ref", site="after")]):
+            circuit.h(0)
+            circuit.cx(0, 1)
+
+        # Create a two-qubit noise model with known gamma
+        noise_model = PauliLindbladMap.from_sparse_list(
+            [("ZX", [0, 1], 0.1), ("XZ", [0, 1], 0.1)], num_qubits=2
+        )
+        noise_model_mapping = {"another_ref": noise_model}
+
+        with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
+            calculate_gamma(circuit, noise_model_mapping, noise_factor=1)
+
 
 @ddt
 class TestPreparePecFunction(unittest.TestCase):
@@ -408,10 +425,8 @@ class TestPreparePecFunction(unittest.TestCase):
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
 
-        with self.assertRaises(IBMInputValueError) as context:
+        with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
             prepare_pec([pub], twirling_options, 1024, pec_options, {})
-
-        self.assertIn("noise_model_mapping", str(context.exception))
 
     def test_prepare_pec_raises_error_with_missing_noise_model_key(self):
         """Test that prepare_pec raises error when noise_model_mapping is missing a noise model."""
@@ -445,10 +460,8 @@ class TestPreparePecFunction(unittest.TestCase):
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
 
-        with self.assertRaises(IBMInputValueError) as context:
+        with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
             prepare_pec([pub1, pub2], twirling_options, 1024, pec_options, noise_model_mapping)
-
-        self.assertIn("noise_model_mapping", str(context.exception))
 
     def test_prepare_pec_with_measure_noise_learning(self):
         """Test prepare_pec with measure noise learning (TREX)."""
@@ -503,3 +516,32 @@ class TestPreparePecFunction(unittest.TestCase):
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
         self.assertIn("pec_gammas", passthrough["post_processor"])
+
+    def test_prepare_pec_with_trivial_noise_maps(self):
+        """Test ``prepare_pec`` with noise maps set to identity."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        # Create a simple noise model
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = ""
+        for layer in layers:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref = annot.ref
+        noise_model_mapping = {noise_layer_ref: PauliLindbladMap.identity(num_qubits=2)}
+
+        pec_options = PecOptions()
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
+        shots = 1024
+        quantum_program = prepare_pec(
+            [pub], twirling_options, shots, pec_options, noise_model_mapping
+        )
+        item = cast("SamplexItem", quantum_program.items[0])
+        self.assertEqual(item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], 0)

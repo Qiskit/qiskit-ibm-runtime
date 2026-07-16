@@ -20,9 +20,9 @@ from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models.environment_options import SamplerEnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution_options import SamplerExecutionOptions
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
-from test.utils import get_mocked_backend
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend
 
 
 class TestSamplerOptionsToExecutorOptions(unittest.TestCase):

@@ -20,8 +20,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from qiskit.primitives.primitive_job import PrimitiveJob
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime.models import BackendProperties
-
+    from ..models import BackendProperties
     from .fake_backend import FakeBackendV2
 
 

@@ -18,9 +18,8 @@ import logging
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
-from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-
+from ..base_primitive import get_mode_service_backend
+from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.executor_options import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from ..utils.default_session import get_cm_session

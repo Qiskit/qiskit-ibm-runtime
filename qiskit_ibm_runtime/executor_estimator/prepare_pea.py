@@ -146,11 +146,11 @@ def prepare_pea(
         pub_noise_model = {}
         for spec in specs:
             ref = spec.name.split(".")[-1]
-            if ref not in noise_model_mapping.keys():
-                raise IBMInputValueError(
-                    f"noise_model_mapping is missing noise map for layer reference {ref}"
-                )
-            pub_noise_model[ref] = noise_model_mapping[ref]
+            try:
+                noise_model = noise_model_mapping[ref]
+            except KeyError:
+                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
+            pub_noise_model[ref] = noise_model
             samplex_arguments[f"noise_scales.{ref}"] = noise_scales
 
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
@@ -195,13 +195,6 @@ def prepare_pea(
 
     # Add TREX calibration circuit
     if measure_noise_learning is not None:
-        if (
-            isinstance(measure_noise_learning.shots_per_randomization, int)
-            and measure_noise_learning.shots_per_randomization != shots_per_randomization
-        ):
-            raise IBMInputValueError(
-                "shots_per_randomization must be the same for twirling and measure_noise_learning"
-            )
         trex_num_randomizations = resolve_trex_num_randomizations(
             measure_noise_learning, num_randomizations
         )

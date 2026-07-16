@@ -17,8 +17,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from qiskit_ibm_runtime.api.session import RetrySession
-
+from ...api.session import RetrySession
 from ..rest.runtime import Runtime
 from .backend import BaseBackendClient
 

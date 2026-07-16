@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from ibm_quantum_schemas.common import BaseParamsModel
     from qiskit.circuit import CircuitInstruction
 
-    from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
+    from ..options_models import NoiseLearnerV3Options
 
 
 class ParamsConverter(NamedTuple):

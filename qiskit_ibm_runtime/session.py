@@ -19,12 +19,11 @@ from typing import TYPE_CHECKING, Any
 
 from qiskit.providers.backend import BackendV2
 
-from qiskit_ibm_runtime import QiskitRuntimeService
-
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError, IBMRuntimeError
 from .fake_provider.local_service import QiskitRuntimeLocalService
 from .ibm_backend import IBMBackend
+from .qiskit_runtime_service import QiskitRuntimeService
 from .utils.converters import hms_to_seconds
 from .utils.default_session import set_cm_session
 

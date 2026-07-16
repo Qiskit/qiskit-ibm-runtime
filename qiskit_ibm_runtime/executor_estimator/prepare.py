@@ -27,7 +27,6 @@ if TYPE_CHECKING:
 
 from samplomatic import build
 
-from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
@@ -157,13 +156,6 @@ def prepare(
 
     # Add TREX calibration circuit
     if measure_noise_learning is not None:
-        if (
-            isinstance(measure_noise_learning.shots_per_randomization, int)
-            and measure_noise_learning.shots_per_randomization != shots_per_randomization
-        ):
-            raise IBMInputValueError(
-                "shots_per_randomization must be the same for twirling and measure_noise_learning"
-            )
         trex_num_randomizations = resolve_trex_num_randomizations(
             measure_noise_learning, num_randomizations
         )

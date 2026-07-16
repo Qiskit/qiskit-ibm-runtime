@@ -16,8 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit_ibm_runtime import QiskitRuntimeService
-
+from .qiskit_runtime_service import QiskitRuntimeService
 from .session import Session
 
 if TYPE_CHECKING:

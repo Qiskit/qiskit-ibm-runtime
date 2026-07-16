@@ -38,10 +38,9 @@ from .exceptions import (
 if TYPE_CHECKING:
     from qiskit.providers.backend import Backend
 
-    from qiskit_ibm_runtime import qiskit_runtime_service
-
     from .api.clients import RuntimeClient
     from .decoders.result_decoder import ResultDecoder
+    from .qiskit_runtime_service import QiskitRuntimeService
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +84,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         api_client: RuntimeClient,
         job_id: str,
         program_id: str,
-        service: qiskit_runtime_service.QiskitRuntimeService,
+        service: QiskitRuntimeService,
         creation_date: str | None = None,
         result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         image: str | None = "",

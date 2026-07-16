@@ -14,7 +14,7 @@
 
 import warnings
 
-from qiskit_ibm_runtime.results import EstimatorPubResult  # noqa: F401
+from ..results import EstimatorPubResult  # noqa: F401
 
 warnings.warn(
     "The `EstimatorPubResult` class has been moved to the `qiskit_ibm_runtime.results` package as "

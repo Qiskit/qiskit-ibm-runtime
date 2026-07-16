@@ -21,8 +21,7 @@ from qiskit.exceptions import QiskitError
 from qiskit.quantum_info import Clifford
 from samplomatic.utils import undress_box
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-
+from ..exceptions import IBMInputValueError
 from .learning_protocol import LearningProtocol
 
 if TYPE_CHECKING:

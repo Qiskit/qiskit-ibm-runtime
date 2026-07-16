@@ -24,9 +24,9 @@ from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOpt
 from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
-from test.utils import get_mocked_backend
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend
 
 
 class TestEstimatorOptions(unittest.TestCase):
@@ -43,7 +43,6 @@ class TestEstimatorOptions(unittest.TestCase):
         self.assertIsInstance(options.environment, EnvironmentOptions)
         self.assertIsNone(options.resilience.measure_mitigation)
         self.assertEqual(options.resilience.measure_noise_learning.num_randomizations, "auto")
-        self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, "auto")
 
     def test_set_default_precision(self):
         """Test setting default_precision."""

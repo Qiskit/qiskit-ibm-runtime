@@ -20,8 +20,8 @@ from qiskit.exceptions import QiskitError
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.transpiler.passmanager import PassManager
 
-from qiskit_ibm_runtime.debug_tools.neat_results import NeatPubResult, NeatResult
-from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToClifford
+from ..transpiler.passes.cliffordization import ConvertISAToClifford
+from .neat_results import NeatPubResult, NeatResult
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
