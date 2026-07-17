@@ -23,16 +23,16 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.twirling_options import TwirlingOptions
-    from ..options_models.zne_options import ZneOptions
+    from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ..options_models.twirling import TwirlingOptions
+    from ..options_models.zne import ZneOptions
 
 import numpy as np
 from samplomatic import build
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..options_models.zne_options import PEA_DEFAULT_NOISE_FACTORS
+from ..options_models.zne import PEA_DEFAULT_NOISE_FACTORS
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations

@@ -19,12 +19,12 @@ from dataclasses import asdict
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from .dynamical_decoupling_options import DynamicalDecouplingOptions
-from .environment_options import EnvironmentOptions, SamplerEnvironmentOptions
-from .execution_options import ExecutionOptions, SamplerExecutionOptions
-from .executor_options import ExecutorOptions
-from .simulator_options import SimulatorOptions
-from .twirling_options import TwirlingOptions
+from .dynamical_decoupling import DynamicalDecouplingOptions
+from .environment import EnvironmentOptions, SamplerEnvironmentOptions
+from .execution import ExecutionOptions, SamplerExecutionOptions
+from .executor import ExecutorOptions
+from .simulator import SimulatorOptions
+from .twirling import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
 
 

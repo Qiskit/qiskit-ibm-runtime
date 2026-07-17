@@ -20,13 +20,13 @@ from typing import Literal
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from .dynamical_decoupling_options import DynamicalDecouplingOptions
-from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
-from .executor_options import ExecutorOptions
-from .resilience_options import ResilienceOptions
-from .simulator_options import SimulatorOptions
-from .twirling_options import TwirlingOptions
+from .dynamical_decoupling import DynamicalDecouplingOptions
+from .environment import EnvironmentOptions
+from .execution import ExecutionOptions
+from .executor import ExecutorOptions
+from .resilience import ResilienceOptions
+from .simulator import SimulatorOptions
+from .twirling import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
 
 

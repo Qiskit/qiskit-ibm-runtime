@@ -26,7 +26,7 @@ from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options_models.sampler_options import SamplerOptions
+from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
 
 if TYPE_CHECKING:

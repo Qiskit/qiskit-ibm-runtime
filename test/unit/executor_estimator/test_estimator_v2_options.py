@@ -16,9 +16,9 @@ from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
-from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
-from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
-from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
+from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
+from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 
 from ...ibm_test_case import IBMTestCase
 

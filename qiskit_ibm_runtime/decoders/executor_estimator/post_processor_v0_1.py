@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ...options_models.zne_options import ExtrapolatorType
+    from ...options_models.zne import ExtrapolatorType
     from ...results.quantum_program import QuantumProgramItemResult
 
 import numpy as np

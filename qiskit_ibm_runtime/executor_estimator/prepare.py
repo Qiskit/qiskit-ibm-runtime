@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.twirling_options import TwirlingOptions
+    from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ..options_models.twirling import TwirlingOptions
 
 from samplomatic import build
 

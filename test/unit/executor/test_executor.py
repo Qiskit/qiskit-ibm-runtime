@@ -18,9 +18,9 @@ from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 
 from qiskit_ibm_runtime.executor import Executor
-from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
-from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
-from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
+from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
+from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
+from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase

@@ -17,7 +17,7 @@ from __future__ import annotations
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from .environment_options import EnvironmentOptions
+from .environment import EnvironmentOptions
 from .utils import PRIMITIVES_CONFIG
 
 

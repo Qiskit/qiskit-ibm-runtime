@@ -19,9 +19,9 @@ from typing import Annotated
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
-from .post_selection_options import PostSelectionOptions
+from .environment import EnvironmentOptions
+from .execution import ExecutionOptions
+from .post_selection import PostSelectionOptions
 from .utils import PRIMITIVES_CONFIG
 
 

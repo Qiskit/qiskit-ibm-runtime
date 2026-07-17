@@ -18,10 +18,10 @@ from pydantic import Field, field_validator
 from pydantic.dataclasses import dataclass
 from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
 
-from .measure_noise_learning_options import MeasureNoiseLearningOptions
-from .pec_options import PecOptions
+from .measure_noise_learning import MeasureNoiseLearningOptions
+from .pec import PecOptions
 from .utils import PRIMITIVES_CONFIG
-from .zne_options import ZneOptions
+from .zne import ZneOptions
 
 
 @dataclass(config=PRIMITIVES_CONFIG)

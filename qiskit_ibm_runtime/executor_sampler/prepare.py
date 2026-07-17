@@ -35,8 +35,8 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-    from ..options_models.executor_options import ExecutorOptions
-    from ..options_models.sampler_options import SamplerOptions
+    from ..options_models.executor import ExecutorOptions
+    from ..options_models.sampler import SamplerOptions
     from ..quantum_program import QuantumProgramItem
 
 

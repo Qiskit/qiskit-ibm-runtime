@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-    from ..options_models.twirling_options import TwirlingOptions
+    from ..options_models.twirling import TwirlingOptions
 
 
 def validate_no_boxes(circuit: QuantumCircuit) -> None:

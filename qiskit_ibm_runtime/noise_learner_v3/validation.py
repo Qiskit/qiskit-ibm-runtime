@@ -22,7 +22,7 @@ from samplomatic.annotations import Twirl
 from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
-from ..options_models.post_selection_options import DEFAULT_X_PULSE_TYPE
+from ..options_models.post_selection import DEFAULT_X_PULSE_TYPE
 from .find_learning_protocol import find_learning_protocol
 
 if TYPE_CHECKING:

@@ -16,9 +16,9 @@ from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
-from qiskit_ibm_runtime.options_models.environment_options import SamplerEnvironmentOptions
-from qiskit_ibm_runtime.options_models.execution_options import SamplerExecutionOptions
-from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
+from qiskit_ibm_runtime.options_models.environment import SamplerEnvironmentOptions
+from qiskit_ibm_runtime.options_models.execution import SamplerExecutionOptions
+from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
 
 from ...ibm_test_case import IBMTestCase
 

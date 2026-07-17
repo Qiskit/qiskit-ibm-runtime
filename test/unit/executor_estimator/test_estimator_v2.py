@@ -25,7 +25,7 @@ from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
-from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
+from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
