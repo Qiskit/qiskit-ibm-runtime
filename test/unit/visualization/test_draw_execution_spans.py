@@ -20,11 +20,11 @@ import ddt
 from qiskit_ibm_runtime.execution_span import ExecutionSpans, SliceSpan
 from qiskit_ibm_runtime.visualization import draw_execution_spans
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMVisualizationTestCase
 
 
 @ddt.ddt
-class TestDrawExecutionSpans(IBMTestCase):
+class TestDrawExecutionSpans(IBMVisualizationTestCase):
     """Tests for the ``draw_execution_spans`` function."""
 
     def setUp(self) -> None:

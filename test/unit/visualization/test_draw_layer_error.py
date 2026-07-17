@@ -20,10 +20,10 @@ from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 from qiskit_ibm_runtime.visualization import draw_layer_error_map, draw_layer_errors_swarm
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMVisualizationTestCase
 
 
-class DrawLayerErrorBase(IBMTestCase):
+class DrawLayerErrorBase(IBMVisualizationTestCase):
     """Base class for testing the functions that draw layer errors."""
 
     def setUp(self):

@@ -138,8 +138,8 @@ def prepare_pea(
 
         # Subtract 1 from noise_factors, since a value of 1 represents the noise
         # that is present in the circuit in the absence of amplification.
-        # Also, make noise_scales broadcastable with the parameters.
-        noise_scales = np.expand_dims(np.array(noise_factors) - 1, -1)
+        # Also, make noise_scales broadcastable with the parameters and randomizations.
+        noise_scales = np.expand_dims(np.array(noise_factors) - 1, (-1, -2))
 
         # Create a noise model map containing only the layers relevant for the current pub
         specs = samplex.inputs().get_specs("pauli_lindblad_maps")
@@ -155,8 +155,8 @@ def prepare_pea(
 
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
 
-        # Create SamplexItem
-        shape = (num_randomizations, len(noise_scales), change_basis.shape[0])
+        # Create SamplexItem with noise_factors as first axis
+        shape = (len(noise_scales), num_randomizations, change_basis.shape[0])
         items.append(
             SamplexItem(
                 circuit=template,
@@ -179,8 +179,10 @@ def prepare_pea(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
-            "measure_mitigation": measure_noise_learning is not None,
+            "measure_mitigation": False,
             "pea_noise_factors": noise_factors,
+            "extrapolated_noise_factors": zne_options.extrapolated_noise_factors,
+            "extrapolator": zne_options.extrapolator,
         },
     }
 
@@ -198,7 +200,7 @@ def prepare_pea(
         )
         trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
-        passthrough_data["post_processor"]["measure_mitigation"] = "True"
+        passthrough_data["post_processor"]["measure_mitigation"] = True
 
     # Set semantic role for post-processing dispatch
     quantum_program._semantic_role = "estimator_v2"

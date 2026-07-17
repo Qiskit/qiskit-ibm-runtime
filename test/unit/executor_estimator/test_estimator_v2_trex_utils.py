@@ -12,8 +12,6 @@
 
 """Unit tests for EstimatorV2 TREX helper functions."""
 
-import unittest
-
 from qiskit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
@@ -25,8 +23,10 @@ from qiskit_ibm_runtime.executor_estimator.trex_utils import (
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
+from ...ibm_test_case import IBMTestCase
 
-class TestCreateTrexCalibrationCircuit(unittest.TestCase):
+
+class TestCreateTrexCalibrationCircuit(IBMTestCase):
     """Tests for create_trex_calibration_circuit function."""
 
     def test_creates_samplex_item_with_given_randomizations(self):
@@ -64,7 +64,7 @@ class TestCreateTrexCalibrationCircuit(unittest.TestCase):
         self.assertFalse({"h", "x", "cx"} & operation_names)
 
 
-class TestResolveTrexNumRandomizations(unittest.TestCase):
+class TestResolveTrexNumRandomizations(IBMTestCase):
     """Tests for resolve_trex_num_randomizations."""
 
     def test_auto_returns_twirling_value(self):
