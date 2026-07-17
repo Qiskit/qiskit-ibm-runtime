@@ -12,7 +12,6 @@
 
 """Unit tests for EstimatorV2 ZNE helper functions."""
 
-import unittest
 from typing import Any, cast
 
 import numpy as np
@@ -31,9 +30,11 @@ from qiskit_ibm_runtime.options_models.zne_options import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
+from ...ibm_test_case import IBMTestCase
+
 
 @ddt
-class TestPrepareZneFunction(unittest.TestCase):
+class TestPrepareZneFunction(IBMTestCase):
     """Tests for the prepare_zne function."""
 
     def test_prepare_zne_basic(self):

@@ -12,16 +12,16 @@
 
 """Unit tests for ResilienceOptions."""
 
-import unittest
-
 from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.options_models.resilience_options import ResilienceOptions
 
+from ...ibm_test_case import IBMTestCase
 
-class TestResilienceOptionsDefaults(unittest.TestCase):
+
+class TestResilienceOptionsDefaults(IBMTestCase):
     """Tests for ResilienceOptions default values and basic instantiation."""
 
     def test_defaults(self):
@@ -64,7 +64,7 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
 
 
 @ddt
-class TestNoiseModelMappingValidation(unittest.TestCase):
+class TestNoiseModelMappingValidation(IBMTestCase):
     """Tests for the noise_model_mapping field validator."""
 
     @data(

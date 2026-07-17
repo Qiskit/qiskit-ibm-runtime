@@ -12,7 +12,6 @@
 
 """Unit tests for EstimatorV2 prepare function."""
 
-import unittest
 from typing import Any, cast
 
 import numpy as np
@@ -32,11 +31,12 @@ from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
+from ...ibm_test_case import IBMTestCase
 from ...utils import combine
 
 
 @ddt
-class TestPrepareFunction(unittest.TestCase):
+class TestPrepareFunction(IBMTestCase):
     """Tests for the prepare function."""
 
     @data(
@@ -459,7 +459,7 @@ class TestPrepareFunction(unittest.TestCase):
 
 
 @ddt
-class TestComputeSamplexArguments(unittest.TestCase):
+class TestComputeSamplexArguments(IBMTestCase):
     """Tests for ``compute_samplex_arguments``."""
 
     @data([(2, 2), (2, 2)], [(2, 2, 1), (2, 2)], [(2, 2), (2, 2, 1)], [(), (2, 2, 1)])

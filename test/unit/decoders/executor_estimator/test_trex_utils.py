@@ -12,8 +12,6 @@
 
 """Unit tests for EstimatorV2 TREX helper functions."""
 
-import unittest
-
 import numpy as np
 from qiskit.quantum_info import Pauli, PauliLindbladMap
 
@@ -23,8 +21,10 @@ from qiskit_ibm_runtime.decoders.executor_estimator.trex_utils import (
 )
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramItemResult
 
+from ....ibm_test_case import IBMTestCase
 
-class TestGetProcessedCalibrationData(unittest.TestCase):
+
+class TestGetProcessedCalibrationData(IBMTestCase):
     """Tests for get_processed_calibration_data function."""
 
     def test_raises_when_calibration_register_is_missing(self):
@@ -67,7 +67,7 @@ class TestGetProcessedCalibrationData(unittest.TestCase):
         self.assertEqual(result.all(), np.logical_xor(cal_data, cal_flip).all())
 
 
-class TestCalculateTrexFactor(unittest.TestCase):
+class TestCalculateTrexFactor(IBMTestCase):
     """Tests for calculate_trex_factor function."""
 
     def test_calculates_factor_based_on_noise_model_for_string_observable(self):

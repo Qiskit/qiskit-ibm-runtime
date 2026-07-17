@@ -15,8 +15,6 @@
 from __future__ import annotations
 
 import itertools
-import logging
-import os
 import time
 import unittest
 from datetime import datetime
@@ -37,32 +35,9 @@ from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, B
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 if TYPE_CHECKING:
+    import logging
+
     from qiskit.providers.backend import Backend
-
-
-def setup_test_logging(logger: logging.Logger, filename: str) -> None:
-    """Set logging to file and stdout for a logger.
-
-    Args:
-        logger: Logger object to be updated.
-        filename: Name of the output file, if log to file is enabled.
-    """
-    # Set up formatter.
-    log_fmt = f"{logger.name}.%(funcName)s:%(levelname)s:%(asctime)s: %(message)s"
-    formatter = logging.Formatter(log_fmt)
-
-    if os.getenv("STREAM_LOG", "true").lower() == "true":
-        # Set up the stream handler.
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
-    if os.getenv("FILE_LOG", "false").lower() == "true":
-        file_handler = logging.FileHandler(filename)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-    logger.setLevel(os.getenv("LOG_LEVEL", "DEBUG"))
 
 
 def most_busy_backend(
@@ -91,25 +66,6 @@ def most_busy_backend(
         ),
         key=lambda b: b.status().pending_jobs,
     )
-
-
-def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
-    """Return a slightly larger circuit that would run a bit longer.
-
-    Args:
-        backend: Backend on which the circuit will run.
-
-    Returns:
-        A larger circuit.
-    """
-    n_qubits = min(backend.configuration().n_qubits, 20)
-    circuit = QuantumCircuit(n_qubits, n_qubits)
-    for qubit in range(n_qubits - 1):
-        circuit.h(qubit)
-        circuit.cx(qubit, qubit + 1)
-    circuit.measure(list(range(n_qubits)), list(range(n_qubits)))
-
-    return circuit
 
 
 def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
@@ -154,67 +110,6 @@ def mock_wait_for_final_state(service, job):
         "wait_for_final_state",
         side_effect=service._get_api_client().wait_for_final_state(job.job_id()),
     )
-
-
-def dict_paritally_equal(dict1: dict, dict2: dict) -> bool:
-    """Determine whether all keys in dict2 are in dict1 and have same values."""
-    for key, val in dict2.items():
-        if isinstance(val, dict):
-            if not dict_paritally_equal(dict1.get(key, {}), val):
-                return False
-        elif key not in dict1 or val != dict1[key]:
-            return False
-
-    return True
-
-
-def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
-    """Flat the dictionaries, and compare.
-
-    Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have the same
-    values.
-    """
-
-    def _flat_dict(in_dict, out_dict):
-        for key_, val_ in in_dict.items():
-            if isinstance(val_, dict):
-                _flat_dict(val_, out_dict)
-            else:
-                out_dict[key_] = val_
-
-    flat_dict1: dict = {}
-    flat_dict2: dict = {}
-    _flat_dict(dict1, flat_dict1)
-    _flat_dict(dict2, flat_dict2)
-
-    for key, val in flat_dict2.items():
-        if key not in flat_dict1 or flat_dict1[key] != val:
-            return False
-    return True
-
-
-def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
-    """Recursively determine whether the dictionaries have the same keys.
-
-    Args:
-        dict1: First dictionary.
-        dict2: Second dictionary.
-        exclude_keys: A list of keys in dictionary 1 to be excluded.
-
-    Returns:
-        Whether the two dictionaries have the same keys.
-    """
-    exclude_keys = exclude_keys or []
-    for key, val in dict1.items():
-        if key in exclude_keys:
-            continue
-        if key not in dict2:
-            return False
-        if isinstance(val, dict):
-            if not dict_keys_equal(val, dict2[key]):
-                return False
-
-    return True
 
 
 def create_faulty_backend(
@@ -471,10 +366,3 @@ def remap_observables(observables, isa_circuit):
             raise ValueError(f"Observable of type {type(obs)} is not supported.")
 
     return out_obs
-
-
-class MockSession(Session):
-    """Mock for session class."""
-
-    _circuits_map: dict[str, QuantumCircuit] = {}
-    _instance = None

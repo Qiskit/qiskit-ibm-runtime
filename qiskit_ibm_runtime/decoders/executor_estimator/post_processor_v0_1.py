@@ -84,6 +84,11 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     mitigation = post_processor_data.get("mitigation", None)
     pec_gammas = post_processor_data.get("pec_gammas", None)
 
+    # Extract pea mitigation data if present
+    pea_noise_factors = post_processor_data.get("pea_noise_factors", None)
+    extrapolated_noise_factors = post_processor_data.get("extrapolated_noise_factors", None)
+    extrapolator = post_processor_data.get("extrapolator", None)
+
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
@@ -135,6 +140,17 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 param_basis_pairs,
                 readout_noise_data,
                 pec_gamma=pec_gammas[idx],
+            )
+        elif mitigation == "pea":
+            pub_result = create_pub_result_pea(
+                item_result,
+                observables,
+                param_shape,
+                param_basis_pairs,
+                readout_noise_data,
+                noise_factors=pea_noise_factors,
+                extrapolated_noise_factors=extrapolated_noise_factors,
+                extrapolator=extrapolator,
             )
         elif mitigation is not None:
             raise ValueError(f"Unknown mitigation technique {mitigation}")
@@ -458,6 +474,138 @@ def create_pub_result_pec(
         evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
     )
     return EstimatorPubResult(data=data_bin)
+
+
+def create_pub_result_pea(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+    noise_factors: list[float],
+    extrapolated_noise_factors: list[float],
+    extrapolator: list[ExtrapolatorType],
+) -> EstimatorPubResult:
+    """Calculate expectation values and errors with PEA, and return pub result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation.
+        noise_factors: The noise factors used to amplify the noise.
+        extrapolated_noise_factors: Noise factors to evaluate the fits at.
+        extrapolator: The extrapolator model or models to use.
+            Models will be tried in priority order.
+            Supported models (each fits the named function of the noise factor ``x``):
+            - ``"linear"``: ``a + b*x``
+            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
+            - ``"exponential"``: ``a*exp(b*x)``
+            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``"fallback"``: no fit; the measured value at the lowest noise factor
+
+    Returns:
+        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
+    """
+    if noise_factors is None or extrapolated_noise_factors is None or extrapolator is None:
+        raise ValueError(
+            "Mitigation method is PEA, while at least one of the required "
+            "parameters ``(pea_noise_factors, extrapolated_noise_factors, "
+            "extrapolator)`` in the ``passthrough_data`` is ``None``."
+        )
+    # TODO: The last returned value is the selected extrapolators, that should be saved in the
+    # metadata
+    exp_vals, stds, ensemble_stds, _ = _process_expectation_values_pea(
+        item_result,
+        observables,
+        param_shape,
+        param_basis_pairs,
+        noise_factors,
+        extrapolated_noise_factors,
+        extrapolator,
+        measure_noise_data,
+    )
+    data_bin = DataBin(
+        evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
+    )
+    return EstimatorPubResult(data=data_bin)
+
+
+def _process_expectation_values_pea(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    noise_factors: list[float],
+    extrapolated_noise_factors: float | int | list[float],
+    extrapolator: list[ExtrapolatorType],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float], list[list[str]]]:
+    """Process expectation values for a single item result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        noise_factors: The noise factors used to amplify the noise.
+        extrapolated_noise_factors: Noise factors to evaluate the fits at.
+        extrapolator: The extrapolator model or models to use.
+            Models will be tried in priority order.
+            Supported models (each fits the named function of the noise factor ``x``):
+            - ``"linear"``: ``a + b*x``
+            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
+            - ``"exponential"``: ``a*exp(b*x)``
+            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``"fallback"``: no fit; the measured value at the lowest noise factor
+        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
+
+    Returns:
+        A tuple ``(exp_vals, stds, ensemble_stds, selected_extrapolators)``, where ``exp_vals``
+        are expectation values, ``stds`` are standard deviations, and ``ensemble_stds`` are
+        ensemble standard errors. ``selected_extrapolators`` is a list of the valid extrapolators
+        used to extrapolate the data.
+
+    Raises:
+        ValueError: If ``item_result`` has no ``'_meas'`` key.
+        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``5``.
+        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+            each other.
+    """
+    try:
+        data = item_result["_meas"]
+    except KeyError:
+        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
+
+    if data.ndim != 5:
+        # Shape: (num_noise_scales, num_randomizations, num_configs, shots, num_bits)
+        # where num_configs is the total number of (param_index, basis) pairs
+        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``5``.")
+
+    if data.shape[0] != len(noise_factors):
+        raise ValueError(
+            "Number of noise factors in the data does not match the length of ``noise_factors``."
+        )
+
+    # Apply measurement flips if present
+    if "measurement_flips._meas" in item_result:
+        data ^= item_result["measurement_flips._meas"]
+
+    if isinstance(extrapolated_noise_factors, (float, int)):
+        extrapolated_noise_factors = [extrapolated_noise_factors]
+
+    return calculate_extrapolated_expectation_values(
+        data,
+        observables,
+        param_shape,
+        param_basis_pairs,
+        noise_factors,
+        extrapolated_noise_factors,
+        extrapolator,
+        measure_noise_data,
+    )
 
 
 def calculate_extrapolated_expectation_values(

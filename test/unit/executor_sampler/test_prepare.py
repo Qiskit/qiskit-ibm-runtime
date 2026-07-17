@@ -12,7 +12,6 @@
 
 """Tests for the prepare function."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -27,8 +26,10 @@ from qiskit_ibm_runtime.options_models import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 
+from ...ibm_test_case import IBMTestCase
 
-class TestPrepare(unittest.TestCase):
+
+class TestPrepare(IBMTestCase):
     """Tests for prepare method."""
 
     def test_multiple_pubs(self):
@@ -178,7 +179,7 @@ class TestPrepare(unittest.TestCase):
         self.assertIn("not supported", str(context.exception))
 
 
-class TestPrepareOptionsHandling(unittest.TestCase):
+class TestPrepareOptionsHandling(IBMTestCase):
     """Tests for options handling in prepare() method."""
 
     def test_prepare_returns_executor_options(self):
@@ -335,7 +336,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         self.assertEqual(executor_options.environment.image, "full-test:v1")
 
 
-class TestPrepareTwirling(unittest.TestCase):
+class TestPrepareTwirling(IBMTestCase):
     """Unit tests for prepare() method with twirling enabled."""
 
     def test_prepare_creates_samplex_items(self):
@@ -570,7 +571,7 @@ class TestPrepareTwirling(unittest.TestCase):
 
 
 @ddt
-class TestPreparePassthroughData(unittest.TestCase):
+class TestPreparePassthroughData(IBMTestCase):
     """Unit tests for prepare() method, checking passthrough_data."""
 
     @data(True, False)

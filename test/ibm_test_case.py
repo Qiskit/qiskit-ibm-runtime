@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Custom TestCase for IBM Provider."""
+"""Custom TestCases for IBM Provider."""
 
 from __future__ import annotations
 
@@ -21,16 +21,14 @@ import warnings
 from collections import defaultdict
 from contextlib import contextmanager, suppress
 from typing import TYPE_CHECKING
-from unittest import TestCase
-from unittest.util import safe_repr
+from unittest import TestCase  # noqa: TID251 -- IBMTestCase legitimatelly inherits from it.
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.utils.logging import QISKIT_IBM_RUNTIME_LOGGER_NAME
 
 from .decorators import integration_test_setup
-from .utils import bell, setup_test_logging
+from .utils import bell
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -45,149 +43,78 @@ if TYPE_CHECKING:
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
-    ARTIFACT_DIR = ".test_artifacts"
-    log: logging.Logger
-    dependencies: IntegrationTestDependencies
-    service: QiskitRuntimeService
-    program_ids: dict[str, str]
+    def assertDictPartiallyEqual(self, a: dict, b: dict) -> None:
+        """Assert that all keys in ``b`` are in ``a`` and have the same values."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.log = logging.getLogger(cls.__name__)
-        filename = f"{os.path.splitext(inspect.getfile(cls))[0]}.log"
-        setup_test_logging(cls.log, filename)
-        cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
+        def _dict_partially_equal(dict1: dict, dict2: dict) -> bool:
+            """Determine whether all keys in dict2 are in dict1 and have same values."""
+            for key, val in dict2.items():
+                if isinstance(val, dict):
+                    if not _dict_partially_equal(dict1.get(key, {}), val):
+                        return False
+                elif key not in dict1 or val != dict1[key]:
+                    return False
 
-        # ignore deprecation warnings for .unit and .duration coming from qiskit
-        # as no suitable migration alternative has been found yet
-        warnings.filterwarnings(
-            "ignore",
-            category=DeprecationWarning,
-            message=r"The property "
-            r"``qiskit\.dagcircuit\.dagcircuit\.DAGCircuit\.(unit|duration)`` is deprecated",
-        )
+            return True
 
-        # fail test on deprecation warnings from qiskit
-        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
+        if not _dict_partially_equal(a, b):
+            raise AssertionError(f"Dicts are not partially equal: {a}, {b}")
 
-        # Ensure the artifact directory exists
-        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
+    def assertDictFlatPartiallyEqual(self, a: dict, b: dict) -> None:
+        """Assert that (when flattened) all keys in ``b`` are in ``a`` and have the same values."""
 
-    @classmethod
-    def _set_logging_level(cls, logger: logging.Logger) -> None:
-        """Set logging level for the input logger.
+        def _flat_dict(in_dict, out_dict):
+            """Flat the dictionaries, and compare.
 
-        Args:
-            logger: Logger whose level is to be set.
-        """
-        if logger.level is logging.NOTSET:
-            try:
-                logger.setLevel(cls.log.level)
-            except Exception as ex:
-                logger.warning(
-                    'Error while trying to set the level for the "%s" logger to %s. %s.',
-                    logger,
-                    os.getenv("LOG_LEVEL"),
-                    str(ex),
-                )
-        if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
-            logger.addHandler(logging.StreamHandler())
-            logger.propagate = False
+            Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have
+            the same values.
+            """
+            for key_, val_ in in_dict.items():
+                if isinstance(val_, dict):
+                    _flat_dict(val_, out_dict)
+                else:
+                    out_dict[key_] = val_
 
-    def assert_dict_almost_equal(
-        self, dict1, dict2, delta=None, msg=None, places=None, default_value=0
-    ):
-        """Assert two dictionaries with numeric values are almost equal.
+        flat_dict1: dict = {}
+        flat_dict2: dict = {}
+        _flat_dict(a, flat_dict1)
+        _flat_dict(b, flat_dict2)
 
-        Fail if the two dictionaries are unequal as determined by
-        comparing that the difference between values with the same key are
-        not greater than delta (default 1e-8), or that difference rounded
-        to the given number of decimal places is not zero. If a key in one
-        dictionary is not in the other the default_value keyword argument
-        will be used for the missing value (default 0). If the two objects
-        compare equal then they will automatically compare almost equal.
+        for key, val in flat_dict2.items():
+            if key not in flat_dict1 or flat_dict1[key] != val:
+                raise AssertionError(f"Dicts are not partially equal when flattened: {a}, {b}")
 
-        Args:
-            dict1 (dict): a dictionary.
-            dict2 (dict): a dictionary.
-            delta (number): threshold for comparison (defaults to 1e-8).
-            msg (str): return a custom message on failure.
-            places (int): number of decimal places for comparison.
-            default_value (number): default value for missing keys.
+    def assertDictKeysEqual(self, a: dict, b: dict, exclude_keys: list | None = None) -> None:
+        """Assert recursively that ``a`` and ``b`` have the same keys, optionally excluding keys."""
 
-        Raises:
-            TypeError: if the arguments are not valid (both `delta` and
-                `places` are specified).
-            AssertionError: if the dictionaries are not almost equal.
-        """
-        error_msg = self.dicts_almost_equal(dict1, dict2, delta, places, default_value)
+        def _dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
+            """Recursively determine whether the dictionaries have the same keys.
 
-        if error_msg:
-            msg = self._formatMessage(msg, error_msg)
-            raise self.failureException(msg)
+            Args:
+                dict1: First dictionary.
+                dict2: Second dictionary.
+                exclude_keys: A list of keys in dictionary 1 to be excluded.
 
-    def dicts_almost_equal(self, dict1, dict2, delta=None, places=None, default_value=0):
-        """Test if two dictionaries with numeric values are almost equal.
+            Returns:
+                Whether the two dictionaries have the same keys.
+            """
+            exclude_keys = exclude_keys or []
+            for key, val in dict1.items():
+                if key in exclude_keys:
+                    continue
+                if key not in dict2:
+                    return False
+                if isinstance(val, dict):
+                    if not _dict_keys_equal(val, dict2[key]):
+                        return False
 
-        Fail if the two dictionaries are unequal as determined by
-        comparing that the difference between values with the same key are
-        not greater than delta (default 1e-8), or that difference rounded
-        to the given number of decimal places is not zero. If a key in one
-        dictionary is not in the other the default_value keyword argument
-        will be used for the missing value (default 0). If the two objects
-        compare equal then they will automatically compare almost equal.
+            return True
 
-        Args:
-            dict1 (dict): a dictionary.
-            dict2 (dict): a dictionary.
-            delta (number): threshold for comparison (defaults to 1e-8).
-            places (int): number of decimal places for comparison.
-            default_value (number): default value for missing keys.
-
-        Raises:
-            TypeError: if the arguments are not valid (both `delta` and
-                `places` are specified).
-
-        Returns:
-            String: Empty string if dictionaries are almost equal. A description
-                of their difference if they are deemed not almost equal.
-        """
-
-        def valid_comparison(value):
-            """Compare value to delta, within places accuracy."""
-            if places is not None:
-                return round(value, places) == 0
-            else:
-                return value < delta
-
-        # Check arguments.
-        if dict1 == dict2:
-            return ""
-        if places is not None:
-            if delta is not None:
-                raise TypeError("specify delta or places not both")
-            msg_suffix = f" within {places} places"
-        else:
-            delta = delta or 1e-8
-            msg_suffix = f" within {delta} delta"
-
-        # Compare all keys in both dicts, populating error_msg.
-        error_msg = ""
-        for key in set(dict1.keys()) | set(dict2.keys()):
-            val1 = dict1.get(key, default_value)
-            val2 = dict2.get(key, default_value)
-            if not valid_comparison(abs(val1 - val2)):
-                error_msg += f"({safe_repr(key)}: {safe_repr(val1)} != {safe_repr(val2)}), "
-
-        if error_msg:
-            return error_msg[:-2] + msg_suffix
-        else:
-            return ""
+        if not _dict_keys_equal(a, b, exclude_keys):
+            raise AssertionError(f"Dicts don't have the same keys: {a}, {b}")
 
     @contextmanager
-    def assert_warning_appears(
+    def assertWarnsStrict(
         self,
         warning: type[Warning],
         msg: str,
@@ -241,6 +168,20 @@ class IBMTestCase(TestCase):
                     f"so the warning is visible in scripts and Jupyter notebooks.",
                 )
 
+
+class IBMVisualizationTestCase(IBMTestCase):
+    """Test case for use with visualization-related features."""
+
+    ARTIFACT_DIR = ".test_artifacts"
+
+    @classmethod
+    def setUpClass(cls):
+        """Initial class level setup."""
+        super().setUpClass()
+
+        # Ensure the artifact directory exists
+        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
+
     def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
         """Save a Plotly figure as an HTML artifact."""
         # nested folder path based on the test module, class, and method
@@ -257,6 +198,9 @@ class IBMTestCase(TestCase):
 
 class IBMIntegrationTestCase(IBMTestCase):
     """Custom integration test case for use with qiskit-ibm-runtime."""
+
+    dependencies: IntegrationTestDependencies
+    service: QiskitRuntimeService
 
     @classmethod
     @integration_test_setup()
@@ -286,20 +230,19 @@ class IBMIntegrationTestCase(IBMTestCase):
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
+    log: logging.Logger
+    program_ids: dict[str, str]
+
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
         super().setUpClass()
+        cls.log = logging.getLogger(cls.__name__)
         cls.program_ids = {}
         cls.sim_backends = {}
         service = cls.service
         cls.program_ids[service.channel] = "sampler"
         cls._find_sim_backends()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        """Class level teardown."""
-        super().tearDownClass()
 
     @classmethod
     def _find_sim_backends(cls):

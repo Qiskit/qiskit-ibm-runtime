@@ -12,7 +12,6 @@
 
 """Tests for executor-based SamplerV2."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -23,49 +22,17 @@ from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.options_models import SamplerOptions
+
+from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend
 
 
-def create_mock_backend():
-    """Create a mock IBMBackend for testing."""
-    backend = MagicMock(spec=IBMBackend)
-    backend.name = "fake_backend"
-    backend._instance = "ibm-q/open/main"
-
-    # Mock the service
-    service = MagicMock()
-    backend.service = service
-    backend.target = FakeManilaV2().target
-
-    return backend
-
-
-def create_sampler_for_prepare_tests(options=None):
-    """Create a SamplerV2 instance for testing the prepare method.
-
-    Args:
-        backend: Backend to use. If None, uses a mock backend.
-        options: SamplerOptions to use. If None, uses default SamplerOptions().
-
-    Returns:
-        SamplerV2 instance configured for testing.
-    """
-    backend = create_mock_backend()
-    if options is None:
-        options = SamplerOptions()
-
-    sampler = SamplerV2(mode=backend, options=options)
-    return sampler
-
-
-class TestSamplerV2SimpleCircuits(unittest.TestCase):
+class TestSamplerV2SimpleCircuits(IBMTestCase):
     """Tests for SamplerV2 with simple (non-parametric) circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_multiple_circuits_quantum_program_structure(self, mock_run):
@@ -116,12 +83,12 @@ class TestSamplerV2SimpleCircuits(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 4096)
 
 
-class TestSamplerV2ParametricCircuits(unittest.TestCase):
+class TestSamplerV2ParametricCircuits(IBMTestCase):
     """Tests for SamplerV2 with parametric circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_single_parameter_multiple_values(self, mock_run):
@@ -205,12 +172,12 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         np.testing.assert_array_almost_equal(item2.circuit_arguments, [[0.5], [1.0]])
 
 
-class TestSamplerV2CircuitValidation(unittest.TestCase):
+class TestSamplerV2CircuitValidation(IBMTestCase):
     """Tests for circuit validation in SamplerV2."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_multiple_circuits_one_with_box_raises_error(self, mock_run):
@@ -235,12 +202,12 @@ class TestSamplerV2CircuitValidation(unittest.TestCase):
         mock_run.assert_not_called()
 
 
-class TestSamplerV2ShotsHandling(unittest.TestCase):
+class TestSamplerV2ShotsHandling(IBMTestCase):
     """Tests for shots handling in SamplerV2."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_shots_when_not_specified(self, mock_run):
@@ -279,12 +246,12 @@ class TestSamplerV2ShotsHandling(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 2048)
 
 
-class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
+class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
     """Tests verifying the integrity of QuantumProgram objects created by SamplerV2."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_circuit_preservation(self, mock_run):
@@ -381,12 +348,12 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         self.assertEqual(item.size(), 3)
 
 
-class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
+class TestSamplerV2DynamicalDecoupling(IBMTestCase):
     """Tests for SamplerV2 with dynamical decoupling enabled."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
@@ -491,7 +458,7 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         )
 
 
-class TestSamplerV2SimulatorMode(unittest.TestCase):
+class TestSamplerV2SimulatorMode(IBMTestCase):
     """Tests for SamplerV2 with simulator backends (local mode)."""
 
     def test_simulator_mode_uses_backend_sampler(self):

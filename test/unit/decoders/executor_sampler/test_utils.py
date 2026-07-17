@@ -12,7 +12,6 @@
 
 """Tests for executor sampler decoder utils."""
 
-import unittest
 from datetime import datetime
 
 import numpy as np
@@ -24,8 +23,10 @@ from qiskit_ibm_runtime.decoders.executor_sampler.utils import (
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.results.quantum_program import ChunkPart, ChunkSpan, Metadata
 
+from ....ibm_test_case import IBMTestCase
 
-class TestFlattenTwirlingAxes(unittest.TestCase):
+
+class TestFlattenTwirlingAxes(IBMTestCase):
     """Tests for ``flatten_twirling_axes``."""
 
     def test_non_parametric_pub_with_twirling(self):
@@ -151,7 +152,7 @@ class TestFlattenTwirlingAxes(unittest.TestCase):
         np.testing.assert_array_equal(item["meas"], expected)
 
 
-class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
+class TestExecutorMetadataToSamplerMetadata(IBMTestCase):
     """Tests for ``executor_metadata_to_sampler_metadata``."""
 
     def test_without_twirling(self):

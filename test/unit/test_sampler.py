@@ -29,9 +29,16 @@ from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Se
 from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
+from ..utils import get_mocked_backend, transpile_pubs
 from .mock.fake_api_backend import FakeApiBackendSpecs
 from .mock.fake_runtime_service import FakeRuntimeService
+
+
+class MockSession(Session):
+    """Mock for session class."""
+
+    _circuits_map: dict[str, QuantumCircuit] = {}
+    _instance = None
 
 
 def _measured(n):
@@ -142,10 +149,7 @@ class TestSamplerV2(IBMTestCase):
                 inst = SamplerV2(mode=session, options=options)
                 inst.run((self.circuit,))
                 inputs = session._run.call_args.kwargs["inputs"]["options"]
-                self.assertTrue(
-                    dict_paritally_equal(inputs, expected),
-                    f"{inputs} and {expected} not partially equal.",
-                )
+                self.assertDictPartiallyEqual(inputs, expected)
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
@@ -543,5 +547,5 @@ class TestSamplerV2(IBMTestCase):
             for shots in pub_shots
         ]
 
-        with self.assert_warning_appears(DeprecationWarning, warning_msg, num_appearances):
+        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, shots=run_shots)
