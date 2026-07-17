@@ -18,7 +18,7 @@ from typing import Literal
 
 from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
-from .environment_options import EnvironmentOptions
+from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .resilience import ResilienceOptions
 from .simulator import SimulatorOptions

@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from .base import BaseOptionsModel
-from .environment_options import EnvironmentOptions
+from .environment import EnvironmentOptions
 
 
 class CalibratorOptions(BaseOptionsModel):

@@ -19,7 +19,7 @@ from typing import Annotated
 from pydantic import Field
 
 from .base import BaseOptionsModel
-from .environment_options import EnvironmentOptions
+from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .post_selection import PostSelectionOptions
 

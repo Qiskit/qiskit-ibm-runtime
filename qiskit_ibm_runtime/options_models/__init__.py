@@ -47,7 +47,7 @@ Suboptions
 
 """
 
-from .environment_options import EnvironmentOptions
+from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .executor import ExecutorOptions
 from .noise_learner_v3 import NoiseLearnerV3Options

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
-from .environment_options import SamplerEnvironmentOptions
+from .environment import SamplerEnvironmentOptions
 from .execution import SamplerExecutionOptions
 from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
