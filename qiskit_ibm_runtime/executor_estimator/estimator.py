@@ -214,16 +214,16 @@ class EstimatorV2(BaseEstimatorV2):
         finalized_options = deepcopy(self.options)
 
         # Begin by initializing options based on resilience level
-        defults = RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]
+        defaults = RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]
 
         if finalized_options.twirling.enable_gates is None:
-            finalized_options.twirling.enable_gates = defults["enable_gates"]
+            finalized_options.twirling.enable_gates = defaults["enable_gates"]
         if finalized_options.twirling.enable_measure is None:
-            finalized_options.twirling.enable_measure = defults["enable_measure"]
+            finalized_options.twirling.enable_measure = defaults["enable_measure"]
         if finalized_options.resilience.measure_mitigation is None:
-            finalized_options.resilience.measure_mitigation = defults["measure_mitigation"]
+            finalized_options.resilience.measure_mitigation = defaults["measure_mitigation"]
         if finalized_options.resilience.zne_mitigation is None:
-            finalized_options.resilience.zne_mitigation = defults["zne_mitigation"]
+            finalized_options.resilience.zne_mitigation = defaults["zne_mitigation"]
 
         # Force-set some values based on mitigation
         if finalized_options.resilience.measure_mitigation is True:
