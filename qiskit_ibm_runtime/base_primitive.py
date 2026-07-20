@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Base class for Qiskit Runtime primitives."""
+"""Base class for IBM Quantum Compute primitives."""
 
 from __future__ import annotations
 

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Account management functionality related to the IBM Runtime Services."""
+"""Account management functionality related to the IBM Quantum Compute service."""
 
 from .account import Account, AccountType, ChannelType, PlanType, RegionType
 from .exceptions import (

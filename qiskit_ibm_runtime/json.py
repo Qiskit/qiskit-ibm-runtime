@@ -237,7 +237,7 @@ def _cast_strings_keys_to_int(obj: dict) -> dict:
 
 
 class RuntimeEncoder(json.JSONEncoder):
-    """JSON Encoder used by runtime service."""
+    """JSON Encoder used by IBM Quantum Compute service."""
 
     def default(self, obj: Any) -> Any:
         """Return a serializable object for ``obj``."""
@@ -430,7 +430,7 @@ class RuntimeEncoder(json.JSONEncoder):
 
 
 class RuntimeDecoder(json.JSONDecoder):
-    """JSON Decoder used by runtime service."""
+    """JSON Decoder used by IBM Quantum Compute service."""
 
     def __init__(self, *args: Any, **kwargs: Any):
         if "encoding" in kwargs:

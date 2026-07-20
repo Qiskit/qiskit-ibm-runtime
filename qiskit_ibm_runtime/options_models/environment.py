@@ -71,7 +71,7 @@ class EnvironmentOptions:
         ]
         | None
     ) = None
-    """Runtime image used for this job."""
+    """IBM Quantum Compute (formerly Qiskit Runtime) image used for this job."""
 
 
 @dataclass(config=PRIMITIVES_CONFIG)

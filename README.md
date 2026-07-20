@@ -1,4 +1,4 @@
-# Qiskit Runtime IBM Client
+# IBM Quantum Compute (formerly Qiskit Runtime) client
 
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-ibm-runtime.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/Qiskit/qiskit-ibm-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/Qiskit/qiskit-ibm-runtime/actions/workflows/ci.yml)

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Runtime REST adapter."""
+"""IBM Quantum Compute REST adapter."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class Runtime(RestAdapterBase):
-    """Rest adapter for Runtime base endpoints."""
+    """Rest adapter for IBM Quantum Compute base endpoints."""
 
     URL_MAP = {
         "jobs": "/jobs",
@@ -83,12 +83,12 @@ class Runtime(RestAdapterBase):
             program_id: Program ID.
             backend_name: Name of the backend.
             params: Program parameters.
-            image: Runtime image.
+            image: IBM Quantum Compute image.
             log_level: Log level to use.
-            session_id: ID of the first job in a runtime session.
+            session_id: ID of the first job in a IBM Quantum Compute session.
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
-            start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            start_session: Set to True to explicitly start a IBM Quantum Compute session.
             session_time: Length of session in seconds.
             private: Marks job as private.
             calibration_id: The calibration id to use with the program execution
@@ -156,7 +156,7 @@ class Runtime(RestAdapterBase):
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
-            session_id: Job ID of the first job in a runtime session.
+            session_id: Job ID of the first job in a IBM Quantum Compute session.
             created_after: Filter by the given start date, in local time. This is used to
                 find jobs whose creation dates are after (greater than or equal to) this
                 local date/time.

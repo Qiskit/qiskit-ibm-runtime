@@ -80,7 +80,7 @@ Fields:
 
 
 class EstimatorV2(BaseEstimatorV2):
-    """Executor-based EstimatorV2 primitive for Qiskit Runtime.
+    """Executor-based EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of EstimatorV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
@@ -119,7 +119,7 @@ class EstimatorV2(BaseEstimatorV2):
             * A :class:`~qiskit_ibm_runtime.Session` if you are using session execution mode.
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
-            Refer to the `Qiskit Runtime documentation
+            Refer to the `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
@@ -191,7 +191,7 @@ class EstimatorV2(BaseEstimatorV2):
         )
 
     def finalize_options(self) -> EstimatorOptions:
-        """Construct and finalize the runtime estimator options.
+        """Construct and finalize the Estimator options.
 
         This method combines the configured resilience level with the user-provided option
         to produce the final :class:`~.EstimatorOptions` instance used inside a call to
@@ -249,7 +249,7 @@ class EstimatorV2(BaseEstimatorV2):
         to executor inputs can be resource intensive and cause a delay between invoking the function
         and the ``job`` being submitted. In order to check the progress of the call, it is
         recommended to setup logging (with an ``INFO`` level) - see
-        `Qiskit Runtime documentation
+        `IBM Quantum Compute documentation
         <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 
