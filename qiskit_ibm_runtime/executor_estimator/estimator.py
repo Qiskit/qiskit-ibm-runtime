@@ -293,9 +293,6 @@ class EstimatorV2(BaseEstimatorV2):
             logger.info("Running in local simulator mode")
             return self._run_simulator(coerced_pubs, options, shots)
 
-        # Convert pubs to QuantumProgram and map options using the selected prepare function
-        logger.info("Starting pre-processing")
-
         if options.dynamical_decoupling.enable:
             for pub in coerced_pubs:
                 if pub.circuit.has_control_flow_op():
