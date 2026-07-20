@@ -255,7 +255,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_circuit_preservation(self, mock_run):
-        """Test that circuits are preserved exactly in QuantumProgram."""
+        """Test that circuits are preserved in QuantumProgram with empty metadata."""
         mock_run.return_value = MagicMock()
 
         # Create a circuit with specific structure
@@ -266,14 +266,22 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         circuit.barrier()
         circuit.measure([0, 1, 2], [0, 1, 2])
 
+        # add some metadata
+        metadata = {"foo": True, "bar": np.int64(1)}
+        circuit.metadata = metadata
+
         sampler = SamplerV2(mode=self.backend)
         sampler.run([circuit], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
         item = quantum_program.items[0]
 
-        # Verify circuit is the same object
-        self.assertIs(item.circuit, circuit)
+        # Verify circuit is equivalent and metadata is cleared on the copy
+        self.assertEqual(item.circuit, circuit)
+        self.assertEqual(item.circuit.metadata, {})
+
+        # Verify that the original circuit is not mutated
+        self.assertEqual(circuit.metadata, metadata)
 
         # Verify circuit structure is preserved
         self.assertEqual(item.circuit.num_qubits, 3)

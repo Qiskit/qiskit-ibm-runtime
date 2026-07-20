@@ -27,7 +27,7 @@ from .utils import (
     extract_shots_from_pubs,
     validate_meas_type_twirling,
     validate_no_boxes,
-    validate_twirling_option_fileds_are_not_none,
+    validate_twirling_option_fields_are_not_none,
 )
 
 if TYPE_CHECKING:
@@ -72,7 +72,7 @@ def prepare(
             (when twirling is disabled), if shots are not properly specified, or if
             measurement twirling is enabled with a non-classified ``meas_type``.
     """
-    validate_twirling_option_fileds_are_not_none(options.twirling)
+    validate_twirling_option_fields_are_not_none(options.twirling)
     validate_meas_type_twirling(options.execution.meas_type, options.twirling.enable_measure)
 
     # Extract and validate shots from pubs
@@ -107,9 +107,13 @@ def prepare(
             else:
                 param_values = None
 
+            circuit = pub.circuit
+            if circuit.metadata:
+                circuit = circuit.copy()  # copy the circuit to avoid mutating the original
+                circuit.metadata = {}  # clear the metadata as it is now passthrough data
             items.append(
                 CircuitItem(
-                    circuit=pub.circuit,
+                    circuit=circuit,
                     circuit_arguments=param_values,
                 )
             )

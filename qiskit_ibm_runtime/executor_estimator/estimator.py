@@ -214,16 +214,16 @@ class EstimatorV2(BaseEstimatorV2):
         finalized_options = deepcopy(self.options)
 
         # Begin by initializing options based on resilience level
-        defults = RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]
+        defaults = RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]
 
         if finalized_options.twirling.enable_gates is None:
-            finalized_options.twirling.enable_gates = defults["enable_gates"]
+            finalized_options.twirling.enable_gates = defaults["enable_gates"]
         if finalized_options.twirling.enable_measure is None:
-            finalized_options.twirling.enable_measure = defults["enable_measure"]
+            finalized_options.twirling.enable_measure = defaults["enable_measure"]
         if finalized_options.resilience.measure_mitigation is None:
-            finalized_options.resilience.measure_mitigation = defults["measure_mitigation"]
+            finalized_options.resilience.measure_mitigation = defaults["measure_mitigation"]
         if finalized_options.resilience.zne_mitigation is None:
-            finalized_options.resilience.zne_mitigation = defults["zne_mitigation"]
+            finalized_options.resilience.zne_mitigation = defaults["zne_mitigation"]
 
         # Force-set some values based on mitigation
         if finalized_options.resilience.measure_mitigation is True:
@@ -265,11 +265,13 @@ class EstimatorV2(BaseEstimatorV2):
 
         Raises:
             ValueError: If backend is not provided.
-            IBMInputValueError: If precision is not properly specified or if unsupported
-                options are detected.
+            IBMInputValueError: If no pubs are provided, if precision is not properly
+                specified, or if unsupported options are detected.
         """
         # Coerce pubs to EstimatorPub objects
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        if not coerced_pubs:
+            raise IBMInputValueError("No pubs provided. At least one pub is required.")
 
         # Finalize the options dynamically by:
         #   * Generating new options according to the specified resilience level
@@ -292,9 +294,6 @@ class EstimatorV2(BaseEstimatorV2):
         if self._executor is None:
             logger.info("Running in local simulator mode")
             return self._run_simulator(coerced_pubs, options, shots)
-
-        # Convert pubs to QuantumProgram and map options using the selected prepare function
-        logger.info("Starting pre-processing")
 
         if options.dynamical_decoupling.enable:
             for pub in coerced_pubs:

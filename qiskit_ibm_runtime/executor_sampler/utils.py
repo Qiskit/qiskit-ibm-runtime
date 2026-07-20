@@ -68,7 +68,7 @@ def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | No
         )
 
 
-def validate_twirling_option_fileds_are_not_none(options: TwirlingOptions) -> None:
+def validate_twirling_option_fields_are_not_none(options: TwirlingOptions) -> None:
     """Validate that twirling options fields are not ``None``.
 
     Args:
