@@ -265,11 +265,13 @@ class EstimatorV2(BaseEstimatorV2):
 
         Raises:
             ValueError: If backend is not provided.
-            IBMInputValueError: If precision is not properly specified or if unsupported
-                options are detected.
+            IBMInputValueError: If no pubs are provided, if precision is not properly
+                specified, or if unsupported options are detected.
         """
         # Coerce pubs to EstimatorPub objects
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        if not coerced_pubs:
+            raise IBMInputValueError("No pubs provided. At least one pub is required.")
 
         # Finalize the options dynamically by:
         #   * Generating new options according to the specified resilience level
