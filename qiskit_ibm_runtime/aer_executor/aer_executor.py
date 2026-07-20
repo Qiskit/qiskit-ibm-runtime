@@ -21,6 +21,13 @@ from ..quantum_program import QuantumProgram  # noqa: TC001
 from ..results import QuantumProgramResult  # noqa: TC001
 from .run_quantum_program import run_quantum_program
 
+try:
+    from qiskit_aer import AerSimulator
+
+    HAS_QISKIT_AER = True
+except ImportError:
+    HAS_QISKIT_AER = False
+
 
 class AerRuntimeJob:
     """Job object returned by :meth:`AerExecutor.run`.
@@ -45,10 +52,8 @@ class AerRuntimeJob:
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        from qiskit_aer import AerSampler
-
-        if not isinstance(qasm_simulator, AerSampler):
-            raise ValueError("``qasm_simulator`` needs to be an ``AerSampler`` object.")
+        if not isinstance(qasm_simulator, AerSimulator):
+            raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")
 
         self._qasm_simulator = qasm_simulator
         self._program = program
@@ -123,10 +128,14 @@ class AerExecutor:
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        from qiskit_aer import AerSampler
+        if not HAS_QISKIT_AER:
+            raise ValueError(
+                "Cannot initialize object of type 'AerExecutor' since 'qiskit-aer' is not "
+                "installed. Install 'qiskit-aer' and try again."
+            )
 
-        if not isinstance(qasm_simulator, AerSampler):
-            raise ValueError("``qasm_simulator`` needs to be an ``AerSampler`` object.")
+        if not isinstance(qasm_simulator, AerSimulator):
+            raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")
 
         self._qasm_simulator = qasm_simulator
         self._noise_dict = noise_dict

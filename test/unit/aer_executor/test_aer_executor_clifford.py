@@ -249,7 +249,7 @@ class TestAerExecutor(IBMTestCase):
         item_data = result[0]
 
         # Result shape: (4, shots, 2)
-        self.assertEqual(["c"].shape, (4, shots, 2))
+        self.assertEqual(item_data["c"].shape, (4, shots, 2))
 
         # phi=0, theta=0 → |00⟩
         self.assertTrue((item_data["c"][0] == [False, False]).all())

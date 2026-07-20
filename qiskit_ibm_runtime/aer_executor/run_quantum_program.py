@@ -20,7 +20,6 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers import BackendV2  # noqa: TC002
 from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
 from qiskit.transpiler import PassManager
-from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
 
 from ..quantum_program import (
     CircuitItem,
@@ -30,6 +29,14 @@ from ..quantum_program import (
 from ..results import QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
+
+try:
+    from qiskit_aer import AerSimulator
+    from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
+
+    HAS_QISKIT_AER = True
+except ImportError:
+    HAS_QISKIT_AER = False
 
 
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
@@ -61,10 +68,14 @@ def run_quantum_program(
     Returns:
         Results of simulation.
     """
-    from qiskit_aer import AerSampler
+    if not HAS_QISKIT_AER:
+        raise ValueError(
+            "The function 'run_quantum_program' cannot be run since 'qiskit-aer' is not "
+            "installed. Install 'qiskit-aer' and try again."
+        )
 
-    if not isinstance(qasm_simulator, AerSampler):
-        raise ValueError("``qasm_simulator`` needs to be an ``AerSampler`` object.")
+    if not isinstance(qasm_simulator, AerSimulator):
+        raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")
 
     # Generate a sampler
     backend = deepcopy(qasm_simulator)
