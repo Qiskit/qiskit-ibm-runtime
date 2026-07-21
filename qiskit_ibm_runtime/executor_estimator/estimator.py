@@ -365,12 +365,19 @@ class EstimatorV2(BaseEstimatorV2):
             )
         resilience_options = asdict(options.resilience)  # type: ignore[call-overload]
         resilience_options.pop("noise_model_mapping")
-        # Serialize options (assuming passthrough is correctly configured)
-        quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
-            "twirling": asdict(options.twirling),  # type: ignore[call-overload]
-            "dynamical_decoupling": asdict(options.dynamical_decoupling),  # type: ignore[call-overload]
-            "resilience": resilience_options,
-        }
+
+        # Prepare and set program metadata (assuming passthrough is correctly configured)
+        program_metadata = asdict(options)  # type: ignore[call-overload]
+        for flag_key, options_key in [
+            ("zne_mitigation", "zne"),
+            ("pec_mitigation", "pec"),
+            ("measure_mitigation", "measure_noise_learning"),
+        ]:
+            if not program_metadata["resilience"][flag_key]:
+                program_metadata["resilience"].pop(options_key)
+        program_metadata["target_precision"] = resolved_precision
+        program_metadata["shots"] = shots
+        quantum_program.passthrough_data["post_processor"]["program_metadata"] = program_metadata  # type: ignore[index, call-overload]
 
         executor_options = options.to_executor_options()
 
