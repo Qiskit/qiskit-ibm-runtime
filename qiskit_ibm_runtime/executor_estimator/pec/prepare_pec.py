@@ -92,22 +92,18 @@ def prepare_pec(
     if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
 
-    num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
+    baseline_num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
     )
-    # Preserve the twirling randomization count: ``num_randomizations`` is scaled
-    # per-pub by the PEC sampling overhead below, but the TREX calibration should
-    # follow the (unscaled) twirling value.
-    twirling_num_randomizations = num_randomizations
 
     # set max_overhead
     max_overhead = pec_options.max_overhead
     if max_overhead is None:
         # This is a backup max number of shots, intended to stop python
         # crashing with an overflow error if the noise is really strong
-        max_overhead = sys.float_info.max / (num_randomizations * shots_per_randomization)
+        max_overhead = sys.float_info.max / (baseline_num_randomizations * shots_per_randomization)
 
     # Create items
     items: list[SamplexItem] = []
@@ -174,14 +170,19 @@ def prepare_pec(
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
         scaled_gamma = calculate_gamma(boxed_circuit, pub_noise_model, noise_factor)
         pec_gamma_list.append(scaled_gamma)
-        # Scale the amount of randomizations by gamma**2
+        # Scale the baseline randomization count by gamma**2 for this pub independently.
         sampling_overhead = scaled_gamma**2
-        num_randomizations = int(
-            np.ceil(min(num_randomizations * max_overhead, num_randomizations * sampling_overhead))
+        scaled_num_randomizations = int(
+            np.ceil(
+                min(
+                    baseline_num_randomizations * max_overhead,
+                    baseline_num_randomizations * sampling_overhead,
+                )
+            )
         )
 
         # Create SamplexItem
-        shape = (num_randomizations, change_basis.shape[0])
+        shape = (scaled_num_randomizations, change_basis.shape[0])
         items.append(
             SamplexItem(
                 circuit=template,
@@ -219,7 +220,7 @@ def prepare_pec(
     # Add TREX calibration circuit
     if measure_noise_learning is not None:
         trex_num_randomizations = resolve_trex_num_randomizations(
-            measure_noise_learning, twirling_num_randomizations
+            measure_noise_learning, baseline_num_randomizations
         )
         trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)

@@ -544,3 +544,44 @@ class TestPreparePecFunction(IBMTestCase):
         )
         item = cast("SamplexItem", quantum_program.items[0])
         self.assertEqual(item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], 0)
+
+    def test_prepare_pec_identical_pubs_have_same_num_randomizations(self):
+        """Test that identical pubs produce the same number of randomizations.
+
+        Regression test for a bug where ``num_randomizations`` was overwritten
+        inside the per-pub loop, causing each subsequent pub to compound the
+        previous pub's gamma-scaled value instead of starting from the baseline.
+        """
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        noise_model = PauliLindbladMap.from_sparse_list(
+            [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
+        )
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = next(
+            annot.ref for layer in layers if (annot := get_annotation(layer.operation, InjectNoise))
+        )
+        noise_model_mapping = {noise_layer_ref: noise_model}
+
+        pec_options = PecOptions()
+        pec_options.noise_gain = 0.5
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
+        quantum_program = prepare_pec(
+            [pub, pub], twirling_options, 1024, pec_options, noise_model_mapping
+        )
+
+        item0 = cast("SamplexItem", quantum_program.items[0])
+        item1 = cast("SamplexItem", quantum_program.items[1])
+        self.assertEqual(
+            item0.shape[0],
+            item1.shape[0],
+        )

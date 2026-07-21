@@ -107,9 +107,13 @@ def prepare(
             else:
                 param_values = None
 
+            circuit = pub.circuit
+            if circuit.metadata:
+                circuit = circuit.copy()  # copy the circuit to avoid mutating the original
+                circuit.metadata = {}  # clear the metadata as it is now passthrough data
             items.append(
                 CircuitItem(
-                    circuit=pub.circuit,
+                    circuit=circuit,
                     circuit_arguments=param_values,
                 )
             )
