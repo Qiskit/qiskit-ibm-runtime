@@ -12,14 +12,19 @@
 
 """AerExecutor and AerRuntimeJob: local simulation executor for QuantumProgram objects."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
-from qiskit.providers import BackendV2  # noqa: TC002
-from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
-
-from ..quantum_program import QuantumProgram  # noqa: TC001
-from ..results import QuantumProgramResult  # noqa: TC001
 from .run_quantum_program import run_quantum_program
+
+if TYPE_CHECKING:
+    from qiskit.providers import BackendV2
+    from qiskit.quantum_info import PauliLindbladMap
+
+    from ..quantum_program import QuantumProgram
+    from ..results import QuantumProgramResult
 
 try:
     from qiskit_aer import AerSimulator

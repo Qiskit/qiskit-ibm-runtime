@@ -12,23 +12,26 @@
 
 """Functions for running a QuantumProgram on a local Aer simulator."""
 
+from __future__ import annotations
+
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-from qiskit.providers import BackendV2  # noqa: TC002
-from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
 from qiskit.transpiler import PassManager
 
-from ..quantum_program import (
-    CircuitItem,
-    QuantumProgram,  # noqa: TC001
-    SamplexItem,
-)
+from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
+
+if TYPE_CHECKING:
+    from qiskit.providers import BackendV2
+    from qiskit.quantum_info import PauliLindbladMap
+
+    from ..quantum_program import QuantumProgram
 
 try:
     from qiskit_aer import AerSimulator

@@ -12,16 +12,23 @@
 
 """Transpiler pass that inserts Pauli-Lindblad noise after labeled barriers."""
 
+from __future__ import annotations
+
 import re
 import warnings
-from collections.abc import Callable  # noqa: TC003
 from functools import partial
+from typing import TYPE_CHECKING
 
-from qiskit.circuit import QuantumCircuit, Qubit  # noqa: TC002
+from qiskit.circuit import QuantumCircuit
 from qiskit.converters import circuit_to_dag
-from qiskit.dagcircuit import DAGCircuit, DAGOpNode  # noqa: TC002
-from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
 from qiskit.transpiler import TransformationPass
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from qiskit.circuit import Qubit
+    from qiskit.dagcircuit import DAGCircuit, DAGOpNode
+    from qiskit.quantum_info import PauliLindbladMap
 
 try:
     from qiskit_aer.noise import PauliLindbladError

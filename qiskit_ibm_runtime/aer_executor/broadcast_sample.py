@@ -12,11 +12,16 @@
 
 """Utilities for sampling from a Samplex over broadcast and randomization axes."""
 
+from __future__ import annotations
+
 from math import prod
+from typing import TYPE_CHECKING
 
 import numpy as np
-from samplomatic.samplex import Samplex  # noqa: TC002
-from samplomatic.tensor_interface import TensorInterface  # noqa: TC002
+
+if TYPE_CHECKING:
+    from samplomatic.samplex import Samplex
+    from samplomatic.tensor_interface import TensorInterface
 
 
 def broadcast_sample(
