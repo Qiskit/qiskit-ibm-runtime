@@ -123,6 +123,9 @@ class QiskitRuntimeService:
         it will fall back to the overall default account, defined when calling
         :meth:`.save_account` with ``set_as_default=True``.
 
+    Since ``qiskit-ibm-runtime`` ``0.49``, this class can also be accessed as
+    ``qiskit_ibm_runtime.IBMQuantumComputeService``.
+
     Args:
         channel: String that identifies the service platform. This is
             set to ``ibm_quantum_platform`` by default, but can additionally take ``local``

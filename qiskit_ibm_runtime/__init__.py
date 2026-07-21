@@ -200,7 +200,10 @@ Classes
 
 import logging
 
-from .qiskit_runtime_service import QiskitRuntimeService
+from .qiskit_runtime_service import (
+    QiskitRuntimeService,
+    QiskitRuntimeService as IBMQuantumComputeService,
+)
 from .ibm_backend import IBMBackend
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
