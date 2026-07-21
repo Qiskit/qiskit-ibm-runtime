@@ -15,7 +15,6 @@
 from unittest.mock import MagicMock
 
 import numpy as np
-import pytest
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit_aer import AerSimulator
 
@@ -38,7 +37,7 @@ class TestRunQuantumProgram(IBMTestCase):
         program.shots = 64
         program.passthrough_data = None
 
-        with pytest.raises(TypeError, match="Unsupported QuantumProgramItem type"):
+        with self.assertRaisesRegex(TypeError, "Unsupported QuantumProgramItem type"):
             run_quantum_program(AerSimulator(method="stabilizer"), program)
 
     def test_angle_rounding_snaps_near_clifford(self):

@@ -17,7 +17,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from qiskit.optionals import HAS_AER
+from qiskit.utils.optionals import HAS_AER
 
 from .run_quantum_program import run_quantum_program
 

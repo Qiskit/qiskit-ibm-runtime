@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from qiskit.dagcircuit import DAGCircuit, DAGOpNode
     from qiskit.quantum_info import PauliLindbladMap
 
-from qiskit.optionals import HAS_AER
+from qiskit.utils.optionals import HAS_AER
 from qiskit_aer.noise import PauliLindbladError
 
 
