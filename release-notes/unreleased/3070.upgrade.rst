@@ -1,0 +1,3 @@
+The Qiskit Runtime service has been renamed to IBM Quantum Compute, and the references to it in
+the documentation has been updated. The :class:`~.QiskitRuntimeService` class is now available
+as ``IBMQuantumComputeService``.
