@@ -48,9 +48,9 @@ def _active_session(func):  # type: ignore
 
 
 class Session:
-    """Class for creating a IBM Quantum Compute session.
+    """Class for creating a IBM Quantum Compute (formerly Qiskit Runtime) session.
 
-    A IBM Quantum Compute (formerly Qiskit Runtime) ``session`` allows you to group a collection of
+    A IBM Quantum Compute ``session`` allows you to group a collection of
     iterative calls to the quantum computer. A session is started when the first job within the
     session is started. Subsequent jobs within the session are prioritized by the scheduler.
 

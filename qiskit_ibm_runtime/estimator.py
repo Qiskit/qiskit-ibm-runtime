@@ -45,9 +45,9 @@ class Estimator:
 
 
 class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2):
-    r"""Class for interacting with IBM Quantum Compute Estimator primitive service.
+    r"""EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
-    IBM Quantum Compute (formerly Qiskit Runtime) Estimator primitive service estimates expectation
+    IBM Quantum Compute Estimator primitive service estimates expectation
     values of quantum circuits and observables.
 
     The :meth:`run` can be used to submit circuits, observables, and parameters

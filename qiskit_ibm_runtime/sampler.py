@@ -45,12 +45,12 @@ class Sampler:
 
 
 class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
-    """Class for interacting with IBM Quantum Compute Sampler primitive service.
+    """SamplerV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This class supports version 2 of the Sampler interface, which uses different
     input and output formats than version 1.
 
-    IBM Quantum Compute (formerly Qiskit Runtime) Sampler primitive returns the sampled result
+    IBM Quantum Compute Sampler primitive returns the sampled result
     according to the specified output type. For example, it returns a bitstring for each shot
     if measurement level 2 (bits) is requested.
 

@@ -45,14 +45,14 @@ QASM3RUNNERPROGRAMID = "qasm3-runner"
 
 
 class IBMBackend(Backend):
-    """Backend class interfacing with an IBM Quantum Compute backend.
+    """Backend class interfacing with an IBM Quantum Compute (formerly Qiskit Runtime) backend.
 
     Note:
         * You should not instantiate the ``IBMBackend`` class directly. Instead, use
           the methods provided by an :class:`QiskitRuntimeService` instance to retrieve and handle
           backends.
 
-    This class represents an IBM Quantum Compute (formerly Qiskit Runtime) backend. Its attributes
+    This class represents an IBM Quantum Compute backend. Its attributes
     and methods provide information about the backend. For example, the :meth:`status()` method
     returns a :class:`BackendStatus<~.providers.models.BackendStatus>` instance.
     The instance contains the ``operational`` and ``pending_jobs`` attributes, which state whether
