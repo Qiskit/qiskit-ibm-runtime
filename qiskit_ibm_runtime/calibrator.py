@@ -26,8 +26,8 @@ from .utils.default_session import get_cm_session
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from ..runtime_job_v2 import RuntimeJobV2
     from .batch import Batch
+    from .runtime_job_v2 import RuntimeJobV2
     from .session import Session
 
 
