@@ -21,6 +21,7 @@ import numpy as np
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
+from qiskit.utils.optionals import HAS_AER
 
 from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramResult
@@ -32,14 +33,6 @@ if TYPE_CHECKING:
     from qiskit.quantum_info import PauliLindbladMap
 
     from ..quantum_program import QuantumProgram
-
-try:
-    from qiskit_aer import AerSimulator
-    from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
-
-    HAS_QISKIT_AER = True
-except ImportError:
-    HAS_QISKIT_AER = False
 
 
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
@@ -71,11 +64,14 @@ def run_quantum_program(
     Returns:
         Results of simulation.
     """
-    if not HAS_QISKIT_AER:
+    if not HAS_AER:
         raise ValueError(
             "The function 'run_quantum_program' cannot be run since 'qiskit-aer' is not "
             "installed. Install 'qiskit-aer' and try again."
         )
+
+    from qiskit_aer import AerSimulator
+    from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
 
     if not isinstance(qasm_simulator, AerSimulator):
         raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")

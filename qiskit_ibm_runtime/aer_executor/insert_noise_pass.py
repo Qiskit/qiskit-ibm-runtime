@@ -30,12 +30,8 @@ if TYPE_CHECKING:
     from qiskit.dagcircuit import DAGCircuit, DAGOpNode
     from qiskit.quantum_info import PauliLindbladMap
 
-try:
-    from qiskit_aer.noise import PauliLindbladError
-
-    HAS_QISKIT_AER = True
-except ImportError:
-    HAS_QISKIT_AER = False
+from qiskit.optionals import HAS_AER
+from qiskit_aer.noise import PauliLindbladError
 
 
 def _find_qubit(dag: DAGCircuit, qubit: Qubit) -> int:
@@ -65,10 +61,10 @@ class InsertNoisePass(TransformationPass):
         noise_scale: float = 1.0,
         warn_absent: bool = True,
     ):
-        if not HAS_QISKIT_AER:
+        if not HAS_AER:
             raise ValueError(
-                "Cannot initialize object of type 'InsertNoisePass' since 'qiskit-aer' is not "
-                "installed. Install 'qiskit-aer' and try again."
+                "Cannot import this file since 'qiskit-aer' is not installed. Install 'qiskit-aer' "
+                "and try again."
             )
 
         self._noise_dict = noise_dict or {}

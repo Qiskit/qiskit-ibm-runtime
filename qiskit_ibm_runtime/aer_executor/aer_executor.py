@@ -17,6 +17,8 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
+from qiskit.optionals import HAS_AER
+
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
@@ -25,13 +27,6 @@ if TYPE_CHECKING:
 
     from ..quantum_program import QuantumProgram
     from ..results import QuantumProgramResult
-
-try:
-    from qiskit_aer import AerSimulator
-
-    HAS_QISKIT_AER = True
-except ImportError:
-    HAS_QISKIT_AER = False
 
 
 class AerRuntimeJob:
@@ -57,6 +52,14 @@ class AerRuntimeJob:
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
+        if not HAS_AER:
+            raise ValueError(
+                "Cannot initialize object of type 'AerExecutor' since 'qiskit-aer' is not "
+                "installed. Install 'qiskit-aer' and try again."
+            )
+
+        from qiskit_aer import AerSimulator
+
         if not isinstance(qasm_simulator, AerSimulator):
             raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")
 
@@ -133,11 +136,13 @@ class AerExecutor:
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        if not HAS_QISKIT_AER:
+        if not HAS_AER:
             raise ValueError(
                 "Cannot initialize object of type 'AerExecutor' since 'qiskit-aer' is not "
                 "installed. Install 'qiskit-aer' and try again."
             )
+
+        from qiskit_aer import AerSimulator
 
         if not isinstance(qasm_simulator, AerSimulator):
             raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")
