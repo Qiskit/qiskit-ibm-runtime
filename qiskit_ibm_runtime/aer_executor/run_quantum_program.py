@@ -82,7 +82,7 @@ def run_quantum_program(
     aer_sampler = AerSamplerV2.from_backend(backend)
 
     # _seed is private but is the only way to obtain the sampler's RNG seed for reproducibility.
-    rng = np.random.default_rng(aer_sampler._seed)  # noqa: SLF001
+    rng = np.random.default_rng(aer_sampler._seed)
 
     result_list = []
     metadata_list = []
@@ -100,8 +100,8 @@ def run_quantum_program(
                 bindings_array = BindingsArray(
                     {tuple(prog_item.circuit.parameters): prog_item.circuit_arguments}
                 )
-                for k, v in bindings_array._data.items():  # noqa: SLF001
-                    bindings_array._data[k] = _round_to_clifford(v, angle_decimals)  # noqa: SLF001
+                for k, v in bindings_array._data.items():
+                    bindings_array._data[k] = _round_to_clifford(v, angle_decimals)
             else:
                 bindings_array = None
             sampler_res = aer_sampler.run(
@@ -128,8 +128,8 @@ def run_quantum_program(
             bindings_array = BindingsArray(
                 {tuple(prog_item.circuit.parameters): samplex_data.pop("parameter_values")}
             )
-            for k, v in bindings_array._data.items():  # noqa: SLF001
-                bindings_array._data[k] = _round_to_clifford(v, angle_decimals)  # noqa: SLF001
+            for k, v in bindings_array._data.items():
+                bindings_array._data[k] = _round_to_clifford(v, angle_decimals)
             sampler_res = aer_sampler.run(
                 [
                     SamplerPub(

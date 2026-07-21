@@ -112,7 +112,7 @@ class InsertNoisePass(TransformationPass):
         self, op_node: DAGOpNode, find_qubit: Callable[[Qubit], int]
     ) -> DAGCircuit | None:
         # Qiskit has no public API for reading barrier labels; _label is the only option.
-        label = op_node.op._label  # noqa: SLF001
+        label = op_node.op._label
         if label is None:
             return None
         if (noise_key := self._match_key(label)) is None:
