@@ -24,7 +24,7 @@ from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
-from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
+from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2, build_program_metadata
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
@@ -259,44 +259,6 @@ class TestEstimatorV2Run(IBMTestCase):
         self.assertEqual(options_metadata["twirling"]["enable_gates"], True)
         self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], False)
         self.assertEqual(options_metadata["resilience"]["measure_mitigation"], True)
-
-    @data(
-        ("zne_mitigation", "zne"),
-        ("pec_mitigation", "pec"),
-        ("measure_mitigation", "measure_noise_learning"),
-    )
-    @unpack
-    def test_run_drops_inactive_resilience_sub_options(self, flag_key, options_key):
-        """Test that inactive-flag sub-option dicts are dropped from program_metadata.
-
-        For each ``(flag_key, sub_dict_key)`` pair in the dropping loop, verify that:
-        - setting the flag to ``False`` removes the corresponding sub-option dict, and
-        - setting the flag to ``True`` keeps it.
-        """
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        def _get_resilience_metadata(flag_value):
-            options = EstimatorOptions()
-            options.resilience_level = 0
-            options.resilience.noise_model_mapping = {
-                "layer_0": PauliLindbladMap.identity(num_qubits=2)
-            }
-            setattr(options.resilience, flag_key, flag_value)
-            estimator = EstimatorV2(mode=self.backend, options=options)
-            self.mock_executor_instance.run.reset_mock()
-            estimator.run([(circuit, observable)], precision=0.03125)
-            qp = self.mock_executor_instance.run.call_args[0][0]
-            return qp.passthrough_data["post_processor"]["program_metadata"]["resilience"]
-
-        # When flag is False the sub-option dict must be absent
-        resilience_off = _get_resilience_metadata(False)
-        self.assertNotIn(options_key, resilience_off)
-
-        # When flag is True the sub-option dict must be present
-        resilience_on = _get_resilience_metadata(True)
-        self.assertIn(options_key, resilience_on)
 
     def test_run_with_multiple_observables(self):
         """Test run with multiple observables in a single pub."""
@@ -618,6 +580,41 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
         result2 = estimator2.run([(circuit, observable)]).result()
 
         self.assertFalse(np.array_equal(result1[0].data.evs, result2[0].data.evs))
+
+
+@ddt
+class TestBuildProgramMetadata(IBMTestCase):
+    """Tests for the :func:`build_program_metadata` helper."""
+
+    @data(
+        ("zne_mitigation", "zne"),
+        ("pec_mitigation", "pec"),
+        ("measure_mitigation", "measure_noise_learning"),
+    )
+    @unpack
+    def test_drops_inactive_resilience_sub_options(self, flag_key, options_key):
+        """Test that inactive-flag sub-option dicts are dropped from the metadata dict.
+
+        For each ``(flag_key, options_key)`` pair, verify that:
+        - when the flag is ``False``, the corresponding sub-option dict is absent, and
+        - when the flag is ``True``, the corresponding sub-option dict is present.
+        """
+
+        def _get_resilience_metadata(flag_value):
+            options = EstimatorOptions()
+            options.resilience_level = 0
+            setattr(options.resilience, flag_key, flag_value)
+            return build_program_metadata(options, resolved_precision=None, shots=1024)[
+                "resilience"
+            ]
+
+        # When flag is False the sub-option dict must be absent
+        resilience_off = _get_resilience_metadata(False)
+        self.assertNotIn(options_key, resilience_off)
+
+        # When flag is True the sub-option dict must be present
+        resilience_on = _get_resilience_metadata(True)
+        self.assertIn(options_key, resilience_on)
 
 
 @ddt
