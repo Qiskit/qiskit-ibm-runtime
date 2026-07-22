@@ -255,7 +255,8 @@ class QiskitRuntimeService:
 
         self._default_instance = False
         self._active_api_client = RuntimeClient(self._client_params)
-        self._backends_list: list[dict[str, Any]] = []
+        # Contains the output of the /backends endpoint, keyed by instance crn.
+        self._backends_info_per_instance: dict[str, list[dict[str, Any]]] = {}
         self._backend_instance_groups: list[dict[str, Any]] = []
         self._region = region or self._account.region
         self._plans_preference = plans_preference or self._account.plans_preference
@@ -323,8 +324,8 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            self._backends_list = self._active_api_client.list_backends()
-            return [backend["name"] for backend in self._backends_list]
+            self._backends_info_per_instance[instance] = self._active_api_client.list_backends()
+            return [backend["name"] for backend in self._backends_info_per_instance[instance]]
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:
             logger.warning("Invalid instance %s", instance)
@@ -715,7 +716,7 @@ class QiskitRuntimeService:
     def _create_backend_obj(
         self,
         backend_name: str,
-        instance: str | None,
+        instance: str,
         use_fractional_gates: bool | None,
         calibration_id: str | None = None,
     ) -> IBMBackend:
@@ -778,6 +779,17 @@ class QiskitRuntimeService:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             return None
 
+        # Retrieve `physical_qubits` from the stored `/backends` responses.
+        backend_info = next(
+            (
+                info
+                for info in self._backends_info_per_instance[instance]
+                if info["name"] == backend_name
+            ),
+            {},
+        )
+        physical_qubits = backend_info.get("physical_qubits", None)
+
         if config:
             return IBMBackend(
                 instance=instance,
@@ -785,6 +797,7 @@ class QiskitRuntimeService:
                 service=self,
                 api_client=self._active_api_client,
                 calibration_id=calibration_id,
+                physical_qubits=physical_qubits,
             )
         return None
 
@@ -1348,9 +1361,7 @@ class QiskitRuntimeService:
                 except RequestsApiError:
                     continue
         else:
-            if not self._backends_list:
-                self._backends_list = self._active_api_client.list_backends()
-            all_backends = self._backends_list
+            all_backends = self._active_api_client.list_backends()
 
         candidates = []
         for backend in all_backends:
