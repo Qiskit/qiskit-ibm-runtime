@@ -379,6 +379,16 @@ class TestEstimatorV2Run(IBMTestCase):
             estimator.run([pub1, pub2])
         self.assertIn("same precision", str(context.exception))
 
+    def test_run_raises_error_when_no_pubs_provided(self):
+        """Test that run raises IBMInputValueError when called with an empty pub list."""
+        estimator = EstimatorV2(mode=self.backend)
+
+        with self.assertRaisesRegex(IBMInputValueError, "No pubs provided"):
+            estimator.run([])
+
+        # Executor should never be reached
+        self.mock_executor_instance.run.assert_not_called()
+
     def test_run_raises_error_when_pec_enabled_without_noise_model(self):
         """Test that run raises error when PEC is enabled but noise_model_mapping isn't."""
         estimator = EstimatorV2(mode=self.backend)
