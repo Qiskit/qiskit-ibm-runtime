@@ -34,7 +34,7 @@ from ...utils import combine
 
 
 @ddt
-class TestPrepareFunction(IBMTestCase):
+class TestPrepare(IBMTestCase):
     """Tests for the prepare function."""
 
     @data(
