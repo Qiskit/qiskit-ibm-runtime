@@ -45,15 +45,6 @@ class BaseOptionsModel(BaseModel):
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""
-        warn(
-            "The `update` method of the option models is deprecated as of qiskit_ibm_runtime "
-            "v0.49.0 and will be removed in a future release. Please update the model fields "
-            "directly (`options.foo = bar`) or create a copy of the options "
-            '(`options.model_copy(update={"foo": "bar"})`).',
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
         for key, value in kwargs.items():
             current_field_value = getattr(self, key, None)
             if isinstance(current_field_value, BaseOptionsModel):

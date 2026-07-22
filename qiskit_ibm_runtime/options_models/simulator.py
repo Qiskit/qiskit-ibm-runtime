@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from typing import Annotated, TypeAlias
-from warnings import warn
 
 from pydantic import Field, InstanceOf
 from qiskit.exceptions import MissingOptionalLibraryError
@@ -75,13 +74,6 @@ class SimulatorOptions(BaseOptionsModel):
         Raises:
             MissingOptionalLibraryError: if qiskit-aer is not found.
         """
-        warn(
-            "The `set_backend` method is deprecated as of qiskit_ibm_runtime v0.49.0 and will be "
-            "removed in a future release. Please update the model fields directly from the "
-            "backend.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         if not optionals.HAS_AER:
             raise MissingOptionalLibraryError(
                 "qiskit-aer", "Aer provider", "pip install qiskit-aer"
