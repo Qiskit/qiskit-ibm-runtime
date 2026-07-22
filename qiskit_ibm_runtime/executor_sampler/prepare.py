@@ -21,6 +21,7 @@ from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
+from ..options_models.converters import sampler_option_to_executor_options
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
 from .utils import (
@@ -181,6 +182,6 @@ def prepare(
     quantum_program._semantic_role = "sampler_v2"
 
     # Map options to executor options
-    executor_options = options.to_executor_options()
+    executor_options = sampler_option_to_executor_options(options)
 
     return quantum_program, executor_options

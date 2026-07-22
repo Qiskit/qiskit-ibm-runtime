@@ -10,19 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Calibrator options."""
+"""Aer-based local executor for QuantumProgram objects."""
 
-from __future__ import annotations
-
-from .base import BaseOptionsModel
-from .environment import EnvironmentOptions
-
-
-class CalibratorOptions(BaseOptionsModel):
-    """Options for the Calibrator."""
-
-    environment: EnvironmentOptions = EnvironmentOptions()
-    """Options related to the execution environment."""
-
-    experimental: dict = {}
-    """Experimental options that are passed to the executor."""
+from .aer_executor import AerExecutor, AerRuntimeJob

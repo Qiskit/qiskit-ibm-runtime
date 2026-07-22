@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -162,7 +161,7 @@ def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) ->
         model_items.append(model_item)
 
     # Build options dict starting with execution options
-    options_dict = asdict(options.execution)  # type: ignore[call-overload]
+    options_dict = options.execution.model_dump()  # type: ignore[call-overload]
 
     # Add experimental options if provided
     if options.experimental:

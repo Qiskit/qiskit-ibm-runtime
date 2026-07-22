@@ -17,26 +17,23 @@ from __future__ import annotations
 from typing import Annotated, Literal
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
-from .utils import PRIMITIVES_CONFIG
-
-NonNegativeFloat = Annotated[float, Field(ge=0)]
+from .base import BaseOptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class PecOptions:
+class PecOptions(BaseOptionsModel):
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
-    max_overhead: NonNegativeFloat | None = 100
+    max_overhead: Annotated[float, Field(ge=0)] | None = 100
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
-    In order to remove the full learned noise, the number of randomizations should be
-    multiplied by the sampling overhead, which is gamma^2.
+    In order to remove the full learned noise, the number of randomizations should be multiplied by
+    the sampling overhead, which is ``gamma^2``.
+
     The maximum overhead limits the sampling overhead allowed.
     """
 
-    noise_gain: NonNegativeFloat | Literal["auto"] = "auto"
+    noise_gain: Annotated[float, Field(ge=0)] | Literal["auto"] = "auto"
     """The amount by which to scale the noise.
 
     The amount by which to scale the noise, where:
@@ -46,6 +43,6 @@ class PecOptions:
     * A value between ``0`` and ``1`` corresponds to partially removing the learned noise.
     * A value greater than one corresponds to amplifying the learned noise.
 
-    If ``"auto"``, the value in the range ``[0, 1]`` will be chosen automatically
-    for each input PUB by the formula `1 - log(max_overhead) / log(gamma^2)`.
+    If ``"auto"``, the value in the range ``[0, 1]`` will be chosen automatically for each input
+    PUB by the formula ``1 - log(max_overhead) / log(gamma^2)``.
     """
