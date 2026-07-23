@@ -139,6 +139,7 @@ class IBMBackend(Backend):
         api_client: IBM client used to communicate with the server.
         instance: The service instance to use.
         calibration_id: An optional calibration id to use for this backend
+        physical_qubits: The number of physical qubits of the backend.
     """
 
     id_warning_issued = False
