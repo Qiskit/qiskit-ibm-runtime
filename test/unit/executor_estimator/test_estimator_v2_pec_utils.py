@@ -263,7 +263,11 @@ class TestPreparePec(IBMTestCase):
                 post_processor_data = program.passthrough_data["post_processor"]
                 param_basis_pairs = post_processor_data["param_basis_pairs"][0]
 
+                # Check that the param-basis pairs are the correct ones
                 self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+
+                # Check that the quantum program has one element per param-basis pair
+                self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
 
     def test_prepare_pec_basic(self):
         """Test prepare_pec with basic PEC options and noise model."""

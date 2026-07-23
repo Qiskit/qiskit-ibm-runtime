@@ -62,6 +62,7 @@ class TestPreparePea(IBMTestCase):
 
         zne_options = ZneOptions()
         zne_options.amplifier = "pea"
+        zne_options.noise_factors = [1, 2, 3, 4]
 
         for case in PARAM_BASIS_CASES_3Q.cases:
             parameter_shape = case.parameter_shape
@@ -88,7 +89,14 @@ class TestPreparePea(IBMTestCase):
                 post_processor_data = program.passthrough_data["post_processor"]
                 param_basis_pairs = post_processor_data["param_basis_pairs"][0]
 
+                # Check that the param-basis pairs are the correct ones
                 self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+
+                # Check that the quantum program has one element per param-basis pair
+                self.assertEqual(
+                    program.items[0].shape,
+                    (len(zne_options.noise_factors), 1, len(expected_pairs)),
+                )
 
     def test_prepare_pea_basic(self):
         """Test prepare_pea with basic noise factors and noise model."""
