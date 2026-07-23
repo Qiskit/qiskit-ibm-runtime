@@ -12,12 +12,12 @@
 
 """Tests for the classes used to instantiate noise learner results."""
 
-from unittest import skipIf
+from unittest import skipIf, skipUnless
 
 from ddt import ddt
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
-from qiskit_aer import AerSimulator
+from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
@@ -30,6 +30,9 @@ try:
     PLOTLY_INSTALLED = True
 except ImportError:
     PLOTLY_INSTALLED = False
+
+if HAS_AER:
+    from qiskit_aer import AerSimulator
 
 
 class TestPauliLindbladError(IBMTestCase):
@@ -157,6 +160,7 @@ class TestLayerError(IBMTestCase):
             self.assertEqual(layer_error1.error, layer_error2.error)
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_no_coupling_map(self):
         """Tests the `draw_map` function with invalid coordinates."""
         with self.assertRaises(ValueError):

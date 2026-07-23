@@ -79,7 +79,7 @@ Fields:
 
 
 class EstimatorV2(BaseEstimatorV2):
-    """Executor-based EstimatorV2 primitive for Qiskit Runtime.
+    """Executor-based EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of EstimatorV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
@@ -118,7 +118,7 @@ class EstimatorV2(BaseEstimatorV2):
             * A :class:`~qiskit_ibm_runtime.Session` if you are using session execution mode.
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
-            Refer to the `Qiskit Runtime documentation
+            Refer to the `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
@@ -169,9 +169,30 @@ class EstimatorV2(BaseEstimatorV2):
         """Return the unique boxed layers found across the given PUBs.
 
         The returned list contains one instance of each distinct boxed layer (represented as a
-        :class:`~.CircuitInstruction`) appearing in the input PUBs. This list can be passed
-        directly to the :meth:`~.qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3.run` method
-        for characterization, avoiding redundant learning of identical layers.
+        :class:`~.CircuitInstruction`) appearing in the input PUBs.
+
+        For noise learning, keep only the boxes that carry an :class:`~samplomatic.InjectNoise`
+        annotation:
+
+        .. code-block:: python
+
+            from samplomatic import InjectNoise
+            from samplomatic.utils import get_annotation
+
+            est = EstimatorV2(mode, options)
+            est.options.resilience.pec_mitigation = True
+
+            layers = [
+                layer
+                for layer in est.find_unique_layers(pubs)
+                if get_annotation(layer.operation, InjectNoise)
+            ]
+
+            results = NoiseLearnerV3(mode).run(layers).result()
+            noise_model = results.to_dict(layers)
+
+            # Assign the learned model so PEC uses it on the next run.
+            est.options.resilience.noise_model_mapping = noise_model
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
@@ -190,7 +211,7 @@ class EstimatorV2(BaseEstimatorV2):
         )
 
     def finalize_options(self) -> EstimatorOptions:
-        """Construct and finalize the runtime estimator options.
+        """Construct and finalize the Estimator options.
 
         This method combines the configured resilience level with the user-provided option
         to produce the final :class:`~.EstimatorOptions` instance used inside a call to
@@ -248,7 +269,7 @@ class EstimatorV2(BaseEstimatorV2):
         to executor inputs can be resource intensive and cause a delay between invoking the function
         and the ``job`` being submitted. In order to check the progress of the call, it is
         recommended to setup logging (with an ``INFO`` level) - see
-        `Qiskit Runtime documentation
+        `IBM Quantum Compute documentation
         <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 

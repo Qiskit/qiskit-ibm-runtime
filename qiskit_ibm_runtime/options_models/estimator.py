@@ -91,7 +91,7 @@ class EstimatorOptions(BaseOptionsModel):
         zero bias.
 
     Refer to the
-    `Configure error mitigation for Qiskit Runtime
+    `Configure error mitigation for IBM Quantum Compute (formerly Qiskit Runtime)
     <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide for more
     information about the error mitigation methods used at each level.
     """

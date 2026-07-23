@@ -149,7 +149,7 @@ convention = "google"
 [project]
 name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]
-description = "IBM Quantum client for Qiskit Runtime."
+description = "IBM Quantum client for IBM Quantum Compute (formerly Qiskit Runtime)."
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
     {name = "Qiskit Development Team", email="qiskit@us.ibm.com"},

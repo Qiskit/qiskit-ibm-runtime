@@ -13,20 +13,25 @@
 """Unit tests."""
 
 from itertools import islice, product
+from unittest import skipUnless
 
 from ddt import data, ddt, unpack
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives.containers.bit_array import BitArray
 from qiskit.quantum_info import PauliLindbladMap
-from qiskit_aer import AerSimulator
+from qiskit.utils import optionals
 from samplomatic import Tag, Twirl
 from samplomatic.builders.build import build
 
-from qiskit_ibm_runtime.aer_executor import AerExecutor
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
+
+if optionals.HAS_AER:
+    from qiskit_aer import AerSimulator
+
+    from qiskit_ibm_runtime.aer_executor import AerExecutor
 
 
 def _batched(iterable, n, *, strict=False):
@@ -85,6 +90,7 @@ def _circ_b():
 
 
 @ddt
+@skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
 class TestNoisySimulation(IBMTestCase):
     """Test noisy simulation."""
 

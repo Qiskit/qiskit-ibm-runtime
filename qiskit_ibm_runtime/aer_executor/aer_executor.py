@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from ..results import QuantumProgramResult
 
 
+@HAS_AER.require_in_instance
 class AerRuntimeJob:
     """Job object returned by :meth:`AerExecutor.run`.
 
@@ -52,12 +53,6 @@ class AerRuntimeJob:
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        if not HAS_AER:
-            raise ValueError(
-                "Cannot initialize object of type 'AerExecutor' since 'qiskit-aer' is not "
-                "installed. Install 'qiskit-aer' and try again."
-            )
-
         self._backend = backend
         self._program = program
         self._noise_dict = noise_dict
@@ -83,6 +78,7 @@ class AerRuntimeJob:
         return self._result
 
 
+@HAS_AER.require_in_instance
 class AerExecutor:
     """Local Aer-based executor mimicking the IBM Runtime executor interface.
 
@@ -131,12 +127,6 @@ class AerExecutor:
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        if not HAS_AER:
-            raise ValueError(
-                "Cannot initialize object of type 'AerExecutor' since 'qiskit-aer' is not "
-                "installed. Install 'qiskit-aer' and try again."
-            )
-
         self._backend = backend
         self._noise_dict = noise_dict
         self._angle_decimals = angle_decimals

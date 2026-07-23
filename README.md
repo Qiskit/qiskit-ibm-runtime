@@ -1,4 +1,5 @@
-# Qiskit Runtime IBM Client
+# IBM Quantum Compute (formerly Qiskit Runtime) client
+
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-ibm-runtime.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/Qiskit/qiskit-ibm-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/Qiskit/qiskit-ibm-runtime/actions/workflows/ci.yml)
 [![](https://img.shields.io/github/release/Qiskit/qiskit-ibm-runtime.svg?style=popout-square)](https://github.com/Qiskit/qiskit-ibm-runtime/releases)
@@ -9,10 +10,10 @@
 
 **Qiskit** is an open-source SDK for working with quantum computers at the level of extended quantum circuits, operators, and primitives.
 
-**Qiskit IBM Runtime** is a new environment offered by IBM Quantum that streamlines quantum computations and provides optimal
+**IBM Quantum Compute** (formerly Qiskit Runtime) is a new environment offered by IBM Quantum that streamlines quantum computations and provides optimal
 implementations of the Qiskit primitives `sampler` and `estimator` for IBM Quantum hardware. It is designed to use additional classical compute resources to execute quantum circuits with more efficiency on quantum processors, by including near-time computations such as error suppression and error mitigation. Examples of error suppression include dynamical decoupling, noise-aware compilation, error mitigation including readout mitigation, zero-noise extrapolation (ZNE), and probabilistic error cancellation (PEC).
 
-This module provides the interface to access the Qiskit Runtime service on IBM Quantum Platform.
+This module provides the interface to access the IBM Quantum Compute service on IBM Quantum Platform.
 
 ## Installation
 
@@ -31,13 +32,7 @@ pip install qiskit-ibm-runtime[performance,visualization]
 
 ## Account setup
 
-### Qiskit Runtime service on IBM Quantum Platform
-
-| :warning: After the sunset of IBM Quantum Platform Classic the `ibm_quantum` channel option is no longer supported. The `ibm_cloud` and `ibm_quantum_platform` channels are now the only valid channels. See the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp) for more information.
-|:---------------------------|
-
-
-### Qiskit Runtime service on the new IBM Quantum Platform (IBM Cloud)
+### IBM Quantum Compute service on IBM Quantum Platform
 
 You will need your IBM Quantum Platform API token to authenticate with the runtime service:
 
@@ -46,7 +41,7 @@ You will need your IBM Quantum Platform API token to authenticate with the runti
 2. Copy (and optionally regenerate) your API token from your
    [IBM Cloud account page].
 
-The runtime service is now part of the IBM Quantum Services on IBM Cloud. To use this service, you'll
+The IBM Quantum Compute service is now part of the IBM Quantum Services on IBM Cloud. To use this service, you'll
 need to create an IBM Cloud account and a quantum service instance.
 [This guide](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
 contains step-by-step instructions, including how to find your
@@ -58,8 +53,8 @@ IBM Cloud API key and Cloud Resource Name (CRN), which you will need for authent
 Once you have the account credentials, you can save them on disk, so you won't have to input
 them each time. The credentials are saved in the `$HOME/.qiskit/qiskit-ibm.json` file, where `$HOME` is your home directory.
 
-| :warning: Account credentials are saved in plain text, so only do so if you are using a trusted device. |
-|:---------------------------|
+> [!WARNING]
+> Account credentials are saved in plain text, so only do so if you are using a trusted device.
 
  ```python
 from qiskit_ibm_runtime import QiskitRuntimeService
@@ -119,7 +114,7 @@ Primitives accept vectorized inputs, where single circuits can be grouped with a
 
 The [primitive interfaces](https://quantum.cloud.ibm.com/docs/api/qiskit/primitives) are defined in Qiskit.
 
-The IBM Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
+The IBM Quantum Compute service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
 There are several different options you can specify when calling the primitives. See [Primitive options](https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/options) for more information.
 
@@ -214,7 +209,7 @@ This code batches together 50 parameters to be executed in a single job. If a us
 
 ## Session
 
-In many algorithms and applications, an Estimator needs to be called iteratively without incurring queuing delays on each iteration. To solve this, the IBM Runtime service provides a **Session**. A session starts when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
+In many algorithms and applications, an Estimator needs to be called iteratively without incurring queuing delays on each iteration. To solve this, the IBM Quantum Compute service provides a **Session**. A session starts when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
 
 You can use the [`qiskit_ibm_runtime.Session`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/session.py) class to start a
 session. Consider the same example above and try to find the optimal `theta`. The following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimal theta that maximizes the observable.
@@ -352,7 +347,7 @@ export USAGE_DATA_OPT_OUT=True
 
 ## Contribution guidelines
 
-If you'd like to contribute to qiskit-ibm-runtime, please take a look at our
+If you'd like to contribute to `qiskit-ibm-runtime`, please take a look at our
 [contribution guidelines]. This project adheres to Qiskit's [code of conduct].
 By participating, you are expected to uphold to this code.
 

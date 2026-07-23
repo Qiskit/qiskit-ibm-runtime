@@ -64,9 +64,9 @@ class TwirlingOptions:
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
       primitive execution interface and therefore is always obeyed. ``default_shots``, on the other
-      hand, is considered a Qiskit Runtime specific option. Therefore, the product of
-      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over
-      ``default_shots``.
+      hand, is considered a IBM Quantum Compute (formerly Qiskit Runtime) specific option.
+      Therefore, the product of ``num_randomizations`` and ``shots_per_randomization`` takes
+      precedence over ``default_shots``.
     """
 
     shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
@@ -84,9 +84,9 @@ class TwirlingOptions:
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
       primitive execution interface and therefore is always obeyed. ``default_shots``, on the other
-      hand, is considered a Qiskit Runtime specific option. Therefore, the product of
-      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over
-      ``default_shots``.
+      hand, is considered a IBM Quantum Compute (formerly Qiskit Runtime) specific option.
+      Therefore, the product of ``num_randomizations`` and ``shots_per_randomization`` takes
+      precedence over ``default_shots``.
     """
 
     strategy: UnsetType | TwirlingStrategyType = Unset

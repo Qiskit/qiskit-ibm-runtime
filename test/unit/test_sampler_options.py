@@ -13,16 +13,20 @@
 """Tests for SamplerOptions class."""
 
 from dataclasses import asdict
+from unittest import skipUnless
 
 from ddt import data, ddt
 from pydantic import ValidationError
-from qiskit_aer.noise import NoiseModel
+from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend, get_primitive_inputs
+
+if HAS_AER:
+    from qiskit_aer.noise import NoiseModel
 
 
 @ddt
@@ -41,6 +45,7 @@ class TestSamplerOptions(IBMTestCase):
             SamplerOptions(**val)
         self.assertIn(list(val.keys())[0], str(exc.exception))
 
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_program_inputs(self):
         """Test converting to program inputs from sampler options."""
         noise_model = NoiseModel()

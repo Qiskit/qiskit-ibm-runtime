@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 class RunnerResult(Result):
-    """Result class for Qiskit Runtime program circuit-runner."""
+    """Result class for IBM Quantum Compute (formerly Qiskit Runtime) program circuit-runner."""
 
     def get_quasiprobabilities(
         self, experiment: int | list | None = None

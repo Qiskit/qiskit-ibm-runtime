@@ -55,7 +55,7 @@ SERVICE_NAME = "runtime"
 
 
 class QiskitRuntimeService:
-    """Class for interacting with the Qiskit Runtime service.
+    """Class for interacting with the IBM Quantum Compute (formerly Qiskit Runtime) service.
 
     Recommended uses:
 
@@ -123,6 +123,9 @@ class QiskitRuntimeService:
         it will fall back to the overall default account, defined when calling
         :meth:`.save_account` with ``set_as_default=True``.
 
+    Since ``qiskit-ibm-runtime`` ``0.49``, this class can also be accessed as
+    ``qiskit_ibm_runtime.IBMQuantumComputeService``.
+
     Args:
         channel: String that identifies the service platform. This is
             set to ``ibm_quantum_platform`` by default, but can additionally take ``local``
@@ -130,7 +133,7 @@ class QiskitRuntimeService:
             path as ``ibm_quantum_platform``, the recommended value is `ibm_quantum_platform``.
             If ``local`` is selected, the local testing mode will be used, and
             primitive queries will run on a local simulator. For more details, check the
-            `Qiskit Runtime local testing mode
+            `IBM Quantum Compute local testing mode
             <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
             For non-local modes, the channel is used to resolve the default API URL value.
             ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
@@ -164,7 +167,7 @@ class QiskitRuntimeService:
             authentication)
         verify: Whether to verify the server's TLS certificate.
         private_endpoint: Connect to private API URL.
-        url_resolver: Function used to resolve the runtime URL. If not
+        url_resolver: Function used to resolve the IBM Quantum Compute URL. If not
             provided, a default resolver will be used to access different service endpoints.
         region: Set a region preference for automatic instance selection.
             This argument is **ignored** if an ``instance`` is specified.
@@ -995,15 +998,15 @@ class QiskitRuntimeService:
         Args:
             program_id: Program ID.
             inputs: Program input parameters. These input values are passed
-                to the runtime program.
+                to the IBM Quantum Compute program.
             options: Runtime options that control the execution environment.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
                 of such subclasses. If more than one decoder is specified, they will be called in
                 chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
                 decoder. If not specified, a program-specific decoder or the default
                 ``ResultDecoder`` is used.
-            session_id: Job ID of the first job in a runtime session.
-            start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            session_id: Job ID of the first job in a IBM Quantum Compute session.
+            start_session: Set to True to explicitly start a IBM Quantum Compute session.
             calibration_id: The calibration id to use for the IBM backend.
 
         Returns:
@@ -1084,13 +1087,13 @@ class QiskitRuntimeService:
         )
 
     def job(self, job_id: str) -> RuntimeJobV2:
-        """Retrieve a runtime job.
+        """Retrieve a IBM Quantum Compute job.
 
         Args:
             job_id: Job ID.
 
         Returns:
-            Runtime job retrieved.
+            IBM Quantum Compute job retrieved.
 
         Raises:
             RuntimeJobNotFound: If the job doesn't exist.
@@ -1130,7 +1133,7 @@ class QiskitRuntimeService:
         created_before: datetime | None = None,
         descending: bool = True,
     ) -> list[RuntimeJobV2]:
-        """Retrieve all runtime jobs, subject to optional filtering.
+        """Retrieve all IBM Quantum Compute jobs, subject to optional filtering.
 
         Args:
             limit: Number of jobs to retrieve. ``None`` means no limit.
@@ -1154,7 +1157,7 @@ class QiskitRuntimeService:
                 creation date (i.e. newest first) until the limit is reached.
 
         Returns:
-            A list of runtime jobs.
+            A list of IBM Quantum Compute jobs.
 
         Raises:
             IBMInputValueError: If an input value is invalid.
@@ -1210,7 +1213,7 @@ class QiskitRuntimeService:
         return [self._decode_job(job) for job in job_responses]
 
     def delete_job(self, job_id: str) -> None:
-        """Delete a runtime job.
+        """Delete a IBM Quantum Compute job.
 
         Note that this operation cannot be reversed.
 
