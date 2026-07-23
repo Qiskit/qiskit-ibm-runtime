@@ -291,7 +291,11 @@ class IBMBackend(Backend):
 
     @property
     def physical_qubits(self) -> int:
-        """Return the number of physical qubits the backend has."""
+        """Return the number of physical qubits the backend has.
+
+        Return the number of physical qubits for the backend (programmable qubits, reset qubits,
+        and couplers combined).
+        """
         return self._physical_qubits
 
     def target_history(self, datetime: python_datetime | None = None) -> Target:

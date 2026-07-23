@@ -279,7 +279,11 @@ class FakeBackendV2(BackendV2):
 
     @property
     def physical_qubits(self) -> int:
-        """Return the number of physical qubits the backend has."""
+        """Return the number of physical qubits the backend has.
+
+        Return the number of physical qubits for the backend (programmable qubits, reset qubits,
+        and couplers combined).
+        """
         return self._physical_qubits
 
     def run(self, run_input: QuantumCircuit | list[QuantumCircuit], **options: dict) -> Job:
