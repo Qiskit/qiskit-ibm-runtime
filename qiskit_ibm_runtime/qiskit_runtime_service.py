@@ -780,12 +780,11 @@ class QiskitRuntimeService:
             return None
 
         # Retrieve `physical_qubits` from the stored `/backends` responses.
+        backend_infos_for_instance: list[dict[str, Any]] = self._backends_info_per_instance.get(
+            instance, []
+        )
         backend_info = next(
-            (
-                info
-                for info in self._backends_info_per_instance[instance]
-                if info["name"] == backend_name
-            ),
+            (info for info in backend_infos_for_instance if info["name"] == backend_name),
             {},
         )
         physical_qubits = backend_info.get("physical_qubits", None)
@@ -1361,7 +1360,12 @@ class QiskitRuntimeService:
                 except RequestsApiError:
                     continue
         else:
-            all_backends = self._active_api_client.list_backends()
+            default_instance = self._account.instance
+            if default_instance not in self._backends_info_per_instance:
+                self._backends_info_per_instance[default_instance] = (
+                    self._active_api_client.list_backends()
+                )
+            all_backends = self._backends_info_per_instance[default_instance]
 
         candidates = []
         for backend in all_backends:
