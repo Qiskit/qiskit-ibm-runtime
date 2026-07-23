@@ -35,7 +35,7 @@ class BasisCase:
 
     expected_pairs: Sequence[tuple[tuple[int, ...], str]]
     """Expected mapping from each parameter index to the observable(s) assigned after
-    broadcasting  the parameter and basis dimensions."""
+    broadcasting the parameter and basis dimensions."""
 
 
 @dataclass(frozen=True)

@@ -38,7 +38,6 @@ from .utils import PARAM_BASIS_CASES_3Q
 class TestPrepare(IBMTestCase):
     """Tests for the prepare function."""
 
-    @data
     def test_param_basis_expansion_3q(self):
         """Test parameter-basis expansion with three-qubit observables."""
         observables = PARAM_BASIS_CASES_3Q.observables

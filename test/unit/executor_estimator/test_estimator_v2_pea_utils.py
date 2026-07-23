@@ -33,11 +33,48 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMTestCase
+from .utils import PARAM_BASIS_CASES_3Q
 
 
 @ddt
 class TestPreparePeaFunction(IBMTestCase):
     """Tests for the prepare_pea function."""
+
+    def test_param_basis_expansion_3q(self):
+        """Test parameter-basis expansion with three-qubit observables."""
+        observables = PARAM_BASIS_CASES_3Q.observables
+        num_qubits = observables.num_qubits
+
+        circuit = QuantumCircuit(num_qubits)
+        circuit.rz(Parameter("alpha"), 0)
+
+        for case in PARAM_BASIS_CASES_3Q.cases:
+            parameter_shape = case.parameter_shape
+            observables_shape = case.observables_shape
+            expected_pairs = case.expected_pairs
+
+            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
+                pub_like = (
+                    circuit,
+                    observables.reshape(observables_shape),
+                    np.random.random(parameter_shape + (circuit.num_parameters,)),
+                )
+                pub = EstimatorPub.coerce(pub_like)
+
+                twirling_options = TwirlingOptions()
+                twirling_options.enable_gates = True
+                twirling_options.enable_measure = True
+                zne_options = ZneOptions()
+                zne_options.amplifier = "pea"
+                measure_noise_learning = MeasureNoiseLearningOptions()
+                program = prepare_pea(
+                    [pub], twirling_options, 10, zne_options, {}, measure_noise_learning
+                )
+
+                post_processor_data = program.passthrough_data["post_processor"]
+                param_basis_pairs = post_processor_data["param_basis_pairs"][0]
+
+                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
 
     def test_prepare_pea_basic(self):
         """Test prepare_pea with basic noise factors and noise model."""
