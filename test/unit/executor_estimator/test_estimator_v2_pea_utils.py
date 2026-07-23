@@ -16,9 +16,9 @@ import math
 from typing import Any, cast
 
 import numpy as np
-from ddt import ddt
+from ddt import data, ddt, unpack
 from qiskit.circuit import Parameter, QuantumCircuit
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
@@ -37,16 +37,31 @@ from .utils import PARAM_BASIS_CASES_3Q
 
 
 @ddt
-class TestPreparePeaFunction(IBMTestCase):
-    """Tests for the prepare_pea function."""
+class TestPreparePea(IBMTestCase):
+    """Tests for the ``prepare_pea`` function."""
 
-    def test_param_basis_expansion_3q(self):
+    @data([True, True, True], [True, False, False])
+    @unpack
+    def test_param_basis_expansion_3q(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
         """Test parameter-basis expansion with three-qubit observables."""
         observables = PARAM_BASIS_CASES_3Q.observables
         num_qubits = observables.num_qubits
 
         circuit = QuantumCircuit(num_qubits)
         circuit.rz(Parameter("alpha"), 0)
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
 
         for case in PARAM_BASIS_CASES_3Q.cases:
             parameter_shape = case.parameter_shape
@@ -59,16 +74,15 @@ class TestPreparePeaFunction(IBMTestCase):
                     observables.reshape(observables_shape),
                     np.random.random(parameter_shape + (circuit.num_parameters,)),
                 )
-                pub = EstimatorPub.coerce(pub_like)
+                pubs = [EstimatorPub.coerce(pub_like)]
 
-                twirling_options = TwirlingOptions()
-                twirling_options.enable_gates = True
-                twirling_options.enable_measure = True
-                zne_options = ZneOptions()
-                zne_options.amplifier = "pea"
-                measure_noise_learning = MeasureNoiseLearningOptions()
                 program = prepare_pea(
-                    [pub], twirling_options, 10, zne_options, {}, measure_noise_learning
+                    pubs=pubs,
+                    twirling_options=twirling_options,
+                    shots=10,
+                    zne_options=zne_options,
+                    noise_model_mapping={},
+                    measure_noise_learning=measure_noise_learning,
                 )
 
                 post_processor_data = program.passthrough_data["post_processor"]

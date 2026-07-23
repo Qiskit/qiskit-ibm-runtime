@@ -38,13 +38,25 @@ from .utils import PARAM_BASIS_CASES_3Q
 class TestPrepare(IBMTestCase):
     """Tests for the prepare function."""
 
-    def test_param_basis_expansion_3q(self):
+    @data([True, True, True], [False, True, True], [False, False, False])
+    @unpack
+    def test_param_basis_expansion_3q(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
         """Test parameter-basis expansion with three-qubit observables."""
         observables = PARAM_BASIS_CASES_3Q.observables
         num_qubits = observables.num_qubits
 
         circuit = QuantumCircuit(num_qubits)
         circuit.rz(Parameter("alpha"), 0)
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
 
         for case in PARAM_BASIS_CASES_3Q.cases:
             parameter_shape = case.parameter_shape
@@ -57,13 +69,14 @@ class TestPrepare(IBMTestCase):
                     observables.reshape(observables_shape),
                     np.random.random(parameter_shape + (circuit.num_parameters,)),
                 )
-                pub = EstimatorPub.coerce(pub_like)
+                pubs = [EstimatorPub.coerce(pub_like)]
 
-                twirling_options = TwirlingOptions()
-                twirling_options.enable_gates = True
-                twirling_options.enable_measure = True
-                measure_noise_learning = MeasureNoiseLearningOptions()
-                program = prepare([pub], twirling_options, 10, measure_noise_learning)
+                program = prepare(
+                    pubs=pubs,
+                    twirling_options=twirling_options,
+                    shots=10,
+                    measure_noise_learning=measure_noise_learning,
+                )
 
                 post_processor_data = program.passthrough_data["post_processor"]
                 param_basis_pairs = post_processor_data["param_basis_pairs"][0]
