@@ -299,7 +299,7 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @data(-1, 1, 2)
+    @data(-1, 1, 2, np.nan)
     def test_rzz_fixed_angle_validation(self, angle):
         """Test exception when rzz gate is used with an angle outside the range [0, pi/2]."""
         backend = FakeFractionalBackend()
@@ -314,7 +314,7 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaisesRegex(IBMInputValueError, f"{angle}"):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @data(-1, 1, 2)
+    @data(-1, 1, 2, np.nan)
     def test_rzz_parametrized_angle_validation(self, angle):
         """Test rzz gate with parameter outside range.
 
@@ -333,6 +333,17 @@ class TestSamplerV2(IBMTestCase):
         else:
             with self.assertRaisesRegex(IBMInputValueError, f"p={angle}"):
                 SamplerV2(backend).run(pubs=[(circ, [angle])])
+
+    def test_rzz_parametrized_angle_allows_eliminated_nan(self):
+        """Test that a NaN parameter is allowed when it is eliminated from the RZZ angle."""
+        backend = FakeFractionalBackend()
+        param = Parameter("p")
+
+        circ = QuantumCircuit(2)
+        circ.rzz(0 * param + 1, 0, 1)
+        circ.measure_all()
+
+        SamplerV2(backend).run(pubs=[(circ, [np.nan])])
 
     @data([1.0, 2.0], [1.0, 0.0])
     @unpack

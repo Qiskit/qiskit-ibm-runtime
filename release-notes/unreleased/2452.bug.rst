@@ -1,0 +1,3 @@
+Reject fixed and parameterized ``RZZ`` angles that evaluate to ``NaN`` during
+primitive input validation, instead of accepting the value or leaking a raw
+Qiskit binding error.
