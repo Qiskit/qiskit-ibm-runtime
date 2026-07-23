@@ -50,7 +50,7 @@ class ParamBasisTestCases:
 
 
 PARAM_BASIS_CASES_3Q = ParamBasisTestCases(
-    observables=ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]),
+    observables=ObservablesArray(["Z0Z", "X+-", "lrY", "IrI"]),
     cases=[
         BasisCase(
             (2, 2),
