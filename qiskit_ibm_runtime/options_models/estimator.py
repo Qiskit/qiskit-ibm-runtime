@@ -14,28 +14,24 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Literal
 
-from pydantic import Field
-from pydantic.dataclasses import dataclass
-
+from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
-from .executor import ExecutorOptions
 from .resilience import ResilienceOptions
 from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
-from .utils import PRIMITIVES_CONFIG
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class EstimatorOptions:
+class EstimatorOptions(BaseOptionsModel):
     """Options for the executor-based EstimatorV2."""
 
     default_precision: float = 0.015625
-    """The default precision for expectation value estimates if not specified in the PUBs
+    """The default precision to use for any PUB or ``run()`` call that does not specify one.
+
+    The default precision for expectation value estimates if not specified in the PUBs
     or in the run method.
 
     The default value of ``0.015625``, equivalent to ``4096**-0.5``, represents the precision
@@ -48,65 +44,47 @@ class EstimatorOptions:
     .. note::
         If set, this value overrides :attr:`~default_precision`.
 
-    A configuration is a combination of a specific parameter value binding set and a
-    physical measurement basis. A physical measurement basis groups together some
-    collection of qubit-wise commuting observables for some specific circuit/parameter
-    value set to create a single measurement with basis rotations that is inserted into
-    hardware executions.
+    A configuration is a combination of a specific parameter value binding set and a physical
+    measurement basis. A physical measurement basis groups together some collection of qubit-wise
+    commuting observables for some specific circuit/parameter value set to create a single
+    measurement with basis rotations that is inserted into hardware executions.
 
-    If twirling is enabled, the value of this option will be divided over circuit
-    randomizations, with a smaller number of shots per randomization. See the
-    :attr:`~twirling` options.
+    If twirling is enabled, the value of this option will be divided over circuit randomizations,
+    with a smaller number of shots per randomization. See the :attr:`~twirling` options.
     """
 
-    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
-    """Execution options.
+    execution: ExecutionOptions = ExecutionOptions()
+    """Execution options."""
 
-    See :class:`.ExecutionOptions` for all available options.
-    """
-
-    twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
+    twirling: TwirlingOptions = TwirlingOptions()
     """Twirling options.
 
-    Currently only enable_measure=False is supported.
-
-    See :class:`.TwirlingOptions` for all available options.
+    Currently only ``enable_measure=False`` is supported.
     """
 
-    dynamical_decoupling: DynamicalDecouplingOptions = Field(
-        default_factory=DynamicalDecouplingOptions
-    )
-    """Dynamical decoupling options.
+    dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
+    """Dynamical decoupling options."""
 
-    See :class:`~.DynamicalDecouplingOptions` for all available options.
-    """
+    simulator: SimulatorOptions = SimulatorOptions()
+    """Simulator options."""
 
-    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
-    """Simulator options.
-
-    See :class:`~.SimulatorOptions` for all available options.
-    """
-
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options."""
 
     max_execution_time: int | None = None
     """Maximum execution time in seconds, based on system execution time (not wall clock time)."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
 
-    resilience: ResilienceOptions = Field(default_factory=ResilienceOptions)
-    """Advanced resilience options to fine-tune the resilience strategy.
-
-    See :class:`.~ResilienceOptions` for all available options.
-    """
+    resilience: ResilienceOptions = ResilienceOptions()
+    """Advanced resilience options to fine-tune the resilience strategy."""
 
     resilience_level: Literal[0, 1, 2] = 1
     """How much resilience to build against errors.
 
-    Higher levels generate more accurate results, at the expense of longer processing times.
-    The supported values are:
+    Higher levels generate more accurate results, at the expense of longer processing times. The
+    supported values are:
     * 0: No mitigation.
     * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
     * 2: Medium mitigation costs. Typically reduces bias in estimators but is not guaranteed to be
@@ -114,29 +92,6 @@ class EstimatorOptions:
 
     Refer to the
     `Configure error mitigation for Qiskit Runtime
-    <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide
-    for more information about the error mitigation methods used at each level.
+    <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide for more
+    information about the error mitigation methods used at each level.
     """
-
-    def to_executor_options(self) -> ExecutorOptions:
-        """Map EstimatorOptions to ExecutorOptions, ignoring all irrelevant fields.
-
-        .. note::
-            Simulator options are ignored as executor does not support local mode.
-
-        Returns:
-            Mapped executor options.
-        """
-        executor_options = ExecutorOptions()
-
-        environment_options = asdict(self.environment)  # type: ignore[call-overload]
-        execution_options = asdict(self.execution)  # type: ignore[call-overload]
-        executor_options.environment = EnvironmentOptions(**environment_options)
-        executor_options.execution = ExecutionOptions(**execution_options)
-
-        executor_options.environment.max_execution_time = self.max_execution_time
-        if self.experimental:
-            executor_options.environment.image = self.experimental.get("image", None)
-            executor_options.experimental.update(self.experimental)
-
-        return executor_options

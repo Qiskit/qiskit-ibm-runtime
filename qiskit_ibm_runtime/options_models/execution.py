@@ -14,13 +14,10 @@
 
 from typing import Literal
 
-from pydantic.dataclasses import dataclass
-
-from .utils import PRIMITIVES_CONFIG
+from .base import BaseOptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class ExecutionOptions:
+class ExecutionOptions(BaseOptionsModel):
     """Low-level execution options."""
 
     init_qubits: bool = True
@@ -57,23 +54,8 @@ class ExecutionOptions:
     """
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
 class SamplerExecutionOptions(ExecutionOptions):
-    """Execution options for the sampler primitive.
-
-    Args:
-        init_qubits: Whether to reset the qubits to the ground state for each shot.
-            Inherited from :class:`~.ExecutionOptions`.
-        rep_delay: The repetition delay. Inherited from :class:`~.ExecutionOptions`.
-        meas_type: How to process and return measurement results. This option sets
-            the return type of all classical registers in all sampler pub results.
-
-            * ``"classified"``: Returns a BitArray with classified measurement outcomes.
-            * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
-              trace, in arbitrary units.
-            * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots,
-              in arbitrary units.
-    """
+    """Execution options for the sampler primitive."""
 
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified"
     """How to process and return measurement results.
@@ -81,8 +63,7 @@ class SamplerExecutionOptions(ExecutionOptions):
     This option sets the return type of all classical registers in all sampler pub results.
 
     * ``"classified"``: Returns a BitArray with classified measurement outcomes.
-    * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
-        trace, in arbitrary units.
-    * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots,
-        in arbitrary units.
+    * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement trace, in
+        arbitrary units.
+    * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots, in arbitrary units.
     """

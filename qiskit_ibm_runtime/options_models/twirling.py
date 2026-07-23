@@ -16,22 +16,19 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic.dataclasses import dataclass
-
-from .utils import PRIMITIVES_CONFIG
+from .base import BaseOptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class TwirlingOptions:
+class TwirlingOptions(BaseOptionsModel):
     """Twirling options."""
 
     enable_gates: bool | None = None
     """Whether to apply 2-qubit Clifford gate twirling.
 
     If ``None``:
-    - For the Sampler, it defaults to ``False``.
-    - For the Estimator, it is determined by the server according to the resilience level: it is
-    ``False`` for resilience levels ``0`` and ``1``, and ``True`` for resilience level ``2``.
+    * For the Sampler, it defaults to ``False``.
+    * For the Estimator, it is determined by the server according to the resilience level: it is
+      ``False`` for resilience levels ``0`` and ``1``, and ``True`` for resilience level ``2``.
     """
 
     enable_measure: bool | None = None
@@ -41,9 +38,9 @@ class TwirlingOptions:
         Twirling is only applied to measurements that are not involved in a conditional block.
 
     If ``None``:
-    - For the Sampler, it defaults to ``False``.
-    - For the Estimator, it is determined by the server according to the resilience level: it is
-    ``False`` for resilience level ``0``, and ``True`` for resilience levels ``1`` and ``2``.
+    * For the Sampler, it defaults to ``False``.
+    * For the Estimator, it is determined by the server according to the resilience level: it is
+      ``False`` for resilience level ``0``, and ``True`` for resilience levels ``1`` and ``2``.
     """
 
     num_randomizations: int | Literal["auto"] = "auto"

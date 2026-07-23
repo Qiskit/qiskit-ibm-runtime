@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -28,6 +27,7 @@ from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
+from ..options_models.converters import estimator_options_to_executor_options
 from ..options_models.estimator import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
@@ -43,7 +43,6 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
-    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -293,7 +292,16 @@ class EstimatorV2(BaseEstimatorV2):
         # Check if we're in local simulator mode
         if self._executor is None:
             logger.info("Running in local simulator mode")
-            return self._run_simulator(coerced_pubs, options, shots)
+
+            options_dict = options.model_dump()
+            options_dict["default_shots"] = shots
+
+            return self._service._run(
+                program_id="estimator",
+                inputs={"pubs": coerced_pubs, "options": options_dict},
+                options={"backend": self._backend},
+                calibration_id=None,
+            )
 
         if options.dynamical_decoupling.enable:
             for pub in coerced_pubs:
@@ -363,19 +371,15 @@ class EstimatorV2(BaseEstimatorV2):
                 dd_options=options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
-        resilience_options = asdict(options.resilience)  # type: ignore[call-overload]
-        resilience_options.pop("noise_model_mapping")
         # Serialize options (assuming passthrough is correctly configured)
         quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
-            "twirling": asdict(options.twirling),  # type: ignore[call-overload]
-            "dynamical_decoupling": asdict(options.dynamical_decoupling),  # type: ignore[call-overload]
-            "resilience": resilience_options,
+            "twirling": self.options.twirling.model_dump(),
+            "dynamical_decoupling": self.options.dynamical_decoupling.model_dump(),
+            "resilience": self.options.resilience.model_dump(exclude={"noise_model_mapping"}),
         }
 
-        executor_options = options.to_executor_options()
-
         # Set executor options
-        self._executor.options = executor_options
+        self._executor.options = estimator_options_to_executor_options(options)
 
         # Submit to executor
         logger.info(
@@ -386,33 +390,3 @@ class EstimatorV2(BaseEstimatorV2):
         )
 
         return self._executor.run(quantum_program)
-
-    def _run_simulator(
-        self, pubs: list[EstimatorPub], options: EstimatorOptions, shots: int
-    ) -> LocalRuntimeJob:
-        """Run estimator in local simulator mode using BackendEstimatorV2.
-
-        Args:
-            pubs: List of estimator PUBs to run.
-            options: The user options, finalized.
-            shots: The number of shots to use.
-
-        Returns:
-            A LocalRuntimeJob.
-        """
-        options_dict = asdict(options)  # type: ignore[call-overload]
-        options_dict["default_shots"] = shots
-
-        inputs = {
-            "pubs": pubs,
-            "options": options_dict,
-        }
-
-        runtime_options = {"backend": self._backend}
-
-        return self._service._run(
-            program_id="estimator",
-            inputs=inputs,
-            options=runtime_options,
-            calibration_id=None,
-        )

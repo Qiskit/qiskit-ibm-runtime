@@ -14,88 +14,37 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-
-from pydantic import Field
-from pydantic.dataclasses import dataclass
-
+from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
-from .environment import EnvironmentOptions, SamplerEnvironmentOptions
-from .execution import ExecutionOptions, SamplerExecutionOptions
-from .executor import ExecutorOptions
+from .environment import SamplerEnvironmentOptions
+from .execution import SamplerExecutionOptions
 from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
-from .utils import PRIMITIVES_CONFIG
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class SamplerOptions:
+class SamplerOptions(BaseOptionsModel):
     """Options for the executor-based SamplerV2."""
 
     default_shots: int | None = 4096
     """The default number of shots to use if none are specified in the PUBs or in the run method."""
 
-    dynamical_decoupling: DynamicalDecouplingOptions = Field(
-        default_factory=DynamicalDecouplingOptions
-    )
-    """Suboptions for dynamical decoupling.
+    dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
+    """Suboptions for dynamical decoupling."""
 
-    See :class:`~.DynamicalDecouplingOptions` for all available options.
-    """
+    execution: SamplerExecutionOptions = SamplerExecutionOptions()
+    """Execution options."""
 
-    execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
-    """Execution options.
+    twirling: TwirlingOptions = TwirlingOptions()
+    """Pauli twirling options."""
 
-    See :class:`~.SamplerExecutionOptions` for all available options.
-    """
+    simulator: SimulatorOptions = SimulatorOptions()
+    """Simulator options."""
 
-    twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
-    """Pauli twirling options.
-
-    See :class:`~.TwirlingOptions` for all available options.
-    """
-
-    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
-    """Simulator options.
-
-    See :class:`~.SimulatorOptions` for all available options.
-    """
-
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options."""
 
     max_execution_time: int | None = None
     """Maximum execution time in seconds, based on system execution time (not wall clock time)."""
 
-    environment: SamplerEnvironmentOptions = Field(default_factory=SamplerEnvironmentOptions)
+    environment: SamplerEnvironmentOptions = SamplerEnvironmentOptions()
     """Options related to the execution environment."""
-
-    def to_executor_options(self) -> ExecutorOptions:
-        """Map sampler options to executor options, ignoring all irrelevant fields.
-
-        .. note::
-            Simulator options are ignored as executor does not support local mode.
-
-        Returns:
-            Mapped executor options.
-        """
-        executor_options = ExecutorOptions()
-
-        environment_options = asdict(self.environment)  # type: ignore[call-overload]
-        execution_options = asdict(self.execution)  # type: ignore[call-overload]
-        execution_options.pop("meas_type")
-        executor_options.environment = EnvironmentOptions(**environment_options)
-        executor_options.execution = ExecutionOptions(**execution_options)
-
-        executor_options.environment.max_execution_time = self.max_execution_time
-        if self.experimental:
-            executor_options.environment.image = self.experimental.get("image", None)
-            executor_options.experimental.update(self.experimental)
-
-            if execution_key := self.experimental.get("execution", {}):
-                if execution_key.get("scheduler_timing", False):
-                    executor_options.execution.scheduler_timing = True
-                if execution_key.get("stretch_values", False):
-                    executor_options.execution.stretch_values = True
-
-        return executor_options

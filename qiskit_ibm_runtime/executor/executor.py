@@ -15,11 +15,11 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
+from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from ..utils.default_session import get_cm_session
@@ -124,9 +124,6 @@ class Executor:
             raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         params = converter.encoder(program, self.options)
-        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
-        runtime_options["backend"] = self._backend.name
-        runtime_options["instance"] = self._backend._instance
 
         if self._session:
             _run = self._session._run
@@ -147,7 +144,7 @@ class Executor:
 
         return _run(
             program_id=self._PROGRAM_ID,
-            options=runtime_options,
+            options=to_runtime_options(self.options.environment, self._backend),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
         )

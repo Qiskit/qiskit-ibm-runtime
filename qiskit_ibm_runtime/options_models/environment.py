@@ -15,9 +15,8 @@
 from typing import Annotated, Literal
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
-from .utils import PRIMITIVES_CONFIG
+from .base import BaseOptionsModel
 
 LogLevelType = Literal[
     "DEBUG",
@@ -28,17 +27,13 @@ LogLevelType = Literal[
 ]
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class EnvironmentOptions:
+class EnvironmentOptions(BaseOptionsModel):
     """Options related to the execution environment."""
 
     log_level: LogLevelType = "WARNING"
-    """logging level to set in the execution environment.
+    """Logging level to set in the execution environment."""
 
-    The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-    """
-
-    job_tags: list[str] = Field(default_factory=list)
+    job_tags: list[str] = []
     """Tags to be assigned to the job.
 
     The tags can subsequently be used as a filter in the
@@ -58,8 +53,8 @@ class EnvironmentOptions:
     """Maximum execution time in seconds.
 
     This value bounds system execution time (not wall clock time). System execution time is the
-    amount of time that the system is dedicated to processing your job. If a job exceeds
-    this time limit, it is forcibly cancelled.
+    amount of time that the system is dedicated to processing your job. If a job exceeds this time
+    limit, it is forcibly cancelled.
     """
 
     image: (
@@ -74,17 +69,13 @@ class EnvironmentOptions:
     """Runtime image used for this job."""
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class SamplerEnvironmentOptions:
+class SamplerEnvironmentOptions(BaseOptionsModel):
     """Options related to the execution environment."""
 
     log_level: LogLevelType = "WARNING"
-    """logging level to set in the execution environment.
+    """Logging level to set in the execution environment."""
 
-    The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-    """
-
-    job_tags: list[str] = Field(default_factory=list)
+    job_tags: list[str] = []
     """Tags to be assigned to the job.
 
     The tags can subsequently be used as a filter in the
@@ -94,8 +85,8 @@ class SamplerEnvironmentOptions:
     private: bool = False
     """Boolean that indicates whether the job is marked as private.
 
-    When set to true, input parameters are not returned, and the results can only be read once.
+    When set to ``True``, input parameters are not returned, and the results can only be read once.
     After the job is completed, input parameters are deleted from the service. After the results are
-    read, these are also deleted from the service. When set to false, the input parameters and
+    read, these are also deleted from the service. When set to ``False``, the input parameters and
     results follow the standard retention behavior of the API.
     """

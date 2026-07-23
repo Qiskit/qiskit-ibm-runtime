@@ -16,13 +16,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic.dataclasses import dataclass
-
-from .utils import PRIMITIVES_CONFIG
+from .base import BaseOptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class DynamicalDecouplingOptions:
+class DynamicalDecouplingOptions(BaseOptionsModel):
     """Options for dynamical decoupling (DD)."""
 
     enable: bool = False
@@ -39,12 +36,11 @@ class DynamicalDecouplingOptions:
     extra_slack_distribution: Literal["middle", "edges"] = "middle"
     """Where to put extra timing delays due to rounding issues.
 
-    Rounding issues arise because the discrete time step ``dt`` of the system cannot
-    be divided.
+    Rounding issues arise because the discrete time step ``dt`` of the system cannot be divided.
 
     * ``"middle"``: Put the extra slack to the interval at the middle of the sequence.
-    * ``"edges"``: Divide the extra slack as evenly as possible into intervals at beginning
-        and end of the sequence.
+    * ``"edges"``: Divide the extra slack as evenly as possible into intervals at beginning and end
+        of the sequence.
     """
 
     scheduling_method: Literal["alap", "asap"] = "alap"
@@ -53,6 +49,6 @@ class DynamicalDecouplingOptions:
     skip_reset_qubits: bool = False
     """Whether to insert DD on idle periods that immediately follow initialized/reset qubits.
 
-    Since qubits in the ground state are less susceptible to decoherence, it can be beneficial
-    to let them be while they are known to be in this state.
+    Since qubits in the ground state are less susceptible to decoherence, it can be beneficial to
+    let them be while they are known to be in this state.
     """
