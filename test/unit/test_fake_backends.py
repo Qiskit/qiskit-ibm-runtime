@@ -119,3 +119,22 @@ class TestFakeBackends(IBMTestCase):
         backend = FakeMumbaiV2()
         self.assertTrue(backend.dynamic_reprate_enabled)
         self.assertTrue(backend.rep_delay_range)
+
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_backend_physical_qubits(self, backend):
+        """Non-retired backends should have a `physical_qubits` property."""
+        active_backends = [
+            "fake_aachen",
+            "fake_berlin",
+            "fake_boston",
+            "fake_fez",
+            "fake_kingston",
+            "fake_marrakesh",
+            "fake_miami",
+            "fake_pittsburgh",
+        ]
+
+        if backend.name in active_backends:
+            self.assertIsInstance(backend.physical_qubits, int)
+        else:
+            self.assertIsNone(backend.physical_qubits)
