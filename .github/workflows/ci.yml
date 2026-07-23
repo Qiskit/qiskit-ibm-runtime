@@ -108,10 +108,12 @@ jobs:
           fail-on-error: false
   unit-tests-lowest-versions:
     name: Run unit tests with lowest versions - python${{ matrix.python-version }}-${{ matrix.os }}
+    needs: [ "code-quality" , "documentation" ]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        # Limit the combinations to the minimal Python version supported and linux.
         python-version: [ '3.10' ]
         os: [ "ubuntu-latest" ]
     env:
