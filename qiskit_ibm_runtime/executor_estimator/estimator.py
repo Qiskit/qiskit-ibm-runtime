@@ -394,9 +394,9 @@ class EstimatorV2(BaseEstimatorV2):
             )
         # Serialize options (assuming passthrough is correctly configured)
         quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
-            "twirling": self.options.twirling.model_dump(),
-            "dynamical_decoupling": self.options.dynamical_decoupling.model_dump(),
-            "resilience": self.options.resilience.model_dump(exclude={"noise_model_mapping"}),
+            "twirling": options.twirling.model_dump(),
+            "dynamical_decoupling": options.dynamical_decoupling.model_dump(),
+            "resilience": options.resilience.model_dump(exclude={"noise_model_mapping"}),
         }
 
         # Set executor options

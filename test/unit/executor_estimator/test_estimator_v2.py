@@ -260,6 +260,31 @@ class TestEstimatorV2Run(IBMTestCase):
         self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], False)
         self.assertEqual(options_metadata["resilience"]["measure_mitigation"], True)
 
+    def test_run_passthrough_options_are_finalized_not_raw(self):
+        """Test that run adds finalized options (not user options) to passthrough data."""
+        # measure_mitigation=True force-resolves twirling.enable_measure -> True; the user
+        # leaves enable_gates / enable_measure / zne_mitigation unset (raw value None).
+        options = EstimatorOptions()
+        options.resilience.measure_mitigation = True
+
+        estimator = EstimatorV2(mode=self.backend, options=options)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator.run([(circuit, observable)], precision=0.03125)
+
+        self.mock_executor_instance.run.assert_called_once()
+        quantum_program = self.mock_executor_instance.run.call_args[0][0]
+        options_metadata = quantum_program.passthrough_data["post_processor"]["options"]
+
+        # Unset fields must echo their RESOLVED default, never None.
+        self.assertIsNotNone(options_metadata["twirling"]["enable_gates"])
+        self.assertEqual(options_metadata["twirling"]["enable_measure"], True)
+        self.assertEqual(options_metadata["twirling"]["enable_gates"], False)
+        self.assertEqual(options_metadata["resilience"]["zne_mitigation"], False)
+
     def test_run_with_multiple_observables(self):
         """Test run with multiple observables in a single pub."""
         estimator = EstimatorV2(mode=self.backend)
