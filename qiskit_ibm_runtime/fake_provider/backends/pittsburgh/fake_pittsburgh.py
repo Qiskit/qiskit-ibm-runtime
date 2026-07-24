@@ -24,3 +24,4 @@ class FakePittsburgh(FakeBackendV2):
     conf_filename = "conf_pittsburgh.json"
     props_filename = "props_pittsburgh.json"
     backend_name = "fake_pittsburgh"
+    _physical_qubits = 332

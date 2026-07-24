@@ -24,3 +24,4 @@ class FakeBerlin(FakeBackendV2):
     conf_filename = "conf_berlin.json"
     props_filename = "props_berlin.json"
     backend_name = "fake_berlin"
+    _physical_qubits = 338

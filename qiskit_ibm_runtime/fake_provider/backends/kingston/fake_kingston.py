@@ -24,3 +24,4 @@ class FakeKingston(FakeBackendV2):
     conf_filename = "conf_kingston.json"
     props_filename = "props_kingston.json"
     backend_name = "fake_kingston"
+    _physical_qubits = 332

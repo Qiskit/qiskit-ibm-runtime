@@ -73,8 +73,7 @@ def run_quantum_program(
     backend.set_max_qubits(10000)
     aer_sampler = AerSamplerV2.from_backend(backend)
 
-    # _seed is private but is the only way to obtain the sampler's RNG seed for reproducibility.
-    rng = np.random.default_rng(aer_sampler._seed)
+    rng = np.random.default_rng(aer_sampler.seed)
 
     result_list = []
     metadata_list = []
