@@ -12,7 +12,10 @@
 
 """Unit tests for run_quantum_program."""
 
+from __future__ import annotations
+
 from itertools import islice, product
+from typing import TYPE_CHECKING, Any
 from unittest import skipUnless
 from unittest.mock import MagicMock
 
@@ -33,54 +36,39 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
 
+if TYPE_CHECKING:
+    from collections.abc import Generator, Iterable
+
+    from qiskit.transpiler import CouplingMap
+
+
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
 
-def _batched(iterable, n, *, strict=False):
-    # _batched('ABCDEFG', 3) → ABC DEF G
+def batched(iterable: Iterable, n: int) -> Generator[tuple[Any, ...], Any, None]:
+    """Helper function for batching ``n`` items of an iterable together."""
+    # batched('ABCDEFG', 3) → ABC DEF G
     if n < 1:
         raise ValueError("n must be at least one")
     iterator = iter(iterable)
     while batch := tuple(islice(iterator, n)):
-        if strict and len(batch) != n:
-            raise ValueError("_batched(): incomplete batch")
         yield batch
 
 
-def _circ_a():
-    num_qubits = 2
+def generate_circuit(
+    num_qubits: int, coupling_map: CouplingMap
+) -> tuple[QuantumCircuit, list[int]]:
+    """Generate an example twirled circuit given the number of qubits and a coupling map."""
     active_qubits = list(range(num_qubits))
-
     qc_boxed = QuantumCircuit(num_qubits, num_qubits)
     with qc_boxed.box(
         annotations=[
             Twirl(dressing="left"),
             Tag(ref="r0"),
         ]
-    ):  # pyright: ignore[reportGeneralTypeIssues]
-        for edge in _batched(active_qubits, 2):
-            if len(edge) == 2:
-                qc_boxed.cz(*edge)
-
-    with qc_boxed.box(annotations=[Twirl(dressing="right")]):
-        qc_boxed.noop([0, 1])
-    return qc_boxed, active_qubits
-
-
-def _circ_b():
-    fez_backend = FakeFez()
-    coupling_map = fez_backend.coupling_map
-    active_qubits = list(range(fez_backend.num_qubits))
-
-    qc_boxed = QuantumCircuit(fez_backend.num_qubits, fez_backend.num_qubits)
-    with qc_boxed.box(
-        annotations=[
-            Twirl(dressing="left"),
-            Tag(ref="r0"),
-        ]
-    ):  # pyright: ignore[reportGeneralTypeIssues]
-        for edge in _batched(active_qubits, 2):
+    ):
+        for edge in batched(active_qubits, 2):
             if edge in coupling_map:
                 qc_boxed.cz(*edge)
             else:
@@ -165,7 +153,7 @@ class TestRunQuantumProgram(IBMTestCase):
         self.assertTrue((result[0]["c"] == [[True]]).all())
 
     def test_clifford_circuit_item(self):
-        """Test using the stabilizer simulation method via a CircuitItem."""
+        """Test using the stabilizer simulation method via a Circuit item."""
         # Build a simple 3-qubit Clifford circuit (GHZ state preparation + measurement)
         qc = QuantumCircuit(3, 3)
         qc.h(0)
@@ -210,7 +198,7 @@ class TestRunQuantumProgram(IBMTestCase):
                 )
 
     def test_clifford_samplex_item(self):
-        """Test using the stabilizer simulation method via a SamplexItem."""
+        """Test using the stabilizer simulation method via a Samplex item."""
         num_randomizations = 8
         shots = 256
 
@@ -246,11 +234,11 @@ class TestRunQuantumProgram(IBMTestCase):
         self.assert_correct({"c": np.array([False, False])}, item_data)
 
     def test_circuit_item_with_circuit_arguments(self):
-        """Run a parameterized CircuitItem by supplying circuit_arguments directly.
+        """Run a parameterized Circuit item by supplying circuit arguments directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
-        deterministic outcomes, verifying that circuit_arguments are bound correctly
-        in the CircuitItem branch of run_quantum_program.
+        deterministic outcomes, verifying that circuit arguments are bound correctly
+        in the Circuit item branch of ``run_quantum_program``.
         """
         shots = 128
 
@@ -293,16 +281,13 @@ class TestRunQuantumProgram(IBMTestCase):
         # phi=π, theta=π → |11⟩
         self.assertTrue((item_data["c"][3] == [True, True]).all())
 
-    @data(*product([True, False], ["a", "b"]))
+    @data(*product([True, False], [2, 156]))
     @unpack
-    def test_noisy_simulation(self, noise, case):
+    def test_noisy_simulation(self, noise, num_qubits):
         """Test noisy simulation."""
-        if case == "a":
-            qc_boxed, active_qubits = _circ_a()
-        elif case == "b":
-            qc_boxed, active_qubits = _circ_b()
-        else:
-            raise ValueError("...")
+        fez_backend = FakeFez()
+        coupling_map = fez_backend.coupling_map
+        qc_boxed, active_qubits = generate_circuit(num_qubits, coupling_map)
 
         qc_boxed.measure(active_qubits, active_qubits)
 
@@ -350,11 +335,11 @@ class TestRunQuantumProgram(IBMTestCase):
             self.assertEqual(num_shots_tot, cts.get("0" * len(active_qubits), 0))
 
     def test_samplex_item_with_parameter_sweep(self):
-        """Run a parameterized SamplexItem by supplying parameter_values directly.
+        """Run a parameterized Samplex item by supplying parameter values directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
-        deterministic outcomes, verifying that circuit_arguments are bound correctly
-        in the SamplexItem branch of run_quantum_program.
+        deterministic outcomes, verifying that parameter values are bound correctly
+        in the Samplex item branch of ``run_quantum_program``.
         """
         shots = 128
 
@@ -409,7 +394,7 @@ class TestRunQuantumProgram(IBMTestCase):
     def test_samplex_item_with_broadcast_sweep(self):
         """Run a Pauli-twirled circuit with a parameter sweep over input bitflips.
 
-        This test verifies that broadcast dimensions in samplex_arguments are handled correctly.
+        This test verifies that broadcast dimensions in samplex arguments are handled correctly.
 
         The circuit applies RX(theta) on qubit 0 before CX and RX(phi) on qubit 1
         after CX, where theta, phi ∈ {0, π} act as bitflips. This keeps the circuit
