@@ -30,8 +30,8 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import estimator_options_to_executor_options
 from ..options_models.estimator import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
-from .prepare import prepare
 from .prepare_pea import prepare_pea
+from .prepare_vanilla import prepare_vanilla
 from .utils import find_unique_layers, resolve_precision
 from .zne.prepare_zne import prepare_zne
 
@@ -377,7 +377,7 @@ class EstimatorV2(BaseEstimatorV2):
                     else None,
                 )
         else:
-            quantum_program = prepare(
+            quantum_program = prepare_vanilla(
                 pubs=coerced_pubs,
                 twirling_options=options.twirling,
                 shots=shots,
