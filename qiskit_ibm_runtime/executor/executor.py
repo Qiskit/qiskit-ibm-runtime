@@ -77,7 +77,7 @@ class Executor:
     """
 
     _PROGRAM_ID = "executor"
-    _SCHEMA_VERSION = "v1.1"
+    _SCHEMA_VERSION = "v2.0"
 
     options: ExecutorOptions
     """The options of this executor."""
@@ -89,6 +89,10 @@ class Executor:
     ):
         # Coerced to `ExecutorOptions` via `__setattr__()`.
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
+
+        self.options.environment.image = (
+            "qiskit-ibm-primitives:c3c9fdb8e22a570c15b148efbb630a78963ae7a5"  # noqa: E501
+        )
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
