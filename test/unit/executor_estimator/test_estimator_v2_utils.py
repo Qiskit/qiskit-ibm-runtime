@@ -16,8 +16,7 @@ import numpy as np
 from ddt import data, ddt, unpack
 from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.circuit import Parameter
-from qiskit.primitives.containers import ObservablesArray
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.estimator_pub import EstimatorPub, ObservablesArray
 from qiskit.quantum_info import Pauli, SparsePauliOp
 from samplomatic import Tag
 from samplomatic.transpiler import generate_boxing_pass_manager
