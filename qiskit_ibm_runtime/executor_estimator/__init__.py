@@ -11,3 +11,5 @@
 # that they have been altered from the originals.
 
 """Executor-based EstimatorV2"""
+
+from .estimator import EstimatorV2
