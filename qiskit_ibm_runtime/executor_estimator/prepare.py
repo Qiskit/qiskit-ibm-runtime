@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING
 
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from ..exceptions import IBMInputValueError
 from ..options_models.converters import estimator_options_to_executor_options
 from .pec.prepare_pec import prepare_pec
 from .prepare_pea import prepare_pea
@@ -75,11 +74,6 @@ def prepare(
 
     if options.resilience.pec_mitigation:
         logger.info("Running ``prepare_pec``.")
-        if options.resilience.noise_model_mapping is None:
-            raise IBMInputValueError(
-                "When PEC mitigation is enabled, you must provide a noise model "
-                "via options.resilience.noise_model_mapping"
-            )
         quantum_program = prepare_pec(
             pubs=pubs,
             twirling_options=options.twirling,
