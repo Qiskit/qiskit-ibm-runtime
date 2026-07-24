@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 @HAS_AER.require_in_instance
 class SimRuntimeJob:
-    """Job object returned by :meth:`SimExecutor.run`.
+    """Job object returned by :meth:`~.SimExecutor.run`.
 
     The program is executed eagerly on construction; the result is available
     immediately when :meth:`result` is called.
@@ -83,7 +83,7 @@ class SimExecutor:
     """Local Aer-based executor mimicking the IBM Runtime executor interface.
 
     Runs a :class:`~qiskit_ibm_runtime.QuantumProgram` eagerly on construction of the
-    returned job — the result is available immediately when :meth:`SimRuntimeJob.result`
+    returned job — the result is available immediately when :meth:`~.SimRuntimeJob.result`
     is called.
 
     **Noise injection**
@@ -93,7 +93,7 @@ class SimExecutor:
     around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
     labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default,
     noise is injected at the ``R`` (right) barriers, i.e. *after* the gate.  Use
-    ``noise_after=False`` on :class:`InsertNoisePass` to target ``M`` barriers instead
+    ``noise_after=False`` on :class:`~.InsertNoisePass` to target ``M`` barriers instead
     (noise *before* the gate).
 
     The ``noise_dict`` format is:
