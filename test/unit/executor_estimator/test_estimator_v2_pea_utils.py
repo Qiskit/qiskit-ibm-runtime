@@ -18,7 +18,7 @@ from typing import Any, cast
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit.circuit import Parameter, QuantumCircuit
-from qiskit.primitives.containers import EstimatorPub
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation

@@ -18,7 +18,7 @@ import numpy as np
 from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import ClassicalRegister, Parameter
-from qiskit.primitives.containers import EstimatorPub, ObservablesArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub, ObservablesArray
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError

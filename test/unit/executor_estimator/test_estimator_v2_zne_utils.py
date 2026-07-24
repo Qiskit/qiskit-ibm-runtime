@@ -17,7 +17,7 @@ from typing import Any, cast
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit.circuit import Parameter, QuantumCircuit
-from qiskit.primitives.containers import EstimatorPub
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.executor_estimator.zne.prepare_zne import prepare_zne
