@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class BasisCase:
-    """A single parameter-basis expansion test case."""
+class ParamBasisScenario:
+    """A single parameter-basis expansion scenario."""
 
     parameter_shape: tuple[int, ...]
     """The shape of the array of parameter values."""
@@ -39,28 +39,28 @@ class BasisCase:
 
 
 @dataclass(frozen=True)
-class ParamBasisTestCases:
-    """Test cases for parameter-basis expansion."""
+class ParamBasisScenarios:
+    """A collection of scenarios to test parameter-basis expansion."""
 
     observables: ObservablesArray
-    """The observables array used in the test case."""
+    """The observables array used in these scenarios."""
 
-    cases: Sequence[BasisCase]
-    """A collection of test cases."""
+    scenarios: Sequence[ParamBasisScenario]
+    """A collection of scenarios."""
 
 
-PARAM_BASIS_CASES_3Q = ParamBasisTestCases(
+PARAM_BASIS_3Q_SCENARIOS = ParamBasisScenarios(
     observables=ObservablesArray(["Z0Z", "X+-", "lrY", "IrI"]),
-    cases=[
-        BasisCase(
-            (2, 2),
-            (2, 2),
-            [((0, 0), "ZZZ"), ((0, 1), "XXX"), ((1, 0), "YYY"), ((1, 1), "IYI")],
+    scenarios=[
+        ParamBasisScenario(
+            parameter_shape=(2, 2),
+            observables_shape=(2, 2),
+            expected_pairs=[((0, 0), "ZZZ"), ((0, 1), "XXX"), ((1, 0), "YYY"), ((1, 1), "IYI")],
         ),
-        BasisCase(
-            (2, 2),
-            (2, 2, 1),
-            [
+        ParamBasisScenario(
+            parameter_shape=(2, 2),
+            observables_shape=(2, 2, 1),
+            expected_pairs=[
                 ((0, 0), "ZZZ"),
                 ((0, 0), "YYY"),
                 ((0, 1), "ZZZ"),
@@ -71,10 +71,10 @@ PARAM_BASIS_CASES_3Q = ParamBasisTestCases(
                 ((1, 1), "IYI"),
             ],
         ),
-        BasisCase(
-            (2, 2, 1),
-            (2, 2),
-            [
+        ParamBasisScenario(
+            parameter_shape=(2, 2, 1),
+            observables_shape=(2, 2),
+            expected_pairs=[
                 ((0, 0, 0), "ZZZ"),
                 ((0, 0, 0), "XXX"),
                 ((0, 1, 0), "YYY"),
@@ -83,7 +83,11 @@ PARAM_BASIS_CASES_3Q = ParamBasisTestCases(
                 ((1, 1, 0), "YYY"),
             ],
         ),
-        BasisCase((), (2, 2), [((), "ZZZ"), ((), "XXX"), ((), "YYY")]),
+        ParamBasisScenario(
+            parameter_shape=(),
+            observables_shape=(2, 2),
+            expected_pairs=[((), "ZZZ"), ((), "XXX"), ((), "YYY")],
+        ),
     ],
 )
-"""Test cases for parameter-basis expansion with three-qubit observables."""
+"""Scenarios to test parameter-basis expansion with three-qubit observables."""

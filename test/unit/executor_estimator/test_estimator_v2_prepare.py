@@ -31,7 +31,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import combine
-from .utils import PARAM_BASIS_CASES_3Q
+from .utils import PARAM_BASIS_3Q_SCENARIOS
 
 
 @ddt
@@ -44,7 +44,7 @@ class TestPrepare(IBMTestCase):
         self, enable_gates, enable_measure, enable_measure_noise_learning
     ):
         """Test parameter-basis expansion with three-qubit observables."""
-        observables = PARAM_BASIS_CASES_3Q.observables
+        observables = PARAM_BASIS_3Q_SCENARIOS.observables
         num_qubits = observables.num_qubits
 
         circuit = QuantumCircuit(num_qubits)
@@ -58,10 +58,10 @@ class TestPrepare(IBMTestCase):
             MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
         )
 
-        for case in PARAM_BASIS_CASES_3Q.cases:
-            parameter_shape = case.parameter_shape
-            observables_shape = case.observables_shape
-            expected_pairs = case.expected_pairs
+        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
+            parameter_shape = scenario.parameter_shape
+            observables_shape = scenario.observables_shape
+            expected_pairs = scenario.expected_pairs
 
             with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
                 pub_like = (
