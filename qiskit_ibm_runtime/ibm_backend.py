@@ -139,6 +139,7 @@ class IBMBackend(Backend):
         api_client: IBM client used to communicate with the server.
         instance: The service instance to use.
         calibration_id: An optional calibration id to use for this backend
+        physical_qubits: The number of physical qubits of the backend.
     """
 
     id_warning_issued = False
@@ -150,17 +151,20 @@ class IBMBackend(Backend):
         api_client: RuntimeClient,
         instance: str | None = None,
         calibration_id: str | None = None,
+        physical_qubits: int | None = None,
     ) -> None:
         super().__init__(
             name=configuration.backend_name,
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
-        self._calibration_id = calibration_id
-        self._instance = instance
+        self._configuration = deepcopy(configuration)
         self._service = service
         self._api_client = api_client
-        self._configuration = deepcopy(configuration)
+        self._instance = instance
+        self._calibration_id = calibration_id
+        self._physical_qubits = physical_qubits
+
         self._properties: Any = None
         self._target: Any = None
         if (
@@ -284,6 +288,15 @@ class IBMBackend(Backend):
         self.properties()
         self._convert_to_target()
         return self._target
+
+    @property
+    def physical_qubits(self) -> int:
+        """Return the number of physical qubits the backend has.
+
+        Return the number of physical qubits for the backend (programmable qubits, reset qubits,
+        and couplers combined).
+        """
+        return self._physical_qubits
 
     def target_history(self, datetime: python_datetime | None = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
@@ -463,6 +476,7 @@ class IBMBackend(Backend):
             service=self._service,
             api_client=deepcopy(self._api_client),
             instance=self._instance,
+            physical_qubits=self._physical_qubits,
         )
         cpy.name = self.name
         cpy.description = self.description

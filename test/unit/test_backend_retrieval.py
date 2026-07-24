@@ -158,7 +158,7 @@ class TestBackendFilters(IBMTestCase):
         ]
 
         service = self._get_service(fake_backends)
-        service._backends_list = backends_list
+        service._backends_info_per_instance[service._active_api_client._instance] = backends_list
         backend = service.least_busy(use_fractional_gates=True)
         self.assertEqual(backend.name, "fake_fractional")
         self.assertIn("rzz", backend.basis_gates)
@@ -185,7 +185,7 @@ class TestBackendFilters(IBMTestCase):
         ]
 
         service = self._get_service(fake_backends)
-        service._backends_list = backends_list
+        service._backends_info_per_instance[service._active_api_client._instance] = backends_list
         with self.assertRaises(QiskitBackendNotFoundError):
             service.least_busy(use_fractional_gates=True)
 
@@ -209,7 +209,7 @@ class TestBackendFilters(IBMTestCase):
         ]
 
         service = self._get_service(fake_backends)
-        service._backends_list = backends_list
+        service._backends_info_per_instance[service._active_api_client._instance] = backends_list
         backend = service.least_busy(use_fractional_gates=False)
         self.assertEqual(backend.name, "fake_torino")
 
@@ -246,7 +246,7 @@ class TestBackendFilters(IBMTestCase):
         ]
 
         service = self._get_service(fake_backends)
-        service._backends_list = backends_list
+        service._backends_info_per_instance[service._active_api_client._instance] = backends_list
         backend = service.least_busy()
         self.assertEqual(backend.name, "test_backend1")
 
