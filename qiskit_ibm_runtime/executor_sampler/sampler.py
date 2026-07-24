@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamplerV2(BaseSamplerV2):
-    """Executor-based Sampler primitive for Qiskit Runtime.
+    """Executor-based Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of SamplerV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
@@ -86,7 +86,7 @@ class SamplerV2(BaseSamplerV2):
             * A :class:`~qiskit_ibm_runtime.Session` if you are using session execution mode.
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
-            Refer to the `Qiskit Runtime documentation
+            Refer to the `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
@@ -138,7 +138,7 @@ class SamplerV2(BaseSamplerV2):
         to executor inputs can be resource intensive can be resource intensive and cause a delay
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
-        `Qiskit Runtime documentation
+        `IBM Quantum Compute documentation
         <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 

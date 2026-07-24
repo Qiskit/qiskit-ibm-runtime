@@ -10,14 +10,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Exceptions related to the IBM Runtime service."""
+"""Exceptions related to the IBM Quantum Compute service."""
 
 from qiskit.exceptions import QiskitError
 from qiskit.providers.exceptions import JobError, JobTimeoutError
 
 
 class IBMError(QiskitError):
-    """Base class for errors raised by the runtime service modules."""
+    """Base class for errors raised by the IBM Quantum Compute service modules."""
 
     pass
 
@@ -71,7 +71,7 @@ class IBMApiError(IBMError):
 
 
 class IBMRuntimeError(IBMError):
-    """Base class for errors raised by the runtime service modules."""
+    """Base class for errors raised by the IBM Quantum Compute service modules."""
 
     pass
 
@@ -83,7 +83,7 @@ class RuntimeProgramNotFound(IBMRuntimeError):
 
 
 class RuntimeJobFailureError(JobError):
-    """Error raised when a runtime job failed."""
+    """Error raised when a IBM Quantum Compute job failed."""
 
     pass
 

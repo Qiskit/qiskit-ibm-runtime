@@ -11,27 +11,27 @@
 # that they have been altered from the originals.
 
 """
-==========================================
-Qiskit Runtime (:mod:`qiskit_ibm_runtime`)
-==========================================
+================================================================================
+IBM Quantum Compute (formerly Qiskit Runtime) Client (:mod:`qiskit_ibm_runtime`)
+================================================================================
 
 .. currentmodule:: qiskit_ibm_runtime
 
-Modules related to Qiskit Runtime IBM Client.
+Modules related to IBM Quantum Compute (formerly Qiskit Runtime) Client.
 
-Qiskit Runtime is a new architecture that
+IBM Quantum Compute (formerly Qiskit Runtime) is a new architecture that
 streamlines computations requiring many iterations. These experiments will
 execute significantly faster within its improved hybrid quantum/classical process.
 
 Primitives and sessions
 =======================
 
-Qiskit Runtime has two predefined primitives: ``Sampler`` and ``Estimator``.
+IBM Quantum Compute has two predefined primitives: ``Sampler`` and ``Estimator``.
 These primitives provide a simplified interface for performing foundational quantum
 computing tasks while also accounting for the latest developments in
 quantum hardware and software.
 
-Qiskit Runtime also has the concept of a session. Jobs submitted within a session are
+IBM Quantum Compute also has the concept of a session. Jobs submitted within a session are
 prioritized by the scheduler. A session
 allows you to make iterative calls to the quantum computer more efficiently.
 
@@ -137,17 +137,17 @@ Supplementary Information
 Account initialization
 -------------------------
 
-You need to initialize your account before you can start using the Qiskit Runtime service.
+You need to initialize your account before you can start using the IBM Quantum Compute service.
 This is done by initializing a :class:`QiskitRuntimeService` instance with your
 account credentials. If you don't want to pass in the credentials each time, you
 can use the :meth:`QiskitRuntimeService.save_account` method to save the credentials
 on disk.
 
-Qiskit Runtime is available on IBM Cloud, and you can specify the channel with
+IBM Quantum Compute is available on IBM Cloud, and you can specify the channel with
 ``channel="ibm_cloud"`` or ``channel="ibm_quantum_platform"``.
 
-Runtime Jobs
-------------
+IBM Quantum Compute Jobs
+------------------------
 
 When you use the ``run()`` method of the :class:`Sampler` or :class:`Estimator`
 to invoke the primitive, a
@@ -200,7 +200,10 @@ Classes
 
 import logging
 
-from .qiskit_runtime_service import QiskitRuntimeService
+from .qiskit_runtime_service import (
+    QiskitRuntimeService,
+    QiskitRuntimeService as IBMQuantumComputeService,
+)
 from .ibm_backend import IBMBackend
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
