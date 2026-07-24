@@ -100,6 +100,7 @@ jobs:
         run: make unit-test-coverage
       - name: Report coverage to coveralls.io
         uses: coverallsapp/github-action@v2
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           flag-name: unit-tests_python${{ matrix.python-version }}-${{ matrix.os }}
@@ -181,6 +182,7 @@ jobs:
     steps:
       - name: Notify coveralls.io that all parallel tests have finished
         uses: coverallsapp/github-action@v2
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
