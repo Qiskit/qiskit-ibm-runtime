@@ -271,10 +271,10 @@ class EstimatorV2(BaseEstimatorV2):
 
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits
-                  and observables or tuples ``(circuit, observables, parameter_values)``.
+                and observables or tuples ``(circuit, observables, parameter_values)``.
             precision: The target precision for expectation value estimates of each
-                       estimator pub that does not specify its own precision. If ``None``,
-                       the value from ``options.default_precision`` will be used.
+                estimator pub that does not specify its own precision. If ``None``,
+                the value from ``options.default_precision`` will be used.
 
         Returns:
             The submitted job.
