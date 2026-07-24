@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Qiskit Runtime batch mode."""
+"""IBM Quantum Compute batch mode."""
 
 from __future__ import annotations
 
@@ -43,8 +43,8 @@ class Batch(Session):
     Batch mode can shorten processing time if all jobs are provided at the outset.
     If you want to submit iterative jobs, use ``session`` mode instead.
 
-    You can open a Qiskit Runtime batch by using this ``Batch`` class, then submit jobs
-    to one or more primitives.
+    You can open a IBM Quantum Compute (formerly Qiskit Runtime) batch by using this ``Batch``
+    class, then submit jobs to one or more primitives.
 
     For example::
 
@@ -88,7 +88,7 @@ class Batch(Session):
         backend: Instance of ``Backend`` class.
 
         max_time:
-            Maximum amount of time a runtime session can be open before being
+            Maximum amount of time a IBM Quantum Compute session can be open before being
             forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
             This value must be less than the
             `system imposed maximum

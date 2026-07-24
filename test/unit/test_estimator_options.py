@@ -13,10 +13,14 @@
 """Tests for EstimatorOptions class."""
 
 from dataclasses import asdict
+from unittest import skipUnless
 
 from ddt import data, ddt, unpack
 from pydantic import ValidationError
-from qiskit_aer.noise import NoiseModel
+from qiskit.utils.optionals import HAS_AER
+
+if HAS_AER:
+    from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import EstimatorV2 as Estimator
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
@@ -165,6 +169,7 @@ class TestEstimatorOptions(IBMTestCase):
 
         self.assertEqual(options.shots_per_randomization, "auto")
 
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_program_inputs(self):
         """Test converting to program inputs from estimator options."""
         noise_model = NoiseModel.from_backend(FakeManilaV2())

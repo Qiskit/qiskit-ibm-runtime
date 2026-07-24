@@ -12,19 +12,25 @@
 
 """Tests for ``broadcast_sample``."""
 
+from unittest import skipUnless
+
 import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
+from qiskit.utils import optionals
 from samplomatic.builders.build import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
-from qiskit_ibm_runtime.aer_executor.broadcast_sample import broadcast_sample
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
 
+if optionals.HAS_AER:
+    from qiskit_ibm_runtime.aer_executor.broadcast_sample import broadcast_sample
 
+
+@skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
 class TestBroadcastSample(IBMTestCase):
     """Tests for ``broadcast_sample``."""
 

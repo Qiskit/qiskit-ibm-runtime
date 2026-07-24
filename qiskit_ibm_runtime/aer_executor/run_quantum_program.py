@@ -34,6 +34,9 @@ if TYPE_CHECKING:
 
     from ..quantum_program import QuantumProgram
 
+if HAS_AER:
+    from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
+
 
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
     """Round angles to the nearest multiple of π/2 at ``decimals`` decimal places.
@@ -44,6 +47,7 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
     return np.round(values / (np.pi / 2), decimals=decimals) * (np.pi / 2)
 
 
+@HAS_AER.require_in_call
 def run_quantum_program(
     qasm_simulator: AerSimulator,
     program: QuantumProgram,
@@ -64,14 +68,6 @@ def run_quantum_program(
     Returns:
         Results of simulation.
     """
-    if not HAS_AER:
-        raise ValueError(
-            "The function 'run_quantum_program' cannot be run since 'qiskit-aer' is not "
-            "installed. Install 'qiskit-aer' and try again."
-        )
-
-    from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
-
     # Generate a sampler
     backend = deepcopy(qasm_simulator)
     backend.set_max_qubits(10000)

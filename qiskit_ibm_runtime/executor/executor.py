@@ -63,7 +63,7 @@ class Executor:
             * A :class:`Batch` if you are using batch execution mode.
 
             Refer to the
-            `Qiskit Runtime documentation
+            `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about the ``Execution modes``.
 
