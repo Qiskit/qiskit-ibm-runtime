@@ -17,47 +17,45 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+
+from ..options_models.converters import estimator_options_to_executor_options
+from .pec.prepare_pec import prepare_pec
+from .prepare_pea import prepare_pea
+from .prepare_vanilla import prepare_vanilla
+from .zne.prepare_zne import prepare_zne
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-    from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
-    from ..options_models.twirling import TwirlingOptions
+    from ..options_models.estimator import EstimatorOptions
+    from ..options_models.executor import ExecutorOptions
+    from ..quantum_program import QuantumProgram
 
-from samplomatic import build
-
-from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..quantum_program import QuantumProgram
-from ..quantum_program.quantum_program import SamplexItem
-from .trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
-from .utils import (
-    box_circuit,
-    compute_samplex_arguments,
-    make_samplex_arguments,
-    options_to_boxing_pm_kwargs,
-)
 
 logger = logging.getLogger(__name__)
 
 
 def prepare(
     pubs: Sequence[EstimatorPub],
-    twirling_options: TwirlingOptions,
-    shots: int,
-    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    options: EstimatorOptions,
+    shots: int | None = None,
     add_tags: bool = False,
-) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program.
+) -> tuple[QuantumProgram, ExecutorOptions]:
+    """Convert a sequence of estimator PUBs to a quantum program and map options.
+
+    This method processes estimator PUBs (Primitive Unified Blocs) and converts them into
+    a :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+    :class:`~.ExecutorOptions`.
 
     Args:
-        pubs: List of estimator pubs to convert.
-        twirling_options: The twirling options.
+        pubs: List of sampler PUBs to convert.
+        options: The options.
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
-        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
-            Error eXtinction (TREX) mitigation method will be used.
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
             ``False`` will cause no tags to be added (will pass the "none" value to the relevant
             attribute), while ``True`` will cause tags with the twirled boxes hash to be added
@@ -65,105 +63,67 @@ def prepare(
             injecting noise in simulators.
 
     Returns:
-        :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
-        with ``passthrough data`` configured for
-        :class:`~qiskit_ibm_runtime.executor_estimator.estimator.EstimatorV2` post-processing.
+        A tuple containing:
 
-    Raises:
-        IBMInputValueError: If pubs have mismatched precision,
-            if a circuit contains mid-circuit measurements, or if a circuit already uses the
-            reserved classical register name ``_meas``.
+        - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
+            objects for each pub, with passthrough_data configured for post-processing.
+        - :class:`~.ExecutorOptions` mapped from the sampler's options.
     """
-    if twirling_options.enable_gates is None or twirling_options.enable_measure is None:
-        raise ValueError(
-            "Expected twirling options fields ``enable_gates`` and ``enable_measure`` set to "
-            "``True`` or ``False``, found ``None``."
+    # Map options to executor options
+    executor_options = estimator_options_to_executor_options(options)
+
+    if options.resilience.pec_mitigation:
+        logger.info("Running ``prepare_pec``.")
+        quantum_program = prepare_pec(
+            pubs=pubs,
+            twirling_options=options.twirling,
+            shots=shots,
+            pec_options=options.resilience.pec,
+            noise_model_mapping=options.resilience.noise_model_mapping,
+            measure_noise_learning=options.resilience.measure_noise_learning
+            if options.resilience.measure_mitigation
+            else None,
+            add_tags=add_tags,
         )
+        return quantum_program, executor_options
 
-    if measure_noise_learning is not None and not twirling_options.enable_measure:
-        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
+    if options.resilience.zne_mitigation:
+        if options.resilience.zne.amplifier == "pea":
+            logger.info("Running ``prepare_pea``.")
+            quantum_program = prepare_pea(
+                pubs=pubs,
+                twirling_options=options.twirling,
+                shots=shots,
+                zne_options=options.resilience.zne,
+                noise_model_mapping=options.resilience.noise_model_mapping or {},
+                measure_noise_learning=options.resilience.measure_noise_learning
+                if options.resilience.measure_mitigation
+                else None,
+                add_tags=add_tags,
+            )
+            return quantum_program, executor_options
 
-    if twirling_options.enable_gates or twirling_options.enable_measure:
-        num_randomizations, shots_per_randomization = calculate_twirling_shots(
-            shots,
-            twirling_options.num_randomizations,
-            twirling_options.shots_per_randomization,
+        logger.info("Running ``prepare_zne``.")
+        quantum_program = prepare_zne(
+            pubs=pubs,
+            twirling_options=options.twirling,
+            shots=shots,
+            zne_options=options.resilience.zne,
+            measure_noise_learning=options.resilience.measure_noise_learning
+            if options.resilience.measure_mitigation
+            else None,
+            add_tags=add_tags,
         )
-    else:
-        num_randomizations = 1
-        shots_per_randomization = shots
+        return quantum_program, executor_options
 
-    # Create items
-    items: list[SamplexItem] = []
-    observables_list = []
-    param_basis_pairs_list = []
-    param_shapes_list = []
-
-    pm_kwargs = options_to_boxing_pm_kwargs(
-        twirling_options,
-        measure_noise_learning,
-        inject_noise=False,
+    logger.info("Running ``prepare_vanilla``.")
+    quantum_program = prepare_vanilla(
+        pubs=pubs,
+        twirling_options=options.twirling,
+        shots=shots,
+        measure_noise_learning=options.resilience.measure_noise_learning
+        if options.resilience.measure_mitigation
+        else None,
         add_tags=add_tags,
     )
-    for i, pub in enumerate(pubs):
-        logger.info("Processing pub %d/%d", i + 1, len(pubs))
-
-        boxed_circuit = box_circuit(circuit=pub.circuit, **pm_kwargs)
-
-        # Build the template and the samplex
-        template, samplex = build(boxed_circuit)
-
-        # Prepare samplex_arguments
-        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = make_samplex_arguments(
-            samplex, boxed_circuit, flat_parameter_values, change_basis
-        )
-
-        # Create SamplexItem
-        shape = (num_randomizations, change_basis.shape[0])
-        items.append(
-            SamplexItem(
-                circuit=template,
-                samplex=samplex,
-                samplex_arguments=samplex_arguments,
-                shape=shape,
-            )
-        )
-
-        # Store data for passthrough
-        observables_list.append(pub.observables.tolist())
-        param_basis_pairs_list.append(param_basis_pairs)
-        param_shapes_list.append(pub.parameter_values.shape)
-
-    passthrough_data = {
-        "post_processor": {
-            "version": "v0.1",
-            "circuits_metadata": [pub.circuit.metadata for pub in pubs],
-            "observables": observables_list,
-            "param_basis_pairs": param_basis_pairs_list,
-            "param_shapes": param_shapes_list,
-            "measure_mitigation": False,
-            "mitigation": None,
-        },
-    }
-
-    # Create QuantumProgram
-    quantum_program = QuantumProgram(
-        shots=shots_per_randomization,
-        items=items,
-        passthrough_data=passthrough_data,
-    )
-
-    # Add TREX calibration circuit
-    if measure_noise_learning is not None:
-        trex_num_randomizations = resolve_trex_num_randomizations(
-            measure_noise_learning, num_randomizations
-        )
-        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
-        quantum_program.items.append(trex_item)
-        passthrough_data["post_processor"]["measure_mitigation"] = True
-
-    # Set semantic role for post-processing dispatch
-    quantum_program._semantic_role = "estimator_v2"
-
-    return quantum_program
+    return quantum_program, executor_options

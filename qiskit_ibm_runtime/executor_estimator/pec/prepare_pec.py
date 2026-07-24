@@ -55,7 +55,7 @@ def prepare_pec(
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program with PEC mitigation.
+    """Convert estimator PUBs to a quantum program with PEC mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.

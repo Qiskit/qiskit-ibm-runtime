@@ -27,13 +27,9 @@ from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options_models.converters import estimator_options_to_executor_options
 from ..options_models.estimator import EstimatorOptions
-from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
-from .prepare_pea import prepare_pea
 from .utils import find_unique_layers, resolve_precision
-from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -275,10 +271,10 @@ class EstimatorV2(BaseEstimatorV2):
 
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits
-                  and observables or tuples ``(circuit, observables, parameter_values)``.
+                and observables or tuples ``(circuit, observables, parameter_values)``.
             precision: The target precision for expectation value estimates of each
-                       estimator pub that does not specify its own precision. If ``None``,
-                       the value from ``options.default_precision`` will be used.
+                estimator pub that does not specify its own precision. If ``None``,
+                the value from ``options.default_precision`` will be used.
 
         Returns:
             The submitted job.
@@ -337,62 +333,17 @@ class EstimatorV2(BaseEstimatorV2):
                 "PEC mitigation and ZNE mitigation are incompatible with one another."
             )
 
-        # Route to appropriate prepare function
-        if options.resilience.pec_mitigation:
-            if options.resilience.noise_model_mapping is None:
-                raise IBMInputValueError(
-                    "When PEC mitigation is enabled, you must provide a noise model "
-                    "via options.resilience.noise_model_mapping"
-                )
-            quantum_program = prepare_pec(
-                pubs=coerced_pubs,
-                twirling_options=options.twirling,
-                shots=shots,
-                pec_options=options.resilience.pec,
-                noise_model_mapping=options.resilience.noise_model_mapping,
-                measure_noise_learning=options.resilience.measure_noise_learning
-                if options.resilience.measure_mitigation
-                else None,
-            )
-        elif options.resilience.zne_mitigation:
-            if options.resilience.zne.amplifier == "pea":
-                quantum_program = prepare_pea(
-                    pubs=coerced_pubs,
-                    twirling_options=options.twirling,
-                    shots=shots,
-                    zne_options=options.resilience.zne,
-                    noise_model_mapping=options.resilience.noise_model_mapping or {},
-                    measure_noise_learning=options.resilience.measure_noise_learning
-                    if options.resilience.measure_mitigation
-                    else None,
-                )
-            else:
-                quantum_program = prepare_zne(
-                    pubs=coerced_pubs,
-                    twirling_options=options.twirling,
-                    shots=shots,
-                    zne_options=options.resilience.zne,
-                    measure_noise_learning=options.resilience.measure_noise_learning
-                    if options.resilience.measure_mitigation
-                    else None,
-                )
-        else:
-            quantum_program = prepare(
-                pubs=coerced_pubs,
-                twirling_options=options.twirling,
-                shots=shots,
-                measure_noise_learning=options.resilience.measure_noise_learning
-                if options.resilience.measure_mitigation
-                else None,
-            )
+        logger.info("Starting pre-processing")
+        quantum_program, executor_options = prepare(coerced_pubs, options, shots)
 
         if options.dynamical_decoupling.enable:
+            logger.info("Apply dynamical decoupling")
             quantum_program = apply_dynamical_decoupling(
                 backend=self._backend,
                 dd_options=options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
-        # Serialize options (assuming passthrough is correctly configured)
+
         quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
             "twirling": options.twirling.model_dump(),
             "dynamical_decoupling": options.dynamical_decoupling.model_dump(),
@@ -400,7 +351,7 @@ class EstimatorV2(BaseEstimatorV2):
         }
 
         # Set executor options
-        self._executor.options = estimator_options_to_executor_options(options)
+        self._executor.options = executor_options
 
         # Submit to executor
         logger.info(
