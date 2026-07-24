@@ -295,9 +295,6 @@ class EstimatorV2(BaseEstimatorV2):
         #   * Enforcing required dependencies between option values
         options = self.finalize_options()
 
-        # Convert pubs to QuantumProgram and map options using the selected prepare function
-        logger.info("Starting pre-processing")
-
         resolved_precision = resolve_precision(coerced_pubs, precision)
         if resolved_precision is not None:
             shots = int(np.ceil(1.0 / (resolved_precision**2)))
@@ -333,6 +330,7 @@ class EstimatorV2(BaseEstimatorV2):
                 "PEC mitigation and ZNE mitigation are incompatible with one another."
             )
 
+        # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(coerced_pubs, options, shots)
 
