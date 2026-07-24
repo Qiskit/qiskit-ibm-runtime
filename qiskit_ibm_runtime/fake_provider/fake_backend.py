@@ -69,6 +69,9 @@ class FakeBackendV2(BackendV2):
     the instance (cleaned up automatically when the backend is garbage collected).
     """
 
+    _physical_qubits: int | None = None
+    """Number of physical qubits of the device."""
+
     def __init__(self) -> None:
         self._conf_dict = self._get_conf_dict_from_json()
         self._props_dict: dict | None = None
@@ -273,6 +276,15 @@ class FakeBackendV2(BackendV2):
             return dtm * 1e-9
         else:
             return None
+
+    @property
+    def physical_qubits(self) -> int:
+        """Return the number of physical qubits the backend has.
+
+        Return the number of physical qubits for the backend (programmable qubits, reset qubits,
+        and couplers combined).
+        """
+        return self._physical_qubits
 
     def run(self, run_input: QuantumCircuit | list[QuantumCircuit], **options: dict) -> Job:
         """Run on the fake backend using a simulator.

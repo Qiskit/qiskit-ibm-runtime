@@ -1,0 +1,3 @@
+:class:`~.IBMBackend` now has a ``physical_qubits`` attribute, which returns the number of physical
+qubits for the backend (programmable qubits, reset qubits, and couplers combined). The attribute is
+also available in :class:`~.FakeBackendV2` for backends that are not retired.

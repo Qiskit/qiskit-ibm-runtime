@@ -24,3 +24,4 @@ class FakeMiami(FakeBackendV2):
     conf_filename = "conf_miami.json"
     props_filename = "props_miami.json"
     backend_name = "fake_miami"
+    _physical_qubits = 338
