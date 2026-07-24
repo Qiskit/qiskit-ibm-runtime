@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Runtime Session REST adapter."""
+"""IBM Quantum Compute Session REST adapter."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class RuntimeSession(RestAdapterBase):
 
     Args:
         session: RetrySession to be used in the adapter.
-        session_id: Job ID of the first job in a runtime session.
+        session_id: Job ID of the first job in a IBM Quantum Compute session.
         url_prefix: Prefix to use in the URL.
     """
 

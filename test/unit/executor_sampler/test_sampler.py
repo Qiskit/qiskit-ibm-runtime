@@ -12,13 +12,17 @@
 
 """Tests for executor-based SamplerV2."""
 
+from unittest import skipUnless
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.providers.fake_provider import GenericBackendV2
-from qiskit_aer.noise import NoiseModel, depolarizing_error
+from qiskit.utils.optionals import HAS_AER
+
+if HAS_AER:
+    from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -541,6 +545,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         # Results should be different with different seed
         self.assertNotEqual(counts1, counts3)
 
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_simulator_with_general_test_case(self):
         """Test simulator mode with comprehensive simulator options.
 

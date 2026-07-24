@@ -45,15 +45,15 @@ QASM3RUNNERPROGRAMID = "qasm3-runner"
 
 
 class IBMBackend(Backend):
-    """Backend class interfacing with an IBM Quantum backend.
+    """Backend class interfacing with an IBM Quantum Compute (formerly Qiskit Runtime) backend.
 
     Note:
         * You should not instantiate the ``IBMBackend`` class directly. Instead, use
           the methods provided by an :class:`QiskitRuntimeService` instance to retrieve and handle
           backends.
 
-    This class represents an IBM Quantum backend. Its attributes and methods provide
-    information about the backend. For example, the :meth:`status()` method
+    This class represents an IBM Quantum Compute backend. Its attributes
+    and methods provide information about the backend. For example, the :meth:`status()` method
     returns a :class:`BackendStatus<~.providers.models.BackendStatus>` instance.
     The instance contains the ``operational`` and ``pending_jobs`` attributes, which state whether
     the backend is operational and also the number of jobs in the server queue for the backend,
@@ -335,7 +335,7 @@ class IBMBackend(Backend):
 
         Raises:
             TypeError: If an input argument is not of the correct type.
-            NotImplementedError: If `datetime` is specified when cloud runtime is used.
+            NotImplementedError: If `datetime` is specified when IBM Quantum Compute is used.
         """
         if self._configuration.simulator:
             # Simulators do not have backend properties.

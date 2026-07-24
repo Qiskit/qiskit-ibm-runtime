@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Client for accessing IBM Quantum runtime service."""
+"""Client for accessing IBM Quantum Compute service."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class RuntimeClient(BaseBackendClient):
-    """Client for accessing runtime service.
+    """Client for accessing IBM Quantum Compute service.
 
     Args:
         params: Connection parameters.
@@ -72,12 +72,12 @@ class RuntimeClient(BaseBackendClient):
             program_id: Program ID.
             backend_name: Name of the backend to run the program.
             params: Parameters to use.
-            image: The runtime image to use.
+            image: The IBM Quantum Compute image to use.
             log_level: Log level to use.
-            session_id: Job ID of the first job in a runtime session.
+            session_id: Job ID of the first job in a IBM Quantum Compute session.
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
-            start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            start_session: Set to True to explicitly start a IBM Quantum Compute session.
             session_time: Length of session in seconds.
             private: Marks job as private.
             calibration_id: The calibration id to use with the program execution
@@ -111,7 +111,7 @@ class RuntimeClient(BaseBackendClient):
             JSON response.
         """
         response = self._api.program_job(job_id).get(exclude_params=exclude_params)
-        logger.debug("Runtime job get response: %s", response)
+        logger.debug("IBM Quantum Compute job get response: %s", response)
         return response
 
     def jobs_get(
@@ -137,7 +137,7 @@ class RuntimeClient(BaseBackendClient):
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
-            session_id: Job ID of the first job in a runtime session.
+            session_id: Job ID of the first job in a IBM Quantum Compute session.
             created_after: Filter by the given start date, in local time. This is used to
                 find jobs whose creation dates are after (greater than or equal to) this
                 local date/time.
@@ -178,7 +178,7 @@ class RuntimeClient(BaseBackendClient):
         """Cancel a job.
 
         Args:
-            job_id: Runtime job ID.
+            job_id: IBM Quantum Compute job ID.
         """
         self._api.program_job(job_id).cancel()
 
@@ -186,7 +186,7 @@ class RuntimeClient(BaseBackendClient):
         """Delete a job.
 
         Args:
-            job_id: Runtime job ID.
+            job_id: IBM Quantum Compute job ID.
         """
         self._api.program_job(job_id).delete()
 
