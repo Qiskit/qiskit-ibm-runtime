@@ -122,8 +122,11 @@ class TestFakeBackends(IBMTestCase):
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_backend_physical_qubits(self, backend):
-        """Non-retired backends should have a `physical_qubits` property."""
-        active_backends = [
+        """Test the `physical_qubits` property of backends.
+
+        `physical_qubits` was added to all the backends that were active at the time.
+        """
+        backends_with_physical_qubits = [
             "fake_aachen",
             "fake_berlin",
             "fake_boston",
@@ -134,7 +137,7 @@ class TestFakeBackends(IBMTestCase):
             "fake_pittsburgh",
         ]
 
-        if backend.name in active_backends:
+        if backend.name in backends_with_physical_qubits:
             self.assertIsInstance(backend.physical_qubits, int)
         else:
             self.assertIsNone(backend.physical_qubits)
