@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test AerExecutor with a Clifford circuit on the stabilizer simulator."""
+"""Test SimulatorExecutor with a Clifford circuit on the stabilizer simulator."""
 
 from unittest import skipUnless
 
@@ -29,12 +29,12 @@ from ...ibm_test_case import IBMTestCase
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
-    from qiskit_ibm_runtime.sim_executor import AerExecutor
+    from qiskit_ibm_runtime.sim_executor import SimulatorExecutor
 
 
 @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
-class TestAerExecutor(IBMTestCase):
-    """Tests for AerExecutor."""
+class TestSimulatorExecutor(IBMTestCase):
+    """Tests for SimulatorExecutor."""
 
     def assert_correct(
         self, expected: dict[str, np.ndarray], executor_results: dict[str, np.ndarray]
@@ -103,8 +103,8 @@ class TestAerExecutor(IBMTestCase):
         program = QuantumProgram(shots=1024)
         program.append_circuit_item(transpiled)
 
-        # Run via AerExecutor
-        executor = AerExecutor(AerSimulator(method="stabilizer"))
+        # Run via SimulatorExecutor
+        executor = SimulatorExecutor(AerSimulator(method="stabilizer"))
         job = executor.run(program)
         result = job.result()
 
@@ -158,8 +158,8 @@ class TestAerExecutor(IBMTestCase):
             shape=(num_randomizations,),
         )
 
-        # Run via AerExecutor
-        executor = AerExecutor(AerSimulator(method="stabilizer"))
+        # Run via SimulatorExecutor
+        executor = SimulatorExecutor(AerSimulator(method="stabilizer"))
         job = executor.run(program)
         result = job.result()
 
@@ -200,7 +200,7 @@ class TestAerExecutor(IBMTestCase):
         program = QuantumProgram(shots=shots)
         program.append_circuit_item(transpiled, circuit_arguments=circuit_arguments)
 
-        executor = AerExecutor(AerSimulator(method="stabilizer"))
+        executor = SimulatorExecutor(AerSimulator(method="stabilizer"))
         result = executor.run(program).result()
 
         self.assertEqual(len(result), 1)
@@ -249,7 +249,7 @@ class TestAerExecutor(IBMTestCase):
         program = QuantumProgram(shots=shots)
         program.append_circuit_item(transpiled, circuit_arguments=circuit_arguments)
 
-        executor = AerExecutor(AerSimulator(method="stabilizer"), angle_decimals=5)
+        executor = SimulatorExecutor(AerSimulator(method="stabilizer"), angle_decimals=5)
         result = executor.run(program).result()
 
         self.assertEqual(len(result), 1)
@@ -321,7 +321,7 @@ class TestAerExecutor(IBMTestCase):
             shape=(r0, 2, 2, r1),
         )
 
-        executor = AerExecutor(AerSimulator(method="stabilizer"), angle_decimals=5)
+        executor = SimulatorExecutor(AerSimulator(method="stabilizer"), angle_decimals=5)
         job = executor.run(program)
         result = job.result()
 

@@ -62,8 +62,8 @@ def run_quantum_program(
         program: The program to run.
         noise_dict: A map from barrier label refs to noise maps.
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.  See :func:`AerExecutor` for details.
-        warn_absent: Passed to :class:`InsertNoisePass`; see :class:`AerExecutor`.
+            decimal precision before simulation.  See :func:`SimulatorExecutor` for details.
+        warn_absent: Passed to :class:`InsertNoisePass`; see :class:`SimulatorExecutor`.
 
     Returns:
         Results of simulation.
