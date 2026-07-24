@@ -12,4 +12,4 @@
 
 """Aer-based local executor for QuantumProgram objects."""
 
-from .sim_executor import SimulatorExecutor, SimulatorRuntimeJob
+from .sim_executor import SimExecutor, SimRuntimeJob

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""SimulatorExecutor and SimulatorRuntimeJob: local simulation executor for QuantumProgram."""
+"""SimExecutor and SimRuntimeJob: local simulation executor for QuantumProgram."""
 
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
 
 
 @HAS_AER.require_in_instance
-class SimulatorRuntimeJob:
-    """Job object returned by :meth:`SimulatorExecutor.run`.
+class SimRuntimeJob:
+    """Job object returned by :meth:`SimExecutor.run`.
 
     The program is executed eagerly on construction; the result is available
     immediately when :meth:`result` is called.
@@ -79,11 +79,11 @@ class SimulatorRuntimeJob:
 
 
 @HAS_AER.require_in_instance
-class SimulatorExecutor:
+class SimExecutor:
     """Local Aer-based executor mimicking the IBM Runtime executor interface.
 
     Runs a :class:`~qiskit_ibm_runtime.QuantumProgram` eagerly on construction of the
-    returned job — the result is available immediately when :meth:`SimulatorRuntimeJob.result`
+    returned job — the result is available immediately when :meth:`SimRuntimeJob.result`
     is called.
 
     **Noise injection**
@@ -132,7 +132,7 @@ class SimulatorExecutor:
         self._angle_decimals = angle_decimals
         self._warn_absent = warn_absent
 
-    def run(self, program: QuantumProgram) -> SimulatorRuntimeJob:
+    def run(self, program: QuantumProgram) -> SimRuntimeJob:
         """Run a quantum program and return a completed job.
 
         Args:
@@ -141,7 +141,7 @@ class SimulatorExecutor:
         Returns:
             A job whose result is immediately available.
         """
-        return SimulatorRuntimeJob(
+        return SimRuntimeJob(
             backend=self._backend,
             program=program,
             noise_dict=self._noise_dict,

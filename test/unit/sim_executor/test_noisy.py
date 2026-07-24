@@ -31,7 +31,7 @@ from ...ibm_test_case import IBMTestCase
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
-    from qiskit_ibm_runtime.sim_executor import SimulatorExecutor
+    from qiskit_ibm_runtime.sim_executor import SimExecutor
 
 
 def _batched(iterable, n, *, strict=False):
@@ -137,8 +137,8 @@ class TestNoisySimulation(IBMTestCase):
         else:
             noise_dict = None
 
-        # Run via SimulatorExecutor
-        executor = SimulatorExecutor(AerSimulator(method="stabilizer"), noise_dict=noise_dict)
+        # Run via SimExecutor
+        executor = SimExecutor(AerSimulator(method="stabilizer"), noise_dict=noise_dict)
         job = executor.run(program)
         result = job.result()
 
