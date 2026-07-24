@@ -29,7 +29,7 @@ from ...ibm_test_case import IBMTestCase
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
-    from qiskit_ibm_runtime.aer_executor import AerExecutor
+    from qiskit_ibm_runtime.sim_executor import AerExecutor
 
 
 @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")

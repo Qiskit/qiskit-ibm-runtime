@@ -27,7 +27,7 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from ...ibm_test_case import IBMTestCase
 
 if optionals.HAS_AER:
-    from qiskit_ibm_runtime.aer_executor.broadcast_sample import broadcast_sample
+    from qiskit_ibm_runtime.sim_executor.broadcast_sample import broadcast_sample
 
 
 @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
