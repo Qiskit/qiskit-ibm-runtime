@@ -91,7 +91,7 @@ def prepare(
             else None,
             add_tags=add_tags,
         )
-        return quantum_program, options
+        return quantum_program, executor_options
 
     if options.resilience.zne_mitigation:
         if options.resilience.zne.amplifier == "pea":
@@ -107,7 +107,7 @@ def prepare(
                 else None,
                 add_tags=add_tags,
             )
-            return quantum_program, options
+            return quantum_program, executor_options
 
         logger.info("Running ``prepare_zne``.")
         quantum_program = prepare_zne(
@@ -120,7 +120,7 @@ def prepare(
             else None,
             add_tags=add_tags,
         )
-        return quantum_program, options
+        return quantum_program, executor_options
 
     logger.info("Running ``prepare_vanilla``.")
     quantum_program = prepare_vanilla(
