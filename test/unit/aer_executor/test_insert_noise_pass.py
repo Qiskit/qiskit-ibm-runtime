@@ -22,12 +22,12 @@ from qiskit.quantum_info import DensityMatrix, PauliLindbladMap
 from qiskit.transpiler import PassManager
 from qiskit.utils import optionals
 
+from qiskit_ibm_runtime.aer_executor.insert_noise_pass import InsertNoisePass
+
 from ...ibm_test_case import IBMTestCase
 
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
-
-    from qiskit_ibm_runtime.aer_executor.insert_noise_pass import InsertNoisePass
 
 
 def _circuit_with_barrier(n_qubits: int, label: str) -> QuantumCircuit:
