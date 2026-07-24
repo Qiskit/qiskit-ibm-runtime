@@ -90,7 +90,7 @@ class SamplerV2(BaseSamplerV2):
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
-        options: Sampler options. See :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
+        options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
             for all available options.
     """
 
