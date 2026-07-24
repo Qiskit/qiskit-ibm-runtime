@@ -10,15 +10,15 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test AerExecutor and AerRuntimeJob."""
+"""Test SimExecutor and SimRuntimeJob."""
 
 from unittest import skipUnless
 
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime.aer_executor import AerExecutor, AerRuntimeJob
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
+from qiskit_ibm_runtime.sim_executor import SimExecutor, SimRuntimeJob
 
 from ...ibm_test_case import IBMTestCase
 
@@ -27,21 +27,21 @@ if optionals.HAS_AER:
 
 
 @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
-class TestAerExecutor(IBMTestCase):
-    """Tests for AerExecutor."""
+class TestSimExecutor(IBMTestCase):
+    """Tests for SimExecutor."""
 
     def test_run(self):
-        """Test that run returns an `AerRuntimeJob`."""
-        executor = AerExecutor(AerSimulator(method="stabilizer"))
-        self.assertIsInstance(executor, AerExecutor)
-        self.assertIsInstance(executor.run(QuantumProgram(1)), AerRuntimeJob)
+        """Test that run returns an ``SimRuntimeJob``."""
+        executor = SimExecutor(AerSimulator(method="stabilizer"))
+        self.assertIsInstance(executor, SimExecutor)
+        self.assertIsInstance(executor.run(QuantumProgram(1)), SimRuntimeJob)
 
 
 @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
-class TestAerRuntimeJob(IBMTestCase):
-    """Tests for AerRuntimeJob."""
+class TestSimRuntimeJob(IBMTestCase):
+    """Tests for SimRuntimeJob."""
 
     def test_result(self):
-        """Test that result returns a `QuantumProgramResult`."""
-        job = AerRuntimeJob(AerSimulator(method="stabilizer"), QuantumProgram(1))
+        """Test that result returns a ``QuantumProgramResult``."""
+        job = SimRuntimeJob(AerSimulator(method="stabilizer"), QuantumProgram(1))
         self.assertIsInstance(job.result(), QuantumProgramResult)
