@@ -120,7 +120,7 @@ class EstimatorV2(BaseEstimatorV2):
 
         options: Estimator options.
             See
-            :class:`~qiskit_ibm_runtime.options_models.estimator_options.EstimatorOptions`
+            :class:`~qiskit_ibm_runtime.options_models.estimator.EstimatorOptions`
             for all available options.
     """
 
