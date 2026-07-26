@@ -24,7 +24,7 @@ from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
-from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2, build_program_metadata
+from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
@@ -228,7 +228,7 @@ class TestEstimatorV2Run(IBMTestCase):
         self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
 
     def test_run_adds_options_to_passthrough_data(self):
-        """Test that run adds options metadata to quantum program passthrough data."""
+        """Test that run adds options, shots and precision to passthrough data."""
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         options.dynamical_decoupling.enable = False
@@ -249,16 +249,19 @@ class TestEstimatorV2Run(IBMTestCase):
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
 
-        # Verify passthrough data contains program_metadata
+        # Verify passthrough data contains inputs and calculated values
         self.assertIsNotNone(quantum_program.passthrough_data)
         self.assertIn("post_processor", quantum_program.passthrough_data)
-        self.assertIn("program_metadata", quantum_program.passthrough_data["post_processor"])
+        post_processor_data = quantum_program.passthrough_data["post_processor"]
+        self.assertIn("options", post_processor_data)
+        self.assertIn("shots", post_processor_data)
+        self.assertIn("precision", post_processor_data)
 
-        # Verify program_metadata content
-        options_metadata = quantum_program.passthrough_data["post_processor"]["program_metadata"]
-        self.assertEqual(options_metadata["twirling"]["enable_gates"], True)
-        self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], False)
-        self.assertEqual(options_metadata["resilience"]["measure_mitigation"], True)
+        # Verify options content
+        options_data = post_processor_data["options"]
+        self.assertEqual(options_data["twirling"]["enable_gates"], True)
+        self.assertEqual(options_data["dynamical_decoupling"]["enable"], False)
+        self.assertEqual(options_data["resilience"]["measure_mitigation"], True)
 
     def test_run_passthrough_options_are_finalized_not_raw(self):
         """Test that run adds finalized options (not user options) to passthrough data."""
@@ -508,41 +511,6 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
         result2 = estimator2.run([(circuit, observable)]).result()
 
         self.assertFalse(np.array_equal(result1[0].data.evs, result2[0].data.evs))
-
-
-@ddt
-class TestBuildProgramMetadata(IBMTestCase):
-    """Tests for the :func:`build_program_metadata` helper."""
-
-    @data(
-        ("zne_mitigation", "zne"),
-        ("pec_mitigation", "pec"),
-        ("measure_mitigation", "measure_noise_learning"),
-    )
-    @unpack
-    def test_drops_inactive_resilience_sub_options(self, flag_key, options_key):
-        """Test that inactive-flag sub-option dicts are dropped from the metadata dict.
-
-        For each ``(flag_key, options_key)`` pair, verify that:
-        - when the flag is ``False``, the corresponding sub-option dict is absent, and
-        - when the flag is ``True``, the corresponding sub-option dict is present.
-        """
-
-        def _get_resilience_metadata(flag_value):
-            options = EstimatorOptions()
-            options.resilience_level = 0
-            setattr(options.resilience, flag_key, flag_value)
-            return build_program_metadata(options, resolved_precision=None, shots=1024)[
-                "resilience"
-            ]
-
-        # When flag is False the sub-option dict must be absent
-        resilience_off = _get_resilience_metadata(False)
-        self.assertNotIn(options_key, resilience_off)
-
-        # When flag is True the sub-option dict must be present
-        resilience_on = _get_resilience_metadata(True)
-        self.assertIn(options_key, resilience_on)
 
 
 @ddt

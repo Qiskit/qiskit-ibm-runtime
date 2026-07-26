@@ -74,39 +74,6 @@ Fields:
 """
 
 
-def build_program_metadata(
-    options: EstimatorOptions,
-    resolved_precision: float | None,
-    shots: int,
-) -> dict[str, Any]:
-    """Build the program metadata dict to embed in the quantum program passthrough data.
-
-    The metadata is derived from the estimator options. Sub-option dicts whose
-    controlling flag is ``False`` (or falsy) are dropped.
-
-    Args:
-        options: Estimator options.
-        resolved_precision: The target precision for this run, or ``None`` when no
-            precision was requested.
-        shots: The resolved shot count for this run.
-
-    Returns:
-        A plain ``dict`` ready to be stored under
-        ``quantum_program.passthrough_data["post_processor"]["program_metadata"]``.
-    """
-    program_metadata = options.model_dump()  # type: ignore[call-overload]
-    for flag_key, options_key in [
-        ("zne_mitigation", "zne"),
-        ("pec_mitigation", "pec"),
-        ("measure_mitigation", "measure_noise_learning"),
-    ]:
-        if not program_metadata["resilience"][flag_key]:
-            program_metadata["resilience"].pop(options_key)
-    program_metadata["target_precision"] = resolved_precision
-    program_metadata["shots"] = shots
-    return program_metadata
-
-
 class EstimatorV2(BaseEstimatorV2):
     """Executor-based EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
@@ -374,9 +341,10 @@ class EstimatorV2(BaseEstimatorV2):
                 dd_options=options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
-        # Prepare and set program metadata (assuming passthrough is correctly configured)
-        program_metadata = build_program_metadata(options, resolved_precision, shots)
-        quantum_program.passthrough_data["post_processor"]["program_metadata"] = program_metadata  # type: ignore[index, call-overload]
+        # Store raw options, shots and precision for post-processing side to compute metadata
+        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]
+        quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
+        quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
 
         # Set executor options
         self._executor.options = executor_options
