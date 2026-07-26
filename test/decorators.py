@@ -66,7 +66,7 @@ def mock_authentication(
                 patch.object(IAMTokenManager, "get_token", return_value="bearer token"),
                 # Patch HTTP responses, allowing using a custom registry.
                 RequestsMock(
-                    registry=registry, assert_all_requests_are_fired=True
+                    registry=registry, assert_all_requests_are_fired=False
                 ) as responses_mock,
             ):
                 return test_method(*args, responses_mock.get_registry(), **kwargs)

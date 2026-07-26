@@ -17,8 +17,8 @@ from __future__ import annotations
 import json
 import re
 from collections import defaultdict
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from dataclasses import InitVar, dataclass, field
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from responses import GET, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
@@ -70,11 +70,42 @@ class Backend:
     configuration: dict = field(default_factory=dict)
     """Configuration of the backend. If not set, it will be set based on ``FakeLimaV2``."""
 
-    def __post_init__(self) -> None:
+    properties: dict = field(default_factory=dict)
+    """Properties of the backend. If not set, it will be set based on ``FakeLimaV2``."""
+
+    status: dict = field(default_factory=dict)
+    """Status of the backend. If not set, it will be set to operational status."""
+
+    queue_length: int = 0
+    """Lenght of the queue for this backend."""
+
+    extra_config: InitVar[dict[str, Any] | None] = None
+    """Additional overrides of configuration."""
+
+    extra_status: InitVar[dict[str, Any] | None] = None
+    """Additional overrides of status."""
+
+    def __post_init__(
+        self, extra_config: dict[str, Any] | None, extra_status: dict[str, Any] | None
+    ) -> None:
         if not self.configuration:
             reference = FakeLimaV2()
             self.configuration = reference._load_json(reference.conf_filename)
             self.configuration["backend_name"] = self.name
+
+        if not self.configuration:
+            reference = FakeLimaV2()
+            self.properties = reference._load_json(reference.props_filename)
+            self.properties["backend_name"] = self.name
+
+        if not self.status:
+            self.status = {"state": True}
+
+        if extra_config:
+            self.configuration.update(extra_config)
+
+        if extra_status:
+            self.status.update(extra_status)
 
 
 class IBMQuantumComputeRegistry(FirstMatchRegistry):
@@ -129,6 +160,26 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
                     r"https://my-region.quantum.cloud.ibm.com/api/v1/backends/\w+/configuration"
                 ),
                 callback=self.backends_configuration_callback,
+            )
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                # TODO: take into account region, and validate.
+                url=re.compile(
+                    r"https://my-region.quantum.cloud.ibm.com/api/v1/backends/\w+/properties"
+                ),
+                callback=self.backends_properties_callback,
+            )
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                # TODO: take into account region, and validate.
+                url=re.compile(
+                    r"https://my-region.quantum.cloud.ibm.com/api/v1/backends/\w+/status"
+                ),
+                callback=self.backends_status_callback,
             )
         )
 
@@ -197,7 +248,14 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
 
         response_body = {
-            "devices": [{"name": backend_name} for backend_name in self.backends[instance.name]]
+            "devices": [
+                {
+                    "name": backend.name,
+                    "status": {"name": "online" if backend.status["state"] else "offline"},
+                    "queue_length": backend.queue_length,
+                }
+                for backend in self.backends[instance.name].values()
+            ]
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
@@ -221,6 +279,46 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
         backend = self.backends[instance.name][backend_name]
         return (200, {"Content-Type": "application/json"}, json.dumps(backend.configuration))
 
+    def backends_properties_callback(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/backends/{id}/properties`` endpoint.
+
+        Dynamically return the properties of a backend, based on the contents of `self.backends`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
+        """
+        # Validate the instance CRN and backend name.
+        instance_crn = request.headers.get("Service-CRN")
+        instance = next(
+            instance for instance in self.instances.values() if instance.crn == instance_crn
+        )
+        backend_name = request.path_url.split("/")[4]
+        if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        backend = self.backends[instance.name][backend_name]
+        return (200, {"Content-Type": "application/json"}, json.dumps(backend.properties))
+
+    def backends_status_callback(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/backends/{id}/status`` endpoint.
+
+        Dynamically return the configuration of a backend, based on the contents of `self.backends`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
+        """
+        # Validate the instance CRN and backend name.
+        instance_crn = request.headers.get("Service-CRN")
+        instance = next(
+            instance for instance in self.instances.values() if instance.crn == instance_crn
+        )
+        backend_name = request.path_url.split("/")[4]
+        if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        backend = self.backends[instance.name][backend_name]
+        return (200, {"Content-Type": "application/json"}, json.dumps(backend.status))
+
 
 class DefaultRegistry(IBMQuantumComputeRegistry):
     """Registry pre-loaded with a default set of instances and backends."""
@@ -232,4 +330,5 @@ class DefaultRegistry(IBMQuantumComputeRegistry):
         self.add_instance(Instance("b", pricing_type="trial"))
         self.add_backend(Backend("common_backend"), "a")
         self.add_backend(Backend("common_backend"), "b")
-        self.add_backend(Backend("unique_backend"), "b")
+        self.add_backend(Backend("unique_backend_a"), "a")
+        self.add_backend(Backend("unique_backend_b"), "b")
