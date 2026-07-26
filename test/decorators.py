@@ -19,17 +19,61 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 from unittest import SkipTest
+from unittest.mock import patch
 
+import responses
 from ddt import named_data
+from ibm_cloud_sdk_core import IAMTokenManager
+from ibm_cloud_sdk_core.authenticators import NoAuthAuthenticator
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.accounts.account import CloudAccount
 
+from .registries import DefaultRegistry
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from responses.registries import FirstMatchRegistry
+
     from qiskit_ibm_runtime.accounts import ChannelType
+
+
+def mock_authentication(
+    func_or_registry: Callable | type[FirstMatchRegistry] = DefaultRegistry,
+) -> Callable:
+    """Patch out IAM authentication and mock HTTP responses using a registry.
+
+    Can be used bare (``@mock_authentication``, using the default registry) or
+    called with a registry class (``@mock_authentication(SomeRegistry)``). The
+    instantiated registry is passed to the wrapped test as an extra argument.
+    """
+    # Bare use: the argument is the decorated test method, not a registry class.
+    if not isinstance(func_or_registry, type):
+        return mock_authentication(DefaultRegistry)(func_or_registry)
+
+    registry = func_or_registry
+
+    def decorator(test_method: Callable) -> Callable:
+        @wraps(test_method)
+        def wrapper(*args: object, **kwargs: object) -> object:
+            with (
+                # Patch authentication, in order to simplify flow.
+                patch.object(
+                    CloudAccount, "get_iam_authentificator", return_value=NoAuthAuthenticator()
+                ),
+                patch.object(IAMTokenManager, "get_token", return_value="bearer token"),
+                # Patch HTTP responses, allowing using a custom registry.
+                responses.RequestsMock(
+                    registry=registry, assert_all_requests_are_fired=True
+                ) as responses_mock,
+            ):
+                return test_method(*args, responses_mock.get_registry(), **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def production_only(func):
