@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from qiskit.primitives.containers import ObservablesArray
+from qiskit.primitives.containers.estimator_pub import ObservablesArray
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
