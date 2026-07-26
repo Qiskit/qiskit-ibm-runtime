@@ -21,10 +21,10 @@ from typing import TYPE_CHECKING, Any
 from unittest import SkipTest
 from unittest.mock import patch
 
-import responses
 from ddt import named_data
 from ibm_cloud_sdk_core import IAMTokenManager
 from ibm_cloud_sdk_core.authenticators import NoAuthAuthenticator
+from responses import RequestsMock
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.account import CloudAccount
@@ -65,7 +65,7 @@ def mock_authentication(
                 ),
                 patch.object(IAMTokenManager, "get_token", return_value="bearer token"),
                 # Patch HTTP responses, allowing using a custom registry.
-                responses.RequestsMock(
+                RequestsMock(
                     registry=registry, assert_all_requests_are_fired=True
                 ) as responses_mock,
             ):

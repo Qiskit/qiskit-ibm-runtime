@@ -17,11 +17,13 @@ from __future__ import annotations
 import json
 import re
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypeAlias
 
-import responses
+from responses import GET, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
+
+from qiskit_ibm_runtime.fake_provider import FakeLimaV2
 
 if TYPE_CHECKING:
     from requests import PreparedRequest
@@ -58,6 +60,23 @@ class Instance:
             )
 
 
+@dataclass
+class Backend:
+    """Represents a backend."""
+
+    name: str
+    """Name of the backend."""
+
+    configuration: dict = field(default_factory=dict)
+    """Configuration of the backend. If not set, it will be set based on ``FakeLimaV2``."""
+
+    def __post_init__(self) -> None:
+        if not self.configuration:
+            reference = FakeLimaV2()
+            self.configuration = reference._load_json(reference.conf_filename)
+            self.configuration["backend_name"] = self.name
+
+
 class IBMQuantumComputeRegistry(FirstMatchRegistry):
     """Registry that dynamically serves IBM Quantum Compute responses.
 
@@ -68,26 +87,26 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
     instances: dict[str, Instance]
     """Names of the instances."""
 
-    backends: dict[str, list[str]]
-    """Names of the backends in this registry, keyed by instance."""
+    backends: dict[str, dict[str, Backend]]
+    """Backends in this registry, keyed by instance."""
 
     def __init__(self) -> None:
         super().__init__()
 
         self.instances = {}
-        self.backends = defaultdict(list)
+        self.backends = defaultdict(dict)
 
         # Add callbacks for IBM Global Search and Global Catalog.
         self.add(
-            responses.CallbackResponse(
-                method="POST",
+            CallbackResponse(
+                method=POST,
                 url="https://api.global-search-tagging.cloud.ibm.com/v3/resources/search",
                 callback=self.global_search_callback,
             )
         )
         self.add(
-            responses.CallbackResponse(
-                method="GET",
+            CallbackResponse(
+                method=GET,
                 url=re.compile(r"https://globalcatalog.cloud.ibm.com/api/v1/\w+"),
                 callback=self.catalog_callback,
             )
@@ -95,16 +114,16 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
 
         # Add callbacks for the IBM Quantum Compute `/backends` endpoints.
         self.add(
-            responses.CallbackResponse(
-                method="GET",
+            CallbackResponse(
+                method=GET,
                 # TODO: take into account region, and validate.
                 url="https://my-region.quantum.cloud.ibm.com/api/v1/backends",
                 callback=self.backends_callback,
             )
         )
         self.add(
-            responses.CallbackResponse(
-                method="GET",
+            CallbackResponse(
+                method=GET,
                 # TODO: take into account region, and validate.
                 url=re.compile(
                     r"https://my-region.quantum.cloud.ibm.com/api/v1/backends/\w+/configuration"
@@ -113,17 +132,13 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
             )
         )
 
-    def add_instance(
-        self,
-        name: str,
-        pricing_type: PricingType = "free",
-    ) -> None:
+    def add_instance(self, instance: Instance) -> None:
         """Add a new instance to the registry."""
-        self.instances[name] = Instance(name=name, pricing_type=pricing_type)
+        self.instances[instance.name] = instance
 
-    def add_backend(self, name: str, instance: str) -> None:
+    def add_backend(self, backend: Backend, instance: str) -> None:
         """Add a new backend to the registry."""
-        self.backends[instance].append(name)
+        self.backends[instance][backend.name] = backend
 
     def global_search_callback(self, _: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Cloud Global Search API.
@@ -181,7 +196,9 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
         if instance.name not in self.backends:
             return (404, {"Content-Type": "application/json"}, "{}")
 
-        response_body = {"devices": [{"name": backend} for backend in self.backends[instance.name]]}
+        response_body = {
+            "devices": [{"name": backend_name} for backend_name in self.backends[instance.name]]
+        }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def backends_configuration_callback(self, request: PreparedRequest) -> CallbackResult:
@@ -201,22 +218,8 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
 
-        response_body = {
-            "backend_name": backend_name,
-            "backend_version": "1.0",
-            "online_date": "2020-03-23T04:00:00Z",
-            "gates": [],
-            "basis_gates": [],
-            "n_qubits": 2,
-            "local": False,
-            "simulator": False,
-            "conditional": True,
-            "open_pulse": False,
-            "memory": False,
-            "coupling_map": [],
-        }
-
-        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+        backend = self.backends[instance.name][backend_name]
+        return (200, {"Content-Type": "application/json"}, json.dumps(backend.configuration))
 
 
 class DefaultRegistry(IBMQuantumComputeRegistry):
@@ -225,8 +228,8 @@ class DefaultRegistry(IBMQuantumComputeRegistry):
     def __init__(self) -> None:
         super().__init__()
 
-        self.add_instance("a")
-        self.add_instance("b", "trial")
-        self.add_backend("common_backend", "a")
-        self.add_backend("common_backend", "b")
-        self.add_backend("unique_backend", "b")
+        self.add_instance(Instance("a"))
+        self.add_instance(Instance("b", pricing_type="trial"))
+        self.add_backend(Backend("common_backend"), "a")
+        self.add_backend(Backend("common_backend"), "b")
+        self.add_backend(Backend("unique_backend"), "b")
