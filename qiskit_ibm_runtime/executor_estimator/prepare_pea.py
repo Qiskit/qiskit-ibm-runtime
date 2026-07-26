@@ -55,7 +55,7 @@ def prepare_pea(
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program.
+    """Convert estimator PUBs to a quantum program with PEA mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.

@@ -17,16 +17,14 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
+from .base import BaseOptionsModel
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .post_selection import PostSelectionOptions
-from .utils import PRIMITIVES_CONFIG
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class NoiseLearnerV3Options:
+class NoiseLearnerV3Options(BaseOptionsModel):
     """Options for :class:`.NoiseLearnerV3`."""
 
     shots_per_randomization: Annotated[int, Field(ge=1)] = 128
@@ -37,15 +35,15 @@ class NoiseLearnerV3Options:
 
     For TREX experiments, a configuration is a measurement basis.
 
-    For Pauli Lindblad experiments, a configuration is a measurement basis and depth setting.
-    For example, if your experiment has six depths, then setting this value to ``32`` will result
-    in a total of ``32 * 9 * 6`` circuits that need to be executed (where ``9`` is the number
-    of circuits that need to be implemented to measure all the required observables, see the
-    note in the docstring for :class:`~.NoiseLearnerOptions` for mode details), at
+    For Pauli Lindblad experiments, a configuration is a measurement basis and depth setting. For
+    example, if your experiment has six depths, then setting this value to ``32`` will result in a
+    total of ``32 * 9 * 6`` circuits that need to be executed (where ``9`` is the number of
+    circuits that need to be implemented to measure all the required observables, see the note in
+    the docstring for :class:`~.NoiseLearnerOptions` for mode details), at
     :attr:`~shots_per_randomization` each.
     """
 
-    layer_pair_depths: list[Annotated[int, Field(ge=0)]] = (0, 1, 2, 4, 16, 32)  # type: ignore[assignment]
+    layer_pair_depths: list[Annotated[int, Field(ge=0)]] = [0, 1, 2, 4, 16, 32]
     """The circuit depths (measured in number of pairs) to use in Pauli Lindblad experiments.
 
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
@@ -56,17 +54,17 @@ class NoiseLearnerV3Options:
         This field is ignored by TREX experiments.
     """
 
-    post_selection: PostSelectionOptions = Field(default_factory=PostSelectionOptions)
+    post_selection: PostSelectionOptions = PostSelectionOptions()
     """Options for post selecting the results of noise learning circuits."""
 
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options.
 
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
-    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
+    execution: ExecutionOptions = ExecutionOptions()
     """Low-level execution options."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""

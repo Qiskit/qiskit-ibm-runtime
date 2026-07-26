@@ -22,7 +22,6 @@ from samplomatic.annotations import Twirl
 from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
-from ..options_models.post_selection import DEFAULT_X_PULSE_TYPE
 from .find_learning_protocol import find_learning_protocol
 
 if TYPE_CHECKING:
@@ -35,11 +34,9 @@ if TYPE_CHECKING:
 
 def validate_options(options: NoiseLearnerV3Options, configuration: BackendConfiguration) -> None:
     """Validates the options of a noise learner job."""
-    if options.post_selection.enable is True:  # type: ignore[union-attr]
-        x_pulse_type = (
-            options.post_selection.x_pulse_type or DEFAULT_X_PULSE_TYPE  # type: ignore[union-attr]
-        )
-        if x_pulse_type not in (basis_gates := configuration.basis_gates):
+    if options.post_selection.enable is True:
+        x_pulse_type = options.post_selection.x_pulse_type
+        if options.post_selection.x_pulse_type not in (basis_gates := configuration.basis_gates):
             raise ValueError(
                 f"Cannot apply Post Selection with X-pulse type '{x_pulse_type}' on a backend with "
                 f"basis gates {basis_gates}."

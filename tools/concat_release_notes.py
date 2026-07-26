@@ -41,9 +41,9 @@ def sort_release_notes_paths(release_notes_paths: Path) -> list[Path]:
 def generate_header(output_file: Path) -> None:
     """Write the release note headers to a file."""
     output_file.write_text(
-        "=======================================\n\
-Qiskit Runtime IBM Client release notes\n\
-=======================================\n\
+        "==================================================================\n\
+IBM Quantum Compute (formerly Qiskit Runtime) Client release notes\n\
+==================================================================\n\
 \n\
 .. towncrier release notes start\n",
         "utf-8",

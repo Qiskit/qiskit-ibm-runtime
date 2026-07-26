@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""AerExecutor and AerRuntimeJob: local simulation executor for QuantumProgram objects."""
+"""SimExecutor and SimRuntimeJob: local simulation executor for QuantumProgram."""
 
 from __future__ import annotations
 
@@ -22,21 +22,22 @@ from qiskit.utils.optionals import HAS_AER
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
-    from qiskit.providers import BackendV2
     from qiskit.quantum_info import PauliLindbladMap
+    from qiskit_aer import AerSimulator
 
     from ..quantum_program import QuantumProgram
     from ..results import QuantumProgramResult
 
 
-class AerRuntimeJob:
-    """Job object returned by :meth:`AerExecutor.run`.
+@HAS_AER.require_in_instance
+class SimRuntimeJob:
+    """Job object returned by :meth:`~.SimExecutor.run`.
 
     The program is executed eagerly on construction; the result is available
     immediately when :meth:`result` is called.
 
     Args:
-        qasm_simulator: The Aer simulator to run on.
+        backend: The Aer simulator to run on.
         program: The quantum program to execute.
         noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.
         angle_decimals: Rounding precision for gate angles (in units of π/2).
@@ -46,24 +47,13 @@ class AerRuntimeJob:
 
     def __init__(
         self,
-        qasm_simulator: BackendV2,
+        backend: AerSimulator,
         program: QuantumProgram,
         noise_dict: dict[str, PauliLindbladMap] | None = None,
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        if not HAS_AER:
-            raise ValueError(
-                "Cannot initialize object of type 'AerExecutor' since 'qiskit-aer' is not "
-                "installed. Install 'qiskit-aer' and try again."
-            )
-
-        from qiskit_aer import AerSimulator
-
-        if not isinstance(qasm_simulator, AerSimulator):
-            raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")
-
-        self._qasm_simulator = qasm_simulator
+        self._backend = backend
         self._program = program
         self._noise_dict = noise_dict
         self._angle_decimals = angle_decimals
@@ -72,7 +62,7 @@ class AerRuntimeJob:
         self.tags: list[str] = []  # interface compatibility with real Executor
 
         self._result = run_quantum_program(
-            qasm_simulator=self._qasm_simulator,
+            qasm_simulator=self._backend,
             program=self._program,
             noise_dict=self._noise_dict,
             angle_decimals=self._angle_decimals,
@@ -88,11 +78,12 @@ class AerRuntimeJob:
         return self._result
 
 
-class AerExecutor:
+@HAS_AER.require_in_instance
+class SimExecutor:
     """Local Aer-based executor mimicking the IBM Runtime executor interface.
 
     Runs a :class:`~qiskit_ibm_runtime.QuantumProgram` eagerly on construction of the
-    returned job — the result is available immediately when :meth:`AerRuntimeJob.result`
+    returned job — the result is available immediately when :meth:`~.SimRuntimeJob.result`
     is called.
 
     **Noise injection**
@@ -102,7 +93,7 @@ class AerExecutor:
     around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
     labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default,
     noise is injected at the ``R`` (right) barriers, i.e. *after* the gate.  Use
-    ``noise_after=False`` on :class:`InsertNoisePass` to target ``M`` barriers instead
+    ``noise_after=False`` on :class:`~.InsertNoisePass` to target ``M`` barriers instead
     (noise *before* the gate).
 
     The ``noise_dict`` format is:
@@ -118,7 +109,7 @@ class AerExecutor:
       set, independent of global circuit qubit numbering.
 
     Args:
-        qasm_simulator: The Aer simulator to run programs on.
+        backend: The Aer simulator to run programs on.
         noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.  Pass
             ``None`` (default) to run without noise injection.
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
@@ -131,28 +122,17 @@ class AerExecutor:
 
     def __init__(
         self,
-        qasm_simulator: BackendV2,
+        backend: AerSimulator,
         noise_dict: dict[str, PauliLindbladMap] | None = None,
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        if not HAS_AER:
-            raise ValueError(
-                "Cannot initialize object of type 'AerExecutor' since 'qiskit-aer' is not "
-                "installed. Install 'qiskit-aer' and try again."
-            )
-
-        from qiskit_aer import AerSimulator
-
-        if not isinstance(qasm_simulator, AerSimulator):
-            raise ValueError("``qasm_simulator`` needs to be an ``AerSimulator`` object.")
-
-        self._qasm_simulator = qasm_simulator
+        self._backend = backend
         self._noise_dict = noise_dict
         self._angle_decimals = angle_decimals
         self._warn_absent = warn_absent
 
-    def run(self, program: QuantumProgram) -> AerRuntimeJob:
+    def run(self, program: QuantumProgram) -> SimRuntimeJob:
         """Run a quantum program and return a completed job.
 
         Args:
@@ -161,8 +141,8 @@ class AerExecutor:
         Returns:
             A job whose result is immediately available.
         """
-        return AerRuntimeJob(
-            qasm_simulator=self._qasm_simulator,
+        return SimRuntimeJob(
+            backend=self._backend,
             program=program,
             noise_dict=self._noise_dict,
             angle_decimals=self._angle_decimals,

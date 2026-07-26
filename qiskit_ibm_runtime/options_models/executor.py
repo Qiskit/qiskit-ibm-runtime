@@ -14,23 +14,19 @@
 
 from __future__ import annotations
 
-from pydantic import Field
-from pydantic.dataclasses import dataclass
-
+from .base import BaseOptionsModel
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
-from .utils import PRIMITIVES_CONFIG
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class ExecutorOptions:
+class ExecutorOptions(BaseOptionsModel):
     """Options for the executor."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
 
-    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
+    execution: ExecutionOptions = ExecutionOptions()
     """Low-level execution options."""
 
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options that are passed to the executor."""

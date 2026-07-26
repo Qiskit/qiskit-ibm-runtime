@@ -15,11 +15,11 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
+from ..options_models.converters import to_runtime_options
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session
 from .params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
@@ -55,7 +55,8 @@ class NoiseLearnerV3:
             * A :class:`Batch` if you are using batch execution mode.
 
             Refer to the
-            `Qiskit Runtime documentation <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
+            `IBM Quantum Compute (formerly Qiskit Runtime) documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about the execution modes.
 
         options: The desired options.
@@ -146,10 +147,6 @@ class NoiseLearnerV3:
             raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         params = converter.encoder(instructions, self.options)
-        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
-        runtime_options["backend"] = self._backend.name
-        runtime_options["instance"] = self._backend._instance
-
         if self._session:
             _run = self._session._run
         else:
@@ -170,7 +167,7 @@ class NoiseLearnerV3:
 
         return _run(
             program_id=self._PROGRAM_ID,
-            options=runtime_options,
+            options=to_runtime_options(self.options.environment, self._backend),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
         )

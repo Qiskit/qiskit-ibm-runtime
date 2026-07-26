@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 from qiskit.circuit import QuantumCircuit
 from qiskit.converters import circuit_to_dag
 from qiskit.transpiler import TransformationPass
+from qiskit.utils.optionals import HAS_AER
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -30,14 +31,15 @@ if TYPE_CHECKING:
     from qiskit.dagcircuit import DAGCircuit, DAGOpNode
     from qiskit.quantum_info import PauliLindbladMap
 
-from qiskit.utils.optionals import HAS_AER
-from qiskit_aer.noise import PauliLindbladError
+if HAS_AER:
+    from qiskit_aer.noise import PauliLindbladError
 
 
 def _find_qubit(dag: DAGCircuit, qubit: Qubit) -> int:
     return dag.find_bit(qubit).index
 
 
+@HAS_AER.require_in_instance
 class InsertNoisePass(TransformationPass):
     """Transpiler pass that inserts Pauli-Lindblad noise channels after (or before) tagged barriers.
 
@@ -61,12 +63,6 @@ class InsertNoisePass(TransformationPass):
         noise_scale: float = 1.0,
         warn_absent: bool = True,
     ):
-        if not HAS_AER:
-            raise ValueError(
-                "Cannot import this file since 'qiskit-aer' is not installed. Install 'qiskit-aer' "
-                "and try again."
-            )
-
         self._noise_dict = noise_dict or {}
         self._noise_after = noise_after
         self._noise_scale = noise_scale
@@ -132,7 +128,7 @@ class InsertNoisePass(TransformationPass):
             return None
 
         pauli_lindblad_error = PauliLindbladError(
-            generators=pauli_lindblad_map.generators().to_pauli_list(),
+            generators=pauli_lindblad_map.get_qubit_sparse_pauli_list_copy().to_pauli_list(),
             rates=self._noise_scale * pauli_lindblad_map.rates,
         )
 
