@@ -39,14 +39,24 @@ class TestSimExecutor(IBMTestCase):
         executor = SimExecutor(backend)
         self.assertIsInstance(executor.options, ExecutorOptions)
         self.assertIsNone(executor.options.simulator.noise_model)
+        self.assertEqual(executor.options.simulator.gate_angle_precision, 5)
+        self.assertTrue(executor.options.simulator.warn_absent)
 
         noise_model = {
             "tag1": PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)])
         }
 
-        executor.options = {"simulator": {"noise_model": noise_model}}
+        executor.options = {
+            "simulator": {
+                "noise_model": noise_model,
+                "gate_angle_precision": 10,
+                "warn_absent": False,
+            }
+        }
         self.assertIsInstance(executor.options, ExecutorOptions)
         self.assertIsNotNone(executor.options.simulator.noise_model)
+        self.assertEqual(executor.options.simulator.gate_angle_precision, 10)
+        self.assertFalse(executor.options.simulator.warn_absent)
 
     def test_run(self):
         """Test that run returns an ``SimRuntimeJob``."""
