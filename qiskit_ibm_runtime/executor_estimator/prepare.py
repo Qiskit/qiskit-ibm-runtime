@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
+from ..exceptions import IBMInputValueError
+from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
 from .pec.prepare_pec import prepare_pec
 from .prepare_pea import prepare_pea
@@ -29,6 +31,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from qiskit.providers import BackendV2
 
     from ..options_models.estimator import EstimatorOptions
     from ..options_models.executor import ExecutorOptions
@@ -43,6 +46,7 @@ def prepare(
     options: EstimatorOptions,
     shots: int | None = None,
     add_tags: bool = False,
+    backend: BackendV2 | None = None,
 ) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a sequence of estimator PUBs to a quantum program and map options.
 
@@ -61,6 +65,8 @@ def prepare(
             attribute), while ``True`` will cause tags with the twirled boxes hash to be added
             (using the "unique_box" value of the relevant attribute). These tags can help
             injecting noise in simulators.
+        backend: Backend required when dynamical decoupling is enabled, used to extract
+            timing information for the DD pass.
 
     Returns:
         A tuple containing:
@@ -69,6 +75,18 @@ def prepare(
             objects for each pub, with passthrough_data configured for post-processing.
         - :class:`~.ExecutorOptions` mapped from the sampler's options.
     """
+    if options.dynamical_decoupling.enable:
+        for pub in pubs:
+            if pub.circuit.has_control_flow_op():
+                raise IBMInputValueError(
+                    "Dynamical decoupling is not compatible with dynamic circuits "
+                    "(circuits with control flow operations)."
+                )
+        if backend is None:
+            raise IBMInputValueError(
+                "A backend must be provided when dynamical decoupling is enabled."
+            )
+
     # Map options to executor options
     executor_options = estimator_options_to_executor_options(options)
 
@@ -126,4 +144,12 @@ def prepare(
         else None,
         add_tags=add_tags,
     )
+    if options.dynamical_decoupling.enable:
+        logger.info("Apply dynamical decoupling")
+        quantum_program = apply_dynamical_decoupling(
+            backend=backend,
+            dd_options=options.dynamical_decoupling,
+            quantum_program=quantum_program,
+        )
+
     return quantum_program, executor_options

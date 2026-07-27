@@ -25,7 +25,6 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from ..base_primitive import get_mode_service_backend
 from ..exceptions import IBMInputValueError
 from ..executor import Executor
-from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .prepare import prepare
@@ -317,14 +316,6 @@ class EstimatorV2(BaseEstimatorV2):
                 calibration_id=None,
             )
 
-        if options.dynamical_decoupling.enable:
-            for pub in coerced_pubs:
-                if pub.circuit.has_control_flow_op():
-                    raise IBMInputValueError(
-                        "Dynamical decoupling is not compatible with dynamic circuits "
-                        "(circuits with control flow operations)."
-                    )
-
         if options.resilience.pec_mitigation and options.resilience.zne_mitigation:
             raise IBMInputValueError(
                 "PEC mitigation and ZNE mitigation are incompatible with one another."
@@ -332,15 +323,9 @@ class EstimatorV2(BaseEstimatorV2):
 
         # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(coerced_pubs, options, shots)
-
-        if options.dynamical_decoupling.enable:
-            logger.info("Apply dynamical decoupling")
-            quantum_program = apply_dynamical_decoupling(
-                backend=self._backend,
-                dd_options=options.dynamical_decoupling,
-                quantum_program=quantum_program,
-            )
+        quantum_program, executor_options = prepare(
+            coerced_pubs, options, shots, backend=self._backend
+        )
 
         quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
             "twirling": options.twirling.model_dump(),
