@@ -18,42 +18,37 @@ from qiskit import QuantumCircuit
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import run_cloud_fake
+from ..decorators import mock_authentication
 from ..ibm_test_case import IBMTestCase
+from ..registries import Backend, Instance, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
-from .mock.fake_api_backend import FakeApiBackendSpecs
-from .mock.fake_runtime_client import BaseFakeRuntimeClient
 
 
 class TestQiskitRuntimeService(IBMTestCase):
     """Class for testing the `QiskitRuntimeService` class."""
 
-    @run_cloud_fake
-    def test_run_active_client(self, service):
+    @mock_authentication(OneInstanceNoBackendsRegistry)
+    def test_run_active_client(self, registry):
         """`_run()` should use the backend/instance api client rather than the active client."""
-        # Prepare different backends.
-        backend_a, backend_b, backend_c = service.backends()
-        # A backend that has a client and instance registered and active in the service.
-        backend_a._api_client.program_run = MagicMock(wraps=backend_a._api_client.program_run)
-        # A backend that has a client and instance registered and not active in the service.
-        backend_b._instance = "b"
-        backend_b._api_client = BaseFakeRuntimeClient(
-            instance="b", backend_specs=[FakeApiBackendSpecs(backend_b.name)]
-        )
-        backend_b._api_client.program_run = MagicMock(wraps=backend_b._api_client.program_run)
-        # A backend that has a client and instance not registered in the service.
-        backend_c._instance = "c"
-        backend_c._api_client = BaseFakeRuntimeClient(
-            instance="c", backend_specs=[FakeApiBackendSpecs(backend_c.name)]
-        )
-        backend_c._api_client.program_run = MagicMock(wraps=backend_c._api_client.program_run)
+        # Create several instances, with one instance per backend, so they use different clients.
+        registry.add_instance(Instance("b"))
+        registry.add_instance(Instance("c"))
+        registry.add_backend(Backend("backend_a"), "a")
+        registry.add_backend(Backend("backend_b"), "b")
+        registry.add_backend(Backend("backend_c"), "c")
 
-        # Prepare the service to mimic having multiple clients.
-        service._api_clients = {
-            backend_a._instance: backend_a._api_client,
-            backend_b._instance: backend_b._api_client,
-        }
+        # Retrieve backends
+        service = QiskitRuntimeService(token="token")
+        backend_a, backend_b, backend_c = service.backends()
+        # Mimic that backend_c is not available in the service.
+        backend_c._instance = "invalid"
+
+        # Add mocks in order to ensure which clients are used.
+        backend_a._api_client.program_run = MagicMock(wraps=backend_a._api_client.program_run)
+        backend_b._api_client.program_run = MagicMock(wraps=backend_b._api_client.program_run)
+        backend_c._api_client.program_run = MagicMock(wraps=backend_c._api_client.program_run)
 
         # Run a job with the client and instance active in the service.
         pubs = transpile_pubs([(QuantumCircuit(1),)], backend_a, "sampler")
