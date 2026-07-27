@@ -40,8 +40,7 @@ class SimRuntimeJob:
     Args:
         backend: The Aer simulator to run on.
         program: The quantum program to execute.
-        noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.
-        angle_decimals: Rounding precision for gate angles (in units of π/2).
+        options: The simulator options to run with.
         warn_absent: If ``True`` (default), warn when a tagged barrier has no entry in
             ``noise_dict``.
     """
@@ -80,21 +79,26 @@ class SimRuntimeJob:
 class SimExecutor:
     """Local Aer-based executor mimicking the IBM Runtime executor interface.
 
-    Runs a :class:`~qiskit_ibm_runtime.QuantumProgram` eagerly on construction of the
+    Runs a :class:`~qiskit_ibm_runtime.QuantumProgramResult` eagerly on construction of the
     returned job — the result is available immediately when :meth:`~.SimRuntimeJob.result`
     is called.
 
-    **Noise injection**
+    **Simulator options**
 
-    When ``noise_dict`` is provided, Pauli-Lindblad noise is injected into circuits at
-    tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts three barriers
+    :class:`~.SimulatorOptions` are used to enable different options, namely,
+    :attr:`~.SimulatorOptions.gate_angle_precision` and
+
+    ***Noise injection***
+
+    When :attr:`~.SimulatorOptions.noise_model` is provided, Pauli-Lindblad noise is injected into
+    circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts three barriers
     around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
     labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default,
     noise is injected at the ``R`` (right) barriers, i.e. *after* the gate.  Use
     ``noise_after=False`` on :class:`~.InsertNoisePass` to target ``M`` barriers instead
     (noise *before* the gate).
 
-    The ``noise_dict`` format is:
+    The :attr:`~.SimulatorOptions.noise_model` format is:
 
     - **Keys** — layer name tags (strings, e.g. ``"r0"``, ``"my_tag"``).  Each key must match
       the ``ref`` of a ``Tag`` annotation used when building the ``QuantumProgram``.
@@ -108,11 +112,8 @@ class SimExecutor:
 
     Args:
         backend: The Aer simulator to run programs on.
-        noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.  Pass
-            ``None`` (default) to run without noise injection.
-        angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.  This prevents floating-point drift from
-            preventing Clifford-method simulation when angles are nominally Clifford.
+        options: Executor options (see :class:`ExecutorOptions`) populated with simulator
+            options (see :class:`SimulatorOptions`).
         warn_absent: If ``True`` (default), emit a warning when a tagged barrier's tag is
             not found in ``noise_dict``.  Set to ``False`` when partial coverage of tags is
             intentional.
