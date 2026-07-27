@@ -30,11 +30,61 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import combine
+from .utils import PARAM_BASIS_3Q_SCENARIOS
 
 
 @ddt
 class TestPrepareVanilla(IBMTestCase):
     """Tests for the ``prepare_vanilla`` function."""
+
+    @data([True, True, True], [False, True, True], [False, False, False])
+    @unpack
+    def test_param_basis_expansion_3q(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
+        """Test parameter-basis expansion with three-qubit observables."""
+        observables = PARAM_BASIS_3Q_SCENARIOS.observables
+        num_qubits = observables.num_qubits
+
+        circuit = QuantumCircuit(num_qubits)
+        circuit.rz(Parameter("alpha"), 0)
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
+            parameter_shape = scenario.parameter_shape
+            observables_shape = scenario.observables_shape
+            expected_pairs = scenario.expected_pairs
+
+            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
+                pub_like = (
+                    circuit,
+                    observables.reshape(observables_shape),
+                    np.random.random(parameter_shape + (circuit.num_parameters,)),
+                )
+                pubs = [EstimatorPub.coerce(pub_like)]
+
+                program = prepare_vanilla(
+                    pubs=pubs,
+                    twirling_options=twirling_options,
+                    shots=10,
+                    measure_noise_learning=measure_noise_learning,
+                )
+
+                post_processor_data = program.passthrough_data["post_processor"]
+                param_basis_pairs = post_processor_data["param_basis_pairs"][0]
+
+                # Check that the param-basis pairs are the correct ones
+                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+
+                # Check that the quantum program has one element per param-basis pair
+                self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
 
     @data(
         [(2, 2), (2, 2), (1, 4)],
