@@ -55,8 +55,7 @@ class SimRuntimeJob:
     ):
         self._backend = backend
         self._program = program
-        self._noise_dict = options.noise_model
-        self._angle_decimals = options.gate_angle_precision
+        self._options = options
         self._warn_absent = warn_absent
         self._job_id: str = str(uuid.uuid4())
         self.tags: list[str] = []  # interface compatibility with real Executor
@@ -64,8 +63,7 @@ class SimRuntimeJob:
         self._result = run_quantum_program(
             qasm_simulator=self._backend,
             program=self._program,
-            noise_dict=self._noise_dict,
-            angle_decimals=self._angle_decimals,
+            options=self._options,
             warn_absent=self._warn_absent,
         )
 
