@@ -63,6 +63,13 @@ class SimulatorOptions(BaseOptionsModel):
     For example, ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
     """
 
+    gate_angle_precision: int = 5
+    """
+    Gate angles are rounded to the nearest multiple of π/2 at this
+    decimal precision before simulation.  This prevents floating-point drift from
+    preventing Clifford-method simulation when angles are nominally Clifford.
+    """
+
     def set_backend(self, backend: BackendV2) -> None:
         """Set backend for simulation.
 

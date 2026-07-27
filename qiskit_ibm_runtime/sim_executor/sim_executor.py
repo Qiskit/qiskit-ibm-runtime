@@ -15,16 +15,17 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qiskit.utils.optionals import HAS_AER
 
+from ..options_models.executor import ExecutorOptions
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
-    from qiskit.quantum_info import PauliLindbladMap
     from qiskit_aer import AerSimulator
 
+    from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
     from ..results import QuantumProgramResult
 
@@ -49,14 +50,13 @@ class SimRuntimeJob:
         self,
         backend: AerSimulator,
         program: QuantumProgram,
-        noise_dict: dict[str, PauliLindbladMap] | None = None,
-        angle_decimals: int = 5,
+        options: SimulatorOptions,
         warn_absent: bool = True,
     ):
         self._backend = backend
         self._program = program
-        self._noise_dict = noise_dict
-        self._angle_decimals = angle_decimals
+        self._noise_dict = options.noise_model
+        self._angle_decimals = options.gate_angle_precision
         self._warn_absent = warn_absent
         self._job_id: str = str(uuid.uuid4())
         self.tags: list[str] = []  # interface compatibility with real Executor
@@ -120,17 +120,33 @@ class SimExecutor:
             intentional.
     """
 
+    options: ExecutorOptions
+    """The options of this executor."""
+
     def __init__(
         self,
         backend: AerSimulator,
-        noise_dict: dict[str, PauliLindbladMap] | None = None,
-        angle_decimals: int = 5,
+        options: ExecutorOptions | dict | None = None,
         warn_absent: bool = True,
     ):
         self._backend = backend
-        self._noise_dict = noise_dict
-        self._angle_decimals = angle_decimals
+        self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
         self._warn_absent = warn_absent
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to an ``ExecutorOptions`` instance.
+        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
+        autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = ExecutorOptions(**value)
+            elif not isinstance(value, ExecutorOptions):
+                raise TypeError(f"Expected ExecutorOptions or dict, got {type(value)}")
+
+        super().__setattr__(name, value)
 
     def run(self, program: QuantumProgram) -> SimRuntimeJob:
         """Run a quantum program and return a completed job.
@@ -144,7 +160,6 @@ class SimExecutor:
         return SimRuntimeJob(
             backend=self._backend,
             program=program,
-            noise_dict=self._noise_dict,
-            angle_decimals=self._angle_decimals,
+            options=self.options.simulator,
             warn_absent=self._warn_absent,
         )
