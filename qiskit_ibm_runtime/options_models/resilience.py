@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import InstanceOf
+from pydantic import InstanceOf, model_validator
 from qiskit.quantum_info import PauliLindbladMap
 
 from .base import BaseOptionsModel
@@ -76,3 +76,14 @@ class ResilienceOptions(BaseOptionsModel):
     describe the noise characteristics of that layer. The dict contains layers from all PUBs. This
     is required when using PEC mitigation, or ZNE with PEA amplifier.
     """
+
+    @model_validator(mode="after")
+    def _validate_measure_noise_learning(self) -> ResilienceOptions:
+        """Reject a configured measure_noise_learning if measure_mitigation isn't enabled."""
+        learning_is_default = self.measure_noise_learning == MeasureNoiseLearningOptions()
+        if not self.measure_mitigation and not learning_is_default:
+            raise ValueError(
+                "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to "
+                "True."
+            )
+        return self

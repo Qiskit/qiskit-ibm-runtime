@@ -41,7 +41,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
     def test_set_all_options(self):
         """All fields accept explicit non-default values."""
         opts = ResilienceOptions(
-            measure_mitigation=False,
+            measure_mitigation=True,
             measure_noise_learning={"num_randomizations": 64},
             pec_mitigation=True,
             pec={"max_overhead": 50, "noise_gain": 0.5},
@@ -52,7 +52,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
                 "layer_1": PauliLindbladMap.identity(num_qubits=1),
             },
         )
-        self.assertFalse(opts.measure_mitigation)
+        self.assertTrue(opts.measure_mitigation)
         self.assertEqual(opts.measure_noise_learning.num_randomizations, 64)
         self.assertTrue(opts.pec_mitigation)
         self.assertEqual(opts.pec.max_overhead, 50)
@@ -73,3 +73,31 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         """Invalid noise_model_mapping values raise ValidationError."""
         with self.assertRaisesRegex(ValidationError, "noise_model_mapping"):
             ResilienceOptions(noise_model_mapping=value)
+
+    @data(None, False)
+    def test_measure_noise_learning_requires_measure_mitigation(self, measure_mitigation):
+        """Setting measure_noise_learning without enabling measure_mitigation raises (DR-R4a)."""
+        with self.assertRaisesRegex(ValidationError, "measure_noise_learning"):
+            ResilienceOptions(
+                measure_mitigation=measure_mitigation,
+                measure_noise_learning={"num_randomizations": 64},
+            )
+
+    def test_measure_noise_learning_allowed_with_measure_mitigation(self):
+        """measure_noise_learning is accepted once measure_mitigation is True."""
+        opts = ResilienceOptions(
+            measure_mitigation=True, measure_noise_learning={"num_randomizations": 64}
+        )
+        self.assertEqual(opts.measure_noise_learning.num_randomizations, 64)
+
+    def test_measure_noise_learning_default_allowed_regardless_of_mitigation(self):
+        """Leaving measure_noise_learning at its default never trips the validator."""
+        opts = ResilienceOptions(measure_mitigation=False)
+        self.assertEqual(opts.measure_noise_learning.num_randomizations, "auto")
+
+    def test_measure_noise_learning_disallowed_on_mutation(self):
+        """The check also fires on assignment, since validate_assignment is enabled."""
+        opts = ResilienceOptions(measure_mitigation=True)
+        opts.measure_noise_learning.num_randomizations = 64
+        with self.assertRaisesRegex(ValidationError, "measure_noise_learning"):
+            opts.measure_mitigation = False
