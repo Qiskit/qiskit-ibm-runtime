@@ -16,9 +16,11 @@ import numpy as np
 from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
+from qiskit.primitives.base import BaseEstimatorV2  # noqa: TC002
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
+from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2Native
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2ThroughExecutor
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2 as NativeEstimatorV2
 
@@ -26,11 +28,15 @@ from ..ibm_test_case import IBMIntegrationTestCase
 
 
 @ddt
-class TestExecutorThroughExecutor(IBMIntegrationTestCase):
+class _TestEstimatorBase(IBMIntegrationTestCase):
     """An integration test, testing the EstimatorV2 through Executor implementation."""
+
+    estimator_variant: BaseEstimatorV2 | None = None
 
     def setUp(self):
         """Test level setup."""
+        if self.estimator_variant is None:
+            self.skipTest("This base class cannot be run as a standalone testcase.")
         super().setUp()
         self.backend = self.service.backend(self.dependencies.qpu)
 
@@ -92,3 +98,15 @@ class TestExecutorThroughExecutor(IBMIntegrationTestCase):
         # self.assertAlmostEqual(results[1].data.evs, 10.0, delta=delta)  # obs1, phi=pi
         # self.assertAlmostEqual(results[2].data.evs, 10.0, delta=delta)  # obs2, phi=0
         # self.assertAlmostEqual(results[3].data.evs,  8.0, delta=delta)  # obs2, phi=pi
+
+
+class TestEstimatorNative(_TestEstimatorBase):
+    """Variant of the Estimator integration test, running through native Estimator."""
+
+    estimator_variant = EstimatorV2Native
+
+
+class TestEstimatorThroughExecutor(_TestEstimatorBase):
+    """Variant of the Estimator integration test, running through Executor based Estimator."""
+
+    estimator_variant = EstimatorV2ThroughExecutor

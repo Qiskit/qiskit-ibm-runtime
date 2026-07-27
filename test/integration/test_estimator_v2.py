@@ -12,7 +12,6 @@
 
 """Integration tests for Estimator V2."""
 
-from typing import TYPE_CHECKING
 from unittest import skip
 
 from qiskit.circuit.library import IQP, real_amplitudes
@@ -20,26 +19,17 @@ from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2ThroughExecutor
-from qiskit_ibm_runtime import Session
-from qiskit_ibm_runtime.executor_estimator import EstimatorV2 as EstimatorV2Native
+from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
-if TYPE_CHECKING:
-    from qiskit.primitives.base import BaseEstimatorV2
 
-
-class _EstimatorV2_Testcase_Base(IBMIntegrationTestCase):
+class TestEstimatorV2(IBMIntegrationTestCase):
     """Integration tests for Estimator V2 Primitive."""
-
-    estimator_variant: BaseEstimatorV2 | None = None
 
     def setUp(self) -> None:
         """Test level setup."""
-        if self.estimator_variant is None:
-            self.skipTest("Base class")
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
 
@@ -59,7 +49,7 @@ class _EstimatorV2_Testcase_Base(IBMIntegrationTestCase):
         theta3 = [1, 2, 3, 4, 5, 6]
 
         with Session(self._backend) as session:
-            estimator = self.estimator_variant(mode=session)
+            estimator = EstimatorV2(mode=session)
 
             job = estimator.run([(psi1, H1, [theta1])])
             result = job.result()
@@ -80,7 +70,7 @@ class _EstimatorV2_Testcase_Base(IBMIntegrationTestCase):
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = self.estimator_variant(mode=self._backend)
+        estimator = EstimatorV2(mode=self._backend)
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
@@ -118,7 +108,7 @@ class _EstimatorV2_Testcase_Base(IBMIntegrationTestCase):
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = self.estimator_variant(mode=self._backend)
+        estimator = EstimatorV2(mode=self._backend)
         estimator.options.resilience_level = 0
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200
@@ -140,15 +130,3 @@ class _EstimatorV2_Testcase_Base(IBMIntegrationTestCase):
             self.assertTrue(pub_result.metadata)
             self.assertEqual(pub_result.data.evs.shape, shapes[idx])
             self.assertEqual(pub_result.data.stds.shape, shapes[idx])
-
-
-class TestEstimatorV2Native(_EstimatorV2_Testcase_Base):
-    """Variant of the Estimator integration test, running through native Estimator."""
-
-    estimator_variant = EstimatorV2Native
-
-
-class TestEstimatorV2ThroughExecutor(_EstimatorV2_Testcase_Base):
-    """Variant of the Estimator integration test, running through Executor based Estimator."""
-
-    estimator_variant = EstimatorV2ThroughExecutor
