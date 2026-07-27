@@ -35,16 +35,44 @@ from .unit.mock.fake_runtime_service import FakeRuntimeService
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from responses.registries import FirstMatchRegistry
-
     from qiskit_ibm_runtime.accounts import ChannelType
 
+    from .registries import BaseRegistry
 
-def mock_authentication(
-    func_or_registry: Callable | type[FirstMatchRegistry] = DefaultRegistry,
-    expose_requests_mock: bool = False,
+
+def mock_responses(
+    func_or_registry: Callable | type[BaseRegistry] = DefaultRegistry,
+    expose_responses_mock: bool = False,
 ) -> Callable:
-    """Patch out IAM authentication and mock HTTP responses using a registry.
+    """Decorator that mocks the HTTP responses using a registry.
+
+    When decorating a test, this decorator:
+    * intercepts HTTP requests and returns mocked HTTP responses, based on a ``Registry``, which
+      is added as an argument to the test.
+    * patches low-level method related to IAM authentication, to simplify the authentication flow.
+
+    This decorator is meant to be used with the items in the ``registries`` module:
+    * ``DefaultRegistry`` and its subclasses.
+    * ``Instance`` and ``Backend`` for setting the behavior.
+
+    Example::
+
+        @mock_responses(OneInstanceNoBackendsRegistry)
+        def test_with_a_backend(self, registry):
+            # Add a backend to the instance "a".
+            registry.add_backend(Backend("some_new_backend"))
+            ...
+
+        @mock_responses(expose_responses_mock=True)
+        def test_something(self, registry, responses):
+            ...
+            self.assertEqual(len(responses.calls), 1)
+
+    Args:
+        func_or_registry: the ``Registry`` to use. If the decorator is used without parenthesis
+            (``@mock_responses``), contains the test to decorate.
+        expose_responses_mock: if ``True``, the ``response`` will be added to the list of arguments
+            of the decorated tests.
 
     Can be used bare (``@mock_authentication``, using the default registry) or
     called with a registry class (``@mock_authentication(SomeRegistry)``). The
@@ -52,7 +80,7 @@ def mock_authentication(
     """
     # Bare use: the argument is the decorated test method, not a registry class.
     if not isinstance(func_or_registry, type):
-        return mock_authentication(DefaultRegistry)(func_or_registry)
+        return mock_responses(DefaultRegistry)(func_or_registry)
 
     registry = func_or_registry
 
@@ -70,7 +98,7 @@ def mock_authentication(
                     registry=registry, assert_all_requests_are_fired=False
                 ) as responses_mock,
             ):
-                if expose_requests_mock:
+                if expose_responses_mock:
                     return test_method(
                         *args, responses_mock.get_registry(), responses_mock, **kwargs
                     )

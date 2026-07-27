@@ -20,7 +20,7 @@ from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import mock_authentication
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, Instance, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
@@ -29,7 +29,7 @@ from ..utils import transpile_pubs
 class TestQiskitRuntimeService(IBMTestCase):
     """Class for testing the `QiskitRuntimeService` class."""
 
-    @mock_authentication(OneInstanceNoBackendsRegistry)
+    @mock_responses(OneInstanceNoBackendsRegistry)
     def test_run_active_client(self, registry):
         """`_run()` should use the backend/instance api client rather than the active client."""
         # Create several instances, with one instance per backend, so they use different clients.

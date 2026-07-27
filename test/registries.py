@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Custom ``responses`` registries used by unit tests."""
+"""Custom ``responses`` registries for using with unit tests."""
 
 from __future__ import annotations
 
@@ -35,10 +35,16 @@ CallbackResult: TypeAlias = tuple[int, dict[str, str], str]
 
 PricingType: TypeAlias = Literal["free", "trial", "paygo", "paid", "subscription", "unknown"]
 
+DEFAULT_BACKED_CONFIGURATION = FakeLimaV2()._load_json(FakeLimaV2.conf_filename)
+"""Default configuration for registry backends, cached and based on FakeLima."""
+
+DEFAULT_BACKED_PROPERTIES = FakeLimaV2()._load_json(FakeLimaV2.props_filename)
+"""Default properties for registry backends, cached and based on FakeLima."""
+
 
 @dataclass
 class Instance:
-    """Represents an instance."""
+    """Registry representation of an instance."""
 
     name: str
     """Name of the instance."""
@@ -59,7 +65,7 @@ class Instance:
 
 @dataclass
 class Backend:
-    """Represents a backend."""
+    """Registry representation of a backend."""
 
     name: str
     """Name of the backend."""
@@ -78,13 +84,11 @@ class Backend:
 
     def __post_init__(self) -> None:
         if not self.configuration:
-            reference = FakeLimaV2()
-            self.configuration = reference._load_json(reference.conf_filename)
+            self.configuration = DEFAULT_BACKED_CONFIGURATION.copy()
             self.configuration["backend_name"] = self.name
 
         if not self.properties:
-            reference = FakeLimaV2()
-            self.properties = reference._load_json(reference.props_filename)
+            self.properties = DEFAULT_BACKED_PROPERTIES.copy()
             self.properties["backend_name"] = self.name
 
     @classmethod
@@ -112,18 +116,32 @@ class Backend:
         )
 
 
-class IBMQuantumComputeRegistry(FirstMatchRegistry):
+class BaseRegistry(FirstMatchRegistry):
     """Registry that dynamically serves IBM Quantum Compute responses.
 
-    Instances and backends start empty; populate them with ``add_instance`` and
-    ``add_backend`` (see ``DefaultRegistry`` for a pre-loaded subclass).
+    Registry for ``responses`` that generates mocked HTTP responses that allow for testing a subset
+    of the functionality of ``QiskitRuntimeService``. The responses are generated dynamically via
+    the ``callback_*`` methods of this class.
+
+    The content of the responses is controlled via the ``instances`` and ``backends`` attributes,
+    which can be modified via ``add_instance()`` and ``add_backends()``.
+
+    .. seealso::
+        ``decorators.mock_responses`` for a decorator that enables and passes the registry to
+        unit tests.
+
+        This class' subclasses for examples of convenient pre-populated registries.
+
+    .. note::
+        The registry is not meant to provide a full substitute of IBM Quantum Compute API, or
+        return full responses. It is tailored to the needs of testing.
     """
 
     instances: dict[str, Instance]
-    """Names of the instances."""
+    """Instances in this registry, keyed by instance name."""
 
     backends: dict[str, dict[str, Backend]]
-    """Backends in this registry, keyed by instance."""
+    """Backends in this registry, keyed by instance name."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -373,8 +391,13 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
 
-class DefaultRegistry(IBMQuantumComputeRegistry):
-    """Registry pre-loaded with a default set of instances and backends."""
+class DefaultRegistry(BaseRegistry):
+    """Registry with two instances, with one common backend and two unique backends.
+
+    This registry contains:
+    * instance ``a`` (free plan): with ``common_backend``, and ``unique_backend_a``
+    * instance ``b`` (trial plan): with ``common_backend``, and ``unique_backend_b``
+    """
 
     def __init__(self) -> None:
         super().__init__()
@@ -386,8 +409,12 @@ class DefaultRegistry(IBMQuantumComputeRegistry):
         self.add_backend(Backend("unique_backend_b"), "b")
 
 
-class OneInstanceNoBackendsRegistry(IBMQuantumComputeRegistry):
-    """Registry pre-loaded with a single instance ``a`` and no backends."""
+class OneInstanceNoBackendsRegistry(BaseRegistry):
+    """Registry pre-loaded with a single instance ``a`` with no backends.
+
+    This registry contains:
+    * instance ``a`` (free plan): no backends.
+    """
 
     def __init__(self) -> None:
         super().__init__()
