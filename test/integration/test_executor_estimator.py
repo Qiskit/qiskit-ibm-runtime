@@ -13,7 +13,7 @@
 """Tests for Executor-based EstimatorV2."""
 
 import numpy as np
-from ddt import data, ddt
+from ddt import ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.base import BaseEstimatorV2  # noqa: TC002
@@ -22,16 +22,15 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2Native
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2ThroughExecutor
-from qiskit_ibm_runtime.executor_estimator import EstimatorV2 as NativeEstimatorV2
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
 @ddt
 class _TestEstimatorBase(IBMIntegrationTestCase):
-    """An integration test, testing the EstimatorV2 through Executor implementation."""
+    """An integration test, testing different EstimatorV2 implementations."""
 
-    estimator_variant: BaseEstimatorV2 | None = None
+    estimator_variant: type[BaseEstimatorV2] | None = None
 
     def setUp(self):
         """Test level setup."""
@@ -42,17 +41,12 @@ class _TestEstimatorBase(IBMIntegrationTestCase):
 
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
 
-    @data(NativeEstimatorV2, EstimatorV2ThroughExecutor)
-    def test_simple_hamiltonian_with_parameters(self, EstimatorV2Variant):
-        """A simple parametric circuit with multiple observables to make sure the basics work.
-
-        This test is parametrized to run for both the native Estimator and the EstimatorV2 running
-        through Executor.
-        Both those Executor variants behave the same.
+    def test_estimator_works_for_basic_circuit_with_no_options(self):
+        """Runs a simple parametric circuit with multiple observables to make sure the basics work.
 
         Tests
-        - Correct calculation of simple hamiltionian (linear combination of observables)
-        - Basic broadcasting rules (how parameters and observables are combined)
+        - Job completes without exceptions
+        - Correct expectation value shapes
         """
         circuit = QuantumCircuit(2, name="Bell with single parameter")
         circuit.h(0)
@@ -71,7 +65,7 @@ class _TestEstimatorBase(IBMIntegrationTestCase):
         )
         # q0_phase = 0 -> 4.0 q0_phase = pi -> 2.0
 
-        estimator = EstimatorV2Variant(self.backend)
+        estimator = self.estimator_variant(self.backend)
 
         job = estimator.run(
             pubs=[
@@ -84,20 +78,11 @@ class _TestEstimatorBase(IBMIntegrationTestCase):
 
         results = job.result()
 
-        expectation_values_0 = results[0].data.evs
-        self.assertEqual(expectation_values_0.shape, (2, 2))
-        self.assertEqual(expectation_values_0.shape, (2, 2))
+        # 4 Expectation values should have been calculated for full broadcasting:
+        self.assertEqual(results[0].data.evs.shape, (2, 2))
 
-        expectation_values_1 = results[1].data.evs
-        self.assertEqual(expectation_values_1.shape, (2,))
-
-        backend_has_real_qubits = False
-        if backend_has_real_qubits:
-            self.assertTrue(False)
-
-        # self.assertAlmostEqual(results[1].data.evs, 10.0, delta=delta)  # obs1, phi=pi
-        # self.assertAlmostEqual(results[2].data.evs, 10.0, delta=delta)  # obs2, phi=0
-        # self.assertAlmostEqual(results[3].data.evs,  8.0, delta=delta)  # obs2, phi=pi
+        # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
+        self.assertEqual(results[1].data.evs.shape, (2,))
 
 
 class TestEstimatorNative(_TestEstimatorBase):
