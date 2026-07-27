@@ -81,7 +81,7 @@ class SimExecutor:
     **Simulator options**
 
     :class:`~.SimulatorOptions` are used to enable different options, namely,
-    :attr:`~.SimulatorOptions.gate_angle_precision` and
+    :attr:`~.SimulatorOptions.gate_angle_precision`, :attr:`~.SimulatorOptions.warn_absent, and
 
     ***Noise injection***
 
