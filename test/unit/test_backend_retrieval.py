@@ -18,13 +18,12 @@ from ddt import ddt, named_data
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime.accounts import Account
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeTorino
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..decorators import mock_authentication
 from ..ibm_test_case import IBMTestCase
-from ..registries import Backend, IBMQuantumComputeRegistry, Instance
-from .mock.fake_api_backend import FakeApiBackendSpecs
-from .mock.fake_runtime_service import FakeRuntimeService
+from ..registries import Backend, OneInstanceNoBackendsRegistry
 
 
 class TestBackendFilters(IBMTestCase):
@@ -56,7 +55,7 @@ class TestBackendFilters(IBMTestCase):
         # Create service outside the log capture so init's "Loading account" doesn't interfere.
         service = QiskitRuntimeService(token="my_token", instance="auto")
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
-            service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
+            service.backend("common_backend")
 
     @mock_authentication
     def test_saved_account_instance_auto_suppresses_warnings(self, registry):
@@ -72,7 +71,7 @@ class TestBackendFilters(IBMTestCase):
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
             service.backends()
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
-            service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
+            service.backend("common_backend")
 
     @mock_authentication
     def test_no_filter(self, registry):
@@ -94,14 +93,19 @@ class TestBackendFilters(IBMTestCase):
                 backend_name = [back.name for back in service.backends(name=name)]
                 self.assertEqual(len(backend_name), 1)
 
-    @mock_authentication(IBMQuantumComputeRegistry)
+    @mock_authentication(OneInstanceNoBackendsRegistry)
     def test_filter_config_properties(self, registry):
         """Test filtering by configuration properties."""
         n_qubits = 5
-        registry.add_instance(Instance("a"))
-        registry.add_backend(Backend("5q", extra_config={"n_qubits": 5, "local": False}), "a")
-        registry.add_backend(Backend("10q", extra_config={"n_qubits": 10, "local": False}), "a")
-        registry.add_backend(Backend("5q2", extra_config={"n_qubits": 5, "local": True}), "a")
+        backend_5q = Backend("5q")
+        backend_5q.configuration.update({"n_qubits": 5, "local": False})
+        backend_10q = Backend("10q")
+        backend_10q.configuration.update({"n_qubits": 10, "local": False})
+        backend_5q2 = Backend("5q2")
+        backend_5q2.configuration.update({"n_qubits": 5, "local": True})
+        registry.add_backend(backend_5q)
+        registry.add_backend(backend_10q)
+        registry.add_backend(backend_5q2)
 
         service = QiskitRuntimeService(token="my_token")
         filtered_backends = service.backends(n_qubits=n_qubits, local=False)
@@ -109,23 +113,21 @@ class TestBackendFilters(IBMTestCase):
         self.assertEqual(n_qubits, filtered_backends[0].configuration().n_qubits)
         self.assertFalse(filtered_backends[0].configuration().local)
 
-    @mock_authentication(IBMQuantumComputeRegistry)
+    @mock_authentication(OneInstanceNoBackendsRegistry)
     def test_filter_status_dict(self, registry):
         """Test filtering by dictionary of mixed status/configuration properties."""
-        registry.add_instance(Instance(name="a"))
-
-        registry.add_backend(
-            Backend(name="1", status={"state": True}, extra_config={"simulator": True}), "a"
-        )
-        registry.add_backend(
-            Backend(name="2", status={"state": True}, extra_config={"simulator": True}), "a"
-        )
-        registry.add_backend(
-            Backend(name="2", status={"state": True}, extra_config={"simulator": False}), "a"
-        )
-        registry.add_backend(
-            Backend(name="2", status={"state": False}, extra_config={"simulator": True}), "a"
-        )
+        backend_1 = Backend("backend_1")
+        backend_1.configuration.update({"simulator": True})
+        backend_2 = Backend("backend_2")
+        backend_2.configuration.update({"simulator": True})
+        backend_3 = Backend("backend_3")
+        backend_3.configuration.update({"simulator": False})
+        backend_4 = Backend("backend_4", status="offline")
+        backend_4.configuration.update({"simulator": True})
+        registry.add_backend(backend_1)
+        registry.add_backend(backend_2)
+        registry.add_backend(backend_3)
+        registry.add_backend(backend_4)
 
         service = QiskitRuntimeService(token="my_token")
         filtered_backends = service.backends(
@@ -137,14 +139,19 @@ class TestBackendFilters(IBMTestCase):
             self.assertTrue(backend.status().operational)
             self.assertTrue(backend.configuration().simulator)
 
-    @mock_authentication(IBMQuantumComputeRegistry)
+    @mock_authentication(OneInstanceNoBackendsRegistry)
     def test_filter_config_callable(self, registry):
         """Test filtering by lambda function on configuration properties."""
         n_qubits = 5
-        registry.add_instance(Instance("a"))
-        registry.add_backend(Backend("5q", extra_config={"n_qubits": n_qubits}), "a")
-        registry.add_backend(Backend("10q", extra_config={"n_qubits": n_qubits * 2}), "a")
-        registry.add_backend(Backend("4q", extra_config={"n_qubits": n_qubits - 1}), "a")
+        backend_5q = Backend("5q")
+        backend_5q.configuration.update({"n_qubits": n_qubits})
+        backend_10q = Backend("10q")
+        backend_10q.configuration.update({"n_qubits": n_qubits * 2})
+        backend_4q = Backend("4q")
+        backend_4q.configuration.update({"n_qubits": n_qubits - 1})
+        registry.add_backend(backend_5q)
+        registry.add_backend(backend_10q)
+        registry.add_backend(backend_4q)
 
         service = QiskitRuntimeService(token="my_token")
         filtered_backends = service.backends(filters=lambda x: (x.configuration().n_qubits >= 5))
@@ -152,19 +159,11 @@ class TestBackendFilters(IBMTestCase):
         for backend in filtered_backends:
             self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
 
-    @mock_authentication(IBMQuantumComputeRegistry)
+    @mock_authentication(OneInstanceNoBackendsRegistry)
     def test_least_busy_use_fractional_gates_skips_backend_without_rzz(self, registry):
         """When use_fractional_gates=True, least_busy skips backends missing rzz."""
-        registry.add_instance(Instance("a"))
-        registry.add_backend(Backend("fake_torino", queue_length=5), "a")
-        registry.add_backend(
-            Backend(
-                "fake_fractional",
-                queue_length=10,
-                extra_config={"basis_gates": ["id", "rz", "sx", "x", "cx", "reset", "rx", "rzz"]},
-            ),
-            "a",
-        )
+        registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
+        registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
 
         service = QiskitRuntimeService(token="my_token")
         backend = service.least_busy(use_fractional_gates=True)
@@ -178,46 +177,41 @@ class TestBackendFilters(IBMTestCase):
         with self.assertRaises(QiskitBackendNotFoundError):
             service.least_busy(use_fractional_gates=True)
 
-    @mock_authentication(IBMQuantumComputeRegistry)
+    @mock_authentication(OneInstanceNoBackendsRegistry)
     def test_least_busy_use_fractional_gates_false_ignores_rzz(self, registry):
         """When use_fractional_gates=False (default), least_busy returns the least busy backend."""
-        registry.add_instance(Instance("a"))
-        registry.add_backend(Backend("fake_torino", queue_length=5), "a")
-        registry.add_backend(
-            Backend(
-                "fake_fractional",
-                queue_length=10,
-                extra_config={"basis_gates": ["id", "rz", "sx", "x", "cx", "reset", "rx", "rzz"]},
-            ),
-            "a",
-        )
+        registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
+        registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
+
         service = QiskitRuntimeService(token="token")
         backend = service.least_busy(use_fractional_gates=False)
-        self.assertEqual(backend.name, "fake_torino")
+        self.assertEqual(backend.name, "ibm_torino")
 
-    @mock_authentication(IBMQuantumComputeRegistry)
+    @mock_authentication(OneInstanceNoBackendsRegistry)
     def test_filter_least_busy(self, registry):
         """Test filtering by least busy function."""
-        registry.add_instance(Instance("a"))
-        registry.add_backend(Backend("test_backend1", queue_length=10), "a")
-        registry.add_backend(Backend("test_backend2", queue_length=20), "a")
-        registry.add_backend(
-            Backend("test_backend3", queue_length=1, extra_status={"state": False}), "a"
-        )
-        registry.add_backend(Backend("test_backend4", queue_length=15), "a")
+        registry.add_backend(Backend("backend1", queue_length=10))
+        registry.add_backend(Backend("backend2", queue_length=20))
+        registry.add_backend(Backend("backend3", queue_length=1, status="offline"))
+        registry.add_backend(Backend("backend4", queue_length=15))
 
         service = QiskitRuntimeService(token="my_token")
         backend = service.least_busy()
-        self.assertEqual(backend.name, "test_backend1")
+        self.assertEqual(backend.name, "backend1")
 
-    @mock_authentication(IBMQuantumComputeRegistry)
+    @mock_authentication(OneInstanceNoBackendsRegistry)
     def test_filter_min_num_qubits(self, registry):
         """Test filtering by minimum number of qubits."""
         n_qubits = 5
-        registry.add_instance(Instance("a"))
-        registry.add_backend(Backend("5q", extra_config={"n_qubits": n_qubits}), "a")
-        registry.add_backend(Backend("10q", extra_config={"n_qubits": n_qubits * 2}), "a")
-        registry.add_backend(Backend("4q", extra_config={"n_qubits": n_qubits - 1}), "a")
+        backend_5q = Backend("5q")
+        backend_5q.configuration.update({"n_qubits": n_qubits})
+        backend_10q = Backend("10q")
+        backend_10q.configuration.update({"n_qubits": n_qubits * 2})
+        backend_4q = Backend("4q")
+        backend_4q.configuration.update({"n_qubits": n_qubits - 1})
+        registry.add_backend(backend_5q)
+        registry.add_backend(backend_10q)
+        registry.add_backend(backend_4q)
 
         service = QiskitRuntimeService(token="my_token")
         filtered_backends = service.backends(min_num_qubits=n_qubits)
@@ -230,14 +224,13 @@ class TestBackendFilters(IBMTestCase):
 class TestGetBackend(IBMTestCase):
     """Test getting a backend."""
 
-    def test_get_backend_properties(self):
+    @mock_authentication(OneInstanceNoBackendsRegistry)
+    def test_get_backend_properties(self, registry):
         """Test that a backend's properties are loaded into its target."""
-        service = FakeRuntimeService(
-            channel="ibm_quantum_platform",
-            token="my_token",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeTorino")],
-        )
-        backend = service.backend("fake_torino")
+        registry.add_backend(Backend.from_(FakeTorino))
+
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_torino")
 
         t1s = sorted(p.t1 for p in backend.target.qubit_properties)
         sx_errors = sorted(backend.target["sx"][q].error for q in backend.target["sx"])
@@ -260,7 +253,8 @@ class TestGetBackend(IBMTestCase):
         ("without_fractional", False),
         ("without_filtering", None),
     )
-    def test_get_backend_with_fractional_optin(self, use_fractional):
+    @mock_authentication(OneInstanceNoBackendsRegistry)
+    def test_get_backend_with_fractional_optin(self, use_fractional, registry):
         """Test getting backend with fractional gate opt-in.
 
         This test can be modified when the IBM backend architecture changes in future.
@@ -269,11 +263,9 @@ class TestGetBackend(IBMTestCase):
 
         This test is originally written in 2024.05.31
         """
-        service = FakeRuntimeService(
-            channel="ibm_quantum_platform",
-            token="my_token",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
-        )
+        registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
+        service = QiskitRuntimeService(token="my_token")
+
         test_backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
         self.assertEqual(
             "rx" in test_backend.target,
@@ -289,16 +281,14 @@ class TestGetBackend(IBMTestCase):
         if use_fractional or use_fractional is None:
             self.assertAlmostEqual(test_backend.target["rx"][(0,)].error, 0.00019, places=5)
 
-    def test_backend_with_and_without_fractional_from_same_service(self):
+    @mock_authentication(OneInstanceNoBackendsRegistry)
+    def test_backend_with_and_without_fractional_from_same_service(self, registry):
         """Test getting backend with and without fractional gates from the same service.
 
         Backend with and without opt-in must be different object.
         """
-        service = FakeRuntimeService(
-            channel="ibm_quantum_platform",
-            token="my_token",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
-        )
+        registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
+        service = QiskitRuntimeService(token="my_token")
 
         backend_with_fg = service.backend("fake_fractional", use_fractional_gates=True)
         self.assertIn("rx", backend_with_fg.target)
@@ -309,14 +299,13 @@ class TestGetBackend(IBMTestCase):
 
         self.assertIsNot(backend_with_fg, backend_without_fg)
 
-    def test_backend_with_custom_calibration(self):
+    @mock_authentication(OneInstanceNoBackendsRegistry, expose_requests_mock=True)
+    def test_backend_with_custom_calibration(self, registry, requests_mock):
         """Test getting a backend with a custom calibration."""
-        service = FakeRuntimeService(
-            channel="ibm_quantum_platform",
-            token="my_token",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeTorino")],
-        )
+        registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
+        service = QiskitRuntimeService(token="my_token")
 
-        backend_with_calibration = service.backend("fake_torino", calibration_id="abc1234")
+        backend_with_calibration = service.backend("ibm_torino", calibration_id="abc1234")
         self.assertEqual(backend_with_calibration.calibration_id, "abc1234")
-        # TODO: Assert mock has api client calls with cal id set
+        # Assert mock has api client calls with cal id set
+        self.assertIn("calibration_id=abc1234", requests_mock.calls[-1].request.url)

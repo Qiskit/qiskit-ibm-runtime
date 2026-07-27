@@ -17,8 +17,8 @@ from __future__ import annotations
 import json
 import re
 from collections import defaultdict
-from dataclasses import InitVar, dataclass, field
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from responses import GET, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
@@ -27,6 +27,8 @@ from qiskit_ibm_runtime.fake_provider import FakeLimaV2
 
 if TYPE_CHECKING:
     from requests import PreparedRequest
+
+    from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 
 # ``responses`` callback return value: (status code, headers, body).
 CallbackResult: TypeAlias = tuple[int, dict[str, str], str]
@@ -73,39 +75,46 @@ class Backend:
     properties: dict = field(default_factory=dict)
     """Properties of the backend. If not set, it will be set based on ``FakeLimaV2``."""
 
-    status: dict = field(default_factory=dict)
-    """Status of the backend. If not set, it will be set to operational status."""
+    status: Literal["online", "paused", "offline"] = "online"
+    """Status of the backend."""
 
     queue_length: int = 0
     """Lenght of the queue for this backend."""
 
-    extra_config: InitVar[dict[str, Any] | None] = None
-    """Additional overrides of configuration."""
-
-    extra_status: InitVar[dict[str, Any] | None] = None
-    """Additional overrides of status."""
-
-    def __post_init__(
-        self, extra_config: dict[str, Any] | None, extra_status: dict[str, Any] | None
-    ) -> None:
+    def __post_init__(self) -> None:
         if not self.configuration:
             reference = FakeLimaV2()
             self.configuration = reference._load_json(reference.conf_filename)
             self.configuration["backend_name"] = self.name
 
-        if not self.configuration:
+        if not self.properties:
             reference = FakeLimaV2()
             self.properties = reference._load_json(reference.props_filename)
             self.properties["backend_name"] = self.name
 
-        if not self.status:
-            self.status = {"state": True}
+    @classmethod
+    def from_(
+        cls,
+        fake_backend: type[FakeBackendV2],
+        name: str | None = None,
+        status: Literal["online", "paused", "offline"] = "online",
+        queue_length: int = 0,
+    ) -> Backend:
+        """Create a ``Backend`` with the configuration and properties of ``fake_backend``."""
+        reference = fake_backend()
+        configuration = reference._load_json(reference.conf_filename)
+        properties = reference._load_json(reference.props_filename)
+        if name:
+            configuration["backend_name"] = name
+            properties["backend_name"] = name
 
-        if extra_config:
-            self.configuration.update(extra_config)
-
-        if extra_status:
-            self.status.update(extra_status)
+        return cls(
+            name=configuration["backend_name"],
+            configuration=configuration,
+            properties=properties,
+            status=status,
+            queue_length=queue_length,
+        )
 
 
 class IBMQuantumComputeRegistry(FirstMatchRegistry):
@@ -187,9 +196,14 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
         """Add a new instance to the registry."""
         self.instances[instance.name] = instance
 
-    def add_backend(self, backend: Backend, instance: str) -> None:
-        """Add a new backend to the registry."""
-        self.backends[instance][backend.name] = backend
+    def add_backend(self, backend: Backend, instance: str | None = None) -> None:
+        """Add a new backend to the registry.
+
+        If ``instance`` is not passed, the backend is added to all existing instances.
+        """
+        instances = [instance] if instance is not None else list(self.instances)
+        for name in instances:
+            self.backends[name][backend.name] = backend
 
     def global_search_callback(self, _: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Cloud Global Search API.
@@ -251,7 +265,7 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
             "devices": [
                 {
                     "name": backend.name,
-                    "status": {"name": "online" if backend.status["state"] else "offline"},
+                    "status": {"name": backend.status},
                     "queue_length": backend.queue_length,
                 }
                 for backend in self.backends[instance.name].values()
@@ -317,7 +331,13 @@ class IBMQuantumComputeRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
 
         backend = self.backends[instance.name][backend_name]
-        return (200, {"Content-Type": "application/json"}, json.dumps(backend.status))
+        response_body = {
+            "state": backend.status == "online",
+            "status": "active" if backend.status == "online" else backend.status,
+            "length_queue": backend.queue_length,
+            "backend_version": backend.configuration["backend_version"],
+        }
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
 
 class DefaultRegistry(IBMQuantumComputeRegistry):
@@ -328,7 +348,15 @@ class DefaultRegistry(IBMQuantumComputeRegistry):
 
         self.add_instance(Instance("a"))
         self.add_instance(Instance("b", pricing_type="trial"))
-        self.add_backend(Backend("common_backend"), "a")
-        self.add_backend(Backend("common_backend"), "b")
+        self.add_backend(Backend("common_backend"))
         self.add_backend(Backend("unique_backend_a"), "a")
         self.add_backend(Backend("unique_backend_b"), "b")
+
+
+class OneInstanceNoBackendsRegistry(IBMQuantumComputeRegistry):
+    """Registry pre-loaded with a single instance ``a`` and no backends."""
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.add_instance(Instance("a"))

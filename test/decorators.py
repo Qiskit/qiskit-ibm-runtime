@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 
 def mock_authentication(
     func_or_registry: Callable | type[FirstMatchRegistry] = DefaultRegistry,
+    expose_requests_mock: bool = False,
 ) -> Callable:
     """Patch out IAM authentication and mock HTTP responses using a registry.
 
@@ -69,7 +70,12 @@ def mock_authentication(
                     registry=registry, assert_all_requests_are_fired=False
                 ) as responses_mock,
             ):
-                return test_method(*args, responses_mock.get_registry(), **kwargs)
+                if expose_requests_mock:
+                    return test_method(
+                        *args, responses_mock.get_registry(), responses_mock, **kwargs
+                    )
+                else:
+                    return test_method(*args, responses_mock.get_registry(), **kwargs)
 
         return wrapper
 
