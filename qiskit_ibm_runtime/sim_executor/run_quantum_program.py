@@ -23,16 +23,15 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
 
-from ..options_models.simulator import SimulatorOptions
 from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
+    from qiskit.quantum_info import PauliLindbladMap
     from qiskit_aer import AerSimulator
 
-    from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
 
 if HAS_AER:
@@ -52,29 +51,29 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
 def run_quantum_program(
     qasm_simulator: AerSimulator,
     program: QuantumProgram,
-    options: SimulatorOptions,
+    noise_dict: dict[str, PauliLindbladMap] | None = None,
+    angle_decimals: int = 5,
+    warn_absent: bool = True,
 ) -> QuantumProgramResult:
     """Run a quantum program on a simulator.
 
     Args:
         qasm_simulator: The simulator to use.
         program: The program to run.
-        options: The simulator options to use.
+        noise_dict: A map from barrier label refs to noise maps.
+        angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
+            decimal precision before simulation.  See :func:`~.SimExecutor` for details.
+        warn_absent: Passed to :class:`~.InsertNoisePass`; see :class:`~.SimExecutor`.
 
     Returns:
         Results of simulation.
     """
-    noise_dict = options.noise_model
-    angle_decimals = options.gate_angle_precision
-    warn_absent = options.warn_absent
-    seed = options.seed_simulator
-
     # Generate a sampler
     backend = deepcopy(qasm_simulator)
     backend.set_max_qubits(10000)
-    aer_sampler = AerSamplerV2.from_backend(backend, seed=seed)
+    aer_sampler = AerSamplerV2.from_backend(backend)
 
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(aer_sampler.seed)
 
     result_list = []
     metadata_list = []

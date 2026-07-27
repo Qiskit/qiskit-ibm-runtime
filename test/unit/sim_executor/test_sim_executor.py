@@ -14,11 +14,8 @@
 
 from unittest import skipUnless
 
-from qiskit.quantum_info import PauliLindbladMap
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
-from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
 from qiskit_ibm_runtime.sim_executor import SimExecutor, SimRuntimeJob
@@ -33,31 +30,6 @@ if optionals.HAS_AER:
 class TestSimExecutor(IBMTestCase):
     """Tests for SimExecutor."""
 
-    def test_options_setter(self):
-        """Test that ``__setattr__``handles options correctly."""
-        backend = AerSimulator(method="stabilizer")
-        executor = SimExecutor(backend)
-        self.assertIsInstance(executor.options, ExecutorOptions)
-        self.assertIsNone(executor.options.simulator.noise_model)
-        self.assertEqual(executor.options.simulator.gate_angle_precision, 5)
-        self.assertTrue(executor.options.simulator.warn_absent)
-
-        noise_model = {
-            "tag1": PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)])
-        }
-
-        executor.options = {
-            "simulator": {
-                "noise_model": noise_model,
-                "gate_angle_precision": 10,
-                "warn_absent": False,
-            }
-        }
-        self.assertIsInstance(executor.options, ExecutorOptions)
-        self.assertIsNotNone(executor.options.simulator.noise_model)
-        self.assertEqual(executor.options.simulator.gate_angle_precision, 10)
-        self.assertFalse(executor.options.simulator.warn_absent)
-
     def test_run(self):
         """Test that run returns an ``SimRuntimeJob``."""
         executor = SimExecutor(AerSimulator(method="stabilizer"))
@@ -71,7 +43,5 @@ class TestSimRuntimeJob(IBMTestCase):
 
     def test_result(self):
         """Test that result returns a ``QuantumProgramResult``."""
-        job = SimRuntimeJob(
-            AerSimulator(method="stabilizer"), QuantumProgram(1), SimulatorOptions()
-        )
+        job = SimRuntimeJob(AerSimulator(method="stabilizer"), QuantumProgram(1))
         self.assertIsInstance(job.result(), QuantumProgramResult)
