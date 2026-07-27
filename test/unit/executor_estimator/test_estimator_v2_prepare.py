@@ -118,13 +118,12 @@ class TestPrepare(IBMTestCase):
         options.twirling.enable_gates = twirling_enabled
         options.twirling.enable_measure = False
 
-        # Create a circuit with a large delay on one of the qubits.
-        # Non-measure instructions are collapsed by samplomatic
-        circuit = QuantumCircuit(2, 1)
+        # Create a circuit with a large delay on qubit 0.
+        circuit = QuantumCircuit(3)
         for _ in range(10):
-            circuit.measure(0, 0)
+            circuit.cx(1, 2)
         circuit.cx(0, 1)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        observable = SparsePauliOp.from_list([("ZZZ", 1)])
 
         pubs = [
             EstimatorPub.coerce((circuit, observable)),
