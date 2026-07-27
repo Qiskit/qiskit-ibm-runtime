@@ -326,12 +326,10 @@ class EstimatorV2(BaseEstimatorV2):
         quantum_program, executor_options = prepare(
             coerced_pubs, options, shots, backend=self._backend
         )
-
-        quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
-            "twirling": options.twirling.model_dump(),
-            "dynamical_decoupling": options.dynamical_decoupling.model_dump(),
-            "resilience": options.resilience.model_dump(exclude={"noise_model_mapping"}),
-        }
+        # Store raw options, shots and precision for post-processing side to compute metadata
+        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]
+        quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
+        quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
 
         # Set executor options
         self._executor.options = executor_options

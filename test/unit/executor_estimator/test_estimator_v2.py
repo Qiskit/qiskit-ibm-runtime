@@ -228,7 +228,7 @@ class TestEstimatorV2Run(IBMTestCase):
         self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
 
     def test_run_adds_options_to_passthrough_data(self):
-        """Test that run adds options metadata to quantum program passthrough data."""
+        """Test that run adds options, shots and precision to passthrough data."""
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         options.dynamical_decoupling.enable = False
@@ -249,16 +249,19 @@ class TestEstimatorV2Run(IBMTestCase):
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
 
-        # Verify passthrough data contains options
+        # Verify passthrough data contains inputs and calculated values
         self.assertIsNotNone(quantum_program.passthrough_data)
         self.assertIn("post_processor", quantum_program.passthrough_data)
-        self.assertIn("options", quantum_program.passthrough_data["post_processor"])
+        post_processor_data = quantum_program.passthrough_data["post_processor"]
+        self.assertIn("options", post_processor_data)
+        self.assertIn("shots", post_processor_data)
+        self.assertIn("precision", post_processor_data)
 
         # Verify options content
-        options_metadata = quantum_program.passthrough_data["post_processor"]["options"]
-        self.assertEqual(options_metadata["twirling"]["enable_gates"], True)
-        self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], False)
-        self.assertEqual(options_metadata["resilience"]["measure_mitigation"], True)
+        options_data = post_processor_data["options"]
+        self.assertEqual(options_data["twirling"]["enable_gates"], True)
+        self.assertEqual(options_data["dynamical_decoupling"]["enable"], False)
+        self.assertEqual(options_data["resilience"]["measure_mitigation"], True)
 
     def test_run_passthrough_options_are_finalized_not_raw(self):
         """Test that run adds finalized options (not user options) to passthrough data."""
