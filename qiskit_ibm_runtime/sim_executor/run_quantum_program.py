@@ -67,13 +67,14 @@ def run_quantum_program(
     noise_dict = options.noise_model
     angle_decimals = options.gate_angle_precision
     warn_absent = options.warn_absent
+    seed = options.seed_simulator
 
     # Generate a sampler
     backend = deepcopy(qasm_simulator)
     backend.set_max_qubits(10000)
-    aer_sampler = AerSamplerV2.from_backend(backend)
+    aer_sampler = AerSamplerV2.from_backend(backend, seed=seed)
 
-    rng = np.random.default_rng(aer_sampler.seed)
+    rng = np.random.default_rng(seed)
 
     result_list = []
     metadata_list = []
