@@ -22,6 +22,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
@@ -617,3 +618,73 @@ class TestPreparePassthroughData(IBMTestCase):
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
         self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "kerneled")
+
+
+@ddt
+class TestPrepareDynamicalDecoupling(IBMTestCase):
+    """Tests for the DD logic inside ``prepare``."""
+
+    @data(True, False)
+    def test_dd_applied_when_enabled(self, twirling_enabled):
+        """Test DD inserts X gates into circuit items when enabled."""
+        options = SamplerOptions()
+        options.dynamical_decoupling.enable = True
+        options.twirling.enable_gates = twirling_enabled
+        options.twirling.enable_measure = twirling_enabled
+
+        # Create a circuit with a large delay on qubit 0.
+        circuit = QuantumCircuit(3)
+        for _ in range(10):
+            circuit.cx(1, 2)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pubs = [SamplerPub.coerce(circuit, shots=100), SamplerPub.coerce(circuit, shots=100)]
+
+        program, _ = prepare(pubs, options, default_shots=100, backend=FakeManilaV2())
+
+        # DD inserts X gates into idle slots of each circuit item
+        for item in program.items:
+            self.assertIn("x", item.circuit.count_ops())
+
+    def test_dd_rejects_dynamic_circuits(self):
+        """Test DD raises an error for circuits with control flow."""
+        options = SamplerOptions()
+        options.dynamical_decoupling.enable = True
+        options.twirling.enable_gates = False
+        options.twirling.enable_measure = False
+
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.measure(0, 0)
+        with circuit.if_test((0, 1)):
+            circuit.x(1)
+        circuit.measure(1, 1)
+
+        pubs = [SamplerPub.coerce(circuit, shots=100)]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "Dynamical decoupling is not compatible with dynamic circuits",
+        ):
+            prepare(pubs, options, default_shots=100, backend=FakeManilaV2())
+
+    def test_dd_raises_when_no_backend(self):
+        """Test DD raises an error when no backend is provided."""
+        options = SamplerOptions()
+        options.dynamical_decoupling.enable = True
+        options.twirling.enable_gates = False
+        options.twirling.enable_measure = False
+
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pubs = [SamplerPub.coerce(circuit, shots=100)]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "A backend must be provided when dynamical decoupling is enabled",
+        ):
+            prepare(pubs, options, default_shots=100)
