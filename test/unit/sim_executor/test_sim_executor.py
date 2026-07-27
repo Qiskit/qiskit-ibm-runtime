@@ -14,8 +14,10 @@
 
 from unittest import skipUnless
 
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.utils import optionals
 
+from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
 from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
@@ -30,6 +32,21 @@ if optionals.HAS_AER:
 @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
 class TestSimExecutor(IBMTestCase):
     """Tests for SimExecutor."""
+
+    def test_options_setter(self):
+        """Test that ``__setattr__``handles options correctly."""
+        backend = AerSimulator(method="stabilizer")
+        executor = SimExecutor(backend)
+        self.assertIsInstance(executor.options, ExecutorOptions)
+        self.assertIsNone(executor.options.simulator.noise_model)
+
+        noise_model = {
+            "tag1": PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)])
+        }
+
+        executor.options = {"simulator": {"noise_model": noise_model}}
+        self.assertIsInstance(executor.options, ExecutorOptions)
+        self.assertIsNotNone(executor.options.simulator.noise_model)
 
     def test_run(self):
         """Test that run returns an ``SimRuntimeJob``."""
