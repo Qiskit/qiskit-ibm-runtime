@@ -70,6 +70,11 @@ class SimulatorOptions(BaseOptionsModel):
     preventing Clifford-method simulation when angles are nominally Clifford.
     """
 
+    warn_absent: bool = True
+    """
+    Whether to emit a warning when a tagged barrier's tag is not found in ``noise_model``.
+    """
+
     def set_backend(self, backend: BackendV2) -> None:
         """Set backend for simulation.
 

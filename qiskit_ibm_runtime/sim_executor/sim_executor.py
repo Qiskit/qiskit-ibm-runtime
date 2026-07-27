@@ -41,8 +41,6 @@ class SimRuntimeJob:
         backend: The Aer simulator to run on.
         program: The quantum program to execute.
         options: The simulator options to run with.
-        warn_absent: If ``True`` (default), warn when a tagged barrier has no entry in
-            ``noise_dict``.
     """
 
     def __init__(
@@ -50,12 +48,10 @@ class SimRuntimeJob:
         backend: AerSimulator,
         program: QuantumProgram,
         options: SimulatorOptions,
-        warn_absent: bool = True,
     ):
         self._backend = backend
         self._program = program
         self._options = options
-        self._warn_absent = warn_absent
         self._job_id: str = str(uuid.uuid4())
         self.tags: list[str] = []  # interface compatibility with real Executor
 
@@ -63,7 +59,6 @@ class SimRuntimeJob:
             qasm_simulator=self._backend,
             program=self._program,
             options=self._options,
-            warn_absent=self._warn_absent,
         )
 
     def job_id(self) -> str:
@@ -114,9 +109,6 @@ class SimExecutor:
         backend: The Aer simulator to run programs on.
         options: Executor options (see :class:`ExecutorOptions`) populated with simulator
             options (see :class:`SimulatorOptions`).
-        warn_absent: If ``True`` (default), emit a warning when a tagged barrier's tag is
-            not found in ``noise_dict``.  Set to ``False`` when partial coverage of tags is
-            intentional.
     """
 
     options: ExecutorOptions
@@ -126,11 +118,9 @@ class SimExecutor:
         self,
         backend: AerSimulator,
         options: ExecutorOptions | dict | None = None,
-        warn_absent: bool = True,
     ):
         self._backend = backend
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
-        self._warn_absent = warn_absent
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -160,5 +150,4 @@ class SimExecutor:
             backend=self._backend,
             program=program,
             options=self.options.simulator,
-            warn_absent=self._warn_absent,
         )

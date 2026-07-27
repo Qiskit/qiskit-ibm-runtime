@@ -53,7 +53,6 @@ def run_quantum_program(
     qasm_simulator: AerSimulator,
     program: QuantumProgram,
     options: SimulatorOptions,
-    warn_absent: bool = True,
 ) -> QuantumProgramResult:
     """Run a quantum program on a simulator.
 
@@ -61,13 +60,13 @@ def run_quantum_program(
         qasm_simulator: The simulator to use.
         program: The program to run.
         options: The simulator options to use.
-        warn_absent: Passed to :class:`~.InsertNoisePass`; see :class:`~.SimExecutor`.
 
     Returns:
         Results of simulation.
     """
     noise_dict = options.noise_model
     angle_decimals = options.gate_angle_precision
+    warn_absent = options.warn_absent
 
     # Generate a sampler
     backend = deepcopy(qasm_simulator)
