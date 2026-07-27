@@ -57,10 +57,7 @@ class EstimatorOptions(BaseOptionsModel):
     """Execution options."""
 
     twirling: TwirlingOptions = TwirlingOptions()
-    """Twirling options.
-
-    Currently only ``enable_measure=False`` is supported.
-    """
+    """Twirling options."""
 
     dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
     """Dynamical decoupling options."""

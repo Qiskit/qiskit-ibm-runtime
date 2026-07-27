@@ -120,7 +120,7 @@ class EstimatorV2(BaseEstimatorV2):
 
         options: Estimator options.
             See
-            :class:`~qiskit_ibm_runtime.options_models.estimator_options.EstimatorOptions`
+            :class:`~qiskit_ibm_runtime.options_models.estimator.EstimatorOptions`
             for all available options.
     """
 
@@ -295,9 +295,6 @@ class EstimatorV2(BaseEstimatorV2):
         #   * Enforcing required dependencies between option values
         options = self.finalize_options()
 
-        # Convert pubs to QuantumProgram and map options using the selected prepare function
-        logger.info("Starting pre-processing")
-
         resolved_precision = resolve_precision(coerced_pubs, precision)
         if resolved_precision is not None:
             shots = int(np.ceil(1.0 / (resolved_precision**2)))
@@ -333,6 +330,7 @@ class EstimatorV2(BaseEstimatorV2):
                 "PEC mitigation and ZNE mitigation are incompatible with one another."
             )
 
+        # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(coerced_pubs, options, shots)
 
@@ -343,12 +341,10 @@ class EstimatorV2(BaseEstimatorV2):
                 dd_options=options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
-
-        quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
-            "twirling": options.twirling.model_dump(),
-            "dynamical_decoupling": options.dynamical_decoupling.model_dump(),
-            "resilience": options.resilience.model_dump(exclude={"noise_model_mapping"}),
-        }
+        # Store raw options, shots and precision for post-processing side to compute metadata
+        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]
+        quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
+        quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
 
         # Set executor options
         self._executor.options = executor_options
