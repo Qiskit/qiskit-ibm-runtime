@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import copy
 import re
 import warnings
 from typing import TYPE_CHECKING
@@ -46,7 +47,9 @@ def process_extrapolated_expectation_values(
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | int | npt.ArrayLike = 0,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
+) -> tuple[
+    npt.NDArray[float], npt.NDArray[float], npt.NDArray[str], npt.NDArray[float], npt.NDArray[float]
+]:
     r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
     The requested model(s) are fit to the expectation values measured at the noise factors for
@@ -90,15 +93,21 @@ def process_extrapolated_expectation_values(
         ValueError: If an extrapolator name is not recognized.
 
     Returns:
-        A tuple ``(exp_vals, stds, extrapolators)``, where ``exp_vals`` are
-        expectation values evaluated at ``extrapolated_noise_factors``, ``stds`` are
-        standard deviations. ``extrapolators`` are the valid extrapolation methods selected.
+        A tuple ``(exp_vals, stds, extrapolators, extrap_exp_vals, extrap_stds)``, where
+        ``exp_vals`` are expectation values evaluated at ``extrapolated_noise_factors``,
+        ``stds`` are standard deviations. ``extrapolators`` are the valid extrapolation methods
+        selected. ``extrap_exp_vals`` and ``extrap_stds`` are the results from all extrapolation
+        methods, including the invalid extrapolation methods.
     """
     if isinstance(extrapolators, str):
         extrapolators = [extrapolators]
 
     if isinstance(extrapolated_noise_factors, (float, int)):
         extrapolated_noise_factors = [extrapolated_noise_factors]
+
+    # Always evaluate at zero-noise point, copy list to not modify original
+    extrapolated_noise_factors = copy.deepcopy(extrapolated_noise_factors)
+    extrapolated_noise_factors.insert(0, 0)
 
     if {
         len(noise_scaled_exp_vals),
@@ -119,11 +128,19 @@ def process_extrapolated_expectation_values(
     )
 
     # choose the best extrapolated result
-    return select_zne_extrapolated_result(
+    selected_exps, selected_stds, selected_extrap = select_zne_extrapolated_result(
         extrapolated_values,
         extrapolated_stderr,
         observable_term,
         extrapolators,
+    )
+    # for the extrapolated_values, do not returned the added evaluation at 0
+    return (
+        selected_exps,
+        selected_stds,
+        selected_extrap,
+        extrapolated_values[:, 1:],
+        extrapolated_stderr[:, 1:],
     )
 
 
