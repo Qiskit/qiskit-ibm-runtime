@@ -17,8 +17,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
-
 from ..exceptions import IBMInputValueError
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
@@ -55,7 +53,7 @@ def prepare(
     :class:`~.ExecutorOptions`.
 
     Args:
-        pubs: List of sampler PUBs to convert.
+        pubs: List of estimator PUBs to convert.
         options: The options.
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
