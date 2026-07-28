@@ -295,7 +295,7 @@ def bell():
 def mirror_circuit(num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7) -> QuantumCircuit:
     """Return a mirror circuit: U, then U-dagger, then a shared rx(theta).
 
-    ``U`` is ``reps`` layers of a CX brickwork plus a random SU(2) rotation
+    ``U`` is ``layers`` layers of a CX brickwork plus a random SU(2) rotation
     (``rz-sx-rz-sx-rz``) on each qubit, seeded by ``seed`` for reproducibility. A
     barrier separates ``U`` from ``U†`` so the transpiler cannot cancel them to the
     identity. In the noiseless ideal, the echo returns the register to |0...0>, so
