@@ -255,16 +255,31 @@ class TestPrepareVanilla(IBMTestCase):
         # 7 randomizations, 3 basis
         self.assertEqual(program.items[0].shape, (7 if enable_gates or enable_measure else 1, 3))
 
-        name0 = program.items[0].samplex.inputs().specs[0].name
-        self.assertTrue(name0.startswith("basis_changes"))
-        self.assertEqual(program.items[0].samplex.inputs().specs[0].shape, (3,))
-        np.testing.assert_array_equal(program.items[0].samplex_arguments[name0], np.zeros(3))
+        # We expect two `basis_changes` specs, but can't be sure how they'll be ordered.
+        # So we verify that we have exactly one of each expected specs.
+        specs = program.items[0].samplex.inputs().specs
+        for spec in specs:
+            self.assertTrue(spec.name.startswith("basis_changes"))
+            self.assertEqual(spec.shape, (3,))
 
-        name1 = program.items[0].samplex.inputs().specs[1].name
-        self.assertTrue(name1.startswith("basis_changes"))
-        self.assertEqual(program.items[0].samplex.inputs().specs[1].shape, (3,))
-        np.testing.assert_array_equal(
-            program.items[0].samplex_arguments[name1], np.array([[2, 2, 2], [3, 3, 3], [1, 1, 1]])
+        samplex_args = program.items[0].samplex_arguments
+        mid_circuit_names = [
+            name for name in samplex_args if np.array_equal(samplex_args[name], np.zeros(3))
+        ]
+        final_meas_names = [
+            name
+            for name in samplex_args
+            if np.array_equal(samplex_args[name], np.array([[2, 2, 2], [3, 3, 3], [1, 1, 1]]))
+        ]
+        self.assertEqual(
+            len(mid_circuit_names),
+            1,
+            msg=f"Expected 1 mid-circuit spec with zeros, got: {samplex_args}",
+        )
+        self.assertEqual(
+            len(final_meas_names),
+            1,
+            msg=f"Expected 1 final-meas spec with change_basis, got: {samplex_args}",
         )
 
     def test_prepare_with_reserved_classical_register_name_raises(self):

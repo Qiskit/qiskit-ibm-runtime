@@ -20,7 +20,9 @@ from typing import TYPE_CHECKING
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
+from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
+from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import sampler_option_to_executor_options
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
@@ -35,6 +37,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from qiskit.primitives.containers.sampler_pub import SamplerPub
+    from qiskit.providers import BackendV2
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.sampler import SamplerOptions
@@ -45,7 +48,10 @@ logger = logging.getLogger(__name__)
 
 
 def prepare(
-    pubs: Sequence[SamplerPub], options: SamplerOptions, default_shots: int | None = None
+    pubs: Sequence[SamplerPub],
+    options: SamplerOptions,
+    default_shots: int | None = None,
+    backend: BackendV2 | None = None,
 ) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a sequence of sampler PUBs to a quantum program and map options.
 
@@ -58,6 +64,8 @@ def prepare(
         options: The options.
         default_shots: Default number of shots if not specified in PUBs. If ``None``,
             uses the value from ``self.options.default_shots``.
+        backend: The backend for which the program is prepared. Only required when dynamical
+            decoupling is enabled.
 
     Returns:
         A tuple containing:
@@ -67,11 +75,11 @@ def prepare(
         - :class:`~.ExecutorOptions` mapped from the sampler's options.
 
     Raises:
-        ValueError: If backend is not provided or if dynamical decoupling is enabled
-            with dynamic circuits.
         IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions
-            (when twirling is disabled), if shots are not properly specified, or if
-            measurement twirling is enabled with a non-classified ``meas_type``.
+            (when twirling is disabled), if shots are not properly specified, if
+            measurement twirling is enabled with a non-classified ``meas_type``, if
+            dynamical decoupling is enabled with dynamic circuits, or if dynamical
+            decoupling is enabled without a backend.
     """
     validate_twirling_option_fields_are_not_none(options.twirling)
     validate_meas_type_twirling(options.execution.meas_type, options.twirling.enable_measure)
@@ -83,13 +91,16 @@ def prepare(
 
     # Validate DD compatibility if enabled
     if options.dynamical_decoupling.enable:
-        # Validate that circuits don't have control flow (dynamic circuits)
         for pub in pubs:
             if pub.circuit.has_control_flow_op():
-                raise ValueError(
+                raise IBMInputValueError(
                     "Dynamical decoupling is not compatible with dynamic circuits "
                     "(circuits with control flow operations)."
                 )
+        if backend is None:
+            raise IBMInputValueError(
+                "A backend must be provided when dynamical decoupling is enabled."
+            )
 
     # Create items based on whether twirling is enabled
     items: list[QuantumProgramItem] = []
@@ -183,5 +194,13 @@ def prepare(
 
     # Map options to executor options
     executor_options = sampler_option_to_executor_options(options)
+
+    if options.dynamical_decoupling.enable:
+        logger.info("Apply dynamical decoupling")
+        quantum_program = apply_dynamical_decoupling(
+            backend=backend,
+            dd_options=options.dynamical_decoupling,
+            quantum_program=quantum_program,
+        )
 
     return quantum_program, executor_options

@@ -136,9 +136,6 @@ def prepare_zne(
                     folding_method = "front"
                 case "gate_folding_back":
                     folding_method = "back"
-                case _:
-                    # This should never happen due to prior validation
-                    folding_method = "random"
 
             folding_pm = PassManager([GateFolding(noise_factor, folding_method)])
             folded_circuit = folding_pm.run(pub.circuit)

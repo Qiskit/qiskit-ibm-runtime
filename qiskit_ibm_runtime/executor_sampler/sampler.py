@@ -23,7 +23,6 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
@@ -181,16 +180,9 @@ class SamplerV2(BaseSamplerV2):
         # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(coerced_pubs, options, default_shots)
-
-        # Apply dynamical decoupling if enabled
-        if options.dynamical_decoupling.enable:
-            logger.info("Apply dynamical decoupling")
-            quantum_program = apply_dynamical_decoupling(
-                backend=self._backend,
-                dd_options=options.dynamical_decoupling,
-                quantum_program=quantum_program,
-            )
+        quantum_program, executor_options = prepare(
+            coerced_pubs, options, default_shots, backend=self._backend
+        )
 
         # Set executor options
         self._executor.options = executor_options
