@@ -116,7 +116,7 @@ class Executor:
             A job.
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
-            from ..sim_executor.sim_executor import SimRuntimeJob  # TODO: fix this circular import
+            from ..sim_executor.sim_executor import SimRuntimeJob
 
             noise_dict = self.options.simulator.noise_model
             angle_decimals = self.options.simulator.gate_angle_precision
