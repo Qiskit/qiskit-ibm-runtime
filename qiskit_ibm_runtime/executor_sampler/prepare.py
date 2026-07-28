@@ -64,8 +64,8 @@ def prepare(
         options: The options.
         default_shots: Default number of shots if not specified in PUBs. If ``None``,
             uses the value from ``self.options.default_shots``.
-        backend: Backend required when dynamical decoupling is enabled, used to extract
-            timing information for the DD pass.
+        backend: The backend for which the program is prepared. Only required when dynamical
+            decoupling is enabled.
 
     Returns:
         A tuple containing:
