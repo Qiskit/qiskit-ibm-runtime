@@ -206,7 +206,7 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 # Legacy developer extras.
 
 common = [
-    "mypy==1.19.0",
+    "mypy==2.3.0",
     "pproxy==2.7.8",
     "nbqa==1.5.3",
     "matplotlib>=2.1",
