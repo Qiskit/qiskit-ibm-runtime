@@ -10,7 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Integration tests for Estimator V2."""
+"""Integration tests for Estimator V2.
+
+Tests here run against the server-side Estimator V2 implementation only.
+In the future, they should be replaced with the ones in test_executor_v2.py,
+which run against all Estimator V2 implementations.
+"""
 
 from unittest import skip
 
@@ -26,12 +31,7 @@ from ..ibm_test_case import IBMIntegrationTestCase
 
 
 class TestEstimatorV2(IBMIntegrationTestCase):
-    """Integration tests for Estimator V2 Primitive.
-
-    Tests here run against the server-side Estimator V2 implementation only.
-    In the future, they should be replaced with the ones in test_executor_v2.py,
-    which run against all Estimator V2 implementations.
-    """
+    """Integration tests for Estimator V2 Primitive."""
 
     def setUp(self) -> None:
         """Test level setup."""

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Executor-based EstimatorV2."""
+"""Integration tests for EstimatorV2."""
 
 from __future__ import annotations
 
