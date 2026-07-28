@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024-2026.
+# (C) Copyright IBM 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,123 +10,103 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Integration tests for Estimator V2."""
+"""Tests for Executor-based EstimatorV2."""
 
-from unittest import skip
+from typing import TYPE_CHECKING
 
-from qiskit.circuit.library import IQP, real_amplitudes
-from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
+import numpy as np
+from ddt import ddt
+from qiskit import QuantumCircuit
+from qiskit.circuit import Parameter
+from qiskit.primitives.base import BaseEstimatorV2  # noqa: TC002
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import EstimatorV2, Session
-from qiskit_ibm_runtime.fake_provider import FakeAuckland
+if TYPE_CHECKING:
+    from qiskit.transpiler import StagedPassManager
+
+from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2Native
+from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2ThroughExecutor
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
-class TestEstimatorV2(IBMIntegrationTestCase):
-    """Integration tests for Estimator V2 Primitive."""
+def create_bell_isa_circuit_with_single_rz_on_q0(
+    preset_pass_manager: "StagedPassManager",
+) -> QuantumCircuit:
+    """Create a Bell circuit with a single RZ parameter on q0, transpiled to ISA."""
+    circuit = QuantumCircuit(2, name="Bell with single parameter")
+    circuit.h(0)
+    circuit.cx(0, 1)
+    circuit.rz(Parameter("q0_phase"), 0)
 
-    def setUp(self) -> None:
+    return preset_pass_manager.run(circuit)
+
+
+@ddt
+class _TestEstimatorBase(IBMIntegrationTestCase):
+    """An integration test, testing different EstimatorV2 implementations."""
+
+    estimator_variant: type[BaseEstimatorV2] | None = None
+
+    def setUp(self):
         """Test level setup."""
+        if self.estimator_variant is None:
+            self.skipTest("This base class cannot be run as a standalone testcase.")
         super().setUp()
-        self._backend = self.service.backend(self.dependencies.qpu)
+        self.backend = self.service.backend(self.dependencies.qpu)
 
-    def test_estimator_v2_session(self):
-        """Verify correct results are returned."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
 
-        psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
-        psi2 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=3))
+    def test_estimator_works_for_basic_circuit_with_no_options(self):
+        """Runs a simple parametric circuit with multiple observables to make sure the basics work.
 
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
-        H2 = SparsePauliOp.from_list([("IZ", 1)]).apply_layout(psi2.layout)
-        H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)]).apply_layout(psi1.layout)
+        Tests
+        - Job completes without exceptions
+        - Correct expectation value shapes
+        """
+        isa_circuit = create_bell_isa_circuit_with_single_rz_on_q0(self.pm)
 
-        theta1 = [0, 1, 1, 2, 3, 5]
-        theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
-        theta3 = [1, 2, 3, 4, 5, 6]
+        zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
+            isa_circuit.layout
+        )
+        # q0_phase = 0 -> 10.0 q0_phase = pi -> 10
 
-        with Session(self._backend) as session:
-            estimator = EstimatorV2(mode=session)
+        xx_with_offset = SparsePauliOp.from_list([("XX", 1.0), ("II", 3.0)]).apply_layout(
+            isa_circuit.layout
+        )
+        # q0_phase = 0 -> 4.0 q0_phase = pi -> 2.0
 
-            job = estimator.run([(psi1, H1, [theta1])])
-            result = job.result()
-            self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
+        estimator = self.estimator_variant(self.backend)
 
-            job2 = estimator.run([(psi1, [H1, H3], [theta1, theta3]), (psi2, H2, theta2)])
-            result2 = job2.result()
-            self._verify_result_type(result2, num_pubs=2, shapes=[(2,), ()])
+        job = estimator.run(
+            pubs=[
+                # Map all parameter sets to all observables
+                (isa_circuit, [[zz_with_offset], [xx_with_offset]], [[0], [np.pi]]),
+                # Map each parameter set to one observable:
+                (isa_circuit, [zz_with_offset, xx_with_offset], [[0], [np.pi]]),
+            ]
+        )
 
-            job3 = estimator.run([(psi1, H1, theta1), (psi2, H2, theta2), (psi1, H3, theta3)])
-            result3 = job3.result()
-            self._verify_result_type(result3, num_pubs=3, shapes=[(), (), ()])
+        results = job.result()
 
-    def test_estimator_v2_options(self):
-        """Test V2 Estimator with different options."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        # Expect one result per pub:
+        self.assertEqual(len(results), 2)
 
-        circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
-        observable = SparsePauliOp("X" * circuit.num_qubits)
+        # 4 Expectation values should have been calculated for full broadcasting:
+        self.assertEqual(results[0].data.evs.shape, (2, 2))
 
-        estimator = EstimatorV2(mode=self._backend)
-        estimator.options.default_precision = 0.05
-        estimator.options.default_shots = 400
-        estimator.options.resilience_level = 1
-        estimator.options.seed_estimator = 42
-        estimator.options.resilience.measure_mitigation = True
-        estimator.options.resilience.zne_mitigation = True
-        estimator.options.resilience.zne.amplifier = "gate_folding_back"
-        estimator.options.resilience.zne.noise_factors = [3, 5]
-        estimator.options.resilience.zne.extrapolator = "linear"
-        estimator.options.resilience.pec_mitigation = False
-        estimator.options.resilience.layer_noise_learning.max_layers_to_learn = 10
-        estimator.options.resilience.layer_noise_learning.shots_per_randomization = 64
-        estimator.options.resilience.layer_noise_learning.num_randomizations = 16
-        estimator.options.resilience.layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
-        estimator.options.resilience.measure_noise_learning.num_randomizations = 32
-        estimator.options.resilience.measure_noise_learning.shots_per_randomization = 100
-        estimator.options.execution.init_qubits = True
-        estimator.options.execution.rep_delay = 0.00025
-        estimator.options.twirling.enable_gates = True
-        estimator.options.twirling.enable_measure = True
-        estimator.options.twirling.strategy = "active"
-        estimator.options.twirling.num_randomizations = 16
-        estimator.options.twirling.shots_per_randomization = 100
-        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
+        # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
+        self.assertEqual(results[1].data.evs.shape, (2,))
 
-        job = estimator.run([(circuit, observable)])
-        result = job.result()
-        self._verify_result_type(result, num_pubs=1, shapes=[()])
-        self.assertEqual(result[0].metadata["shots"], 1600)
 
-    @skip("Skip until simulator options are accepted by server.")
-    def test_pec(self):
-        """Test running with PEC."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
-        circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
-        observables = SparsePauliOp("X" * circuit.num_qubits)
+class TestEstimatorNative(_TestEstimatorBase):
+    """Variant of the Estimator integration test, running through native Estimator."""
 
-        estimator = EstimatorV2(mode=self._backend)
-        estimator.options.resilience_level = 0
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.resilience.pec_max_overhead = 200
-        estimator.options.simulator.set_backend(FakeAuckland())
-        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
+    estimator_variant = EstimatorV2Native
 
-        job = estimator.run([(circuit, observables)])
-        result = job.result()
-        self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
-        self.assertIn("sampling_overhead", result[0].metadata["resilience"])
 
-    def _verify_result_type(self, result, num_pubs, shapes):
-        """Verify result type."""
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertEqual(len(result), num_pubs)
-        for idx, pub_result in enumerate(result):
-            self.assertIsInstance(pub_result, PubResult)
-            self.assertIsInstance(pub_result.data, DataBin)
-            self.assertTrue(pub_result.metadata)
-            self.assertEqual(pub_result.data.evs.shape, shapes[idx])
-            self.assertEqual(pub_result.data.stds.shape, shapes[idx])
+class TestEstimatorThroughExecutor(_TestEstimatorBase):
+    """Variant of the Estimator integration test, running through Executor based Estimator."""
+
+    estimator_variant = EstimatorV2ThroughExecutor
