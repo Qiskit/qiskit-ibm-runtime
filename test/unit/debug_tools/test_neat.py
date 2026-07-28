@@ -12,18 +12,24 @@
 
 """Tests for Neat class."""
 
+from unittest import skipUnless
+
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, depolarizing_error
+from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.debug_tools import Neat, NeatResult
 
 from ...ibm_test_case import IBMTestCase
 
+if HAS_AER:
+    from qiskit_aer import AerSimulator
+    from qiskit_aer.noise import NoiseModel, depolarizing_error
 
+
+@skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
 class TestNeat(IBMTestCase):
     """Class for testing the Neat class."""
 

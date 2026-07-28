@@ -157,7 +157,7 @@ class QiskitRuntimeLocalService:
         Args:
             program_id: Program ID.
             inputs: Program input parameters. These input values are passed
-                to the runtime program.
+                to the IBM Quantum Compute program.
             options: Runtime options that control the execution environment.
             calibration_id: The calibration id to use with the program execution
 

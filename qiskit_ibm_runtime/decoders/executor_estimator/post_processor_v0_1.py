@@ -37,6 +37,43 @@ from .trex_utils import calculate_trex_factor, get_processed_calibration_data
 from .utils import compute_exp_val, identify_measure_basis
 
 
+def _build_program_result_metadata(post_processor_data: dict) -> dict:
+    """Compute the program result metadata dict from the raw inputs stored in the passthrough data.
+
+    The estimator stores the finalized ``options`` dict, ``shots``, and ``precision`` in
+    the passthrough data.  This function reconstructs the metadata that is exposed on
+    ``PrimitiveResult.metadata`` by pruning inactive resilience sub-options and appending
+    ``target_precision`` and ``shots``.
+
+    Args:
+        post_processor_data: The ``passthrough_data["post_processor"]`` dict.
+
+    Returns:
+        The computed program-metadata dict, or ``{}`` when no options are present (e.g.
+        results produced by an older passthrough schema that stored ``program_metadata``
+        directly).
+    """
+    options = post_processor_data.get("options", None)
+    if options is None:
+        return {}
+
+    program_metadata = dict(options)
+    if "resilience" in program_metadata:
+        resilience = dict(program_metadata["resilience"])
+        for flag_key, options_key in [
+            ("zne_mitigation", "zne"),
+            ("pec_mitigation", "pec"),
+            ("measure_mitigation", "measure_noise_learning"),
+        ]:
+            if not resilience.get(flag_key):
+                resilience.pop(options_key, None)
+        program_metadata["resilience"] = resilience
+
+    program_metadata["target_precision"] = post_processor_data.get("precision", None)
+    program_metadata["shots"] = post_processor_data.get("shots", None)
+    return program_metadata
+
+
 def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
     """Convert a quantum program result to a primitives result, for a V2 estimator.
 
@@ -77,8 +114,8 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
-    # Extract options if present
-    options_metadata = post_processor_data.get("options", {})
+    # Build program_metadata from the raw inputs stored by the estimator
+    program_metadata = _build_program_result_metadata(post_processor_data)
 
     # Extract mitigation data
     mitigation = post_processor_data.get("mitigation", None)
@@ -164,7 +201,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             pub_result.metadata["circuit_metadata"] = circuit_meta
         pub_results.append(pub_result)
 
-    return PrimitiveResult(pub_results, metadata=options_metadata)
+    return PrimitiveResult(pub_results, metadata=program_metadata)
 
 
 def _process_expectation_values(

@@ -13,8 +13,9 @@
 """Tests for the ``Embedding`` class."""
 
 import textwrap
+from unittest import skipUnless
 
-from qiskit_aer import AerSimulator
+from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.fake_provider import (
     FakeAlgiers,
@@ -36,6 +37,9 @@ from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalSer
 from qiskit_ibm_runtime.visualization.embeddings import Embedding
 
 from ...ibm_test_case import IBMTestCase
+
+if HAS_AER:
+    from qiskit_aer import AerSimulator
 
 
 def ascii_to_coords(image: str, col_major: bool = False) -> list[tuple[int, int]]:
@@ -65,6 +69,7 @@ def ascii_to_coords(image: str, col_major: bool = False) -> list[tuple[int, int]
     return coords
 
 
+@skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
 class TestEmbedding(IBMTestCase):
     """Class for testing the Embedding class."""
 

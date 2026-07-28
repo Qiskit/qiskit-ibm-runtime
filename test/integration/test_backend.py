@@ -75,6 +75,14 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         backend = service.backend(self.dependencies.qpu)
         self.assertIn("reset", backend.target)
 
+    @run_integration_test
+    def test_backends_physical_qubits(self, service):
+        """All backends should have a `physical_qubits` property."""
+        backends = service.backends()
+
+        for backend in backends:
+            self.assertIsInstance(backend.physical_qubits, int)
+
 
 class TestIBMBackend(IBMIntegrationTestCase):
     """Test ibm_backend module."""

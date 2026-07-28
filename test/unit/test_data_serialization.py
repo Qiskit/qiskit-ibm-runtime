@@ -19,6 +19,7 @@ import sys
 import tempfile
 import warnings
 from datetime import datetime
+from unittest import skipUnless
 
 import numpy as np
 import qiskit.quantum_info as qi
@@ -39,7 +40,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.quantum_info import Pauli, PauliLindbladMap, PauliList, SparsePauliOp
 from qiskit.result import Counts, Result
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit_aer.noise import NoiseModel
+from qiskit.utils.optionals import HAS_AER
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
@@ -69,6 +70,9 @@ from ..serialization import SerializableClass, SerializableClassDecoder, get_com
 from ..utils import bell, mock_wait_for_final_state
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
+
+if HAS_AER:
+    from qiskit_aer.noise import NoiseModel
 
 
 @ddt
@@ -145,6 +149,7 @@ class TestDataSerialization(IBMTestCase):
                     decoded = json.loads(encoded, cls=RuntimeDecoder)
                     self.assertEqual(operator, decoded)
 
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_coder_noise_model(self):
         """Test encoding and decoding a noise model."""
         noise_model = NoiseModel.from_backend(FakeNairobiV2())

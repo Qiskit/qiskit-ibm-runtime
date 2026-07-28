@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Base runtime job class."""
+"""Base IBM Quantum Compute job class."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ API_TO_JOB_ERROR_MESSAGE = {
 
 
 class BaseRuntimeJob(ABC):
-    """Base Runtime Job class.
+    """Base IBM Quantum Compute Job class.
 
     Args:
         backend: The backend instance used to run this job.
@@ -60,9 +60,9 @@ class BaseRuntimeJob(ABC):
             of such subclasses. If more than one decoder is specified, they will be called in
             chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
             decoder. If not specified, the default ``ResultDecoder`` is used.
-        image: Runtime image used for this job: image_name:tag.
-        service: Runtime service.
-        session_id: Job ID of the first job in a runtime session.
+        image: IBM Quantum Compute image used for this job: image_name:tag.
+        service: IBM Quantum Compute (formerly Qiskit Runtime) service.
+        session_id: Job ID of the first job in a IBM Quantum Compute session.
         tags: Tags assigned to the job.
         version: Primitive version.
         private: Marks job as private.
@@ -234,7 +234,7 @@ class BaseRuntimeJob(ABC):
         """Set status.
 
         Args:
-            job_response: Job response from runtime API.
+            job_response: Job response from IBM Quantum Compute API.
 
         Raises:
             IBMError: If an unknown status is returned from the server.
@@ -257,7 +257,7 @@ class BaseRuntimeJob(ABC):
         """Set error message if the job failed.
 
         Args:
-            job_response: Job response from runtime API.
+            job_response: Job response from IBM Quantum Compute API.
         """
         if self._status == self.ERROR:
             self._error_message = self._error_msg_from_job_response(job_response)
@@ -273,7 +273,7 @@ class BaseRuntimeJob(ABC):
         """Returns the error message from an API response.
 
         Args:
-            response: Job response from the runtime API.
+            response: Job response from the IBM Quantum Compute API.
 
         Returns:
             Error message.
@@ -311,10 +311,10 @@ class BaseRuntimeJob(ABC):
 
     @property
     def image(self) -> str:
-        """Return the runtime image used for the job.
+        """Return the IBM Quantum Compute image used for the job.
 
         Returns:
-            The runtime image ``image_name:tag`` or ``""`` if the default image is used.
+            The IBM Quantum Compute image ``image_name:tag`` or ``""`` if the default image is used.
         """
         return self._image
 

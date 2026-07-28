@@ -24,3 +24,4 @@ class FakeMarrakesh(FakeBackendV2):
     conf_filename = "conf_marrakesh.json"
     props_filename = "props_marrakesh.json"
     backend_name = "fake_marrakesh"
+    _physical_qubits = 332

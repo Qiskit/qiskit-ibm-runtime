@@ -66,7 +66,7 @@ class EnvironmentOptions(BaseOptionsModel):
         ]
         | None
     ) = None
-    """Runtime image used for this job."""
+    """IBM Quantum Compute (formerly Qiskit Runtime) image used for this job."""
 
 
 class SamplerEnvironmentOptions(BaseOptionsModel):

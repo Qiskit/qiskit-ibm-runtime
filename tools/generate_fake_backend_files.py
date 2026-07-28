@@ -12,8 +12,8 @@
 # that they have been altered from the originals.
 """Fetch backend snapshots and generate fake backend package files.
 
-This script connects to IBM Quantum Runtime, fetches the latest configuration and
-properties for one or more backends, and writes the following files under:
+This script connects to IBM Quantum Compute (formerly Qiskit Runtime), fetches the latest
+configuration and properties for one or more backends, and writes the following files under:
 
 ``qiskit_ibm_runtime/fake_provider/backends/<backend_city>/``
 

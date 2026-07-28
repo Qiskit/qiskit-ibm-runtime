@@ -57,10 +57,7 @@ class EstimatorOptions(BaseOptionsModel):
     """Execution options."""
 
     twirling: TwirlingOptions = TwirlingOptions()
-    """Twirling options.
-
-    Currently only ``enable_measure=False`` is supported.
-    """
+    """Twirling options."""
 
     dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
     """Dynamical decoupling options."""
@@ -91,7 +88,7 @@ class EstimatorOptions(BaseOptionsModel):
         zero bias.
 
     Refer to the
-    `Configure error mitigation for Qiskit Runtime
+    `Configure error mitigation for IBM Quantum Compute (formerly Qiskit Runtime)
     <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide for more
     information about the error mitigation methods used at each level.
     """
