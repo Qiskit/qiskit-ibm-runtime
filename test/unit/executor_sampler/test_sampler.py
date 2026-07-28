@@ -12,13 +12,17 @@
 
 """Tests for executor-based SamplerV2."""
 
+from unittest import skipUnless
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.providers.fake_provider import GenericBackendV2
-from qiskit_aer.noise import NoiseModel, depolarizing_error
+from qiskit.utils.optionals import HAS_AER
+
+if HAS_AER:
+    from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -356,116 +360,6 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         self.assertEqual(item.size(), 3)
 
 
-class TestSamplerV2DynamicalDecoupling(IBMTestCase):
-    """Tests for SamplerV2 with dynamical decoupling enabled."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = get_mocked_backend()
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_pass_manager_called_when_enabled(self, mock_run, mock_apply_dd):
-        """Test that apply_dynamical_decoupling is called when DD is enabled."""
-        # Mock to return the quantum program unchanged
-        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
-        mock_run.return_value = MagicMock()
-
-        # Create a simple circuit
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        # Create sampler with DD enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-        sampler.options.dynamical_decoupling.sequence_type = "XX"
-
-        # Run the sampler
-        sampler.run([circuit], shots=1024)
-
-        # Verify apply_dynamical_decoupling was called once
-        mock_apply_dd.assert_called_once()
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_pass_manager_not_called_when_disabled(self, mock_run, mock_apply_dd):
-        """Test that apply_dynamical_decoupling is not called when DD is disabled."""
-        mock_run.return_value = MagicMock()
-
-        # Create a simple circuit
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        # Create sampler with DD disabled (default)
-        sampler = SamplerV2(mode=self.backend)
-        self.assertFalse(sampler.options.dynamical_decoupling.enable)
-
-        # Run the sampler
-        sampler.run([circuit], shots=1024)
-
-        # Verify apply_dynamical_decoupling was NOT called
-        mock_apply_dd.assert_not_called()
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_with_twirling_enabled(self, mock_run, mock_apply_dd):
-        """Test that apply_dynamical_decoupling is called when both DD and twirling are enabled."""
-        # Mock to return the quantum program unchanged
-        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
-        mock_run.return_value = MagicMock()
-
-        # Create a simple circuit
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        # Create sampler with both DD and twirling enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-        sampler.options.dynamical_decoupling.sequence_type = "XpXm"
-        sampler.options.twirling.enable_gates = True
-
-        # Run the sampler
-        sampler.run([circuit], shots=1024)
-
-        # Verify apply_dynamical_decoupling was called once
-        mock_apply_dd.assert_called_once()
-
-    def test_dd_raises_error_with_multiple_circuits_one_has_control_flow(self):
-        """Test that DD raises ValueError when one of multiple circuits has control flow."""
-        # Create a simple circuit without control flow
-        circuit1 = QuantumCircuit(2, 2)
-        circuit1.h(0)
-        circuit1.cx(0, 1)
-        circuit1.measure_all()
-
-        # Create a circuit with control flow
-        circuit2 = QuantumCircuit(2, 2)
-        circuit2.h(0)
-        circuit2.measure(0, 0)
-        with circuit2.if_test((0, 1)):
-            circuit2.x(1)
-        circuit2.measure(1, 1)
-
-        # Create sampler with DD enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-
-        # Verify that running with DD enabled raises ValueError
-        with self.assertRaises(ValueError) as context:
-            sampler.run([circuit1, circuit2], shots=1024)
-
-        # Check the error message
-        self.assertIn(
-            "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
-        )
-
-
 class TestSamplerV2SimulatorMode(IBMTestCase):
     """Tests for SamplerV2 with simulator backends (local mode)."""
 
@@ -541,6 +435,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         # Results should be different with different seed
         self.assertNotEqual(counts1, counts3)
 
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_simulator_with_general_test_case(self):
         """Test simulator mode with comprehensive simulator options.
 

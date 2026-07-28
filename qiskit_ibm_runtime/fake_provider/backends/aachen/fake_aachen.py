@@ -24,3 +24,4 @@ class FakeAachen(FakeBackendV2):
     conf_filename = "conf_aachen.json"
     props_filename = "props_aachen.json"
     backend_name = "fake_aachen"
+    _physical_qubits = 332

@@ -45,15 +45,15 @@ QASM3RUNNERPROGRAMID = "qasm3-runner"
 
 
 class IBMBackend(Backend):
-    """Backend class interfacing with an IBM Quantum backend.
+    """Backend class interfacing with an IBM Quantum Compute (formerly Qiskit Runtime) backend.
 
     Note:
         * You should not instantiate the ``IBMBackend`` class directly. Instead, use
           the methods provided by an :class:`QiskitRuntimeService` instance to retrieve and handle
           backends.
 
-    This class represents an IBM Quantum backend. Its attributes and methods provide
-    information about the backend. For example, the :meth:`status()` method
+    This class represents an IBM Quantum Compute backend. Its attributes
+    and methods provide information about the backend. For example, the :meth:`status()` method
     returns a :class:`BackendStatus<~.providers.models.BackendStatus>` instance.
     The instance contains the ``operational`` and ``pending_jobs`` attributes, which state whether
     the backend is operational and also the number of jobs in the server queue for the backend,
@@ -139,6 +139,7 @@ class IBMBackend(Backend):
         api_client: IBM client used to communicate with the server.
         instance: The service instance to use.
         calibration_id: An optional calibration id to use for this backend
+        physical_qubits: The number of physical qubits of the backend.
     """
 
     id_warning_issued = False
@@ -150,17 +151,20 @@ class IBMBackend(Backend):
         api_client: RuntimeClient,
         instance: str | None = None,
         calibration_id: str | None = None,
+        physical_qubits: int | None = None,
     ) -> None:
         super().__init__(
             name=configuration.backend_name,
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
-        self._calibration_id = calibration_id
-        self._instance = instance
+        self._configuration = deepcopy(configuration)
         self._service = service
         self._api_client = api_client
-        self._configuration = deepcopy(configuration)
+        self._instance = instance
+        self._calibration_id = calibration_id
+        self._physical_qubits = physical_qubits
+
         self._properties: Any = None
         self._target: Any = None
         if (
@@ -285,6 +289,15 @@ class IBMBackend(Backend):
         self._convert_to_target()
         return self._target
 
+    @property
+    def physical_qubits(self) -> int:
+        """Return the number of physical qubits the backend has.
+
+        Return the number of physical qubits for the backend (programmable qubits, reset qubits,
+        and couplers combined).
+        """
+        return self._physical_qubits
+
     def target_history(self, datetime: python_datetime | None = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
 
@@ -335,7 +348,7 @@ class IBMBackend(Backend):
 
         Raises:
             TypeError: If an input argument is not of the correct type.
-            NotImplementedError: If `datetime` is specified when cloud runtime is used.
+            NotImplementedError: If `datetime` is specified when IBM Quantum Compute is used.
         """
         if self._configuration.simulator:
             # Simulators do not have backend properties.
@@ -463,6 +476,7 @@ class IBMBackend(Backend):
             service=self._service,
             api_client=deepcopy(self._api_client),
             instance=self._instance,
+            physical_qubits=self._physical_qubits,
         )
         cpy.name = self.name
         cpy.description = self.description

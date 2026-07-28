@@ -34,6 +34,9 @@ if TYPE_CHECKING:
 
     from ..quantum_program import QuantumProgram
 
+if HAS_AER:
+    from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
+
 
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
     """Round angles to the nearest multiple of π/2 at ``decimals`` decimal places.
@@ -44,6 +47,7 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
     return np.round(values / (np.pi / 2), decimals=decimals) * (np.pi / 2)
 
 
+@HAS_AER.require_in_call
 def run_quantum_program(
     qasm_simulator: AerSimulator,
     program: QuantumProgram,
@@ -58,27 +62,18 @@ def run_quantum_program(
         program: The program to run.
         noise_dict: A map from barrier label refs to noise maps.
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.  See :func:`AerExecutor` for details.
-        warn_absent: Passed to :class:`InsertNoisePass`; see :class:`AerExecutor`.
+            decimal precision before simulation.  See :func:`~.SimExecutor` for details.
+        warn_absent: Passed to :class:`~.InsertNoisePass`; see :class:`~.SimExecutor`.
 
     Returns:
         Results of simulation.
     """
-    if not HAS_AER:
-        raise ValueError(
-            "The function 'run_quantum_program' cannot be run since 'qiskit-aer' is not "
-            "installed. Install 'qiskit-aer' and try again."
-        )
-
-    from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
-
     # Generate a sampler
     backend = deepcopy(qasm_simulator)
     backend.set_max_qubits(10000)
     aer_sampler = AerSamplerV2.from_backend(backend)
 
-    # _seed is private but is the only way to obtain the sampler's RNG seed for reproducibility.
-    rng = np.random.default_rng(aer_sampler._seed)
+    rng = np.random.default_rng(aer_sampler.seed)
 
     result_list = []
     metadata_list = []

@@ -10,6 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Aer-based local executor for QuantumProgram objects."""
+"""Aer-based local simulation executor for QuantumProgram objects."""
 
-from .aer_executor import AerExecutor, AerRuntimeJob
+from .sim_executor import SimExecutor, SimRuntimeJob

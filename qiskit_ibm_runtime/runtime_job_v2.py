@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Qiskit runtime job."""
+"""IBM Quantum Compute job."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ API_TO_JOB_STATUS: dict[str, JobStatus] = {
 
 
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
-    """Representation of a runtime V2 primitive execution.
+    """Representation of a IBM Quantum Compute (formerly Qiskit Runtime) V2 primitive execution.
 
     Args:
         backend: The backend instance used to run this job.
@@ -67,9 +67,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             of such subclasses. If more than one decoder is specified, they will be called in
             chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
             decoder. If not specified, the default ``ResultDecoder`` is used.
-        image: Runtime image used for this job: image_name:tag.
-        service: Runtime service.
-        session_id: Job ID of the first job in a runtime session.
+        image: IBM Quantum Compute image used for this job: image_name:tag.
+        service: IBM Quantum Compute service.
+        session_id: Job ID of the first job in a IBM Quantum Compute session.
         tags: Tags assigned to the job.
         version: Primitive version.
         private: Marks job as private.
@@ -132,7 +132,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 * For session jobs, the default and the floor value are ``100ms``.
 
         Returns:
-            Runtime job result (post-processed if applicable).
+            IBM Quantum Compute job result (post-processed if applicable).
 
         Raises:
             RuntimeJobFailureError: If the job failed.
@@ -186,7 +186,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         """Returns the job status from an API response.
 
         Args:
-            response: Job response from the runtime API.
+            response: Job response from the IBM Quantum Compute API.
 
         Returns:
             Job status.
