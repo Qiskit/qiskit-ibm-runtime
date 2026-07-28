@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from unittest import mock
 
+import numpy as np
 from ddt import data, unpack
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
@@ -289,6 +290,40 @@ def bell():
     quantum_circuit.measure(quantum_register, classical_register)
 
     return quantum_circuit
+
+
+def mirror_circuit(num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7) -> QuantumCircuit:
+    """Return a mirror circuit: U, then U-dagger, then a shared rx(theta).
+
+    ``U`` is ``reps`` layers of a CX brickwork plus a random SU(2) rotation
+    (``rz-sx-rz-sx-rz``) on each qubit, seeded by ``seed`` for reproducibility. A
+    barrier separates ``U`` from ``U†`` so the transpiler cannot cancel them to the
+    identity. In the noiseless ideal, the echo returns the register to |0...0>, so
+    every single-qubit <Z_j>(theta) = cos(theta) -- useful as a per-qubit noise probe.
+    """
+    rng = np.random.default_rng(seed)
+    theta = Parameter("theta")
+    forward = QuantumCircuit(num_qubits, name="mirror_forward")
+    for _ in range(layers):
+        for control in range(0, num_qubits - 1, 2):
+            forward.cx(control, control + 1)
+        for control in range(1, num_qubits - 1, 2):
+            forward.cx(control, control + 1)
+        for qubit in range(num_qubits):
+            forward.rz(rng.uniform(0, 2 * np.pi), qubit)
+            forward.sx(qubit)
+            forward.rz(rng.uniform(0, 2 * np.pi), qubit)
+            forward.sx(qubit)
+            forward.rz(rng.uniform(0, 2 * np.pi), qubit)
+
+    circuit = QuantumCircuit(num_qubits, name=f"mirror_{num_qubits}q")
+    circuit.compose(forward, inplace=True)
+    circuit.barrier()  # keep U and U† from telescoping to identity under transpilation
+    circuit.compose(forward.inverse(), inplace=True)
+    circuit.barrier()
+    for qubit in range(num_qubits):
+        circuit.rx(theta, qubit)
+    return circuit
 
 
 def get_transpiled_circuit(backend, num_qubits=2, measure=False):
