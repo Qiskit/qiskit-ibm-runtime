@@ -60,14 +60,7 @@ class SimRuntimeJob(RuntimeJobV2):
         self._angle_decimals = angle_decimals
         self._warn_absent = warn_absent
         self._job_id: str = str(uuid.uuid4())
-
-        self._result = run_quantum_program(
-            qasm_simulator=self._backend,
-            program=self._program,
-            noise_dict=self._noise_dict,
-            angle_decimals=self._angle_decimals,
-            warn_absent=self._warn_absent,
-        )
+        self._result = None
 
     def job_id(self) -> str:
         """Return the unique job ID."""
@@ -75,6 +68,14 @@ class SimRuntimeJob(RuntimeJobV2):
 
     def result(self, *_, **__) -> QuantumProgramResult:  # type: ignore[no-untyped-def]
         """Return the result of the program execution."""
+        if self._result is None:
+            self._result = run_quantum_program(
+                qasm_simulator=self._backend,
+                program=self._program,
+                noise_dict=self._noise_dict,
+                angle_decimals=self._angle_decimals,
+                warn_absent=self._warn_absent,
+            )
         return self._result
 
 
