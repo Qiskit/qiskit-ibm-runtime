@@ -12,6 +12,8 @@
 
 """Tests for Executor-based EstimatorV2."""
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from ddt import ddt
 from qiskit import QuantumCircuit
@@ -20,10 +22,25 @@ from qiskit.primitives.base import BaseEstimatorV2  # noqa: TC002
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
+if TYPE_CHECKING:
+    from qiskit.transpiler import StagedPassManager
+
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2Native
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2ThroughExecutor
 
 from ..ibm_test_case import IBMIntegrationTestCase
+
+
+def create_bell_isa_circuit_with_single_rz_on_q0(
+    preset_pass_manager: "StagedPassManager",
+) -> QuantumCircuit:
+    """Create a Bell circuit with a single RZ parameter on q0, transpiled to ISA."""
+    circuit = QuantumCircuit(2, name="Bell with single parameter")
+    circuit.h(0)
+    circuit.cx(0, 1)
+    circuit.rz(Parameter("q0_phase"), 0)
+
+    return preset_pass_manager.run(circuit)
 
 
 @ddt
@@ -48,12 +65,7 @@ class _TestEstimatorBase(IBMIntegrationTestCase):
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        circuit = QuantumCircuit(2, name="Bell with single parameter")
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.rz(Parameter("q0_phase"), 0)
-
-        isa_circuit = self.pm.run(circuit)
+        isa_circuit = create_bell_isa_circuit_with_single_rz_on_q0(self.pm)
 
         zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
             isa_circuit.layout
@@ -77,6 +89,9 @@ class _TestEstimatorBase(IBMIntegrationTestCase):
         )
 
         results = job.result()
+
+        # Expect one result per pub:
+        self.assertEqual(len(results), 2)
 
         # 4 Expectation values should have been calculated for full broadcasting:
         self.assertEqual(results[0].data.evs.shape, (2, 2))
