@@ -29,8 +29,8 @@ class TestEstimatorV2(IBMIntegrationTestCase):
     """Integration tests for Estimator V2 Primitive.
 
     Tests here run against the server-side Estimator V2 implementation only.
-    In the future, they should be replaced with the ones in test_executor_v2.py, which run against all
-    Estimator V2 implementations.
+    In the future, they should be replaced with the ones in test_executor_v2.py,
+    which run against all Estimator V2 implementations.
     """
 
     def setUp(self) -> None:

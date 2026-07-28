@@ -12,18 +12,14 @@
 
 """Tests for Executor-based EstimatorV2."""
 
-from typing import TYPE_CHECKING
-
 import numpy as np
 from ddt import ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.base import BaseEstimatorV2  # noqa: TC002
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.transpiler import StagedPassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-
-if TYPE_CHECKING:
-    from qiskit.transpiler import StagedPassManager
 
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2Native
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2ThroughExecutor
@@ -32,7 +28,7 @@ from ..ibm_test_case import IBMIntegrationTestCase
 
 
 def create_bell_isa_circuit_with_single_rz_on_q0(
-    preset_pass_manager: "StagedPassManager",
+    preset_pass_manager: StagedPassManager,
 ) -> QuantumCircuit:
     """Create a Bell circuit with a single RZ parameter on q0, transpiled to ISA."""
     circuit = QuantumCircuit(2, name="Bell with single parameter")
