@@ -12,13 +12,19 @@
 
 """Tests for Executor-based EstimatorV2."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from ddt import ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.base import BaseEstimatorV2  # noqa: TC002
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.transpiler import StagedPassManager
+
+if TYPE_CHECKING:
+    from qiskit.transpiler import StagedPassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import EstimatorV2 as EstimatorV2Native
