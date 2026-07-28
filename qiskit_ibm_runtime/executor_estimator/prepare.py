@@ -103,9 +103,7 @@ def prepare(
             else None,
             add_tags=add_tags,
         )
-        return quantum_program, executor_options
-
-    if options.resilience.zne_mitigation:
+    elif options.resilience.zne_mitigation:
         if options.resilience.zne.amplifier == "pea":
             logger.info("Running ``prepare_pea``.")
             quantum_program = prepare_pea(
@@ -119,31 +117,29 @@ def prepare(
                 else None,
                 add_tags=add_tags,
             )
-            return quantum_program, executor_options
-
-        logger.info("Running ``prepare_zne``.")
-        quantum_program = prepare_zne(
+        else:
+            logger.info("Running ``prepare_zne``.")
+            quantum_program = prepare_zne(
+                pubs=pubs,
+                twirling_options=options.twirling,
+                shots=shots,
+                zne_options=options.resilience.zne,
+                measure_noise_learning=options.resilience.measure_noise_learning
+                if options.resilience.measure_mitigation
+                else None,
+                add_tags=add_tags,
+            )
+    else:
+        logger.info("Running ``prepare_vanilla``.")
+        quantum_program = prepare_vanilla(
             pubs=pubs,
             twirling_options=options.twirling,
             shots=shots,
-            zne_options=options.resilience.zne,
             measure_noise_learning=options.resilience.measure_noise_learning
             if options.resilience.measure_mitigation
             else None,
             add_tags=add_tags,
         )
-        return quantum_program, executor_options
-
-    logger.info("Running ``prepare_vanilla``.")
-    quantum_program = prepare_vanilla(
-        pubs=pubs,
-        twirling_options=options.twirling,
-        shots=shots,
-        measure_noise_learning=options.resilience.measure_noise_learning
-        if options.resilience.measure_mitigation
-        else None,
-        add_tags=add_tags,
-    )
     if options.dynamical_decoupling.enable:
         logger.info("Apply dynamical decoupling")
         quantum_program = apply_dynamical_decoupling(
