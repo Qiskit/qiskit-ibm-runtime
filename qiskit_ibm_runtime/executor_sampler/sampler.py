@@ -23,7 +23,6 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
@@ -44,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamplerV2(BaseSamplerV2):
-    """Executor-based Sampler primitive for Qiskit Runtime.
+    """Executor-based Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of SamplerV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
@@ -86,11 +85,11 @@ class SamplerV2(BaseSamplerV2):
             * A :class:`~qiskit_ibm_runtime.Session` if you are using session execution mode.
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
-            Refer to the `Qiskit Runtime documentation
+            Refer to the `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
-        options: Sampler options. See :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
+        options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
             for all available options.
     """
 
@@ -138,7 +137,7 @@ class SamplerV2(BaseSamplerV2):
         to executor inputs can be resource intensive can be resource intensive and cause a delay
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
-        `Qiskit Runtime documentation
+        `IBM Quantum Compute documentation
         <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 
@@ -181,16 +180,9 @@ class SamplerV2(BaseSamplerV2):
         # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(coerced_pubs, options, default_shots)
-
-        # Apply dynamical decoupling if enabled
-        if options.dynamical_decoupling.enable:
-            logger.info("Apply dynamical decoupling")
-            quantum_program = apply_dynamical_decoupling(
-                backend=self._backend,
-                dd_options=options.dynamical_decoupling,
-                quantum_program=quantum_program,
-            )
+        quantum_program, executor_options = prepare(
+            coerced_pubs, options, default_shots, backend=self._backend
+        )
 
         # Set executor options
         self._executor.options = executor_options

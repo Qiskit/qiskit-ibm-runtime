@@ -55,7 +55,7 @@ def prepare_zne(
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program.
+    """Convert estimator PUBs to a quantum program with ZNE mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.
@@ -136,9 +136,6 @@ def prepare_zne(
                     folding_method = "front"
                 case "gate_folding_back":
                     folding_method = "back"
-                case _:
-                    # This should never happen due to prior validation
-                    folding_method = "random"
 
             folding_pm = PassManager([GateFolding(noise_factor, folding_method)])
             folded_circuit = folding_pm.run(pub.circuit)

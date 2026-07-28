@@ -149,7 +149,7 @@ convention = "google"
 [project]
 name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]
-description = "IBM Quantum client for Qiskit Runtime."
+description = "IBM Quantum client for IBM Quantum Compute (formerly Qiskit Runtime)."
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
     {name = "Qiskit Development Team", email="qiskit@us.ibm.com"},
@@ -183,8 +183,8 @@ dependencies = [
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas>=0.10rc2,<1",
-    "pydantic>=2.11.0",
+    "ibm-quantum-schemas>=0.10.20260723,<1",
+    "pydantic>=2.13.0",
     "qiskit>=2.3.0",
     "pybase64>=1.4.0",
     "samplomatic>=0.18.0"
@@ -206,7 +206,7 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 # Legacy developer extras.
 
 common = [
-    "mypy==1.19.0",
+    "mypy==2.3.0",
     "pproxy==2.7.8",
     "nbqa==1.5.3",
     "matplotlib>=2.1",

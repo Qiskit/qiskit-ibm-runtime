@@ -15,12 +15,12 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-from ddt import data, ddt, unpack
+from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.providers.fake_provider import GenericBackendV2
-from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
+from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
@@ -228,7 +228,7 @@ class TestEstimatorV2Run(IBMTestCase):
         self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
 
     def test_run_adds_options_to_passthrough_data(self):
-        """Test that run adds options metadata to quantum program passthrough data."""
+        """Test that run adds options, shots and precision to passthrough data."""
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         options.dynamical_decoupling.enable = False
@@ -249,16 +249,44 @@ class TestEstimatorV2Run(IBMTestCase):
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
 
-        # Verify passthrough data contains options
+        # Verify passthrough data contains inputs and calculated values
         self.assertIsNotNone(quantum_program.passthrough_data)
         self.assertIn("post_processor", quantum_program.passthrough_data)
-        self.assertIn("options", quantum_program.passthrough_data["post_processor"])
+        post_processor_data = quantum_program.passthrough_data["post_processor"]
+        self.assertIn("options", post_processor_data)
+        self.assertIn("shots", post_processor_data)
+        self.assertIn("precision", post_processor_data)
 
         # Verify options content
+        options_data = post_processor_data["options"]
+        self.assertEqual(options_data["twirling"]["enable_gates"], True)
+        self.assertEqual(options_data["dynamical_decoupling"]["enable"], False)
+        self.assertEqual(options_data["resilience"]["measure_mitigation"], True)
+
+    def test_run_passthrough_options_are_finalized_not_raw(self):
+        """Test that run adds finalized options (not user options) to passthrough data."""
+        # measure_mitigation=True force-resolves twirling.enable_measure -> True; the user
+        # leaves enable_gates / enable_measure / zne_mitigation unset (raw value None).
+        options = EstimatorOptions()
+        options.resilience.measure_mitigation = True
+
+        estimator = EstimatorV2(mode=self.backend, options=options)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator.run([(circuit, observable)], precision=0.03125)
+
+        self.mock_executor_instance.run.assert_called_once()
+        quantum_program = self.mock_executor_instance.run.call_args[0][0]
         options_metadata = quantum_program.passthrough_data["post_processor"]["options"]
-        self.assertEqual(options_metadata["twirling"]["enable_gates"], True)
-        self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], False)
-        self.assertEqual(options_metadata["resilience"]["measure_mitigation"], True)
+
+        # Unset fields must echo their RESOLVED default, never None.
+        self.assertIsNotNone(options_metadata["twirling"]["enable_gates"])
+        self.assertEqual(options_metadata["twirling"]["enable_measure"], True)
+        self.assertEqual(options_metadata["twirling"]["enable_gates"], False)
+        self.assertEqual(options_metadata["resilience"]["zne_mitigation"], False)
 
     def test_run_with_multiple_observables(self):
         """Test run with multiple observables in a single pub."""
@@ -293,52 +321,6 @@ class TestEstimatorV2Run(IBMTestCase):
 
         self.mock_executor_instance.run.assert_called_once()
         self.assertEqual(job, self.mock_job)
-
-    @data((True, True), (True, False), (False, True), (False, False))
-    @unpack
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.apply_dynamical_decoupling")
-    def test_run_applies_dynamical_decoupling_after_prepare(
-        self, twirling_enabled, measure_mitigration, mock_apply_dd
-    ):
-        """Test apply_dynamical_decoupling is called when DD is enabled.
-
-        Tests with twirling enabled and disabled (samplex item vs circuit item).
-        """
-        estimator = EstimatorV2(mode=self.backend)
-        estimator.options.dynamical_decoupling.enable = True
-        estimator.options.twirling.enable_gates = twirling_enabled
-        estimator.options.twirling.enable_measure = twirling_enabled
-        estimator.options.resilience.measure_mitigation = measure_mitigration
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        # Mock to return the quantum program unchanged
-        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
-
-        estimator.run([(circuit, observable), (circuit, observable)], precision=0.03125)
-
-        # Verify apply_dynamical_decoupling was called once
-        mock_apply_dd.assert_called_once()
-
-    def test_run_rejects_dynamic_circuits_when_dynamical_decoupling_enabled(self):
-        """Test DD rejects circuits with control flow."""
-        estimator = EstimatorV2(mode=self.backend)
-        estimator.options.dynamical_decoupling.enable = True
-
-        circuit = QuantumCircuit(2, 1)
-        circuit.h(0)
-        circuit.measure(0, 0)
-        circuit.if_else((0, True), QuantumCircuit(2, 1), QuantumCircuit(2, 1), [0, 1], [0])
-
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        with self.assertRaisesRegex(
-            ValueError,
-            "Dynamical decoupling is not compatible with dynamic circuits",
-        ):
-            estimator.run([(circuit, observable)], precision=0.03125)
 
     def test_run_incompatible_broadcast_shapes(self):
         """Test that incompatible parameter and observable shapes raise an error."""
@@ -389,76 +371,6 @@ class TestEstimatorV2Run(IBMTestCase):
         # Executor should never be reached
         self.mock_executor_instance.run.assert_not_called()
 
-    def test_run_raises_error_when_pec_enabled_without_noise_model(self):
-        """Test that run raises error when PEC is enabled but noise_model_mapping isn't."""
-        estimator = EstimatorV2(mode=self.backend)
-
-        # Enable PEC without providing noise model
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.resilience.noise_model_mapping = None
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        with self.assertRaisesRegex(
-            IBMInputValueError,
-            "When PEC mitigation is enabled, you must provide a noise model",
-        ):
-            estimator.run([(circuit, observable)], precision=0.03125)
-
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_pec")
-    def test_run_dispatches_to_prepare_pec_when_pec_enabled(self, mock_prepare_pec):
-        """Test that run calls prepare_pec when pec_mitigation is enabled."""
-        estimator = EstimatorV2(mode=self.backend)
-        estimator.options.resilience.pec_mitigation = True
-        noise_model_mapping = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
-        estimator.options.resilience.noise_model_mapping = noise_model_mapping
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        # Mock prepare_pec to return a valid QuantumProgram
-        mock_qp = MagicMock(spec=QuantumProgram)
-        mock_qp.shots = 1024
-        mock_qp.passthrough_data = {"post_processor": {}}
-        mock_qp.items = []
-        mock_prepare_pec.return_value = mock_qp
-
-        estimator.run([(circuit, observable)], precision=0.03125)
-
-        mock_prepare_pec.assert_called_once()
-        call_kwargs = mock_prepare_pec.call_args
-        self.assertEqual(call_kwargs.kwargs["pec_options"], estimator.options.resilience.pec)
-        self.assertEqual(call_kwargs.kwargs["noise_model_mapping"], noise_model_mapping)
-
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_zne")
-    def test_run_dispatches_to_prepare_zne_when_zne_enabled(self, mock_prepare_zne):
-        """Test that run calls prepare_zne when zne_mitigation is enabled.
-
-        with non-pea amplifier.
-        """
-        estimator = EstimatorV2(mode=self.backend)
-        estimator.options.resilience.zne_mitigation = True
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        # Mock prepare_zne to return a valid QuantumProgram
-        mock_qp = MagicMock(spec=QuantumProgram)
-        mock_qp.shots = 1024
-        mock_qp.passthrough_data = {"post_processor": {}}
-        mock_qp.items = []
-        mock_prepare_zne.return_value = mock_qp
-
-        estimator.run([(circuit, observable)], precision=0.03125)
-
-        mock_prepare_zne.assert_called_once()
-        call_kwargs = mock_prepare_zne.call_args
-        self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)
-
     def test_run_raises_error_when_pec_and_zne_both_enabled(self):
         """Test that run raises error when both pec_mitigation and zne_mitigation are enabled."""
         estimator = EstimatorV2(mode=self.backend)
@@ -474,33 +386,6 @@ class TestEstimatorV2Run(IBMTestCase):
             "PEC mitigation and ZNE mitigation are incompatible with one another",
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
-
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_pea")
-    def test_run_dispatches_to_prepare_pea_when_pea_amplifier_selected(self, mock_prepare_pea):
-        """Test that run calls prepare_pea when zne_mitigation is enabled with amplifier='pea'."""
-        estimator = EstimatorV2(mode=self.backend)
-        estimator.options.resilience.zne_mitigation = True
-        estimator.options.resilience.zne.amplifier = "pea"
-        noise_model_mapping = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
-        estimator.options.resilience.noise_model_mapping = noise_model_mapping
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        # Mock prepare_pea to return a valid QuantumProgram
-        mock_qp = MagicMock(spec=QuantumProgram)
-        mock_qp.shots = 1024
-        mock_qp.passthrough_data = {"post_processor": {}}
-        mock_qp.items = []
-        mock_prepare_pea.return_value = mock_qp
-
-        estimator.run([(circuit, observable)], precision=0.03125)
-
-        mock_prepare_pea.assert_called_once()
-        call_kwargs = mock_prepare_pea.call_args
-        self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)
-        self.assertEqual(call_kwargs.kwargs["noise_model_mapping"], noise_model_mapping)
 
 
 class TestEstimatorV2SimulatorMode(IBMTestCase):

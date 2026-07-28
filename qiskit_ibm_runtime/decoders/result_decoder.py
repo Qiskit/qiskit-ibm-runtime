@@ -19,10 +19,10 @@ from ..json import RuntimeDecoder
 
 
 class ResultDecoder:
-    """Runtime job result decoder.
+    """IBM Quantum Compute job result decoder.
 
     You can subclass this class and overwrite the :meth:`decode` method to create a custom result
-    decoder for the results of your runtime program. For example::
+    decoder for the results of your IBM Quantum Compute program. For example::
 
         class MyResultDecoder(ResultDecoder):
 

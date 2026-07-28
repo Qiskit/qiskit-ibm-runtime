@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utility functions for the runtime service."""
+"""Utility functions for the IBM Quantum Compute service."""
 
 import warnings
 

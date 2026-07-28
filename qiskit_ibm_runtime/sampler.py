@@ -45,13 +45,13 @@ class Sampler:
 
 
 class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
-    """Class for interacting with Qiskit Runtime Sampler primitive service.
+    """SamplerV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This class supports version 2 of the Sampler interface, which uses different
     input and output formats than version 1.
 
-    Qiskit Runtime Sampler primitive returns the sampled result according to the
-    specified output type. For example, it returns a bitstring for each shot
+    IBM Quantum Compute Sampler primitive returns the sampled result
+    according to the specified output type. For example, it returns a bitstring for each shot
     if measurement level 2 (bits) is requested.
 
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
@@ -64,7 +64,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             * A :class:`Batch` if you are using batch execution mode.
 
             Refer to the
-            `Qiskit Runtime documentation
+            `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about the ``Execution modes``.
 
