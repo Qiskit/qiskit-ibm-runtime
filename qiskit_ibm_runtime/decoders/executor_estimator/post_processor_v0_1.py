@@ -191,9 +191,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         elif mitigation == "zne":
             # In case each pub is associated with several items - create a list in which each
             # element is a list containing all relevant items for that pub
-            combined_results = []
-            for item_idx in range(pub_idx * res_step, (pub_idx + 1) * res_step):
-                combined_results.append(result[item_idx])
+            combined_results = result[pub_idx * res_step : (pub_idx + 1) * res_step]
 
             pub_result = create_pub_result_zne(
                 combined_results,
@@ -587,7 +585,7 @@ def create_pub_result_pea(
         noise_factors_ensemble_stds,
         noise_factors_stds,
         extrapolated_exp_vals,
-        extrapolated_ensemble_stds,
+        extrapolated_stds,
         selected_extrapolators,
     ) = _process_expectation_values_pea(
         item_result,
@@ -607,7 +605,7 @@ def create_pub_result_pea(
         stds_noise_factors=noise_factors_stds,
         ensemble_stds_noise_factors=noise_factors_ensemble_stds,
         evs_extrapolated=extrapolated_exp_vals,
-        stds_extrapolated=extrapolated_ensemble_stds,
+        stds_extrapolated=extrapolated_stds,
     )
     return EstimatorPubResult(data=data_bin)
 
@@ -652,19 +650,20 @@ def _process_expectation_values_pea(
             PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
     Returns:
-        A tuple ``(zero_extrapolated_exp_vals, zero_extrapolated_stds, noise_factors_exp_vals,
-        noise_factors_ensemble_stds, noise_factors_stds, extrapolated_exp_vals,
-        extrapolated_ensemble_stds, selected_extrapolators)``, where
-        ``zero_extrapolated_exp_vals`` are expectation values evaluated at zero noise point,
-        ``zero_extrapolated_stds`` are the standard deviations of the extrapolated expectation
-        values evaluated at zero noise point, ``noise_factors_exp_vals`` are expectation values
-        calculated at the noise_factors points, ``noise_factors_ensemble_stds`` are ensemble
-        standard errors calculated at the noise_factors points, ``noise_factors_stds`` are
-        standard errors calculated at the noise_factors points, ``extrapolated_exp_vals``
-        are expectation values evaluated at the extrapolated_noise_factors points,
-        ``extrapolated_ensemble_stds`` are ensemble standard errors evaluated at the
-        extrapolated_noise_factors points and ``selected_extrapolators`` are the valid
-        extrapolators used to extrapolate the data for each observable term.
+        A tuple (
+        ``zero_extrapolated_exp_vals``,  expectation values evaluated at zero noise point.
+        ``zero_extrapolated_stds``, the standard deviations of the extrapolated expectation
+        values evaluated at zero noise point.
+        ``noise_factors_exp_vals``, expectation values calculated at the noise_factors points,
+        ``noise_factors_ensemble_stds``, ensemble standard errors calculated at the noise_factors
+        points.
+        ``noise_factors_stds``, standard errors calculated at the noise_factors points.
+        ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
+        points.
+        ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
+        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
+        observable term.
+         ).
 
     Raises:
         ValueError: If ``item_result`` has no ``'_meas'`` key.
@@ -752,7 +751,7 @@ def create_pub_result_zne(
         noise_factors_ensemble_stds,
         noise_factors_stds,
         extrapolated_exp_vals,
-        extrapolated_ensemble_stds,
+        extrapolated_stds,
         selected_extrapolators,
     ) = _process_expectation_values_zne(
         item_results,
@@ -772,7 +771,7 @@ def create_pub_result_zne(
         stds_noise_factors=noise_factors_stds,
         ensemble_stds_noise_factors=noise_factors_ensemble_stds,
         evs_extrapolated=extrapolated_exp_vals,
-        stds_extrapolated=extrapolated_ensemble_stds,
+        stds_extrapolated=extrapolated_stds,
     )
     return EstimatorPubResult(data=data_bin)
 
@@ -816,19 +815,20 @@ def _process_expectation_values_zne(
             PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
     Returns:
-        A tuple ``(zero_extrapolated_exp_vals, zero_extrapolated_stds, noise_factors_exp_vals,
-        noise_factors_ensemble_stds, noise_factors_stds, extrapolated_exp_vals,
-        extrapolated_ensemble_stds, selected_extrapolators)``, where
-        ``zero_extrapolated_exp_vals`` are expectation values evaluated at zero noise point,
-        ``zero_extrapolated_stds`` are the standard deviations of the extrapolated expectation
-        values evaluated at zero noise point, ``noise_factors_exp_vals`` are expectation values
-        calculated at the noise_factors points, ``noise_factors_ensemble_stds`` are ensemble
-        standard errors calculated at the noise_factors points, ``noise_factors_stds`` are
-        standard errors calculated at the noise_factors points, ``extrapolated_exp_vals``
-        are expectation values evaluated at the extrapolated_noise_factors points,
-        ``extrapolated_ensemble_stds`` are ensemble standard errors evaluated at the
-        extrapolated_noise_factors points and ``selected_extrapolators`` are the valid
-        extrapolators used to extrapolate the data for each observable term.
+        A tuple (
+        ``zero_extrapolated_exp_vals``,  expectation values evaluated at zero noise point.
+        ``zero_extrapolated_stds``, the standard deviations of the extrapolated expectation
+        values evaluated at zero noise point.
+        ``noise_factors_exp_vals``, expectation values calculated at the noise_factors points,
+        ``noise_factors_ensemble_stds``, ensemble standard errors calculated at the noise_factors
+        points.
+        ``noise_factors_stds``, standard errors calculated at the noise_factors points.
+        ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
+        points.
+        ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
+        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
+        observable term.
+         ).
 
     Raises:
         ValueError: If ``item_result`` has no ``'_meas'`` key.
@@ -913,19 +913,20 @@ def calculate_extrapolated_expectation_values(
             PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
     Returns:
-        A tuple ``(zero_extrapolated_exp_vals, zero_extrapolated_stds, noise_factors_exp_vals,
-        noise_factors_ensemble_stds, noise_factors_stds, extrapolated_exp_vals,
-        extrapolated_ensemble_stds, selected_extrapolators)``, where
-        ``zero_extrapolated_exp_vals`` are expectation values evaluated at zero noise point,
-        ``zero_extrapolated_stds`` are the standard deviations of the extrapolated expectation
-        values evaluated at zero noise point, ``noise_factors_exp_vals`` are expectation values
-        calculated at the noise_factors points, ``noise_factors_ensemble_stds`` are ensemble
-        standard errors calculated at the noise_factors points, ``noise_factors_stds`` are
-        standard errors calculated at the noise_factors points, ``extrapolated_exp_vals``
-        are expectation values evaluated at the extrapolated_noise_factors points,
-        ``extrapolated_ensemble_stds`` are ensemble standard errors evaluated at the
-        extrapolated_noise_factors points and ``selected_extrapolators`` are the valid
-        extrapolators used to extrapolate the data for each observable term.
+        A tuple (
+        ``zero_extrapolated_exp_vals``,  expectation values evaluated at zero noise point.
+        ``zero_extrapolated_stds``, the standard deviations of the extrapolated expectation
+        values evaluated at zero noise point.
+        ``noise_factors_exp_vals``, expectation values calculated at the noise_factors points,
+        ``noise_factors_ensemble_stds``, ensemble standard errors calculated at the noise_factors
+        points.
+        ``noise_factors_stds``, standard errors calculated at the noise_factors points.
+        ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
+        points.
+        ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
+        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
+        observable term.
+         ).
 
     Raises:
         ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
@@ -950,7 +951,7 @@ def calculate_extrapolated_expectation_values(
 
     # Compute expectation values for all observables
     zero_extrapolated_exp_vals = np.zeros(shape=output_shape, dtype=float)
-    zero_extrapolated_ensemble_vars = np.zeros(shape=output_shape, dtype=float)
+    zero_extrapolated_vars = np.zeros(shape=output_shape, dtype=float)
     # Save the data for the extrapolated points (only exp_vals and ensamble_stds)
     extrapolated_exp_vals = np.empty(
         shape=output_shape
@@ -960,7 +961,7 @@ def calculate_extrapolated_expectation_values(
         ),
         dtype=float,
     )
-    extrapolated_ensemble_stds = np.empty(
+    extrapolated_stds = np.empty(
         shape=output_shape
         + (
             len(extrapolator),
@@ -976,7 +977,8 @@ def calculate_extrapolated_expectation_values(
     noise_factors_twirl_variance = np.zeros(shape=output_shape + (len(noise_factors),), dtype=float)
     noise_factors_ensemble_stds = np.empty(shape=output_shape + (len(noise_factors),), dtype=float)
     noise_factors_twirl_stds = np.empty(shape=output_shape + (len(noise_factors),), dtype=float)
-    # save for each extrapolated observable term the selected extrapolator
+    # save for each extrapolated observable term (in each observable, for each parameter
+    # configuration), for each extrapolator model the selected extrapolator
     selected_extrapolators = []
 
     # Loop over the broadcast output shape
@@ -1058,10 +1060,9 @@ def calculate_extrapolated_expectation_values(
             zero_extrapolated_exp_vals[bcast_index] += (
                 coeff * selected_exp_vals[0] * term_scale_factor
             )
-            if not np.isnan(selected_stds[0]):
-                zero_extrapolated_ensemble_vars[bcast_index] += (
-                    (coeff**2) * (selected_stds[0] ** 2) * (term_scale_factor**2)
-                )
+            zero_extrapolated_vars[bcast_index] += (
+                (coeff**2) * (selected_stds[0] ** 2) * (term_scale_factor**2)
+            )
 
             for model_index, (extrap_model_exp_val, extrap_model_std) in enumerate(
                 zip(extrap_exp_vals, extrap_stds)
@@ -1073,14 +1074,12 @@ def calculate_extrapolated_expectation_values(
                     exp_vals_extrapolated[(model_index, extrap_index)] += (
                         coeff * extrap_exp_val * term_scale_factor
                     )
-                    # failed extrapolation might return NaN as std; accumulate variance
-                    if not np.isnan(extrap_std):
-                        ensemble_var_extrapolated[(model_index, extrap_index)] += (
-                            (coeff**2) * (extrap_std**2) * (term_scale_factor**2)
-                        )
+                    ensemble_var_extrapolated[(model_index, extrap_index)] += (
+                        (coeff**2) * (extrap_std**2) * (term_scale_factor**2)
+                    )
 
         extrapolated_exp_vals[(*bcast_index, slice(None), slice(None))] = exp_vals_extrapolated
-        extrapolated_ensemble_stds[(*bcast_index, slice(None), slice(None))] = np.sqrt(
+        extrapolated_stds[(*bcast_index, slice(None), slice(None))] = np.sqrt(
             ensemble_var_extrapolated
         )
         for noise_factor_index in range(len(noise_factors)):
@@ -1095,11 +1094,11 @@ def calculate_extrapolated_expectation_values(
 
     return (
         zero_extrapolated_exp_vals,
-        np.sqrt(zero_extrapolated_ensemble_vars),
+        np.sqrt(zero_extrapolated_vars),
         noise_factors_exp_vals,
         noise_factors_ensemble_stds,
         noise_factors_twirl_stds,
         extrapolated_exp_vals,
-        extrapolated_ensemble_stds,
+        extrapolated_stds,
         selected_extrapolators,
     )

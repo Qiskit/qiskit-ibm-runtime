@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import copy
 import re
 import warnings
 from typing import TYPE_CHECKING
@@ -106,8 +105,8 @@ def process_extrapolated_expectation_values(
         extrapolated_noise_factors = [extrapolated_noise_factors]
 
     # Always evaluate at zero-noise point, copy list to not modify original
-    extrapolated_noise_factors = copy.deepcopy(extrapolated_noise_factors)
-    extrapolated_noise_factors.insert(0, 0)
+    extrapolated_noise_factors = np.array(extrapolated_noise_factors)
+    extrapolated_noise_factors = np.insert(extrapolated_noise_factors, 0, 0)
 
     if {
         len(noise_scaled_exp_vals),
@@ -288,8 +287,8 @@ def select_zne_extrapolated_result(
         accepted = np.where(col)[0]
         accepted_idx = accepted[0] if accepted.size else fallback_indices[idx]
         fits_idx = (accepted_idx, idx)
-        accept_values[idx] = zne_values[fits_idx]
-        accept_stderrs[idx] = zne_std_errors[fits_idx]
+        accept_values[idx] = np.nan_to_num(zne_values[fits_idx], nan=np.inf)
+        accept_stderrs[idx] = np.nan_to_num(zne_std_errors[fits_idx], nan=np.inf)
         accept_extrap[idx] = zne_extrapolator[accepted_idx]
 
     return accept_values, accept_stderrs, accept_extrap
