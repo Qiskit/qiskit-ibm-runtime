@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qiskit.utils.optionals import HAS_AER
 
@@ -66,7 +66,7 @@ class SimRuntimeJob(LocalRuntimeJob):
         """Return the unique job ID."""
         return self._job_id
 
-    def result(self, *_, **__) -> QuantumProgramResult:  # type: ignore[no-untyped-def]
+    def result(self, *_: Any, **__: Any) -> QuantumProgramResult:
         """Return the result of the program execution."""
         if self._result is None:
             self._result = run_quantum_program(
