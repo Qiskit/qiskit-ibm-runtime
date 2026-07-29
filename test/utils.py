@@ -345,7 +345,7 @@ def make_mirror_circuit_with_phases(
     circuit.compose(mirror, inplace=True)
     circuit.barrier()  # keep U and U† from resolving to identity under transpilation
     circuit.compose(mirror.inverse(), inplace=True)
-    
+
     circuit.barrier()
     for qubit in range(num_qubits):
         circuit.rx(Parameter(f"theta_{qubit}"), qubit)
