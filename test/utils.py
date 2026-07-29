@@ -334,15 +334,18 @@ def make_mirror_circuit_with_phases(
         getattr(layer2, entangler)(control, target)
 
     rng = np.random.default_rng(seed)
-    circuit = QuantumCircuit(num_qubits)
+    mirror = QuantumCircuit(num_qubits)
     for _ in range(layers):
-        circuit.compose(layer1, inplace=True)
-        circuit.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
-        circuit.compose(layer2, inplace=True)
-        circuit.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
+        mirror.compose(layer1, inplace=True)
+        mirror.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
+        mirror.compose(layer2, inplace=True)
+        mirror.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
 
+    circuit = QuantumCircuit(num_qubits)
+    circuit.compose(mirror, inplace=True)
     circuit.barrier()  # keep U and U† from resolving to identity under transpilation
-    circuit.compose(circuit.inverse(), inplace=True)
+    circuit.compose(mirror.inverse(), inplace=True)
+    
     circuit.barrier()
     for qubit in range(num_qubits):
         circuit.rx(Parameter(f"theta_{qubit}"), qubit)
