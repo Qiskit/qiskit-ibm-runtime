@@ -24,7 +24,7 @@ from .base import BaseOptionsModel
 class PecOptions(BaseOptionsModel):
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
-    max_overhead: Annotated[float, Field(ge=0)] | None = 100
+    max_overhead: Annotated[float, Field(gt=0)] | None = 100
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
     In order to remove the full learned noise, the number of randomizations should be multiplied by

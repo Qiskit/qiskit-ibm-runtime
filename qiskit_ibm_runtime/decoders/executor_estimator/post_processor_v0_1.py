@@ -248,7 +248,7 @@ def _process_expectation_values(
 
     # Apply measurement flips if present
     if "measurement_flips._meas" in item_result:
-        data ^= item_result["measurement_flips._meas"]
+        data ^= item_result.pop("measurement_flips._meas")
 
     # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
     # This allows us to find all available measurement bases for a given parameter
@@ -373,7 +373,7 @@ def _process_expectation_values_pec(
 
     # Apply measurement flips if present
     if "measurement_flips._meas" in item_result:
-        data ^= item_result["measurement_flips._meas"]
+        data ^= item_result.pop("measurement_flips._meas")
 
     # extract pec signs if present
     pec_signs = item_result.get("pauli_signs", None)
@@ -628,7 +628,7 @@ def _process_expectation_values_pea(
 
     # Apply measurement flips if present
     if "measurement_flips._meas" in item_result:
-        data ^= item_result["measurement_flips._meas"]
+        data ^= item_result.pop("measurement_flips._meas")
 
     if isinstance(extrapolated_noise_factors, (float, int)):
         extrapolated_noise_factors = [extrapolated_noise_factors]

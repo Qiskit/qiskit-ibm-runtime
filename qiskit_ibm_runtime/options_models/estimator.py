@@ -14,7 +14,9 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
+
+from pydantic import Field
 
 from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
@@ -28,7 +30,7 @@ from .twirling import TwirlingOptions
 class EstimatorOptions(BaseOptionsModel):
     """Options for the executor-based EstimatorV2."""
 
-    default_precision: float = 0.015625
+    default_precision: Annotated[float, Field(gt=0)] = 0.015625
     """The default precision to use for any PUB or ``run()`` call that does not specify one.
 
     The default precision for expectation value estimates if not specified in the PUBs
@@ -38,7 +40,7 @@ class EstimatorOptions(BaseOptionsModel):
     expected from ``4096`` shots in the presence of i.i.d. noise.
     """
 
-    default_shots: int | None = None
+    default_shots: Annotated[int, Field(ge=0)] | None = None
     """The total number of shots to use per circuit per configuration.
 
     .. note::

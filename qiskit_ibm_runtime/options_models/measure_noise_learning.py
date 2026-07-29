@@ -14,7 +14,9 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
+
+from pydantic import Field
 
 from .base import BaseOptionsModel
 
@@ -27,7 +29,7 @@ class MeasureNoiseLearningOptions(BaseOptionsModel):
         requires measurement noise learning.
     """
 
-    num_randomizations: int | Literal["auto"] = "auto"
+    num_randomizations: Annotated[int, Field(ge=1)] | Literal["auto"] = "auto"
     """The number of random circuits to draw for the measurement learning experiment.
 
     If ``"auto"``, the calibration uses the same number of randomizations

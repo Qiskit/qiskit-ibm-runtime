@@ -76,7 +76,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
 
     # Extract circuit metadata if present and validate length
     circuits_metadata = post_processor_data.get("circuits_metadata", None) or [None] * len(result)
-    if circuits_metadata is not None and len(circuits_metadata) != len(result):
+    if len(circuits_metadata) != len(result):
         raise ValueError(
             f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
             f"number of pubs ({len(result)})."
