@@ -22,9 +22,9 @@ from qiskit.utils.optionals import HAS_AER
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
-    from qiskit.quantum_info import PauliLindbladMap
     from qiskit_aer import AerSimulator
 
+    from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
     from ..results import QuantumProgramResult
 
@@ -39,25 +39,19 @@ class SimRuntimeJob:
     Args:
         backend: The Aer simulator to run on.
         program: The quantum program to execute.
-        noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.
-        angle_decimals: Rounding precision for gate angles (in units of π/2).
-        warn_absent: If ``True`` (default), warn when a tagged barrier has no entry in
-            ``noise_dict``.
+        options: The simulator options to use.
     """
 
     def __init__(
         self,
         backend: AerSimulator,
         program: QuantumProgram,
-        noise_dict: dict[str, PauliLindbladMap] | None = None,
-        angle_decimals: int = 5,
-        warn_absent: bool = True,
+        options: SimulatorOptions,
     ):
         self._backend = backend
         self._program = program
-        self._noise_dict = noise_dict
-        self._angle_decimals = angle_decimals
-        self._warn_absent = warn_absent
+        self._options = options
+
         self._job_id: str = str(uuid.uuid4())
         self.tags: list[str] = []  # interface compatibility with real Executor
 
@@ -70,12 +64,13 @@ class SimRuntimeJob:
     def result(self, *_, **__) -> QuantumProgramResult:  # type: ignore[no-untyped-def]
         """Return the result of the program execution."""
         if self._result is None:
+            options = self._options
             self._result = run_quantum_program(
                 qasm_simulator=self._backend,
                 program=self._program,
-                noise_dict=self._noise_dict,
-                angle_decimals=self._angle_decimals,
-                warn_absent=self._warn_absent,
+                noise_dict=options.noise_model,
+                angle_decimals=options.angle_decimals,
+                warn_absent=options.warn_absent,
             )
         return self._result
 
@@ -112,27 +107,16 @@ class SimExecutor:
 
     Args:
         backend: The Aer simulator to run programs on.
-        noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.  Pass
-            ``None`` (default) to run without noise injection.
-        angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.  This prevents floating-point drift from
-            preventing Clifford-method simulation when angles are nominally Clifford.
-        warn_absent: If ``True`` (default), emit a warning when a tagged barrier's tag is
-            not found in ``noise_dict``.  Set to ``False`` when partial coverage of tags is
-            intentional.
+        options: The simulator options to use.
     """
 
     def __init__(
         self,
         backend: AerSimulator,
-        noise_dict: dict[str, PauliLindbladMap] | None = None,
-        angle_decimals: int = 5,
-        warn_absent: bool = True,
+        options: SimulatorOptions,
     ):
         self._backend = backend
-        self._noise_dict = noise_dict
-        self._angle_decimals = angle_decimals
-        self._warn_absent = warn_absent
+        self._options = options
 
     def run(self, program: QuantumProgram) -> SimRuntimeJob:
         """Run a quantum program and return a completed job.
@@ -146,7 +130,5 @@ class SimExecutor:
         return SimRuntimeJob(
             backend=self._backend,
             program=program,
-            noise_dict=self._noise_dict,
-            angle_decimals=self._angle_decimals,
-            warn_absent=self._warn_absent,
+            options=self._options,
         )

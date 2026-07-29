@@ -118,16 +118,8 @@ class Executor:
             A job.
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
-            backend = self._backend
-            noise_dict = self.options.simulator.noise_model
-            angle_decimals = self.options.simulator.angle_decimals
-            warn_absent = self.options.simulator.warn_absent
             return SimRuntimeJob(  # type: ignore[return-value]
-                backend=backend,
-                program=program,
-                noise_dict=noise_dict,
-                angle_decimals=angle_decimals,
-                warn_absent=warn_absent,
+                backend=self._backend, program=program, options=self.options.simulator
             )
 
         try:
