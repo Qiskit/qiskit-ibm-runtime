@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from qiskit.quantum_info import PauliLindbladMap
     from qiskit_aer import AerSimulator
 
+    from ..fake_provider.fake_backend import FakeBackendV2
     from ..quantum_program import QuantumProgram
     from ..results import QuantumProgramResult
 
@@ -37,7 +38,7 @@ class SimRuntimeJob(LocalRuntimeJob):
     The program is executed on call to :meth:`result` and cached.
 
     Args:
-        backend: The Aer simulator to run on.
+        backend: The Aer simulator or fake backend to run on.
         program: The quantum program to execute.
         noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.
         angle_decimals: Rounding precision for gate angles (in units of π/2).
@@ -47,7 +48,7 @@ class SimRuntimeJob(LocalRuntimeJob):
 
     def __init__(
         self,
-        backend: AerSimulator,
+        backend: AerSimulator | FakeBackendV2,
         program: QuantumProgram,
         noise_dict: dict[str, PauliLindbladMap] | None = None,
         angle_decimals: int = 5,
