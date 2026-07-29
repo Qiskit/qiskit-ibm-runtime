@@ -23,7 +23,7 @@ from qiskit.transpiler import CouplingMap
 
 from ..runtime_options import RuntimeOptions
 from .environment_options import EnvironmentOptions
-from .simulator_options import SimulatorOptions
+from .simulator_options import LegacySimulatorOptions
 from .utils import (
     Dict,
     Unset,
@@ -134,7 +134,7 @@ class OptionsV2(BaseOptions):
             :class:`EnvironmentOptions` for all available options.
 
         simulator: Simulator options. See
-            :class:`SimulatorOptions` for all available options.
+            :class:`LegacySimulatorOptions` for all available options.
     """
 
     _VERSION: int = Field(2, frozen=True)
@@ -142,7 +142,7 @@ class OptionsV2(BaseOptions):
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset
     environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
-    simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
+    simulator: LegacySimulatorOptions | Dict = Field(default_factory=LegacySimulatorOptions)
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""
