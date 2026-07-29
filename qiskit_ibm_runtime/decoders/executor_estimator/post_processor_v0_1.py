@@ -978,7 +978,7 @@ def calculate_extrapolated_expectation_values(
     noise_factors_ensemble_stds = np.empty(shape=output_shape + (len(noise_factors),), dtype=float)
     noise_factors_twirl_stds = np.empty(shape=output_shape + (len(noise_factors),), dtype=float)
     # save for each extrapolated observable term (in each observable, for each parameter
-    # configuration), for each extrapolator model the selected extrapolator
+    # configuration), the selected extrapolator
     selected_extrapolators = []
 
     # Loop over the broadcast output shape
