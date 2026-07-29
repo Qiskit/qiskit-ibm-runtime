@@ -34,7 +34,7 @@ class ExecutorOptions(BaseOptionsModel):
 
     simulator: SimulatorOptions = SimulatorOptions()
     """Simulator options.
-    
+
     These options are used when an executor is initialized with a backend that is a simulator,
     and they are ignored otherwise.
     """
