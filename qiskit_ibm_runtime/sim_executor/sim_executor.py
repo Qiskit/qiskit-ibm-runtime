@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING
 
 from qiskit.utils.optionals import HAS_AER
 
-from ..runtime_job_v2 import RuntimeJobV2
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
 
 
 @HAS_AER.require_in_instance
-class SimRuntimeJob(RuntimeJobV2):
+class SimRuntimeJob:
     """Job object returned by :meth:`~.SimExecutor.run`.
 
     The program is executed eagerly on construction; the result is available

@@ -89,7 +89,10 @@ class Executor:
     ):
         # Coerced to `ExecutorOptions` via `__setattr__()`.
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
+
         self._session, self._service, self._backend = get_mode_service_backend(mode)
+        if isinstance(self._service, QiskitRuntimeLocalService):
+            raise ValueError("The executor is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -115,20 +118,6 @@ class Executor:
         Returns:
             A job.
         """
-        if isinstance(self._service, QiskitRuntimeLocalService):
-            from ..sim_executor.sim_executor import SimRuntimeJob
-
-            noise_dict = self.options.simulator.noise_model
-            angle_decimals = self.options.simulator.gate_angle_precision
-            warn_absent = self.options.simulator.warn_absent
-            return SimRuntimeJob(
-                backend=self._backend,
-                program=program,
-                noise_dict=noise_dict,
-                angle_decimals=angle_decimals,
-                warn_absent=warn_absent,
-            )
-
         try:
             converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
         except KeyError:
