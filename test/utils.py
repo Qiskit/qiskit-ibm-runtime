@@ -38,7 +38,7 @@ from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 if TYPE_CHECKING:
     import logging
 
-    from qiskit.providers.backend import Backend
+    from qiskit.providers.backend import Backend, BackendV2
 
 
 def most_busy_backend(
@@ -292,35 +292,60 @@ def bell():
     return quantum_circuit
 
 
-def mirror_circuit(num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7) -> QuantumCircuit:
-    """Return a mirror circuit: U, then U-dagger, then a shared rx(theta).
+def make_mirror_circuit_with_phases(
+    backend: BackendV2, num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7
+) -> QuantumCircuit:
+    """Make a circuit that composes a mirror circuit with a final layer of RX gates.
 
-    ``U`` is ``layers`` layers of a CX brickwork plus a random SU(2) rotation
-    (``rz-sx-rz-sx-rz``) on each qubit, seeded by ``seed`` for reproducibility. A
-    barrier separates ``U`` from ``U†`` so the transpiler cannot cancel them to the
-    identity. In the noiseless ideal, the echo returns the register to |0...0>, so
-    every single-qubit <Z_j>(theta) = cos(theta) -- useful as a per-qubit noise probe.
+    The mirror circuit contains entanglers between nearest neighbours.
     """
-    rng = np.random.default_rng(seed)
-    theta = Parameter("theta")
-    forward = QuantumCircuit(num_qubits, name="mirror_forward")
-    for _ in range(layers):
-        forward.cx(range(0, num_qubits - 1, 2), range(1, num_qubits, 2))
-        forward.cx(range(1, num_qubits - 1, 2), range(2, num_qubits, 2))
-        for qubit in range(num_qubits):
-            forward.rz(rng.uniform(0, 2 * np.pi), qubit)
-            forward.sx(qubit)
-            forward.rz(rng.uniform(0, 2 * np.pi), qubit)
-            forward.sx(qubit)
-            forward.rz(rng.uniform(0, 2 * np.pi), qubit)
+    if "cz" in (basis_gates := backend.basis_gates):
+        entangler = "cz"
+    elif "cx" in basis_gates:
+        entangler = "cx"
+    elif "ecr" in basis_gates:
+        entangler = "ecr"
+    else:
+        # This should not be reachable
+        raise ValueError("No entangler found.")
 
-    circuit = QuantumCircuit(num_qubits, name=f"mirror_{num_qubits}q")
-    circuit.compose(forward, inplace=True)
+    even_pairs = zip(range(0, backend.num_qubits, 2), range(1, backend.num_qubits, 2))
+    layer1_pairs = [
+        (control, target)
+        for control, target in even_pairs
+        if backend.target.instruction_supported(entangler, (control, target))
+        and control < num_qubits
+        and target < num_qubits
+    ]
+    layer1 = QuantumCircuit(num_qubits)
+    for control, target in layer1_pairs:
+        layer1.getattr(entangler, (control, target))
+
+    odd_pairs = zip(range(1, backend.num_qubits, 2), range(2, backend.num_qubits, 2))
+    layer2_pairs = [
+        (control, target)
+        for control, target in odd_pairs
+        if backend.target.instruction_supported(entangler, (control, target))
+        and control < num_qubits
+        and target < num_qubits
+    ]
+    layer2 = QuantumCircuit(num_qubits)
+    for control, target in layer2_pairs:
+        layer2.getattr(entangler, (control, target))
+
+    rng = np.random.default_rng(seed)
+    circuit = QuantumCircuit(num_qubits)
+    for _ in range(layers):
+        circuit.compose(layer1, inplace=True)
+        circuit.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
+        circuit.compose(layer2, inplace=True)
+        circuit.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
+
     circuit.barrier()  # keep U and U† from resolving to identity under transpilation
-    circuit.compose(forward.inverse(), inplace=True)
+    circuit.compose(circuit.inverse(), inplace=True)
     circuit.barrier()
     for qubit in range(num_qubits):
-        circuit.rx(theta, qubit)
+        circuit.rx(Parameter(f"theta_{qubit}"), qubit)
     circuit.measure_all()
     return circuit
 
