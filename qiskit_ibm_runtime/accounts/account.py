@@ -339,8 +339,8 @@ class CloudAccount(Account):
         catalog = GlobalCatalogV1(authenticator=authenticator)
 
         # Prepare the services.
-        client.set_service_url(get_global_search_api_url(self.url))
-        catalog.set_service_url(get_global_catalog_api_url(self.url))
+        client.set_service_url(get_global_search_api_url(self.url, self.private_endpoint))
+        catalog.set_service_url(get_global_catalog_api_url(self.url, self.private_endpoint))
         client.configure_service("global_search")
         catalog.configure_service("global_catalog")
 

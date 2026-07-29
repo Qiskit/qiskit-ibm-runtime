@@ -27,16 +27,18 @@ def get_iam_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
 
 
-def get_global_search_api_url(cloud_url: str) -> str:
+def get_global_search_api_url(cloud_url: str, private_endpoint: bool = False) -> str:
     """Compute the GlobalSearchV2 API URL."""
     parsed_url = urlparse(cloud_url)
-    return f"{parsed_url.scheme}://api.global-search-tagging.{parsed_url.hostname}"
+    host = f"tags.private.global-search-tagging.{parsed_url.hostname}" if private_endpoint else f"api.global-search-tagging.{parsed_url.hostname}"
+    return f"{parsed_url.scheme}://{host}"
 
 
-def get_global_catalog_api_url(cloud_url: str) -> str:
+def get_global_catalog_api_url(cloud_url: str, private_endpoint: bool = False) -> str:
     """Compute the GlobalCatalogV1 API URL."""
     parsed_url = urlparse(cloud_url)
-    return f"{parsed_url.scheme}://globalcatalog.{parsed_url.hostname}/api/v1"
+    host = f"private.globalcatalog.{parsed_url.hostname}" if private_endpoint else f"globalcatalog.{parsed_url.hostname}"
+    return f"{parsed_url.scheme}://{host}/api/v1"
 
 
 def get_resource_controller_api_url(cloud_url: str) -> str:
