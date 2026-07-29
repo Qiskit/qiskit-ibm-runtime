@@ -319,7 +319,7 @@ def make_mirror_circuit_with_phases(
     ]
     layer1 = QuantumCircuit(num_qubits)
     for control, target in layer1_pairs:
-        layer1.getattr(entangler, (control, target))
+        getattr(layer1, entangler)(control, target)
 
     odd_pairs = zip(range(1, backend.num_qubits, 2), range(2, backend.num_qubits, 2))
     layer2_pairs = [
@@ -331,7 +331,7 @@ def make_mirror_circuit_with_phases(
     ]
     layer2 = QuantumCircuit(num_qubits)
     for control, target in layer2_pairs:
-        layer2.getattr(entangler, (control, target))
+        getattr(layer2, entangler)(control, target)
 
     rng = np.random.default_rng(seed)
     circuit = QuantumCircuit(num_qubits)
