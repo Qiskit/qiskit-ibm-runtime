@@ -305,10 +305,8 @@ def mirror_circuit(num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7
     theta = Parameter("theta")
     forward = QuantumCircuit(num_qubits, name="mirror_forward")
     for _ in range(layers):
-        for control in range(0, num_qubits - 1, 2):
-            forward.cx(control, control + 1)
-        for control in range(1, num_qubits - 1, 2):
-            forward.cx(control, control + 1)
+        forward.cx(range(0,num_qubits-1,2), range(1,num_qubits,2))
+        forward.cx(range(1,num_qubits-1,2), range(2,num_qubits,2))
         for qubit in range(num_qubits):
             forward.rz(rng.uniform(0, 2 * np.pi), qubit)
             forward.sx(qubit)
@@ -318,11 +316,12 @@ def mirror_circuit(num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7
 
     circuit = QuantumCircuit(num_qubits, name=f"mirror_{num_qubits}q")
     circuit.compose(forward, inplace=True)
-    circuit.barrier()  # keep U and U† from telescoping to identity under transpilation
+    circuit.barrier()  # keep U and U† from resolving to identity under transpilation
     circuit.compose(forward.inverse(), inplace=True)
     circuit.barrier()
     for qubit in range(num_qubits):
         circuit.rx(theta, qubit)
+    circuit.measure_all()
     return circuit
 
 
