@@ -33,4 +33,8 @@ class ExecutorOptions(BaseOptionsModel):
     """Experimental options that are passed to the executor."""
 
     simulator: SimulatorOptions = SimulatorOptions()
-    """Local mode simulator options."""
+    """Simulator options.
+    
+    These options are used when an executor is initialized with a backend that is a simulator,
+    and they are ignored otherwise.
+    """
