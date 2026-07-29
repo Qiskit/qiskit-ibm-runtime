@@ -305,8 +305,8 @@ def mirror_circuit(num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7
     theta = Parameter("theta")
     forward = QuantumCircuit(num_qubits, name="mirror_forward")
     for _ in range(layers):
-        forward.cx(range(0,num_qubits-1,2), range(1,num_qubits,2))
-        forward.cx(range(1,num_qubits-1,2), range(2,num_qubits,2))
+        forward.cx(range(0, num_qubits - 1, 2), range(1, num_qubits, 2))
+        forward.cx(range(1, num_qubits - 1, 2), range(2, num_qubits, 2))
         for qubit in range(num_qubits):
             forward.rz(rng.uniform(0, 2 * np.pi), qubit)
             forward.sx(qubit)
