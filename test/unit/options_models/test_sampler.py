@@ -19,14 +19,14 @@ from pydantic import ValidationError
 from qiskit.transpiler import CouplingMap
 
 from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
-from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
+from qiskit_ibm_runtime.options_models.simulator import LegacySimulatorOptions
 
 from ...ibm_test_case import IBMTestCase
 
 
 @ddt
-class TestSimulatorOptions(IBMTestCase):
-    """Tests for SimulatorOptions in SamplerOptions."""
+class TestLegacySimulatorOptions(IBMTestCase):
+    """Tests for LegacySimulatorOptions in SamplerOptions."""
 
     def test_simulator_options_default(self):
         """Test that simulator options have correct defaults."""
@@ -49,15 +49,15 @@ class TestSimulatorOptions(IBMTestCase):
     def test_coupling_map_invalid_type_raises(self, input):
         """Non-list, non-CouplingMap, non-None value should raise ValidationError."""
         with self.assertRaises(ValidationError):
-            SimulatorOptions(coupling_map=input)
+            LegacySimulatorOptions(coupling_map=input)
 
     def test_noise_model_invalid_type_no_aer_raises(self):
         """Passing a non-dict noise_model raises when Aer is not installed."""
         with patch("qiskit_ibm_runtime.options_models.simulator.optionals.HAS_AER", False):
             with self.assertRaises(ValidationError):
-                SimulatorOptions(noise_model=object())
+                LegacySimulatorOptions(noise_model=object())
 
     def test_noise_model_invalid_type_with_aer_raises(self):
         """A non-dict, non-AerNoiseModel value raises ValidationError."""
         with self.assertRaises(ValidationError):
-            SimulatorOptions(noise_model=12345)
+            LegacySimulatorOptions(noise_model=12345)
