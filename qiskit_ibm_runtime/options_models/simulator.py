@@ -36,7 +36,7 @@ else:
 
 
 class SimulatorOptions(BaseOptionsModel):
-    """Simulator options utilized by :mod:`qiskit_ibm_runtime.sim_executor`."""
+    """Simulator options."""
 
     gate_angle_precision: int = 5
     """Rounding precision for gate angles (in units of π/2)."""
