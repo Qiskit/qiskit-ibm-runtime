@@ -387,6 +387,39 @@ class TestEstimatorV2Run(IBMTestCase):
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
 
+    def test_run_raises_error_when_pec_enabled_without_noise_model_mapping(self):
+        """Test that run raises error when pec_mitigation is enabled without noise model."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.pec_mitigation = True
+        # noise_model_mapping is None by default
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "PEC and PEA mitigation require noise model mapping",
+        ):
+            estimator.run([(circuit, observable)], precision=0.03125)
+
+    def test_run_raises_error_when_pea_amplifier_enabled_without_noise_model_mapping(self):
+        """Test that run raises error when ZNE with PEA amplifier is enabled without noise model."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.zne.amplifier = "pea"
+        # noise_model_mapping is None by default
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "PEC and PEA mitigation require noise model mapping",
+        ):
+            estimator.run([(circuit, observable)], precision=0.03125)
+
 
 class TestEstimatorV2SimulatorMode(IBMTestCase):
     """Tests for EstimatorV2 with local simulator backends."""
