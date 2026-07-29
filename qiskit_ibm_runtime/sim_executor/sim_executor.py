@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from qiskit.utils.optionals import HAS_AER
 
+from ..fake_provider.local_runtime_job import LocalRuntimeJob
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
@@ -30,11 +31,10 @@ if TYPE_CHECKING:
 
 
 @HAS_AER.require_in_instance
-class SimRuntimeJob:
-    """Job object returned by :meth:`~.SimExecutor.run`.
+class SimRuntimeJob(LocalRuntimeJob):
+    """Job object for running local-mode simulations via qiskit-aer.
 
-    The program is executed eagerly on construction; the result is available
-    immediately when :meth:`result` is called.
+    The program is executed on call to :meth:`result` and cached.
 
     Args:
         backend: The Aer simulator to run on.
@@ -53,14 +53,13 @@ class SimRuntimeJob:
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        self._backend = backend
+        super().__init__(function=None, future=None, backend=backend, primitive="sim", inputs={})  # type: ignore[arg-type]
+
+        self._job_id: str = str(uuid.uuid4())
         self._program = program
         self._noise_dict = noise_dict
         self._angle_decimals = angle_decimals
         self._warn_absent = warn_absent
-        self._job_id: str = str(uuid.uuid4())
-        self.tags: list[str] = []  # interface compatibility with real Executor
-
         self._result = None
 
     def job_id(self) -> str:
