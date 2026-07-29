@@ -34,7 +34,7 @@ else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
-class SimulatorOptions(BaseOptionsModel):
+class LegacySimulatorOptions(BaseOptionsModel):
     """Simulator options.
 
     Used to control local mode simulation.

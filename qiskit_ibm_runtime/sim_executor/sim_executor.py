@@ -60,6 +60,8 @@ class SimRuntimeJob(RuntimeJobV2):
         self._angle_decimals = angle_decimals
         self._warn_absent = warn_absent
         self._job_id: str = str(uuid.uuid4())
+        self.tags: list[str] = []  # interface compatibility with real Executor
+
         self._result = None
 
     def job_id(self) -> str:
