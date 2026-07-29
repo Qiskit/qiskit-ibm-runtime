@@ -30,8 +30,8 @@ class TestSimulatorOptions(IBMTestCase):
         """Test that simulator options have correct defaults."""
         options = SimulatorOptions()
 
-        self.assertEqual(options.gate_angle_precision, 5)
-        self.assertIsNone(options.layer_noise_dict)
+        self.assertEqual(options.angle_decimals, 5)
+        self.assertIsNone(options.noise_model)
         self.assertIsNone(options.seed_simulator)
         self.assertTrue(options.warn_absent)
 

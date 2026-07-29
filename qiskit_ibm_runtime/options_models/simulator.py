@@ -38,14 +38,16 @@ else:
 class SimulatorOptions(BaseOptionsModel):
     """Simulator options."""
 
-    gate_angle_precision: int = 5
-    """Rounding precision for gate angles (in units of π/2)."""
+    angle_decimals: int = 5
+    """Gate angle decimal precision.
 
-    layer_noise_dict: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
-    """A map from tagged barrier references to Pauli-Lindblad noise maps.
-
-    Each key must match the ``ref`` of a :class:`~samplomatic.Tag` annotation.
+    Gate angles are rounded to the nearest multiple of ``np.pi/2`` at this decimal precision before
+    simulation. This prevents floating-point drift from preventing Clifford-method simulation when
+    angles are nominally Clifford.
     """
+
+    noise_model: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
+    """A map from ``ref`` of a :class:`~samplomatic.Tag` annotations to PauliLindblad noise maps."""
 
     seed_simulator: int | None = None
     """Random seed to control sampling."""
