@@ -28,7 +28,7 @@ class NoiseModel:
 
 
 @primitive_dataclass
-class SimulatorOptions:
+class LegacySimulatorOptions:
     """Simulator options.
 
     For best practice in simulating a backend make sure to pass the

@@ -14,7 +14,9 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
+
+from pydantic import Field
 
 from .base import BaseOptionsModel
 
@@ -43,13 +45,13 @@ class TwirlingOptions(BaseOptionsModel):
       ``False`` for resilience level ``0``, and ``True`` for resilience levels ``1`` and ``2``.
     """
 
-    num_randomizations: int | Literal["auto"] = "auto"
+    num_randomizations: Annotated[int, Field(ge=1)] | Literal["auto"] = "auto"
     """The number of random samples to use when twirling or performing sampled mitigation.
 
     If ``"auto"``, the value is determined automatically based on the input PUB and other options.
     """
 
-    shots_per_randomization: int | Literal["auto"] = "auto"
+    shots_per_randomization: Annotated[int, Field(ge=1)] | Literal["auto"] = "auto"
     """The number of shots to run for each random sample.
 
     If ``"auto"``, the value is determined automatically based on the input PUB and other options.
