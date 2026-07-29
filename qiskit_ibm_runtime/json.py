@@ -20,8 +20,6 @@ import importlib
 import inspect
 import io
 import json
-import re
-import struct
 import sys
 import warnings
 import zlib
@@ -30,8 +28,6 @@ from typing import TYPE_CHECKING, Any, BinaryIO, get_args
 
 import dateutil.parser
 import numpy as np
-from qiskit import __version__ as QISKIT_VERSION
-from qiskit.exceptions import QiskitError
 
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 
@@ -56,7 +52,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.qpy import QPY_VERSION as QISKIT_QPY_VERSION
-from qiskit.qpy import dump, load
+from qiskit.qpy import dump, get_qpy_version, load
 from qiskit.qpy.binary_io.value import _read_parameter, _write_parameter
 from qiskit.result import Result
 from qiskit.transpiler import CouplingMap
@@ -131,74 +127,30 @@ def _serialize_and_encode(
     return base64.standard_b64encode(serialized_data).decode("utf-8")
 
 
-def _installed_qiskit_version() -> tuple[int, int, int]:
-    """Return the installed Qiskit release as a (major, minor, patch) tuple."""
-    version_match = re.search(r"(\d+)\.(\d+)\.(\d+)", QISKIT_VERSION)
-    if version_match is None:
-        return (0, 0, 0)
-    return (
-        int(version_match.group(1)),
-        int(version_match.group(2)),
-        int(version_match.group(3)),
-    )
+def _load_qpy(file_obj: BinaryIO) -> list[Any]:
+    """Load circuits from QPY, warning when the payload uses a newer QPY format.
 
+    ``RuntimeDecoder`` receives QPY payloads from the Runtime API. When a job was
+    serialized with a newer Qiskit release, the embedded QPY format version can
+    exceed what the installed Qiskit supports. Emit a clear warning in that case
+    before delegating to :func:`~qiskit.qpy.load`.
 
-_QPY_QISKIT_VERSION_WARNING = "The qiskit version used to generate the provided QPY"
-
-
-def _read_qpy_header(file_obj: BinaryIO) -> tuple[int, tuple[int, int, int]]:
-    """Return the QPY format and Qiskit versions from the file header prefix."""
-    offset = file_obj.tell()
-    file_obj.seek(0)
-    try:
-        preface, qpy_version, major, minor, patch = struct.unpack("!6sBBBB", file_obj.read(10))
-        if preface != b"QISKIT":
-            raise QiskitError("Input is not a valid QPY payload.")
-        return qpy_version, (major, minor, patch)
-    finally:
-        file_obj.seek(offset)
-
-
-def _warn_on_qpy_version_mismatch(file_obj: BinaryIO) -> bool:
-    """Warn on version mismatches before loading QPY data.
+    Args:
+        file_obj: Binary stream containing QPY data.
 
     Returns:
-        Whether a Qiskit version mismatch warning was emitted.
+        The programs deserialized from the QPY payload.
     """
-    qpy_version, qiskit_version = _read_qpy_header(file_obj)
+    qpy_version = get_qpy_version(file_obj)
     if qpy_version > QISKIT_QPY_VERSION:
-        raise QiskitError(
-            f"This job uses QPY format version {qpy_version}, which is not supported "
-            f"by your installed Qiskit ({QISKIT_VERSION}). "
-            "Upgrade with 'pip install -U qiskit' to load the job's circuits."
-        )
-
-    installed_version = _installed_qiskit_version()
-    if qiskit_version > installed_version:
-        version_str = ".".join(str(value) for value in qiskit_version)
         warnings.warn(
-            "This job was serialized with Qiskit "
-            f"{version_str}, which is newer than your installed version "
-            f"({QISKIT_VERSION}). Loading may still succeed, but if it fails, "
-            "upgrade with 'pip install -U qiskit'.",
+            "This job was serialized with a newer Qiskit release than you have "
+            "installed. Upgrade with 'pip install -U qiskit' to load the job's "
+            "circuits.",
             UserWarning,
-            stacklevel=3,
+            stacklevel=2,
         )
-        return True
-    return False
-
-
-def _load_qpy(file_obj: BinaryIO) -> list:
-    """Load circuits from QPY with clearer version mismatch warnings."""
-    warned_qiskit = _warn_on_qpy_version_mismatch(file_obj)
-    with warnings.catch_warnings():
-        if warned_qiskit:
-            warnings.filterwarnings(
-                "ignore",
-                message=_QPY_QISKIT_VERSION_WARNING,
-                category=UserWarning,
-            )
-        return load(file_obj)
+    return load(file_obj)
 
 
 def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool = True) -> Any:

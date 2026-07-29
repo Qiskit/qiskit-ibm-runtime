@@ -1,5 +1,5 @@
 Improve the warning shown when a retrieved job was serialized with a newer
-version of Qiskit than is installed locally. Instead of a cryptic QPY
-warning from ``qiskit.qpy.load``, users now see a clear message that
-explains the version mismatch and suggests upgrading with
-``pip install -U qiskit``.
+Qiskit release than is installed locally. Before calling ``qiskit.qpy.load``,
+``RuntimeDecoder`` now emits a clear message that suggests upgrading with
+``pip install -U qiskit`` when the embedded QPY format version is newer than
+what the installed Qiskit supports.

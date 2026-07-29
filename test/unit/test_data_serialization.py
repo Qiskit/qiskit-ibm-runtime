@@ -904,37 +904,8 @@ class TestRuntimeDecoder(IBMTestCase):
 class TestQpyQiskitVersionValidation(IBMTestCase):
     """Tests for QPY version warnings during deserialization."""
 
-    def test_newer_qpy_qiskit_version_emits_clear_warning(self):
-        """A newer embedded Qiskit version emits a clear warning and still decodes."""
-        circuit = QuantumCircuit(1)
-        encoded = json.dumps(circuit, cls=RuntimeEncoder)
-        payload = json.loads(encoded)
-        qpy_bytes = bytearray(zlib.decompress(base64.standard_b64decode(payload["__value__"])))
-        qpy_bytes[7] = 99
-        qpy_bytes[8] = 0
-        qpy_bytes[9] = 0
-        payload["__value__"] = base64.standard_b64encode(zlib.compress(bytes(qpy_bytes))).decode(
-            "utf-8"
-        )
-
-        with warnings.catch_warnings(record=True) as caught_warnings:
-            warnings.simplefilter("always")
-            decoded = json.loads(json.dumps(payload), cls=RuntimeDecoder)
-
-        self.assertIsInstance(decoded, QuantumCircuit)
-        clear_warnings = [
-            warning
-            for warning in caught_warnings
-            if "pip install -U qiskit" in str(warning.message)
-            and "newer than your installed version" in str(warning.message)
-        ]
-        self.assertEqual(len(clear_warnings), 1)
-        self.assertFalse(
-            any("provided QPY file" in str(warning.message) for warning in caught_warnings)
-        )
-
-    def test_unsupported_qpy_format_version_raises(self):
-        """An unsupported QPY format version raises a clear runtime error."""
+    def test_newer_qpy_format_version_warns_before_load_fails(self):
+        """A newer QPY format version emits a clear warning before load fails."""
         circuit = QuantumCircuit(1)
         encoded = json.dumps(circuit, cls=RuntimeEncoder)
         payload = json.loads(encoded)
@@ -944,11 +915,18 @@ class TestQpyQiskitVersionValidation(IBMTestCase):
             "utf-8"
         )
 
-        with self.assertRaises(QiskitError) as context:
-            json.loads(json.dumps(payload), cls=RuntimeDecoder)
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+            with self.assertRaises(QiskitError):
+                json.loads(json.dumps(payload), cls=RuntimeDecoder)
 
-        self.assertIn("QPY format version", str(context.exception))
-        self.assertIn("pip install -U qiskit", str(context.exception))
+        clear_warnings = [
+            warning
+            for warning in caught_warnings
+            if "pip install -U qiskit" in str(warning.message)
+            and "newer Qiskit release" in str(warning.message)
+        ]
+        self.assertEqual(len(clear_warnings), 1)
 
     def test_matching_qpy_qiskit_version_still_decodes(self):
         """Circuits encoded with the installed Qiskit version still decode."""
