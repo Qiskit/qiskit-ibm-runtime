@@ -19,6 +19,7 @@ from typing import Annotated, TypeAlias
 from pydantic import Field, InstanceOf
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler import CouplingMap
 from qiskit.utils import optionals
 
@@ -34,8 +35,27 @@ else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
+class SimulatorOptions(BaseOptionsModel):
+    """Simulator options utilized by :mod:`qiskit_ibm_runtime.sim_executor`."""
+
+    gate_angle_precision: int = 5
+    """Rounding precision for gate angles (in units of π/2)."""
+
+    layer_noise_dict: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
+    """A map from tagged barrier references to Pauli-Lindblad noise maps.
+
+    Each key must match the ``ref`` of a :class:`~samplomatic.Tag` annotation.
+    """
+
+    seed_simulator: int | None = None
+    """Random seed to control sampling."""
+
+    warn_absent: bool = True
+    """Whether to emit a warning when an entry is missing in :attr:`layer_noise_dict`."""
+
+
 class LegacySimulatorOptions(BaseOptionsModel):
-    """Simulator options.
+    """Legacy Simulator options.
 
     Used to control local mode simulation.
     """
