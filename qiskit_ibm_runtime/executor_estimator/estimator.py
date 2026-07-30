@@ -321,12 +321,6 @@ class EstimatorV2(BaseEstimatorV2):
                 "PEC mitigation and ZNE mitigation are incompatible with one another."
             )
 
-        if (
-            options.resilience.pec_mitigation
-            or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea")
-        ) and options.resilience.noise_model_mapping is None:
-            raise IBMInputValueError("PEC and PEA mitigation require noise model mapping.")
-
         # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(

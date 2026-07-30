@@ -36,7 +36,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         self.assertFalse(opts.zne_mitigation)
         self.assertEqual(opts.zne.amplifier, "gate_folding")
         self.assertEqual(opts.zne.noise_factors, "auto")
-        self.assertIsNone(opts.noise_model_mapping)
+        self.assertEqual(opts.noise_model_mapping, {})
 
     def test_set_all_options(self):
         """All fields accept explicit non-default values."""

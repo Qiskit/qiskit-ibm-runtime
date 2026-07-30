@@ -109,7 +109,7 @@ def prepare(
                 twirling_options=options.twirling,
                 shots=shots,
                 zne_options=options.resilience.zne,
-                noise_model_mapping=options.resilience.noise_model_mapping or {},
+                noise_model_mapping=options.resilience.noise_model_mapping,
                 measure_noise_learning=options.resilience.measure_noise_learning
                 if options.resilience.measure_mitigation
                 else None,
