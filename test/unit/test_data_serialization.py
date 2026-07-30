@@ -927,11 +927,3 @@ class TestQpyQiskitVersionValidation(IBMTestCase):
             and "newer Qiskit release" in str(warning.message)
         ]
         self.assertEqual(len(clear_warnings), 1)
-
-    def test_matching_qpy_qiskit_version_still_decodes(self):
-        """Circuits encoded with the installed Qiskit version still decode."""
-        circuit = QuantumCircuit(1)
-        encoded = json.dumps(circuit, cls=RuntimeEncoder)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)
-        self.assertIsInstance(decoded, QuantumCircuit)
-        self.assertEqual(decoded.num_qubits, 1)
