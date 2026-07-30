@@ -17,9 +17,11 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Any
 
+from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
+from qiskit.primitives.containers import PrimitiveResult
+from qiskit.providers import JobStatus
 from qiskit.utils.optionals import HAS_AER
 
-from ..fake_provider.local_runtime_job import LocalRuntimeJob
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
@@ -27,11 +29,10 @@ if TYPE_CHECKING:
     from qiskit.quantum_info import PauliLindbladMap
 
     from ..quantum_program import QuantumProgram
-    from ..results import QuantumProgramResult
 
 
 @HAS_AER.require_in_instance
-class SimRuntimeJob(LocalRuntimeJob):
+class SimRuntimeJob(BasePrimitiveJob[PrimitiveResult, JobStatus]):
     """Job object for running local-mode simulations via qiskit-aer.
 
     The program is executed on call to :meth:`result` and cached.
@@ -53,9 +54,8 @@ class SimRuntimeJob(LocalRuntimeJob):
         angle_decimals: int = 5,
         warn_absent: bool = True,
     ):
-        super().__init__(function=None, future=None, backend=backend, primitive="sim", inputs={})  # type: ignore[arg-type]
-
-        self._job_id: str = str(uuid.uuid4())
+        super().__init__(str(uuid.uuid4()))
+        self._backend = backend
         self._program = program
         self._noise_dict = noise_dict
         self._angle_decimals = angle_decimals
@@ -66,7 +66,7 @@ class SimRuntimeJob(LocalRuntimeJob):
         """Return the unique job ID."""
         return self._job_id
 
-    def result(self, *_: Any, **__: Any) -> QuantumProgramResult:
+    def result(self, *_: Any, **__: Any) -> Any:
         """Return the result of the program execution."""
         if self._result is None:
             self._result = run_quantum_program(
@@ -77,6 +77,30 @@ class SimRuntimeJob(LocalRuntimeJob):
                 warn_absent=self._warn_absent,
             )
         return self._result
+
+    def status(self) -> JobStatus:
+        """Return the status of the job."""
+        return JobStatus.DONE
+
+    def done(self) -> bool:
+        """Return whether the job has successfully run."""
+        return True
+
+    def running(self) -> bool:
+        """Return whether the job is actively running."""
+        return False
+
+    def cancelled(self) -> bool:
+        """Return whether the job has been cancelled."""
+        return False
+
+    def in_final_state(self) -> bool:
+        """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
+        return True
+
+    def cancel(self) -> bool:
+        """Attempt to cancel the job."""
+        return False
 
 
 @HAS_AER.require_in_instance
