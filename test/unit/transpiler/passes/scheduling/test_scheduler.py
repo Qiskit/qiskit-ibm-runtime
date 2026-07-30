@@ -1179,7 +1179,6 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    # These control-flow regressions were prepared with Codex (GPT-5) and reviewed.
     def test_padding_preserves_control_flow_block_indices(self):
         """Test that rebuilding control-flow ops preserves their scheduled block indices."""
         target = Target(num_qubits=3, dt=1)

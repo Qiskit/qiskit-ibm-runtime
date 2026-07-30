@@ -363,7 +363,6 @@ class BlockBasePadder(TransformationPass):
         prev_node = self._prev_node
         self._prev_node = None
         prev_wire_map, self._wire_map = self._wire_map, wire_map
-        # This nested-state preservation was prepared with Codex (GPT-5) and reviewed.
         prev_idle_after = self._idle_after
         prev_current_block_idx = self._current_block_idx
 
@@ -468,7 +467,6 @@ class BlockBasePadder(TransformationPass):
     def _visit_control_flow_op(self, node: DAGNode) -> None:
         """Visit a control-flow node to pad."""
         # Control-flow terminator ends scheduling of block currently
-        # This index-preservation fix was prepared with Codex (GPT-5) and reviewed.
         scheduled_block_idx, t0 = self._node_start_time[node]
         self._terminate_block(t0, scheduled_block_idx)
         self._add_block_terminating_barrier(scheduled_block_idx, t0, node)
