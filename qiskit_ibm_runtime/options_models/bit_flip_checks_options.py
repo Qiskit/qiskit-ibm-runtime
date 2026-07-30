@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Post selection options."""
+"""Options to apply bit-flip checks."""
 
 from typing import Literal
 
