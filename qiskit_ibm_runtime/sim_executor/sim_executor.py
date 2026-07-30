@@ -22,7 +22,7 @@ from qiskit.utils.optionals import HAS_AER
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
-    from qiskit_aer import AerSimulator
+    from qiskit.providers import BackendV2
 
     from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
@@ -44,7 +44,7 @@ class SimRuntimeJob:
 
     def __init__(
         self,
-        backend: AerSimulator,
+        backend: BackendV2,
         program: QuantumProgram,
         options: SimulatorOptions,
     ):
@@ -112,7 +112,7 @@ class SimExecutor:
 
     def __init__(
         self,
-        backend: AerSimulator,
+        backend: BackendV2,
         options: SimulatorOptions,
     ):
         self._backend = backend
