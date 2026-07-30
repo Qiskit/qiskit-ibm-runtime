@@ -46,7 +46,9 @@ def process_extrapolated_expectation_values(
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | int | npt.ArrayLike = 0,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
+) -> tuple[
+    npt.NDArray[float], npt.NDArray[float], npt.NDArray[str], npt.NDArray[float], npt.NDArray[float]
+]:
     r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
     The requested model(s) are fit to the expectation values measured at the noise factors for
@@ -90,15 +92,21 @@ def process_extrapolated_expectation_values(
         ValueError: If an extrapolator name is not recognized.
 
     Returns:
-        A tuple ``(exp_vals, stds, extrapolators)``, where ``exp_vals`` are
-        expectation values evaluated at ``extrapolated_noise_factors``, ``stds`` are
-        standard deviations. ``extrapolators`` are the valid extrapolation methods selected.
+        A tuple ``(exp_vals, stds, extrapolators, extrap_exp_vals, extrap_stds)``, where
+        ``exp_vals`` are expectation values evaluated at ``extrapolated_noise_factors``,
+        ``stds`` are standard deviations. ``extrapolators`` are the valid extrapolation methods
+        selected. ``extrap_exp_vals`` and ``extrap_stds`` are the results from all extrapolation
+        methods, including the invalid extrapolation methods.
     """
     if isinstance(extrapolators, str):
         extrapolators = [extrapolators]
 
     if isinstance(extrapolated_noise_factors, (float, int)):
         extrapolated_noise_factors = [extrapolated_noise_factors]
+
+    # Always evaluate at zero-noise point, copy list to not modify original
+    extrapolated_noise_factors = np.array(extrapolated_noise_factors)
+    extrapolated_noise_factors = np.insert(extrapolated_noise_factors, 0, 0)
 
     if {
         len(noise_scaled_exp_vals),
@@ -119,11 +127,19 @@ def process_extrapolated_expectation_values(
     )
 
     # choose the best extrapolated result
-    return select_zne_extrapolated_result(
+    selected_exps, selected_stds, selected_extrap = select_zne_extrapolated_result(
         extrapolated_values,
         extrapolated_stderr,
         observable_term,
         extrapolators,
+    )
+    # for the extrapolated_values, do not returned the added evaluation at 0
+    return (
+        selected_exps,
+        selected_stds,
+        selected_extrap,
+        extrapolated_values[:, 1:],
+        extrapolated_stderr[:, 1:],
     )
 
 
@@ -271,8 +287,8 @@ def select_zne_extrapolated_result(
         accepted = np.where(col)[0]
         accepted_idx = accepted[0] if accepted.size else fallback_indices[idx]
         fits_idx = (accepted_idx, idx)
-        accept_values[idx] = zne_values[fits_idx]
-        accept_stderrs[idx] = zne_std_errors[fits_idx]
+        accept_values[idx] = np.nan_to_num(zne_values[fits_idx], nan=np.inf)
+        accept_stderrs[idx] = np.nan_to_num(zne_std_errors[fits_idx], nan=np.inf)
         accept_extrap[idx] = zne_extrapolator[accepted_idx]
 
     return accept_values, accept_stderrs, accept_extrap

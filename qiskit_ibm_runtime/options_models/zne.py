@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from .base import BaseOptionsModel
 
@@ -119,6 +119,7 @@ class ZneOptions(BaseOptionsModel):
     The default depends on the amplifier method - the default for pea is
     :data:`~.PEA_DEFAULT_NOISE_FACTORS` and the default for the other methods
     is :data:`~.ZNE_DEFAULT_NOISE_FACTORS`.
+    Must contain at least two points in order to do an extrapolation.
     """
 
     extrapolator: ExtrapolatorType | Sequence[ExtrapolatorType] = ("exponential", "linear")
@@ -150,3 +151,16 @@ class ZneOptions(BaseOptionsModel):
     points at which the ``extrapolator``\s are evaluated to be returned in the data
     fields called ``evs_extrapolated`` and ``stds_extrapolated``.
     """
+
+    @field_validator("noise_factors", mode="plain")
+    @classmethod
+    def _validate_noise_factors(
+        cls, value: Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"]
+    ) -> Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"]:
+        if value == "auto":
+            return value
+        if len(value) < 2:
+            raise ValueError(
+                "Must have at least two noise factors in order to do an extrapolation."
+            )
+        return value

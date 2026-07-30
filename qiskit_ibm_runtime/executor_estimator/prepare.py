@@ -71,7 +71,7 @@ def prepare(
 
         - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
             objects for each pub, with passthrough_data configured for post-processing.
-        - :class:`~.ExecutorOptions` mapped from the sampler's options.
+        - :class:`~.ExecutorOptions` mapped from the estimator's options.
     """
     if options.dynamical_decoupling.enable:
         for pub in pubs:
@@ -109,7 +109,7 @@ def prepare(
                 twirling_options=options.twirling,
                 shots=shots,
                 zne_options=options.resilience.zne,
-                noise_model_mapping=options.resilience.noise_model_mapping or {},
+                noise_model_mapping=options.resilience.noise_model_mapping,
                 measure_noise_learning=options.resilience.measure_noise_learning
                 if options.resilience.measure_mitigation
                 else None,
