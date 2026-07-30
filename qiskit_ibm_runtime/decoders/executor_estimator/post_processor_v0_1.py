@@ -933,7 +933,10 @@ def calculate_extrapolated_expectation_values(
             each other.
     """
     # Get number of randomizations and shots per randomization
+    # Shape: (noise_factors, num_randomizations, num_configs, shots_per_rand, num_bits)
     num_randomizations = noise_amplified_data.shape[1]
+    shots_per_randomization = noise_amplified_data.shape[-2]
+    total_shots = num_randomizations * shots_per_randomization
 
     # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
     # This allows us to find all available measurement bases for a given parameter
@@ -1084,7 +1087,7 @@ def calculate_extrapolated_expectation_values(
         )
         for noise_factor_index in range(len(noise_factors)):
             noise_factors_ensemble_stds[(*bcast_index, noise_factor_index)] = np.sqrt(
-                noise_factors_ensemble_variance[(*bcast_index, noise_factor_index)]
+                noise_factors_ensemble_variance[(*bcast_index, noise_factor_index)] / total_shots
             )
             noise_factors_twirl_stds[(*bcast_index, noise_factor_index)] = np.sqrt(
                 noise_factors_twirl_variance[(*bcast_index, noise_factor_index)]
