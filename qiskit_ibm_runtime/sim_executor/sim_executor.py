@@ -22,8 +22,8 @@ from qiskit.utils.optionals import HAS_AER
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
+    from qiskit.providers import BackendV2
     from qiskit.quantum_info import PauliLindbladMap
-    from qiskit_aer import AerSimulator
 
     from ..quantum_program import QuantumProgram
     from ..results import QuantumProgramResult
@@ -37,7 +37,7 @@ class SimRuntimeJob:
     immediately when :meth:`result` is called.
 
     Args:
-        backend: The Aer simulator to run on.
+        backend: The backend to simulate.
         program: The quantum program to execute.
         noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.
         angle_decimals: Rounding precision for gate angles (in units of π/2).
@@ -47,7 +47,7 @@ class SimRuntimeJob:
 
     def __init__(
         self,
-        backend: AerSimulator,
+        backend: BackendV2,
         program: QuantumProgram,
         noise_dict: dict[str, PauliLindbladMap] | None = None,
         angle_decimals: int = 5,
@@ -71,7 +71,7 @@ class SimRuntimeJob:
         """Return the result of the program execution."""
         if self._result is None:
             self._result = run_quantum_program(
-                qasm_simulator=self._backend,
+                backend=self._backend,
                 program=self._program,
                 noise_dict=self._noise_dict,
                 angle_decimals=self._angle_decimals,
@@ -111,7 +111,7 @@ class SimExecutor:
       set, independent of global circuit qubit numbering.
 
     Args:
-        backend: The Aer simulator to run programs on.
+        backend: The backend to simulate.
         noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.  Pass
             ``None`` (default) to run without noise injection.
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
@@ -124,7 +124,7 @@ class SimExecutor:
 
     def __init__(
         self,
-        backend: AerSimulator,
+        backend: BackendV2,
         noise_dict: dict[str, PauliLindbladMap] | None = None,
         angle_decimals: int = 5,
         warn_absent: bool = True,

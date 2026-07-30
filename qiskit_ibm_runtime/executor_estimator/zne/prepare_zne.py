@@ -92,9 +92,15 @@ def prepare_zne(
         )
 
     if zne_options.noise_factors == "auto":
-        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS)
+        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS, dtype=float)
     else:
-        noise_factors = np.array(zne_options.noise_factors)
+        noise_factors = np.array(zne_options.noise_factors, dtype=float)
+
+    extrapolated_noise_factors = zne_options.extrapolated_noise_factors
+    if extrapolated_noise_factors == "auto":
+        extrapolated_noise_factors = np.insert(noise_factors, 0, 0.0)
+    else:
+        extrapolated_noise_factors = np.array(extrapolated_noise_factors, dtype=float)
 
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
@@ -111,7 +117,6 @@ def prepare_zne(
     observables_list = []
     param_basis_pairs_list = []
     param_shapes_list = []
-    item_id = []
 
     pm_kwargs = options_to_boxing_pm_kwargs(
         twirling_options,
@@ -162,9 +167,6 @@ def prepare_zne(
                 )
             )
 
-            # each index is the item index, and it maps to (pub_number, noise_factor)
-            item_id.append((i, noise_factor))
-
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
         param_basis_pairs_list.append(param_basis_pairs)
@@ -180,7 +182,8 @@ def prepare_zne(
             "measure_mitigation": False,
             "mitigation": "zne",
             "zne_noise_factors": noise_factors,
-            "item_id": item_id,
+            "extrapolated_noise_factors": extrapolated_noise_factors,
+            "extrapolator": zne_options.extrapolator,
         },
     }
 
