@@ -37,7 +37,7 @@ class SimRuntimeJob:
     immediately when :meth:`result` is called.
 
     Args:
-        backend: The Aer simulator to run on.
+        backend: The backend to simulate.
         program: The quantum program to execute.
         options: The simulator options to use.
     """
@@ -66,7 +66,7 @@ class SimRuntimeJob:
         if self._result is None:
             options = self._options
             self._result = run_quantum_program(
-                qasm_simulator=self._backend,
+                backend=self._backend,
                 program=self._program,
                 noise_dict=options.noise_model,
                 angle_decimals=options.angle_decimals,
@@ -106,8 +106,8 @@ class SimExecutor:
       set, independent of global circuit qubit numbering.
 
     Args:
-        backend: The Aer simulator to run programs on.
-        options: The simulator options to use.
+        backend: The backend to simulate.
+        options: The simulator options.
     """
 
     def __init__(

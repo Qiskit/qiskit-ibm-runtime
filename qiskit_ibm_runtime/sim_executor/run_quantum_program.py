@@ -50,7 +50,7 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
 
 @HAS_AER.require_in_call
 def run_quantum_program(
-    qasm_simulator: BackendV2,
+    backend: BackendV2,
     program: QuantumProgram,
     noise_dict: dict[str, PauliLindbladMap] | None = None,
     angle_decimals: int = 5,
@@ -59,7 +59,7 @@ def run_quantum_program(
     """Run a quantum program on a simulator.
 
     Args:
-        qasm_simulator: The simulator to use.
+        backend: The backend to simulate.
         program: The program to run.
         noise_dict: A map from barrier label refs to noise maps.
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
@@ -70,11 +70,9 @@ def run_quantum_program(
         Results of simulation.
     """
     # Generate a sampler
-    if isinstance(qasm_simulator, AerSimulator):
-        backend = deepcopy(qasm_simulator)
+    if isinstance(backend, AerSimulator):
+        backend = deepcopy(backend)
         backend.set_max_qubits(10000)
-    else:
-        backend = qasm_simulator
 
     aer_sampler = AerSamplerV2.from_backend(backend)
 
