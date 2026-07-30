@@ -69,10 +69,10 @@ class ResilienceOptions(BaseOptionsModel):
     zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options."""
 
-    noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
+    noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = {}
     """A noise model mapping for PEC mitigation.
 
     Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that
     describe the noise characteristics of that layer. The dict contains layers from all PUBs. This
-    is required when using PEC mitigation.
+    is required when using PEC mitigation, or ZNE with PEA amplifier.
     """
