@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field, InstanceOf
+from pydantic import InstanceOf
 from qiskit.quantum_info import PauliLindbladMap
 
 from .base import BaseOptionsModel
@@ -69,9 +69,7 @@ class ResilienceOptions(BaseOptionsModel):
     zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options."""
 
-    noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = Field(
-        default_factory=dict
-    )
+    noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = {}
     """A noise model mapping for PEC mitigation.
 
     Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that
