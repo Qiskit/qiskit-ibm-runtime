@@ -134,7 +134,7 @@ class SamplerV2(BaseSamplerV2):
         """Submit a request to the sampler primitive.
 
         For moderate and complex workloads, the client-side processing done to map sampler inputs
-        to executor inputs can be resource intensive can be resource intensive and cause a delay
+        to executor inputs can be resource intensive and cause a delay
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
         `IBM Quantum Compute documentation
