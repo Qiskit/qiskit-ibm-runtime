@@ -513,3 +513,10 @@ class TestPreparePea(IBMTestCase):
         self.assertEqual(
             passthrough["post_processor"]["param_shapes"][0], pub.parameter_values.shape
         )
+
+    def test_prepare_pea_raises_error_with_less_than_2_noise_factors(self):
+        """Test that prepare_pea raises when noise_factors has less than 2 points."""
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+        with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
+            zne_options.noise_factors = [1.5]

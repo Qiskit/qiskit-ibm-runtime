@@ -100,6 +100,10 @@ def prepare_pea(
     else:
         noise_factors = np.array(zne_options.noise_factors)
 
+    extrapolated_noise_factors = zne_options.extrapolated_noise_factors
+    if extrapolated_noise_factors == "auto":
+        extrapolated_noise_factors = np.insert(noise_factors, 0, 0.0)
+
     num_randomizations, shots_per_randomization = calculate_twirling_shots(
         shots,
         twirling_options.num_randomizations,
@@ -181,7 +185,7 @@ def prepare_pea(
             "param_shapes": param_shapes_list,
             "measure_mitigation": False,
             "pea_noise_factors": noise_factors,
-            "extrapolated_noise_factors": zne_options.extrapolated_noise_factors,
+            "extrapolated_noise_factors": extrapolated_noise_factors,
             "extrapolator": zne_options.extrapolator,
         },
     }
