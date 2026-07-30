@@ -254,12 +254,12 @@ performance = [
 # Developer extras.
 
 style = [
-    "mypy==1.19.0",
+    "mypy==2.3.0",
     "pre-commit>=4",
 ]
 
 style_local = [
-    "mypy==1.19.0",
+    "mypy==2.3.0",
     "ruff~=0.14.10",
 ]
 
