@@ -12,12 +12,14 @@
 
 """Tests for runtime data serialization."""
 
+import base64
 import json
 import os
 import subprocess
 import sys
 import tempfile
 import warnings
+import zlib
 from datetime import datetime
 from unittest import skipUnless
 
@@ -26,6 +28,7 @@ import qiskit.quantum_info as qi
 from ddt import data, ddt
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
+from qiskit.exceptions import QiskitError
 from qiskit.primitives.containers import (
     BitArray,
     DataBin,
@@ -37,6 +40,7 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.qpy import QPY_VERSION
 from qiskit.quantum_info import Pauli, PauliLindbladMap, PauliList, SparsePauliOp
 from qiskit.result import Counts, Result
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -900,3 +904,31 @@ class TestRuntimeDecoder(IBMTestCase):
 
         self.assertEqual(decoded["params"]["instructions"], "foo")
         self.assertEqual(decoded["params"]["options"], "bar")
+
+
+class TestQpyQiskitVersionValidation(IBMTestCase):
+    """Tests for QPY version warnings during deserialization."""
+
+    def test_newer_qpy_format_version_warns_before_load_fails(self):
+        """A newer QPY format version emits a clear warning before load fails."""
+        circuit = QuantumCircuit(1)
+        encoded = json.dumps(circuit, cls=RuntimeEncoder)
+        payload = json.loads(encoded)
+        qpy_bytes = bytearray(zlib.decompress(base64.standard_b64decode(payload["__value__"])))
+        qpy_bytes[6] = QPY_VERSION + 1
+        payload["__value__"] = base64.standard_b64encode(zlib.compress(bytes(qpy_bytes))).decode(
+            "utf-8"
+        )
+
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+            with self.assertRaises(QiskitError):
+                json.loads(json.dumps(payload), cls=RuntimeDecoder)
+
+        clear_warnings = [
+            warning
+            for warning in caught_warnings
+            if "pip install -U qiskit" in str(warning.message)
+            and "newer Qiskit release" in str(warning.message)
+        ]
+        self.assertEqual(len(clear_warnings), 1)
