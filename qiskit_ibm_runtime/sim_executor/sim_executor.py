@@ -17,7 +17,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from qiskit.primitives.primitive_job import PrimitiveJob
-from qiskit.utils.optionals import HAS_AER
 
 from .run_quantum_program import run_quantum_program
 
@@ -28,7 +27,6 @@ if TYPE_CHECKING:
     from ..quantum_program import QuantumProgram
 
 
-@HAS_AER.require_in_instance
 class SimRuntimeJob(PrimitiveJob):
     """Job object for running local-mode simulations via qiskit-aer.
 
@@ -63,7 +61,6 @@ class SimRuntimeJob(PrimitiveJob):
         self._submit()
 
 
-@HAS_AER.require_in_instance
 class SimExecutor:
     """Local Aer-based executor mimicking the IBM Runtime executor interface.
 
