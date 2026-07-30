@@ -14,10 +14,10 @@
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 
-class FakeFractionalBackend(fake_backend.FakeBackendV2):
+class FakeFractionalBackend(FakeBackendV2):
     """A fake 5 qubit backend with dynamic and fractional feature modeled based on FakeLima.
 
     This backend include following features.

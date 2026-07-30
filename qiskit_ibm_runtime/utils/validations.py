@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.utils.utils import are_circuits_dynamic, is_isa_circuit, is_valid_rzz_pub
+from ..exceptions import IBMInputValueError
+from ..utils.utils import are_circuits_dynamic, is_isa_circuit, is_valid_rzz_pub
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -82,8 +82,12 @@ def validate_estimator_pubs(pubs: list[EstimatorPub]) -> None:
 
     Raises:
         IBMInputValueError: If any observable array is of size 0
+        IBMInputValueError: If any precision value is not greater than 0
     """
     for pub in pubs:
+        if pub.precision is not None and pub.precision <= 0:
+            raise IBMInputValueError("The precision value must be strictly greater than 0.")
+
         if pub.observables.shape == (0,):
             raise IBMInputValueError("Empty observables array is not allowed")
 

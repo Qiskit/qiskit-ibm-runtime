@@ -1,0 +1,2 @@
+The option classes from the :mod:`options_models` package are now based on Pydantic's ``BaseModel``
+instead of on ``dataclass``.

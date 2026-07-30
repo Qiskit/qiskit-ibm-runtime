@@ -43,7 +43,7 @@ class GateConfig:
         qasm_def: definition of this gate in terms of OpenQASM 2 primitives U and CX.
         coupling_map: An optional coupling map for the gate. In the form of a list of lists of
             integers representing the qubit groupings which are coupled by this gate.
-        latency_map: An optional map of latency for the gate. In the the form of a list of
+        latency_map: An optional map of latency for the gate. In the form of a list of
             lists of integers of either 0 or 1 representing an array of dimension
             len(coupling_map) X n_registers that specifies the register latency
             (1: fast, 0: slow) conditional operations on the gate.

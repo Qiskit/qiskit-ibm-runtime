@@ -23,6 +23,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from .base_primitive import BasePrimitiveV2
 from .options import SamplerOptions
 from .utils import validate_classical_registers
+from .utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -44,13 +45,13 @@ class Sampler:
 
 
 class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
-    """Class for interacting with Qiskit Runtime Sampler primitive service.
+    """SamplerV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This class supports version 2 of the Sampler interface, which uses different
     input and output formats than version 1.
 
-    Qiskit Runtime Sampler primitive returns the sampled result according to the
-    specified output type. For example, it returns a bitstring for each shot
+    IBM Quantum Compute Sampler primitive returns the sampled result
+    according to the specified output type. For example, it returns a bitstring for each shot
     if measurement level 2 (bits) is requested.
 
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
@@ -63,7 +64,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             * A :class:`Batch` if you are using batch execution mode.
 
             Refer to the
-            `Qiskit Runtime documentation
+            `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about the ``Execution modes``.
 
@@ -105,6 +106,15 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             ValueError: Invalid arguments are given.
         """
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+
+        if len({pub.shots for pub in coerced_pubs}) > 1:
+            issue_deprecation_msg(
+                msg="Specifying different 'shots' across pubs is deprecated",
+                version="0.48.0",
+                remedy="Submit one job for each desired shot count instead. "
+                "To reduce overhead, Consider submitting these jobs inside a Batch execution mode.",
+                stacklevel=2,
+            )
 
         validate_classical_registers(coerced_pubs)
 

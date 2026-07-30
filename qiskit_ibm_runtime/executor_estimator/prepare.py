@@ -15,365 +15,135 @@
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+
+from ..exceptions import IBMInputValueError
+from ..executor.dynamical_decoupling import apply_dynamical_decoupling
+from ..options_models.converters import estimator_options_to_executor_options
+from .pec.prepare_pec import prepare_pec
+from .prepare_pea import prepare_pea
+from .prepare_vanilla import prepare_vanilla
+from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    import numpy.typing as npt
-    from qiskit import QuantumCircuit
-    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
-    from samplomatic.samplex import Samplex
+    from qiskit.providers import BackendV2
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.twirling_options import TwirlingOptions
+    from ..options_models.estimator import EstimatorOptions
+    from ..options_models.executor import ExecutorOptions
+    from ..quantum_program import QuantumProgram
 
-import numpy as np
-from qiskit.circuit import ClassicalRegister
-from qiskit.circuit.exceptions import CircuitError
-from qiskit.quantum_info import Pauli, PauliList
-from samplomatic import ChangeBasis, build
-from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions, get_annotation
-
-from ..exceptions import IBMInputValueError
-from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..quantum_program import QuantumProgram
-from ..quantum_program.quantum_program import SamplexItem
-from .trex_utils import create_trex_calibration_circuit
-from .utils import get_pauli_basis, pauli_to_ints, unbroadcast_index
 
 logger = logging.getLogger(__name__)
 
 
 def prepare(
     pubs: Sequence[EstimatorPub],
-    twirling_options: TwirlingOptions,
-    shots: int,
-    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
-) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program.
+    options: EstimatorOptions,
+    shots: int | None = None,
+    add_tags: bool = False,
+    backend: BackendV2 | None = None,
+) -> tuple[QuantumProgram, ExecutorOptions]:
+    """Convert a sequence of estimator PUBs to a quantum program and map options.
+
+    This method processes estimator PUBs (Primitive Unified Blocs) and converts them into
+    a :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+    :class:`~.ExecutorOptions`.
 
     Args:
-        pubs: List of estimator pubs to convert.
-        twirling_options: The twirling options.
+        pubs: List of estimator PUBs to convert.
+        options: The options.
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
-        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
-            Error eXtinction (TREX) mitigation method will be used.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
+            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
+            (using the "unique_box" value of the relevant attribute). These tags can help
+            injecting noise in simulators.
+        backend: The backend for which the program is prepared. Only required when dynamical
+            decoupling is enabled.
 
     Returns:
-        :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
-        with ``passthrough data`` configured for
-        :class:`~qiskit_ibm_runtime.executor_estimator.estimator.EstimatorV2` post-processing.
+        A tuple containing:
 
-    Raises:
-        IBMInputValueError: If pubs have mismatched precision,
-            if a circuit contains mid-circuit measurements, or if a circuit already uses the
-            reserved classical register name ``_meas``.
+        - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
+            objects for each pub, with passthrough_data configured for post-processing.
+        - :class:`~.ExecutorOptions` mapped from the estimator's options.
     """
-    if twirling_options.enable_gates or twirling_options.enable_measure:
-        num_randomizations, shots_per_randomization = calculate_twirling_shots(
-            shots,
-            twirling_options.num_randomizations,
-            twirling_options.shots_per_randomization,
-        )
-    else:
-        num_randomizations = 1
-        shots_per_randomization = shots
-
-    # Create items
-    items: list[SamplexItem] = []
-    observables_list = []
-    param_basis_pairs_list = []
-    param_shapes_list = []
-
-    for i, pub in enumerate(pubs):
-        logger.info("Processing pub %d/%d", i + 1, len(pubs))
-
-        boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None
-        )
-
-        # Build the template and the samplex
-        template, samplex = build(boxed_circuit)
-
-        # Prepare samplex_arguments
-        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = make_samplex_arguments(
-            samplex, boxed_circuit, flat_parameter_values, change_basis
-        )
-
-        # Create SamplexItem
-        shape = (num_randomizations, change_basis.shape[0])
-        items.append(
-            SamplexItem(
-                circuit=template,
-                samplex=samplex,
-                samplex_arguments=samplex_arguments,
-                shape=shape,
-            )
-        )
-
-        # Store data for passthrough
-        observables_list.append(pub.observables.tolist())
-        param_basis_pairs_list.append(param_basis_pairs)
-        param_shapes_list.append(pub.parameter_values.shape)
-
-    passthrough_data = {
-        "post_processor": {
-            "version": "v0.1",
-            "circuits_metadata": [pub.circuit.metadata for pub in pubs],
-            "observables": observables_list,
-            "param_basis_pairs": param_basis_pairs_list,
-            "param_shapes": param_shapes_list,
-            "measure_mitigation": "False",
-        },
-    }
-
-    # Create QuantumProgram
-    quantum_program = QuantumProgram(
-        shots=shots_per_randomization,
-        items=items,
-        passthrough_data=passthrough_data,
-    )
-
-    # Add TREX calibration circuit
-    if measure_noise_learning is not None:
-        if (
-            isinstance(measure_noise_learning.shots_per_randomization, int)
-            and measure_noise_learning.shots_per_randomization != shots_per_randomization
-        ):
+    if options.dynamical_decoupling.enable:
+        for pub in pubs:
+            if pub.circuit.has_control_flow_op():
+                raise IBMInputValueError(
+                    "Dynamical decoupling is not compatible with dynamic circuits "
+                    "(circuits with control flow operations)."
+                )
+        if backend is None:
             raise IBMInputValueError(
-                "shots_per_randomization must be the same for twirling and measure_noise_learning"
+                "A backend must be provided when dynamical decoupling is enabled."
             )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
-        quantum_program.items.append(trex_item)
-        passthrough_data["post_processor"]["measure_mitigation"] = "True"
 
-    # Set semantic role for post-processing dispatch
-    quantum_program._semantic_role = "estimator_v2"
+    # Map options to executor options
+    executor_options = estimator_options_to_executor_options(options)
 
-    return quantum_program
-
-
-def compute_samplex_arguments(
-    pub: EstimatorPub,
-) -> tuple[npt.NDArray[float], npt.NDArray[int], list[tuple[tuple[int, ...], str]]]:
-    """Compute parameter values and basis changes to be used as inputs by the samplex.
-
-    To minimize the total number of circuits executions, this function takes the following
-    steps:
-        1. It creates a map between subsets of parameters and the observables that need to
-           be measured for each subset, applying broadcasting rules to params and observables.
-        2. It replaces the observables in that map with the minimal set of Pauli basis that
-           can be used to measure all such observables.
-        3. It flattens the map into two 1D arrays of equal lenght, containing the subsets of
-           parameters and basis changing gates respectively. When a subset of parameter maps
-           to more than one basis changing gate, the flattened array contains multiple copies
-           of it.
-
-    Overall, the two 1D arrays returned contain ``N`` elements, where ``N`` is the total number
-    of basis changing gates that need to be measured across all the different parameter sets.
-    Zipping them yields parameter–basis pairs, where each parameter value must be measured using
-    its associated change basis.
-
-    The two arrays have the format required by samplomatic and can be pass straight to the samplex
-    via ``samplex.inputs()``.
-
-    Args:
-        pub: An estimator PUB.
-
-    Return:
-        A tuple ``(flat_parameter_values, change_basis, param_basis_pairs)`` where:
-
-            * ``flat_parameter_values`` is a 1-D array of parameter values in the format expected
-            by ``samplex.inputs()``. The array is of length ``N``, the total number of
-            basis-changing gates required across all parameter sets.
-
-            * ``change_basis`` is a 1-D array of length ``N`` containing the basis-changing gates
-            associated with ``flat_parameter_values``, also in the format expected by
-            ``samplex.inputs()``.
-
-            * ``param_basis_pairs`` is a list of ``N`` tuples ``(ndindex, basis)`` describing the
-            correspondence between the two arrays. For the i-th tuple:
-                - ``ndindex`` is the N-dimensional index of the parameter entry in
-                    ``pub.parameter_values``.
-                - ``basis`` is the measurement basis associated with that parameter entry.
-    """
-    parameter_values = pub.parameter_values
-    observables = pub.observables
-    bcast_shape = pub.shape
-
-    # Step 1.
-    # Generate a map between param ndindices to pauli basis and the observable terms that they
-    # measure
-    param_obs_map: dict[set] = defaultdict(lambda: defaultdict(set))  # type: ignore[type-arg]
-    for bcast_index in np.ndindex(bcast_shape):
-        param_index = unbroadcast_index(bcast_index, parameter_values.shape)
-        obs = observables[unbroadcast_index(bcast_index, observables.shape)]
-        for obs_term, _ in obs.items():
-            pauli_basis = get_pauli_basis(obs_term)
-            param_obs_map[param_index][pauli_basis].add(obs_term)
-
-    # Step 2.
-    # Collect the Paulis to measure for each parameter value in commuting sets
-    param_meas_groups_map = {}
-    for param_index, pauli_map in param_obs_map.items():
-        pauli_set = list(pauli_map)
-        meas_groups = PauliList(pauli_set).group_commuting(qubit_wise=True)
-        param_meas_groups_map[param_index] = meas_groups
-
-    # Figure out measurement Pauli basis for each set of commuting Paulis
-    param_basis_map = {}
-    for param_index, meas_groups in param_meas_groups_map.items():
-        param_basis_map[param_index] = [
-            Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
-            for paulis in meas_groups
-        ]
-
-    # Step 3. Flatten the params.
-    # We flatten params into a 1D array and generate a corresponding 1D `change_basis` array. Both
-    # arrays contain ``num_basis`` elements.
-    num_basis = sum(len(basis) for basis in param_basis_map.values())
-    flat_parameter_values = np.empty(
-        (num_basis, parameter_values.num_parameters),
-        dtype=float,
-    )
-    change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
-
-    basis_idx = 0
-    for ndindex, basis in param_basis_map.items():
-        for bases in basis:
-            change_basis[basis_idx] = pauli_to_ints(bases)
-            flat_parameter_values[basis_idx] = parameter_values.as_array()[ndindex]
-            basis_idx += 1
-
-    # Step 4. Log info.
-    param_basis_pairs: list[tuple[tuple[int, ...], str]] = [
-        (ndindex, bases.to_label()) for ndindex, basis in param_basis_map.items() for bases in basis
-    ]
-
-    return flat_parameter_values, change_basis, param_basis_pairs
-
-
-def make_samplex_arguments(
-    samplex: Samplex,
-    boxed_circuit: QuantumCircuit,
-    flat_parameter_values: npt.NDArray[float],
-    change_basis: npt.NDArray[int],
-) -> dict[str, Any]:
-    """Build a samplex args dictionary consisting of ``change_basis`` and parameters data.
-
-    Args:
-        samplex: A samplex object to create args to.
-        boxed_circuit: A boxed circuit related to the samplex.
-        flat_parameter_values: A flattened array of parameter values.
-        change_basis: An array of bases to change.
-
-    Returns:
-        A samplex args dictionary.
-    """
-    # Prepare samplex_arguments
-    samplex_arguments = {}
-    if samplex.inputs().get_specs("parameter_values"):
-        samplex_arguments["parameter_values"] = flat_parameter_values
-
-    # Set changing basis gates
-    for spec in samplex.inputs().get_specs("basis_changes"):
-        # Default to np.zeros, to ensure that every mid-circuit measurement
-        # that may be present is performed without basis changing gates
-        samplex_arguments[spec.name] = np.zeros(spec.shape)
-
-    # Finalize basis changing gates for the final measurements
-    for instr in boxed_circuit.reverse_ops():
-        op = instr.operation
-        if op.name == "box" and (change_basis_annot := get_annotation(op, ChangeBasis)):
-            samplex_arguments[f"basis_changes.{change_basis_annot.ref}"] = change_basis
-            break
-    else:
-        # This should not be reachable
-        raise ValueError("Could not find a change basis annotation.")
-
-    return samplex_arguments
-
-
-def box_circuit(
-    circuit: QuantumCircuit,
-    twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
-    inject_noise: bool = False,
-) -> QuantumCircuit:
-    """Box a circuit based on the given input options.
-
-    Removes the final measurement layer and adds a new measurement layer with dedicated
-    register name.
-
-    Args:
-        circuit: Quantum circuit to box.
-        twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
-        inject_noise: Whether to inject noise.
-
-    Returns:
-        boxed circuit.
-
-    """
-    # Remove any existing final measurements
-    prepared_circuit = circuit.remove_final_measurements(inplace=False)
-
-    # Add final measurements
-    creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
-    try:
-        prepared_circuit.add_register(creg)
-    except CircuitError:
-        raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
-    prepared_circuit.barrier()
-    prepared_circuit.measure(prepared_circuit.qubits, creg)
-
-    # Add boxes
-    boxing_pm = generate_boxing_pass_manager(
-        enable_gates=twirling_options.enable_gates or inject_noise,
-        enable_measures=True,
-        twirling_strategy=twirling_options.strategy.replace("-", "_"),
-        measure_annotations="all"
-        if twirling_options.enable_measure or twirl_measurements
-        else "change_basis",
-        inject_noise_targets="gates" if inject_noise else "none",
-        inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
-    )
-    boxed_circuit = boxing_pm.run(prepared_circuit)
-    return boxed_circuit
-
-
-def get_layers(
-    pubs: Sequence[EstimatorPub],
-    twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
-    inject_noise: bool = False,
-) -> list[list[CircuitInstruction]]:
-    """Find unique layers of the circuit of each pub.
-
-    Uses the input options to box the circuit, and find its unique layers.
-
-    Args:
-        pubs: list of estimators pubs.
-        twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
-        inject_noise: Whether to inject noise.
-
-    Returns:
-        Unique layers for each pub.
-
-    """
-    return [
-        find_unique_box_instructions(
-            box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise).data,
-            normalize_annotations=None,
-            undress_boxes=True,
+    if options.resilience.pec_mitigation:
+        logger.info("Running ``prepare_pec``.")
+        quantum_program = prepare_pec(
+            pubs=pubs,
+            twirling_options=options.twirling,
+            shots=shots,
+            pec_options=options.resilience.pec,
+            noise_model_mapping=options.resilience.noise_model_mapping,
+            measure_noise_learning=options.resilience.measure_noise_learning
+            if options.resilience.measure_mitigation
+            else None,
+            add_tags=add_tags,
         )
-        for pub in pubs
-    ]
+    elif options.resilience.zne_mitigation:
+        if options.resilience.zne.amplifier == "pea":
+            logger.info("Running ``prepare_pea``.")
+            quantum_program = prepare_pea(
+                pubs=pubs,
+                twirling_options=options.twirling,
+                shots=shots,
+                zne_options=options.resilience.zne,
+                noise_model_mapping=options.resilience.noise_model_mapping,
+                measure_noise_learning=options.resilience.measure_noise_learning
+                if options.resilience.measure_mitigation
+                else None,
+                add_tags=add_tags,
+            )
+        else:
+            logger.info("Running ``prepare_zne``.")
+            quantum_program = prepare_zne(
+                pubs=pubs,
+                twirling_options=options.twirling,
+                shots=shots,
+                zne_options=options.resilience.zne,
+                measure_noise_learning=options.resilience.measure_noise_learning
+                if options.resilience.measure_mitigation
+                else None,
+                add_tags=add_tags,
+            )
+    else:
+        logger.info("Running ``prepare_vanilla``.")
+        quantum_program = prepare_vanilla(
+            pubs=pubs,
+            twirling_options=options.twirling,
+            shots=shots,
+            measure_noise_learning=options.resilience.measure_noise_learning
+            if options.resilience.measure_mitigation
+            else None,
+            add_tags=add_tags,
+        )
+    if options.dynamical_decoupling.enable:
+        logger.info("Apply dynamical decoupling")
+        quantum_program = apply_dynamical_decoupling(
+            backend=backend,
+            dd_options=options.dynamical_decoupling,
+            quantum_program=quantum_program,
+        )
+
+    return quantum_program, executor_options

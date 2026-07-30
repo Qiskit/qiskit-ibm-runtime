@@ -12,18 +12,23 @@
 
 """Tests for the functions used to visualize noise learner results."""
 
+from unittest import skipUnless
+
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
-from qiskit_aer import AerSimulator
+from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 from qiskit_ibm_runtime.visualization import draw_layer_error_map, draw_layer_errors_swarm
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMVisualizationTestCase
+
+if HAS_AER:
+    from qiskit_aer import AerSimulator
 
 
-class DrawLayerErrorBase(IBMTestCase):
+class DrawLayerErrorBase(IBMVisualizationTestCase):
     """Base class for testing the functions that draw layer errors."""
 
     def setUp(self):
@@ -82,6 +87,7 @@ class TestDrawLayerErrorMap(DrawLayerErrorBase):
 
         self.save_plotly_artifact(fig)
 
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_no_coupling_map(self):
         """Test error when invalid coordinates are passed."""
         with self.assertRaises(ValueError):

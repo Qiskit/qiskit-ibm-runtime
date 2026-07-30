@@ -12,7 +12,6 @@
 
 """Tests for dynamical decoupling utilities."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -34,17 +33,17 @@ from qiskit_ibm_runtime.executor.dynamical_decoupling import (
     make_dd_sequence,
 )
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
-    DynamicalDecouplingOptions,
-)
+from qiskit_ibm_runtime.options_models.dynamical_decoupling import DynamicalDecouplingOptions
 from qiskit_ibm_runtime.quantum_program.quantum_program import (
     CircuitItem,
     QuantumProgram,
     SamplexItem,
 )
 
+from ...ibm_test_case import IBMTestCase
 
-class TestMakeDDSequence(unittest.TestCase):
+
+class TestMakeDDSequence(IBMTestCase):
     """Tests for make_dd_sequence function."""
 
     def test_xx_sequence(self):
@@ -118,7 +117,7 @@ class TestMakeDDSequence(unittest.TestCase):
         self.assertIn("Unknown sequence", str(context.exception))
 
 
-class TestGenerateDDPassManager(unittest.TestCase):
+class TestGenerateDDPassManager(IBMTestCase):
     """Tests for generate_dd_pass_manager function."""
 
     def setUp(self):
@@ -336,7 +335,7 @@ class TestGenerateDDPassManager(unittest.TestCase):
         )
 
 
-class TestApplyDynamicalDecoupling(unittest.TestCase):
+class TestApplyDynamicalDecoupling(IBMTestCase):
     """Tests for apply_dynamical_decoupling function."""
 
     def setUp(self):

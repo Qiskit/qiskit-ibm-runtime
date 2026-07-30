@@ -35,7 +35,7 @@ from .converters import (
 )
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results
+    from ...results.noise_learner_v3 import NoiseLearnerV3Results
 
 logger = logging.getLogger(__name__)
 

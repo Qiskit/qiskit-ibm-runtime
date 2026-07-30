@@ -37,7 +37,7 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
-        self.boxing_pm = generate_boxing_pass_manager()
+        self.boxing_pm = generate_boxing_pass_manager(inject_noise_site="after")
 
         # bell circuit
         bell = QuantumCircuit(2, name="Bell")

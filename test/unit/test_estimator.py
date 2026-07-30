@@ -13,7 +13,7 @@
 """Tests for estimator class."""
 
 import numpy as np
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -24,7 +24,6 @@ from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
-    dict_paritally_equal,
     get_mocked_backend,
     get_primitive_inputs,
     get_transpiled_circuit,
@@ -94,6 +93,22 @@ class TestEstimatorV2(IBMTestCase):
             estimator.run(**get_primitive_inputs(estimator), precision=0)
         self.assertIn("The precision value must be strictly greater than 0", str(exc.exception))
 
+    def test_invalid_estimator_pub_precision(self):
+        """Test exception when a pub specifies a precision that is not strictly greater than 0."""
+        backend = get_mocked_backend()
+        backend.configuration().simulator = True
+
+        estimator = EstimatorV2(mode=backend)
+        # Precision supplied at the pub level (4th element) must also be guarded client-side,
+        # not just the run() kwarg -- otherwise a pub-level precision=0 reaches the server and
+        # raises a bare ZeroDivisionError when it converts precision to shots.
+        pub = get_primitive_inputs(estimator)["pubs"][0]
+        pub_with_zero_precision = (*pub, 0)
+        with self.assertRaisesRegex(
+            ValueError, "The precision value must be strictly greater than 0"
+        ):
+            estimator.run([pub_with_zero_precision])
+
     def test_pec_simulator(self):
         """Test error is raised when using pec on simulator without coupling map."""
         backend = get_mocked_backend()
@@ -128,10 +143,7 @@ class TestEstimatorV2(IBMTestCase):
                 inst = EstimatorV2(mode=backend, options=options)
                 inst.run(**get_primitive_inputs(inst, backend=backend))
                 options = backend.service._run.call_args.kwargs["inputs"]["options"]
-                self.assertTrue(
-                    dict_paritally_equal(options, expected),
-                    f"{options} and {expected} not partially equal.",
-                )
+                self.assertDictPartiallyEqual(options, expected)
 
     @data(
         {"zne_extrapolator": "bad_extrapolator"},
@@ -284,3 +296,31 @@ class TestEstimatorV2(IBMTestCase):
 
         with self.assertRaisesRegex(IBMInputValueError, " h "):
             estimator.run(pubs=[(circ, observable)])
+
+    @data(
+        ([None, None], 0.01, 0),
+        ([0.01, 0.01], 0.01, 0),
+        ([0.02, 0.02], 0.01, 0),
+        ([0.02, None], 0.02, 0),
+        ([0.02, None], 0.01, 1),
+        ([0.01, 0.02, 0.03], 0.04, 1),
+    )
+    @unpack
+    def test_deprecate_pub_level_precision(self, pub_precisions, run_precision, num_appearances):
+        """Conflicting pub-level precision emits one DeprecationWarning."""
+        backend = get_mocked_backend()
+        circ = QuantumCircuit(1)
+        t_circ = transpile(circ, backend=backend)
+        observable = remap_observables("Z", t_circ)
+        inst = EstimatorV2(mode=backend)
+
+        warning_msg = "Specifying different 'precision' across pubs is deprecated"
+        pubs = [
+            (t_circ, observable, None, precision)
+            if precision is not None
+            else EstimatorPub.coerce((t_circ, observable))
+            for precision in pub_precisions
+        ]
+
+        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+            inst.run(pubs, precision=run_precision)

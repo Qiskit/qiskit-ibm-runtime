@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 from ddt import data, ddt, named_data, unpack
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -29,9 +29,30 @@ from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Se
 from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
+from ..utils import get_mocked_backend, transpile_pubs
 from .mock.fake_api_backend import FakeApiBackendSpecs
 from .mock.fake_runtime_service import FakeRuntimeService
+
+
+class MockSession(Session):
+    """Mock for session class."""
+
+    _circuits_map: dict[str, QuantumCircuit] = {}
+    _instance = None
+
+
+def _measured(n):
+    """Return an n-qubit circuit with all qubits measured."""
+    qc = QuantumCircuit(n)
+    qc.measure_all()
+    return qc
+
+
+def _real_amplitudes_measured(num_qubits, reps):
+    """Return a real_amplitudes circuit with all qubits measured."""
+    qc = real_amplitudes(num_qubits=num_qubits, reps=reps)
+    qc.measure_all()
+    return qc
 
 
 @ddt
@@ -44,9 +65,9 @@ class TestSamplerV2(IBMTestCase):
         self.circuit = QuantumCircuit(1, 1)
 
     @data(
-        [(real_amplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
-        [(QuantumCircuit(2),)],
-        [(real_amplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
+        [(_real_amplitudes_measured(num_qubits=2, reps=1), [1, 2, 3, 4])],
+        [(_measured(2),)],
+        [(_real_amplitudes_measured(num_qubits=1, reps=1), [1, 2]), (_measured(3),)],
     )
     def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
@@ -128,10 +149,7 @@ class TestSamplerV2(IBMTestCase):
                 inst = SamplerV2(mode=session, options=options)
                 inst.run((self.circuit,))
                 inputs = session._run.call_args.kwargs["inputs"]["options"]
-                self.assertTrue(
-                    dict_paritally_equal(inputs, expected),
-                    f"{inputs} and {expected} not partially equal.",
-                )
+                self.assertDictPartiallyEqual(inputs, expected)
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
@@ -288,6 +306,7 @@ class TestSamplerV2(IBMTestCase):
 
         circ = QuantumCircuit(2)
         circ.rzz(angle, 0, 1)
+        circ.measure_all()
 
         if angle == 1:
             SamplerV2(backend).run(pubs=[circ])
@@ -307,6 +326,7 @@ class TestSamplerV2(IBMTestCase):
 
         circ = QuantumCircuit(2)
         circ.rzz(param, 0, 1)
+        circ.measure_all()
 
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ, [angle])])
@@ -328,6 +348,7 @@ class TestSamplerV2(IBMTestCase):
 
         circ = QuantumCircuit(2)
         circ.rzz(2 * p2 + p1, 0, 1)
+        circ.measure_all()
 
         if val2 == 0:
             SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
@@ -502,3 +523,29 @@ class TestSamplerV2(IBMTestCase):
             self.assertEqual(used_run_options["meas_level"], 1)
             self.assertEqual(used_run_options["meas_return"], "avg")
             self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
+
+    @data(
+        ([None, None], 100, 0),
+        ([100, 100], 100, 0),
+        ([20, 20], 100, 0),
+        ([20, None], 20, 0),
+        ([20, None], 100, 1),
+        ([100, 20, 34], 50, 1),
+    )
+    @unpack
+    def test_deprecate_pub_level_shots(self, pub_shots, run_shots, num_appearances):
+        """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
+        backend = get_mocked_backend()
+        circ = QuantumCircuit(1, 1)
+        circ.measure(0, 0)
+        t_circ = transpile(circ, backend=backend)
+        inst = SamplerV2(mode=backend)
+
+        warning_msg = "Specifying different 'shots' across pubs is deprecated"
+        pubs = [
+            (t_circ, None, shots) if shots is not None else SamplerPub(t_circ)
+            for shots in pub_shots
+        ]
+
+        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+            inst.run(pubs, shots=run_shots)

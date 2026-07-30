@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -20,7 +20,6 @@ from pydantic import ValidationError
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
 
 
 @ddt
@@ -59,14 +58,8 @@ class TestEstimatorOptions(IBMTestCase):
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
         options = asdict(NoiseLearnerOptions(**opts_dict))
-        self.assertTrue(
-            dict_paritally_equal(options, opts_dict),
-            f"options={options}, opts_dict={opts_dict}",
-        )
-
-        self.assertTrue(
-            dict_keys_equal(asdict(NoiseLearnerOptions()), options), f"options={options}"
-        )
+        self.assertDictPartiallyEqual(options, opts_dict)
+        self.assertDictKeysEqual(asdict(NoiseLearnerOptions()), options)
 
     @data(
         {},
@@ -87,9 +80,6 @@ class TestEstimatorOptions(IBMTestCase):
         options.update(**new_opts)
 
         # Make sure the values are equal.
-        self.assertTrue(
-            flat_dict_partially_equal(asdict(options), new_opts),
-            f"new_opts={new_opts}, combined={options}",
-        )
+        self.assertDictFlatPartiallyEqual(asdict(options), new_opts)
         # Make sure the structure didn't change.
-        self.assertTrue(dict_keys_equal(asdict(options), asdict(NoiseLearnerOptions())))
+        self.assertDictKeysEqual(asdict(options), asdict(NoiseLearnerOptions()))

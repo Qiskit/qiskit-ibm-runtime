@@ -84,7 +84,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             message = logs.output[1]
             self.assertIn("Free and trial", message)
 
-        # no defualt instance and plans_preference
+        # no default instance and plans_preference
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service = QiskitRuntimeService(
                 token=self.dependencies.token,
@@ -97,7 +97,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             self.assertNotIn("Free and trial", message)
             self.assertIn("available account instances are", message)
 
-        # no defualt instance and region
+        # no default instance and region
         region = "us-east"
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service = QiskitRuntimeService(

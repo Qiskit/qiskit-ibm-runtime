@@ -28,7 +28,7 @@ from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
 
 from qiskit_ibm_runtime.decoders.quantum_program.converters import quantum_program_result_from_0_1
-from qiskit_ibm_runtime.options_models.executor_options import ExecutionOptions, ExecutorOptions
+from qiskit_ibm_runtime.options_models.executor import ExecutionOptions, ExecutorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_from_0_1,
@@ -67,10 +67,10 @@ class TestQuantumProgramConverters(IBMTestCase):
         )
 
         circuit2 = QuantumCircuit(2)
-        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl0")]):
+        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl0", site="after")]):
             circuit2.rx(Parameter("p"), 0)
             circuit2.cx(0, 1)
-        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl1")]):
+        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl1", site="after")]):
             circuit2.measure_all()
 
         template_circuit, samplex = build(circuit2)
@@ -220,11 +220,11 @@ class TestQuantumProgramConverters(IBMTestCase):
         params_model = quantum_program_to_0_1(quantum_program, options)
         quantum_program_out, options_out = quantum_program_from_0_1(params_model)
 
-        assert options_out == options
+        self.assertEqual(options_out, options)
 
         items = quantum_program_out.items
-        assert len(items) == 2
-        assert isinstance(items[0], CircuitItem)
-        assert items[0].circuit == quantum_program.items[0].circuit
-        assert isinstance(items[1], SamplexItem)
-        assert items[1].circuit == quantum_program.items[1].circuit
+        self.assertEqual(len(items), 2)
+        self.assertIsInstance(items[0], CircuitItem)
+        self.assertEqual(items[0].circuit, quantum_program.items[0].circuit)
+        self.assertIsInstance(items[1], SamplexItem)
+        self.assertEqual(items[1].circuit, quantum_program.items[1].circuit)

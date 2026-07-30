@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
+    from ..options_models.twirling import TwirlingOptions
+
 
 def validate_no_boxes(circuit: QuantumCircuit) -> None:
     """Validate that a circuit contains no :class:`~qiskit.circuit.BoxOp` instructions.
@@ -43,6 +45,42 @@ def validate_no_boxes(circuit: QuantumCircuit) -> None:
                 "which is not supported in this minimal implementation. "
                 "BoxOp support (for twirling) will be added in a future phase."
             )
+
+
+def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | None) -> None:
+    """Validate measurement twirling is compatible with the requested ``meas_type``.
+
+    Measurement twirling flips bits before measurement and XOR-corrects them in
+    post-processing, which requires classified bit results. Kerneled returns are complex
+    IQ data, so the correction cannot be applied.
+
+    Args:
+        meas_type: The requested measurement return type.
+        enable_measure: Whether measurement twirling is enabled.
+
+    Raises:
+        IBMInputValueError: If ``enable_measure`` is set with a non-classified ``meas_type``.
+    """
+    if meas_type in {"kerneled", "avg_kerneled"} and enable_measure:
+        raise IBMInputValueError(
+            f"'meas_type={meas_type}' and measurement twirling are not compatible. "
+            "Set `twirling.enable_measure=False` or `execution.meas_type='classified'`"
+        )
+
+
+def validate_twirling_option_fields_are_not_none(options: TwirlingOptions) -> None:
+    """Validate that twirling options fields are not ``None``.
+
+    Args:
+        options: The options to validate
+
+    Raises:
+        IBMInputValueError: If ``options.enable_gates`` or ``options.enable_measure`` are ``None``.
+    """
+    if options.enable_gates is None:
+        raise IBMInputValueError("``enable_gates`` is ``None``, expected ``True`` or ``False``.")
+    if options.enable_measure is None:
+        raise IBMInputValueError("``enable_measure`` is ``None``, expected ``True`` or ``False``.")
 
 
 def extract_shots_from_pubs(pubs: Sequence[SamplerPub], default_shots: int | None = None) -> int:

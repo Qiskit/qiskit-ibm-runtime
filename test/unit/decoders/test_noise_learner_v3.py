@@ -59,10 +59,10 @@ class TestDecoder(IBMTestCase):
         """Tests the decoder."""
         decoded = NoiseLearnerV3ResultDecoder.decode(self.encoded)
         for datum_in, datum_out in zip(self.results.data, decoded.data):
-            assert datum_in._generators == datum_out._generators
-            assert np.allclose(datum_in._rates, datum_out._rates)
-            assert np.allclose(datum_in._rates_std, datum_out._rates_std)
-            assert datum_in.metadata == datum_out.metadata
+            self.assertEqual(datum_in._generators, datum_out._generators)
+            self.assertTrue(np.allclose(datum_in._rates, datum_out._rates))
+            self.assertTrue(np.allclose(datum_in._rates_std, datum_out._rates_std))
+            self.assertEqual(datum_in.metadata, datum_out.metadata)
 
     def test_no_schema_version(self):
         """Verify an error is raised if the encoded string does not specify any schema version."""

@@ -71,9 +71,9 @@ class TestBackend(IBMTestCase):
         sampler = SamplerV2(ibm_backend)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run([transpiled])
+            sampler.run(transpiled)
 
-        self.assertIn("inhomogeneous", str(err.exception))
+        self.assertIn("faulty", str(err.exception))
 
     def test_raise_faulty_edge(self):
         """Test faulty edge is raised."""
@@ -259,9 +259,9 @@ class TestBackend(IBMTestCase):
         """Test handling of non-unitary ISA operations."""
         target = convert_to_target(FakeSherbrooke().configuration())
 
-        assert isinstance(target.get("reset"), dict)
-        assert isinstance(target.get("measure"), dict)
-        assert target.get("measure_2") is None
+        self.assertIsInstance(target.get("reset"), dict)
+        self.assertIsInstance(target.get("measure"), dict)
+        self.assertIsNone(target.get("measure_2"))
 
     def test_convert_to_target_with_filter(self):
         """Test converting legacy data structure to V2 target model with faulty qubits.

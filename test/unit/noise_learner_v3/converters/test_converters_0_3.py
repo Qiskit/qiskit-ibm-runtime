@@ -55,7 +55,7 @@ class TestConverters(IBMTestCase):
         encoded = noise_learner_v3_inputs_to_0_3(instructions, options)
         decoded = noise_learner_v3_inputs_from_0_3(encoded)
 
-        assert decoded == (instructions, options)
+        self.assertEqual(decoded, (instructions, options))
 
     def test_converting_results(self):
         """Tests converting results."""
@@ -85,10 +85,10 @@ class TestConverters(IBMTestCase):
         encoded = noise_learner_v3_result_to_0_3(results)
         decoded = noise_learner_v3_result_from_0_3(encoded)
         for datum_in, datum_out in zip(results.data, decoded.data):
-            assert datum_in._generators == datum_out._generators
-            assert np.allclose(datum_in._rates, datum_out._rates)
-            assert np.allclose(datum_in._rates_std, datum_out._rates_std)
-            assert datum_in.metadata == datum_out.metadata
+            self.assertEqual(datum_in._generators, datum_out._generators)
+            self.assertTrue(np.allclose(datum_in._rates, datum_out._rates))
+            self.assertTrue(np.allclose(datum_in._rates_std, datum_out._rates_std))
+            self.assertEqual(datum_in.metadata, datum_out.metadata)
 
     def test_converting_invalid_results(self):
         """Test that converting results raises when results are invalid."""

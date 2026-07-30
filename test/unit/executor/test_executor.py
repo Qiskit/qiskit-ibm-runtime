@@ -18,13 +18,14 @@ from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 
 from qiskit_ibm_runtime.executor import Executor
-from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
-from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
-from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
+from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
+from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
+from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
+from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from test.utils import get_mocked_backend, get_mocked_session
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend, get_mocked_session
 
 
 class TestExecutorOptions(IBMTestCase):
@@ -35,6 +36,7 @@ class TestExecutorOptions(IBMTestCase):
         executor = Executor(mode=get_mocked_backend())
         self.assertIsInstance(executor.options, ExecutorOptions)
         self.assertEqual(executor.options, ExecutorOptions())
+        self.assertEqual(executor.options.simulator, SimulatorOptions())
 
     def test_options_from_instance(self):
         """Test constructing with an ExecutorOptions instance."""
@@ -145,7 +147,7 @@ class TestExecutor(IBMTestCase):
         self.program.append_circuit_item(circuit=QuantumCircuit(1))
 
     def test_run_of_session_is_selected(self):
-        """Test ``Executor.run`` selects the service ``run`` method, if session specified."""
+        """Test ``Executor.run`` selects the service ``run`` method, if session is specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
         with (
@@ -157,7 +159,7 @@ class TestExecutor(IBMTestCase):
             self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
-        """Test ``Executor.run`` selects the service ``run`` method, if session not specified."""
+        """Test ``Executor.run`` selects the service ``run`` method, if session is not specified."""
         backend = get_mocked_backend()
         with patch.object(backend.service, "_run", return_value="service"):
             executor = Executor(mode=backend)

@@ -1,2 +1,0 @@
-Added options to request circuit schedule timing and to return numeric resolutions of
-stretches for individual circuits when running executor jobs. (`2790 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2790>`__)

@@ -14,14 +14,10 @@
 
 from typing import Literal
 
-from pydantic import Field
-from pydantic.dataclasses import dataclass
-
-from .utils import PRIMITIVES_CONFIG
+from .base import BaseOptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class PostCircuitBitFlipChecksOptions:
+class PostCircuitBitFlipChecksOptions(BaseOptionsModel):
     """Options to apply post-circuit bit-flip checks to the results of noise learning circuits."""
 
     enable: bool = False
@@ -44,8 +40,7 @@ class PostCircuitBitFlipChecksOptions:
     """
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class PreCircuitBitFlipChecksOptions:
+class PreCircuitBitFlipChecksOptions(BaseOptionsModel):
     """Options to apply pre-circuit bit-flip checks to the results of noise learning circuits."""
 
     enable: bool = False
@@ -68,16 +63,11 @@ class PreCircuitBitFlipChecksOptions:
     """
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class BitFlipChecksOptions:
+class BitFlipChecksOptions(BaseOptionsModel):
     """Options to apply bit-flip checks to the results of noise learning circuits."""
 
-    pre_circuit: PreCircuitBitFlipChecksOptions = Field(
-        default_factory=PreCircuitBitFlipChecksOptions
-    )
+    pre_circuit: PreCircuitBitFlipChecksOptions = PreCircuitBitFlipChecksOptions()
     """Options to apply pre-circuit bit-flip checks to the results of noise learning circuits."""
 
-    post_circuit: PostCircuitBitFlipChecksOptions = Field(
-        default_factory=PostCircuitBitFlipChecksOptions
-    )
+    post_circuit: PostCircuitBitFlipChecksOptions = PostCircuitBitFlipChecksOptions()
     """Options to apply post-circuit bit-flip checks to the results of noise learning circuits."""

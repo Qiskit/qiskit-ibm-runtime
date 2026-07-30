@@ -20,16 +20,19 @@ from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_
 from ibm_quantum_schemas.executor.version_0_2 import ParamsModel as ParamsModel_0_2
 from ibm_quantum_schemas.executor.version_1_0 import ParamsModel as ParamsModel_1_0
 from ibm_quantum_schemas.executor.version_1_1 import ParamsModel as ParamsModel_1_1
+from ibm_quantum_schemas.executor.version_2_0 import ParamsModel as ParamsModel_2_0
 
 from .converters import (
     quantum_program_from_0_1,
     quantum_program_from_0_2,
     quantum_program_from_1_0,
     quantum_program_from_1_1,
+    quantum_program_from_2_0,
     quantum_program_to_0_1,
     quantum_program_to_0_2,
     quantum_program_to_1_0,
     quantum_program_to_1_1,
+    quantum_program_to_2_0,
 )
 
 if TYPE_CHECKING:
@@ -59,5 +62,6 @@ QUANTUM_PROGRAM_PARAMS_CONVERTERS = {
     "v0.2": ParamsConverter(ParamsModel_0_2, quantum_program_from_0_2, quantum_program_to_0_2),
     "v1.0": ParamsConverter(ParamsModel_1_0, quantum_program_from_1_0, quantum_program_to_1_0),
     "v1.1": ParamsConverter(ParamsModel_1_1, quantum_program_from_1_1, quantum_program_to_1_1),
+    "v2.0": ParamsConverter(ParamsModel_2_0, quantum_program_from_2_0, quantum_program_to_2_0),
 }
 """Converter to/from schema model for the inputs of executor."""

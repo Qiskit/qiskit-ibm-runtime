@@ -14,10 +14,10 @@
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 
-class FakeRomeV2(fake_backend.FakeBackendV2):
+class FakeRomeV2(FakeBackendV2):
     """A fake 5 qubit backend."""
 
     dirname = os.path.dirname(__file__)

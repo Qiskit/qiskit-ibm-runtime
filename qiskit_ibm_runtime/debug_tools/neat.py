@@ -19,9 +19,10 @@ from typing import TYPE_CHECKING
 from qiskit.exceptions import QiskitError
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.transpiler.passmanager import PassManager
+from qiskit.utils.optionals import HAS_AER
 
-from qiskit_ibm_runtime.debug_tools.neat_results import NeatPubResult, NeatResult
-from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToClifford
+from ..transpiler.passes.cliffordization import ConvertISAToClifford
+from .neat_results import NeatPubResult, NeatResult
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -29,16 +30,12 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers import EstimatorPubLike
     from qiskit.providers import BackendV2 as Backend
 
-
-try:
+if HAS_AER:
     from qiskit_aer.noise import NoiseModel
     from qiskit_aer.primitives.estimator_v2 import EstimatorV2 as AerEstimator
 
-    HAS_QISKIT_AER = True
-except ImportError:
-    HAS_QISKIT_AER = False
 
-
+@HAS_AER.require_in_instance
 class Neat:
     """A class to help understand the expected performance of estimator jobs.
 
@@ -87,12 +84,6 @@ class Neat:
     """
 
     def __init__(self, backend: Backend, noise_model: NoiseModel | None = None) -> None:
-        if not HAS_QISKIT_AER:
-            raise ValueError(
-                "Cannot initialize object of type 'Neat' since 'qiskit-aer' is not installed. "
-                "Install 'qiskit-aer' and try again."
-            )
-
         self._backend = backend
         self.noise_model = (
             noise_model

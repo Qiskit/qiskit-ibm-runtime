@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 from ibm_quantum_schemas.common import F64TensorModel, QpyModelV13ToV17
@@ -52,7 +51,7 @@ def noise_learner_v3_inputs_to_0_3(
         circuit.append(instr, instr.qubits, instr.clbits)
 
     # Convert `options` to dict, moving the fields in `options.execution` to top-level.
-    schema_options = asdict(options)  # type: ignore[call-overload]
+    schema_options = options.model_dump()
     for field in EXECUTION_FIELDS:
         schema_options[field] = schema_options["execution"][field]
     schema_options.pop("execution")
