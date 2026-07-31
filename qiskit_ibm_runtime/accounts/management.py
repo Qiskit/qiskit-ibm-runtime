@@ -242,14 +242,11 @@ class AccountManager:
         url = os.getenv("QISKIT_IBM_URL")
         if not token:
             return None
-        private_endpoint_env = os.getenv("QISKIT_IBM_PRIVATE_ENDPOINT", "").lower()
-        private_endpoint = private_endpoint_env in ("1", "true", "yes")
         return Account.create_account(
             token=token,
             url=url,
             instance=os.getenv("QISKIT_IBM_INSTANCE"),
             channel=channel,
-            private_endpoint=private_endpoint,
         )
 
     @classmethod
