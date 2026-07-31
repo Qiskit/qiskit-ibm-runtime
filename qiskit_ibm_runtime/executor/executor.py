@@ -122,7 +122,7 @@ class Executor:
             A job.
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
-            return SimRuntimeJob(  # type: ignore[return-value]
+            return SimRuntimeJob(
                 backend=self._backend, program=program, options=self.options.simulator
             )
 
