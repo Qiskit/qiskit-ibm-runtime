@@ -18,11 +18,11 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
+from ..executor_simulator import SimRuntimeJob
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from ..simulator import SimRuntimeJob
 from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
