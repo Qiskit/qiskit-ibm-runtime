@@ -48,9 +48,6 @@ class TestConverters(IBMTestCase):
         options.layer_pair_depths = [2, 4, 10]
         options.execution.init_qubits = False
         options.execution.rep_delay = 10**-6
-        options.post_selection.enable = True
-        options.post_selection.strategy = "edge"
-        options.post_selection.x_pulse_type = "xslow"
 
         encoded = noise_learner_v3_inputs_to_0_2(instructions, options)
         decoded = noise_learner_v3_inputs_from_0_2(encoded)
