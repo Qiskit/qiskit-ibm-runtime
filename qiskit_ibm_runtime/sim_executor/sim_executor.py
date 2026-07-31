@@ -14,10 +14,9 @@
 
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
-from qiskit.utils.optionals import HAS_AER
+from qiskit.primitives.primitive_job import PrimitiveJob
 
 from .run_quantum_program import run_quantum_program
 
@@ -26,15 +25,12 @@ if TYPE_CHECKING:
 
     from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
-    from ..results import QuantumProgramResult
 
 
-@HAS_AER.require_in_instance
-class SimRuntimeJob:
-    """Job object returned by :meth:`~.SimExecutor.run`.
+class SimRuntimeJob(PrimitiveJob):
+    """Job object for running local-mode simulations via qiskit-aer.
 
-    The program is executed eagerly on construction; the result is available
-    immediately when :meth:`result` is called.
+    The program is executed on call to :meth:`result` and cached.
 
     Args:
         backend: The backend to simulate.
@@ -48,34 +44,18 @@ class SimRuntimeJob:
         program: QuantumProgram,
         options: SimulatorOptions,
     ):
-        self._backend = backend
-        self._program = program
-        self._options = options
+        super().__init__(
+            function=run_quantum_program,
+            backend=backend,
+            program=program,
+            noise_dict=options.noise_model,
+            angle_decimals=options.angle_decimals,
+            warn_absent=options.warn_absent,
+        )
 
-        self._job_id: str = str(uuid.uuid4())
-        self.tags: list[str] = []  # interface compatibility with real Executor
-
-        self._result = None
-
-    def job_id(self) -> str:
-        """Return the unique job ID."""
-        return self._job_id
-
-    def result(self, *_, **__) -> QuantumProgramResult:  # type: ignore[no-untyped-def]
-        """Return the result of the program execution."""
-        if self._result is None:
-            options = self._options
-            self._result = run_quantum_program(
-                backend=self._backend,
-                program=self._program,
-                noise_dict=options.noise_model,
-                angle_decimals=options.angle_decimals,
-                warn_absent=options.warn_absent,
-            )
-        return self._result
+        self._submit()
 
 
-@HAS_AER.require_in_instance
 class SimExecutor:
     """Local Aer-based executor mimicking the IBM Runtime executor interface.
 
