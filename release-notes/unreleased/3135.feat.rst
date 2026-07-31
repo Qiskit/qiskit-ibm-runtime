@@ -1,18 +1,11 @@
-Added support for configuring private endpoints via the ``QISKIT_IBM_PRIVATE_ENDPOINT``
-environment variable. Setting this variable to ``1``, ``true``, or ``yes`` is equivalent to
-passing ``private_endpoint=True`` to :class:`.QiskitRuntimeService`. The env var is read
-in ``__init__`` and applies regardless of how the account was loaded: from a saved file,
-from other environment variables, or constructed with explicit arguments such as
-``QiskitRuntimeService(token=..., channel=...)``. Combined with the existing
-``QISKIT_IBM_URL`` variable, this allows fully configuring a VPE environment without
-any code changes.
-
-Fixed the IBM Cloud Global Search and Global Catalog private endpoint hostnames so that
-traffic is correctly routed through the VPE when ``private_endpoint=True``:
-``tags.private.global-search-tagging.<host>`` and ``private.globalcatalog.<host>``.
-
 When a fully-qualified CRN is provided as the ``instance``, :class:`.QiskitRuntimeService`
 no longer calls :meth:`.QiskitRuntimeService.instances` during initialization to validate it.
 A CRN is self-describing and the validation call is redundant; skipping it also avoids
 unnecessary Global Search and Global Catalog traffic in VPE environments where those
-public endpoints may not be reachable.
+endpoints may not be reachable from the runtime service's network.
+
+The IAM URL used by :meth:`.QiskitRuntimeService.instances` can now be overridden via the
+``IAM_URL`` environment variable, following the same convention as the IBM SDK's
+``GLOBAL_SEARCH_URL`` and ``GLOBAL_CATALOG_URL`` variables. This allows routing IAM traffic
+through a private endpoint (e.g. ``https://private.iam.cloud.ibm.com``) in VPE environments
+without any code changes.

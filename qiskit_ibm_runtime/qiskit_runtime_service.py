@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import warnings
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
@@ -241,8 +240,6 @@ class QiskitRuntimeService:
 
         if private_endpoint is not None:
             self._account.private_endpoint = private_endpoint
-        elif os.environ.get("QISKIT_IBM_PRIVATE_ENDPOINT", "").lower() in ("1", "true", "yes"):
-            self._account.private_endpoint = True
 
         self._client_params = ClientParameters(
             channel=self._account.channel,
@@ -271,8 +268,8 @@ class QiskitRuntimeService:
             if not is_crn(self._account.instance):
                 if self._account.instance not in [inst["crn"] for inst in self.instances()]:
                     raise IBMInputValueError(
-                        "The given API token is associated with an account that does not "
-                        f"have access to the instance {self._account.instance}. "
+                        "The given API token is associated with an account that does not have access "
+                        f"to the instance {self._account.instance}. "
                         "To use this instance, use an API token generated from the account "
                         "with this instance available."
                     )

@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from urllib.parse import urlparse
@@ -291,7 +292,7 @@ class CloudAccount(Account):
 
     def get_iam_authentificator(self) -> IAMAuthenticator:
         """Return the configured IAM Authentification service."""
-        iam_url = get_iam_api_url(self.url)
+        iam_url = os.environ.get("IAM_URL") or get_iam_api_url(self.url)
         proxies_kwargs = self._get_proxies_kwargs()
         return IAMAuthenticator(
             apikey=self.token,
@@ -339,8 +340,8 @@ class CloudAccount(Account):
         catalog = GlobalCatalogV1(authenticator=authenticator)
 
         # Prepare the services.
-        client.set_service_url(get_global_search_api_url(self.url, self.private_endpoint))
-        catalog.set_service_url(get_global_catalog_api_url(self.url, self.private_endpoint))
+        client.set_service_url(get_global_search_api_url(self.url))
+        catalog.set_service_url(get_global_catalog_api_url(self.url))
         client.configure_service("global_search")
         catalog.configure_service("global_catalog")
 
