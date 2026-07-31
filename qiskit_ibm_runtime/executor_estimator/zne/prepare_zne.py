@@ -46,6 +46,33 @@ from .gate_folding import GateFolding
 
 logger = logging.getLogger(__name__)
 
+_REQUIRED_NOISE_FACTORS = {
+    "linear": 2,
+    "exponential": 2,
+    "double_exponential": 4,
+    "fallback": 1,
+    **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
+}
+
+
+def validate_noise_factors(
+    noise_factors: Sequence[float], extrapolator: str | Sequence[str]
+) -> None:
+    """Check that ``noise_factors`` has enough points for every requested extrapolator.
+
+    Args:
+        noise_factors: The resolved noise factors that will be used for amplification.
+        extrapolator: The extrapolator(s) requested in the ZNE options.
+
+    Raises:
+        IBMInputValueError: If ``noise_factors`` is under-specified for any extrapolator.
+    """
+    extrapolators = [extrapolator] if isinstance(extrapolator, str) else extrapolator
+    for extrap in extrapolators:
+        required = _REQUIRED_NOISE_FACTORS[extrap]
+        if len(noise_factors) < required:
+            raise IBMInputValueError(f"{extrap} requires at least {required} noise_factors")
+
 
 def prepare_zne(
     pubs: Sequence[EstimatorPub],
@@ -83,6 +110,8 @@ def prepare_zne(
             reserved classical register name ``_meas``.
         IBMInputValueError: If the amplifier in the ZneOptions is not one of ``gate_folding``,
         ``gate_folding_front`` or ``gate_folding_back``.
+        IBMInputValueError: If ``zne_options.noise_factors`` has too few points for the
+            requested ``zne_options.extrapolator``(s).
     """
     if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
@@ -95,6 +124,8 @@ def prepare_zne(
         noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS, dtype=float)
     else:
         noise_factors = np.array(zne_options.noise_factors, dtype=float)
+
+    validate_noise_factors(noise_factors, zne_options.extrapolator)
 
     extrapolated_noise_factors = zne_options.extrapolated_noise_factors
     if extrapolated_noise_factors == "auto":
