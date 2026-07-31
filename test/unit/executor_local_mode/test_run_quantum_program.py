@@ -30,7 +30,7 @@ from samplomatic import Tag, Twirl
 from samplomatic.builders.build import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
-from qiskit_ibm_runtime.executor_simulator.run_quantum_program import run_quantum_program
+from qiskit_ibm_runtime.executor_local_mode.run_quantum_program import run_quantum_program
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
