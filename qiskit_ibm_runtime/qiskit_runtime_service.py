@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import warnings
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
@@ -265,11 +266,14 @@ class QiskitRuntimeService:
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
         if self._account.instance:
-            if not is_crn(self._account.instance):
+            skip_instance_check = not is_crn(self._account.instance) and bool(
+                os.environ.get("QISKIT_FUNCTIONS_EXPERIMENTAL")
+            )
+            if not skip_instance_check:
                 if self._account.instance not in [inst["crn"] for inst in self.instances()]:
                     raise IBMInputValueError(
-                        "The given API token is associated with an account that does not "
-                        f"have access to the instance {self._account.instance}. "
+                        "The given API token is associated with an account that does not have access "
+                        f"to the instance {self._account.instance}. "
                         "To use this instance, use an API token generated from the account "
                         "with this instance available."
                     )
