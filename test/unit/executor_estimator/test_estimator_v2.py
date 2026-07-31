@@ -524,6 +524,16 @@ class TestFinalizeOptions(IBMTestCase):
         self.assertFalse(finalized_options.resilience.measure_mitigation)
         self.assertTrue(finalized_options.resilience.zne_mitigation)
 
+    def test_measure_noise_learning_customized_with_mitigation_unset(self):
+        """Test customized mnl is accepted when measure_mitigation finalizes to True."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = 1
+        estimator.options.resilience.measure_noise_learning.num_randomizations = 64
+
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.resilience.measure_mitigation)
+        self.assertEqual(finalized_options.resilience.measure_noise_learning.num_randomizations, 64)
+
     @data(0, 1, 2)
     def test_forced_values(self, resilience_level):
         """Test that finalize force-set certain values."""
