@@ -43,6 +43,9 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         with self.assertWarnsRegex(DeprecationWarning, "0.49.0"):
             options.post_selection.enable = True
 
+        with self.assertWarnsRegex(DeprecationWarning, "0.49.0"):
+            NoiseLearnerV3Options(post_selection={"enable": True})
+
     def test_options_from_instance(self):
         """Test constructing with an NoiseLearnerV3Options instance."""
         opts_dict = {
