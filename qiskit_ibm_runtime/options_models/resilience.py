@@ -81,7 +81,7 @@ class ResilienceOptions(BaseOptionsModel):
     def _validate_measure_noise_learning(self) -> ResilienceOptions:
         """Reject a configured measure_noise_learning if measure_mitigation isn't enabled."""
         learning_is_default = self.measure_noise_learning == MeasureNoiseLearningOptions()
-        if not self.measure_mitigation and not learning_is_default:
+        if self.measure_mitigation is False and not learning_is_default:
             raise ValueError(
                 "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to "
                 "True."
