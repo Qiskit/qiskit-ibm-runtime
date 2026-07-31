@@ -22,7 +22,6 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
-from qiskit_aer import AerSimulator
 
 from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramResult
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
     from ..quantum_program import QuantumProgram
 
 if HAS_AER:
+    from qiskit_aer import AerSimulator
     from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
 
 
