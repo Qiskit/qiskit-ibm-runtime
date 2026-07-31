@@ -22,7 +22,7 @@ from qiskit.quantum_info import DensityMatrix, PauliLindbladMap
 from qiskit.transpiler import PassManager
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime.sim_executor.insert_noise_pass import InsertNoisePass
+from qiskit_ibm_runtime.simulator.insert_noise_pass import InsertNoisePass
 
 from ...ibm_test_case import IBMTestCase
 

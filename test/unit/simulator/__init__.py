@@ -10,4 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for ``sim_executor``."""
+"""Unit tests for local mode simulations of QuantumProgram."""

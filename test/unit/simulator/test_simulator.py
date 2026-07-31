@@ -19,7 +19,7 @@ from qiskit.utils import optionals
 from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
-from qiskit_ibm_runtime.sim_executor import SimRuntimeJob
+from qiskit_ibm_runtime.simulator import SimRuntimeJob
 
 from ...ibm_test_case import IBMTestCase
 

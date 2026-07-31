@@ -20,7 +20,7 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from qiskit_ibm_runtime.sim_executor.broadcast_sample import broadcast_sample
+from qiskit_ibm_runtime.simulator.broadcast_sample import broadcast_sample
 
 from ...ibm_test_case import IBMTestCase
 
