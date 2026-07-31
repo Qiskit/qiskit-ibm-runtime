@@ -14,6 +14,9 @@
 
 from typing import Literal
 
+from pydantic import field_validator
+
+from ..utils.deprecation import issue_deprecation_msg
 from .base import BaseOptionsModel
 
 
@@ -52,3 +55,16 @@ class PostSelectionOptions(BaseOptionsModel):
     See the dosctrings of :class:`.PostSelector` and :meth:`.PostSelector.compute_mask` for more
     details.
     """
+
+    @field_validator("enable")
+    @classmethod
+    def _warn_post_selection(cls, value: bool) -> bool:
+        """Warn that the ``post_selection`` option is deprecated when it is enabled."""
+        if value:
+            issue_deprecation_msg(
+                msg="The 'post_selection' field of NoiseLearnerV3 is deprecated",
+                version="0.49.0",
+                remedy="Use 'bit_flip_check' field instead",
+                stacklevel=3,
+            )
+        return value
