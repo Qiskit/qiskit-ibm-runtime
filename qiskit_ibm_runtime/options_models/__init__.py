@@ -41,12 +41,20 @@ Suboptions
    :toctree: ../stubs/
    :nosignatures:
 
+   BitFlipChecksOptions
    EnvironmentOptions
    ExecutionOptions
+   PostCircuitBitFlipChecksOptions
    PostSelectionOptions
+   PreCircuitBitFlipChecksOptions
 
 """
 
+from .bit_flip_checks_options import (
+    BitFlipChecksOptions,
+    PostCircuitBitFlipChecksOptions,
+    PreCircuitBitFlipChecksOptions,
+)
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .executor import ExecutorOptions
