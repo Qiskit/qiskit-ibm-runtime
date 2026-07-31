@@ -69,7 +69,7 @@ def _get_client_header() -> str:
         "qiskit_experiments",
         "qiskit_optimization",
         "qiskit_fermions",
-        "qiskit_paulice",        
+        "qiskit_paulice",
         "qiskit_addon_opt_mapper",
         "qiskit_addon_aqc_tensor",
         "qiskit_addon_mpf",
