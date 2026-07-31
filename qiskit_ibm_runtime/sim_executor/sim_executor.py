@@ -22,8 +22,8 @@ from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
-    from qiskit.quantum_info import PauliLindbladMap
 
+    from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
 
 
@@ -35,27 +35,22 @@ class SimRuntimeJob(PrimitiveJob):
     Args:
         backend: The backend to simulate.
         program: The quantum program to execute.
-        noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.
-        angle_decimals: Rounding precision for gate angles (in units of π/2).
-        warn_absent: If ``True`` (default), warn when a tagged barrier has no entry in
-            ``noise_dict``.
+        options: The simulator options to use.
     """
 
     def __init__(
         self,
         backend: BackendV2,
         program: QuantumProgram,
-        noise_dict: dict[str, PauliLindbladMap] | None = None,
-        angle_decimals: int = 5,
-        warn_absent: bool = True,
+        options: SimulatorOptions,
     ):
         super().__init__(
             function=run_quantum_program,
             backend=backend,
             program=program,
-            noise_dict=noise_dict,
-            angle_decimals=angle_decimals,
-            warn_absent=warn_absent,
+            noise_dict=options.noise_model,
+            angle_decimals=options.angle_decimals,
+            warn_absent=options.warn_absent,
         )
 
         self._submit()
@@ -92,27 +87,16 @@ class SimExecutor:
 
     Args:
         backend: The backend to simulate.
-        noise_dict: A map from barrier label refs to Pauli-Lindblad noise maps.  Pass
-            ``None`` (default) to run without noise injection.
-        angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.  This prevents floating-point drift from
-            preventing Clifford-method simulation when angles are nominally Clifford.
-        warn_absent: If ``True`` (default), emit a warning when a tagged barrier's tag is
-            not found in ``noise_dict``.  Set to ``False`` when partial coverage of tags is
-            intentional.
+        options: The simulator options.
     """
 
     def __init__(
         self,
         backend: BackendV2,
-        noise_dict: dict[str, PauliLindbladMap] | None = None,
-        angle_decimals: int = 5,
-        warn_absent: bool = True,
+        options: SimulatorOptions,
     ):
         self._backend = backend
-        self._noise_dict = noise_dict
-        self._angle_decimals = angle_decimals
-        self._warn_absent = warn_absent
+        self._options = options
 
     def run(self, program: QuantumProgram) -> SimRuntimeJob:
         """Run a quantum program and return a completed job.
@@ -126,7 +110,5 @@ class SimExecutor:
         return SimRuntimeJob(
             backend=self._backend,
             program=program,
-            noise_dict=self._noise_dict,
-            angle_decimals=self._angle_decimals,
-            warn_absent=self._warn_absent,
+            options=self._options,
         )
