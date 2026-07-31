@@ -1,9 +1,3 @@
-When a fully-qualified CRN is provided as the ``instance``, :class:`.QiskitRuntimeService`
-no longer calls :meth:`.QiskitRuntimeService.instances` during initialization to validate it.
-A CRN is self-describing and the validation call is redundant; skipping it also avoids
-unnecessary Global Search and Global Catalog traffic in VPE environments where those
-endpoints may not be reachable from the runtime service's network.
-
 The IAM URL used by :meth:`.QiskitRuntimeService.instances` can now be overridden via the
 ``IAM_URL`` environment variable, following the same convention as the IBM SDK's
 ``GLOBAL_SEARCH_URL`` and ``GLOBAL_CATALOG_URL`` variables. This allows routing IAM traffic
