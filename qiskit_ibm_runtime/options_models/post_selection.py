@@ -59,7 +59,7 @@ class PostSelectionOptions(BaseOptionsModel):
     @field_validator("enable")
     @classmethod
     def _warn_post_selection(cls, value: bool) -> bool:
-        """Warn that the ``post_selection`` option is deprecated when it is enabled."""
+        """Warn that the post selection options are deprecated."""
         if value:
             issue_deprecation_msg(
                 msg="The 'post_selection' field of NoiseLearnerV3 is deprecated",
