@@ -65,6 +65,6 @@ class PostSelectionOptions(BaseOptionsModel):
                 msg="The 'post_selection' field of NoiseLearnerV3 is deprecated",
                 version="0.49.0",
                 remedy="Use 'bit_flip_check' field instead",
-                stacklevel=3,
+                stacklevel=2,
             )
         return value
