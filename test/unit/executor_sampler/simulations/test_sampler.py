@@ -63,12 +63,12 @@ class TestSampler(IBMTestCase):
         circuit_cp = pub.circuit.copy()
         circuit_cp.remove_final_measurements()
 
-        parameter_values = pub.parameter_values
-        if len(parameter_values.shape) == 0:
-            parameter_values = parameter_values.reshape((1,) + parameter_values.shape)
+        # Convert to at least 1D array, so that we can loop through its elements.
+        parameter_values = pub.parameter_values.as_array(pub.circuit.parameters)
+        parameter_values = np.atleast_1d(parameter_values)
 
-        for index in np.ndindex(parameter_values.shape):
-            assigned_parameters = parameter_values[index].as_array(pub.circuit.parameters)
+        for index in np.ndindex(parameter_values.shape[:-1]):
+            assigned_parameters = parameter_values[index]
             bound_circuit = circuit_cp.assign_parameters(assigned_parameters)
             probabilities = Statevector(bound_circuit).probabilities_dict()
 
