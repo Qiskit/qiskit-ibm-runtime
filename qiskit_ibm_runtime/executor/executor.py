@@ -93,6 +93,10 @@ class Executor:
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
 
+        local_mode = self.options.experimental.get("local_mode", False)
+        if isinstance(self._service, QiskitRuntimeLocalService) and not local_mode:
+            raise ValueError("The executor is currently not supported in local mode.")
+
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
 
