@@ -22,6 +22,7 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
+from qiskit_aer import AerSimulator
 
 from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramResult
@@ -29,8 +30,8 @@ from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
+    from qiskit.providers import BackendV2
     from qiskit.quantum_info import PauliLindbladMap
-    from qiskit_aer import AerSimulator
 
     from ..quantum_program import QuantumProgram
 
@@ -49,7 +50,7 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
 
 @HAS_AER.require_in_call
 def run_quantum_program(
-    qasm_simulator: AerSimulator,
+    backend: BackendV2,
     program: QuantumProgram,
     noise_dict: dict[str, PauliLindbladMap] | None = None,
     angle_decimals: int = 5,
@@ -58,7 +59,7 @@ def run_quantum_program(
     """Run a quantum program on a simulator.
 
     Args:
-        qasm_simulator: The simulator to use.
+        backend: The backend to simulate.
         program: The program to run.
         noise_dict: A map from barrier label refs to noise maps.
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
@@ -69,8 +70,10 @@ def run_quantum_program(
         Results of simulation.
     """
     # Generate a sampler
-    backend = deepcopy(qasm_simulator)
-    backend.set_max_qubits(10000)
+    if isinstance(backend, AerSimulator):
+        backend = deepcopy(backend)
+        backend.set_max_qubits(10000)
+
     aer_sampler = AerSamplerV2.from_backend(backend)
 
     rng = np.random.default_rng(aer_sampler.seed)

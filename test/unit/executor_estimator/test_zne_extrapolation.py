@@ -411,47 +411,54 @@ class TestProcessExtrapolatedExpectationValues(IBMTestCase):
 
     def test_end_to_end_returns_selected_values(self):
         """Returns the selected extrapolated value at the target noise factor."""
-        result_vals, result_stds, result_extraps = process_extrapolated_expectation_values(
-            self._EXP_VALS,
-            self._STDERRS,
-            self._OBSERVABLE_TERM,
-            self._NOISE_FACTORS,
-            ["linear", "fallback"],
-            extrapolated_noise_factors=0.0,
+        result_vals, result_stds, result_extraps, extrapolated_vals, extrapolated_std = (
+            process_extrapolated_expectation_values(
+                self._EXP_VALS,
+                self._STDERRS,
+                self._OBSERVABLE_TERM,
+                self._NOISE_FACTORS,
+                ["linear", "fallback"],
+                extrapolated_noise_factors=0.0,
+            )
         )
-        # shape: (1 extrapolated noise factor,)
-        self.assertEqual(result_vals.shape, (1,))
+        # shape: (2,) because zero is added to the extrapolated noise factor
+        self.assertEqual(result_vals.shape, (2,))
         np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
         self.assertTrue(np.all(np.isfinite(result_stds)))
         np.testing.assert_array_equal(result_extraps[0], "linear")
 
     def test_string_extrapolator_is_wrapped(self):
         """A single model name (not a list) is accepted."""
-        result_vals, result_stds, result_extraps = process_extrapolated_expectation_values(
-            self._EXP_VALS,
-            self._STDERRS,
-            self._OBSERVABLE_TERM,
-            self._NOISE_FACTORS,
-            "linear",
-            extrapolated_noise_factors=0.0,
+        result_vals, result_stds, result_extraps, extrapolated_vals, extrapolated_std = (
+            process_extrapolated_expectation_values(
+                self._EXP_VALS,
+                self._STDERRS,
+                self._OBSERVABLE_TERM,
+                self._NOISE_FACTORS,
+                "linear",
+                extrapolated_noise_factors=0.0,
+            )
         )
-        self.assertEqual(result_vals.shape, (1,))
+        self.assertEqual(result_vals.shape, (2,))
         np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
 
     def test_multiple_extrapolated_noise_factors(self):
         """When multiple extrapolation targets are given, output has one entry per target."""
-        result_vals, result_stds, result_extraps = process_extrapolated_expectation_values(
-            self._EXP_VALS,
-            self._STDERRS,
-            self._OBSERVABLE_TERM,
-            self._NOISE_FACTORS,
-            ["linear"],
-            extrapolated_noise_factors=[0.0, 1.0],
+        result_vals, result_stds, result_extraps, extrapolated_vals, extrapolated_std = (
+            process_extrapolated_expectation_values(
+                self._EXP_VALS,
+                self._STDERRS,
+                self._OBSERVABLE_TERM,
+                self._NOISE_FACTORS,
+                ["linear"],
+                extrapolated_noise_factors=[0.0, 1.0],
+            )
         )
-        # shape: (2 extrapolated noise factors,)
-        self.assertEqual(result_vals.shape, (2,))
+        # shape: (3,) because zero is added to the extrapolated noise factor
+        self.assertEqual(result_vals.shape, (3,))
         np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
-        np.testing.assert_allclose(result_vals[1], 0.6, rtol=1e-6)
+        np.testing.assert_allclose(result_vals[1], 0.65, rtol=1e-6)
+        np.testing.assert_allclose(result_vals[2], 0.6, rtol=1e-6)
 
     def test_unsupported_model_name_raises(self):
         """An unrecognized extrapolator name raises ``ValueError``."""
