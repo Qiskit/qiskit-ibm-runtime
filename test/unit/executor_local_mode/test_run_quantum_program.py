@@ -33,6 +33,7 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from qiskit_ibm_runtime.executor_local_mode.run_quantum_program import run_quantum_program
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
+from qiskit_ibm_runtime.results import QuantumProgramItemResult
 
 from ...ibm_test_case import IBMTestCase
 
@@ -268,6 +269,8 @@ class TestRunQuantumProgram(IBMTestCase):
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
+        self.assertIsInstance(item_data, QuantumProgramItemResult)
+        self.assertIsNotNone(item_data.metadata)
 
         # Result shape: (4, shots, 2)
         self.assertEqual(item_data["c"].shape, (4, shots, 2))
