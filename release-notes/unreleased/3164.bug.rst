@@ -1,0 +1,7 @@
+Fix :class:`.FakeProviderForBackendV2` to include the 8 fake backends that were
+importable from :mod:`qiskit_ibm_runtime.fake_provider` but missing from the provider's
+backend list: :class:`.FakeAachen`, :class:`.FakeBerlin`, :class:`.FakeBoston`,
+:class:`.FakeBrussels`, :class:`.FakeKingston`, :class:`.FakeMiami`, :class:`.FakePittsburgh`,
+and :class:`.FakeStrasbourg`. Previously, calling
+``FakeProviderForBackendV2().backend(name="fake_kingston")`` (and the other 7) raised a
+``QiskitBackendNotFoundError`` even though the backend classes existed.
