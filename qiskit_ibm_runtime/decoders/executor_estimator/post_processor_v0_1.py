@@ -1059,7 +1059,8 @@ def calculate_extrapolated_expectation_values(
                 )
             )
 
-            selected_extrapolators_per_term.append(sel_extrapolators)
+            # Only the selected extrapolator of the zero point should be returned
+            selected_extrapolators_per_term.append(sel_extrapolators[0])
             zero_extrapolated_exp_vals[bcast_index] += (
                 coeff * selected_exp_vals[0] * term_scale_factor
             )
