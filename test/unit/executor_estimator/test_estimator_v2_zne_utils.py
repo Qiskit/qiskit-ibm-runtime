@@ -27,12 +27,12 @@ from qiskit_ibm_runtime.options_models.zne import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, assert_samplex_item
+from ...ibm_test_case import IBMEstimatorPrepareTestCase
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
 
 
 @ddt
-class TestPrepareZne(IBMTestCase):
+class TestPrepareZne(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_zne`` function."""
 
     @data([True, True, True], [False, True, True], [False, False, False])
@@ -127,7 +127,7 @@ class TestPrepareZne(IBMTestCase):
                 )
                 # One item per noise factor; skip any trailing TREX item
                 for item in program.items[: len(zne_options.noise_factors)]:
-                    assert_samplex_item(self, item, scenario, inject_noise=False)
+                    self.assertSamplexItem(item, scenario, inject_noise=False)
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""

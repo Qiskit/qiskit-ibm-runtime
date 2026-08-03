@@ -33,8 +33,8 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, assert_samplex_item
+from ...ibm_test_case import IBMEstimatorPrepareTestCase, IBMTestCase
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
 
 
 class TestCalculateGamma(IBMTestCase):
@@ -215,7 +215,7 @@ class TestCalculateGamma(IBMTestCase):
 
 
 @ddt
-class TestPreparePec(IBMTestCase):
+class TestPreparePec(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_pec`` function."""
 
     @data([True, True, True], [True, False, False])
@@ -310,7 +310,7 @@ class TestPreparePec(IBMTestCase):
                     noise_model_mapping=noise_model_mapping,
                     measure_noise_learning=measure_noise_learning,
                 )
-                assert_samplex_item(self, program.items[0], scenario, inject_noise=True)
+                self.assertSamplexItem(program.items[0], scenario, inject_noise=True)
 
     def test_prepare_pec_basic(self):
         """Test prepare_pec with basic PEC options and noise model."""

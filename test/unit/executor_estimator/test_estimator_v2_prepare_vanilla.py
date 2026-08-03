@@ -28,13 +28,13 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMEstimatorPrepareTestCase
 from ...utils import combine
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, assert_samplex_item
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
 
 
 @ddt
-class TestPrepareVanilla(IBMTestCase):
+class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_vanilla`` function."""
 
     @data([True, True, True], [False, True, True], [False, False, False])
@@ -120,7 +120,7 @@ class TestPrepareVanilla(IBMTestCase):
                     shots=10,
                     measure_noise_learning=measure_noise_learning,
                 )
-                assert_samplex_item(self, program.items[0], scenario, inject_noise=False)
+                self.assertSamplexItem(program.items[0], scenario, inject_noise=False)
 
     @data(
         [(2, 2), (2, 2), (1, 4)],

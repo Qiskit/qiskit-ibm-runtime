@@ -23,6 +23,7 @@ from contextlib import contextmanager, suppress
 from typing import TYPE_CHECKING
 from unittest import TestCase  # noqa: TID251 -- IBMTestCase legitimatelly inherits from it.
 
+import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
@@ -36,8 +37,10 @@ if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
 
     from qiskit_ibm_runtime import QiskitRuntimeService
+    from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
     from .decorators import IntegrationTestDependencies
+    from .unit.executor_estimator.utils import SamplexCircuitScenario
 
 
 class IBMTestCase(TestCase):
@@ -167,6 +170,117 @@ class IBMTestCase(TestCase):
                     f"the user's code -- past any qiskit_ibm_runtime or pydantic internals -- "
                     f"so the warning is visible in scripts and Jupyter notebooks.",
                 )
+
+
+class IBMEstimatorPrepareTestCase(IBMTestCase):
+    """TestCase with assertions for estimator prepare-function tests."""
+
+    def assertSamplexItem(
+        self,
+        item: SamplexItem,
+        scenario: SamplexCircuitScenario,
+        inject_noise: bool,
+    ) -> None:
+        """Assert that a :class:`~.SamplexItem`'s arguments match the expected structure.
+
+        Checks:
+
+        * ``parameter_values`` is present iff ``scenario.has_parameter_values``.
+        * Exactly ``scenario.num_basis_changes`` keys start with ``basis_changes.``.
+        * Exactly ``scenario.num_basis_changes - 1`` ``basis_changes.*`` keys are
+          all-zero arrays (mid-circuit measurement boxes), and exactly one is
+          non-zero (the final measurement box).
+        * When ``inject_noise`` is ``True`` (PEA, PEC): exactly
+          ``scenario.num_noise_maps`` ``noise_scales.*`` keys and the same number
+          of ``pauli_lindblad_maps.*`` keys exist.
+        * When ``inject_noise`` is ``False`` (vanilla, ZNE): no ``noise_scales.*``
+          or ``pauli_lindblad_maps.*`` keys exist.
+
+        Args:
+            item: The :class:`~.SamplexItem` to inspect.
+            scenario: The :class:`SamplexCircuitScenario` whose PUB was used to
+                produce ``item``.
+            inject_noise: ``True`` for methods that inject noise (PEA, PEC);
+                ``False`` for methods that do not (vanilla, ZNE).
+        """
+        keys = list(item.samplex_arguments)
+        basis_keys = [k for k in keys if k.startswith("basis_changes.")]
+        noise_keys = [k for k in keys if k.startswith("noise_scales.")]
+        plm_keys = [k for k in keys if k.startswith("pauli_lindblad_maps.")]
+
+        self.assertEqual(
+            "parameter_values" in keys,
+            scenario.has_parameter_values,
+            msg=f"[{scenario.label}] parameter_values presence mismatch; keys={keys}",
+        )
+        if scenario.has_parameter_values:
+            expected_pv = scenario.pub.parameter_values.as_array(scenario.pub.circuit.parameters)
+            actual_pv = np.squeeze(np.asarray(item.samplex_arguments["parameter_values"]))
+            self.assertTrue(
+                np.array_equal(actual_pv, np.squeeze(expected_pv)),
+                msg=(
+                    f"[{scenario.label}] parameter_values mismatch; "
+                    f"got {actual_pv!r}, expected {np.squeeze(expected_pv)!r}"
+                ),
+            )
+        self.assertEqual(
+            len(basis_keys),
+            scenario.num_basis_changes,
+            msg=(
+                f"[{scenario.label}] expected {scenario.num_basis_changes} "
+                f"basis_changes key(s), got {len(basis_keys)}; keys={keys}"
+            ),
+        )
+        # Verify basis changes
+        zero_bc_keys = [k for k in basis_keys if np.all(np.asarray(item.samplex_arguments[k]) == 0)]
+        nonzero_bc_keys = [
+            k for k in basis_keys if not np.all(np.asarray(item.samplex_arguments[k]) == 0)
+        ]
+        self.assertEqual(
+            len(zero_bc_keys),
+            scenario.num_basis_changes - 1,
+            msg=(
+                f"[{scenario.label}] expected {scenario.num_basis_changes - 1} all-zero "
+                f"basis_changes key(s) (mid-circuit boxes), got {len(zero_bc_keys)}; "
+                f"keys={basis_keys}"
+            ),
+        )
+        self.assertEqual(
+            len(nonzero_bc_keys),
+            1,
+            msg=(
+                f"[{scenario.label}] expected exactly 1 non-zero basis_changes key "
+                f"(final measurement box), got {len(nonzero_bc_keys)}; keys={basis_keys}"
+            ),
+        )
+        if inject_noise:
+            self.assertEqual(
+                len(noise_keys),
+                scenario.num_noise_maps,
+                msg=(
+                    f"[{scenario.label}] expected {scenario.num_noise_maps} noise_scales "
+                    f"key(s), got {len(noise_keys)}; keys={keys}"
+                ),
+            )
+            self.assertEqual(
+                len(plm_keys),
+                scenario.num_noise_maps,
+                msg=(
+                    f"[{scenario.label}] expected {scenario.num_noise_maps} "
+                    f"pauli_lindblad_maps key(s), got {len(plm_keys)}; keys={keys}"
+                ),
+            )
+        else:
+            self.assertEqual(
+                noise_keys,
+                [],
+                msg=f"[{scenario.label}] noise_scales must be absent; keys={keys}",
+            )
+            self.assertEqual(
+                plm_keys,
+                [],
+                msg=f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}",
+            )
 
 
 class IBMVisualizationTestCase(IBMTestCase):

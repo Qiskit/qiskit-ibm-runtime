@@ -32,12 +32,12 @@ from qiskit_ibm_runtime.options_models.zne import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, assert_samplex_item
+from ...ibm_test_case import IBMEstimatorPrepareTestCase
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
 
 
 @ddt
-class TestPreparePea(IBMTestCase):
+class TestPreparePea(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_pea`` function."""
 
     @data([True, True, True], [True, False, False])
@@ -143,7 +143,7 @@ class TestPreparePea(IBMTestCase):
                     noise_model_mapping=noise_model_mapping,
                     measure_noise_learning=measure_noise_learning,
                 )
-                assert_samplex_item(self, program.items[0], scenario, inject_noise=True)
+                self.assertSamplexItem(program.items[0], scenario, inject_noise=True)
 
     def test_prepare_pea_basic(self):
         """Test prepare_pea with basic noise factors and noise model."""
