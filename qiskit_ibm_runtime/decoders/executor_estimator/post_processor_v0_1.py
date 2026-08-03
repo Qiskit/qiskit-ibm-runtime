@@ -661,8 +661,8 @@ def _process_expectation_values_pea(
         ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
         points.
         ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
-        observable term.
+        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
+        observable term for the zero noise extrapolation point.
          ).
 
     Raises:
@@ -826,8 +826,8 @@ def _process_expectation_values_zne(
         ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
         points.
         ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
-        observable term.
+        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
+        observable term for the zero noise extrapolation point.
          ).
 
     Raises:
@@ -924,8 +924,8 @@ def calculate_extrapolated_expectation_values(
         ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
         points.
         ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
-        observable term.
+        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
+        observable term for the zero noise extrapolation point.
          ).
 
     Raises:
