@@ -107,6 +107,43 @@ class TestPrepare(IBMTestCase):
         self.assertIsInstance(executor_options, ExecutorOptions)
         self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "pea")
 
+    def test_zne_raises_error_with_too_few_noise_factors_for_extrapolator(self):
+        """Test that prepare rejects noise_factors under-specified for the extrapolator."""
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        options.resilience.zne_mitigation = True
+        options.resilience.zne.extrapolator = "double_exponential"
+        options.resilience.zne.noise_factors = [1.0, 3.0]
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pubs = [EstimatorPub.coerce((circuit, observable))]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError, "double_exponential requires at least 4 noise_factors"
+        ):
+            prepare(pubs, options, shots=100)
+
+    def test_pea_raises_error_with_too_few_noise_factors_for_extrapolator(self):
+        """Test that prepare rejects PEA noise_factors under-specified for the extrapolator."""
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        options.resilience.zne_mitigation = True
+        options.resilience.zne.amplifier = "pea"
+        options.resilience.zne.extrapolator = "double_exponential"
+        options.resilience.zne.noise_factors = [1.0, 3.0]
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pubs = [EstimatorPub.coerce((circuit, observable))]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError, "double_exponential requires at least 4 noise_factors"
+        ):
+            prepare(pubs, options, shots=100)
+
     @data(True, False)
     def test_dd_applied_when_enabled(self, twirling_enabled):
         """Test apply_dynamical_decoupling is called when DD is enabled.
