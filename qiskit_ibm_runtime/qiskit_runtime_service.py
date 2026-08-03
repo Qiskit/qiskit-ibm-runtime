@@ -269,8 +269,8 @@ class QiskitRuntimeService:
             if not os.environ.get("QISKIT_FUNCTIONS_EXPERIMENTAL"):
                 if self._account.instance not in [inst["crn"] for inst in self.instances()]:
                     raise IBMInputValueError(
-                        "The given API token is associated with an account that does not have access "
-                        f"to the instance {self._account.instance}. "
+                        "The given API token is associated with an account that does not have "
+                        f"access to the instance {self._account.instance}. "
                         "To use this instance, use an API token generated from the account "
                         "with this instance available."
                     )
