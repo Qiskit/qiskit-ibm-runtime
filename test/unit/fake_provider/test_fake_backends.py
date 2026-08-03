@@ -21,8 +21,7 @@ from unittest import mock
 from qiskit import QuantumCircuit, transpile
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
-from qiskit_ibm_runtime import fake_provider as fake_provider_module
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2, fake_provider
 from qiskit_ibm_runtime.fake_provider import (
     FakeAthensV2,
     FakePerth,
@@ -79,10 +78,10 @@ class FakeBackendsTest(IBMTestCase):
         """Test that every fake backend class in the module is registered in the provider."""
         all_classes = {
             name
-            for name in dir(fake_provider_module)
+            for name in dir(fake_provider)
             if name.startswith("Fake")
-            and isinstance(getattr(fake_provider_module, name), type)
-            and issubclass(getattr(fake_provider_module, name), FakeBackendV2)
+            and isinstance(getattr(fake_provider, name), type)
+            and issubclass(getattr(fake_provider, name), FakeBackendV2)
         }
         registered = {type(backend).__name__ for backend in FakeProviderForBackendV2().backends()}
         self.assertEqual(all_classes, registered)
