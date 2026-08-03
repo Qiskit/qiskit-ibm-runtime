@@ -19,7 +19,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
-from test.utils import make_mirror_circuit_with_phases
+from .utils import make_mirror_circuit_with_phases
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
