@@ -19,6 +19,7 @@ from typing import Annotated, TypeAlias
 from pydantic import Field, InstanceOf
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler import CouplingMap
 from qiskit.utils import optionals
 
@@ -35,7 +36,28 @@ else:
 
 
 class SimulatorOptions(BaseOptionsModel):
-    """Simulator options.
+    """Simulator options."""
+
+    angle_decimals: int = 5
+    """Gate angle decimal precision.
+
+    Gate angles are rounded to the nearest multiple of ``np.pi/2`` at this decimal precision before
+    simulation. This prevents floating-point drift from preventing Clifford-method simulation when
+    angles are nominally Clifford.
+    """
+
+    noise_model: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
+    """A map from ``ref`` of a :class:`~samplomatic.Tag` annotations to PauliLindblad noise maps."""
+
+    seed_simulator: int | None = None
+    """Random seed to control sampling."""
+
+    warn_absent: bool = True
+    """Whether to emit a warning when an entry is missing in :attr:`layer_noise_dict`."""
+
+
+class LegacySimulatorOptions(BaseOptionsModel):
+    """Legacy Simulator options.
 
     Used to control local mode simulation.
     """

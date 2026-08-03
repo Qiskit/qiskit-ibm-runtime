@@ -32,7 +32,7 @@ class ResilienceOptions(BaseOptionsModel):
     """Whether to enable measurement error mitigation method.
 
     If you enable measurement mitigation, you can fine-tune its noise learning by using
-    :attr:`~measure_noise_learning`. See :class:`.~MeasureNoiseLearningOptions` for all measurement
+    :attr:`~measure_noise_learning`. See :class:`~.MeasureNoiseLearningOptions` for all measurement
     mitigation noise learning options.
 
     If ``measure_mitigation`` is ``None``, it is determined by the according to the resilience
@@ -61,18 +61,18 @@ class ResilienceOptions(BaseOptionsModel):
     If you enable ZNE, you can fine-tune its options by using :attr:`~zne`. See
     :class:`~.ZneOptions` for additional ZNE related options.
 
-    If ``zne_mitigation`` is ``None``, it is determined by the server according to the resilience
-    level: it is ``False`` for resilience levels ``0`` and ``1``, and ``True`` for resilience level
-    ``2``.
+    If ``zne_mitigation`` is left as ``None``, it inherits the default for the configured
+    :attr:`~.EstimatorOptions.resilience_level`: ``False`` for resilience levels ``0`` and ``1``,
+    and ``True`` for resilience level ``2``.
     """
 
     zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options."""
 
-    noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
+    noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = {}
     """A noise model mapping for PEC mitigation.
 
     Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that
     describe the noise characteristics of that layer. The dict contains layers from all PUBs. This
-    is required when using PEC mitigation.
+    is required when using PEC mitigation, or ZNE with PEA amplifier.
     """

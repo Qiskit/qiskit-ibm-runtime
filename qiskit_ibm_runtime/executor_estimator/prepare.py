@@ -17,8 +17,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
-
 from ..exceptions import IBMInputValueError
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
@@ -55,7 +53,7 @@ def prepare(
     :class:`~.ExecutorOptions`.
 
     Args:
-        pubs: List of sampler PUBs to convert.
+        pubs: List of estimator PUBs to convert.
         options: The options.
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
@@ -73,7 +71,7 @@ def prepare(
 
         - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
             objects for each pub, with passthrough_data configured for post-processing.
-        - :class:`~.ExecutorOptions` mapped from the sampler's options.
+        - :class:`~.ExecutorOptions` mapped from the estimator's options.
     """
     if options.dynamical_decoupling.enable:
         for pub in pubs:
@@ -103,9 +101,7 @@ def prepare(
             else None,
             add_tags=add_tags,
         )
-        return quantum_program, executor_options
-
-    if options.resilience.zne_mitigation:
+    elif options.resilience.zne_mitigation:
         if options.resilience.zne.amplifier == "pea":
             logger.info("Running ``prepare_pea``.")
             quantum_program = prepare_pea(
@@ -113,37 +109,35 @@ def prepare(
                 twirling_options=options.twirling,
                 shots=shots,
                 zne_options=options.resilience.zne,
-                noise_model_mapping=options.resilience.noise_model_mapping or {},
+                noise_model_mapping=options.resilience.noise_model_mapping,
                 measure_noise_learning=options.resilience.measure_noise_learning
                 if options.resilience.measure_mitigation
                 else None,
                 add_tags=add_tags,
             )
-            return quantum_program, executor_options
-
-        logger.info("Running ``prepare_zne``.")
-        quantum_program = prepare_zne(
+        else:
+            logger.info("Running ``prepare_zne``.")
+            quantum_program = prepare_zne(
+                pubs=pubs,
+                twirling_options=options.twirling,
+                shots=shots,
+                zne_options=options.resilience.zne,
+                measure_noise_learning=options.resilience.measure_noise_learning
+                if options.resilience.measure_mitigation
+                else None,
+                add_tags=add_tags,
+            )
+    else:
+        logger.info("Running ``prepare_vanilla``.")
+        quantum_program = prepare_vanilla(
             pubs=pubs,
             twirling_options=options.twirling,
             shots=shots,
-            zne_options=options.resilience.zne,
             measure_noise_learning=options.resilience.measure_noise_learning
             if options.resilience.measure_mitigation
             else None,
             add_tags=add_tags,
         )
-        return quantum_program, executor_options
-
-    logger.info("Running ``prepare_vanilla``.")
-    quantum_program = prepare_vanilla(
-        pubs=pubs,
-        twirling_options=options.twirling,
-        shots=shots,
-        measure_noise_learning=options.resilience.measure_noise_learning
-        if options.resilience.measure_mitigation
-        else None,
-        add_tags=add_tags,
-    )
     if options.dynamical_decoupling.enable:
         logger.info("Apply dynamical decoupling")
         quantum_program = apply_dynamical_decoupling(

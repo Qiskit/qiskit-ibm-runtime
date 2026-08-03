@@ -276,6 +276,7 @@ class QiskitRuntimeService:
                     )
             self._default_instance = True
             self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
+            self._active_api_client = self._api_clients[self._account.instance]
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
