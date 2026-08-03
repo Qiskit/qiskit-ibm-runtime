@@ -22,7 +22,6 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
-from qiskit_aer import AerSimulator
 
 from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramResult
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
     from ..quantum_program import QuantumProgram
 
 if HAS_AER:
+    from qiskit_aer import AerSimulator
     from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
 
 
@@ -63,8 +63,8 @@ def run_quantum_program(
         program: The program to run.
         noise_dict: A map from barrier label refs to noise maps.
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.  See :func:`~.SimExecutor` for details.
-        warn_absent: Passed to :class:`~.InsertNoisePass`; see :class:`~.SimExecutor`.
+            decimal precision before simulation.
+        warn_absent: Passed to :class:`~.InsertNoisePass`.
 
     Returns:
         Results of simulation.
