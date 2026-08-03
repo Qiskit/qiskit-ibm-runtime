@@ -30,7 +30,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import combine
-from .utils import PARAM_BASIS_3Q_SCENARIOS
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, assert_samplex_item
 
 
 @ddt
@@ -85,6 +85,42 @@ class TestPrepareVanilla(IBMTestCase):
 
                 # Check that the quantum program has one element per param-basis pair
                 self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+
+    @data(
+        [True, True, True],
+        [False, True, True],
+        [False, False, False],
+        [True, False, False],
+        [False, True, False],
+        [True, True, False],
+    )
+    @unpack
+    def test_samplex_arguments_structure(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
+        """Test that samplex items contain the expected argument keys for each circuit type.
+
+        vanilla never injects noise, so items must have ``basis_changes.*`` (and
+        ``parameter_values`` for parametric circuits) but no ``noise_scales.*`` or
+        ``pauli_lindblad_maps.*`` keys.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
+            with self.subTest(circuit=scenario.label):
+                program = prepare_vanilla(
+                    pubs=[scenario.pub],
+                    twirling_options=twirling_options,
+                    shots=10,
+                    measure_noise_learning=measure_noise_learning,
+                )
+                assert_samplex_item(self, program.items[0], scenario, inject_noise=False)
 
     @data(
         [(2, 2), (2, 2), (1, 4)],
