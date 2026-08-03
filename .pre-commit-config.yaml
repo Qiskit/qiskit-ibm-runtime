@@ -23,8 +23,9 @@ repos:
         name: mypy
         entry: mypy
         pass_filenames: false
-        language: system
+        language: python
         require_serial: true
+        additional_dependencies: ["mypy==2.3.0"]
       - id: verify-headers
         name: Verify copyright headers
         entry: tools/verify_headers.py
