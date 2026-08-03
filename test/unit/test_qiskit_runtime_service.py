@@ -12,6 +12,9 @@
 
 """Tests for `QiskitRuntimeService`."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 from qiskit import QuantumCircuit
@@ -24,6 +27,9 @@ from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, Instance, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
+
+if TYPE_CHECKING:
+    from ..registries import DefaultRegistry
 
 
 class TestQiskitRuntimeService(IBMTestCase):
@@ -79,3 +85,36 @@ class TestQiskitRuntimeService(IBMTestCase):
         backend_b._api_client.program_run.assert_not_called()
         backend_c._api_client.program_run.assert_not_called()
         self.assertEqual(service._active_api_client, backend_b._api_client)
+
+    @mock_responses
+    def test_initialization_state_variables(self, registry: DefaultRegistry) -> None:
+        """Test state variables populated during `QiskitRuntimeService.__init__`."""
+        crns_in_registry = {instance.crn for instance in registry.instances.values()}
+        backends_in_registry = {
+            instance.crn: set(registry.backends[instance.name])
+            for instance in registry.instances.values()
+        }
+
+        service = QiskitRuntimeService(token="my_token")
+        # `_all_instance` contains all the instances available.
+        self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
+        # `_backend_configs` is empty.
+        self.assertEqual(service._backend_configs, {})
+        # `_api_clients` contains one client per instance available.
+        self.assertEqual(set(service._api_clients.keys()), crns_in_registry)
+        # `_active_api_client` is among the ones in `_api_clients`.
+        self.assertIn(service._active_api_client, service._api_clients.values())
+        # `_backends_info_per_instance` contains one entry per instance, with its backends.
+        self.assertEqual(
+            {
+                crn: {info["name"] for info in value}
+                for crn, value in service._backends_info_per_instance.items()
+            },
+            backends_in_registry,
+        )
+
+        # `_backend_instance_groups` contains one entry per instance, with its backends.
+        self.assertEqual(
+            {info["crn"]: set(info["backends"]) for info in service._backend_instance_groups},
+            backends_in_registry,
+        )
