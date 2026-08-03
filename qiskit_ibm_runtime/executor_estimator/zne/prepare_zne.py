@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-    from ...options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ...options_models.twirling_options import TwirlingOptions
-    from ...options_models.zne_options import ZneOptions
+    from ...options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ...options_models.twirling import TwirlingOptions
+    from ...options_models.zne import ZneOptions
 
 import numpy as np
 from qiskit.transpiler import PassManager
@@ -32,10 +32,10 @@ from samplomatic import build
 
 from ...exceptions import IBMInputValueError
 from ...executor.calculate_twirling_shots import calculate_twirling_shots
-from ...options_models.zne_options import ZNE_DEFAULT_NOISE_FACTORS
+from ...options_models.zne import ZNE_DEFAULT_NOISE_FACTORS
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
-from ..trex_utils import create_trex_calibration_circuit
+from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from ..utils import (
     box_circuit,
     compute_samplex_arguments,
@@ -55,7 +55,7 @@ def prepare_zne(
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program.
+    """Convert estimator PUBs to a quantum program with ZNE mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.
@@ -84,15 +84,23 @@ def prepare_zne(
         IBMInputValueError: If the amplifier in the ZneOptions is not one of ``gate_folding``,
         ``gate_folding_front`` or ``gate_folding_back``.
     """
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
     if zne_options.amplifier not in ["gate_folding", "gate_folding_front", "gate_folding_back"]:
         raise IBMInputValueError(
             "ZNE mitigation must be used with a gate folding noise amplification."
         )
 
     if zne_options.noise_factors == "auto":
-        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS)
+        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS, dtype=float)
     else:
-        noise_factors = np.array(zne_options.noise_factors)
+        noise_factors = np.array(zne_options.noise_factors, dtype=float)
+
+    extrapolated_noise_factors = zne_options.extrapolated_noise_factors
+    if extrapolated_noise_factors == "auto":
+        extrapolated_noise_factors = np.insert(noise_factors, 0, 0.0)
+    else:
+        extrapolated_noise_factors = np.array(extrapolated_noise_factors, dtype=float)
 
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
@@ -109,7 +117,6 @@ def prepare_zne(
     observables_list = []
     param_basis_pairs_list = []
     param_shapes_list = []
-    item_id = []
 
     pm_kwargs = options_to_boxing_pm_kwargs(
         twirling_options,
@@ -134,9 +141,6 @@ def prepare_zne(
                     folding_method = "front"
                 case "gate_folding_back":
                     folding_method = "back"
-                case _:
-                    # This should never happen due to prior validation
-                    folding_method = "random"
 
             folding_pm = PassManager([GateFolding(noise_factor, folding_method)])
             folded_circuit = folding_pm.run(pub.circuit)
@@ -163,9 +167,6 @@ def prepare_zne(
                 )
             )
 
-            # each index is the item index, and it maps to (pub_number, noise_factor)
-            item_id.append((i, noise_factor))
-
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
         param_basis_pairs_list.append(param_basis_pairs)
@@ -178,10 +179,11 @@ def prepare_zne(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
-            "measure_mitigation": measure_noise_learning is not None,
+            "measure_mitigation": False,
             "mitigation": "zne",
             "zne_noise_factors": noise_factors,
-            "item_id": item_id,
+            "extrapolated_noise_factors": extrapolated_noise_factors,
+            "extrapolator": zne_options.extrapolator,
         },
     }
 
@@ -194,16 +196,12 @@ def prepare_zne(
 
     # Add TREX calibration circuit
     if measure_noise_learning is not None:
-        if (
-            isinstance(measure_noise_learning.shots_per_randomization, int)
-            and measure_noise_learning.shots_per_randomization != shots_per_randomization
-        ):
-            raise IBMInputValueError(
-                "shots_per_randomization must be the same for twirling and measure_noise_learning"
-            )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        trex_num_randomizations = resolve_trex_num_randomizations(
+            measure_noise_learning, num_randomizations
+        )
+        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
-        passthrough_data["post_processor"]["measure_mitigation"] = "True"
+        passthrough_data["post_processor"]["measure_mitigation"] = True
 
     # Set semantic role for post-processing dispatch
     quantum_program._semantic_role = "estimator_v2"

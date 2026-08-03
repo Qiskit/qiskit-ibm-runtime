@@ -14,10 +14,10 @@
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 
-class FakeTorino(fake_backend.FakeBackendV2):
+class FakeTorino(FakeBackendV2):
     """A fake 133 qubit backend."""
 
     dirname = os.path.dirname(__file__)

@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from qiskit.primitives.base import BaseSamplerV2
@@ -23,20 +23,18 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options_models.sampler_options import SamplerOptions
+from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable
     from typing import Any
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
-    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -45,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamplerV2(BaseSamplerV2):
-    """Executor-based Sampler primitive for Qiskit Runtime.
+    """Executor-based Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of SamplerV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
@@ -87,11 +85,11 @@ class SamplerV2(BaseSamplerV2):
             * A :class:`~qiskit_ibm_runtime.Session` if you are using session execution mode.
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
-            Refer to the `Qiskit Runtime documentation
+            Refer to the `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
-        options: Sampler options. See :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
+        options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
             for all available options.
     """
 
@@ -136,10 +134,10 @@ class SamplerV2(BaseSamplerV2):
         """Submit a request to the sampler primitive.
 
         For moderate and complex workloads, the client-side processing done to map sampler inputs
-        to executor inputs can be resource intensive can be resource intensive and cause a delay
+        to executor inputs can be resource intensive and cause a delay
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
-        `Qiskit Runtime documentation
+        `IBM Quantum Compute documentation
         <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 
@@ -156,27 +154,35 @@ class SamplerV2(BaseSamplerV2):
         # Coerce pubs to SamplerPub objects
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
+        # Finalize the options--namely, resolve the ``None`` in the twirling options
+        # as documented.
+        options = deepcopy(self.options)
+        options.twirling.enable_gates = options.twirling.enable_gates or False
+        options.twirling.enable_measure = options.twirling.enable_measure or False
+
         # Determine default shots: run parameter takes precedence over options.default_shots
-        default_shots = shots if shots is not None else self.options.default_shots
+        default_shots = shots if shots is not None else options.default_shots
 
         # Check if we're in local simulator mode
         if self._executor is None:
             logger.info("Running in local simulator mode")
-            return self._run_simulator(coerced_pubs, default_shots)
+
+            options_dict = options.model_dump()
+            options_dict["default_shots"] = shots
+
+            return self._service._run(
+                program_id="sampler",
+                inputs={"pubs": coerced_pubs, "options": options_dict},
+                options={"backend": self._backend},
+                calibration_id=None,
+            )
 
         # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(coerced_pubs, self.options, default_shots)
-
-        # Apply dynamical decoupling if enabled
-        if self.options.dynamical_decoupling.enable:
-            logger.info("Apply dynamical decoupling")
-            quantum_program = apply_dynamical_decoupling(
-                backend=self._backend,
-                dd_options=self.options.dynamical_decoupling,
-                quantum_program=quantum_program,
-            )
+        quantum_program, executor_options = prepare(
+            coerced_pubs, options, default_shots, backend=self._backend
+        )
 
         # Set executor options
         self._executor.options = executor_options
@@ -190,33 +196,3 @@ class SamplerV2(BaseSamplerV2):
         )
 
         return self._executor.run(quantum_program)
-
-    def _run_simulator(self, pubs: Sequence[SamplerPub], shots: int) -> LocalRuntimeJob:
-        """Run sampler in local simulator mode using BackendSamplerV2.
-
-        Args:
-            pubs: List of sampler PUBs to run.
-            shots: The number of shots to run.
-
-        Returns:
-            A LocalRuntimeJob.
-        """
-        # Prepare options dict - this goes in the inputs["options"] field
-        options_dict = asdict(self.options)  # type: ignore[call-overload]
-        options_dict["default_shots"] = shots
-
-        # Prepare inputs dict with pubs and options
-        inputs = {
-            "pubs": pubs,
-            "options": options_dict,
-        }
-
-        # Prepare runtime options with backend
-        runtime_options = {"backend": self._backend}
-
-        return self._service._run(
-            program_id="sampler",
-            inputs=inputs,
-            options=runtime_options,
-            calibration_id=None,
-        )

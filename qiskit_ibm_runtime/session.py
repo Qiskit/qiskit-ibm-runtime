@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Qiskit Runtime flexible session."""
+"""IBM Quantum Compute flexible session."""
 
 from __future__ import annotations
 
@@ -19,12 +19,11 @@ from typing import TYPE_CHECKING, Any
 
 from qiskit.providers.backend import BackendV2
 
-from qiskit_ibm_runtime import QiskitRuntimeService
-
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError, IBMRuntimeError
 from .fake_provider.local_service import QiskitRuntimeLocalService
 from .ibm_backend import IBMBackend
+from .qiskit_runtime_service import QiskitRuntimeService
 from .utils.converters import hms_to_seconds
 from .utils.default_session import set_cm_session
 
@@ -49,13 +48,13 @@ def _active_session(func):  # type: ignore
 
 
 class Session:
-    """Class for creating a Qiskit Runtime session.
+    """Class for creating a IBM Quantum Compute (formerly Qiskit Runtime) session.
 
-    A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
-    the quantum computer. A session is started when the first job within the session
-    is started. Subsequent jobs within the session are prioritized by the scheduler.
+    A IBM Quantum Compute ``session`` allows you to group a collection of
+    iterative calls to the quantum computer. A session is started when the first job within the
+    session is started. Subsequent jobs within the session are prioritized by the scheduler.
 
-    You can open a Qiskit Runtime session using this ``Session`` class and submit jobs
+    You can open a IBM Quantum Compute session using this ``Session`` class and submit jobs
     to one or more primitives.
 
     For example::
@@ -89,7 +88,7 @@ class Session:
         backend: Instance of ``Backend`` class.
 
         max_time:
-            Maximum amount of time, a runtime session can be open before being
+            Maximum amount of time, a IBM Quantum Compute session can be open before being
             forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
             This value must be less than the
             `system imposed maximum
@@ -157,7 +156,7 @@ class Session:
         Args:
             program_id: Program ID.
             inputs: Program input parameters. These input values are passed
-                to the runtime program.
+                to the IBM Quantum Compute program.
             options: Runtime options that control the execution environment.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
                 of such subclasses. If more than one decoder is specified, they will be called in

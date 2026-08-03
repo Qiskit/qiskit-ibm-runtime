@@ -1,6 +1,0 @@
-The :meth:`qiskit-ibm-runtime.RuntimeJobV2.usage` method now supports an optional ``partial``
-parameter:
-* if the ``partial`` flag is ``False``, the method will return ``0`` until the job usage
-  calculation is completed.
-* if the ``partial`` flag is ``True``, the method will return the incremential partial job usage
-  regardless of the calculation being completed.

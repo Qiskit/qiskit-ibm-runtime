@@ -12,7 +12,6 @@
 
 """Unit tests for SamplerV2 post-processor and static conversion method."""
 
-import unittest
 from dataclasses import asdict
 
 import numpy as np
@@ -25,7 +24,7 @@ from qiskit_ibm_runtime.decoders.executor_sampler.converters import (
 from qiskit_ibm_runtime.decoders.executor_sampler.post_processor_v0_1 import (
     sampler_v2_post_processor_v0_1,
 )
-from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
+from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
 from qiskit_ibm_runtime.results.quantum_program import (
     ItemMetadata,
     Metadata,
@@ -35,9 +34,11 @@ from qiskit_ibm_runtime.results.quantum_program import (
     StretchValues,
 )
 
+from ....ibm_test_case import IBMTestCase
+
 
 @ddt
-class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
+class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
     """Test ``quantum_program_item_result_to_sampler_pub_result``."""
 
     def test_single_pub_multiple_registers(self):
@@ -156,7 +157,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
 
 
 @ddt
-class TestSamplerV2PostProcessor(unittest.TestCase):
+class TestSamplerV2PostProcessor(IBMTestCase):
     """Test SamplerV2 post-processor function.
 
     This class contains basic smoke tests to verify the post-processor function
@@ -192,7 +193,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": twirling,
                 "meas_type": meas_type,
                 "shots": shots,
@@ -245,7 +246,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -286,7 +287,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": False,
                 "meas_type": "classified",
                 "shots": num_shots,
@@ -328,7 +329,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -376,7 +377,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -419,7 +420,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -455,7 +456,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertEqual(result.metadata, {})
 
 
-class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
+class TestSamplerV2PostProcessorFlattening(IBMTestCase):
     """Test that sampler_v2_post_processor_v0_1 flattens twirling axes correctly.
 
     When twirling is enabled, the executor returns data with shape
@@ -478,7 +479,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": twirling_enabled,
                 "meas_type": meas_type,
                 "shots": shots,
@@ -560,7 +561,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         # Create options with twirling enabled
         options = SamplerOptions()
         options.twirling.enable_gates = True
-        options_dict = asdict(options)
+        options_dict = options.model_dump()
 
         # Build result with options but WITHOUT twirling flag
         post_processor_data = {
@@ -593,7 +594,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         # Create options with twirling enabled
         options = SamplerOptions()
         options.twirling.enable_gates = True
-        options_dict = asdict(options)
+        options_dict = options.model_dump()
 
         # Build result with options but WITHOUT meas_type
         post_processor_data = {

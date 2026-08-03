@@ -15,19 +15,19 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
-from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from qiskit_ibm_runtime.options_models.calibrator_options import CalibratorOptions
-from qiskit_ibm_runtime.utils.default_session import get_cm_session
+from .base_primitive import get_mode_service_backend
+from .fake_provider.local_service import QiskitRuntimeLocalService
+from .options_models.calibrator import CalibratorOptions
+from .options_models.converters import to_runtime_options
+from .utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from ..runtime_job_v2 import RuntimeJobV2
     from .batch import Batch
+    from .runtime_job_v2 import RuntimeJobV2
     from .session import Session
 
 
@@ -92,10 +92,6 @@ class Calibrator:
         Returns:
             A calibration job.
         """
-        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
-        runtime_options["backend"] = self._backend.name
-        runtime_options["instance"] = self._backend._instance
-
         options_dict = {}
         if self.options.experimental:
             options_dict["experimental"] = self.options.experimental
@@ -117,7 +113,7 @@ class Calibrator:
 
         return _run(
             program_id=self._PROGRAM_ID,
-            options=runtime_options,
+            options=to_runtime_options(self.options.environment, self._backend),
             inputs={"options": options_dict},
             calibration_id=getattr(self._backend, "calibration_id", None),
         )

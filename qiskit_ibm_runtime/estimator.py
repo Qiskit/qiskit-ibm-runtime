@@ -20,11 +20,10 @@ from typing import TYPE_CHECKING
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from qiskit_ibm_runtime.utils.deprecation import issue_deprecation_msg
-
 from .base_primitive import BasePrimitiveV2
 from .options.estimator_options import EstimatorOptions
 from .utils import validate_estimator_pubs
+from .utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -46,10 +45,10 @@ class Estimator:
 
 
 class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2):
-    r"""Class for interacting with Qiskit Runtime Estimator primitive service.
+    r"""EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
-    Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
-    observables.
+    IBM Quantum Compute Estimator primitive service estimates expectation
+    values of quantum circuits and observables.
 
     The :meth:`run` can be used to submit circuits, observables, and parameters
     to the Estimator primitive.
@@ -105,7 +104,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             * A :class:`Batch` if you are using batch execution mode.
 
             Refer to the
-            `Qiskit Runtime documentation
+            `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about the ``Execution modes``.
 

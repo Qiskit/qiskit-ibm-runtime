@@ -24,7 +24,6 @@ from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
-    dict_paritally_equal,
     get_mocked_backend,
     get_primitive_inputs,
     get_transpiled_circuit,
@@ -144,10 +143,7 @@ class TestEstimatorV2(IBMTestCase):
                 inst = EstimatorV2(mode=backend, options=options)
                 inst.run(**get_primitive_inputs(inst, backend=backend))
                 options = backend.service._run.call_args.kwargs["inputs"]["options"]
-                self.assertTrue(
-                    dict_paritally_equal(options, expected),
-                    f"{options} and {expected} not partially equal.",
-                )
+                self.assertDictPartiallyEqual(options, expected)
 
     @data(
         {"zne_extrapolator": "bad_extrapolator"},
@@ -326,5 +322,5 @@ class TestEstimatorV2(IBMTestCase):
             for precision in pub_precisions
         ]
 
-        with self.assert_warning_appears(DeprecationWarning, warning_msg, num_appearances):
+        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, precision=run_precision)

@@ -34,9 +34,6 @@ from ..utils import (
     bell,
     combine,
     create_faulty_backend,
-    dict_keys_equal,
-    dict_paritally_equal,
-    flat_dict_partially_equal,
     get_mocked_backend,
     get_mocked_batch,
     get_mocked_session,
@@ -74,7 +71,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend = get_mocked_backend()
         for options in options_vars:
             inst = primitive(mode=backend, options=options)
-            self.assertTrue(dict_paritally_equal(asdict(inst.options), options))
+            self.assertDictPartiallyEqual(asdict(inst.options), options)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -374,7 +371,7 @@ class TestPrimitivesV2(IBMTestCase):
                 inst.options.update(**options)
                 inst.run(**get_primitive_inputs(inst))
                 inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
-                self._assert_dict_partially_equal(inputs, expected)
+                self.assertDictPartiallyEqual(inputs, expected)
 
     @data(EstimatorV2, SamplerV2)
     def test_run_overwrite_runtime_options(self, primitive):
@@ -393,7 +390,7 @@ class TestPrimitivesV2(IBMTestCase):
                 inst.run(**get_primitive_inputs(inst))
                 runtime_options = primitive._options_class._get_runtime_options(options)
                 rt_options = backend.service._run.call_args.kwargs["options"]
-                self._assert_dict_partially_equal(rt_options, runtime_options)
+                self.assertDictPartiallyEqual(rt_options, runtime_options)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -473,15 +470,9 @@ class TestPrimitivesV2(IBMTestCase):
         inst.options.update(**new_opts)
         # Make sure the values are equal.
         inst_options = asdict(inst.options)
-        self.assertTrue(
-            flat_dict_partially_equal(inst_options, new_opts),
-            f"inst_options={inst_options}, new_opt={new_opts}",
-        )
+        self.assertDictFlatPartiallyEqual(inst_options, new_opts)
         # Make sure the structure didn't change.
-        self.assertTrue(
-            dict_keys_equal(inst_options, asdict(opt_cls())),
-            f"inst_options={inst_options}, original={opt_cls()}",
-        )
+        self.assertDictKeysEqual(inst_options, asdict(opt_cls()))
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits(self, primitive):
@@ -653,13 +644,6 @@ class TestPrimitivesV2(IBMTestCase):
                 self._update_dict(val, dict2.pop(key, {}))
             elif key in dict2.keys():
                 dict1[key] = dict2.pop(key)
-
-    def _assert_dict_partially_equal(self, dict1, dict2):
-        """Assert all keys in dict2 are in dict1 and have same values."""
-        self.assertTrue(
-            dict_paritally_equal(dict1, dict2),
-            f"{dict1} and {dict2} not partially equal.",
-        )
 
 
 class TestGetModeServiceBackend(IBMTestCase):

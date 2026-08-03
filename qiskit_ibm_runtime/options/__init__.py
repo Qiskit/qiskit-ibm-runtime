@@ -17,7 +17,7 @@ Primitive options (:mod:`qiskit_ibm_runtime.options`)
 
 .. currentmodule:: qiskit_ibm_runtime.options
 
-Options that can be passed to the Qiskit Runtime primitives.
+Options that can be passed to the IBM Quantum Compute (formerly Qiskit Runtime) primitives.
 
 V2 Primitives
 =============
@@ -81,7 +81,7 @@ Suboptions
    ExecutionOptionsV2
    SamplerExecutionOptionsV2
    EnvironmentOptions
-   SimulatorOptions
+   LegacySimulatorOptions
 
 """
 
@@ -97,6 +97,6 @@ from .pec_options import PecOptions
 from .resilience_options import ResilienceOptionsV2
 from .sampler_execution_options import SamplerExecutionOptionsV2
 from .sampler_options import SamplerOptions
-from .simulator_options import SimulatorOptions
+from .simulator_options import LegacySimulatorOptions
 from .twirling_options import TwirlingOptions
 from .zne_options import ZneOptions

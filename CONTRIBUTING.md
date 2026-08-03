@@ -119,7 +119,11 @@ Then, identify which type of change your release note is:
 * `other` (other note)
 
 Now, create a new file in the `release-notes/unreleased` folder in the format `<github-number>.<type>.rst`,
-such as `156.bug.rst` or `231.feat.rst`.
+such as `156.bug.rst` or `231.feat.rst` via:
+
+```sh
+towncrier create 156.bug.rst
+```
 
 Open up the new release note file and provide a description of the change, such as what users need
 to do. The files use RST syntax and you can use mechanisms like code blocks and cross-references.

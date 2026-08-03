@@ -19,9 +19,9 @@ from .result_decoder import ResultDecoder
 
 
 class RunnerResultDecoder(ResultDecoder):
-    """Result class for Qiskit Runtime program circuit-runner."""
+    """Result class for IBM Quantum Compute program circuit-runner."""
 
     @classmethod
     def decode(cls, data: str) -> RunnerResult:
-        """Decoding for results from Qiskit runtime jobs."""
+        """Decoding for results from IBM Quantum Compute jobs."""
         return RunnerResult.from_dict(super().decode(data))

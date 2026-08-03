@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.utils.utils import are_circuits_dynamic, is_isa_circuit, is_valid_rzz_pub
+from ..exceptions import IBMInputValueError
+from ..utils.utils import are_circuits_dynamic, is_isa_circuit, is_valid_rzz_pub
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

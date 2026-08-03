@@ -15,7 +15,7 @@
 import logging
 import os
 from tempfile import NamedTemporaryFile
-from unittest import mock, skipIf
+from unittest import skipIf
 
 from qiskit_ibm_runtime.utils.logging import (
     QISKIT_IBM_RUNTIME_LOG_FILE,
@@ -23,6 +23,7 @@ from qiskit_ibm_runtime.utils.logging import (
     setup_logger,
 )
 
+from ..account import custom_envs
 from ..ibm_test_case import IBMTestCase
 
 
@@ -38,7 +39,7 @@ class TestLogger(IBMTestCase):
         logger = logging.getLogger(self.id())
         default_level_not_set = logging.NOTSET
 
-        with mock.patch.dict("os.environ"):
+        with custom_envs({}):
             if QISKIT_IBM_RUNTIME_LOG_LEVEL in os.environ:
                 del os.environ[QISKIT_IBM_RUNTIME_LOG_LEVEL]
             setup_logger(logger)
@@ -58,7 +59,7 @@ class TestLogger(IBMTestCase):
         logger = logging.getLogger(self.id())
         default_level_not_set = logging.NOTSET
 
-        with mock.patch.dict("os.environ", {QISKIT_IBM_RUNTIME_LOG_LEVEL: ""}):
+        with custom_envs({}):
             setup_logger(logger)
             self.assertEqual(
                 logger.level,
@@ -79,9 +80,7 @@ class TestLogger(IBMTestCase):
         invalid_log_levels = ["invalid", "debugs"]
         for invalid_log_level in invalid_log_levels:
             with self.subTest(invalid_log_level=invalid_log_level):
-                with mock.patch.dict(
-                    "os.environ", {QISKIT_IBM_RUNTIME_LOG_LEVEL: invalid_log_level}
-                ):
+                with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: invalid_log_level}):
                     setup_logger(logger)
                     self.assertEqual(
                         logger.level,
@@ -103,7 +102,7 @@ class TestLogger(IBMTestCase):
 
         for level_name, level_value in all_valid_log_levels.items():
             with self.subTest(level_name=level_name):
-                with mock.patch.dict("os.environ", {QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
+                with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
                     setup_logger(logger)
                     self.assertEqual(
                         logger.level,
@@ -120,11 +119,12 @@ class TestLogger(IBMTestCase):
 
         with NamedTemporaryFile() as temp_log_file:
             # Set the environment variables, including the temp file name.
-            env_vars_to_patch = {
-                QISKIT_IBM_RUNTIME_LOG_LEVEL: log_level_error[0],
-                QISKIT_IBM_RUNTIME_LOG_FILE: temp_log_file.name,
-            }
-            with mock.patch.dict("os.environ", env_vars_to_patch):
+            with custom_envs(
+                {
+                    QISKIT_IBM_RUNTIME_LOG_LEVEL: log_level_error[0],
+                    QISKIT_IBM_RUNTIME_LOG_FILE: temp_log_file.name,
+                }
+            ):
                 setup_logger(logger)
 
                 self.assertEqual(

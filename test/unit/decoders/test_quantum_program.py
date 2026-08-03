@@ -13,7 +13,6 @@
 """Tests the decoder for the quantum program result model."""
 
 import json
-import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -104,7 +103,7 @@ class TestDecoder(IBMTestCase):
             QuantumProgramResultDecoder.decode(encoded_as_str)
 
 
-class TestDecoderPostProcessing(unittest.TestCase):
+class TestDecoderPostProcessing(IBMTestCase):
     """Test QuantumProgram decoder post-processing logic."""
 
     def setUp(self):

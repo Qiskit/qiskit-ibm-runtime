@@ -15,13 +15,13 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
-from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-
-from ..options_models.executor_options import ExecutorOptions
+from ..base_primitive import get_mode_service_backend
+from ..executor_local_mode import SimRuntimeJob
+from ..fake_provider.local_service import QiskitRuntimeLocalService
+from ..options_models.converters import to_runtime_options
+from ..options_models.executor import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from ..utils.default_session import get_cm_session
 
@@ -64,7 +64,7 @@ class Executor:
             * A :class:`Batch` if you are using batch execution mode.
 
             Refer to the
-            `Qiskit Runtime documentation
+            `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about the ``Execution modes``.
 
@@ -92,7 +92,9 @@ class Executor:
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
-        if isinstance(self._service, QiskitRuntimeLocalService):
+
+        local_mode = self.options.experimental.get("local_mode", False)
+        if isinstance(self._service, QiskitRuntimeLocalService) and not local_mode:
             raise ValueError("The executor is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -119,15 +121,17 @@ class Executor:
         Returns:
             A job.
         """
+        if isinstance(self._service, QiskitRuntimeLocalService):
+            return SimRuntimeJob(
+                backend=self._backend, program=program, options=self.options.simulator
+            )
+
         try:
             converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
         except KeyError:
             raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         params = converter.encoder(program, self.options)
-        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
-        runtime_options["backend"] = self._backend.name
-        runtime_options["instance"] = self._backend._instance
 
         if self._session:
             _run = self._session._run
@@ -148,7 +152,7 @@ class Executor:
 
         return _run(
             program_id=self._PROGRAM_ID,
-            options=runtime_options,
+            options=to_runtime_options(self.options.environment, self._backend),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
         )

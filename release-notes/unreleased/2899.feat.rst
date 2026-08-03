@@ -1,2 +1,0 @@
-Support for passing multiple result decoders to :class:`qiskit_ibm_runtime.RuntimeJobV2` and
-:meth:`qiskit_ibm_runtime.RuntimeJobV2.result` has been reintroduced.

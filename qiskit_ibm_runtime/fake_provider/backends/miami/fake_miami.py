@@ -14,13 +14,14 @@
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 
-class FakeMiami(fake_backend.FakeBackendV2):
+class FakeMiami(FakeBackendV2):
     """A fake 120 qubit backend."""
 
     dirname = os.path.dirname(__file__)
     conf_filename = "conf_miami.json"
     props_filename = "props_miami.json"
     backend_name = "fake_miami"
+    _physical_qubits = 338

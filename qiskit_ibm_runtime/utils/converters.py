@@ -18,7 +18,7 @@ from typing import Any
 
 from dateutil import parser, tz
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from ..exceptions import IBMInputValueError
 
 
 def utc_to_local(utc_dt: datetime | str) -> datetime:

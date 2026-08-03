@@ -1,0 +1,3 @@
+The usage of stdlib ``asdict`` with option classes from the :mod:`options_models` package is now
+deprecated, as they are now Pydantic models. Please use ``options.model_dump()`` directly instead
+for serializing them to a ``dict``.

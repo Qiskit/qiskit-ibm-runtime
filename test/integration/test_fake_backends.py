@@ -152,11 +152,6 @@ class TestFakeBackends(IBMTestCase):
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
     """Test case for refreshing fake backends."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-
     @production_only
     def test_refresh_method(self):
         """Test refresh method."""

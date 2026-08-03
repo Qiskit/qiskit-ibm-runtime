@@ -27,7 +27,7 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..decorators import integration_test_setup
-from ..ibm_test_case import IBMTestCase
+from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..utils import bell
 
 if TYPE_CHECKING:
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from ..decorators import IntegrationTestDependencies
 
 
-class TestIBMJobAttributes(IBMTestCase):
+class TestIBMJobAttributes(IBMIntegrationJobTestCase):
     """Test IBMJob instance attributes."""
 
     sim_backend: IBMBackend
@@ -58,11 +58,6 @@ class TestIBMJobAttributes(IBMTestCase):
         sampler = Sampler(mode=cls.sim_backend)
         cls.sim_job = sampler.run([cls.bell])
         cls.last_week = datetime.now() - timedelta(days=7)
-
-    def setUp(self):
-        """Initial test setup."""
-        super().setUp()
-        self._qc = bell()
 
     def test_job_id(self):
         """Test getting a job ID."""
