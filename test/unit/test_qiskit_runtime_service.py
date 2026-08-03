@@ -88,7 +88,7 @@ class TestQiskitRuntimeService(IBMTestCase):
 
     @mock_responses
     def test_initialization_state_variables(self, registry: DefaultRegistry) -> None:
-        """Test state variables populated during `QiskitRuntimeService.__init__`."""
+        """Test state variables populated during `__init__`."""
         crns_in_registry = {instance.crn for instance in registry.instances.values()}
         backends_in_registry = {
             instance.crn: set(registry.backends[instance.name])
@@ -96,7 +96,7 @@ class TestQiskitRuntimeService(IBMTestCase):
         }
 
         service = QiskitRuntimeService(token="my_token")
-        # `_all_instance` contains all the instances available.
+        # `_all_instances` contains all the instances available.
         self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
         # `_backend_configs` is empty.
         self.assertEqual(service._backend_configs, {})
@@ -112,9 +112,31 @@ class TestQiskitRuntimeService(IBMTestCase):
             },
             backends_in_registry,
         )
-
         # `_backend_instance_groups` contains one entry per instance, with its backends.
         self.assertEqual(
             {info["crn"]: set(info["backends"]) for info in service._backend_instance_groups},
             backends_in_registry,
         )
+
+    @mock_responses
+    def test_initialization_state_variables_passing_instance(
+        self, registry: DefaultRegistry
+    ) -> None:
+        """Test state variables populated during `__init__`, passing the `instance` argument."""
+        chosen_crn = registry.instances["a"].crn
+        crns_in_registry = {instance.crn for instance in registry.instances.values()}
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+        print(service._backends_info_per_instance)
+        # `_all_instances` contains all the instances available.
+        self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
+        # `_backend_configs` is empty.
+        self.assertEqual(service._backend_configs, {})
+        # `_api_clients` contains only a client for the specified instance.
+        self.assertEqual(set(service._api_clients.keys()), {chosen_crn})
+        # `_active_api_client` is among the ones in `_api_clients`.
+        self.assertIn(service._active_api_client, service._api_clients.values())
+        # `_backends_info_per_instance` is empty.
+        self.assertEqual(service._backends_info_per_instance, {})
+        # `_backend_instance_groups` is empty.
+        self.assertEqual(service._backend_instance_groups, [])
