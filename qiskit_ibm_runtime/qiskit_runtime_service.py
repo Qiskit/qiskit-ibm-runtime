@@ -740,6 +740,9 @@ class QiskitRuntimeService:
 
         Returns:
             A backend object.
+
+        Raises:
+            ``QiskitBackendNotFoundError`` if the backend cannot be created.
         """
         try:
             if backend_name in self._backend_configs:
@@ -783,7 +786,9 @@ class QiskitRuntimeService:
                 self._backend_configs[backend_name] = config
         except Exception as ex:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
-            return None
+            raise QiskitBackendNotFoundError(
+                f"Unable to create configuration for {backend_name}, assuming backend is retired"
+            ) from ex
 
         # Retrieve `physical_qubits` from the stored `/backends` responses.
         backend_infos_for_instance: list[dict[str, Any]] = self._backends_info_per_instance.get(
@@ -804,7 +809,10 @@ class QiskitRuntimeService:
                 calibration_id=calibration_id,
                 physical_qubits=physical_qubits,
             )
-        return None
+
+        raise QiskitBackendNotFoundError(
+            f"Unable to create configuration for {backend_name}, assuming backend is retired"
+        )
 
     def active_account(self) -> dict[str, str] | None:
         """Return the IBM Quantum account currently in use for the session.
