@@ -17,7 +17,7 @@ from unittest import skipUnless
 
 import numpy as np
 from ddt import data, ddt, unpack
-from qiskit.circuit import Barrier, QuantumCircuit
+from qiskit.circuit import Barrier, QuantumCircuit, QuantumRegister
 from qiskit.quantum_info import DensityMatrix, PauliLindbladMap
 from qiskit.transpiler import PassManager
 from qiskit.utils import optionals
@@ -148,3 +148,45 @@ class TestInsertNoisePass(IBMTestCase):
         expected_p1 = (1 - np.exp(-2 * rates_per_physical_qubit)) / 2
         actual_p1 = np.array([dm.probabilities([q])[1] for q in range(circuit.num_qubits)])
         np.testing.assert_allclose(actual_p1, expected_p1, atol=1e-10)
+
+    def test_noise_injected_inside_control_flow_block(self):
+        """Test that noise is injected into barriers inside control flow blocks."""
+        separate_body = QuantumCircuit(QuantumRegister(2, "inner"))
+        separate_body.append(Barrier(2, label="R0@tag=r0"), separate_body.qubits)
+
+        circuit = QuantumCircuit(3, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.append(Barrier(2, label="R0@tag=r0"), [2, 0])
+        circuit.if_test((circuit.clbits[0], True), separate_body, [2, 0], [])
+
+        noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
+        result = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_after=True)]).run(
+            circuit
+        )
+
+        if_instrs = [instr for instr in result.data if instr.operation.name == "if_else"]
+        self.assertEqual(len(if_instrs), 2)
+        for if_instr in if_instrs:
+            if_body = if_instr.operation.blocks[0]
+
+            # if_instr.qubits = [circuit.qubits[2], circuit.qubits[0]], so:
+            #   if_body.qubits[0] -> parent qubit 2
+            #   if_body.qubits[1] -> parent qubit 0
+            
+            self.assertEqual(if_body.num_qubits, 2)
+            self.assertIs(if_instr.qubits[0], result.qubits[2])
+            self.assertIs(if_instr.qubits[1], result.qubits[0])
+            
+            self.assertEqual(len(_noise_error_ops(if_body)), 1)
+            barrier_instr = next(instr for instr in if_body.data if instr.operation.name == "barrier")
+            noise_instr = next(instr for instr in if_body.data if instr.operation.name == "quantum_channel")
+
+            # The barrier preserves its original local qubit order [0, 1].
+            self.assertIs(barrier_instr.qubits[0], if_body.qubits[0])
+            self.assertIs(barrier_instr.qubits[1], if_body.qubits[1])
+
+            # Barrier qargs [2, 0] sorted ascending -> [0, 2], so the noise channel must
+            # be applied to local qubit 1 (parent qubit 0) then local qubit 0 (parent qubit 2).
+            self.assertIs(noise_instr.qubits[0], if_body.qubits[1])
+            self.assertIs(noise_instr.qubits[1], if_body.qubits[0])
