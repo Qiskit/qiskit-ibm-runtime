@@ -74,9 +74,7 @@ class InsertNoisePass(TransformationPass):
         physical_index = {q: dag.find_bit(q).index for q in dag.qubits}
         return self._process_dag(dag, physical_index)
 
-    def _process_dag(
-        self, dag: DAGCircuit, physical_index: dict[Qubit, int]
-    ) -> DAGCircuit:
+    def _process_dag(self, dag: DAGCircuit, physical_index: dict[Qubit, int]) -> DAGCircuit:
         """Process a DAG, recursing into control-flow blocks."""
         for op_node in reversed(list(dag.topological_op_nodes())):
             if op_node.name == "barrier":

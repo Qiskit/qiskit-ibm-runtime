@@ -173,14 +173,18 @@ class TestInsertNoisePass(IBMTestCase):
             # if_instr.qubits = [circuit.qubits[2], circuit.qubits[0]], so:
             #   if_body.qubits[0] -> parent qubit 2
             #   if_body.qubits[1] -> parent qubit 0
-            
+
             self.assertEqual(if_body.num_qubits, 2)
             self.assertEqual(result.find_bit(if_instr.qubits[0]).index, 2)
             self.assertEqual(result.find_bit(if_instr.qubits[1]).index, 0)
-            
+
             self.assertEqual(len(_noise_error_ops(if_body)), 1)
-            barrier_instr = next(instr for instr in if_body.data if instr.operation.name == "barrier")
-            noise_instr = next(instr for instr in if_body.data if instr.operation.name == "quantum_channel")
+            barrier_instr = next(
+                instr for instr in if_body.data if instr.operation.name == "barrier"
+            )
+            noise_instr = next(
+                instr for instr in if_body.data if instr.operation.name == "quantum_channel"
+            )
 
             # The barrier preserves its original local qubit order [0, 1].
             self.assertEqual(if_body.find_bit(barrier_instr.qubits[0]).index, 0)
