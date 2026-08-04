@@ -175,8 +175,8 @@ class TestInsertNoisePass(IBMTestCase):
             #   if_body.qubits[1] -> parent qubit 0
             
             self.assertEqual(if_body.num_qubits, 2)
-            self.assertIs(if_instr.qubits[0], result.qubits[2])
-            self.assertIs(if_instr.qubits[1], result.qubits[0])
+            self.assertEqual(result.find_bit(if_instr.qubits[0]).index, 2)
+            self.assertEqual(result.find_bit(if_instr.qubits[1]).index, 0)
             
             self.assertEqual(len(_noise_error_ops(if_body)), 1)
             barrier_instr = next(instr for instr in if_body.data if instr.operation.name == "barrier")
