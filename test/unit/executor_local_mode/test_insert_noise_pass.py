@@ -183,10 +183,10 @@ class TestInsertNoisePass(IBMTestCase):
             noise_instr = next(instr for instr in if_body.data if instr.operation.name == "quantum_channel")
 
             # The barrier preserves its original local qubit order [0, 1].
-            self.assertIs(barrier_instr.qubits[0], if_body.qubits[0])
-            self.assertIs(barrier_instr.qubits[1], if_body.qubits[1])
+            self.assertEqual(if_body.find_bit(barrier_instr.qubits[0]).index, 0)
+            self.assertEqual(if_body.find_bit(barrier_instr.qubits[1]).index, 1)
 
             # Barrier qargs [2, 0] sorted ascending -> [0, 2], so the noise channel must
             # be applied to local qubit 1 (parent qubit 0) then local qubit 0 (parent qubit 2).
-            self.assertIs(noise_instr.qubits[0], if_body.qubits[1])
-            self.assertIs(noise_instr.qubits[1], if_body.qubits[0])
+            self.assertEqual(if_body.find_bit(noise_instr.qubits[0]).index, 1)
+            self.assertEqual(if_body.find_bit(noise_instr.qubits[1]).index, 0)
