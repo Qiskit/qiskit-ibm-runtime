@@ -132,9 +132,6 @@ class Job:
     status: Literal["queued", "running", "completed", "cancelled", "failed"] = "completed"
     """Job status."""
 
-    tags: list[str] = field(default_factory=list)
-    """List of job tags."""
-
 
 class BaseRegistry(FirstMatchRegistry):
     """Registry that dynamically serves IBM Quantum Compute responses.
@@ -225,7 +222,7 @@ class BaseRegistry(FirstMatchRegistry):
             )
         )
 
-        # Add responses for the IBM Quantum Compute `/instances` endpoint.
+        # Add responses for the IBM Quantum Compute `/instances` endpoints.
         self.add(
             Response(
                 method=GET,
@@ -323,10 +320,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         if instance.name not in self.backends:
             return (404, {"Content-Type": "application/json"}, "{}")
 
@@ -351,10 +345,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = request.path_url.split("/")[4]
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
@@ -371,10 +362,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = request.path_url.split("/")[4]
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
@@ -391,10 +379,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = request.path_url.split("/")[4]
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
@@ -417,10 +402,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = json.loads(str(request.body))["backend"]
 
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
@@ -440,29 +422,10 @@ class BaseRegistry(FirstMatchRegistry):
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
         """
-        # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        # Validate the instance CRN.
+        instance = self.get_crn_from_request(request)
         if instance.name not in self.backends:
             return (404, {"Content-Type": "application/json"}, "{}")
-
-        # Retrieve query parameters.
-        query_dict: dict = dict(parse_qsl(urlparse(request.url).query))
-        limit = int(query_dict.get("limit", 0))
-        offset = int(query_dict.get("offset", 0))
-        program = query_dict.get("program", None)
-        pending = query_dict.get("pending", None)
-
-        # Build filter based on query parameters.
-        filter_: dict[str, tuple] = {}
-        if program:
-            filter_["program"] = (program,)
-        if pending == "true":
-            filter_["status"] = ("queued", "running")
-        elif pending == "false":
-            filter_["status"] = ("completed", "cancelled", "failed")
 
         jobs = [
             {
@@ -472,14 +435,13 @@ class BaseRegistry(FirstMatchRegistry):
                 "program": {"id": job.program},
             }
             for job in self.jobs[instance.name].values()
-            if all(getattr(job, key) in value for key, value in filter_.items())
         ]
 
         response_body = {
-            "jobs": jobs[offset : offset + limit],
+            "jobs": jobs,
             "count": len(jobs),
-            "limit": limit,
-            "offset": offset,
+            "limit": 20,
+            "offset": 0,
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
@@ -492,10 +454,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         job_id = request.path_url.split("/")[-1].split("?")[0]
 
         if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
@@ -510,6 +469,13 @@ class BaseRegistry(FirstMatchRegistry):
             "program": {"id": job.program},
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+    
+    def get_crn_from_request(self, request: PreparedRequest) -> Instance:
+        """Retrieve the instance CRN from the request headers."""
+        instance_crn = request.headers.get("Service-CRN")
+        return next(
+            instance for instance in self.instances.values() if instance.crn == instance_crn
+        )
 
 
 class DefaultRegistry(BaseRegistry):
