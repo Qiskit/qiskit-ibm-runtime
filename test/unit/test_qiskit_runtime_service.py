@@ -101,7 +101,7 @@ class TestQiskitRuntimeService(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         # `_all_instances` contains all the instances available.
         self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
-        # `_backend_configs` is empty.
+        # `_backend_configs` is empty (populated by `backends()`).
         self.assertEqual(service._backend_configs, {})
         # `_api_clients` contains one client per instance available.
         self.assertEqual(set(service._api_clients.keys()), crns_in_registry)
@@ -126,21 +126,20 @@ class TestQiskitRuntimeService(IBMTestCase):
     def test_initialization_state_passing_instance(
         self, with_env_var: bool, registry: OneInstanceNoBackendsRegistry
     ) -> None:
-        """Test `__init__` state variables, passing the `instance` argument on empty registry."""
-        registry.add_instance(Instance("a"))
-        chosen_crn = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+        """Test `__init__` state variables, passing the `instance` argument."""
+        chosen_crn = registry.instances["a"].crn
         crns_in_registry = {chosen_crn}
 
         if with_env_var:
             # Using the `QISKIT_FUNCTIONS_EXPERIMENTAL` should have no side effects.
-            with custom_envs({"QISKIT_FUNCTIONS_EXPERIMENTAL": chosen_crn}):
+            with custom_envs({"QISKIT_FUNCTIONS_EXPERIMENTAL": "FOO"}):
                 service = QiskitRuntimeService(token="my_token", instance=chosen_crn)
         else:
             service = QiskitRuntimeService(token="my_token", instance=chosen_crn)
 
         # `_all_instances` contains all the instances available.
         self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
-        # `_backend_configs` is empty.
+        # `_backend_configs` is empty (populated by `backends()`).
         self.assertEqual(service._backend_configs, {})
         # `_api_clients` contains only a client for the specified instance.
         self.assertEqual(set(service._api_clients.keys()), {chosen_crn})
