@@ -148,3 +148,17 @@ class TestInsertNoisePass(IBMTestCase):
         expected_p1 = (1 - np.exp(-2 * rates_per_physical_qubit)) / 2
         actual_p1 = np.array([dm.probabilities([q])[1] for q in range(circuit.num_qubits)])
         np.testing.assert_allclose(actual_p1, expected_p1, atol=1e-10)
+
+    def test_noise_injected_inside_control_flow_block(self):
+        """Test that noise is injected into barriers inside control flow blocks."""
+        circuit = QuantumCircuit(2, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.append(Barrier(2, label="R0@tag=r0"), [0, 1])
+
+        noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1), ("IX", 0.2)])}
+        pm = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_after=True)])
+        result = pm.run(circuit)
+
+        if_body = next(instr for instr in result.data if instr.operation.name == "if_else")
+        self.assertEqual(len(_noise_error_ops(if_body.operation.blocks[0])), 1)
