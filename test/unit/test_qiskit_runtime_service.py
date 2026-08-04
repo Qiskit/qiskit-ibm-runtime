@@ -17,21 +17,24 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
+from ddt import data, ddt
 from qiskit import QuantumCircuit
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..account import custom_envs
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..registries import Backend, Instance, OneInstanceNoBackendsRegistry
+from ..registries import Backend, DefaultRegistry, Instance, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
 
 if TYPE_CHECKING:
     from ..registries import DefaultRegistry
 
 
+@ddt
 class TestQiskitRuntimeService(IBMTestCase):
     """Class for testing the `QiskitRuntimeService` class."""
 
@@ -87,8 +90,8 @@ class TestQiskitRuntimeService(IBMTestCase):
         self.assertEqual(service._active_api_client, backend_b._api_client)
 
     @mock_responses
-    def test_initialization_state_variables(self, registry: DefaultRegistry) -> None:
-        """Test state variables populated during `__init__`."""
+    def test_initialization_state(self, registry: DefaultRegistry) -> None:
+        """Test `__init__` state variables, with default arguments."""
         crns_in_registry = {instance.crn for instance in registry.instances.values()}
         backends_in_registry = {
             instance.crn: set(registry.backends[instance.name])
@@ -118,16 +121,23 @@ class TestQiskitRuntimeService(IBMTestCase):
             backends_in_registry,
         )
 
-    @mock_responses
-    def test_initialization_state_variables_passing_instance(
-        self, registry: DefaultRegistry
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    @data(True, False)
+    def test_initialization_state_passing_instance(
+        self, with_env_var: bool, registry: OneInstanceNoBackendsRegistry
     ) -> None:
-        """Test state variables populated during `__init__`, passing the `instance` argument."""
-        chosen_crn = registry.instances["a"].crn
-        crns_in_registry = {instance.crn for instance in registry.instances.values()}
+        """Test `__init__` state variables, passing the `instance` argument on empty registry."""
+        registry.add_instance(Instance("a"))
+        chosen_crn = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+        crns_in_registry = {chosen_crn}
 
-        service = QiskitRuntimeService(token="my_token", instance="a")
-        print(service._backends_info_per_instance)
+        if with_env_var:
+            # Using the `QISKIT_FUNCTIONS_EXPERIMENTAL` should have no side effects.
+            with custom_envs({"QISKIT_FUNCTIONS_EXPERIMENTAL": chosen_crn}):
+                service = QiskitRuntimeService(token="my_token", instance=chosen_crn)
+        else:
+            service = QiskitRuntimeService(token="my_token", instance=chosen_crn)
+
         # `_all_instances` contains all the instances available.
         self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
         # `_backend_configs` is empty.
