@@ -152,7 +152,7 @@ class TestInsertNoisePass(IBMTestCase):
     def test_noise_injected_inside_control_flow_block(self):
         """Test that noise is injected into barriers inside control flow blocks."""
         separate_body = QuantumCircuit(QuantumRegister(2, "inner"))
-        separate_body.append(Barrier(2, label="R0@tag=r0"), separate_body.qubits)
+        separate_body.append(Barrier(2, label="R0@tag=r0"), [0, 1])
 
         circuit = QuantumCircuit(3, 1)
         circuit.measure(0, 0)
