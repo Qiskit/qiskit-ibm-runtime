@@ -21,10 +21,12 @@ from qiskit.primitives.primitive_job import PrimitiveJob
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
+    from qiskit.primitives.containers.primitive_result import PrimitiveResult
     from qiskit.providers import BackendV2
 
     from ..options_models.simulator import ExperimentalSimulatorOptions
     from ..quantum_program import QuantumProgram
+    from ..results import QuantumProgramResult
 
 
 class SimRuntimeJob(PrimitiveJob):
@@ -64,8 +66,17 @@ class SimRuntimeJob(PrimitiveJob):
         program: QuantumProgram,
         options: ExperimentalSimulatorOptions,
     ):
+        from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
+
+        def _fn(
+            backend: BackendV2, program: QuantumProgram, options: ExperimentalSimulatorOptions
+        ) -> QuantumProgramResult | PrimitiveResult:
+            return QuantumProgramResultDecoder._apply_post_processing(
+                run_quantum_program(backend, program, options)
+            )
+
         super().__init__(
-            function=run_quantum_program,
+            function=_fn,
             backend=backend,
             program=program,
             options=options,

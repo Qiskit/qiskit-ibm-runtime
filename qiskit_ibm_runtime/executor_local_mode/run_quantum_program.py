@@ -145,9 +145,11 @@ def run_quantum_program(
         else:
             raise TypeError(f"Unsupported QuantumProgramItem type: {type(prog_item)}")
 
-    return QuantumProgramResult(
+    ret = QuantumProgramResult(
         data=result_list,
         # metadata=dict(enumerate(metadata_list)),
         metadata=None,  # TODO: Figure this out
         passthrough_data=program.passthrough_data,
     )
+    ret._semantic_role = program._semantic_role
+    return ret

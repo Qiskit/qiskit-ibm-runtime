@@ -18,7 +18,6 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
-from qiskit.primitives.containers import BitArray
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
@@ -383,10 +382,10 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         # Verify we got results
         self.assertEqual(len(result), 1)
-        self.assertIsNotNone(result[0])
+        self.assertIsNotNone(result[0].data)
 
         # Verify the results are valid Bell state measurements
-        counts = BitArray.from_bool_array(result[0]["c"]).get_counts()
+        counts = result[0].data.c.get_counts()
         # Should only have |00> and |11> states
         for bitstring in counts.keys():
             self.assertIn(bitstring, ["00", "11"])
@@ -415,8 +414,8 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         job1 = sampler1.run([transpiled])
         result1 = job1.result()
+        counts1 = result1[0].data.meas.get_counts()
 
-        counts1 = BitArray.from_bool_array(result1[0]["meas"]).get_counts()
         # Second sampler with same seed
         sampler2 = SamplerV2(
             mode=backend,
@@ -426,7 +425,8 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         job2 = sampler2.run([transpiled])
         result2 = job2.result()
-        counts2 = BitArray.from_bool_array(result2[0]["meas"]).get_counts()
+        counts2 = result2[0].data.meas.get_counts()
+
         # Results should be identical with same seed
         self.assertEqual(counts1, counts2)
 
@@ -440,7 +440,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         job3 = sampler3.run([transpiled])
         result3 = job3.result()
-        counts3 = BitArray.from_bool_array(result3[0]["meas"]).get_counts()
+        counts3 = result3[0].data.meas.get_counts()
 
         # Results should be different with different seed
         self.assertNotEqual(counts1, counts3)
@@ -479,7 +479,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
             [np.pi, np.pi / 2],  # Third parameter set
         ]
 
-        # Create sampler with all simulator options and set seed for reproducibility
+        # Create sampler with all simulator options
         simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
         sampler = SamplerV2(
             mode=backend,
@@ -492,14 +492,14 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         # Verify results structure
         self.assertEqual(len(result), 1)
-        self.assertIsNotNone(result[0])
+        self.assertIsNotNone(result[0].data)
 
         # Verify we got results for all parameter sets
         pub_result = result[0]
-        self.assertIsNotNone(pub_result.get("meas", None))
+        self.assertIsNotNone(pub_result.data.meas)
 
         # Get counts and verify basic properties
-        counts = BitArray.from_bool_array(pub_result["meas"]).get_counts()
+        counts = pub_result.data.meas.get_counts()
 
         # Total counts should equal shots × number of parameter sets
         self.assertEqual(sum(counts.values()), 3000)
