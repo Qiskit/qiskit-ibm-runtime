@@ -18,6 +18,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
+from ..executor_local_mode import SimRuntimeJob
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
@@ -91,7 +92,9 @@ class Executor:
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
-        if isinstance(self._service, QiskitRuntimeLocalService):
+
+        local_mode = self.options.experimental.get("local_mode", False)
+        if isinstance(self._service, QiskitRuntimeLocalService) and not local_mode:
             raise ValueError("The executor is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -118,6 +121,11 @@ class Executor:
         Returns:
             A job.
         """
+        if isinstance(self._service, QiskitRuntimeLocalService):
+            return SimRuntimeJob(
+                backend=self._backend, program=program, options=self.options.simulator
+            )
+
         try:
             converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
         except KeyError:
