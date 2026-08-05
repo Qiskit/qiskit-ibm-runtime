@@ -13,8 +13,6 @@
 """Tests for Executor."""
 
 import numpy as np
-from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
@@ -23,6 +21,7 @@ from qiskit_ibm_runtime import Executor, QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramItemResult, QuantumProgramResult
 
 from ..ibm_test_case import IBMIntegrationTestCase
+from ..utils import make_mirror_circuit_with_phases
 
 
 class TestExecutor(IBMIntegrationTestCase):
@@ -43,20 +42,12 @@ class TestExecutor(IBMIntegrationTestCase):
 
     def test_executor_with_circuit_item(self):
         """Test sampler with a single circuit item."""
-        circuit = QuantumCircuit(3, name="GHZ with params")
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.cx(1, 2)
-        circuit.rz(Parameter("theta"), 0)
-        circuit.rz(Parameter("phi"), 1)
-        circuit.rz(Parameter("lam"), 2)
-        circuit.measure_all()
+        circuit = make_mirror_circuit_with_phases(self.backend, num_qubits=3)
 
         shape = (2, 3)
         circuit_arguments = np.random.random(shape + (circuit.num_parameters,))
 
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
-        isa_circuit = pm.run(circuit)
+        isa_circuit = self.pm.run(circuit)
 
         passthrough_data = {
             "str": "ciao",
@@ -97,14 +88,7 @@ class TestExecutor(IBMIntegrationTestCase):
 
     def test_executor_with_samplex_item(self):
         """Test sampler with a single samplex item."""
-        circuit = QuantumCircuit(3, name="GHZ with params")
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.cx(1, 2)
-        circuit.rz(Parameter("theta"), 0)
-        circuit.rz(Parameter("phi"), 1)
-        circuit.rz(Parameter("lam"), 2)
-        circuit.measure_all()
+        circuit = make_mirror_circuit_with_phases(self.backend, num_qubits=3)
 
         shape = (2, 3)
         parameter_values = np.random.random(shape + (circuit.num_parameters,))
