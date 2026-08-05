@@ -19,9 +19,9 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime import Executor, QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramItemResult, QuantumProgramResult
-from test.utils import make_mirror_circuit_with_phases
 
 from ..ibm_test_case import IBMIntegrationTestCase
+from ..utils import make_mirror_circuit_with_phases
 
 
 class TestExecutor(IBMIntegrationTestCase):
