@@ -23,8 +23,6 @@ from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
 
-# if HAS_AER:
-#     from qiskit_aer.noise import NoiseModel, depolarizing_error
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
 
@@ -474,25 +472,6 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         # Create sampler with all simulator options
         sampler = SamplerV2(mode=backend)
-
-        # TODO
-        # # Set noise model (simple depolarizing noise)
-
-        # noise_model = NoiseModel()
-        # # Add depolarizing error to single-qubit gates
-        # error_1q = depolarizing_error(0.001, 1)
-        # noise_model.add_all_qubit_quantum_error(error_1q, ["h", "rx", "ry"])
-        # # Add depolarizing error to two-qubit gates
-        # error_2q = depolarizing_error(0.01, 2)
-        # noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
-
-        # sampler.options.simulator.noise_model = noise_model
-
-        # # Set coupling map (linear topology for 3 qubits)
-        # sampler.options.simulator.coupling_map = [[0, 1], [1, 0], [1, 2], [2, 1]]
-
-        # # Set basis gates
-        # sampler.options.simulator.basis_gates = ["h", "rx", "ry", "cx", "id"]
 
         # Set seed for reproducibility
         sampler.options.simulator.seed_simulator = 42
