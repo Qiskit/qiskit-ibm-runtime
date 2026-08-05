@@ -98,8 +98,10 @@ class Executor:
         if isinstance(self._service, QiskitRuntimeLocalService) and not local_mode:
             raise ValueError("The executor is currently not supported in local mode.")
 
-        if local_mode and self.options.experimental.get("sim_options", None) is None:
-            self.options.experimental["sim_options"] = ExperimentalSimulatorOptions()
+        if local_mode:
+            self.options.experimental["simulator_options"] = self.options.experimental.get(
+                "simulator_options", ExperimentalSimulatorOptions()
+            )
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -129,7 +131,7 @@ class Executor:
             return SimRuntimeJob(
                 backend=self._backend,
                 program=program,
-                options=self.options.experimental["sim_options"],
+                options=self.options.experimental["simulator_options"],
             )
 
         try:
