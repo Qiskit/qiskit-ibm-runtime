@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for SimulatorOptions and SimulatorOptions."""
+"""Tests for SimulatorOptions and ExperimentalSimulatorOptions."""
 
 from unittest.mock import patch
 
