@@ -30,8 +30,8 @@ from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
-    from qiskit.quantum_info import PauliLindbladMap
 
+    from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
 
 if HAS_AER:
@@ -52,25 +52,23 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
 def run_quantum_program(
     backend: BackendV2,
     program: QuantumProgram,
-    noise_dict: dict[str, PauliLindbladMap] | None = None,
-    angle_decimals: int = 5,
-    warn_absent: bool = True,
-    seed: int | None = None,
+    options: SimulatorOptions,
 ) -> QuantumProgramResult:
     """Run a quantum program on a simulator.
 
     Args:
         backend: The backend to simulate.
         program: The program to run.
-        noise_dict: A map from barrier label refs to noise maps.
-        angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.
-        warn_absent: Passed to :class:`~.InsertNoisePass`.
-        seed: The seed to use.
+        options: The simulator options to use.
 
     Returns:
         Results of simulation.
     """
+    noise_dict = options.noise_model
+    angle_decimals = options.angle_decimals
+    warn_absent = options.warn_absent
+    seed = options.seed_simulator
+
     # Generate a sampler
     if isinstance(backend, AerSimulator):
         backend = deepcopy(backend)

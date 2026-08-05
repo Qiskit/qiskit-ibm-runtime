@@ -68,10 +68,7 @@ class SimRuntimeJob(PrimitiveJob):
             function=run_quantum_program,
             backend=backend,
             program=program,
-            noise_dict=options.noise_model,
-            angle_decimals=options.angle_decimals,
-            warn_absent=options.warn_absent,
-            seed=options.seed_simulator,
+            options=options,
         )
 
         self._submit()
