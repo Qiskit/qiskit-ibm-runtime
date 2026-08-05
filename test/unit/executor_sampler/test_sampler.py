@@ -374,7 +374,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         transpiled = pm.run(circuit)
 
-        sampler = SamplerV2(mode=backend)
+        sampler = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
 
         # Run should work and return results
         job = sampler.run([transpiled], shots=100)
@@ -405,7 +405,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         transpiled = pm.run(circuit)
 
         # First sampler with seed
-        sampler1 = SamplerV2(mode=backend)
+        sampler1 = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
         sampler1.options.simulator.seed_simulator = 42
         sampler1.options.default_shots = 200
 
@@ -414,7 +414,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         counts1 = BitArray.from_bool_array(result1[0]["meas"]).get_counts()
         # Second sampler with same seed
-        sampler2 = SamplerV2(mode=backend)
+        sampler2 = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
         sampler2.options.simulator.seed_simulator = 42
         sampler2.options.default_shots = 200
 
@@ -425,7 +425,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         self.assertEqual(counts1, counts2)
 
         # Third sampler with different seed should give different results
-        sampler3 = SamplerV2(mode=backend)
+        sampler3 = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
         sampler3.options.simulator.seed_simulator = 123
         sampler3.options.default_shots = 200
 
@@ -471,7 +471,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         ]
 
         # Create sampler with all simulator options
-        sampler = SamplerV2(mode=backend)
+        sampler = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
 
         # Set seed for reproducibility
         sampler.options.simulator.seed_simulator = 42

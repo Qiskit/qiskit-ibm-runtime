@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -103,13 +103,19 @@ class SamplerV2(BaseSamplerV2):
     ):
         super().__init__()
 
-        # Coerced to `SamplerOptions` via `__setattr__()`.
-        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
-
         # Store mode, service, and backend for simulator detection
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
-        self._executor = Executor(mode=mode, options={"experimental": {"local_mode": True}})
+        # Coerced to `SamplerOptions` via `__setattr__()`.
+        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
+
+        # Only create executor for non-local backends
+        # For local simulators (QiskitRuntimeLocalService), we'll use BackendSamplerV2 directly
+        self._executor = None
+        if self.options.experimental.get("local_mode", False) or not isinstance(
+            self._service, QiskitRuntimeLocalService
+        ):
+            self._executor = Executor(mode=mode, options={"experimental": {"local_mode": True}})
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -159,6 +165,20 @@ class SamplerV2(BaseSamplerV2):
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else options.default_shots
 
+        # Check if we're in local simulator mode
+        if self._executor is None:
+            logger.info("Running in local simulator mode")
+
+            options_dict = options.model_dump()
+            options_dict["default_shots"] = shots
+
+            return self._service._run(
+                program_id="sampler",
+                inputs={"pubs": coerced_pubs, "options": options_dict},
+                options={"backend": self._backend},
+                calibration_id=None,
+            )
+
         # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
@@ -169,15 +189,12 @@ class SamplerV2(BaseSamplerV2):
         # Set executor options
         self._executor.options = executor_options
 
-        # logging the correct mode
-        if isinstance(self._service, QiskitRuntimeLocalService):
-            logger.info("Running in local simulator mode")
-        else:
-            logger.info(
-                "Submitting %d pub%s to executor with %d shots",
-                len(coerced_pubs),
-                "s" if len(coerced_pubs) > 1 else "",
-                quantum_program.shots,
-            )
+        # Submit to executor
+        logger.info(
+            "Submitting %d pub%s to executor with %d shots",
+            len(coerced_pubs),
+            "s" if len(coerced_pubs) > 1 else "",
+            quantum_program.shots,
+        )
 
         return self._executor.run(quantum_program)
