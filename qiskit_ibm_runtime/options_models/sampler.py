@@ -18,7 +18,7 @@ from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment import SamplerEnvironmentOptions
 from .execution import SamplerExecutionOptions
-from .simulator import LegacySimulatorOptions, SimulatorOptions
+from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
 
 
@@ -37,11 +37,8 @@ class SamplerOptions(BaseOptionsModel):
     twirling: TwirlingOptions = TwirlingOptions()
     """Pauli twirling options."""
 
-    simulator: LegacySimulatorOptions = LegacySimulatorOptions()
+    simulator: SimulatorOptions = SimulatorOptions()
     """Simulator options."""
-
-    local_mode: SimulatorOptions = SimulatorOptions()
-    """Executor based local mode simulator options."""
 
     experimental: dict = {}
     """Experimental options."""

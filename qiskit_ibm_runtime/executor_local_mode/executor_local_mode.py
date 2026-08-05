@@ -23,7 +23,7 @@ from .run_quantum_program import run_quantum_program
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from ..options_models.simulator import SimulatorOptions
+    from ..options_models.simulator import ExperimentalSimulatorOptions
     from ..quantum_program import QuantumProgram
 
 
@@ -32,8 +32,8 @@ class SimRuntimeJob(PrimitiveJob):
 
     **Noise injection**
 
-    When ``noise_model`` is provided in :class:`~.SimulatorOptions`, Pauli-Lindblad noise is
-    injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic
+    When ``noise_model`` is provided in :class:`~.ExperimentalSimulatorOptions`, Pauli-Lindblad
+    noise is injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic
     inserts three barriers around each boxed gate — left (``L``), middle (``M``), and right (``R``)
     — with labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default,
     noise is injected at the ``R`` (right) barriers, i.e. *after* the gate.  Use
@@ -62,7 +62,7 @@ class SimRuntimeJob(PrimitiveJob):
         self,
         backend: BackendV2,
         program: QuantumProgram,
-        options: SimulatorOptions,
+        options: ExperimentalSimulatorOptions,
     ):
         super().__init__(
             function=run_quantum_program,
