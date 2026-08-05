@@ -71,6 +71,7 @@ class SimRuntimeJob(PrimitiveJob):
             noise_dict=options.noise_model,
             angle_decimals=options.angle_decimals,
             warn_absent=options.warn_absent,
+            seed=options.seed_simulator,
         )
 
         self._submit()

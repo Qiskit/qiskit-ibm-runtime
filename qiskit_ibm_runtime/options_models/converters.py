@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
+
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .executor import ExecutorOptions
@@ -53,8 +55,10 @@ def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptio
 
     environment_options = options.environment.model_dump()
     execution_options = options.execution.model_dump(exclude={"meas_type"})
+    simulator_options = options.local_mode.model_dump()
     executor_options.environment = EnvironmentOptions(**environment_options)
     executor_options.execution = ExecutionOptions(**execution_options)
+    executor_options.simulator = SimulatorOptions(**simulator_options)
 
     executor_options.environment.max_execution_time = options.max_execution_time
     if options.experimental:

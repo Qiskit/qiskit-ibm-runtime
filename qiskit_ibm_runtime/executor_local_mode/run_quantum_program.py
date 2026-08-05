@@ -55,6 +55,7 @@ def run_quantum_program(
     noise_dict: dict[str, PauliLindbladMap] | None = None,
     angle_decimals: int = 5,
     warn_absent: bool = True,
+    seed: int | None = None,
 ) -> QuantumProgramResult:
     """Run a quantum program on a simulator.
 
@@ -65,6 +66,7 @@ def run_quantum_program(
         angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
             decimal precision before simulation.
         warn_absent: Passed to :class:`~.InsertNoisePass`.
+        seed: The seed to use.
 
     Returns:
         Results of simulation.
@@ -73,10 +75,11 @@ def run_quantum_program(
     if isinstance(backend, AerSimulator):
         backend = deepcopy(backend)
         backend.set_max_qubits(10000)
+        backend.set_options(seed_simulator=seed)
 
-    aer_sampler = AerSamplerV2.from_backend(backend)
+    aer_sampler = AerSamplerV2.from_backend(backend, seed=seed)
 
-    rng = np.random.default_rng(aer_sampler.seed)
+    rng = np.random.default_rng(seed)
 
     result_list = []
     metadata_list = []
