@@ -408,7 +408,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         # First sampler with seed
         sampler1 = SamplerV2(mode=backend)
-        sampler1.options.local_mode.seed_simulator = 42
+        sampler1.options.simulator.seed_simulator = 42
         sampler1.options.default_shots = 200
 
         job1 = sampler1.run([transpiled])
@@ -417,7 +417,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         counts1 = BitArray.from_bool_array(result1[0]["meas"]).get_counts()
         # Second sampler with same seed
         sampler2 = SamplerV2(mode=backend)
-        sampler2.options.local_mode.seed_simulator = 42
+        sampler2.options.simulator.seed_simulator = 42
         sampler2.options.default_shots = 200
 
         job2 = sampler2.run([transpiled])
@@ -428,7 +428,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
 
         # Third sampler with different seed should give different results
         sampler3 = SamplerV2(mode=backend)
-        sampler3.options.local_mode.seed_simulator = 123
+        sampler3.options.simulator.seed_simulator = 123
         sampler3.options.default_shots = 200
 
         job3 = sampler3.run([transpiled])
@@ -495,7 +495,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         # sampler.options.simulator.basis_gates = ["h", "rx", "ry", "cx", "id"]
 
         # Set seed for reproducibility
-        sampler.options.local_mode.seed_simulator = 42
+        sampler.options.simulator.seed_simulator = 42
 
         # Run with parameter sweep
         job = sampler.run([(transpiled, param_values)], shots=1000)

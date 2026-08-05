@@ -55,7 +55,7 @@ def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptio
 
     environment_options = options.environment.model_dump()
     execution_options = options.execution.model_dump(exclude={"meas_type"})
-    simulator_options = options.local_mode.model_dump()
+    simulator_options = options.simulator.model_dump()
     executor_options.environment = EnvironmentOptions(**environment_options)
     executor_options.execution = ExecutionOptions(**execution_options)
     executor_options.simulator = SimulatorOptions(**simulator_options)
