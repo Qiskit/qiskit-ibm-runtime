@@ -31,7 +31,7 @@ from .insert_noise_pass import InsertNoisePass
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from ..options_models.simulator import SimulatorOptions
+    from ..options_models.simulator import ExperimentalSimulatorOptions
     from ..quantum_program import QuantumProgram
 
 if HAS_AER:
@@ -52,7 +52,7 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
 def run_quantum_program(
     backend: BackendV2,
     program: QuantumProgram,
-    options: SimulatorOptions,
+    options: ExperimentalSimulatorOptions,
 ) -> QuantumProgramResult:
     """Run a quantum program on a simulator.
 
