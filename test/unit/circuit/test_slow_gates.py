@@ -15,6 +15,9 @@
 from qiskit import QuantumCircuit, generate_preset_pass_manager
 from qiskit.circuit import Instruction
 from qiskit.providers.fake_provider import GenericBackendV2
+from qiskit.transpiler.exceptions import TranspilerError
+
+from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
 from qiskit_ibm_runtime.circuit.library import CZSlowGate, XSlowGate
 
@@ -42,8 +45,19 @@ class TestXSlowGate(IBMTestCase):
         self.assertIs(qc.data[0].operation, gate)
         self.assertIs(qc.data[1].operation, gate)
 
+    def test_transpiler_compat_without(self):
+        """Test that the default pass manager fails if x_slow is not inthe target."""
+        gate = XSlowGate()
+        backend = FakeVigoV2()
+        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        qc = QuantumCircuit(1)
+        qc.append(gate, [0])
+        with self.assertRaises(TranspilerError):
+            pm.run(qc)
+
     def test_transpiler_compat_with(self):
-        """Test that default PM passes if x_slow is in Target and does not modify the instruction."""
+        """Test that the default pass manager passes if x_slow is in the target,
+        and does not modify the instruction."""
         gate = XSlowGate()
         backend = GenericBackendV2(num_qubits=5, seed=0)
         backend.target.add_instruction(gate, {(i,): None for i in range(5)})
@@ -75,8 +89,19 @@ class TestCZSlowGate(IBMTestCase):
         self.assertIs(qc.data[0].operation, gate)
         self.assertIs(qc.data[1].operation, gate)
 
+    def test_transpiler_compat_without(self):
+        """Test that the default pass manager fails if cz_slow is not in the target."""
+        gate = CZSlowGate()
+        backend = FakeVigoV2()
+        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        qc = QuantumCircuit(2)
+        qc.append(gate, [0, 1])
+        with self.assertRaises(TranspilerError):
+            pm.run(qc)
+
     def test_transpiler_compat_with(self):
-        """Test that default PM passes if cz_slow is in Target and does not modify the instruction."""
+        """Test that the default pass manager passes if cz_slow is in the target,
+        and does not modify the instruction."""
         gate = CZSlowGate()
         backend = GenericBackendV2(num_qubits=5, seed=0)
         coupling_pairs = {tuple(pair) for pair in backend.coupling_map}
