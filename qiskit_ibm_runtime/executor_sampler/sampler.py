@@ -187,10 +187,6 @@ class SamplerV2(BaseSamplerV2):
         # Set executor options
         self._executor.options = executor_options
 
-        self._executor.options.environment.image = (
-            "qiskit-ibm-primitives:04dc5d44dab8df0f995d76fc75dea44eb8b0dce8"  # noqa: E501
-        )
-
         # Submit to executor
         logger.info(
             "Submitting %d pub%s to executor with %d shots",
