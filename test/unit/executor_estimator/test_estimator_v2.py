@@ -12,7 +12,7 @@
 
 """Unit tests for EstimatorV2 run method."""
 
-import warnings as _warnings
+import warnings
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -552,10 +552,13 @@ class TestFinalizeOptions(IBMTestCase):
     def test_no_warning_when_twirling_field_not_set_by_user(self):
         """No warning when the user never set the twirling field that is being overridden."""
         estimator = EstimatorV2(self.backend)
+        # Use resilience_level=0 so enable_measure defaults to False, ensuring the only
+        # thing suppressing the warning is the field being absent from model_fields_set.
+        estimator.options.resilience_level = 0
         estimator.options.resilience.measure_mitigation = True
         # enable_measure was not explicitly set by the user → no warning expected
-        with _warnings.catch_warnings(record=True) as caught:
-            _warnings.simplefilter("always")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
             estimator.finalize_options()
         user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
         self.assertEqual(user_warns, [])
@@ -565,8 +568,8 @@ class TestFinalizeOptions(IBMTestCase):
         estimator = EstimatorV2(self.backend)
         estimator.options.twirling.enable_measure = True
         estimator.options.resilience.measure_mitigation = True
-        with _warnings.catch_warnings(record=True) as caught:
-            _warnings.simplefilter("always")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
             estimator.finalize_options()
         user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
         self.assertEqual(user_warns, [])
@@ -590,8 +593,8 @@ class TestFinalizeOptions(IBMTestCase):
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.measure_mitigation = False
         estimator.options.resilience.zne.amplifier = "pea"
-        with _warnings.catch_warnings(record=True) as caught:
-            _warnings.simplefilter("always")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
             estimator.finalize_options()
         msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
         self.assertTrue(any(field in m and "PEA mitigation" in m for m in msgs))
@@ -603,8 +606,8 @@ class TestFinalizeOptions(IBMTestCase):
         setattr(estimator.options.twirling, field, False)
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.measure_mitigation = False
-        with _warnings.catch_warnings(record=True) as caught:
-            _warnings.simplefilter("always")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
             estimator.finalize_options()
         msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
         self.assertTrue(any(field in m and "PEC mitigation" in m for m in msgs))
