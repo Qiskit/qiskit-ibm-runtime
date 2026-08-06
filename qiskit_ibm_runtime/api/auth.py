@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import os
 import warnings
 from typing import TYPE_CHECKING
 
@@ -47,7 +48,7 @@ class CloudAuth(AuthBase):
         self.private = private
         self.proxies = proxies
         self.verify = verify
-        iam_url = (
+        iam_url = os.environ.get("IAM_URL") or (
             f"https://{'private.' if private else ''}"
             f"{STAGING_CLOUD_IAM_URL if cname_from_crn(crn) == 'staging' else CLOUD_IAM_URL}"
         )
