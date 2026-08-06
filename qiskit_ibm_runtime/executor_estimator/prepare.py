@@ -20,11 +20,9 @@ from typing import TYPE_CHECKING
 from ..exceptions import IBMInputValueError
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
-from ..options_models.zne import PEA_DEFAULT_NOISE_FACTORS, ZNE_DEFAULT_NOISE_FACTORS
 from .pec.prepare_pec import prepare_pec
 from .prepare_pea import prepare_pea
 from .prepare_vanilla import prepare_vanilla
-from .utils import validate_noise_factors
 from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
@@ -104,16 +102,6 @@ def prepare(
             add_tags=add_tags,
         )
     elif options.resilience.zne_mitigation:
-        if options.resilience.zne.noise_factors == "auto":
-            noise_factors: Sequence[float] = (
-                PEA_DEFAULT_NOISE_FACTORS
-                if options.resilience.zne.amplifier == "pea"
-                else ZNE_DEFAULT_NOISE_FACTORS
-            )
-        else:
-            noise_factors = options.resilience.zne.noise_factors
-        validate_noise_factors(noise_factors, options.resilience.zne.extrapolator)
-
         if options.resilience.zne.amplifier == "pea":
             logger.info("Running ``prepare_pea``.")
             quantum_program = prepare_pea(

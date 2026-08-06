@@ -20,6 +20,7 @@ from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.zne.prepare_zne import prepare_zne
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
@@ -360,3 +361,22 @@ class TestPrepareZne(IBMTestCase):
         zne_options.amplifier = "gate_folding"
         with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
             zne_options.noise_factors = [1.5]
+
+    def test_prepare_zne_raises_error_with_too_few_noise_factors_for_extrapolator(self):
+        """Test that prepare_zne rejects noise_factors under-specified for the extrapolator."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        twirling_options = TwirlingOptions()
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.extrapolator = "double_exponential"
+        zne_options.noise_factors = [1.0, 3.0]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError, "double_exponential requires at least 4 noise_factors"
+        ):
+            prepare_zne([pub], twirling_options, 100, zne_options)
