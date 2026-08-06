@@ -17,9 +17,8 @@ from qiskit.circuit import Instruction
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler.exceptions import TranspilerError
 
-from qiskit_ibm_runtime.fake_provider import FakeVigoV2
-
 from qiskit_ibm_runtime.circuit.library import CZSlowGate, XSlowGate
+from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
 from ...ibm_test_case import IBMTestCase
 
@@ -56,8 +55,10 @@ class TestXSlowGate(IBMTestCase):
             pm.run(qc)
 
     def test_transpiler_compat_with(self):
-        """Test that the default pass manager passes if x_slow is in the target,
-        and does not modify the instruction."""
+        """Test that the default pass manager passes if x_slow is in the target.
+
+        Test also that the pass manager does not modify the instruction.
+        """
         gate = XSlowGate()
         backend = GenericBackendV2(num_qubits=5, seed=0)
         backend.target.add_instruction(gate, {(i,): None for i in range(5)})
@@ -100,12 +101,14 @@ class TestCZSlowGate(IBMTestCase):
             pm.run(qc)
 
     def test_transpiler_compat_with(self):
-        """Test that the default pass manager passes if cz_slow is in the target,
-        and does not modify the instruction."""
+        """Test that the default pass manager passes if cz_slow is in the target.
+
+        Test also that the pass manager does not modify the instruction.
+        """
         gate = CZSlowGate()
         backend = GenericBackendV2(num_qubits=5, seed=0)
         coupling_pairs = {tuple(pair) for pair in backend.coupling_map}
-        backend.target.add_instruction(gate, {pair: None for pair in coupling_pairs})
+        backend.target.add_instruction(gate, dict.fromkeys(coupling_pairs))
         pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
         qc = QuantumCircuit(2)
         qc.append(gate, [0, 1])
