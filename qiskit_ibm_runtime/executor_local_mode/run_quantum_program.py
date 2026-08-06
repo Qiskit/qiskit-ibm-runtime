@@ -144,8 +144,7 @@ def run_quantum_program(
 
     ret = QuantumProgramResult(
         data=result_list,
-        # metadata=dict(enumerate(metadata_list)),
-        metadata=None,  # TODO: Figure this out
+        metadata=None,
         passthrough_data=program.passthrough_data,
     )
     ret._semantic_role = program._semantic_role

@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..options_models.simulator import ExperimentalSimulatorOptions
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .executor import ExecutorOptions
@@ -67,11 +66,6 @@ def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptio
                 executor_options.execution.scheduler_timing = True
             if execution_key.get("stretch_values", False):
                 executor_options.execution.stretch_values = True
-
-        if options.experimental.get("local_mode", False):
-            executor_options.experimental["simulator_options"] = options.experimental.get(
-                "simulator_options", ExperimentalSimulatorOptions()
-            )
 
     return executor_options
 
