@@ -19,8 +19,8 @@ from qiskit.transpiler import PassManager
 
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
-    ConvertToMidCircuitResetAndMeasure,
     ConvertToMidCircuitMeasure,
+    ConvertToMidCircuitResetAndMeasure,
 )
 
 from .....ibm_test_case import IBMTestCase
