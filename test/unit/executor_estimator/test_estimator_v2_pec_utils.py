@@ -308,7 +308,10 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
                     noise_model_mapping=noise_model_mapping,
                     measure_noise_learning=measure_noise_learning,
                 )
-                self.assertSamplexItemIsCorrect(program.items[0], scenario, inject_noise=True)
+                # PEC always requires enable_gates=True
+                self.assertSamplexItemIsCorrect(
+                    program.items[0], scenario, inject_noise=True, enable_gates=True
+                )
 
     def test_prepare_pec_basic(self):
         """Test prepare_pec with basic PEC options and noise model."""

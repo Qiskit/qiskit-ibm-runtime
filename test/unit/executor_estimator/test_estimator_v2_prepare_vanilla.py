@@ -120,7 +120,9 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
                     shots=10,
                     measure_noise_learning=measure_noise_learning,
                 )
-                self.assertSamplexItemIsCorrect(program.items[0], scenario, inject_noise=False)
+                self.assertSamplexItemIsCorrect(
+                    program.items[0], scenario, inject_noise=False, enable_gates=enable_gates
+                )
 
     @data(
         [(2, 2), (2, 2), (1, 4)],
