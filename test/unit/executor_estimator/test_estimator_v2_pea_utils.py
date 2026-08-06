@@ -143,7 +143,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
                     noise_model_mapping=noise_model_mapping,
                     measure_noise_learning=measure_noise_learning,
                 )
-                self.assertSamplexItem(program.items[0], scenario, inject_noise=True)
+                self.assertSamplexItemIsCorrect(program.items[0], scenario, inject_noise=True)
 
     def test_prepare_pea_basic(self):
         """Test prepare_pea with basic noise factors and noise model."""

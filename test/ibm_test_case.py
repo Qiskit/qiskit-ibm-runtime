@@ -175,7 +175,7 @@ class IBMTestCase(TestCase):
 class IBMEstimatorPrepareTestCase(IBMTestCase):
     """TestCase with assertions for estimator prepare-function tests."""
 
-    def assertSamplexItem(
+    def assertSamplexItemIsCorrect(
         self,
         item: SamplexItem,
         scenario: SamplexCircuitScenario,

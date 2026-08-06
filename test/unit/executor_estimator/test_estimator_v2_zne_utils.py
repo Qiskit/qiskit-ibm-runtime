@@ -127,7 +127,7 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
                 )
                 # One item per noise factor; skip any trailing TREX item
                 for item in program.items[: len(zne_options.noise_factors)]:
-                    self.assertSamplexItem(item, scenario, inject_noise=False)
+                    self.assertSamplexItemIsCorrect(item, scenario, inject_noise=False)
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""

@@ -134,10 +134,10 @@ def _make_samplex_circuit_scenarios() -> list[SamplexCircuitScenario]:
     obs2 = SparsePauliOp.from_list([("ZZ", 1)])
     obs3 = SparsePauliOp.from_list([("ZZZ", 1)])
 
-    # regular: no parameters, no mid-circuit measurements
-    qc_regular = QuantumCircuit(2)
-    qc_regular.h(0)
-    qc_regular.cx(0, 1)
+    # non-parametric: no parameters, no mid-circuit measurements
+    qc_non_parametric = QuantumCircuit(2)
+    qc_non_parametric.h(0)
+    qc_non_parametric.cx(0, 1)
 
     # parametric: one free parameter
     qc_parametric = QuantumCircuit(2)
@@ -162,8 +162,8 @@ def _make_samplex_circuit_scenarios() -> list[SamplexCircuitScenario]:
 
     return [
         SamplexCircuitScenario(
-            label="regular",
-            pub=EstimatorPub.coerce((qc_regular, obs2)),
+            label="non_parameteric",
+            pub=EstimatorPub.coerce((qc_non_parametric, obs2)),
             has_parameter_values=False,
             num_basis_changes=1,
             num_noise_maps=1,
@@ -195,6 +195,6 @@ def _make_samplex_circuit_scenarios() -> list[SamplexCircuitScenario]:
 SAMPLEX_CIRCUIT_SCENARIOS: list[SamplexCircuitScenario] = _make_samplex_circuit_scenarios()
 """Four circuit scenarios for samplex argument tests.
 
-Covers: regular, parametric, mid-circuit measurement, and multi-layer (two
+Covers: non-parametric, parametric, mid-circuit measurement, and multi-layer (two
 distinct noise-injected gate layers).
 """
