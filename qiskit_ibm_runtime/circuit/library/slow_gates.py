@@ -18,12 +18,12 @@ from qiskit.circuit import Instruction
 class XSlowGate(Instruction):
     """A class for a ``xslow`` instruction."""
 
-    def __init__(self, name="x_slow") -> None:
-        super().__init__(name, 1, 0, [])
+    def __init__(self) -> None:
+        super().__init__("x_slow", 1, 0, [])
 
 
 class CZSlowGate(Instruction):
     """A class for a ``cz_slow`` instruction."""
 
-    def __init__(self, name: str = "cz_slow", label: str | None = None) -> None:
-        super().__init__(name, 2, 0, [], label=label)
+    def __init__(self) -> None:
+        super().__init__("cz_slow", 2, 0, [])
