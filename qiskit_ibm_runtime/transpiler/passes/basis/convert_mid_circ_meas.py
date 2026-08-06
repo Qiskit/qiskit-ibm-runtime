@@ -128,8 +128,8 @@ class ConvertToMidCircuitMeasure(TransformationPass):
     pass accepts custom ``measure_`` definitions. This pass is expected to run after routing, as
     it will check that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
 
-    This pass is similar to ``ConvertToMidCircuitInstructions`` but only handles measurements,
-    not resets. It internally calls ``ConvertToMidCircuitInstructions`` with a no-op reset name.
+    This pass is similar to ``ConvertToMidCircuitResetAndMeasure`` but only handles measurements,
+    not resets. It internally calls ``ConvertToMidCircuitResetAndMeasure`` with a no-op reset name.
 
     Note that the pass will only act on non-terminal ``measure`` instances,
     and won't replace existing mid-circuit measurement instructions
