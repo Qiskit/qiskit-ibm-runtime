@@ -25,6 +25,7 @@ from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
+from ..options_models.simulator import ExperimentalSimulatorOptions
 from .prepare import prepare
 
 if TYPE_CHECKING:
@@ -115,6 +116,9 @@ class SamplerV2(BaseSamplerV2):
         if self.options.experimental.get("local_mode", False) or not isinstance(
             self._service, QiskitRuntimeLocalService
         ):
+            self.options.experimental["simulator_options"] = self.options.experimental.get(
+                "simulator_options", ExperimentalSimulatorOptions()
+            )
             self._executor = Executor(mode=mode, options={"experimental": {"local_mode": True}})
 
     def __setattr__(self, name: str, value: Any) -> None:
