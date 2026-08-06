@@ -1048,7 +1048,7 @@ def calculate_extrapolated_expectation_values(
                     (coeff**2) * term_twirl_variance * term_scale_factor**2
                 )
 
-            selected_exp_vals, selected_stds, sel_extrapolators, extrap_exp_vals, extrap_stds = (
+            zero_noise_exp_val, zero_noise_std, sel_extrapolator, extrap_exp_vals, extrap_stds = (
                 process_extrapolated_expectation_values(
                     noise_scaled_exp_vals,
                     noise_scaled_ensemble_std,
@@ -1059,13 +1059,13 @@ def calculate_extrapolated_expectation_values(
                 )
             )
 
-            # Only the selected extrapolator of the zero point should be returned
-            selected_extrapolators_per_term.append(sel_extrapolators[0])
+            # Only the selected extrapolator of the zero point is returned
+            selected_extrapolators_per_term.append(sel_extrapolator)
             zero_extrapolated_exp_vals[bcast_index] += (
-                coeff * selected_exp_vals[0] * term_scale_factor
+                coeff * zero_noise_exp_val * term_scale_factor
             )
             zero_extrapolated_vars[bcast_index] += (
-                (coeff**2) * (selected_stds[0] ** 2) * (term_scale_factor**2)
+                (coeff**2) * (zero_noise_std**2) * (term_scale_factor**2)
             )
 
             for model_index, (extrap_model_exp_val, extrap_model_std) in enumerate(
