@@ -110,18 +110,12 @@ class SamplerV2(BaseSamplerV2):
         # Coerced to `SamplerOptions` via `__setattr__()`.
         self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
 
-        # Only create executor for non-local backends
-        # For local simulators (QiskitRuntimeLocalService), we'll use BackendSamplerV2 directly
-        self._executor = None
-        if (local_mode := self.options.experimental.get("local_mode", False)) or not isinstance(
-            self._service, QiskitRuntimeLocalService
-        ):
+        if self.options.experimental.get("local_mode", False):
             self.options.experimental["simulator_options"] = self.options.experimental.get(
                 "simulator_options", ExperimentalSimulatorOptions()
             )
-            self._executor = Executor(
-                mode=mode, options={"experimental": {"local_mode": local_mode}}
-            )
+
+        self._executor = Executor(mode=mode, options={"experimental": {"local_mode": True}})
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -171,8 +165,10 @@ class SamplerV2(BaseSamplerV2):
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else options.default_shots
 
-        # Check if we're in local simulator mode
-        if self._executor is None:
+        # Legacy simulator path (no executor)
+        if not self.options.experimental.get("local_mode", False) and isinstance(
+            self._service, QiskitRuntimeLocalService
+        ):
             logger.info("Running in local simulator mode")
 
             options_dict = options.model_dump()
@@ -185,7 +181,6 @@ class SamplerV2(BaseSamplerV2):
                 calibration_id=None,
             )
 
-        # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
