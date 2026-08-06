@@ -12,18 +12,18 @@
 
 """Slow gate instructions."""
 
-from qiskit.circuit import Instruction
+from qiskit.circuit import Gate
 
 
-class XSlowGate(Instruction):
-    """A class for a ``xslow`` instruction."""
-
-    def __init__(self) -> None:
-        super().__init__("x_slow", 1, 0, [])
-
-
-class CZSlowGate(Instruction):
-    """A class for a ``cz_slow`` instruction."""
+class XSlowGate(Gate):
+    """A class for a ``x_slow`` gate."""
 
     def __init__(self) -> None:
-        super().__init__("cz_slow", 2, 0, [])
+        super().__init__("x_slow", 1, [])
+
+
+class CZSlowGate(Gate):
+    """A class for a ``cz_slow`` gate."""
+
+    def __init__(self) -> None:
+        super().__init__("cz_slow", 2, [])

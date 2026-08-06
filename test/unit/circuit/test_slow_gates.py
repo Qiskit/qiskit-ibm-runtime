@@ -13,7 +13,7 @@
 """Tests for XSlowGate and CZSlowGate instructions."""
 
 from qiskit import QuantumCircuit, generate_preset_pass_manager
-from qiskit.circuit import Instruction
+from qiskit.circuit import Gate
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler.exceptions import TranspilerError
 
@@ -30,7 +30,7 @@ class TestXSlowGate(IBMTestCase):
         """Test default instantiation."""
         gate = XSlowGate()
         self.assertIs(gate.base_class, XSlowGate)
-        self.assertIsInstance(gate, Instruction)
+        self.assertIsInstance(gate, Gate)
         self.assertEqual(gate.name, "x_slow")
         self.assertEqual(gate.num_qubits, 1)
         self.assertEqual(gate.num_clbits, 0)
@@ -76,7 +76,7 @@ class TestCZSlowGate(IBMTestCase):
         """Test default instantiation."""
         gate = CZSlowGate()
         self.assertIs(gate.base_class, CZSlowGate)
-        self.assertIsInstance(gate, Instruction)
+        self.assertIsInstance(gate, Gate)
         self.assertEqual(gate.name, "cz_slow")
         self.assertEqual(gate.num_qubits, 2)
         self.assertEqual(gate.num_clbits, 0)
