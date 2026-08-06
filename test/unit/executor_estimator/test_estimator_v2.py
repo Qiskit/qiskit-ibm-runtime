@@ -12,6 +12,7 @@
 
 """Unit tests for EstimatorV2 run method."""
 
+import warnings as _warnings
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -547,3 +548,63 @@ class TestFinalizeOptions(IBMTestCase):
         finalized_options = estimator.finalize_options()
         self.assertTrue(finalized_options.twirling.enable_gates)
         self.assertTrue(finalized_options.twirling.enable_measure)
+
+    def test_no_warning_when_twirling_field_not_set_by_user(self):
+        """No warning when the user never set the twirling field that is being overridden."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience.measure_mitigation = True
+        # enable_measure was not explicitly set by the user → no warning expected
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            estimator.finalize_options()
+        user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
+        self.assertEqual(user_warns, [])
+
+    def test_no_warning_when_user_set_field_to_true(self):
+        """No warning when the user already set the field to True (no conflict)."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.twirling.enable_measure = True
+        estimator.options.resilience.measure_mitigation = True
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            estimator.finalize_options()
+        user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
+        self.assertEqual(user_warns, [])
+
+    def test_warning_measure_mitigation_overrides_enable_measure_false(self):
+        """Warning when measure_mitigation=True overrides user-set enable_measure=False."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.twirling.enable_measure = False
+        estimator.options.resilience.measure_mitigation = True
+        with self.assertWarns(UserWarning) as ctx:
+            estimator.finalize_options()
+        msg = str(ctx.warning)
+        self.assertIn("enable_measure", msg)
+        self.assertIn("measurement mitigation", msg)
+
+    @data("enable_gates", "enable_measure")
+    def test_warning_pea_overrides_twirling_field_false(self, field):
+        """Warning when PEA overrides user-set enable_gates=False or enable_measure=False."""
+        estimator = EstimatorV2(self.backend)
+        setattr(estimator.options.twirling, field, False)
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.measure_mitigation = False
+        estimator.options.resilience.zne.amplifier = "pea"
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            estimator.finalize_options()
+        msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
+        self.assertTrue(any(field in m and "PEA mitigation" in m for m in msgs))
+
+    @data("enable_gates", "enable_measure")
+    def test_warning_pec_overrides_twirling_field_false(self, field):
+        """Warning when PEC overrides user-set enable_gates=False or enable_measure=False."""
+        estimator = EstimatorV2(self.backend)
+        setattr(estimator.options.twirling, field, False)
+        estimator.options.resilience.pec_mitigation = True
+        estimator.options.resilience.measure_mitigation = False
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            estimator.finalize_options()
+        msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
+        self.assertTrue(any(field in m and "PEC mitigation" in m for m in msgs))
