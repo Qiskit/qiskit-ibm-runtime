@@ -106,14 +106,16 @@ class SamplerV2(BaseSamplerV2):
         # Store mode, service, and backend for simulator detection
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
+        # Coerced to `SamplerOptions` via `__setattr__()`.
+        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
+
         # Only create executor for non-local backends
         # For local simulators (QiskitRuntimeLocalService), we'll use BackendSamplerV2 directly
         self._executor = None
-        if not isinstance(self._service, QiskitRuntimeLocalService):
-            self._executor = Executor(mode=mode)
-
-        # Coerced to `SamplerOptions` via `__setattr__()`.
-        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
+        if self.options.experimental.get("local_mode", False) or not isinstance(
+            self._service, QiskitRuntimeLocalService
+        ):
+            self._executor = Executor(mode=mode, options={"experimental": {"local_mode": True}})
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
