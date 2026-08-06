@@ -12,4 +12,4 @@
 
 """Contains the classes and functions required to run executor in local mode"""
 
-from .executor_local_mode import SimRuntimeJob
+from .sim_runtime_job import SimRuntimeJob

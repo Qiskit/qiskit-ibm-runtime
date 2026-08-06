@@ -66,20 +66,21 @@ class SimRuntimeJob(PrimitiveJob):
         program: QuantumProgram,
         options: ExperimentalSimulatorOptions,
     ):
-        from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
-
-        def _fn(
-            backend: BackendV2, program: QuantumProgram, options: ExperimentalSimulatorOptions
-        ) -> QuantumProgramResult | PrimitiveResult:
-            return QuantumProgramResultDecoder._apply_post_processing(
-                run_quantum_program(backend, program, options)
-            )
-
         super().__init__(
-            function=_fn,
+            function=run_quantum_program,
             backend=backend,
             program=program,
             options=options,
         )
 
         self._submit()
+
+    def result(self) -> QuantumProgramResult | PrimitiveResult:
+        """Return the post-processed results of the job.
+
+        Returns:
+            IBM Quantum Compute job result (post-processed if applicable).
+        """
+        from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
+
+        return QuantumProgramResultDecoder._apply_post_processing(super().result())

@@ -64,9 +64,6 @@ def run_quantum_program(
     Returns:
         Results of simulation.
     """
-    noise_dict = options.noise_model
-    angle_decimals = options.angle_decimals
-    warn_absent = options.warn_absent
     seed = options.seed_simulator
 
     # Generate a sampler
@@ -83,9 +80,9 @@ def run_quantum_program(
     metadata_list = []
 
     for prog_item in program.items:
-        if noise_dict is not None:
+        if (noise_dict := options.noise_model) is not None:
             circuit = PassManager(
-                [InsertNoisePass(noise_dict=noise_dict, warn_absent=warn_absent)]
+                [InsertNoisePass(noise_dict=noise_dict, warn_absent=options.warn_absent)]
             ).run(prog_item.circuit)
         else:
             circuit = prog_item.circuit
@@ -96,7 +93,7 @@ def run_quantum_program(
                     {tuple(prog_item.circuit.parameters): prog_item.circuit_arguments}
                 )
                 for k, v in bindings_array._data.items():
-                    bindings_array._data[k] = _round_to_clifford(v, angle_decimals)
+                    bindings_array._data[k] = _round_to_clifford(v, options.angle_decimals)
             else:
                 bindings_array = None
             sampler_res = aer_sampler.run(
@@ -124,7 +121,7 @@ def run_quantum_program(
                 {tuple(prog_item.circuit.parameters): samplex_data.pop("parameter_values")}
             )
             for k, v in bindings_array._data.items():
-                bindings_array._data[k] = _round_to_clifford(v, angle_decimals)
+                bindings_array._data[k] = _round_to_clifford(v, options.angle_decimals)
             sampler_res = aer_sampler.run(
                 [
                     SamplerPub(
