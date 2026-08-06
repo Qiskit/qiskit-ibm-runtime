@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from urllib.parse import urlparse
@@ -291,7 +292,7 @@ class CloudAccount(Account):
 
     def get_iam_authentificator(self) -> IAMAuthenticator:
         """Return the configured IAM Authentification service."""
-        iam_url = get_iam_api_url(self.url)
+        iam_url = os.environ.get("IAM_URL") or get_iam_api_url(self.url)
         proxies_kwargs = self._get_proxies_kwargs()
         return IAMAuthenticator(
             apikey=self.token,
@@ -334,6 +335,18 @@ class CloudAccount(Account):
 
     def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
+        # Bypass calling Global Search and Global Catalog.
+        if os.environ.get("QISKIT_FUNCTIONS_EXPERIMENTAL"):
+            return [
+                {
+                    "crn": self.instance,
+                    "plan": "plan",
+                    "name": "name",
+                    "tags": [],
+                    "pricing_type": "unknown",
+                }
+            ]
+
         authenticator = self.get_iam_authentificator()
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
