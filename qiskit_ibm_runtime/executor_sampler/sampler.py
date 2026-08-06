@@ -25,7 +25,6 @@ from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
-from ..options_models.simulator import ExperimentalSimulatorOptions
 from .prepare import prepare
 
 if TYPE_CHECKING:
@@ -110,13 +109,6 @@ class SamplerV2(BaseSamplerV2):
         # Coerced to `SamplerOptions` via `__setattr__()`.
         self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
 
-        if self.options.experimental.get("local_mode", False):
-            self.options.experimental["simulator_options"] = self.options.experimental.get(
-                "simulator_options", ExperimentalSimulatorOptions()
-            )
-
-        self._executor = Executor(mode=mode, options={"experimental": {"local_mode": True}})
-
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
 
@@ -187,8 +179,8 @@ class SamplerV2(BaseSamplerV2):
             coerced_pubs, options, default_shots, backend=self._backend
         )
 
-        # Set executor options
-        self._executor.options = executor_options
+        # Initialize executor with settings
+        executor = Executor(mode=self._backend, options=executor_options)
 
         # Submit to executor
         logger.info(
@@ -198,4 +190,4 @@ class SamplerV2(BaseSamplerV2):
             quantum_program.shots,
         )
 
-        return self._executor.run(quantum_program)
+        return executor.run(quantum_program)
