@@ -85,8 +85,8 @@ class TestSampler(IBMTestCase):
 
         pubs = [SamplerPub.coerce([circuit, parameters])]
 
-        sampler = SamplerV2(self.backend, options={"experimental": {"local_mode": True}})
-        # sampler.options.experimental = {"local_mode": True}
+        sampler = SamplerV2(self.backend)
+        sampler.options.experimental = {"local_mode": True}
 
         sampler.options.twirling.enable_gates = enable_gates
         sampler.options.twirling.enable_measure = enable_measure
@@ -94,11 +94,7 @@ class TestSampler(IBMTestCase):
         sampler.options.twirling.shots_per_randomization = (shots_per_randomization := 100)
 
         job = sampler.run(pubs, shots=(shots := 4_000))
-
-        # TODO: This is a temporary patch that can be removed when sampler supports
-        # local mode via executor's own local mode.
         result = job.result()
-        # result = sampler_v2_post_processor_v0_1(executor_result)
 
         array = result[0].data.meas
         self.assertEqual(
