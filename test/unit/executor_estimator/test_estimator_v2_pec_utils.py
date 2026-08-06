@@ -218,11 +218,9 @@ class TestCalculateGamma(IBMTestCase):
 class TestPreparePec(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_pec`` function."""
 
-    @data([True, True, True], [True, False, False])
+    @data([True, True], [False, False])
     @unpack
-    def test_param_basis_expansion_3q(
-        self, enable_gates, enable_measure, enable_measure_noise_learning
-    ):
+    def test_param_basis_expansion_3q(self, enable_measure, enable_measure_noise_learning):
         """Test parameter-basis expansion with three-qubit observables."""
         observables = PARAM_BASIS_3Q_SCENARIOS.observables
         num_qubits = observables.num_qubits
@@ -231,7 +229,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
         circuit.rz(Parameter("alpha"), 0)
 
         twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_gates = True
         twirling_options.enable_measure = enable_measure
 
         measure_noise_learning = (

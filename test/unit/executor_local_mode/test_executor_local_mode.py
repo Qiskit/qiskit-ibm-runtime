@@ -17,7 +17,7 @@ from unittest import skipUnless
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime.executor_local_mode import SimRuntimeJob
-from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
 
@@ -34,6 +34,6 @@ class TestSimRuntimeJob(IBMTestCase):
     def test_result(self):
         """Test that result returns a ``QuantumProgramResult``."""
         job = SimRuntimeJob(
-            AerSimulator(method="stabilizer"), QuantumProgram(1), SimulatorOptions()
+            AerSimulator(method="stabilizer"), QuantumProgram(1), ExperimentalSimulatorOptions()
         )
         self.assertIsInstance(job.result(), QuantumProgramResult)
