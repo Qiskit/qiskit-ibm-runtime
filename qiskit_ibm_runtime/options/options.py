@@ -134,7 +134,7 @@ class OptionsV2(BaseOptions):
             :class:`EnvironmentOptions` for all available options.
 
         simulator: Simulator options. See
-            :class:`SimulatorOptions` for all available options.
+            :class:`~.SimulatorOptions` for all available options.
     """
 
     _VERSION: int = Field(2, frozen=True)

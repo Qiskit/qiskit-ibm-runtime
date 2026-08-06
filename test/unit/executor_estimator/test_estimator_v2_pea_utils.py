@@ -16,7 +16,7 @@ import math
 from typing import Any, cast
 
 import numpy as np
-from ddt import ddt
+from ddt import data, ddt, unpack
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
@@ -33,11 +33,68 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMTestCase
+from .utils import PARAM_BASIS_3Q_SCENARIOS
 
 
 @ddt
-class TestPreparePeaFunction(IBMTestCase):
-    """Tests for the prepare_pea function."""
+class TestPreparePea(IBMTestCase):
+    """Tests for the ``prepare_pea`` function."""
+
+    @data([True, True], [False, False])
+    @unpack
+    def test_param_basis_expansion_3q(self, enable_measure, enable_measure_noise_learning):
+        """Test parameter-basis expansion with three-qubit observables."""
+        observables = PARAM_BASIS_3Q_SCENARIOS.observables
+        num_qubits = observables.num_qubits
+
+        circuit = QuantumCircuit(num_qubits)
+        circuit.rz(Parameter("alpha"), 0)
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+        zne_options.noise_factors = [1, 2, 3, 4]
+
+        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
+            parameter_shape = scenario.parameter_shape
+            observables_shape = scenario.observables_shape
+            expected_pairs = scenario.expected_pairs
+
+            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
+                pub_like = (
+                    circuit,
+                    observables.reshape(observables_shape),
+                    np.random.random(parameter_shape + (circuit.num_parameters,)),
+                )
+                pubs = [EstimatorPub.coerce(pub_like)]
+
+                program = prepare_pea(
+                    pubs=pubs,
+                    twirling_options=twirling_options,
+                    shots=10,
+                    zne_options=zne_options,
+                    noise_model_mapping={},
+                    measure_noise_learning=measure_noise_learning,
+                )
+
+                post_processor_data = program.passthrough_data["post_processor"]
+                param_basis_pairs = post_processor_data["param_basis_pairs"][0]
+
+                # Check that the param-basis pairs are the correct ones
+                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+
+                # Check that the quantum program has one element per param-basis pair
+                self.assertEqual(
+                    program.items[0].shape,
+                    (len(zne_options.noise_factors), 1, len(expected_pairs)),
+                )
 
     def test_prepare_pea_basic(self):
         """Test prepare_pea with basic noise factors and noise model."""
@@ -454,3 +511,10 @@ class TestPreparePeaFunction(IBMTestCase):
         self.assertEqual(
             passthrough["post_processor"]["param_shapes"][0], pub.parameter_values.shape
         )
+
+    def test_prepare_pea_raises_error_with_less_than_2_noise_factors(self):
+        """Test that prepare_pea raises when noise_factors has less than 2 points."""
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+        with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
+            zne_options.noise_factors = [1.5]

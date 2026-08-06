@@ -10,6 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Aer-based local executor for QuantumProgram objects."""
+"""Contains the classes and functions required to run executor in local mode"""
 
-from .aer_executor import AerExecutor, AerRuntimeJob
+from .executor_local_mode import SimRuntimeJob

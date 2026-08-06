@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from .base import BaseOptionsModel
 
@@ -59,8 +59,8 @@ class ZneOptions(BaseOptionsModel):
         1. ``pub_result.data.evs_extrapolated`` and ``pub_result.data.stds_extrapolated``,
             both with shape ``(*shape, num_extrapolators, num_evaluation_points)``, where
             ``num_extrapolators`` is the length of the list of
-            ``options.resilience.zne.extrapolators``, and ``num_evaluation_points`` is the length of
-            the list ``options.resilience.extrapolated_noise_factors``. These values provide
+            ``options.resilience.zne.extrapolator``, and ``num_evaluation_points`` is the length of
+            the list ``options.resilience.zne.extrapolated_noise_factors``. These values provide
             evaluations of every extrapolator at every specified noise extrapolation value.
         2. ``pub_result.data.evs_noise_factors``, ``pub_result.data.stds_noise_factors``, and
            ``ensemble_stds_noise_factors`` all have shape ``(*shape, num_noise_factors)`` where
@@ -117,8 +117,9 @@ class ZneOptions(BaseOptionsModel):
     """ noise_factors: Noise factors to use for noise amplification.
 
     The default depends on the amplifier method - the default for pea is
-    :class:.~PEA_DEFAULT_NOISE_FACTORS` and the default for the other methods
-    is :class:.~ZNE_DEFAULT_NOISE_FACTORS`.
+    :data:`~.PEA_DEFAULT_NOISE_FACTORS` and the default for the other methods
+    is :data:`~.ZNE_DEFAULT_NOISE_FACTORS`.
+    Must contain at least two points in order to do an extrapolation.
     """
 
     extrapolator: ExtrapolatorType | Sequence[ExtrapolatorType] = ("exponential", "linear")
@@ -150,3 +151,16 @@ class ZneOptions(BaseOptionsModel):
     points at which the ``extrapolator``\s are evaluated to be returned in the data
     fields called ``evs_extrapolated`` and ``stds_extrapolated``.
     """
+
+    @field_validator("noise_factors", mode="plain")
+    @classmethod
+    def _validate_noise_factors(
+        cls, value: Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"]
+    ) -> Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"]:
+        if value == "auto":
+            return value
+        if len(value) < 2:
+            raise ValueError(
+                "Must have at least two noise factors in order to do an extrapolation."
+            )
+        return value

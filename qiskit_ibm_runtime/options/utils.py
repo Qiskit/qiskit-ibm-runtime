@@ -18,7 +18,7 @@ import copy
 import functools
 from dataclasses import asdict, is_dataclass
 from numbers import Real
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import ConfigDict, field_validator
 from pydantic.dataclasses import dataclass
@@ -233,12 +233,14 @@ class Dict:
 class UnsetType:
     """Class used to represent an unset field."""
 
+    _instance: ClassVar[UnsetType | None] = None
+
     def __repr__(self) -> str:
         return "Unset"
 
     def __new__(cls) -> UnsetType:
         """Construct a ``UnsetType`` instance."""
-        if not hasattr(cls, "_instance"):
+        if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 

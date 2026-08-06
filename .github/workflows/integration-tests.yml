@@ -84,6 +84,7 @@ jobs:
       - name: Run benchmarks
         run: make benchmark
   unit-tests-lowest-versions:
+    if: github.event_name == 'workflow_dispatch' || github.repository_owner == 'Qiskit'
     name: Run unit tests with lowest versions - python${{ matrix.python-version }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:

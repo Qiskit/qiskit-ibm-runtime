@@ -19,17 +19,95 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 from unittest import SkipTest
+from unittest.mock import patch
 
 from ddt import named_data
+from ibm_cloud_sdk_core import IAMTokenManager
+from ibm_cloud_sdk_core.authenticators import NoAuthAuthenticator
+from responses import RequestsMock
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.accounts.account import CloudAccount
 
+from .registries import DefaultRegistry
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from qiskit_ibm_runtime.accounts import ChannelType
+
+    from .registries import BaseRegistry
+
+
+def mock_responses(
+    func_or_registry: Callable | type[BaseRegistry] = DefaultRegistry,
+    expose_responses_mock: bool = False,
+) -> Callable:
+    """Decorator that mocks the HTTP responses using a registry.
+
+    When decorating a test, this decorator:
+    * intercepts HTTP requests and returns mocked HTTP responses, based on a ``Registry``, which
+      is added as an argument to the test.
+    * patches low-level method related to IAM authentication, to simplify the authentication flow.
+
+    This decorator is meant to be used with the items in the ``registries`` module:
+    * ``DefaultRegistry`` and its subclasses.
+    * ``Instance`` and ``Backend`` for setting the behavior.
+
+    Example::
+
+        @mock_responses(OneInstanceNoBackendsRegistry)
+        def test_with_a_backend(self, registry):
+            # Add a backend to the instance "a".
+            registry.add_backend(Backend("some_new_backend"))
+            ...
+
+        @mock_responses(expose_responses_mock=True)
+        def test_something(self, registry, responses):
+            ...
+            self.assertEqual(len(responses.calls), 1)
+
+    Args:
+        func_or_registry: the ``Registry`` to use. If the decorator is used without parenthesis
+            (``@mock_responses``), contains the test to decorate.
+        expose_responses_mock: if ``True``, the ``response`` will be added to the list of arguments
+            of the decorated tests.
+
+    Can be used bare (``@mock_authentication``, using the default registry) or
+    called with a registry class (``@mock_authentication(SomeRegistry)``). The
+    instantiated registry is passed to the wrapped test as an extra argument.
+    """
+    # Bare use: the argument is the decorated test method, not a registry class.
+    if not isinstance(func_or_registry, type):
+        return mock_responses(DefaultRegistry)(func_or_registry)
+
+    registry = func_or_registry
+
+    def decorator(test_method: Callable) -> Callable:
+        @wraps(test_method)
+        def wrapper(*args: object, **kwargs: object) -> object:
+            with (
+                # Patch authentication, in order to simplify flow.
+                patch.object(
+                    CloudAccount, "get_iam_authentificator", return_value=NoAuthAuthenticator()
+                ),
+                patch.object(IAMTokenManager, "get_token", return_value="bearer token"),
+                # Patch HTTP responses, allowing using a custom registry.
+                RequestsMock(
+                    registry=registry, assert_all_requests_are_fired=False
+                ) as responses_mock,
+            ):
+                if expose_responses_mock:
+                    return test_method(
+                        *args, responses_mock.get_registry(), responses_mock, **kwargs
+                    )
+                else:
+                    return test_method(*args, responses_mock.get_registry(), **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def production_only(func):

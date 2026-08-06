@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Helper functions for the PEC error mitigation method."""
+"""Helper functions for the PEA error mitigation method."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ def prepare_pea(
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program.
+    """Convert estimator PUBs to a quantum program with PEA mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.
@@ -96,9 +96,13 @@ def prepare_pea(
         raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")
 
     if zne_options.noise_factors == "auto":
-        noise_factors = np.array(PEA_DEFAULT_NOISE_FACTORS)
+        noise_factors = np.array(PEA_DEFAULT_NOISE_FACTORS, dtype=float)
     else:
-        noise_factors = np.array(zne_options.noise_factors)
+        noise_factors = np.array(zne_options.noise_factors, dtype=float)
+
+    extrapolated_noise_factors = zne_options.extrapolated_noise_factors
+    if extrapolated_noise_factors == "auto":
+        extrapolated_noise_factors = np.insert(noise_factors, 0, 0.0)
 
     num_randomizations, shots_per_randomization = calculate_twirling_shots(
         shots,
@@ -181,7 +185,7 @@ def prepare_pea(
             "param_shapes": param_shapes_list,
             "measure_mitigation": False,
             "pea_noise_factors": noise_factors,
-            "extrapolated_noise_factors": zne_options.extrapolated_noise_factors,
+            "extrapolated_noise_factors": extrapolated_noise_factors,
             "extrapolator": zne_options.extrapolator,
         },
     }

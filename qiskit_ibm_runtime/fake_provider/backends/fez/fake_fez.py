@@ -24,3 +24,4 @@ class FakeFez(FakeBackendV2):
     conf_filename = "conf_fez.json"
     props_filename = "props_fez.json"
     backend_name = "fake_fez"
+    _physical_qubits = 332
