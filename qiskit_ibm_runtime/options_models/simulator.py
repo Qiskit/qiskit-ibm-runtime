@@ -35,7 +35,7 @@ else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
-class SimulatorOptions(BaseOptionsModel):
+class ExperimentalSimulatorOptions(BaseOptionsModel):
     """Simulator options."""
 
     angle_decimals: int = 5
@@ -56,7 +56,7 @@ class SimulatorOptions(BaseOptionsModel):
     """Whether to emit a warning when an entry is missing in :attr:`layer_noise_dict`."""
 
 
-class LegacySimulatorOptions(BaseOptionsModel):
+class SimulatorOptions(BaseOptionsModel):
     """Legacy Simulator options.
 
     Used to control local mode simulation.
