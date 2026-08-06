@@ -19,7 +19,7 @@ from qiskit.transpiler import PassManager
 
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
-    ConvertToMidCircuitInstructions,
+    ConvertToMidCircuitResetAndMeasure,
     ConvertToMidCircuitMeasure,
 )
 
@@ -51,7 +51,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
 
     def test_convert_default(self):
         """Test basic conversion to measure_2 and reset_2."""
-        custom_pass = ConvertToMidCircuitInstructions(self.target_with)
+        custom_pass = ConvertToMidCircuitResetAndMeasure(self.target_with)
         pm = PassManager([custom_pass])
         transpiled = pm.run(self.qc)
 
@@ -92,7 +92,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         target.add_instruction(mcm, {(i,): None for i in range(num_qubits)})
         target.add_instruction(mcr, {(i,): None for i in range(num_qubits)})
 
-        custom_pass = ConvertToMidCircuitInstructions(target, "measure_3", "reset_3")
+        custom_pass = ConvertToMidCircuitResetAndMeasure(target, "measure_3", "reset_3")
         pm = PassManager([custom_pass])
         transpiled = pm.run(self.qc)
 

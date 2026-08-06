@@ -35,7 +35,7 @@ See :mod:`qiskit_ibm_runtime.transpiler.passes.scheduling` for a collection of s
 
 from .basis import (
     ConvertIdToDelay,
-    ConvertToMidCircuitInstructions,
+    ConvertToMidCircuitResetAndMeasure,
     ConvertToMidCircuitMeasure,
     FoldRzzAngle,
 )

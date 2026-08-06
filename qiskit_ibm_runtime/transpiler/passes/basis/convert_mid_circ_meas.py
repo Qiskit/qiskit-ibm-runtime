@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from qiskit.transpiler import Target
 
 
-class ConvertToMidCircuitInstructions(TransformationPass):
+class ConvertToMidCircuitResetAndMeasure(TransformationPass):
     """Transpiler pass replacing mid-circuit measure and reset instructions.
 
     Transpiler pass that replaces terminal measure instructions in non-terminal locations
@@ -150,7 +150,7 @@ class ConvertToMidCircuitMeasure(TransformationPass):
     def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
         super().__init__()
         # Use "reset" as the mcr_name to ensure no reset conversion happens
-        self._inner_pass = ConvertToMidCircuitInstructions(
+        self._inner_pass = ConvertToMidCircuitResetAndMeasure(
             target=target, mcm_name=mcm_name, mcr_name="reset"
         )
 
