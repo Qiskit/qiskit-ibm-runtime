@@ -96,9 +96,9 @@ def prepare_pea(
         raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")
 
     if zne_options.noise_factors == "auto":
-        noise_factors = np.array(PEA_DEFAULT_NOISE_FACTORS)
+        noise_factors = np.array(PEA_DEFAULT_NOISE_FACTORS, dtype=float)
     else:
-        noise_factors = np.array(zne_options.noise_factors)
+        noise_factors = np.array(zne_options.noise_factors, dtype=float)
 
     extrapolated_noise_factors = zne_options.extrapolated_noise_factors
     if extrapolated_noise_factors == "auto":
