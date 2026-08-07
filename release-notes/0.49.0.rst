@@ -43,7 +43,7 @@ New Features
 - :class:`~.IBMBackend` now has a ``physical_qubits`` attribute, which returns the number of physical
   qubits for the backend (programmable qubits, reset qubits, and couplers combined). The attribute is
   also available in :class:`~.FakeBackendV2` for backends that are not retired. (`3080 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3080>`__)
-- The IAM URL used by :meth:`.QiskitRuntimeService.instances` can now be overridden via the
+- The IAM URL used by :meth:`.QiskitRuntimeService.instances` can now be overridden by the
   ``IAM_URL`` environment variable, following the same convention as the IBM SDK's
   ``GLOBAL_SEARCH_URL`` and ``GLOBAL_CATALOG_URL`` variables. This allows routing IAM traffic
   through a private endpoint (for example,  ``https://private.iam.cloud.ibm.com``) in VPE environments
