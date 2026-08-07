@@ -129,11 +129,9 @@ class TestEstimator(IBMIntegrationTestCase):
 
         layers = estimator.find_unique_layers(pubs)
         noise_model = {
-            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.from_list(
-                [("X" * layer.operation.num_qubits, 0.001)]
-            )
+            annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)])
             for layer in layers
-            if get_annotation(layer.operation, InjectNoise)
+            if (annotation := get_annotation(layer.operation, InjectNoise))
         }
         estimator.options.resilience.noise_model_mapping = noise_model
 
