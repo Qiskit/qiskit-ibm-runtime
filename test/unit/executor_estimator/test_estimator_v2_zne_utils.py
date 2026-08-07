@@ -27,12 +27,12 @@ from qiskit_ibm_runtime.options_models.zne import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS
+from ...ibm_test_case import IBMEstimatorPrepareTestCase
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
 
 
 @ddt
-class TestPrepareZne(IBMTestCase):
+class TestPrepareZne(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_zne`` function."""
 
     @data([True, True, True], [False, True, True], [False, False, False])
@@ -84,6 +84,50 @@ class TestPrepareZne(IBMTestCase):
 
                 # Check that the quantum program has one element per param-basis pair
                 self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+
+    @data(
+        [True, True, True],
+        [False, True, True],
+        [False, False, False],
+        [True, False, False],
+        [False, True, False],
+        [True, True, False],
+    )
+    @unpack
+    def test_samplex_arguments_structure(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
+        """Test that samplex items contain the expected argument keys for each circuit type.
+
+        ZNE never injects noise, so items must have ``basis_changes.*`` (and
+        ``parameter_values`` for parametric circuits) but no ``noise_scales.*`` or
+        ``pauli_lindblad_maps.*`` keys.  There is one item per noise factor, and
+        one for TREX when needed, which is ignored.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = [1, 2, 3]
+
+        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
+            with self.subTest(circuit=scenario.label):
+                program = prepare_zne(
+                    pubs=[scenario.pub],
+                    twirling_options=twirling_options,
+                    shots=10,
+                    zne_options=zne_options,
+                    measure_noise_learning=measure_noise_learning,
+                )
+                # One item per noise factor; skip any trailing TREX item
+                for item in program.items[: len(zne_options.noise_factors)]:
+                    self.assertSamplexItemIsCorrect(item, scenario, inject_noise=False)
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""
