@@ -21,9 +21,9 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import EstimatorV2
-from test.utils import make_mirror_circuit_with_phases
 
 from ..ibm_test_case import IBMIntegrationTestCase
+from ..utils import make_mirror_circuit_with_phases
 
 
 @ddt

@@ -335,6 +335,18 @@ class CloudAccount(Account):
 
     def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
+        # Bypass calling Global Search and Global Catalog.
+        if os.environ.get("QISKIT_FUNCTIONS_EXPERIMENTAL"):
+            return [
+                {
+                    "crn": self.instance,
+                    "plan": "plan",
+                    "name": "name",
+                    "tags": [],
+                    "pricing_type": "unknown",
+                }
+            ]
+
         authenticator = self.get_iam_authentificator()
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
