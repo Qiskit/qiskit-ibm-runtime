@@ -131,6 +131,12 @@ class Job:
     status: Literal["queued", "running", "completed", "cancelled", "failed"] = "completed"
     """Job status."""
 
+    raw_details: str | None = None
+    """Response for the job details."""
+
+    raw_results: str | None = None
+    """Response for the job results."""
+
 
 class BaseRegistry(FirstMatchRegistry):
     """Registry that dynamically serves IBM Quantum Compute responses.
@@ -248,8 +254,15 @@ class BaseRegistry(FirstMatchRegistry):
         self.add(
             CallbackResponse(
                 method=GET,
-                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w"),
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+"),
                 callback=self.callback_jobs_id,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+/results"),
+                callback=self.callback_jobs_results,
             ),
         )
 
@@ -461,13 +474,41 @@ class BaseRegistry(FirstMatchRegistry):
 
         job = self.jobs[instance.name][job_id]
 
-        response_body = {
-            "id": job.id,
-            "backend": job.backend_name,
-            "status": job.status.capitalize(),
-            "program": {"id": job.program},
-        }
-        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+        if job.raw_details:
+            response_body = job.raw_details
+        else:
+            response_body = json.dumps(
+                {
+                    "id": job.id,
+                    "backend": job.backend_name,
+                    "status": job.status.capitalize(),
+                    "program": {"id": job.program},
+                }
+            )
+        return (200, {"Content-Type": "application/json"}, response_body)
+
+    def callback_jobs_results(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}/results`` endpoint.
+
+        Dynamically return a job results, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and backend name.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-2].split("?")[0]
+
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        job = self.jobs[instance.name][job_id]
+
+        if job.raw_results:
+            response_body = job.raw_results
+        else:
+            response_body = json.dumps({})
+        return (200, {"Content-Type": "application/json"}, response_body)
 
     def get_crn_from_request(self, request: PreparedRequest) -> Instance:
         """Retrieve the instance CRN from the request headers."""
