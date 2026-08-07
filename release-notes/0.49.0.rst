@@ -1,0 +1,67 @@
+0.49.0 (2026-07-14)
+===================
+
+Upgrade Notes
+-------------
+
+- The option classes from the :mod:`options_models` package are now based on Pydantic's ``BaseModel``
+  instead of on ``dataclass``. (`3042 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3042>`__)
+- Switched default schema version for executor to `2.0`. (`3043 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3043>`__)
+- The Qiskit Runtime service has been renamed to IBM Quantum Compute service, and the references to
+  it in the documentation have been updated. The :class:`~.QiskitRuntimeService` class is now
+  available as ``IBMQuantumComputeService``. (`3070 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3070>`__)
+
+
+Deprecation Notes
+-----------------
+
+- The usage of stdlib ``asdict`` with option classes from the :mod:`options_models` package is now
+  deprecated, as they are now Pydantic models. Please use ``options.model_dump()`` directly instead
+  for serializing them to a ``dict``. (`3042 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3042>`__)
+- The ``post_selection`` option of :class:`.NoiseLearnerV3` is now deprecated and will be removed in a
+  future release. (`3160 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3160>`__)
+
+
+New Features
+------------
+
+- Added :class:`~qiskit_ibm_runtime.circuit.library.MidCircuitReset` instruction and
+  :class:`~qiskit_ibm_runtime.transpiler.passes.ConvertToMidCircuitResetAndMeasure` transpiler pass.
+  The new pass extends the existing :class:`~qiskit_ibm_runtime.transpiler.passes.ConvertToMidCircuitMeasure`
+  functionality by also replacing non-terminal ``reset`` instructions with hardware-specific
+  mid-circuit reset implementations. (`2903 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2903>`__)
+- Added `bit_flip_checks` field to `NoiseLearnerV3Options`, allowing users to request bit-flip checks to the
+  results of noise learning circuits. (`2907 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2907>`__)
+- Added an optional ``persist`` parameter to :meth:`.FakeBackendV2.refresh`. By default
+  (``persist=True``) the behavior is unchanged: the refreshed configuration and properties
+  overwrite the data files bundled with the installed package so the update persists across
+  sessions. Passing ``persist=False`` instead writes the refreshed data to a temporary
+  directory, which allows :meth:`~.FakeBackendV2.refresh` to succeed even when the package is
+  installed in a read-only location (e.g. a system-wide ``site-packages`` directory) where
+  overwriting the bundled files would otherwise raise a ``PermissionError``. In that mode the
+  backend is updated for the current session only and the changes are not persisted to disk. (`2977 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2977>`__)
+- :class:`~.IBMBackend` now has a ``physical_qubits`` attribute, which returns the number of physical
+  qubits for the backend (programmable qubits, reset qubits, and couplers combined). The attribute is
+  also available in :class:`~.FakeBackendV2` for backends that are not retired. (`3080 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3080>`__)
+- The IAM URL used by :meth:`.QiskitRuntimeService.instances` can now be overridden via the
+  ``IAM_URL`` environment variable, following the same convention as the IBM SDK's
+  ``GLOBAL_SEARCH_URL`` and ``GLOBAL_CATALOG_URL`` variables. This allows routing IAM traffic
+  through a private endpoint (e.g. ``https://private.iam.cloud.ibm.com``) in VPE environments
+  without any code changes. (`3135 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3135>`__)
+
+
+Bug Fixes
+---------
+
+- Improve the warning shown when a retrieved job was serialized with a newer
+  Qiskit release than is installed locally. Before calling ``qiskit.qpy.load``,
+  ``RuntimeDecoder`` now emits a clear message that suggests upgrading with
+  ``pip install -U qiskit`` when the embedded QPY format version is newer than
+  what the installed Qiskit supports. (`2426 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2426>`__)
+- :meth:`.FakeProviderForBackendV2.backends` now also returns 8 fake backends that were
+  importable from :mod:`qiskit_ibm_runtime.fake_provider` but missing from the provider's
+  backend list, in addition to the ones it already returned: :class:`.FakeAachen`,
+  :class:`.FakeBerlin`, :class:`.FakeBoston`, :class:`.FakeBrussels`, :class:`.FakeKingston`,
+  :class:`.FakeMiami`, :class:`.FakePittsburgh`, and :class:`.FakeStrasbourg`. Previously,
+  calling ``FakeProviderForBackendV2().backend(name="fake_kingston")`` (and the other 7)
+  raised a ``QiskitBackendNotFoundError`` even though the backend classes existed. (`3164 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3164>`__)
