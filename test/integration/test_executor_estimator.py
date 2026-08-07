@@ -17,10 +17,12 @@ from __future__ import annotations
 import numpy as np
 from ddt import ddt
 from qiskit.primitives.base import BaseEstimatorV2  # noqa: TC002
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from samplomatic import InjectNoise
+from samplomatic.utils import get_annotation
 
-from qiskit_ibm_runtime import EstimatorV2
+from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import make_mirror_circuit_with_phases
@@ -41,8 +43,8 @@ class TestEstimator(IBMIntegrationTestCase):
             optimization_level=1, target=self.backend.target
         )
 
-    def test_estimator_works_for_basic_circuit_with_no_options(self):
-        """Runs a simple parametric circuit with multiple observables to make sure the basics work.
+    def test_vanilla_estimator(self):
+        """Test the "vanilla" path (no mitigation) for estimator.
 
         Tests
         - Job completes without exceptions
@@ -78,6 +80,64 @@ class TestEstimator(IBMIntegrationTestCase):
             ]
         )
 
+        results = job.result()
+
+        # Expect one result per pub:
+        self.assertEqual(len(results), 2)
+
+        # 4 Expectation values should have been calculated for full broadcasting:
+        self.assertEqual(results[0].data.evs.shape, (2, 2))
+
+        # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
+        self.assertEqual(results[1].data.evs.shape, (2,))
+
+    def test_pec_estimator(self):
+        """Test the PEC path (no mitigation) for estimator.
+
+        Tests
+        - Job completes without exceptions
+        - Correct expectation value shapes
+        """
+        circuit = make_mirror_circuit_with_phases(self.backend)
+        isa_circuit = self.preset_pass_manager.run(circuit)
+
+        zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
+            isa_circuit.layout
+        )
+
+        xx_with_offset = SparsePauliOp.from_list([("XX", 1.0), ("II", 3.0)]).apply_layout(
+            isa_circuit.layout
+        )
+
+        pubs = [
+            # Map all parameter sets to all observables
+            (
+                isa_circuit,
+                [[zz_with_offset], [xx_with_offset]],
+                [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]],
+            ),
+            # Map each parameter set to one observable:
+            (
+                isa_circuit,
+                [zz_with_offset, xx_with_offset],
+                [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]],
+            ),
+        ]
+
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience.pec_mitigation = True
+
+        layers = estimator.find_unique_layers(pubs)
+        noise_model = {
+            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.from_list(
+                [("X" * layer.operation.num_qubits, 0.001)]
+            )
+            for layer in layers
+            if get_annotation(layer.operation, InjectNoise)
+        }
+        estimator.options.resilience.noise_model_mapping = noise_model
+
+        job = estimator.run(pubs)
         results = job.result()
 
         # Expect one result per pub:
