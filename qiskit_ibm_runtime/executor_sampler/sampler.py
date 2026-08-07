@@ -26,11 +26,13 @@ from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
+from .utils import find_unique_layers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
@@ -123,6 +125,28 @@ class SamplerV2(BaseSamplerV2):
                 raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def find_unique_layers(
+        self, pubs: Iterable[SamplerPubLike], add_tags: bool = False
+    ) -> list[CircuitInstruction]:
+        """Return the unique boxed layers found across the given PUBs.
+
+        The returned list contains one instance of each distinct boxed layer (represented as a
+        :class:`~.CircuitInstruction`) appearing in the input PUBs.
+
+        Args:
+            pubs: The list of PUBs to return a list of unique boxes for.
+            add_tags: Whether to include tags for the boxes.
+
+        Returns:
+            The unique boxed layers found across the given PUBs.
+        """
+        coerced_pubs = [SamplerPub.coerce(pub, None) for pub in pubs]
+        return find_unique_layers(
+            pubs=coerced_pubs,
+            twirling_options=self.options.twirling,
+            add_tags=add_tags,
+        )
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.

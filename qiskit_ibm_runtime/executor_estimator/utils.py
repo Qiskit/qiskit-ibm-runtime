@@ -288,7 +288,7 @@ def find_unique_layers(
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates.
-        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+        add_tags: Whether to include tags for the boxes.
 
     Returns:
         Unique boxed layers found across the given PUBs.
