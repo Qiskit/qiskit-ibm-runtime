@@ -58,7 +58,7 @@ Bug Fixes
   ``RuntimeDecoder`` now emits a clear message that suggests upgrading with
   ``pip install -U qiskit`` when the embedded QPY format version is newer than
   what the installed Qiskit supports. (`2426 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2426>`__)
-- :meth:`.FakeProviderForBackendV2.backends` now also returns 8 fake backends that were
+- :meth:`.FakeProviderForBackendV2.backends` now also returns eight fake backends that were
   importable from :mod:`qiskit_ibm_runtime.fake_provider` but missing from the provider's
   backend list, in addition to the ones it already returned: :class:`.FakeAachen`,
   :class:`.FakeBerlin`, :class:`.FakeBoston`, :class:`.FakeBrussels`, :class:`.FakeKingston`,
