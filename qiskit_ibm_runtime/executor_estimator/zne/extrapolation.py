@@ -46,9 +46,7 @@ def process_extrapolated_expectation_values(
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | int | npt.ArrayLike = 0,
-) -> tuple[
-    npt.NDArray[float], npt.NDArray[float], npt.NDArray[str], npt.NDArray[float], npt.NDArray[float]
-]:
+) -> tuple[float, float, str, npt.NDArray[float], npt.NDArray[float]]:
     r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
     The requested model(s) are fit to the expectation values measured at the noise factors for
@@ -92,11 +90,12 @@ def process_extrapolated_expectation_values(
         ValueError: If an extrapolator name is not recognized.
 
     Returns:
-        A tuple ``(exp_vals, stds, extrapolators, extrap_exp_vals, extrap_stds)``, where
-        ``exp_vals`` are expectation values evaluated at ``extrapolated_noise_factors``,
-        ``stds`` are standard deviations. ``extrapolators`` are the valid extrapolation methods
-        selected. ``extrap_exp_vals`` and ``extrap_stds`` are the results from all extrapolation
-        methods, including the invalid extrapolation methods.
+        A tuple ``(zero_noise_exp_val, zero_noise_std, extrapolator, extrap_exp_vals,
+        extrap_stds)``, where ``zero_noise_exp_val`` is the expectation value evaluated at zero
+        noise extrapolation point, ``zero_noise_std`` is the standard deviation of the zero noise
+        extrapolation point. ``extrapolator`` is the valid extrapolation method selected.
+        ``extrap_exp_vals`` and ``extrap_stds`` are the results from all extrapolation
+        methods for all ``extrapolated_noise_factors``, including the invalid extrapolation methods.
     """
     if isinstance(extrapolators, str):
         extrapolators = [extrapolators]
@@ -126,17 +125,17 @@ def process_extrapolated_expectation_values(
         extrapolated_noise_factor=extrapolated_noise_factors,
     )
 
-    # choose the best extrapolated result
-    selected_exps, selected_stds, selected_extrap = select_zne_extrapolated_result(
-        extrapolated_values,
-        extrapolated_stderr,
+    # choose the best extrapolated result for the zero noise point
+    zero_noise_exp_val, zero_noise_std, selected_extrap = select_zne_extrapolated_result(
+        extrapolated_values[:, 0],
+        extrapolated_stderr[:, 0],
         observable_term,
         extrapolators,
     )
     # for the extrapolated_values, do not returned the added evaluation at 0
     return (
-        selected_exps,
-        selected_stds,
+        zero_noise_exp_val,
+        zero_noise_std,
         selected_extrap,
         extrapolated_values[:, 1:],
         extrapolated_stderr[:, 1:],
@@ -219,11 +218,11 @@ def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
 
 
 def select_zne_extrapolated_result(
-    zne_values: npt.NDArray[float],
-    zne_std_errors: npt.NDArray[float],
+    zne_values: npt.Array[float],
+    zne_std_errors: npt.Array[float],
     observable_term: str,
     zne_extrapolator: Sequence[str],
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
+) -> tuple[float, float, str]:
     """Choose the best extrapolated values.
 
     The best value is the valid value produced by the highest-priority model. Valid values are
@@ -274,24 +273,18 @@ def select_zne_extrapolated_result(
 
     # Fallback index is the lowest stderror result if none satisfy acceptance
     # criteria. Here we map NaN to Inf since argmin treats NaN < 0.
-    fallback_indices = np.argmin(np.nan_to_num(zne_std_errors, nan=np.inf), axis=0)
+    fallback_indices = np.argmin(np.nan_to_num(zne_std_errors, nan=np.inf))
 
-    # Iterate across each extrapolated noise scale and select the output from the
-    # highest-priority (lowest indexed) model that produced a valid output.
-    # If no model gives a valid output for a noise scale, the value with the lowest
-    # stderr will be chosen.
-    accept_values = np.zeros(zne_values.shape[1:], dtype=float)
-    accept_stderrs = np.zeros_like(accept_values)
-    accept_extrap = np.zeros_like(accept_values, dtype=object)
-    for idx, col in enumerate(accept.T):
-        accepted = np.where(col)[0]
-        accepted_idx = accepted[0] if accepted.size else fallback_indices[idx]
-        fits_idx = (accepted_idx, idx)
-        accept_values[idx] = np.nan_to_num(zne_values[fits_idx], nan=np.inf)
-        accept_stderrs[idx] = np.nan_to_num(zne_std_errors[fits_idx], nan=np.inf)
-        accept_extrap[idx] = zne_extrapolator[accepted_idx]
+    # Select the output from the highest-priority (lowest indexed) model that
+    # produced a valid output. If no model gives a valid output, the value
+    # with the lowest stderr will be chosen.
+    accepted = np.where(accept)[0]
+    accepted_idx = accepted[0] if accepted.size else fallback_indices
+    accept_value = np.nan_to_num(zne_values[accepted_idx], nan=np.inf)
+    accept_stderr = np.nan_to_num(zne_std_errors[accepted_idx], nan=np.inf)
+    accept_extrap = zne_extrapolator[accepted_idx]
 
-    return accept_values, accept_stderrs, accept_extrap
+    return accept_value, accept_stderr, accept_extrap
 
 
 def extrapolate(
