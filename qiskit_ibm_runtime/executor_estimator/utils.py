@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
@@ -47,6 +47,33 @@ from ..exceptions import IBMInputValueError
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
+
+_REQUIRED_NOISE_FACTORS = {
+    "linear": 2,
+    "exponential": 2,
+    "double_exponential": 4,
+    "fallback": 1,
+    **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
+}
+
+
+def validate_noise_factors(
+    noise_factors: Sequence[float], extrapolator: str | Sequence[str]
+) -> None:
+    """Check that ``noise_factors`` has enough points for every requested extrapolator.
+
+    Args:
+        noise_factors: The resolved noise factors that will be used for amplification.
+        extrapolator: The extrapolator(s) requested in the ZNE options.
+
+    Raises:
+        IBMInputValueError: If ``noise_factors`` is under-specified for any extrapolator.
+    """
+    extrapolators = [extrapolator] if isinstance(extrapolator, str) else extrapolator
+    for extrap in extrapolators:
+        required = _REQUIRED_NOISE_FACTORS[extrap]
+        if len(noise_factors) < required:
+            raise IBMInputValueError(f"{extrap} requires at least {required} noise_factors")
 
 
 def get_pauli_basis(basis: str) -> Pauli:
