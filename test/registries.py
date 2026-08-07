@@ -19,7 +19,6 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypeAlias
-from urllib.parse import parse_qsl, urlparse
 
 from responses import GET, POST, CallbackResponse, Response
 from responses.registries import FirstMatchRegistry
@@ -469,7 +468,7 @@ class BaseRegistry(FirstMatchRegistry):
             "program": {"id": job.program},
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
-    
+
     def get_crn_from_request(self, request: PreparedRequest) -> Instance:
         """Retrieve the instance CRN from the request headers."""
         instance_crn = request.headers.get("Service-CRN")
