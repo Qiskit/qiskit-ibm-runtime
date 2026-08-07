@@ -285,6 +285,25 @@ if __name__ == '__main__':
 
         self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
 
+    def test_circuit_metadata_round_trip(self):
+        """Test circuit metadata is restored when decoding."""
+        expected = np.arange(0, 10, dtype=np.float64)
+        inner = QuantumCircuit(1)
+        inner.metadata = {"test": expected}
+        circ = QuantumCircuit(1)
+        circ.metadata = {"test": expected, "inner": inner}
+        payload = {"circuits": [circ]}
+
+        decoded = json.loads(json.dumps(payload, cls=RuntimeEncoder), cls=RuntimeDecoder)
+        metadata = decoded["circuits"][0].metadata
+        self.assertIsInstance(metadata["test"], np.ndarray)
+        self.assertEqual(metadata["test"].dtype, expected.dtype)
+        self.assertTrue(np.array_equal(metadata["test"], expected))
+        self.assertIsInstance(metadata["inner"], QuantumCircuit)
+        self.assertIsInstance(metadata["inner"].metadata["test"], np.ndarray)
+        self.assertEqual(metadata["inner"].metadata["test"].dtype, expected.dtype)
+        self.assertTrue(np.array_equal(metadata["inner"].metadata["test"], expected))
+
 
 @ddt
 class TestContainerSerialization(IBMTestCase):
