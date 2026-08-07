@@ -419,7 +419,6 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
             options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
         )
         estimator.options.default_shots = 10_000
-        estimator.options.simulator.seed_simulator = 42
         result = estimator.run([(transpiled, observable)]).result()
 
         self.assertEqual(len(result), 1)
@@ -444,7 +443,6 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
             mode=backend,
             options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
         )
-        estimator1.options.simulator.seed_simulator = 42
         estimator1.options.default_shots = 100
         result1 = estimator1.run([(transpiled, observable)]).result()
 
@@ -452,7 +450,6 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
             mode=backend,
             options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
         )
-        estimator2.options.simulator.seed_simulator = 42
         estimator2.options.default_shots = 100
         result2 = estimator2.run([(transpiled, observable)]).result()
 
@@ -482,7 +479,6 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
                 "experimental": {"local_mode": True, "simulator_options": {"seed_simulator": 42}}
             },
         )
-        estimator1.options.simulator.seed_simulator = 42
         estimator1.options.default_shots = 100
         result1 = estimator1.run([(transpiled, observable)]).result()
 
@@ -492,7 +488,6 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
             mode=backend,
             options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
         )
-        estimator2.options.simulator.seed_simulator = 99
         estimator2.options.default_shots = 100
         result2 = estimator2.run([(transpiled, observable)]).result()
 
