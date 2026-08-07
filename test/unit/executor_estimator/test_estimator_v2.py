@@ -222,10 +222,12 @@ class TestEstimatorV2Run(IBMTestCase):
 
         estimator.run([(circuit, observable)], precision=0.03125)
 
-        # Verify executor options were set
-        self.assertIsNotNone(self.mock_executor_instance.options)
-        self.assertTrue(self.mock_executor_instance.options.execution.init_qubits)
-        self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
+        # Verify Executor was constructed with the correctly mapped executor options
+        self.mock_executor_class.assert_called_once()
+        executor_options = self.mock_executor_class.call_args[1]["options"]
+        self.assertTrue(executor_options.execution.init_qubits)
+        self.assertEqual(executor_options.execution.rep_delay, 0.001)
+        self.assertEqual(executor_options.environment.max_execution_time, 300)
 
     def test_run_adds_options_to_passthrough_data(self):
         """Test that run adds options, shots and precision to passthrough data."""
@@ -390,13 +392,6 @@ class TestEstimatorV2Run(IBMTestCase):
 
 class TestEstimatorV2SimulatorMode(IBMTestCase):
     """Tests for EstimatorV2 with local simulator backends."""
-
-    def test_simulator_mode_skips_executor(self):
-        """Test that a local backend (non-IBMBackend) skips the Executor."""
-        backend = GenericBackendV2(num_qubits=5)
-        estimator = EstimatorV2(mode=backend)
-
-        self.assertIsNone(estimator._executor)
 
     def test_simulator_mode_returns_result(self):
         """Test that local mode returns expectation values close to the ideal.
