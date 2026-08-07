@@ -46,7 +46,7 @@ New Features
 - The IAM URL used by :meth:`.QiskitRuntimeService.instances` can now be overridden via the
   ``IAM_URL`` environment variable, following the same convention as the IBM SDK's
   ``GLOBAL_SEARCH_URL`` and ``GLOBAL_CATALOG_URL`` variables. This allows routing IAM traffic
-  through a private endpoint (e.g. ``https://private.iam.cloud.ibm.com``) in VPE environments
+  through a private endpoint (for example,  ``https://private.iam.cloud.ibm.com``) in VPE environments
   without any code changes. (`3135 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3135>`__)
 
 
