@@ -14,9 +14,10 @@
 
 from ddt import data, ddt
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
-from qiskit.circuit import Delay, Parameter
+from qiskit.circuit import ControlFlowOp, Delay, Parameter
 from qiskit.circuit.library import CXGate, Measure, Reset, RZGate, XGate
 from qiskit.converters import circuit_to_dag
+from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.target import InstructionProperties, Target
@@ -1177,6 +1178,89 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         expected.delay(1000, 2)
 
         self.assertEqual(expected, scheduled)
+
+    def test_padding_preserves_control_flow_block_indices(self):
+        """Test that rebuilding control-flow ops preserves their scheduled block indices."""
+        target = Target(num_qubits=3, dt=1)
+        target.add_instruction(
+            XGate(),
+            {(qubit,): InstructionProperties(duration=200) for qubit in range(3)},
+        )
+        target.add_instruction(
+            Measure(),
+            {(qubit,): InstructionProperties(duration=1000) for qubit in range(3)},
+        )
+
+        circuit = QuantumCircuit(3, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((0, True)) as else_:
+            circuit.x(1)
+        with else_:
+            circuit.x(2)
+        with circuit.if_test((0, True)) as else_:
+            circuit.x(2)
+        with else_:
+            circuit.x(1)
+
+        scheduler = PassManager([ASAPScheduleAnalysis(target=target)])
+        scheduler.run(circuit)
+        expected = [
+            start_time
+            for node, start_time in scheduler.property_set["node_start_time"].items()
+            if isinstance(node.op, ControlFlowOp)
+        ]
+
+        scheduler_and_padder = PassManager(
+            [
+                ASAPScheduleAnalysis(target=target),
+                PadDelay(target=target, schedule_idle_qubits=True),
+            ]
+        )
+        scheduler_and_padder.run(circuit)
+        actual = [
+            start_time
+            for node, start_time in scheduler_and_padder.property_set["node_start_time"].items()
+            if isinstance(node.op, ControlFlowOp)
+        ]
+
+        self.assertEqual(expected, actual)
+
+    def test_nested_block_visit_restores_parent_timing_state(self):
+        """Test nested timing state restoration and final fast-path barrier placement."""
+        padder = PadDelay(target=Target(num_qubits=1, dt=1))
+        parent_qubit = QuantumCircuit(1).qubits[0]
+        parent_idle_after = {parent_qubit: 10}
+        padder._idle_after = parent_idle_after
+        padder._current_block_idx = 7
+        padder._prev_node = None
+        padder._wire_map = {}
+        padder._block_dag = DAGCircuit()
+        padder._block_duration = 0
+        padder._block_ordering_callable = lambda _: []
+
+        nested_dag = DAGCircuit()
+        padder._empty_dag_like = lambda *args, **kwargs: nested_dag
+        fast_path_node = object()
+        padder._fast_path_nodes = {fast_path_node}
+        terminating_barrier_args = []
+
+        def mutate_nested_timing_state(block_duration, block_idx):
+            del block_duration, block_idx
+            padder._idle_after = {parent_qubit: 20}
+            padder._current_block_idx = 11
+            padder._prev_node = fast_path_node
+
+        def record_terminating_barrier(block_idx, time, current_node, force=False):
+            terminating_barrier_args.append((block_idx, time, current_node, force))
+
+        padder._terminate_block = mutate_nested_timing_state
+        padder._add_block_terminating_barrier = record_terminating_barrier
+
+        padder._visit_block(nested_dag, {})
+
+        self.assertEqual(terminating_barrier_args, [(7, 0, fast_path_node, True)])
+        self.assertIs(padder._idle_after, parent_idle_after)
+        self.assertEqual(padder._current_block_idx, 7)
 
     @data(True, False)
     def test_nested_control_scheduling(self, use_target):

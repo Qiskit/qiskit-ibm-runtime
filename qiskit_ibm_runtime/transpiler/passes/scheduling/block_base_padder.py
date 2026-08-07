@@ -363,6 +363,8 @@ class BlockBasePadder(TransformationPass):
         prev_node = self._prev_node
         self._prev_node = None
         prev_wire_map, self._wire_map = self._wire_map, wire_map
+        prev_idle_after = self._idle_after
+        prev_current_block_idx = self._current_block_idx
 
         prev_block_dag = self._block_dag
         self._block_dag = new_block_dag = self._empty_dag_like(
@@ -394,13 +396,15 @@ class BlockBasePadder(TransformationPass):
         # Edge-case: Add a barrier if the final node is a fast-path
         if self._prev_node in self._fast_path_nodes:
             self._add_block_terminating_barrier(
-                prev_block_duration, prev_block_idx, self._prev_node, force=True
+                prev_block_idx, prev_block_duration, self._prev_node, force=True
             )
 
         # Pop the previous block dag off the stack restoring it
         self._block_dag = prev_block_dag
         self._prev_node = prev_node
         self._wire_map = prev_wire_map
+        self._idle_after = prev_idle_after
+        self._current_block_idx = prev_current_block_idx
 
         return new_block_dag
 
@@ -463,9 +467,9 @@ class BlockBasePadder(TransformationPass):
     def _visit_control_flow_op(self, node: DAGNode) -> None:
         """Visit a control-flow node to pad."""
         # Control-flow terminator ends scheduling of block currently
-        block_idx, t0 = self._node_start_time[node]
-        self._terminate_block(t0, block_idx)
-        self._add_block_terminating_barrier(block_idx, t0, node)
+        scheduled_block_idx, t0 = self._node_start_time[node]
+        self._terminate_block(t0, scheduled_block_idx)
+        self._add_block_terminating_barrier(scheduled_block_idx, t0, node)
 
         # Only pad non-fast path nodes
         fast_path_node = node in self._fast_path_nodes
@@ -480,8 +484,8 @@ class BlockBasePadder(TransformationPass):
         # We resolve this here by extracting the cached dag blocks that were
         # stored by the scheduling pass.
         new_node_block_dags = []
-        for block_idx, _ in enumerate(node.op.blocks):
-            block_dag = self._node_block_dags[node][block_idx]
+        for body_idx, _ in enumerate(node.op.blocks):
+            block_dag = self._node_block_dags[node][body_idx]
             inner_wire_map = {
                 inner: outer
                 for outer, inner in zip(
@@ -513,7 +517,7 @@ class BlockBasePadder(TransformationPass):
         else:
             padded_qubits = self._block_dag.qubits
         self._apply_scheduled_op(
-            block_idx,
+            scheduled_block_idx,
             t0,
             new_control_flow_op,
             padded_qubits,
