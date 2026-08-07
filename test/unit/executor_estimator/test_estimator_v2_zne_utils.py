@@ -12,6 +12,7 @@
 
 """Unit tests for EstimatorV2 ZNE helper functions."""
 
+import dataclasses
 from typing import Any, cast
 
 import numpy as np
@@ -94,16 +95,10 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
         [True, True, False],
     )
     @unpack
-    def test_samplex_arguments_structure(
+    def test_samplex_item_structure(
         self, enable_gates, enable_measure, enable_measure_noise_learning
     ):
-        """Test that samplex items contain the expected argument keys for each circuit type.
-
-        ZNE never injects noise, so items must have ``basis_changes.*`` (and
-        ``parameter_values`` for parametric circuits) but no ``noise_scales.*`` or
-        ``pauli_lindblad_maps.*`` keys.  There is one item per noise factor, and
-        one for TREX when needed, which is ignored.
-        """
+        """Test that samplex items have the expected structure for each circuit type."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
@@ -114,7 +109,7 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
 
         zne_options = ZneOptions()
         zne_options.amplifier = "gate_folding"
-        zne_options.noise_factors = [1, 2, 3]
+        zne_options.noise_factors = [1, 3, 5]
 
         for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
             with self.subTest(circuit=scenario.label):
@@ -125,9 +120,28 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
                     zne_options=zne_options,
                     measure_noise_learning=measure_noise_learning,
                 )
-                # One item per noise factor; skip any trailing TREX item
-                for item in program.items[: len(zne_options.noise_factors)]:
-                    self.assertSamplexItemIsCorrect(item, scenario, inject_noise=False)
+                # One item per noise factor; skip any trailing TREX item.
+                # Gate folding at odd noise_factor nf repeats each 2q gate instance nf
+                # times; the measurement boxes are fixed.  So:
+                #   num_parameters[nf] = num_meas_parameters
+                #                        + (gates_on - num_meas_parameters) * nf
+                for noise_factor, item in zip(
+                    zne_options.noise_factors, program.items[: len(zne_options.noise_factors)]
+                ):
+                    scaled_scenario = dataclasses.replace(
+                        scenario,
+                        num_circuit_parameters_gates_on=(
+                            scenario.num_meas_parameters
+                            + (
+                                scenario.num_circuit_parameters_gates_on
+                                - scenario.num_meas_parameters
+                            )
+                            * noise_factor
+                        ),
+                    )
+                    self.assertSamplexItemIsCorrect(
+                        item, scaled_scenario, inject_noise=False, enable_gates=enable_gates
+                    )
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""

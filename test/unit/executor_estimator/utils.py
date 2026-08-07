@@ -98,12 +98,12 @@ PARAM_BASIS_3Q_SCENARIOS = ParamBasisScenarios(
 
 @dataclass(frozen=True)
 class SamplexCircuitScenario:
-    """A single circuit scenario for testing samplex argument structure.
+    """A single circuit scenario for testing SamplexItem structure.
 
     Each scenario pairs an :class:`~qiskit.primitives.EstimatorPub` with the
     structural properties that its corresponding :class:`~.SamplexItem` must
     satisfy, regardless of which ``prepare_*`` function or twirling options are
-    used.
+    used (except ZNE with gate folding which requires adaptations to the number of parameters).
     """
 
     label: str
@@ -122,6 +122,33 @@ class SamplexCircuitScenario:
     """Expected number of ``basis_changes.*`` keys in the samplex arguments.
 
     Depends on the number of mid-circuit boxes in the circuit.
+    """
+
+    expected_num_clbits: int
+    """Expected number of classical bits in the template circuit.
+
+    Equal to ``original_qubits + original_clbits``.
+    """
+
+    num_circuit_parameters_gates_on: int
+    """Expected ``template.num_parameters`` when ``twirling_options.enable_gates=True``
+    and ``noise_factor=1`` (no gate folding).
+
+    Depends on the topology of the circuit, but also on the boxing strategy.
+    ``enable_measure`` does not affect this count.
+    """
+
+    num_circuit_parameters_gates_off: int
+    """Expected ``template.num_parameters`` when ``twirling_options.enable_gates=False``.
+
+    Depends on the measurements and parameterized gates in the circuit, but also on the
+    boxing strategy. ``enable_measure`` does not affect this count.
+    """
+
+    num_meas_parameters: int
+    """Expected number of parameters that belong to measurement boxes only.
+
+    Used to calculate the expected number of parameters when ZNE is used with gate folding.
     """
 
     num_noise_maps: int = 0
@@ -166,6 +193,12 @@ def _make_samplex_circuit_scenarios() -> list[SamplexCircuitScenario]:
             pub=EstimatorPub.coerce((qc_non_parametric, obs2)),
             has_parameter_values=False,
             num_basis_changes=1,
+            expected_num_clbits=2,
+            # enable_gates=True: 1 gate box (2q=6 Rz) + 1 meas box (2q=6 Rz) = 12
+            # enable_gates=False: 1 meas box (2q=6 Rz) = 6
+            num_circuit_parameters_gates_on=12,
+            num_circuit_parameters_gates_off=6,
+            num_meas_parameters=6,  # 1 final-meas box (2q=6 Rz)
             num_noise_maps=1,
         ),
         SamplexCircuitScenario(
@@ -173,6 +206,12 @@ def _make_samplex_circuit_scenarios() -> list[SamplexCircuitScenario]:
             pub=EstimatorPub.coerce((qc_parametric, obs2, np.array([[0.5]]))),
             has_parameter_values=True,
             num_basis_changes=1,
+            expected_num_clbits=2,
+            # enable_gates=True: theta absorbed into Rz chain; same structure as non_param = 12
+            # enable_gates=False: theta stays as a free circuit parameter = 6 meas Rz + 1 theta = 7
+            num_circuit_parameters_gates_on=12,
+            num_circuit_parameters_gates_off=7,
+            num_meas_parameters=6,  # 1 final-meas box (2q=6 Rz); theta absent (absorbed)
             num_noise_maps=1,
         ),
         SamplexCircuitScenario(
@@ -180,6 +219,13 @@ def _make_samplex_circuit_scenarios() -> list[SamplexCircuitScenario]:
             pub=EstimatorPub.coerce((qc_midcirc, obs2)),
             has_parameter_values=False,
             num_basis_changes=2,
+            expected_num_clbits=3,
+            # enable_gates=True: 1 gate box (2q=6) + 1 mid-meas box (2q=6)
+            #   + 1 final-meas box (2q=6) = 18
+            # enable_gates=False: 1 mid-meas box (1q=3) [active accum] + 1 final-meas box (2q=6) = 9
+            num_circuit_parameters_gates_on=18,
+            num_circuit_parameters_gates_off=9,
+            num_meas_parameters=12,  # mid-meas box (2q=6 Rz) + final-meas box (2q=6 Rz)
             num_noise_maps=1,
         ),
         SamplexCircuitScenario(
@@ -187,6 +233,14 @@ def _make_samplex_circuit_scenarios() -> list[SamplexCircuitScenario]:
             pub=EstimatorPub.coerce((qc_multilayer, obs3)),
             has_parameter_values=False,
             num_basis_changes=1,
+            expected_num_clbits=3,
+            # enable_gates=True: 4 cx instances get twirling boxes; q1 participates in
+            #                    both gate layers so its adjacent boxes share Rz runs,
+            #                    yielding 30 gate Rz + 9 meas = 39
+            # enable_gates=False: 1 meas box (3q=9 Rz) = 9
+            num_circuit_parameters_gates_on=39,
+            num_circuit_parameters_gates_off=9,
+            num_meas_parameters=9,  # 1 final-meas box (3q=9 Rz)
             num_noise_maps=2,
         ),
     ]

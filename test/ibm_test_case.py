@@ -180,8 +180,9 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
         item: SamplexItem,
         scenario: SamplexCircuitScenario,
         inject_noise: bool,
+        enable_gates: bool = True,
     ) -> None:
-        """Assert that a :class:`~.SamplexItem`'s arguments match the expected structure.
+        """Assert that a :class:`~.SamplexItem` matches the expected structure.
 
         Checks:
 
@@ -195,6 +196,9 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
           of ``pauli_lindblad_maps.*`` keys exist.
         * When ``inject_noise`` is ``False`` (vanilla, ZNE): no ``noise_scales.*``
           or ``pauli_lindblad_maps.*`` keys exist.
+        * ``item.circuit.num_clbits`` matches ``scenario.expected_num_clbits``.
+        * ``item.circuit.num_parameters`` matches ``scenario.num_circuit_parameters_gates_on``
+          when ``enable_gates=True``, or ``scenario.num_circuit_parameters_gates_off`` otherwise.
 
         Args:
             item: The :class:`~.SamplexItem` to inspect.
@@ -202,7 +206,11 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 produce ``item``.
             inject_noise: ``True`` for methods that inject noise (PEA, PEC);
                 ``False`` for methods that do not (vanilla, ZNE).
+            enable_gates: Whether gate twirling was enabled for this prepare call.
+                Selects between ``scenario.num_circuit_parameters_gates_on`` and
+                ``scenario.num_circuit_parameters_gates_off``.
         """
+        # --- Samplex arguments checks ---
         keys = list(item.samplex_arguments)
         basis_keys = [k for k in keys if k.startswith("basis_changes.")]
         noise_keys = [k for k in keys if k.startswith("noise_scales.")]
@@ -281,6 +289,31 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 [],
                 msg=f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}",
             )
+
+        # --- template circuit checks ---
+        circuit = item.circuit
+        expected_num_params = (
+            scenario.num_circuit_parameters_gates_on
+            if enable_gates
+            else scenario.num_circuit_parameters_gates_off
+        )
+        self.assertEqual(
+            circuit.num_clbits,
+            scenario.expected_num_clbits,
+            msg=(
+                f"[{scenario.label}] template num_clbits mismatch; "
+                f"got {circuit.num_clbits}, expected {scenario.expected_num_clbits}"
+            ),
+        )
+        self.assertEqual(
+            circuit.num_parameters,
+            expected_num_params,
+            msg=(
+                f"[{scenario.label}] template num_parameters mismatch "
+                f"(enable_gates={enable_gates}); "
+                f"got {circuit.num_parameters}, expected {expected_num_params}"
+            ),
+        )
 
 
 class IBMVisualizationTestCase(IBMTestCase):
