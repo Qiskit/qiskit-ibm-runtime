@@ -475,9 +475,7 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         estimator1 = EstimatorV2(
             mode=backend,
-            options={
-                "experimental": {"local_mode": True, "simulator_options": {"seed_simulator": 42}}
-            },
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
         )
         estimator1.options.default_shots = 100
         result1 = estimator1.run([(transpiled, observable)]).result()
