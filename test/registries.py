@@ -511,7 +511,7 @@ class BaseRegistry(FirstMatchRegistry):
         return (200, {"Content-Type": "application/json"}, response_body)
 
     def get_crn_from_request(self, request: PreparedRequest) -> Instance:
-        """Retrieve the instance CRN from the request headers."""
+        """Retrieve the `Instance` from the request headers."""
         instance_crn = request.headers.get("Service-CRN")
         return next(
             instance for instance in self.instances.values() if instance.crn == instance_crn
