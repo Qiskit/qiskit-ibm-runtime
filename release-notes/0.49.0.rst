@@ -63,5 +63,5 @@ Bug Fixes
   backend list, in addition to the ones it already returned: :class:`.FakeAachen`,
   :class:`.FakeBerlin`, :class:`.FakeBoston`, :class:`.FakeBrussels`, :class:`.FakeKingston`,
   :class:`.FakeMiami`, :class:`.FakePittsburgh`, and :class:`.FakeStrasbourg`. Previously,
-  calling ``FakeProviderForBackendV2().backend(name="fake_kingston")`` (and the other 7)
+  calling ``FakeProviderForBackendV2().backend(name="fake_kingston")`` (and the other seven)
   raised a ``QiskitBackendNotFoundError`` even though the backend classes existed. (`3164 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3164>`__)
