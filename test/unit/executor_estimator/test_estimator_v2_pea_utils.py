@@ -98,13 +98,8 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
 
     @data([True, False], [False, False], [True, True])
     @unpack
-    def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
-        """Test that samplex items contain the expected argument keys for each circuit type.
-
-        PEA always injects noise, so items must have ``basis_changes.*``,
-        ``noise_scales.*``, and ``pauli_lindblad_maps.*`` keys (and additionally
-        ``parameter_values`` for parametric circuits).
-        """
+    def test_samplex_item_structure(self, enable_measure, enable_measure_noise_learning):
+        """Test that samplex items have the expected structure for each circuit type."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
         twirling_options.enable_measure = enable_measure

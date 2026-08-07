@@ -95,15 +95,10 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         [True, True, False],
     )
     @unpack
-    def test_samplex_arguments_structure(
+    def test_samplex_item_structure(
         self, enable_gates, enable_measure, enable_measure_noise_learning
     ):
-        """Test that samplex items contain the expected argument keys for each circuit type.
-
-        vanilla never injects noise, so items must have ``basis_changes.*`` (and
-        ``parameter_values`` for parametric circuits) but no ``noise_scales.*`` or
-        ``pauli_lindblad_maps.*`` keys.
-        """
+        """Test that samplex items have the expected structure for each circuit type."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
