@@ -165,7 +165,7 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
             angle = instruction.operation.params[0]
             if isinstance(angle, ParameterExpression):
                 angle_params.add(angle)
-            elif angle < 0.0 or angle > np.pi / 2 + 1e-10:
+            elif np.isnan(angle) or angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 return (
                     "The instruction rzz is supported only for angles in the "
                     f"range [0, pi/2], but an angle ({angle}) outside of this "
@@ -218,8 +218,8 @@ def is_valid_rzz_pub(pub: EstimatorPub | SamplerPub) -> str:
         projected_arr = arr[:, col_indices]
 
         for row in projected_arr:
-            angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
-            if angle < 0.0 or angle > np.pi / 2 + 1e-10:
+            angle = float(param_exp.bind_all(dict(zip(param_exp.parameters, row))))
+            if np.isnan(angle) or angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 vals_msg = ", ".join(
                     [f"{param_name}={param_val}" for param_name, param_val in zip(param_names, row)]
                 )
