@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -42,6 +43,33 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
+
+
+def _force_twirling_field(
+    field: str,
+    twirling_options: Any,
+    user_twirling_fields: set[str],
+    mitigation: str,
+) -> None:
+    """Force a twirling field to ``True``, warning if the user had explicitly set it to ``False``.
+
+    Args:
+        field: The twirling field name (``"enable_gates"`` or ``"enable_measure"``).
+        twirling_options: The ``TwirlingOptions`` instance to update in place.
+        user_twirling_fields: The set of field names explicitly set by the user on the twirling
+            options (i.e. ``self.options.twirling.model_fields_set``).
+        mitigation: A short description of the mitigation technique forcing the override, used in
+            the warning message (e.g. ``"measurement mitigation"``).
+    """
+    if field in user_twirling_fields and getattr(twirling_options, field) is False:
+        warnings.warn(
+            f"twirling.{field}=False was explicitly set, but {mitigation} requires "
+            f"twirling.{field}=True. The value is being overridden to True.",
+            UserWarning,
+            stacklevel=3,
+        )
+    setattr(twirling_options, field, True)
+
 
 RESILIENCE_LEVEL_DEFAULTS = {
     0: {
@@ -234,18 +262,48 @@ class EstimatorV2(BaseEstimatorV2):
         if finalized_options.resilience.zne_mitigation is None:
             finalized_options.resilience.zne_mitigation = defaults["zne_mitigation"]
 
-        # Force-set some values based on mitigation
+        # Force-set some values based on mitigation, warning when a user-specified twirling
+        # field is being overridden.
+        user_twirling_fields = self.options.twirling.model_fields_set
+
         if finalized_options.resilience.measure_mitigation is True:
-            finalized_options.twirling.enable_measure = True
+            _force_twirling_field(
+                "enable_measure",
+                finalized_options.twirling,
+                user_twirling_fields,
+                "measurement mitigation",
+            )
+
         if (
             finalized_options.resilience.zne_mitigation is True
             and finalized_options.resilience.zne.amplifier == "pea"
         ):
-            finalized_options.twirling.enable_gates = True
-            finalized_options.twirling.enable_measure = True
+            _force_twirling_field(
+                "enable_gates",
+                finalized_options.twirling,
+                user_twirling_fields,
+                "PEA mitigation",
+            )
+            _force_twirling_field(
+                "enable_measure",
+                finalized_options.twirling,
+                user_twirling_fields,
+                "PEA mitigation",
+            )
+
         if finalized_options.resilience.pec_mitigation is True:
-            finalized_options.twirling.enable_gates = True
-            finalized_options.twirling.enable_measure = True
+            _force_twirling_field(
+                "enable_gates",
+                finalized_options.twirling,
+                user_twirling_fields,
+                "PEC mitigation",
+            )
+            _force_twirling_field(
+                "enable_measure",
+                finalized_options.twirling,
+                user_twirling_fields,
+                "PEC mitigation",
+            )
 
         return finalized_options
 
