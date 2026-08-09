@@ -16,7 +16,7 @@ Deprecation Notes
 -----------------
 
 - The usage of stdlib ``asdict`` with option classes from the :mod:`options_models` package is now
-  deprecated, as they are now Pydantic models. Instead, use ``options.model_dump()`` directly 
+  deprecated, as they are now Pydantic models. Instead, use ``options.model_dump()`` directly
   for serializing them to a ``dict``. (`3042 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3042>`__)
 - The ``post_selection`` option :class:`.NoiseLearnerV3` is now deprecated and will be removed in a
   future release. (`3160 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3160>`__)
