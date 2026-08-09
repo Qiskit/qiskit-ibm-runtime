@@ -25,8 +25,7 @@ if TYPE_CHECKING:
 
     import numpy as np
     from plotly.graph_objects import Figure as PlotlyFigure
-
-    from ..quantum_program.datatree import DataTree
+    from samplomatic.quantum_program.datatree import DataTree
 
 
 @dataclass

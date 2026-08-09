@@ -28,9 +28,9 @@ from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
+    from samplomatic.quantum_program import QuantumProgram
 
     from ..batch import Batch
-    from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 

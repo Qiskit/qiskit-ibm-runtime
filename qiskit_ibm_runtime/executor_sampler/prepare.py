@@ -18,14 +18,13 @@ import logging
 from typing import TYPE_CHECKING
 
 from samplomatic import build
+from samplomatic.quantum_program import CircuitItem, QuantumProgram, SamplexItem
 from samplomatic.transpiler import generate_boxing_pass_manager
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import sampler_option_to_executor_options
-from ..quantum_program import QuantumProgram
-from ..quantum_program.quantum_program import CircuitItem, SamplexItem
 from .utils import (
     extract_shots_from_pubs,
     validate_meas_type_twirling,
@@ -38,10 +37,10 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.sampler_pub import SamplerPub
     from qiskit.providers import BackendV2
+    from samplomatic.quantum_program import QuantumProgramItem
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.sampler import SamplerOptions
-    from ..quantum_program import QuantumProgramItem
 
 
 logger = logging.getLogger(__name__)

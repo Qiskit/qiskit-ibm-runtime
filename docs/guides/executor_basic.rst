@@ -64,7 +64,7 @@ transpiled according to the backend's ISA.
 .. code-block:: python
 
     from qiskit.transpiler import generate_preset_pass_manager
-    from qiskit_ibm_runtime.quantum_program import QuantumProgram
+    from samplomatic.quantum_program import QuantumProgram
 
     # Initialize an empty program
     program = QuantumProgram(shots=1024)

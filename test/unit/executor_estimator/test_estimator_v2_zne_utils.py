@@ -19,14 +19,13 @@ from ddt import data, ddt, unpack
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
+from samplomatic.quantum_program import QuantumProgram, SamplexItem
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.zne.prepare_zne import prepare_zne
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.options_models.zne import ZneOptions
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase
 from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS

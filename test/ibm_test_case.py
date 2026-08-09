@@ -35,9 +35,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from plotly.graph_objects import Figure as PlotlyFigure
+    from samplomatic.quantum_program import SamplexItem
 
     from qiskit_ibm_runtime import QiskitRuntimeService
-    from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
     from .decorators import IntegrationTestDependencies
     from .unit.executor_estimator.utils import SamplexCircuitScenario

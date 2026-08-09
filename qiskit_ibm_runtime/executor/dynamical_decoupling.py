@@ -30,9 +30,9 @@ from qiskit.transpiler.passes import (
 if TYPE_CHECKING:
     from qiskit.circuit import Gate
     from qiskit.providers import BackendV2
+    from samplomatic.quantum_program import QuantumProgram
 
     from ..options_models.dynamical_decoupling import DynamicalDecouplingOptions
-    from ..quantum_program.quantum_program import QuantumProgram
 
 
 def make_dd_sequence(

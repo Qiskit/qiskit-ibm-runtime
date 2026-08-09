@@ -30,10 +30,10 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.providers import BackendV2
+    from samplomatic.quantum_program import QuantumProgram
 
     from ..options_models.estimator import EstimatorOptions
     from ..options_models.executor import ExecutorOptions
-    from ..quantum_program import QuantumProgram
 
 
 logger = logging.getLogger(__name__)

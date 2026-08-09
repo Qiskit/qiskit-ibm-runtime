@@ -22,17 +22,17 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
+from samplomatic.quantum_program import CircuitItem, SamplexItem
 
-from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
+    from samplomatic.quantum_program import QuantumProgram
 
     from ..options_models.simulator import ExperimentalSimulatorOptions
-    from ..quantum_program import QuantumProgram
 
 if HAS_AER:
     from qiskit_aer import AerSimulator

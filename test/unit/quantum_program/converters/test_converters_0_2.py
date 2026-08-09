@@ -29,15 +29,14 @@ from ibm_quantum_schemas.executor.version_0_2 import (
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
+from samplomatic.quantum_program import CircuitItem, QuantumProgram, SamplexItem
 
 from qiskit_ibm_runtime.decoders.quantum_program.converters import quantum_program_result_from_0_2
 from qiskit_ibm_runtime.options_models.executor import ExecutionOptions, ExecutorOptions
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_from_0_2,
     quantum_program_to_0_2,
 )
-from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 
 from ....ibm_test_case import IBMTestCase
 

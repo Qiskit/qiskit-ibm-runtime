@@ -39,9 +39,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ibm_quantum_schemas.common import BaseParamsModel
+    from samplomatic.quantum_program import QuantumProgram
 
     from ..options_models import ExecutorOptions
-    from .quantum_program import QuantumProgram
 
 
 class ParamsConverter(NamedTuple):
