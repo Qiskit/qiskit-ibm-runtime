@@ -123,7 +123,7 @@ class TestEstimator(IBMIntegrationTestCase):
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         self.assertEqual(results[1].data.evs.shape, (2,))
 
-    @data("auto", "pea")
+    @data("gate_folding", "pea")
     def test_zne_estimator(self, amplifier):
         """Test the ZNE path for estimator, parameterized over the noise amplifier.
 
