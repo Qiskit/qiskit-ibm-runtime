@@ -576,8 +576,6 @@ def create_pub_result_pea(
             "parameters ``(pea_noise_factors, extrapolated_noise_factors, "
             "extrapolator)`` in the ``passthrough_data`` is ``None``."
         )
-    # TODO: The last returned value is the selected extrapolators, that should be saved in the
-    # metadata
     (
         zero_noise_exp_vals,
         zero_noise_stds,
@@ -597,6 +595,10 @@ def create_pub_result_pea(
         extrapolator,
         measure_noise_data,
     )
+    # TODO: save selected_extrapolators_per_obs in the metadata
+    # selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
+    #     selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
+    # )
 
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
@@ -742,8 +744,6 @@ def create_pub_result_zne(
             "parameters ``(zne_noise_factors, extrapolated_noise_factors, "
             "extrapolator)`` in the ``passthrough_data`` is ``None``."
         )
-    # TODO: The last returned value is the selected extrapolators, that should be saved in the
-    # metadata
     (
         zero_noise_exp_vals,
         zero_noise_stds,
@@ -763,6 +763,10 @@ def create_pub_result_zne(
         extrapolator,
         measure_noise_data,
     )
+    # TODO: save selected_extrapolators_per_obs in the metadata
+    # selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
+    #     selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
+    # )
 
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
@@ -871,6 +875,34 @@ def _process_expectation_values_zne(
         extrapolator,
         measure_noise_data,
     )
+
+
+def combine_selected_extrapolators_per_observable(
+    selected_extrapolators: list[list[str]], output_shape: tuple[int, ...]
+) -> np.ndarray:
+    """Combines multiple extrapolator records into a single record for each observable.
+
+    Args:
+        selected_extrapolators: list of lists selected extrapolator names. Each element in the
+            list is a list of all the selected extrapolator records of the different observable
+            terms associated with a single observable.
+        output_shape: Shape of the output of the estimator.
+
+    Returns:
+        An array of the same shape as ``output_shape`` containing the selected extrapolator for
+        each observable (for each parameters set). If different extrapolators were selected for
+        different terms of an observable, ``"multiple"`` will be returned for this observable.
+    """
+    extrapolator_per_observable = []
+    for observable_terms_extrapolators in selected_extrapolators:
+        common_extrapolator = observable_terms_extrapolators[0]
+        if all(
+            extrapolator == common_extrapolator for extrapolator in observable_terms_extrapolators
+        ):
+            extrapolator_per_observable.append(common_extrapolator)
+        else:
+            extrapolator_per_observable.append("multiple")
+    return np.array(extrapolator_per_observable).reshape(output_shape)
 
 
 def calculate_extrapolated_expectation_values(
