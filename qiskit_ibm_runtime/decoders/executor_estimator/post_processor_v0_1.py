@@ -608,6 +608,7 @@ def create_pub_result_pea(
         ensemble_stds_noise_factors=noise_factors_ensemble_stds,
         evs_extrapolated=extrapolated_exp_vals,
         stds_extrapolated=extrapolated_stds,
+        shape=zero_noise_exp_vals.shape,
     )
     return EstimatorPubResult(data=data_bin)
 
@@ -776,6 +777,7 @@ def create_pub_result_zne(
         ensemble_stds_noise_factors=noise_factors_ensemble_stds,
         evs_extrapolated=extrapolated_exp_vals,
         stds_extrapolated=extrapolated_stds,
+        shape=zero_noise_exp_vals.shape,
     )
     return EstimatorPubResult(data=data_bin)
 

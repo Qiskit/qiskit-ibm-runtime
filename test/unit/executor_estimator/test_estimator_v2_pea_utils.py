@@ -32,12 +32,12 @@ from qiskit_ibm_runtime.options_models.zne import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS
+from ...ibm_test_case import IBMEstimatorPrepareTestCase
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
 
 
 @ddt
-class TestPreparePea(IBMTestCase):
+class TestPreparePea(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_pea`` function."""
 
     @data([True, True], [False, False])
@@ -95,6 +95,53 @@ class TestPreparePea(IBMTestCase):
                     program.items[0].shape,
                     (len(zne_options.noise_factors), 1, len(expected_pairs)),
                 )
+
+    @data([True, False], [False, False], [True, True])
+    @unpack
+    def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
+        """Test that samplex items contain the expected argument keys for each circuit type.
+
+        PEA always injects noise, so items must have ``basis_changes.*``,
+        ``noise_scales.*``, and ``pauli_lindblad_maps.*`` keys (and additionally
+        ``parameter_values`` for parametric circuits).
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+        zne_options.noise_factors = [1, 2, 3]
+
+        # Build a noise model mapping covering the layers of all scenario pubs.
+        # Must use the same twirling_options as the prepare call, since different
+        # options produce different layer refs.
+        pubs = [scenario.pub for scenario in SAMPLEX_CIRCUIT_SCENARIOS]
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        noise_model_mapping = {
+            annot.ref: PauliLindbladMap.from_sparse_list(
+                [("Z" * len(layer.qubits), list(range(len(layer.qubits))), 0.1)],
+                num_qubits=len(layer.qubits),
+            )
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
+            with self.subTest(circuit=scenario.label):
+                program = prepare_pea(
+                    pubs=[scenario.pub],
+                    twirling_options=twirling_options,
+                    shots=10,
+                    zne_options=zne_options,
+                    noise_model_mapping=noise_model_mapping,
+                    measure_noise_learning=measure_noise_learning,
+                )
+                self.assertSamplexItemIsCorrect(program.items[0], scenario, inject_noise=True)
 
     def test_prepare_pea_basic(self):
         """Test prepare_pea with basic noise factors and noise model."""
@@ -518,3 +565,25 @@ class TestPreparePea(IBMTestCase):
         zne_options.amplifier = "pea"
         with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
             zne_options.noise_factors = [1.5]
+
+    def test_prepare_pea_raises_error_with_too_few_noise_factors_for_extrapolator(self):
+        """Test that prepare_pea rejects noise_factors under-specified for the extrapolator."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+        zne_options.extrapolator = "double_exponential"
+        zne_options.noise_factors = [1.0, 3.0]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError, "double_exponential requires at least 4 noise_factors"
+        ):
+            prepare_pea(
+                [pub], twirling_options, shots=100, zne_options=zne_options, noise_model_mapping={}
+            )

@@ -33,8 +33,8 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS
+from ...ibm_test_case import IBMEstimatorPrepareTestCase, IBMTestCase
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
 
 
 class TestCalculateGamma(IBMTestCase):
@@ -215,7 +215,7 @@ class TestCalculateGamma(IBMTestCase):
 
 
 @ddt
-class TestPreparePec(IBMTestCase):
+class TestPreparePec(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_pec`` function."""
 
     @data([True, True], [False, False])
@@ -266,6 +266,49 @@ class TestPreparePec(IBMTestCase):
 
                 # Check that the quantum program has one element per param-basis pair
                 self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+
+    @data([True, False], [False, False], [True, True])
+    @unpack
+    def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
+        """Test that samplex items contain the expected argument keys for each circuit type.
+
+        PEC always injects noise, so items must have ``basis_changes.*``,
+        ``noise_scales.*``, and ``pauli_lindblad_maps.*`` keys (and additionally
+        ``parameter_values`` for parametric circuits).
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        # Build a noise model mapping covering the layers of all scenario pubs.
+        # Must use the same twirling_options as the prepare call, since different
+        # options produce different layer refs.
+        pubs = [scenario.pub for scenario in SAMPLEX_CIRCUIT_SCENARIOS]
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        noise_model_mapping = {
+            annot.ref: PauliLindbladMap.from_sparse_list(
+                [("Z" * len(layer.qubits), list(range(len(layer.qubits))), 0.1)],
+                num_qubits=len(layer.qubits),
+            )
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
+            with self.subTest(circuit=scenario.label):
+                program = prepare_pec(
+                    pubs=[scenario.pub],
+                    twirling_options=twirling_options,
+                    shots=10,
+                    pec_options=PecOptions(),
+                    noise_model_mapping=noise_model_mapping,
+                    measure_noise_learning=measure_noise_learning,
+                )
+                self.assertSamplexItemIsCorrect(program.items[0], scenario, inject_noise=True)
 
     def test_prepare_pec_basic(self):
         """Test prepare_pec with basic PEC options and noise model."""
