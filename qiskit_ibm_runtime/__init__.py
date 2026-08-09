@@ -211,6 +211,8 @@ from .json import RuntimeEncoder, RuntimeDecoder
 from .session import Session
 from .batch import Batch
 
+from .quantum_program import QuantumProgram
+
 from .exceptions import *
 from .utils.logging import setup_logger
 from .version import __version__
