@@ -40,3 +40,12 @@ Classes
 """
 
 from samplomatic.quantum_program import CircuitItem, QuantumProgram, QuantumProgramItem, SamplexItem
+
+from ..utils.deprecation import issue_deprecation_msg
+
+issue_deprecation_msg(
+    msg="Importing from 'qiskit_ibm_runtime.quantum_program' is deprecated",
+    version="0.49.0",
+    remedy="Import these classes from 'samplomatic.quantum_program' instead.",
+    stacklevel=2,
+)
