@@ -139,13 +139,33 @@ class SamplerV2(BaseSamplerV2):
             The unique boxed layers found across the given PUBs.
         """
         coerced_pubs = [SamplerPub.coerce(pub, None) for pub in pubs]
+        options = self.finalize_options()
         return find_unique_layers(
             pubs=coerced_pubs,
-            twirling_options=self.options.twirling,
+            twirling_options=options.twirling,
             measure_noise_learning=None,
             inject_noise=False,
             add_tags=True,
         )
+
+    def finalize_options(self) -> SamplerOptions:
+        """Construct and finalize the Sampler options.
+
+        This method produces the final :class:`~.SamplerOptions` instance used inside a call to
+        :meth:`~.Sampler.run` by resolving the ``None`` in the twirling options as documented in
+        :class:`~.TwirlingOptions`.
+
+        Returns:
+            The finalized :class:`~.SamplerOptions` object.
+        """
+        finalized_options = deepcopy(self.options)
+
+        if finalized_options.twirling.enable_gates is None:
+            finalized_options.twirling.enable_gates = False
+        if finalized_options.twirling.enable_measure is None:
+            finalized_options.twirling.enable_measure = False
+
+        return finalized_options
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
@@ -173,9 +193,7 @@ class SamplerV2(BaseSamplerV2):
 
         # Finalize the options--namely, resolve the ``None`` in the twirling options
         # as documented.
-        options = deepcopy(self.options)
-        options.twirling.enable_gates = options.twirling.enable_gates or False
-        options.twirling.enable_measure = options.twirling.enable_measure or False
+        options = self.finalize_options()
 
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else options.default_shots
