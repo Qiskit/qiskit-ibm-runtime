@@ -304,7 +304,7 @@ def make_mirror_circuit_with_phases(
 
     The mirror circuit contains entanglers between nearest neighbours.
     """
-    if "cz" in (basis_gates := backend.basis_gates):
+    if "cz" in (basis_gates := backend.configuration().basis_gates):
         entangler = "cz"
     elif "cx" in basis_gates:
         entangler = "cx"

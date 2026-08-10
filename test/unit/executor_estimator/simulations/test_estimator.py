@@ -14,10 +14,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from ddt import ddt
-from qiskit.primitives import StatevectorEstimator
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.primitives import ObservablesArray, StatevectorEstimator
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
@@ -26,6 +27,9 @@ from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
+
+if TYPE_CHECKING:
+    import numpy.typing as npt
 
 
 @ddt
@@ -36,6 +40,7 @@ class TestEstimator(IBMTestCase):
         """Test level setup."""
         super().setUp()
         self.backend = FakeManilaV2()
+        # self.backend = AerSimulator()
         self.preset_pass_manager = generate_preset_pass_manager(
             optimization_level=1, target=self.backend.target
         )
@@ -43,7 +48,7 @@ class TestEstimator(IBMTestCase):
     def test_result_quality_for_different_resilience_levels(self):
         """Tests the effect of resilience on EstimatorV2 results.
 
-        Estimator result quality is expected to increases with increasing resilience level.
+        Estimator result quality is expected to increase with increasing resilience level.
 
         Compares the results against a statevector simulation.
         """
@@ -52,29 +57,29 @@ class TestEstimator(IBMTestCase):
         circuit = make_mirror_circuit_with_phases(self.backend, add_measurement=False)
         isa_circuit = self.preset_pass_manager.run(circuit)
 
-        # We want to run multiple random variants of the circuit to get different expectation
-        # values and to improve statistical significance:
-        num_randomizations = 5
+        # Select values for the rz gates:
         np.random.seed(42)
         parameters = np.random.uniform(
             0,
             2 * np.pi,
-            size=(num_randomizations, circuit.num_parameters),
+            size=(1, circuit.num_parameters),
         )
 
-        # Prepare a PUB with an observable to estimate expectation values on.
-        # Using "ZZ" observable, as the mirror circuit has parametric rx gates, which should yield
+        # Prepare a PUB with multiple observables to estimate expectation values on.
+        # Using "Z" observables, as the mirror circuit has parametric rx gates, which should yield
         # variations on Z projection.
-        observable = SparsePauliOp("ZZ").apply_layout(isa_circuit.layout)
-        pub = (isa_circuit, [observable], parameters)
+        observable = ObservablesArray(["ZZ", "IZ", "ZI"]).apply_layout(isa_circuit.layout)
+        pub = (isa_circuit, observable, parameters)
 
         # Calculate ground truth to compare the results against via a statevector simulation:
         statevector_estimator = StatevectorEstimator()
         statevector_result = statevector_estimator.run([pub]).result()
         statevector_evs = statevector_result[0].data.evs
 
+        # maps resilience level to error (compared to statevector simulation) for each observable
+        errors: dict[int, npt.NDArray[np.float64]] = {}
+
         # Run Estimator with different resilience levels:
-        mean_errors: dict[int, float] = {}
         for resilience_level in (0, 1, 2):
             options = EstimatorOptions(
                 # The resilience level we want to run with:
@@ -87,15 +92,16 @@ class TestEstimator(IBMTestCase):
             estimator = EstimatorV2(mode=self.backend, options=options)
 
             result = estimator.run([pub]).result()
+            # We get one expectation value per observable:
             evs = result[0].data.evs
-            mean_error = np.mean(np.abs(evs - statevector_evs))
-            max_error = np.max(np.abs(evs - statevector_evs))
-            # Assert a base-level of quality across all resilience levels:
-            self.assertLessEqual(max_error, 0.15)
-            mean_errors[resilience_level] = float(mean_error)
+            errors[resilience_level] = np.abs(evs - statevector_evs)
 
-        print(f"Mean errors per resilience level: {mean_errors}")
+            # TODO: also look at stds.
 
         # Increased resilience level should translate into increased expectation value quality:
-        self.assertGreater(mean_errors[0], mean_errors[1])
-        self.assertGreater(mean_errors[1], mean_errors[2])
+        debug_message = f"Error per resilience level: {errors}"
+        np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
+        np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
+
+        # Resilience level 2 should give very accurate expectation value:
+        np.testing.assert_array_less(errors[2], 0.05, err_msg=debug_message)
