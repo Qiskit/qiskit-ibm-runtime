@@ -14,8 +14,6 @@
 
 import numpy as np
 from ddt import data, ddt, unpack
-from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -23,6 +21,7 @@ from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
 
 from ..ibm_test_case import IBMIntegrationTestCase
+from ..utils import make_mirror_circuit_with_phases
 
 
 @ddt
@@ -39,12 +38,7 @@ class TestSampler(IBMIntegrationTestCase):
     @data(True, False)
     def test_sampler_with_parametric_circuits(self, twirling):
         """Test sampler with parametric circuits."""
-        circuit = QuantumCircuit(2, name="Bell with Params")
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.rz(Parameter("th"), 0)
-        circuit.rz(Parameter("lam"), 1)
-        circuit.measure_all()
+        circuit = make_mirror_circuit_with_phases(self.backend)
         isa_circuit = self.pm.run(circuit)
 
         shapes = [(5, 4), (3,)]
@@ -81,11 +75,9 @@ class TestSampler(IBMIntegrationTestCase):
         self, default_shots, num_randomizations, shots_per_randomization, num_shots
     ):
         """Test result's num_shots with different twirling options."""
-        circuit = QuantumCircuit(2, name="Bell")
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
+        circuit = make_mirror_circuit_with_phases(self.backend)
         isa_circuit = self.pm.run(circuit)
+        parameter_values = np.zeros(isa_circuit.num_parameters)
 
         options = SamplerOptions()
         options.twirling.enable_gates = True
@@ -94,7 +86,7 @@ class TestSampler(IBMIntegrationTestCase):
         options.twirling.shots_per_randomization = shots_per_randomization
 
         sampler = SamplerV2(self.backend, options)
-        job = sampler.run([isa_circuit])
+        job = sampler.run([(isa_circuit, parameter_values)])
 
         results = job.result()
         self.assertEqual(results[0].data.meas.num_shots, num_shots)
