@@ -32,6 +32,7 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime.executor_local_mode.run_quantum_program import run_quantum_program
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramItemResult
 
@@ -149,7 +150,9 @@ class TestRunQuantumProgram(IBMTestCase):
         program = QuantumProgram(shots=64)
         program.append_circuit_item(qc, circuit_arguments=circuit_arguments)
 
-        result = run_quantum_program(AerSimulator(method="stabilizer"), program)
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertTrue((result[0]["c"] == [[True]]).all())
 
@@ -174,7 +177,9 @@ class TestRunQuantumProgram(IBMTestCase):
         program = QuantumProgram(shots=1024)
         program.append_circuit_item(transpiled)
 
-        result = run_quantum_program(AerSimulator(method="stabilizer"), program)
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         # The result should have one item
         self.assertEqual(len(result), 1)
@@ -226,7 +231,9 @@ class TestRunQuantumProgram(IBMTestCase):
             shape=(num_randomizations,),
         )
 
-        result = run_quantum_program(AerSimulator(method="stabilizer"), program)
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -265,7 +272,9 @@ class TestRunQuantumProgram(IBMTestCase):
         program = QuantumProgram(shots=shots)
         program.append_circuit_item(transpiled, circuit_arguments=circuit_arguments)
 
-        result = run_quantum_program(AerSimulator(method="stabilizer"), program)
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -325,7 +334,9 @@ class TestRunQuantumProgram(IBMTestCase):
             noise_dict = None
 
         result = run_quantum_program(
-            AerSimulator(method="stabilizer"), program, noise_dict=noise_dict
+            AerSimulator(method="stabilizer"),
+            program,
+            ExperimentalSimulatorOptions(noise_model=noise_dict),
         )
 
         self.assertEqual(len(result), 1)
@@ -374,7 +385,9 @@ class TestRunQuantumProgram(IBMTestCase):
             samplex_arguments={"parameter_values": parameter_values},
         )
 
-        result = run_quantum_program(AerSimulator(method="stabilizer"), program)
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -448,7 +461,9 @@ class TestRunQuantumProgram(IBMTestCase):
             shape=(r0, 2, 2, r1),
         )
 
-        result = run_quantum_program(AerSimulator(method="stabilizer"), program)
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -492,4 +507,6 @@ class TestRunQuantumProgram(IBMTestCase):
         program.passthrough_data = None
 
         with self.assertRaisesRegex(TypeError, "Unsupported QuantumProgramItem type"):
-            run_quantum_program(AerSimulator(method="stabilizer"), program)
+            run_quantum_program(
+                AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+            )

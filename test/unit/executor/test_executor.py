@@ -21,7 +21,6 @@ from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
-from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
@@ -36,7 +35,6 @@ class TestExecutorOptions(IBMTestCase):
         executor = Executor(mode=get_mocked_backend())
         self.assertIsInstance(executor.options, ExecutorOptions)
         self.assertEqual(executor.options, ExecutorOptions())
-        self.assertEqual(executor.options.simulator, SimulatorOptions())
 
     def test_options_from_instance(self):
         """Test constructing with an ExecutorOptions instance."""
