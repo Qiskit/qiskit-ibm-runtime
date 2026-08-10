@@ -18,6 +18,7 @@ from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
+
 from qiskit_ibm_runtime.results.quantum_program import ItemMetadata
 
 if TYPE_CHECKING:
@@ -76,7 +77,7 @@ def quantum_program_item_result_to_sampler_pub_result(
         pub_metadata["circuit_metadata"] = circuit_metadata
     if num_randomizations > 0:
         pub_metadata["num_randomizations"] = num_randomizations
-    
+
     if isinstance(item.metadata, ItemMetadata):
         if item.metadata.scheduler_timing:
             pub_metadata.setdefault("compilation", {})
