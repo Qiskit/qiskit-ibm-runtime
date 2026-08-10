@@ -52,7 +52,7 @@ def prepare_pea(
     twirling_options: TwirlingOptions,
     shots: int,
     zne_options: ZneOptions,
-    noise_mapping: dict[str, PauliLindbladMap],
+    noise_model: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
@@ -67,7 +67,7 @@ def prepare_pea(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         zne_options: The options for PEA mitigation (which have the same options as ZNE).
-        noise_mapping: Mapping between layer ref to a noise model to use for noise
+        noise_model: Mapping between layer ref to a noise model to use for noise
             amplification. The dict contains layers from all pubs. Assumes that the unique
             layers used for noise learning were extracted using the ``find_unique_layers`` method.
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
@@ -85,7 +85,7 @@ def prepare_pea(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If noise_mapping is missing a noise map for at least one of
+        IBMInputValueError: If ``noise_model`` is missing a noise map for at least one of
             the pubs layers.
         IBMInputValueError: If ``noise_factors`` is under-specified for the requested extrapolator.
 
@@ -154,10 +154,10 @@ def prepare_pea(
         for spec in specs:
             ref = spec.name.split(".")[-1]
             try:
-                noise_model = noise_mapping[ref]
+                model = noise_model[ref]
             except KeyError:
                 raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
-            pub_noise_model[ref] = noise_model
+            pub_noise_model[ref] = model
             samplex_arguments[f"noise_scales.{ref}"] = noise_scales
 
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model

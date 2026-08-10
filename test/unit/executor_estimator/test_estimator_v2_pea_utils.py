@@ -80,7 +80,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
                     twirling_options=twirling_options,
                     shots=10,
                     zne_options=zne_options,
-                    noise_mapping={},
+                    noise_model={},
                     measure_noise_learning=measure_noise_learning,
                 )
 
@@ -133,7 +133,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
                     twirling_options=twirling_options,
                     shots=10,
                     zne_options=zne_options,
-                    noise_mapping=noise_mapping,
+                    noise_model=noise_mapping,
                     measure_noise_learning=measure_noise_learning,
                 )
                 # PEA always requires enable_gates=True
@@ -172,7 +172,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
             twirling_options=twirling_options,
             shots=10,
             zne_options=zne_options,
-            noise_mapping=noise_mapping,
+            noise_model=noise_mapping,
         )
         self.assertTemplateCircuitIsCorrect(program.items[0], scenario, enable_gates=True)
 
@@ -613,6 +613,4 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
         with self.assertRaisesRegex(
             IBMInputValueError, "double_exponential requires at least 4 noise_factors"
         ):
-            prepare_pea(
-                [pub], twirling_options, shots=100, zne_options=zne_options, noise_mapping={}
-            )
+            prepare_pea([pub], twirling_options, shots=100, zne_options=zne_options, noise_model={})

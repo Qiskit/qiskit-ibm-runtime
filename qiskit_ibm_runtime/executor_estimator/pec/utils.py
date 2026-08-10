@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 def calculate_gamma(
     boxed_circuit: QuantumCircuit,
-    noise_mapping: dict[str, PauliLindbladMap],
+    noise_model: dict[str, PauliLindbladMap],
     noise_factor: float,
 ) -> float:
     """Calculate the PEC gamma factor of a circuit based on a noise model.
@@ -43,7 +43,7 @@ def calculate_gamma(
 
     Args:
         boxed_circuit: The annotated circuit to calculate the PEC gamma for.
-        noise_mapping: Mapping between layer ref to a noise model
+        noise_model: Mapping between layer ref to a noise model.
         noise_factor: The noise factor of the noise amplification.
 
     Returns:
@@ -54,12 +54,12 @@ def calculate_gamma(
         if annot := get_annotation(instr.operation, InjectNoise):
             ref = annot.ref
             try:
-                noise_model = noise_mapping[ref]
+                model = noise_model[ref]
             except KeyError:
                 raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
             # scale the noise by noise_factor
-            noise_model = noise_model.scale_rates(noise_factor)
-            gamma *= noise_model.inverse().gamma()
+            model = model.scale_rates(noise_factor)
+            gamma *= model.inverse().gamma()
     return gamma
 
 

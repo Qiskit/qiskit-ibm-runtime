@@ -254,7 +254,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
                     twirling_options=twirling_options,
                     shots=10,
                     pec_options=PecOptions(),
-                    noise_mapping={},
+                    noise_model={},
                     measure_noise_learning=measure_noise_learning,
                 )
 
@@ -300,7 +300,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
                     twirling_options=twirling_options,
                     shots=10,
                     pec_options=PecOptions(),
-                    noise_mapping=noise_mapping,
+                    noise_model=noise_mapping,
                     measure_noise_learning=measure_noise_learning,
                 )
                 # PEC always requires enable_gates=True
@@ -335,7 +335,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
             twirling_options=twirling_options,
             shots=10,
             pec_options=PecOptions(),
-            noise_mapping=noise_mapping,
+            noise_model=noise_mapping,
         )
         self.assertTemplateCircuitIsCorrect(program.items[0], scenario, enable_gates=True)
 
