@@ -28,7 +28,8 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.options_models.zne import ZneOptions
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
+from ...utils import combine
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, TEMPLATE_CIRCUIT_SCENARIO
 
 
 @ddt
@@ -97,13 +98,7 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
     def test_samplex_arguments_structure(
         self, enable_gates, enable_measure, enable_measure_noise_learning
     ):
-        """Test that samplex items contain the expected argument keys for each circuit type.
-
-        ZNE never injects noise, so items must have ``basis_changes.*`` (and
-        ``parameter_values`` for parametric circuits) but no ``noise_scales.*`` or
-        ``pauli_lindblad_maps.*`` keys.  There is one item per noise factor, and
-        one for TREX when needed, which is ignored.
-        """
+        """Test that samplex arguments have the expected structure for each circuit type."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
@@ -114,7 +109,7 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
 
         zne_options = ZneOptions()
         zne_options.amplifier = "gate_folding"
-        zne_options.noise_factors = [1, 2, 3]
+        zne_options.noise_factors = [1, 3, 5]
 
         for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
             with self.subTest(circuit=scenario.label):
@@ -125,9 +120,41 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
                     zne_options=zne_options,
                     measure_noise_learning=measure_noise_learning,
                 )
-                # One item per noise factor; skip any trailing TREX item
+                # One item per noise factor; skip any trailing TREX item.
                 for item in program.items[: len(zne_options.noise_factors)]:
-                    self.assertSamplexItemIsCorrect(item, scenario, inject_noise=False)
+                    self.assertSamplexArgumentsAreCorrect(item, scenario, inject_noise=False)
+
+    @combine(enable_gates=[True, False], enable_measure=[True, False])
+    def test_template_circuit(self, enable_gates, enable_measure):
+        """Test that the template circuit has the expected clbits and parameter count.
+
+        Uses a single circuit combining 2Q gates, a parametric gate, and a mid-circuit
+        measurement. Verifies that gate folding at each noise factor scales only the
+        gate-twirling parameters, leaving measurement-box parameters fixed.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = [1, 3, 5]
+
+        scenario = TEMPLATE_CIRCUIT_SCENARIO
+        program = prepare_zne(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+            zne_options=zne_options,
+        )
+        # One item per noise factor; verify that the template scales correctly.
+        for noise_factor, item in zip(
+            zne_options.noise_factors, program.items[: len(zne_options.noise_factors)]
+        ):
+            with self.subTest(noise_factor=noise_factor):
+                self.assertTemplateCircuitIsCorrect(
+                    item, scenario, enable_gates=enable_gates, noise_factor=noise_factor
+                )
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""

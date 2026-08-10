@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit import QuantumCircuit
     from qiskit.circuit import CircuitInstruction
-    from qiskit.primitives import EstimatorPub
+    from qiskit.primitives import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
@@ -300,7 +300,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
 
 
 def find_unique_layers(
-    pubs: Iterable[EstimatorPub],
+    pubs: Iterable[EstimatorPub | SamplerPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
@@ -315,7 +315,7 @@ def find_unique_layers(
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates.
-        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+        add_tags: Whether to include tags for the boxes.
 
     Returns:
         Unique boxed layers found across the given PUBs.
@@ -418,13 +418,12 @@ def compute_samplex_arguments(
     )
     change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
 
+    parameter_values_array = parameter_values.as_array(pub.circuit.parameters)
     basis_idx = 0
     for ndindex, basis in param_basis_map.items():
         for bases in basis:
             change_basis[basis_idx] = pauli_to_ints(bases)
-            flat_parameter_values[basis_idx] = parameter_values.as_array(pub.circuit.parameters)[
-                ndindex
-            ]
+            flat_parameter_values[basis_idx] = parameter_values_array[ndindex]
             basis_idx += 1
 
     # Step 4. Log info.

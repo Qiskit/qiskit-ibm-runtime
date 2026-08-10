@@ -29,7 +29,7 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase
 from ...utils import combine
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, TEMPLATE_CIRCUIT_SCENARIO
 
 
 @ddt
@@ -97,12 +97,7 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
     def test_samplex_arguments_structure(
         self, enable_gates, enable_measure, enable_measure_noise_learning
     ):
-        """Test that samplex items contain the expected argument keys for each circuit type.
-
-        vanilla never injects noise, so items must have ``basis_changes.*`` (and
-        ``parameter_values`` for parametric circuits) but no ``noise_scales.*`` or
-        ``pauli_lindblad_maps.*`` keys.
-        """
+        """Test that samplex arguments have the expected structure for each circuit type."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
@@ -119,7 +114,28 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
                     shots=10,
                     measure_noise_learning=measure_noise_learning,
                 )
-                self.assertSamplexItemIsCorrect(program.items[0], scenario, inject_noise=False)
+                self.assertSamplexArgumentsAreCorrect(
+                    program.items[0], scenario, inject_noise=False
+                )
+
+    @combine(enable_gates=[True, False], enable_measure=[True, False])
+    def test_template_circuit(self, enable_gates, enable_measure):
+        """Test that the template circuit has the expected clbits and parameter count.
+
+        Uses a single circuit combining 2Q gates, a parametric gate, and a mid-circuit
+        measurement — covering all structural features of template compilation.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        scenario = TEMPLATE_CIRCUIT_SCENARIO
+        program = prepare_vanilla(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+        )
+        self.assertTemplateCircuitIsCorrect(program.items[0], scenario, enable_gates=enable_gates)
 
     @data(
         [(2, 2), (2, 2), (1, 4)],
