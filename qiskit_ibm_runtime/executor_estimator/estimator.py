@@ -154,9 +154,7 @@ class EstimatorV2(BaseEstimatorV2):
 
         super().__setattr__(name, value)
 
-    def find_unique_layers(
-        self, pubs: Iterable[EstimatorPubLike], add_tags: bool = False
-    ) -> list[CircuitInstruction]:
+    def find_unique_layers(self, pubs: Iterable[EstimatorPubLike]) -> list[CircuitInstruction]:
         """Return the unique boxed layers found across the given PUBs.
 
         The returned list contains one instance of each distinct boxed layer (represented as a
@@ -187,7 +185,6 @@ class EstimatorV2(BaseEstimatorV2):
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
-            add_tags: Whether to include tags for the boxes.
 
         Returns:
             The unique boxed layers found across the given PUBs.
@@ -200,7 +197,7 @@ class EstimatorV2(BaseEstimatorV2):
             measure_noise_learning=options.resilience.measure_noise_learning,
             inject_noise=options.resilience.pec_mitigation
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
-            add_tags=add_tags,
+            add_tags=True,
         )
 
     def finalize_options(self) -> EstimatorOptions:
