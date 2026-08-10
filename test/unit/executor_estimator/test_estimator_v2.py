@@ -22,11 +22,13 @@ from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
@@ -223,10 +225,12 @@ class TestEstimatorV2Run(IBMTestCase):
 
         estimator.run([(circuit, observable)], precision=0.03125)
 
-        # Verify executor options were set
-        self.assertIsNotNone(self.mock_executor_instance.options)
-        self.assertTrue(self.mock_executor_instance.options.execution.init_qubits)
-        self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
+        # Verify Executor was constructed with the correctly mapped executor options
+        self.mock_executor_class.assert_called_once()
+        executor_options = self.mock_executor_class.call_args[1]["options"]
+        self.assertTrue(executor_options.execution.init_qubits)
+        self.assertEqual(executor_options.execution.rep_delay, 0.001)
+        self.assertEqual(executor_options.environment.max_execution_time, 300)
 
     def test_run_adds_options_to_passthrough_data(self):
         """Test that run adds options, shots and precision to passthrough data."""
@@ -392,53 +396,63 @@ class TestEstimatorV2Run(IBMTestCase):
 class TestEstimatorV2SimulatorMode(IBMTestCase):
     """Tests for EstimatorV2 with local simulator backends."""
 
-    def test_simulator_mode_skips_executor(self):
-        """Test that a local backend (non-IBMBackend) skips the Executor."""
-        backend = GenericBackendV2(num_qubits=5)
-        estimator = EstimatorV2(mode=backend)
-
-        self.assertIsNone(estimator._executor)
-
     def test_simulator_mode_returns_result(self):
         """Test that local mode returns expectation values close to the ideal.
 
         The Bell state (|00> + |11>)/sqrt(2) has <ZZ> = 1.0 exactly.
         With enough shots the noisy simulator should be within 0.1 of that.
         """
-        backend = GenericBackendV2(num_qubits=5, seed=42)
+        backend = GenericBackendV2(num_qubits=2, seed=42)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator = EstimatorV2(mode=backend)
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+
+        estimator = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator.options.default_shots = 10_000
-        estimator.options.simulator.seed_simulator = 42
-        result = estimator.run([(circuit, observable)]).result()
+        result = estimator.run([(transpiled, observable)]).result()
 
         self.assertEqual(len(result), 1)
         self.assertAlmostEqual(result[0].data.evs, 1.0, delta=0.1)
 
     def test_simulator_mode_seed_is_deterministic(self):
         """Test that seed_simulator produces deterministic expectation values."""
-        backend = GenericBackendV2(num_qubits=5)
+        backend = GenericBackendV2(num_qubits=2)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
+
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator1 = EstimatorV2(mode=backend)
-        estimator1.options.simulator.seed_simulator = 42
-        estimator1.options.default_shots = 100
-        result1 = estimator1.run([(circuit, observable)]).result()
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
 
-        estimator2 = EstimatorV2(mode=backend)
-        estimator2.options.simulator.seed_simulator = 42
+        estimator1 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
+        estimator1.options.default_shots = 100
+        result1 = estimator1.run([(transpiled, observable)]).result()
+
+        estimator2 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator2.options.default_shots = 100
-        result2 = estimator2.run([(circuit, observable)]).result()
+        result2 = estimator2.run([(transpiled, observable)]).result()
 
         np.testing.assert_array_equal(result1[0].data.evs, result2[0].data.evs)
 
@@ -448,22 +462,33 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
         Uses a single-qubit H gate whose <Z>=0 expectation value has shot-noise
         variance, so results differ between seeds with high probability.
         """
-        backend = GenericBackendV2(num_qubits=5)
+        backend = GenericBackendV2(num_qubits=2)
 
         # H|0> gives <Z>=0 with shot noise - results vary by seed
         circuit = QuantumCircuit(1)
         circuit.h(0)
-        observable = SparsePauliOp.from_list([("Z", 1)])
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
 
-        estimator1 = EstimatorV2(mode=backend)
-        estimator1.options.simulator.seed_simulator = 42
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+
+        estimator1 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator1.options.default_shots = 100
-        result1 = estimator1.run([(circuit, observable)]).result()
+        result1 = estimator1.run([(transpiled, observable)]).result()
 
-        estimator2 = EstimatorV2(mode=backend)
-        estimator2.options.simulator.seed_simulator = 99
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=99)
+
+        estimator2 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator2.options.default_shots = 100
-        result2 = estimator2.run([(circuit, observable)]).result()
+        result2 = estimator2.run([(transpiled, observable)]).result()
 
         self.assertFalse(np.array_equal(result1[0].data.evs, result2[0].data.evs))
 
