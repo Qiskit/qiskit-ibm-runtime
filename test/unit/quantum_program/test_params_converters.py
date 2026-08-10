@@ -14,9 +14,9 @@
 
 from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
-from samplomatic.quantum_program import QuantumProgram
 
 from qiskit_ibm_runtime.options_models import ExecutorOptions
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 
 from ...ibm_test_case import IBMTestCase

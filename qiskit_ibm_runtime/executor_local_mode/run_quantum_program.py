@@ -30,9 +30,9 @@ from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
-    from samplomatic.quantum_program import QuantumProgram
 
     from ..options_models.simulator import ExperimentalSimulatorOptions
+    from ..quantum_program import QuantumProgram
 
 if HAS_AER:
     from qiskit_aer import AerSimulator

@@ -15,10 +15,10 @@
 from unittest import skipUnless
 
 from qiskit.utils import optionals
-from samplomatic.quantum_program import QuantumProgram
 
 from qiskit_ibm_runtime.executor_local_mode import SimRuntimeJob
 from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
 
 from ...ibm_test_case import IBMTestCase

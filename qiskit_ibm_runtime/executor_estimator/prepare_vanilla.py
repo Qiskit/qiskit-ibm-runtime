@@ -26,9 +26,10 @@ if TYPE_CHECKING:
     from ..options_models.twirling import TwirlingOptions
 
 from samplomatic import build
-from samplomatic.quantum_program import QuantumProgram, SamplexItem
+from samplomatic.quantum_program import SamplexItem
 
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
+from ..quantum_program import QuantumProgram
 from .trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from .utils import (
     box_circuit,

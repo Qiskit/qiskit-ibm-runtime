@@ -23,9 +23,9 @@ from .run_quantum_program import run_quantum_program
 if TYPE_CHECKING:
     from qiskit.primitives.containers.primitive_result import PrimitiveResult
     from qiskit.providers import BackendV2
-    from samplomatic.quantum_program import QuantumProgram
 
     from ..options_models.simulator import ExperimentalSimulatorOptions
+    from ..quantum_program import QuantumProgram
     from ..results import QuantumProgramResult
 
 

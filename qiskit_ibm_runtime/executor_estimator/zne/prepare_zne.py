@@ -29,11 +29,12 @@ if TYPE_CHECKING:
 import numpy as np
 from qiskit.transpiler import PassManager
 from samplomatic import build
-from samplomatic.quantum_program import QuantumProgram, SamplexItem
+from samplomatic.quantum_program import SamplexItem
 
 from ...exceptions import IBMInputValueError
 from ...executor.calculate_twirling_shots import calculate_twirling_shots
 from ...options_models.zne import ZNE_DEFAULT_NOISE_FACTORS
+from ...quantum_program import QuantumProgram
 from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from ..utils import (
     box_circuit,

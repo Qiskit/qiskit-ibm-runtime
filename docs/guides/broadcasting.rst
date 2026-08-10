@@ -15,7 +15,7 @@ you have a parametric circuit and want to run it with 5 different parameter conf
 
     import numpy as np
     from qiskit.circuit import Parameter, QuantumCircuit
-    from samplomatic.quantum_program import QuantumProgram
+    from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
     # A circuit with 3 parameters
     circuit = QuantumCircuit(3)
