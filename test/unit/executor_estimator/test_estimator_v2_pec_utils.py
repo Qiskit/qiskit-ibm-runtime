@@ -34,7 +34,7 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase, IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS
+from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, TEMPLATE_CIRCUIT_SCENARIO
 
 
 class TestCalculateGamma(IBMTestCase):
@@ -270,12 +270,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
     @data([True, False], [False, False], [True, True])
     @unpack
     def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
-        """Test that samplex items contain the expected argument keys for each circuit type.
-
-        PEC always injects noise, so items must have ``basis_changes.*``,
-        ``noise_scales.*``, and ``pauli_lindblad_maps.*`` keys (and additionally
-        ``parameter_values`` for parametric circuits).
-        """
+        """Test that samplex arguments have the expected structure for each circuit type."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
         twirling_options.enable_measure = enable_measure
@@ -308,7 +303,41 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
                     noise_model_mapping=noise_model_mapping,
                     measure_noise_learning=measure_noise_learning,
                 )
-                self.assertSamplexItemIsCorrect(program.items[0], scenario, inject_noise=True)
+                # PEC always requires enable_gates=True
+                self.assertSamplexArgumentsAreCorrect(program.items[0], scenario, inject_noise=True)
+
+    @data(True, False)
+    def test_template_circuit(self, enable_measure):
+        """Test that the template circuit has the expected clbits and parameter count.
+
+        Uses a single circuit combining 2Q gates, a parametric gate, and a mid-circuit
+        measurement — covering all structural features of template compilation.
+        PEC always runs with enable_gates=True.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = enable_measure
+
+        scenario = TEMPLATE_CIRCUIT_SCENARIO
+        pubs = [scenario.pub]
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        noise_model_mapping = {
+            annot.ref: PauliLindbladMap.from_sparse_list(
+                [("Z" * len(layer.qubits), list(range(len(layer.qubits))), 0.1)],
+                num_qubits=len(layer.qubits),
+            )
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+        program = prepare_pec(
+            pubs=pubs,
+            twirling_options=twirling_options,
+            shots=10,
+            pec_options=PecOptions(),
+            noise_model_mapping=noise_model_mapping,
+        )
+        self.assertTemplateCircuitIsCorrect(program.items[0], scenario, enable_gates=True)
 
     def test_prepare_pec_basic(self):
         """Test prepare_pec with basic PEC options and noise model."""

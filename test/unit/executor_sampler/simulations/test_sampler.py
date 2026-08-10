@@ -62,15 +62,16 @@ class TestSampler(IBMTestCase):
         parameter_values = pub.parameter_values.as_array(pub.circuit.parameters)
         parameter_values = np.atleast_1d(parameter_values)
 
+        array = pub_result.data.meas
+        self.assertEqual(array.shape, pub.shape)
+
         for index in np.ndindex(parameter_values.shape[:-1]):
             assigned_parameters = parameter_values[index]
             bound_circuit = circuit_cp.assign_parameters(assigned_parameters)
             probabilities = Statevector(bound_circuit).probabilities_dict()
 
-            counts = pub_result.data.meas[index].get_counts()
-
             self.assertAlmostEqual(
-                fidelity := hellinger_fidelity(counts, probabilities),
+                fidelity := hellinger_fidelity(array[index].get_counts(), probabilities),
                 1.0,
                 msg=f"Fidelity: {fidelity}",
                 delta=self.tolerance,
@@ -79,7 +80,15 @@ class TestSampler(IBMTestCase):
     @data([True, False], [False, True], [True, True], [False, False])
     @unpack
     def test_twirling_configurations(self, enable_gates, enable_measure):
-        """Test sampler with different configurations of twirling."""
+        """Test sampler with different configurations of twirling.
+
+        Checks that:
+        * The pub results match with the correct results, regardless of the twirling
+          strategy.
+        * The number of shots equals ``num_randomizations * shots_per_randomization`` when
+          either gate or measurement twirling is enabled, and the requested ``shots``
+          otherwise.
+        """
         circuit = make_mirror_circuit_with_phases(self.backend)
         parameters = np.random.random((2, 3) + (circuit.num_parameters,))
 
@@ -103,7 +112,6 @@ class TestSampler(IBMTestCase):
             if enable_measure or enable_gates
             else shots,
         )
-        self.assertEqual(array.shape, pubs[0].shape)
 
         for pub, pub_result in zip(pubs, result):
             self.verify_pub_result(pub, pub_result)

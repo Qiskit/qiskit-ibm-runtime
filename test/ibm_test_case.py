@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
     from .decorators import IntegrationTestDependencies
-    from .unit.executor_estimator.utils import SamplexCircuitScenario
+    from .unit.executor_estimator.utils import SamplexCircuitScenario, TemplateCircuitScenario
 
 
 class IBMTestCase(TestCase):
@@ -175,13 +175,13 @@ class IBMTestCase(TestCase):
 class IBMEstimatorPrepareTestCase(IBMTestCase):
     """TestCase with assertions for estimator prepare-function tests."""
 
-    def assertSamplexItemIsCorrect(
+    def assertSamplexArgumentsAreCorrect(
         self,
         item: SamplexItem,
         scenario: SamplexCircuitScenario,
         inject_noise: bool,
     ) -> None:
-        """Assert that a :class:`~.SamplexItem`'s arguments match the expected structure.
+        """Assert that a :class:`~.SamplexItem`'s samplex arguments have the expected structure.
 
         Checks:
 
@@ -231,7 +231,6 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 f"basis_changes key(s), got {len(basis_keys)}; keys={keys}"
             ),
         )
-        # Verify basis changes
         zero_bc_keys = [k for k in basis_keys if np.all(np.asarray(item.samplex_arguments[k]) == 0)]
         nonzero_bc_keys = [
             k for k in basis_keys if not np.all(np.asarray(item.samplex_arguments[k]) == 0)
@@ -281,6 +280,65 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 [],
                 msg=f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}",
             )
+
+    def assertTemplateCircuitIsCorrect(
+        self,
+        item: SamplexItem,
+        scenario: TemplateCircuitScenario,
+        enable_gates: bool,
+        noise_factor: int = 1,
+    ) -> None:
+        """Assert that the template circuit inside a :class:`~.SamplexItem` has the expected shape.
+
+        Checks:
+
+        * ``item.circuit.num_clbits`` matches ``scenario.expected_num_clbits``.
+        * ``item.circuit.num_parameters`` is consistent with the twirling options and
+          ``noise_factor``.  When ``enable_gates=True``, gate-folding scales the gate-twirling
+          parameters while the measurement-box parameters stay fixed.  ``noise_factor=1``
+          is the unfolded baseline, so each additional unit adds
+          ``scenario.num_parameters_per_noise_factor`` parameters::
+
+              expected = num_circuit_parameters_gates_on
+                         + num_parameters_per_noise_factor * (noise_factor - 1)
+
+          When ``enable_gates=False`` the noise factor does not apply and the expected
+          count is ``scenario.num_circuit_parameters_gates_off``.
+
+        Args:
+            item: The :class:`~.SamplexItem` to inspect.
+            scenario: The :class:`TemplateCircuitScenario` whose PUB was used to
+                produce ``item``.
+            enable_gates: Whether gate twirling was enabled for this prepare call.
+            noise_factor: The ZNE gate-folding noise factor (default ``1``, i.e. no
+                folding).  Only meaningful when ``enable_gates=True``.
+        """
+        circuit = item.circuit
+        if enable_gates:
+            expected_num_params = (
+                scenario.num_circuit_parameters_gates_on
+                + scenario.num_parameters_per_noise_factor * (noise_factor - 1)
+            )
+        else:
+            expected_num_params = scenario.num_circuit_parameters_gates_off
+
+        self.assertEqual(
+            circuit.num_clbits,
+            scenario.expected_num_clbits,
+            msg=(
+                f"[{scenario.label}] template num_clbits mismatch; "
+                f"got {circuit.num_clbits}, expected {scenario.expected_num_clbits}"
+            ),
+        )
+        self.assertEqual(
+            circuit.num_parameters,
+            expected_num_params,
+            msg=(
+                f"[{scenario.label}] template num_parameters mismatch "
+                f"(enable_gates={enable_gates}, noise_factor={noise_factor}); "
+                f"got {circuit.num_parameters}, expected {expected_num_params}"
+            ),
+        )
 
 
 class IBMVisualizationTestCase(IBMTestCase):
