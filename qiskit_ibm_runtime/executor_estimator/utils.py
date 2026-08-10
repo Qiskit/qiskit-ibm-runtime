@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit import QuantumCircuit
     from qiskit.circuit import CircuitInstruction
-    from qiskit.primitives import EstimatorPub
+    from qiskit.primitives import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
@@ -300,7 +300,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
 
 
 def find_unique_layers(
-    pubs: Iterable[EstimatorPub],
+    pubs: Iterable[EstimatorPub | SamplerPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,

@@ -23,10 +23,10 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
+from ..executor_estimator.utils import find_unique_layers
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
-from .utils import find_unique_layers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -142,6 +142,8 @@ class SamplerV2(BaseSamplerV2):
         return find_unique_layers(
             pubs=coerced_pubs,
             twirling_options=self.options.twirling,
+            measure_noise_learning=None,
+            inject_noise=False,
             add_tags=True,
         )
 
