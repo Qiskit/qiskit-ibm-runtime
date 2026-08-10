@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit import QuantumCircuit
     from qiskit.circuit import CircuitInstruction
-    from qiskit.primitives import EstimatorPub
+    from qiskit.primitives import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
@@ -300,7 +300,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
 
 
 def find_unique_layers(
-    pubs: Iterable[EstimatorPub],
+    pubs: Iterable[EstimatorPub | SamplerPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
@@ -315,7 +315,7 @@ def find_unique_layers(
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates.
-        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+        add_tags: Whether to include tags for the boxes.
 
     Returns:
         Unique boxed layers found across the given PUBs.

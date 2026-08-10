@@ -197,6 +197,7 @@ class EstimatorV2(BaseEstimatorV2):
             measure_noise_learning=options.resilience.measure_noise_learning,
             inject_noise=options.resilience.pec_mitigation
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
+            add_tags=True,
         )
 
     def finalize_options(self) -> EstimatorOptions:
