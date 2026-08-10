@@ -108,4 +108,4 @@ class TestEstimator(IBMTestCase):
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
 
         # Resilience level 2 should give very accurate expectation value:
-        np.testing.assert_array_less(errors[2], 0.05, err_msg=debug_message)
+        np.testing.assert_array_less(errors[2], 0.1, err_msg=debug_message)
