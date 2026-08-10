@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from collections.abc import MutableMapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, overload
 
@@ -26,6 +25,11 @@ if TYPE_CHECKING:
     import numpy as np
     from plotly.graph_objects import Figure as PlotlyFigure
     from samplomatic.quantum_program.datatree import DataTree
+
+from samplomatic.quantum_program import (
+    QuantumProgramItemResult as SamplomaticQuantumProgramItemResult,
+)
+from samplomatic.quantum_program import QuantumProgramResult as SamplomaticQuantumProgramResult
 
 
 @dataclass
@@ -257,7 +261,7 @@ class ChunkTiming:
         )
 
 
-class QuantumProgramItemResult(MutableMapping):
+class QuantumProgramItemResult(SamplomaticQuantumProgramItemResult):
     """A container to store results for a single item of a :class:`QuantumProgram`.
 
     Args:
@@ -270,8 +274,7 @@ class QuantumProgramItemResult(MutableMapping):
         result: dict[str, np.ndarray],
         metadata: ItemMetadata | None = None,
     ):
-        self._result = result
-        self.metadata = metadata or ItemMetadata()
+        super().__init__(result=result, metadata=metadata or ItemMetadata())
 
     def __getitem__(self, key: str) -> np.ndarray:
         return self._result[key]
@@ -292,8 +295,8 @@ class QuantumProgramItemResult(MutableMapping):
         return f"{self.__class__.__name__}({self._result}, metadata={self.metadata})"
 
 
-class QuantumProgramResult:
-    """A container to store results from executing a :class:`QuantumProgram`.
+class QuantumProgramResult(SamplomaticQuantumProgramResult):
+    """A container to store results from executing a :class:`~.QuantumProgram`.
 
     Args:
         data: A list of dictionaries with array-valued data.
@@ -307,39 +310,21 @@ class QuantumProgramResult:
         metadata: Metadata | None = None,
         passthrough_data: DataTree | None = None,
     ):
-        self._data = [
-            datum
-            if isinstance(datum, QuantumProgramItemResult)
-            else QuantumProgramItemResult(datum)
-            for datum in data
-        ]
-        self.metadata = metadata or Metadata()
-        self.passthrough_data = passthrough_data
+        super().__init__(
+            data=[
+                datum
+                if isinstance(datum, QuantumProgramItemResult)
+                else QuantumProgramItemResult(datum)
+                for datum in data
+            ],
+            metadata=metadata or Metadata(),
+            passthrough_data=passthrough_data,
+        )
 
         # Semantic role indicating how execution results may be post-processed by runtime clients.
         # Reserved system values include 'sampler-v2' and 'estimator-v2', and are subject to change
         # without notice. Third party clients should not set or depend on this value.
         self._semantic_role: str | None = None
-
-    def __iter__(self) -> Iterator[QuantumProgramItemResult]:
-        yield from self._data
-
-    @overload
-    def __getitem__(self, idx: int) -> QuantumProgramItemResult: ...
-
-    @overload
-    def __getitem__(self, idx: slice) -> list[QuantumProgramItemResult]: ...
-
-    def __getitem__(
-        self, idx: int | slice
-    ) -> QuantumProgramItemResult | list[QuantumProgramItemResult]:
-        return self._data[idx]
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}(<{len(self)} results>)"
 
     @property
     def timing(self) -> ChunkTiming:

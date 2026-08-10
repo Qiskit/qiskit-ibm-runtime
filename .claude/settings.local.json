@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(.tox/*/bin/python -c \"import samplomatic; print\\(samplomatic.__version__\\)\")"
+    ]
+  }
+}
