@@ -22,6 +22,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -39,15 +40,20 @@ class TestEstimator(IBMTestCase):
             optimization_level=1, target=self.backend.target
         )
 
-    def test_simple_mirror_circuit_correct_evs(self):
-        """Tests EstimatorV2 expectation values of a simple RZ Gate Circuit with default options.
+    def test_result_quality_for_different_resilience_levels(self):
+        """Tests the effect of resilience on EstimatorV2 results.
+
+        Estimator result quality is expected to increases with increasing resilience level.
 
         Compares the results against a statevector simulation.
         """
+        # Use standard mirror circuit, but without measurements, as StatevectorEstimator does
+        # not support them.
         circuit = make_mirror_circuit_with_phases(self.backend, add_measurement=False)
         isa_circuit = self.preset_pass_manager.run(circuit)
 
-        parameters = [np.pi, np.pi]
+        # We want to run multiple random variants of the circuit to get different expectation
+        # values and to improve statistical significance:
         num_randomizations = 5
         np.random.seed(42)
         parameters = np.random.uniform(
@@ -56,19 +62,40 @@ class TestEstimator(IBMTestCase):
             size=(num_randomizations, circuit.num_parameters),
         )
 
-        estimator = EstimatorV2(self.backend)
-        estimator.options.experimental = {"local_mode": True}
-
+        # Prepare a PUB with an observable to estimate expectation values on.
+        # Using "ZZ" observable, as the mirror circuit has parametric rx gates, which should yield
+        # variations on Z projection.
         observable = SparsePauliOp("ZZ").apply_layout(isa_circuit.layout)
-
         pub = (isa_circuit, [observable], parameters)
-        result = estimator.run([pub]).result()
 
+        # Calculate ground truth to compare the results against via a statevector simulation:
         statevector_estimator = StatevectorEstimator()
         statevector_result = statevector_estimator.run([pub]).result()
+        statevector_evs = statevector_result[0].data.evs
 
-        print(
-            f"EstimatorV2 <ZZ> = {result[0].data.evs}, "
-            + f"StatevectorEstimator <ZZ> = {statevector_result[0].data.evs}"
-        )
-        np.testing.assert_allclose(result[0].data.evs, statevector_result[0].data.evs, atol=0.15)
+        # Run Estimator with different resilience levels:
+        mean_errors: dict[int, float] = {}
+        for resilience_level in (0, 1, 2):
+            options = EstimatorOptions(
+                # The resilience level we want to run with:
+                resilience_level=resilience_level,
+                # Local mode means that the underlying Executor is running Aer simulation
+                # instead of connecting to a real backend.
+                experimental={"local_mode": True},
+            )
+
+            estimator = EstimatorV2(mode=self.backend, options=options)
+
+            result = estimator.run([pub]).result()
+            evs = result[0].data.evs
+            mean_error = np.mean(np.abs(evs - statevector_evs))
+            max_error = np.max(np.abs(evs - statevector_evs))
+            # Assert a base-level of quality across all resilience levels:
+            self.assertLessEqual(max_error, 0.15)
+            mean_errors[resilience_level] = float(mean_error)
+
+        print(f"Mean errors per resilience level: {mean_errors}")
+
+        # Increased resilience level should translate into increased expectation value quality:
+        self.assertGreater(mean_errors[0], mean_errors[1])
+        self.assertGreater(mean_errors[1], mean_errors[2])
