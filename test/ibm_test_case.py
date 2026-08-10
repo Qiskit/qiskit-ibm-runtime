@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
     from .decorators import IntegrationTestDependencies
-    from .unit.executor_estimator.utils import SamplexCircuitScenario
+    from .unit.executor_estimator.utils import SamplexCircuitScenario, TemplateCircuitScenario
 
 
 class IBMTestCase(TestCase):
@@ -175,14 +175,13 @@ class IBMTestCase(TestCase):
 class IBMEstimatorPrepareTestCase(IBMTestCase):
     """TestCase with assertions for estimator prepare-function tests."""
 
-    def assertSamplexItemIsCorrect(
+    def assertSamplexArgumentsAreCorrect(
         self,
         item: SamplexItem,
         scenario: SamplexCircuitScenario,
         inject_noise: bool,
-        enable_gates: bool = True,
     ) -> None:
-        """Assert that a :class:`~.SamplexItem` matches the expected structure.
+        """Assert that a :class:`~.SamplexItem`'s samplex arguments have the expected structure.
 
         Checks:
 
@@ -196,9 +195,6 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
           of ``pauli_lindblad_maps.*`` keys exist.
         * When ``inject_noise`` is ``False`` (vanilla, ZNE): no ``noise_scales.*``
           or ``pauli_lindblad_maps.*`` keys exist.
-        * ``item.circuit.num_clbits`` matches ``scenario.expected_num_clbits``.
-        * ``item.circuit.num_parameters`` matches ``scenario.num_circuit_parameters_gates_on``
-          when ``enable_gates=True``, or ``scenario.num_circuit_parameters_gates_off`` otherwise.
 
         Args:
             item: The :class:`~.SamplexItem` to inspect.
@@ -206,11 +202,7 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 produce ``item``.
             inject_noise: ``True`` for methods that inject noise (PEA, PEC);
                 ``False`` for methods that do not (vanilla, ZNE).
-            enable_gates: Whether gate twirling was enabled for this prepare call.
-                Selects between ``scenario.num_circuit_parameters_gates_on`` and
-                ``scenario.num_circuit_parameters_gates_off``.
         """
-        # --- Samplex arguments checks ---
         keys = list(item.samplex_arguments)
         basis_keys = [k for k in keys if k.startswith("basis_changes.")]
         noise_keys = [k for k in keys if k.startswith("noise_scales.")]
@@ -239,7 +231,6 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 f"basis_changes key(s), got {len(basis_keys)}; keys={keys}"
             ),
         )
-        # Verify basis changes
         zero_bc_keys = [k for k in basis_keys if np.all(np.asarray(item.samplex_arguments[k]) == 0)]
         nonzero_bc_keys = [
             k for k in basis_keys if not np.all(np.asarray(item.samplex_arguments[k]) == 0)
@@ -290,13 +281,47 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 msg=f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}",
             )
 
-        # --- template circuit checks ---
+    def assertTemplateCircuitIsCorrect(
+        self,
+        item: SamplexItem,
+        scenario: TemplateCircuitScenario,
+        enable_gates: bool,
+        noise_factor: int = 1,
+    ) -> None:
+        """Assert that the template circuit inside a :class:`~.SamplexItem` has the expected shape.
+
+        Checks:
+
+        * ``item.circuit.num_clbits`` matches ``scenario.expected_num_clbits``.
+        * ``item.circuit.num_parameters`` is consistent with the twirling options and
+          ``noise_factor``.  When ``enable_gates=True``, gate-folding scales the gate-twirling
+          parameters while the measurement-box parameters stay fixed.  ``noise_factor=1``
+          is the unfolded baseline, so each additional unit adds
+          ``scenario.num_parameters_per_noise_factor`` parameters::
+
+              expected = num_circuit_parameters_gates_on
+                         + num_parameters_per_noise_factor * (noise_factor - 1)
+
+          When ``enable_gates=False`` the noise factor does not apply and the expected
+          count is ``scenario.num_circuit_parameters_gates_off``.
+
+        Args:
+            item: The :class:`~.SamplexItem` to inspect.
+            scenario: The :class:`TemplateCircuitScenario` whose PUB was used to
+                produce ``item``.
+            enable_gates: Whether gate twirling was enabled for this prepare call.
+            noise_factor: The ZNE gate-folding noise factor (default ``1``, i.e. no
+                folding).  Only meaningful when ``enable_gates=True``.
+        """
         circuit = item.circuit
-        expected_num_params = (
-            scenario.num_circuit_parameters_gates_on
-            if enable_gates
-            else scenario.num_circuit_parameters_gates_off
-        )
+        if enable_gates:
+            expected_num_params = (
+                scenario.num_circuit_parameters_gates_on
+                + scenario.num_parameters_per_noise_factor * (noise_factor - 1)
+            )
+        else:
+            expected_num_params = scenario.num_circuit_parameters_gates_off
+
         self.assertEqual(
             circuit.num_clbits,
             scenario.expected_num_clbits,
@@ -310,7 +335,7 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
             expected_num_params,
             msg=(
                 f"[{scenario.label}] template num_parameters mismatch "
-                f"(enable_gates={enable_gates}); "
+                f"(enable_gates={enable_gates}, noise_factor={noise_factor}); "
                 f"got {circuit.num_parameters}, expected {expected_num_params}"
             ),
         )
