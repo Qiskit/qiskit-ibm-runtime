@@ -43,7 +43,7 @@ def calculate_gamma(
 
     Args:
         boxed_circuit: The annotated circuit to calculate the PEC gamma for.
-        noise_model: Mapping between layer ref to a noise model.
+        noise_model: Mapping between layer ref to a noise model
         noise_factor: The noise factor of the noise amplification.
 
     Returns:

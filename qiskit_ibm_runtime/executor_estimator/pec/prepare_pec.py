@@ -66,7 +66,7 @@ def prepare_pec(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         pec_options: The options for PEC mitigation.
-        noise_model: Mapping between layer ref to a noise model to use for PEC mitigation.
+        noise_model: Mapping between layer ref to a noise model to use for PEC mitigation
             method. The dict contains layers from all pubs. Assumes that the unique layers
             used for noise learning were extracted using the ``find_unique_layers`` method.
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
