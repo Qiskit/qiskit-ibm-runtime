@@ -159,7 +159,8 @@ class NoiseLearnerV3Results:
             require_refs: Whether to raise if some of the instructions do not own an
                 annotation. If ``False``, all the instructions that do not contain an
                 annotation are simply skipped when constructing the returned dictionary.
-            group_by: Whether to use ``inject_noise`` or ``tag`` annotations.
+            group_by: If ``tag``, it groups by :class:`~.Tag` annotations. Otherwise, by
+                :class:`~.InjectNoise` annotations.
 
         Raise:
             ValueError: If ``instructions`` contains a number of elements that is not equal to the
