@@ -418,13 +418,12 @@ def compute_samplex_arguments(
     )
     change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
 
+    parameter_values_array = parameter_values.as_array(pub.circuit.parameters)
     basis_idx = 0
     for ndindex, basis in param_basis_map.items():
         for bases in basis:
             change_basis[basis_idx] = pauli_to_ints(bases)
-            flat_parameter_values[basis_idx] = parameter_values.as_array(pub.circuit.parameters)[
-                ndindex
-            ]
+            flat_parameter_values[basis_idx] = parameter_values_array[ndindex]
             basis_idx += 1
 
     # Step 4. Log info.
