@@ -26,10 +26,8 @@ if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
     from samplomatic.quantum_program.datatree import DataTree
 
-from samplomatic.quantum_program import (
-    QuantumProgramItemResult as SamplomaticQuantumProgramItemResult,
-)
-from samplomatic.quantum_program import QuantumProgramResult as SamplomaticQuantumProgramResult
+from samplomatic.quantum_program import QuantumProgramItemResult as BaseQuantumProgramItemResult
+from samplomatic.quantum_program import QuantumProgramResult as BaseQuantumProgramResult
 
 
 @dataclass
@@ -261,7 +259,7 @@ class ChunkTiming:
         )
 
 
-class QuantumProgramItemResult(SamplomaticQuantumProgramItemResult):
+class QuantumProgramItemResult(BaseQuantumProgramItemResult):
     """A container to store results for a single item of a :class:`QuantumProgram`.
 
     Args:
@@ -295,7 +293,7 @@ class QuantumProgramItemResult(SamplomaticQuantumProgramItemResult):
         return f"{self.__class__.__name__}({self._result}, metadata={self.metadata})"
 
 
-class QuantumProgramResult(SamplomaticQuantumProgramResult):
+class QuantumProgramResult(BaseQuantumProgramResult):
     """A container to store results from executing a :class:`~.QuantumProgram`.
 
     Args:

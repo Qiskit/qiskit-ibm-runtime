@@ -23,10 +23,10 @@ if TYPE_CHECKING:
     from samplomatic.quantum_program import QuantumProgramItem
     from samplomatic.quantum_program.datatree import DataTree
 
-from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
+from samplomatic.quantum_program import QuantumProgram as BaseQuantumProgram
 
 
-class QuantumProgram(SamplomaticQuantumProgram):
+class QuantumProgram(BaseQuantumProgram):
     """A quantum runtime executable.
 
     A quantum program consists of a list of ordered elements, each of which contains a single
