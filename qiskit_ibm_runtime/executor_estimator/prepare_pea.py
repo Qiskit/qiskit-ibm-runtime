@@ -41,6 +41,7 @@ from .utils import (
     compute_samplex_arguments,
     make_samplex_arguments,
     options_to_boxing_pm_kwargs,
+    validate_noise_factors,
 )
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,7 @@ def prepare_pea(
             reserved classical register name ``_meas``.
         IBMInputValueError: If noise_model_mapping is missing a noise map for at least one of
             the pubs layers.
+        IBMInputValueError: If ``noise_factors`` is under-specified for the requested extrapolator.
 
     """
     if not twirling_options.enable_gates:
@@ -99,6 +101,7 @@ def prepare_pea(
         noise_factors = np.array(PEA_DEFAULT_NOISE_FACTORS, dtype=float)
     else:
         noise_factors = np.array(zne_options.noise_factors, dtype=float)
+    validate_noise_factors(noise_factors, zne_options.extrapolator)
 
     extrapolated_noise_factors = zne_options.extrapolated_noise_factors
     if extrapolated_noise_factors == "auto":
