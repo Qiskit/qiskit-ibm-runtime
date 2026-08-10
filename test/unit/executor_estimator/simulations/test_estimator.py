@@ -1,14 +1,24 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Tests Executor based EstimatorV2 implementation using simulator through local mode."""
+
 from __future__ import annotations
 
 import numpy as np
 from ddt import ddt
 from qiskit.primitives import StatevectorEstimator
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_aer import AerSimulator
-
-# TODO: This import is not yet available. Maybe we can directly skip this,
-# once local mode of Estimator is supported
-from qiskit_ibm_runtime.sim_executor import SimExecutor
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
@@ -18,26 +28,46 @@ from ....utils import make_mirror_circuit_with_phases
 
 
 @ddt
-class TestSampler(IBMTestCase):
+class TestEstimator(IBMTestCase):
+    """Tests Executor based EstimatorV2 implementation using simulator through local mode."""
+
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self.backend = FakeManilaV2()
+        self.preset_pass_manager = generate_preset_pass_manager(
+            optimization_level=1, target=self.backend.target
+        )
 
     def test_simple_mirror_circuit_correct_evs(self):
-        circuit = make_mirror_circuit_with_phases(self.backend)
+        """Tests EstimatorV2 expectation values of a simple RZ Gate Circuit with default options.
 
-        # TODO: I think we need to explicitly define parameters in order to write assertion on EVs
-        parameters = np.random.random((2, 3) + (circuit.num_parameters,))
+        Compares the results against a statevector simulation.
+        """
+        circuit = make_mirror_circuit_with_phases(self.backend, add_measurement=False)
+        isa_circuit = self.preset_pass_manager.run(circuit)
+
+        parameters = [np.pi, np.pi]
+        num_randomizations = 25
+        parameters = np.random.uniform(
+            0,
+            2 * np.pi,
+            size=(num_randomizations, circuit.num_parameters),
+        )
 
         estimator = EstimatorV2(self.backend)
-        estimator._executor = SimExecutor(AerSimulator())
+        estimator.options.experimental = {"local_mode": True}
 
-        observable = SparsePauliOp("ZZ")
-        pub = (circuit, parameters, [observable])
+        observable = SparsePauliOp("ZZ").apply_layout(isa_circuit.layout)
+
+        pub = (isa_circuit, [observable], parameters)
         result = estimator.run([pub]).result()
 
         statevector_estimator = StatevectorEstimator()
         statevector_result = statevector_estimator.run([pub]).result()
 
-        # TODO: make this a class assertion + check for proximity rather than equivalence
-        assert result[0].evs[0] == statevector_result[0].evs[0]
+        print(
+            f"EstimatorV2 <ZZ> = {result[0].data.evs}, "
+            + f"StatevectorEstimator <ZZ> = {statevector_result[0].data.evs}"
+        )
+        np.testing.assert_allclose(result[0].data.evs, statevector_result[0].data.evs, atol=0.1)
