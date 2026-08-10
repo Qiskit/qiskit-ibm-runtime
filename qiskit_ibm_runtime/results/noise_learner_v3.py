@@ -143,7 +143,7 @@ class NoiseLearnerV3Results:
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
         group_by: Literal["inject_noise", "tag"] = "inject_noise",
-    ) -> dict[int, PauliLindbladMap]:
+    ) -> dict[str, PauliLindbladMap]:
         """Convert to dictionary from references to :class:`PauliLindbladMap` objects.
 
         References can be one of :attr:`InjectNoise.ref` or :attr:`Tag.ref` depending on
