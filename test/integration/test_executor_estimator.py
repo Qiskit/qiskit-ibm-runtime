@@ -133,7 +133,7 @@ class TestEstimator(IBMIntegrationTestCase):
             for layer in layers
             if (annotation := get_annotation(layer.operation, InjectNoise))
         }
-        estimator.options.resilience.noise_model_mapping = noise_model
+        estimator.options.resilience.noise_mapping = noise_model
 
         job = estimator.run(pubs)
         results = job.result()

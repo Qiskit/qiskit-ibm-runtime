@@ -36,7 +36,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         self.assertFalse(opts.zne_mitigation)
         self.assertEqual(opts.zne.amplifier, "gate_folding")
         self.assertEqual(opts.zne.noise_factors, "auto")
-        self.assertEqual(opts.noise_model_mapping, {})
+        self.assertEqual(opts.noise_mapping, {})
 
     def test_set_all_options(self):
         """All fields accept explicit non-default values."""
@@ -47,7 +47,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
             pec={"max_overhead": 50, "noise_gain": 0.5},
             zne_mitigation=True,
             zne={"amplifier": "gate_folding_front", "noise_factors": [1, 3, 5]},
-            noise_model_mapping={
+            noise_mapping={
                 "layer_0": PauliLindbladMap.identity(num_qubits=1),
                 "layer_1": PauliLindbladMap.identity(num_qubits=1),
             },
@@ -60,7 +60,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         self.assertTrue(opts.zne_mitigation)
         self.assertEqual(opts.zne.amplifier, "gate_folding_front")
         self.assertEqual(list(opts.zne.noise_factors), [1, 3, 5])
-        self.assertEqual(set(opts.noise_model_mapping.keys()), {"layer_0", "layer_1"})
+        self.assertEqual(set(opts.noise_mapping.keys()), {"layer_0", "layer_1"})
 
     @data(
         "not_a_dict",
@@ -69,7 +69,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         {"layer_0": "bad_value"},  # non-PauliLindbladMap value
         {"layer_0": None},  # None as a value
     )
-    def test_invalid_noise_model_mapping(self, value):
-        """Invalid noise_model_mapping values raise ValidationError."""
-        with self.assertRaisesRegex(ValidationError, "noise_model_mapping"):
-            ResilienceOptions(noise_model_mapping=value)
+    def test_invalid_noise_mapping(self, value):
+        """Invalid noise_mapping values raise ValidationError."""
+        with self.assertRaisesRegex(ValidationError, "noise_mapping"):
+            ResilienceOptions(noise_mapping=value)

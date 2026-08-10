@@ -49,7 +49,7 @@ class ResilienceOptions(BaseOptionsModel):
     If you enable PEC, you can fine-tune its options by using :attr:`~pec`. See
     :class:`PecOptions` for additional PEC-related options.
 
-    You must also provide a noise model via :attr:`~noise_model_mapping` when enabling PEC.
+    You must also provide a noise model via :attr:`~noise_mapping` when enabling PEC.
     """
 
     pec: PecOptions = PecOptions()
@@ -69,7 +69,7 @@ class ResilienceOptions(BaseOptionsModel):
     zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options."""
 
-    noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = {}
+    noise_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = {}
     """A noise model mapping for PEC mitigation.
 
     Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that
