@@ -18,6 +18,7 @@ from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
+from qiskit_ibm_runtime.results.quantum_program import ItemMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -75,17 +76,19 @@ def quantum_program_item_result_to_sampler_pub_result(
         pub_metadata["circuit_metadata"] = circuit_metadata
     if num_randomizations > 0:
         pub_metadata["num_randomizations"] = num_randomizations
-    if item.metadata.scheduler_timing:
-        pub_metadata.setdefault("compilation", {})
-        pub_metadata["compilation"]["scheduler_timing"] = {
-            "timing": item.metadata.scheduler_timing.timing,
-            "circuit_duration": item.metadata.scheduler_timing.circuit_duration,
-        }
-    if item.metadata.stretch_values:
-        pub_metadata.setdefault("compilation", {})
-        pub_metadata["compilation"]["stretch_values"] = [
-            asdict(stretch_value, dict_factory=expanded_values_to_lists)
-            for stretch_value in item.metadata.stretch_values
-        ]
+    
+    if isinstance(item.metadata, ItemMetadata):
+        if item.metadata.scheduler_timing:
+            pub_metadata.setdefault("compilation", {})
+            pub_metadata["compilation"]["scheduler_timing"] = {
+                "timing": item.metadata.scheduler_timing.timing,
+                "circuit_duration": item.metadata.scheduler_timing.circuit_duration,
+            }
+        if item.metadata.stretch_values:
+            pub_metadata.setdefault("compilation", {})
+            pub_metadata["compilation"]["stretch_values"] = [
+                asdict(stretch_value, dict_factory=expanded_values_to_lists)
+                for stretch_value in item.metadata.stretch_values
+            ]
 
     return SamplerPubResult(data=data_bin, metadata=pub_metadata)

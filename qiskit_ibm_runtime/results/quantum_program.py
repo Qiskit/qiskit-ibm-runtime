@@ -269,7 +269,7 @@ class QuantumProgramItemResult(MutableMapping):
     def __init__(
         self,
         result: dict[str, np.ndarray],
-        metadata: ItemMetadata | None = None,
+        metadata: ItemMetadata | dict | None = None,
     ):
         self._result = result
         self.metadata = metadata or ItemMetadata()
