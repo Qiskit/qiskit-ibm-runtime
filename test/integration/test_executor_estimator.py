@@ -58,7 +58,7 @@ class TestEstimator(IBMIntegrationTestCase):
             isa_circuit.layout
         )
 
-        self._pubs = [
+        self.pubs = [
             # Map all parameter sets to all observables: pub shape (2, 2)
             (
                 isa_circuit,
@@ -73,15 +73,6 @@ class TestEstimator(IBMIntegrationTestCase):
             ),
         ]
 
-    def _make_stub_noise_model(self, estimator):
-        """Return a stub noise model mapping each unique layer to a weak depolarising map."""
-        layers = estimator.find_unique_layers(self._pubs)
-        return {
-            annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)])
-            for layer in layers
-            if (annotation := get_annotation(layer.operation, InjectNoise))
-        }
-
     def test_vanilla_estimator(self):
         """Test the "vanilla" path (no mitigation) for estimator.
 
@@ -90,7 +81,7 @@ class TestEstimator(IBMIntegrationTestCase):
         - Correct expectation value shapes
         """
         estimator = EstimatorV2(self.backend)
-        results = estimator.run(self._pubs).result()
+        results = estimator.run(self.pubs).result()
 
         # Expect one result per pub:
         self.assertEqual(len(results), 2)
@@ -110,9 +101,15 @@ class TestEstimator(IBMIntegrationTestCase):
         """
         estimator = EstimatorV2(self.backend)
         estimator.options.resilience.pec_mitigation = True
-        estimator.options.resilience.noise_model_mapping = self._make_stub_noise_model(estimator)
 
-        results = estimator.run(self._pubs).result()
+        layers = estimator.find_unique_layers(self.pubs)
+        estimator.options.resilience.noise_model_mapping = {
+            annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)])
+            for layer in layers
+            if (annotation := get_annotation(layer.operation, InjectNoise))
+        }
+
+        results = estimator.run(self.pubs).result()
 
         # Expect one result per pub:
         self.assertEqual(len(results), 2)
@@ -141,9 +138,14 @@ class TestEstimator(IBMIntegrationTestCase):
         estimator.options.resilience.zne.amplifier = amplifier
 
         if amplifier == "pea":
-            estimator.options.resilience.noise_model_mapping = self._make_stub_noise_model(
-                estimator
-            )
+            layers = estimator.find_unique_layers(self.pubs)
+            estimator.options.resilience.noise_model_mapping = {
+                annotation.ref: PauliLindbladMap.from_list(
+                    [("X" * layer.operation.num_qubits, 0.001)]
+                )
+                for layer in layers
+                if (annotation := get_annotation(layer.operation, InjectNoise))
+            }
             expected_num_noise_factors = len(PEA_DEFAULT_NOISE_FACTORS)
         else:
             expected_num_noise_factors = len(ZNE_DEFAULT_NOISE_FACTORS)
@@ -152,7 +154,7 @@ class TestEstimator(IBMIntegrationTestCase):
         expected_num_extrapolated = expected_num_noise_factors + 1
         expected_num_extrapolators = len(estimator.options.resilience.zne.extrapolator)
 
-        results = estimator.run(self._pubs).result()
+        results = estimator.run(self.pubs).result()
 
         # Expect one result per pub:
         self.assertEqual(len(results), 2)
