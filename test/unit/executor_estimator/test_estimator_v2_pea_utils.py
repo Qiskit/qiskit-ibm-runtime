@@ -563,3 +563,25 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
         zne_options.amplifier = "pea"
         with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
             zne_options.noise_factors = [1.5]
+
+    def test_prepare_pea_raises_error_with_too_few_noise_factors_for_extrapolator(self):
+        """Test that prepare_pea rejects noise_factors under-specified for the extrapolator."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+        zne_options.extrapolator = "double_exponential"
+        zne_options.noise_factors = [1.0, 3.0]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError, "double_exponential requires at least 4 noise_factors"
+        ):
+            prepare_pea(
+                [pub], twirling_options, shots=100, zne_options=zne_options, noise_model_mapping={}
+            )

@@ -41,6 +41,7 @@ from ..utils import (
     compute_samplex_arguments,
     make_samplex_arguments,
     options_to_boxing_pm_kwargs,
+    validate_noise_factors,
 )
 from .gate_folding import GateFolding
 
@@ -83,6 +84,7 @@ def prepare_zne(
             reserved classical register name ``_meas``.
         IBMInputValueError: If the amplifier in the ZneOptions is not one of ``gate_folding``,
         ``gate_folding_front`` or ``gate_folding_back``.
+        IBMInputValueError: If ``noise_factors`` is under-specified for the requested extrapolator.
     """
     if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
@@ -95,6 +97,7 @@ def prepare_zne(
         noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS, dtype=float)
     else:
         noise_factors = np.array(zne_options.noise_factors, dtype=float)
+    validate_noise_factors(noise_factors, zne_options.extrapolator)
 
     extrapolated_noise_factors = zne_options.extrapolated_noise_factors
     if extrapolated_noise_factors == "auto":
