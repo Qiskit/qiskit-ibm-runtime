@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from ddt import ddt
-from qiskit.primitives import ObservablesArray, StatevectorEstimator
+from qiskit.primitives import StatevectorEstimator
+from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
@@ -68,8 +69,11 @@ class TestEstimator(IBMTestCase):
         # Prepare a PUB with multiple observables to estimate expectation values on.
         # Using "Z" observables, as the mirror circuit has parametric rx gates, which should yield
         # variations on Z projection.
-        observable = ObservablesArray(["ZZ", "IZ", "ZI"]).apply_layout(isa_circuit.layout)
-        pub = (isa_circuit, observable, parameters)
+        observables = [
+            SparsePauliOp(pauli_string).apply_layout(isa_circuit.layout)
+            for pauli_string in ["ZZ", "IZ", "ZI"]
+        ]
+        pub = (isa_circuit, observables, parameters)
 
         # Calculate ground truth to compare the results against via a statevector simulation:
         statevector_estimator = StatevectorEstimator()
