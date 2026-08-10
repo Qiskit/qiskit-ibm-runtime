@@ -14,12 +14,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Literal, Union
 
 import numpy as np
 from qiskit.circuit import BoxOp
 from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
-from samplomatic import InjectNoise
+from samplomatic import InjectNoise, Tag
 from samplomatic.utils import get_annotation
 
 if TYPE_CHECKING:
@@ -142,19 +142,24 @@ class NoiseLearnerV3Results:
         self,
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
+        group_by: Literal["inject_noise", "tag"] = "inject_noise",
     ) -> dict[int, PauliLindbladMap]:
-        """Convert to dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
+        """Convert to dictionary from references to :class:`PauliLindbladMap` objects.
+
+        References can be one of :attr:`InjectNoise.ref` or :attr:`Tag.ref` depending on
+        ``group_by`` selection.
 
         This function iterates over a sequence of instructions, extracts the ``ref`` value
-        from the inject noise annotation of each instruction, and returns a dictionary mapping
+        from the annotation of each instruction, and returns a dictionary mapping
         those refs to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in
         this :class:`NoiseLearnerV3Results` object.
 
         Args:
             instructions: The instructions to get the refs from.
-            require_refs: Whether to raise if some of the instructions do not own an inject noise
-                annotation. If ``False``, all the instructions that do not contain an inject noise
-                annotations are simply skipped when constructing the returned dictionary.
+            require_refs: Whether to raise if some of the instructions do not own an
+                annotation. If ``False``, all the instructions that do not contain an
+                annotation are simply skipped when constructing the returned dictionary.
+            group_by: Whether to use ``inject_noise`` or ``tag`` annotations.
 
         Raise:
             ValueError: If ``instructions`` contains a number of elements that is not equal to the
@@ -171,10 +176,11 @@ class NoiseLearnerV3Results:
 
         noise_source = {}
         num_instr = 0
+        annotation_type = Tag if group_by == "tag" else InjectNoise
         for instr, datum in zip(instructions, self.data):
             if not isinstance(instr.operation, BoxOp):
                 raise ValueError("Found an instruction that does not contain a box.")
-            if annotation := get_annotation(instr.operation, InjectNoise):
+            if annotation := get_annotation(instr.operation, annotation_type):
                 num_instr += 1
                 noise_source[annotation.ref] = datum.to_pauli_lindblad_map()
             elif require_refs:
