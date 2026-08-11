@@ -64,9 +64,12 @@ class QuantumProgram(BaseQuantumProgram):
         passthrough_data: DataTree | None = None,
     ):
         super().__init__(
-            shots=shots, items=items, noise_maps=noise_maps, passthrough_data=passthrough_data
+            shots=shots,
+            items=items,
+            noise_maps=noise_maps,
+            meas_level=meas_level,
+            passthrough_data=passthrough_data,
         )
-        self.meas_level = meas_level
 
         # Semantic role indicating how execution results may be post-processed by runtime clients.
         # Reserved system values include 'sampler-v2' and 'estimator-v2', and are subject to change
