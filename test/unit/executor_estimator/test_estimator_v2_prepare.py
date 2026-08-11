@@ -54,9 +54,7 @@ class TestPrepare(IBMTestCase):
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         options.resilience.pec_mitigation = True
-        options.resilience.noise_model_mapping = {
-            "layer_0": PauliLindbladMap.identity(num_qubits=2)
-        }
+        options.resilience.noise_model = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
