@@ -181,7 +181,7 @@ class EstimatorV2(BaseEstimatorV2):
             noise_model = results.to_dict(layers)
 
             # Assign the learned model so PEC uses it on the next run.
-            est.options.resilience.noise_model_mapping = noise_model
+            est.options.resilience.noise_model = noise_model
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
@@ -325,7 +325,7 @@ class EstimatorV2(BaseEstimatorV2):
         )
         # Store raw options, shots and precision for post-processing side to compute metadata.
         quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump(  # type: ignore[index, call-overload]
-            exclude={"resilience": {"noise_model_mapping"}}
+            exclude={"resilience": {"noise_model"}}
         )
         quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
         quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
