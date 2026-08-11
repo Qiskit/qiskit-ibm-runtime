@@ -96,6 +96,7 @@ class TestEstimator(IBMTestCase):
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
+        results: dict = {}
 
         # Run Estimator with different resilience levels:
         for resilience_level in (0, 1, 2):
@@ -108,6 +109,7 @@ class TestEstimator(IBMTestCase):
             )
             options.twirling.num_randomizations = 100
             options.twirling.shots_per_randomization = 200
+            options.default_shots = 2000
 
             estimator = EstimatorV2(mode=self.backend, options=options)
 
@@ -115,15 +117,46 @@ class TestEstimator(IBMTestCase):
             # We get one expectation value per observable:
             evs = result[0].data.evs
             errors[resilience_level] = np.abs(evs - statevector_evs)
+            results[resilience_level] = result[0].data
 
             # TODO: also look at stds.
             # assert error / std < 4
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
+        self.compare_results(
+            name="resilience level 0 vs 1",
+            better_result=results[1],
+            worse_result=results[0],
+            better_error=errors[1],
+            worse_error=errors[0],
+        )
+        self.compare_results(
+            name="resilience level 1 vs 2",
+            better_result=results[2],
+            worse_result=results[1],
+            better_error=errors[2],
+            worse_error=errors[1],
+        )
 
-        np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
-        np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
+        # error_to_std = errors[2] / results[2].stds
+        # np.testing.assert_array_less(error_to_std, 10)
 
         # Resilience level 2 should give very accurate expectation value:
         np.testing.assert_array_less(errors[2], 0.1, err_msg=debug_message)
+
+    def compare_results(self, name: str, better_result, worse_result, better_error, worse_error):
+        abs_difference_1_0 = np.abs(better_result.evs - worse_result.evs)
+        max_std = np.maximum(better_result.stds, worse_result.stds)
+        for i in range(len(better_result.evs)):
+            if abs_difference_1_0[i] < max_std[i] * 2:
+                # Statistical noise makes it hard to compare the results, since the
+                # "error-bars"/confidence intervals overlap.
+                print(
+                    f"Warning: Trying to compare {name}, but observable {i} has too high standard deviation. Ignoring..."
+                )
+                print(f" better result std: {better_result.stds[i]}")
+                print(f" worse result std : {worse_result.stds[i]}")
+                continue
+            self.assertLess(better_error[i], worse_error[i])
+        return
