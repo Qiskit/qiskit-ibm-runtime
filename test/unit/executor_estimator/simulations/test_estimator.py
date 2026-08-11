@@ -59,12 +59,7 @@ class TestEstimator(IBMTestCase):
         isa_circuit = self.preset_pass_manager.run(circuit)
 
         # Select values for the rz gates:
-        np.random.seed(42)
-        parameters = np.random.uniform(
-            0,
-            2 * np.pi,
-            size=(1, circuit.num_parameters),
-        )
+        parameters = np.array([3.5 * np.pi / 4] * circuit.num_parameters)
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
         # Using "Z" observables, as the mirror circuit has parametric rx gates, which should yield
@@ -92,6 +87,9 @@ class TestEstimator(IBMTestCase):
                 # instead of connecting to a real backend.
                 experimental={"local_mode": True},
             )
+            options.twirling.num_randomizations = 100
+            options.twirling.shots_per_randomization = 200
+            options.default_shots = 100 * 200
 
             estimator = EstimatorV2(mode=self.backend, options=options)
 
@@ -100,12 +98,11 @@ class TestEstimator(IBMTestCase):
             evs = result[0].data.evs
             errors[resilience_level] = np.abs(evs - statevector_evs)
 
-            # TODO: also look at stds.
-
+        print(statevector_evs)
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
         np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
 
         # Resilience level 2 should give very accurate expectation value:
-        np.testing.assert_array_less(errors[2], 0.1, err_msg=debug_message)
+        np.testing.assert_array_less(errors[2], 0.025, err_msg=debug_message)
