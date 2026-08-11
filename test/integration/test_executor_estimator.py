@@ -103,7 +103,7 @@ class TestEstimator(IBMIntegrationTestCase):
         estimator.options.resilience.pec_mitigation = True
 
         layers = estimator.find_unique_layers(self.pubs)
-        estimator.options.resilience.noise_model_mapping = {
+        estimator.options.resilience.noise_model = {
             annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)])
             for layer in layers
             if (annotation := get_annotation(layer.operation, InjectNoise))
@@ -139,7 +139,7 @@ class TestEstimator(IBMIntegrationTestCase):
 
         if amplifier == "pea":
             layers = estimator.find_unique_layers(self.pubs)
-            estimator.options.resilience.noise_model_mapping = {
+            estimator.options.resilience.noise_model = {
                 annotation.ref: PauliLindbladMap.from_list(
                     [("X" * layer.operation.num_qubits, 0.001)]
                 )

@@ -25,6 +25,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -90,7 +91,10 @@ class TestEstimator(IBMTestCase):
                 resilience_level=resilience_level,
                 # Local mode means that the underlying Executor is running Aer simulation
                 # instead of connecting to a real backend.
-                experimental={"local_mode": True},
+                experimental={
+                    "local_mode": True,
+                    "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
+                },
             )
 
             estimator = EstimatorV2(mode=self.backend, options=options)
