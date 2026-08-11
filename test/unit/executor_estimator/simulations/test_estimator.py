@@ -98,7 +98,6 @@ class TestEstimator(IBMTestCase):
             evs = result[0].data.evs
             errors[resilience_level] = np.abs(evs - statevector_evs)
 
-        print(statevector_evs)
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
         np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
