@@ -144,7 +144,7 @@ class NoiseLearnerV3Results:
         require_refs: bool = True,
         group_by: Literal["inject_noise", "tag"] = "inject_noise",
     ) -> dict[str, PauliLindbladMap]:
-        """Convert to dictionary from references to :class:`PauliLindbladMap` objects.
+        """Convert to a dictionary from references to :class:`PauliLindbladMap` objects.
 
         References can be one of :attr:`InjectNoise.ref` or :attr:`Tag.ref` depending on
         ``group_by`` selection.
