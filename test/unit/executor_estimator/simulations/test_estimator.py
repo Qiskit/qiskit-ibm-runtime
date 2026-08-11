@@ -58,7 +58,7 @@ class TestEstimator(IBMTestCase):
         circuit = make_mirror_circuit_with_phases(self.backend, add_measurement=False)
         isa_circuit = self.preset_pass_manager.run(circuit)
 
-        # Select values for the rz gates:
+        # Select values for the rx gates:
         parameters = np.array([3.5 * np.pi / 4] * circuit.num_parameters)
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
