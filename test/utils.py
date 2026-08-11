@@ -299,6 +299,7 @@ def make_mirror_circuit_with_phases(
     *,
     seed: int | None = 7,
     add_measurement: bool = True,
+    add_rx: bool = True,
 ) -> QuantumCircuit:
     """Make a circuit that composes a mirror circuit with a final layer of RX gates.
 
@@ -352,8 +353,9 @@ def make_mirror_circuit_with_phases(
     circuit.compose(mirror.inverse(), inplace=True)
 
     circuit.barrier()
-    for qubit in range(num_qubits):
-        circuit.rx(Parameter(f"theta_{qubit}"), qubit)
+    if add_rx:
+        for qubit in range(num_qubits):
+            circuit.rx(Parameter(f"theta_{qubit}"), qubit)
     if add_measurement:
         circuit.measure_all()
     return circuit

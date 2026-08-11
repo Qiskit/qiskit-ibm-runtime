@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from ddt import ddt
+from qiskit.circuit import Parameter
 from qiskit.primitives import StatevectorEstimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -55,23 +56,36 @@ class TestEstimator(IBMTestCase):
         """
         # Use standard mirror circuit, but without measurements, as StatevectorEstimator does
         # not support them.
-        circuit = make_mirror_circuit_with_phases(self.backend, add_measurement=False)
+        circuit = make_mirror_circuit_with_phases(
+            self.backend, num_qubits=3, add_measurement=False, add_rx=False
+        )
+        circuit.rx(Parameter("rx_0"), 0)  # sensitive to Z and Y observable
+        circuit.rx(Parameter("rx_1"), 1)  # sensitive to Z and Y
+        circuit.rx(Parameter("rx_2"), 2)  # sensitive to Z and Y
+        circuit.rz(Parameter("rz_0"), 2)  # sensitive to Z and Y
+        # for qubit in range(circuit.num_qubits):
+        #    circuit.rz(Parameter(f"phi_{qubit}"), qubit)
         isa_circuit = self.preset_pass_manager.run(circuit)
 
         # Select values for the rz gates:
-        np.random.seed(42)
-        parameters = np.random.uniform(
-            0,
-            2 * np.pi,
-            size=(1, circuit.num_parameters),
-        )
+        np.random.seed(43)
+        parameters = [
+            # Make qubit 0 sensitive to Z observable
+            np.random.uniform(0, np.pi / 4),
+            # Make qubit 1 sensitive to Y observable
+            np.random.uniform(np.pi / 4, 3 * np.pi / 4),
+            # Make qubit 2 sensitive to X observable
+            np.random.uniform(np.pi / 4, 3 * np.pi / 4),
+            np.random.uniform(np.pi / 4, 3 * np.pi / 4),
+        ]
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
         # Using "Z" observables, as the mirror circuit has parametric rx gates, which should yield
         # variations on Z projection.
         observables = [
             SparsePauliOp(pauli_string).apply_layout(isa_circuit.layout)
-            for pauli_string in ["ZZ", "IZ", "ZI"]
+            # for pauli_string in ["ZXY", "IZ", "ZI", "XI", "IX", "YI", "IY"]
+            for pauli_string in ["ZII", "IXI", "IIY", "XYZ"]
         ]
         pub = (isa_circuit, observables, parameters)
 
@@ -92,6 +106,8 @@ class TestEstimator(IBMTestCase):
                 # instead of connecting to a real backend.
                 experimental={"local_mode": True},
             )
+            options.twirling.num_randomizations = 100
+            options.twirling.shots_per_randomization = 200
 
             estimator = EstimatorV2(mode=self.backend, options=options)
 
@@ -101,11 +117,13 @@ class TestEstimator(IBMTestCase):
             errors[resilience_level] = np.abs(evs - statevector_evs)
 
             # TODO: also look at stds.
+            # assert error / std < 4
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
-        np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
+
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
+        np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
 
         # Resilience level 2 should give very accurate expectation value:
         np.testing.assert_array_less(errors[2], 0.1, err_msg=debug_message)
