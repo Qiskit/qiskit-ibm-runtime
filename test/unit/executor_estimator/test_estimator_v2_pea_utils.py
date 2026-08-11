@@ -33,7 +33,12 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, TEMPLATE_CIRCUIT_SCENARIO
+from .utils import (
+    PARAM_BASIS_3Q_SCENARIOS,
+    SAMPLEX_CIRCUIT_SCENARIOS,
+    TEMPLATE_CIRCUIT_SCENARIO,
+    TWIRLING_SHAPE_SCENARIOS,
+)
 
 
 @ddt
@@ -620,3 +625,60 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
             prepare_pea(
                 [pub], twirling_options, shots=100, zne_options=zne_options, noise_model_mapping={}
             )
+
+    def _build_trivial_noise_model(self, pubs, twirling_options):
+        """Build a trivial (zero-rate) noise model mapping for the given PUBs."""
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        return {
+            annot.ref: PauliLindbladMap.from_sparse_list([], num_qubits=len(layer.qubits))
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+    def test_shapes_twirling_configs(self):
+        """Verify the number of randomization and program.shots.
+
+        PEA shape is (num_noise_factors, num_randomizations, num_basis).
+        """
+        noise_factors = [1.0, 3.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+        zne_options.noise_factors = noise_factors
+
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        for scenario in TWIRLING_SHAPE_SCENARIOS:
+            if not scenario.twirling_options.enable_gates:
+                continue  # PEA requires enable_gates=True
+            with self.subTest(twirling=scenario.label):
+                noise_model_mapping = self._build_trivial_noise_model(
+                    [pub], scenario.twirling_options
+                )
+                program = prepare_pea(
+                    pubs=[pub],
+                    twirling_options=scenario.twirling_options,
+                    shots=scenario.shots,
+                    zne_options=zne_options,
+                    noise_model_mapping=noise_model_mapping,
+                )
+                item = program.items[0]
+                self.assertEqual(
+                    item.shape[0],
+                    len(noise_factors),
+                    msg=f"[{scenario.label}] expected N={len(noise_factors)}, got {item.shape[0]}",
+                )
+                self.assertEqual(
+                    item.shape[1],
+                    scenario.expected_num_randomizations,
+                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+                    f"got {item.shape[1]}",
+                )
+                self.assertEqual(
+                    program.shots,
+                    scenario.expected_shots_per_randomization,
+                    msg=f"[{scenario.label}] expected program.shots="
+                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+                )
