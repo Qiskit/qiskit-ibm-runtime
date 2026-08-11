@@ -59,12 +59,12 @@ class TestEstimator(IBMTestCase):
         circuit = make_mirror_circuit_with_phases(
             self.backend, num_qubits=3, add_measurement=False, add_rx=False
         )
-        circuit.rx(Parameter("rx_0"), 0)  # sensitive to Z and Y observable
-        circuit.rx(Parameter("rx_1"), 1)  # sensitive to Z and Y
-        circuit.rx(Parameter("rx_2"), 2)  # sensitive to Z and Y
-        circuit.rz(Parameter("rz_0"), 2)  # sensitive to Z and Y
-        # for qubit in range(circuit.num_qubits):
-        #    circuit.rz(Parameter(f"phi_{qubit}"), qubit)
+
+        circuit.rx(Parameter("rx_0"), 0)
+        circuit.rx(Parameter("rx_1"), 1)
+        circuit.rx(Parameter("rx_2"), 2)
+        circuit.rz(Parameter("rz_0"), 2)
+
         isa_circuit = self.preset_pass_manager.run(circuit)
 
         # Select values for the rz gates:
@@ -80,8 +80,6 @@ class TestEstimator(IBMTestCase):
         ]
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
-        # Using "Z" observables, as the mirror circuit has parametric rx gates, which should yield
-        # variations on Z projection.
         observables = [
             SparsePauliOp(pauli_string).apply_layout(isa_circuit.layout)
             # for pauli_string in ["ZXY", "IZ", "ZI", "XI", "IX", "YI", "IY"]
@@ -109,7 +107,7 @@ class TestEstimator(IBMTestCase):
             )
             options.twirling.num_randomizations = 100
             options.twirling.shots_per_randomization = 200
-            options.default_shots = 2000
+            options.default_shots = 100 * 200
 
             estimator = EstimatorV2(mode=self.backend, options=options)
 
@@ -118,9 +116,6 @@ class TestEstimator(IBMTestCase):
             evs = result[0].data.evs
             errors[resilience_level] = np.abs(evs - statevector_evs)
             results[resilience_level] = result[0].data
-
-            # TODO: also look at stds.
-            # assert error / std < 4
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
