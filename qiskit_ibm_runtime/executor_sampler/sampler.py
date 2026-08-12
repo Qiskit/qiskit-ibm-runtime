@@ -219,6 +219,8 @@ class SamplerV2(BaseSamplerV2):
         quantum_program, executor_options = prepare(
             coerced_pubs, options, default_shots, backend=self._backend
         )
+        # Store raw options for post-processing side to compute metadata.
+        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]
 
         # Initialize executor with settings
         executor = Executor(mode=self._backend, options=executor_options)
