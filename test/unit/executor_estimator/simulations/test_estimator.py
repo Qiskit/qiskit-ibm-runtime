@@ -66,6 +66,8 @@ class TestEstimator(IBMTestCase):
         circuit.rx(Parameter("rx_0"), 0)
         circuit.rx(Parameter("rx_1"), 1)
         circuit.ry(Parameter("ry_2"), 2)
+        isa_circuit = self.preset_pass_manager.run(circuit)
+
         parameters = [
             # Qubit 0: Expect <Z> close to 1
             1 * np.pi / 8,
@@ -74,7 +76,6 @@ class TestEstimator(IBMTestCase):
             # Qubit 2: Expect <X> to be close to 1
             3 * np.pi / 8,
         ]
-        isa_circuit = self.preset_pass_manager.run(circuit)
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
         observables = [
