@@ -14,15 +14,12 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import numpy as np
 
-from ...execution_span import DoubleSliceSpan, TwirledSliceSpanV2
-
 if TYPE_CHECKING:
-    from ...results.quantum_program import ChunkSpan, Metadata, QuantumProgramItemResult
+    from ...results.quantum_program import ChunkSpan, QuantumProgramItemResult
 
 TWIRLING_PREFIX = "measurement_flips."
 """The prefix used to store the twirling bitflips."""
@@ -49,83 +46,6 @@ def undo_twirling(item: QuantumProgramItemResult) -> None:
         # Apply XOR and remove flip key
         flip_data = item.pop(flip_key)
         item[target_key] ^= flip_data
-
-
-def _spans_for_twirled_execution(
-    metadata: Metadata,
-    num_randomizations: int,
-    shots_per_randomization: int,
-    pubs_shapes: list[tuple[int, ...]],
-) -> list[TwirledSliceSpanV2]:
-    """Helper to compute spans when twirling is ON."""
-    # A map from part indices to the latest element included in a slice
-    slices_latest_stop: dict[int, int] = defaultdict(int)
-
-    spans = []
-    for span in metadata.chunk_timing:
-        _validate_chunk_span(span, pubs_shapes)
-
-        # The dictionary of slices required to initialize a ``TwirledSliceSpanV2``
-        slices = {}
-
-        for part in span.parts:
-            slice_start = slices_latest_stop[part.idx_item]
-            slice_stop = slice_start + part.size
-            slices_latest_stop[part.idx_item] = slice_stop
-
-            # A shape tuple including a twirling axis, and where the last axis is shots per
-            # randomization.
-            twirled_shape = (
-                (num_randomizations,) + pubs_shapes[part.idx_item] + (shots_per_randomization,)
-            )
-
-            # Whether ``num_randomizations`` is at the front of the tuple, as opposed to right
-            # before the ``shots`` axis at the end.
-            at_front = True
-
-            # a slice of an array of shape ``twirled_shape[:-1]``, flattened
-            shape_slice = slice(slice_start, slice_stop)
-
-            # a slice of ``twirled_shape[-1]``
-            shots_slice = slice(0, shots_per_randomization)
-
-            # the number of shots requested for the pub
-            pub_shots = num_randomizations * shots_per_randomization
-
-            slices[part.idx_item] = (twirled_shape, at_front, shape_slice, shots_slice, pub_shots)
-
-        spans.append(TwirledSliceSpanV2(span.start, span.stop, slices))
-
-    return spans
-
-
-def _spans_for_untwirled_execution(
-    metadata: Metadata,
-    shots: int,
-    pubs_shapes: list[tuple[int, ...]],
-) -> list[DoubleSliceSpan]:
-    """Helper to compute spans when twirling is OFF."""
-    # A map from part indices to the latest element included in a slice
-    slices_latest_stop: dict[int, int] = defaultdict(int)
-
-    spans = []
-    for span in metadata.chunk_timing:
-        _validate_chunk_span(span, pubs_shapes)
-
-        # The dictionary of slices required to initialize a ``DoubleSliceSpan``
-        slices = {}
-        for part in span.parts:
-            slice_start = slices_latest_stop[part.idx_item]
-            slice_stop = slice_start + part.size
-            slices_latest_stop[part.idx_item] = slice_stop
-
-            shape_tuple = pubs_shapes[part.idx_item] + (shots,)
-            flat_shape_slice = slice(slice_start, slice_stop)
-            shots_slice = slice(0, shots)
-            slices[part.idx_item] = (shape_tuple, flat_shape_slice, shots_slice)
-        spans.append(DoubleSliceSpan(span.start, span.stop, slices))
-
-    return spans
 
 
 def _validate_chunk_span(span: ChunkSpan, pubs_shapes: list[tuple[int, ...]]) -> None:
