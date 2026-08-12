@@ -58,6 +58,10 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Missing 'twirling' in passthrough data.")
     if (meas_type := post_processor_data.get("meas_type", None)) is None:
         raise ValueError("Missing 'meas_type' in passthrough data.")
+    if (shots := post_processor_data.get("shots", None)) is None:
+        raise ValueError("Missing 'shots' in passthrough data.")
+    if (options := post_processor_data.get("options", None)) is None:
+        raise ValueError("Missing 'options' in passthrough data.")
 
     # Compute the ``num_randomizations`` from the left-most axis of the result arrays
     if twirling:
@@ -100,8 +104,5 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         )
         pub_results.append(pub_result)
 
-    metadata = {"executor": result.metadata}
-    if (options := post_processor_data.get("options", None)) is not None:
-        metadata["options"] = options
-
-    return PrimitiveResult(pub_results, metadata=result.metadata or {})
+    metadata = {"executor": result.metadata, "options": options, "shots": shots}
+    return PrimitiveResult(pub_results, metadata=metadata or {})
