@@ -19,6 +19,8 @@ from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+from samplomatic import Tag
+from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
@@ -32,6 +34,21 @@ from ...ibm_test_case import IBMTestCase
 
 class TestPrepare(IBMTestCase):
     """Tests for prepare method."""
+
+    def test_add_tags(self):
+        """Test that tags are added when ``add_tags=True``."""
+        circuit1 = QuantumCircuit(2, 2)
+        circuit1.h(0)
+        circuit1.measure_all()
+
+        pubs = [SamplerPub.coerce(circuit1, shots=1024)]
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+        program, _ = prepare(pubs, options, add_tags=True)
+
+        for item in program.items:
+            unique_instructions = find_unique_box_instructions(item.circuit)
+            for inst in unique_instructions:
+                self.assertIsNotNone(get_annotation(inst.operation, Tag))
 
     def test_multiple_pubs(self):
         """Test conversion of multiple pubs, including parametric circuits."""
