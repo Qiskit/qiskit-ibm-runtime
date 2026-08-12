@@ -18,7 +18,9 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from ddt import ddt
-from qiskit.primitives import StatevectorEstimator
+from qiskit import QuantumCircuit
+from qiskit.primitives import ObservablesArray, StatevectorEstimator
+from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -35,8 +37,12 @@ if TYPE_CHECKING:
 
 
 @ddt
-class TestEstimator(IBMTestCase):
-    """Tests Executor based EstimatorV2 implementation using simulator through local mode."""
+class TestEstimatorErrorMitigationEfficacy(IBMTestCase):
+    """Tests the efficacy of error mitigation in the Executor based EstimatorV2 implementation.
+
+    The tests use noisy simulations to verify that expectation values get closer to the ideal
+    result as the mitigation is applied.
+    """
 
     def setUp(self):
         """Test level setup."""
@@ -109,3 +115,88 @@ class TestEstimator(IBMTestCase):
 
         # Resilience level 2 should give very accurate expectation value:
         np.testing.assert_array_less(errors[2], 0.025, err_msg=debug_message)
+
+
+@ddt
+class TestEstimatorCorrectness(IBMTestCase):
+    """Tests the correctness of Executor based EstimatorV2 implementation.
+
+    The tests use noiseless simulations to verify the expectation values against
+    theoretical results.
+    """
+
+    def setUp(self):
+        """Test level setup."""
+        super().setUp()
+        self.backend = GenericBackendV2(5, noise_info=False, seed=972)
+        # self.backend = AerSimulator()
+        self.preset_pass_manager = generate_preset_pass_manager(
+            optimization_level=1, target=self.backend.target
+        )
+        self.tolerance = 2  # In terms of stansdard deviations
+
+    def test_vanilla_correctness(self):
+        """Tests the correctness of vanilla estimator (no error mitigation)."""
+        target_precision = 0.01
+
+        circuit = QuantumCircuit(3)
+        theta = np.pi / 8
+        circuit.rx(theta, 0)
+        circuit.rx(-np.pi / 2, 1)
+        circuit.ry(np.pi / 2, 2)
+
+        isa_circuit = self.preset_pass_manager.run(circuit)
+
+        observable_pairs: list[tuple[str, float]] = [
+            ("IIZ", np.cos(theta)),
+            ("IYZ", np.cos(theta)),
+            ("XIZ", np.cos(theta)),
+            ("1IZ", 0.5 * np.cos(theta)),
+            ("IYr", np.sin(np.pi / 4 - theta / 2) ** 2),
+            ("X+I", 0.5),
+            ("0IZ", 0.5 * np.cos(theta)),
+            ("IYl", np.cos(np.pi / 4 - theta / 2) ** 2),
+            ("X-I", 0.5),
+            ("ZXY", 0),
+        ]
+        observables = ObservablesArray.coerce([obs_string for obs_string, _ in observable_pairs])
+        isa_observables = observables.apply_layout(isa_circuit.layout)
+        pub = (isa_circuit, isa_observables)
+
+        options = EstimatorOptions(
+            resilience_level=0,
+            experimental={
+                "local_mode": True,
+                # "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
+            },
+        )
+        options.twirling.enable_gates = True
+        options.default_precision = target_precision
+
+        estimator = EstimatorV2(mode=self.backend, options=options)
+        result = estimator.run([pub]).result()
+        errors = [
+            abs(expected[1] - res) for expected, res in zip(observable_pairs, result[0].data.evs)
+        ]
+
+        # Test the maximal deviation \ reported std
+        # Base distribution N[0, target_precision]
+        self.assertLess(max(errors), self.tolerance * target_precision)
+        self.assertLess(
+            max(result[0].data.ensemble_standard_error), self.tolerance * target_precision
+        )
+
+        # Test the mean of the deviations \ reported stds
+        # Distribution of the mean N[0.8 * target_precision, 0.6 * target_precision / np.sqrt(N)]
+        expected_mean = 0.8 * target_precision
+        expected_mean_std = 0.6 * target_precision / np.sqrt(len(observable_pairs))
+        self.assertLess(np.mean(errors), expected_mean + self.tolerance * expected_mean_std)
+        self.assertGreater(np.mean(errors), expected_mean - self.tolerance * expected_mean_std)
+        self.assertLess(
+            np.mean(result[0].data.ensemble_standard_error),
+            expected_mean + self.tolerance * expected_mean_std,
+        )
+        self.assertGreater(
+            np.mean(result[0].data.ensemble_standard_error),
+            expected_mean - self.tolerance * expected_mean_std,
+        )
