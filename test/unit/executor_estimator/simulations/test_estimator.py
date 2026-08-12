@@ -67,27 +67,19 @@ class TestEstimator(IBMTestCase):
         circuit.rz(Parameter("rz_0"), 2)
 
         isa_circuit = self.preset_pass_manager.run(circuit)
+        print(list(isa_circuit.parameters))
 
         # Select values for the rz gates:
         np.random.seed(43)
         parameters = [
             # Qubit 0: Expect <Z> close to 0.7
-            np.pi / 4,
+            np.pi/4,
             # Qubit 1: Expect <Y> close to -0.7
-            5 * np.pi / 4,
+            np.pi/4,
             # Qubit 2: Expect <X> to be close to -0.7
-            np.pi / 4,
-            np.pi / 2,
+            np.pi/4,
+            np.pi/2
         ]
-        # parameters = [
-        #    # Make qubit 0 sensitive to Z observable
-        #    np.random.uniform(0, np.pi / 4),
-        #    # Make qubit 1 sensitive to Y observable
-        #    np.random.uniform(np.pi / 4, 3 * np.pi / 4),
-        #    # Make qubit 2 sensitive to X observable
-        #    np.random.uniform(np.pi / 4, 3 * np.pi / 4),
-        #    np.random.uniform(np.pi / 4, 3 * np.pi / 4),
-        # ]
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
         observables = [
@@ -101,6 +93,13 @@ class TestEstimator(IBMTestCase):
         statevector_result = statevector_estimator.run([pub]).result()
         statevector_evs = statevector_result[0].data.evs
         print(f"statevector EVs: {statevector_evs}")
+        # Assert the statevector EVs match the expectations stated in the parameter comments:
+        # Qubit 0 with rx=pi/4 -> <Z> should be close to cos(pi/4) ≈ 0.707
+        np.testing.assert_allclose(statevector_evs[0], 0.7, atol=0.01)
+        # Qubit 1 with rx=5*pi/4 -> <Y> should be close to -sin(5*pi/4) ≈ -0.707
+        np.testing.assert_allclose(statevector_evs[1], -0.7, atol=0.01)
+        # Qubit 2 with rx=pi/4 and rz=pi/2 -> <X> should be close to -sin(pi/4) ≈ -0.707
+        np.testing.assert_allclose(statevector_evs[2], -0.7, atol=0.01)
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
