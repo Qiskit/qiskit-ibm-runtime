@@ -298,7 +298,7 @@ class EstimatorV2(BaseEstimatorV2):
             shots = int(np.ceil(1.0 / (options.default_precision**2)))
 
         # Check if we're in local simulator mode
-        if not self.options.experimental.get("local_mode", False) and isinstance(
+        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
             self._service, QiskitRuntimeLocalService
         ):
             logger.info("Running in local simulator mode")
@@ -321,7 +321,7 @@ class EstimatorV2(BaseEstimatorV2):
         # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            coerced_pubs, options, shots, backend=self._backend
+            coerced_pubs, options, shots, backend=self._backend, add_tags=local_mode
         )
         # Store raw options, shots and precision for post-processing side to compute metadata.
         quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump(  # type: ignore[index, call-overload]
