@@ -51,6 +51,7 @@ def prepare(
     pubs: Sequence[SamplerPub],
     options: SamplerOptions,
     default_shots: int | None = None,
+    add_tags: bool = False,
     backend: BackendV2 | None = None,
 ) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a sequence of sampler PUBs to a quantum program and map options.
@@ -64,6 +65,10 @@ def prepare(
         options: The options.
         default_shots: Default number of shots if not specified in PUBs. If ``None``,
             uses the value from ``self.options.default_shots``.
+        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
+            (will pass the "none" value to the relevant attribute), while ``True`` will cause tags
+            with the twirled boxes hash to be added (using the "unique_box" value of the relevant
+            attribute). These tags are used to inject noise when running in local mode.
         backend: The backend for which the program is prepared. Only required when dynamical
             decoupling is enabled.
 
@@ -144,6 +149,7 @@ def prepare(
             enable_measures=bool(options.twirling.enable_measure),
             twirling_strategy=options.twirling.strategy.replace("-", "_"),
             inject_noise_site="after",
+            add_tags="unique_box" if add_tags else "none",
         )
 
         for i, pub in enumerate(pubs):
