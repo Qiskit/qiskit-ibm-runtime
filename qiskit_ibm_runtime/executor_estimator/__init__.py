@@ -102,7 +102,7 @@ circuit before calling :meth:`~.EstimatorV2.run`.
 PEC mitigation requires a learned noise model. Use :meth:`~.EstimatorV2.find_unique_layers` to
 extract the unique gate layers from your PUBs, run
 :class:`~qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3` as a separate job to learn their
-noise, then assign the result to :attr:`~.ResilienceOptions.noise_model_mapping`.
+noise, then assign the result to :attr:`~.ResilienceOptions.noise_model`.
 
 .. code-block:: python
 
@@ -122,8 +122,8 @@ noise, then assign the result to :attr:`~.ResilienceOptions.noise_model_mapping`
     # Step 2 — learn the noise model for those layers
     nl_result = NoiseLearnerV3(mode=backend).run(noise_layers).result()
 
-    # Step 3 — build the noise_model_mapping and assign it
-    estimator.options.resilience.noise_model_mapping = {
+    # Step 3 — build the noise_model and assign it
+    estimator.options.resilience.noise_model = {
         get_annotation(layer.operation, InjectNoise).ref: nl_result[i].data.error
         for i, layer in enumerate(noise_layers)
     }
@@ -144,7 +144,7 @@ noise, then assign the result to :attr:`~.ResilienceOptions.noise_model_mapping`
     noise_layers = [l for l in layers if get_annotation(l.operation, InjectNoise)]
     nl_result = NoiseLearnerV3(mode=backend).run(noise_layers).result()
 
-    estimator.options.resilience.noise_model_mapping = {
+    estimator.options.resilience.noise_model = {
         get_annotation(layer.operation, InjectNoise).ref: nl_result[i].data.error
         for i, layer in enumerate(noise_layers)
     }
@@ -322,9 +322,9 @@ The sub-group that enables and configures individual mitigation techniques:
   amplifier, noise factors, and extrapolation models are configured in ``resilience.zne``.
   See :class:`~.ZneOptions`.
 * *Probabilistic Error Cancellation (PEC)* — enabled via ``resilience.pec_mitigation``. Requires
-  a ``resilience.noise_model_mapping``. Fine-tuned with ``resilience.pec``.
+  a ``resilience.noise_model``. Fine-tuned with ``resilience.pec``.
   See :class:`~.PecOptions`.
-* *Noise model mapping* — ``resilience.noise_model_mapping`` is a
+* *Noise model* — ``resilience.noise_model`` is a
   ``dict[str, PauliLindbladMap]`` required for PEC and PEA-based ZNE. Obtain it by running
   :class:`~qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3` (see Examples above).
 
@@ -449,7 +449,7 @@ The following differences exist between this executor-based
   executor estimator, noise learning is an independent workflow. The user must call
   :meth:`~.EstimatorV2.find_unique_layers` to extract gate layers, run
   :class:`~qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3` as a separate job, and assign the
-  result to ``options.resilience.noise_model_mapping`` before calling :meth:`~.EstimatorV2.run`.
+  result to ``options.resilience.noise_model`` before calling :meth:`~.EstimatorV2.run`.
 
 * **Different import path** — ``from qiskit_ibm_runtime.executor_estimator import EstimatorV2``
   vs. ``from qiskit_ibm_runtime import EstimatorV2``.
@@ -495,7 +495,8 @@ If your code uses PEC (``pec_mitigation=True``) or ZNE with PEA (``zne.amplifier
 noise learning that was previously handled automatically by the server must now be done explicitly
 before calling ``run()``. See Example 3 above for the full workflow using
 :meth:`~.EstimatorV2.find_unique_layers` and
-:class:`~qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3`.
+:class:`~qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3`. Assign the result to
+``options.resilience.noise_model``.
 
 **Step 4 — No other changes required**
 
