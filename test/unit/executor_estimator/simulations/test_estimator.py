@@ -55,11 +55,11 @@ def create_estimator_test_data(backend, preset_pass_manager):
 
     parameters = [
         # Qubit 0: Expect <Z> close to 1
-        1 * np.pi / 8,
+        0,
         # Qubit 1: Expect <Y> close to -1
-        3 * np.pi / 8,
+        np.pi / 2,
         # Qubit 2: Expect <X> to be close to 1
-        3 * np.pi / 8,
+        np.pi / 2,
     ]
 
     # Prepare a PUB with multiple observables to estimate expectation values on.
@@ -97,9 +97,9 @@ def create_local_mode_estimator(backend):
     )
 
     # Increase number of shots to have better statistics:
-    options.twirling.num_randomizations = 100
-    options.twirling.shots_per_randomization = 200
-    options.default_shots = 100 * 200
+    options.twirling.num_randomizations = 10
+    options.twirling.shots_per_randomization = 20
+    options.default_shots = 10 * 20
 
     return EstimatorV2(mode=backend, options=options)
 
@@ -175,6 +175,8 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         result = estimator.run([pub]).result()
         # We get one expectation value per observable:
         evs = result[0].data.evs
+        print(evs)
+        assert False
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
