@@ -63,8 +63,9 @@ class TestEstimator(IBMTestCase):
 
         circuit.rx(Parameter("rx_0"), 0)
         circuit.rx(Parameter("rx_1"), 1)
-        circuit.rx(Parameter("rx_2"), 2)
-        circuit.rz(Parameter("rz_0"), 2)
+        circuit.ry(Parameter("ry_2"), 2)
+        # circuit.rx(Parameter("rx_2"), 2)
+        # circuit.rz(Parameter("rz_0"), 2)
 
         isa_circuit = self.preset_pass_manager.run(circuit)
         print(list(isa_circuit.parameters))
@@ -73,12 +74,12 @@ class TestEstimator(IBMTestCase):
         np.random.seed(43)
         parameters = [
             # Qubit 0: Expect <Z> close to 0.7
-            np.pi/4,
+            np.pi / 4,
             # Qubit 1: Expect <Y> close to -0.7
-            np.pi/4,
+            np.pi / 4,
             # Qubit 2: Expect <X> to be close to -0.7
-            np.pi/4,
-            np.pi/2
+            np.pi / 2,
+            # np.pi/2
         ]
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
@@ -92,6 +93,8 @@ class TestEstimator(IBMTestCase):
         statevector_estimator = StatevectorEstimator()
         statevector_result = statevector_estimator.run([pub]).result()
         statevector_evs = statevector_result[0].data.evs
+
+        # For debugging:
         print(f"statevector EVs: {statevector_evs}")
         # Assert the statevector EVs match the expectations stated in the parameter comments:
         # Qubit 0 with rx=pi/4 -> <Z> should be close to cos(pi/4) ≈ 0.707
