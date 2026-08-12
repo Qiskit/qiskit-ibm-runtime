@@ -10,36 +10,86 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test AerExecutor with a Clifford circuit on the stabilizer simulator."""
+"""Unit tests for run_quantum_program."""
 
+from __future__ import annotations
+
+from itertools import islice, product
+from typing import TYPE_CHECKING, Any
 from unittest import skipUnless
+from unittest.mock import MagicMock
 
 import numpy as np
+from ddt import data, ddt, unpack
 from qiskit.circuit import Parameter, QuantumCircuit
+from qiskit.primitives.containers.bit_array import BitArray
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils import optionals
+from samplomatic import Tag, Twirl
 from samplomatic.builders.build import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
+from qiskit_ibm_runtime.executor_local_mode.run_quantum_program import run_quantum_program
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
 
+if TYPE_CHECKING:
+    from collections.abc import Generator, Iterable
+
+    from qiskit.transpiler import CouplingMap
+
+
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
-    from qiskit_ibm_runtime.aer_executor import AerExecutor
+
+def batched(iterable: Iterable, n: int) -> Generator[tuple[Any, ...], Any, None]:
+    """Helper function for batching ``n`` items of an iterable together."""
+    # batched('ABCDEFG', 3) → ABC DEF G
+    if n < 1:
+        raise ValueError("n must be at least one")
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, n)):
+        yield batch
 
 
+def generate_circuit(
+    num_qubits: int, coupling_map: CouplingMap
+) -> tuple[QuantumCircuit, list[int]]:
+    """Generate an example twirled circuit given the number of qubits and a coupling map."""
+    active_qubits = list(range(num_qubits))
+    qc_boxed = QuantumCircuit(num_qubits, num_qubits)
+    with qc_boxed.box(
+        annotations=[
+            Twirl(dressing="left"),
+            Tag(ref="r0"),
+        ]
+    ):
+        for edge in batched(active_qubits, 2):
+            if edge in coupling_map:
+                qc_boxed.cz(*edge)
+            else:
+                qc_boxed.z(edge)
+
+    with qc_boxed.box(annotations=[Twirl(dressing="right")]):
+        qc_boxed.noop(active_qubits)
+
+    return qc_boxed, active_qubits
+
+
+@ddt
 @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
-class TestAerExecutor(IBMTestCase):
-    """Tests for AerExecutor."""
+class TestRunQuantumProgram(IBMTestCase):
+    """Test for running quantum programs."""
 
     def assert_correct(
         self, expected: dict[str, np.ndarray], executor_results: dict[str, np.ndarray]
     ) -> None:
-        """Assert that executor results match the expected bit arrays after flip correction.
+        """Assert that results match the expected bit arrays after flip correction.
 
         Bit arrays use LSB-first ordering: ``data[..., 0]`` corresponds to classical
         register bit 0.
@@ -82,8 +132,31 @@ class TestAerExecutor(IBMTestCase):
                 f"Corrected data for '{name}' does not match expected outcome {expected_bits}",
             )
 
+    def test_angle_rounding_snaps_near_clifford(self):
+        """RZ(π + ε) with a tiny ε should round to π, yielding |1⟩ deterministically.
+
+        H → RZ(π) → H maps |0⟩ → |1⟩. Without rounding, ε would make the angle non-Clifford
+        and the stabilizer simulator would error.
+        """
+        theta = Parameter("theta")
+        qc = QuantumCircuit(1, 1)
+        qc.h(0)
+        qc.rz(theta, 0)
+        qc.h(0)
+        qc.measure(0, 0)
+
+        circuit_arguments = np.array([[np.pi + 1e-10]])  # shape (sweeps=1, params=1)
+        program = QuantumProgram(shots=64)
+        program.append_circuit_item(qc, circuit_arguments=circuit_arguments)
+
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
+
+        self.assertTrue((result[0]["c"] == [[True]]).all())
+
     def test_clifford_circuit_item(self):
-        """Test using the stabilizer simulation method via a CircuitItem."""
+        """Test using the stabilizer simulation method via a Circuit item."""
         # Build a simple 3-qubit Clifford circuit (GHZ state preparation + measurement)
         qc = QuantumCircuit(3, 3)
         qc.h(0)
@@ -103,10 +176,9 @@ class TestAerExecutor(IBMTestCase):
         program = QuantumProgram(shots=1024)
         program.append_circuit_item(transpiled)
 
-        # Run via AerExecutor
-        executor = AerExecutor(AerSimulator(method="stabilizer"))
-        job = executor.run(program)
-        result = job.result()
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         # The result should have one item
         self.assertEqual(len(result), 1)
@@ -131,7 +203,7 @@ class TestAerExecutor(IBMTestCase):
                 )
 
     def test_clifford_samplex_item(self):
-        """Test using the stabilizer simulation method via a SamplexItem."""
+        """Test using the stabilizer simulation method via a Samplex item."""
         num_randomizations = 8
         shots = 256
 
@@ -158,10 +230,9 @@ class TestAerExecutor(IBMTestCase):
             shape=(num_randomizations,),
         )
 
-        # Run via AerExecutor
-        executor = AerExecutor(AerSimulator(method="stabilizer"))
-        job = executor.run(program)
-        result = job.result()
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -170,11 +241,11 @@ class TestAerExecutor(IBMTestCase):
         self.assert_correct({"c": np.array([False, False])}, item_data)
 
     def test_circuit_item_with_circuit_arguments(self):
-        """Run a parameterized CircuitItem by supplying circuit_arguments directly.
+        """Run a parameterized Circuit item by supplying circuit arguments directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
-        deterministic outcomes, verifying that circuit_arguments are bound correctly
-        in the CircuitItem branch of run_quantum_program.
+        deterministic outcomes, verifying that circuit arguments are bound correctly
+        in the Circuit item branch of ``run_quantum_program``.
         """
         shots = 128
 
@@ -200,8 +271,9 @@ class TestAerExecutor(IBMTestCase):
         program = QuantumProgram(shots=shots)
         program.append_circuit_item(transpiled, circuit_arguments=circuit_arguments)
 
-        executor = AerExecutor(AerSimulator(method="stabilizer"))
-        result = executor.run(program).result()
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -217,13 +289,68 @@ class TestAerExecutor(IBMTestCase):
         self.assertTrue((item_data["c"][2] == [True, False]).all())
         # phi=π, theta=π → |11⟩
         self.assertTrue((item_data["c"][3] == [True, True]).all())
+
+    @data(*product([True, False], [2, 156]))
+    @unpack
+    def test_noisy_simulation(self, noise, num_qubits):
+        """Test noisy simulation."""
+        fez_backend = FakeFez()
+        coupling_map = fez_backend.coupling_map
+        qc_boxed, active_qubits = generate_circuit(num_qubits, coupling_map)
+
+        qc_boxed.measure(active_qubits, active_qubits)
+
+        template_circuit, samplex = build(qc_boxed)
+
+        self.assertGreater(template_circuit.count_ops().get("rz", 0), 0)
+
+        shots_per_twirl = 1024
+        num_twirls = 1
+        num_shots_tot = shots_per_twirl * num_twirls
+
+        # Build a QuantumProgram using a SamplexItem
+        program = QuantumProgram(shots=shots_per_twirl)
+        program.append_samplex_item(
+            template_circuit,
+            samplex=samplex,
+            shape=(num_twirls,),
+        )
+
+        def _xi(i: int, n: int = len(active_qubits)) -> str:
+            ll = ["I"] * n
+            ll[i] = "X"
+            return "".join(reversed(ll))
+
+        if noise:
+            noise_dict = {
+                "r0": PauliLindbladMap.from_list(
+                    [(_xi(i), 1e-1) for i in range(len(active_qubits))]
+                ),
+            }
+        else:
+            noise_dict = None
+
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"),
+            program,
+            ExperimentalSimulatorOptions(noise_model=noise_dict),
+        )
+
+        self.assertEqual(len(result), 1)
+
+        ba_c = BitArray.from_bool_array(result[0]["c"])
+        cts = ba_c.get_counts()
+        if noise:
+            self.assertGreater(num_shots_tot, cts.get("0" * len(active_qubits), 0))
+        else:
+            self.assertEqual(num_shots_tot, cts.get("0" * len(active_qubits), 0))
 
     def test_samplex_item_with_parameter_sweep(self):
-        """Run a parameterized CircuitItem by supplying circuit_arguments directly.
+        """Run a parameterized Samplex item by supplying parameter values directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
-        deterministic outcomes, verifying that circuit_arguments are bound correctly
-        in the CircuitItem branch of run_quantum_program.
+        deterministic outcomes, verifying that parameter values are bound correctly
+        in the Samplex item branch of ``run_quantum_program``.
         """
         shots = 128
 
@@ -239,18 +366,25 @@ class TestAerExecutor(IBMTestCase):
             initial_layout=[17, 27],
             optimization_level=0,
         )
+        pm.post_scheduling = generate_boxing_pass_manager()
         transpiled = pm.run(qc)
+        template_circuit, samplex = build(transpiled)
 
         # circuit.parameters sorts alphabetically: [phi, theta]
         # shape (4, 2): 4 sweep configurations, 2 parameters each
-        circuit_arguments = np.array(
+        parameter_values = np.array(
             [[0.0, 0.0], [np.pi, 0.0], [0.0, np.pi], [np.pi, np.pi]], dtype=float
         )
         program = QuantumProgram(shots=shots)
-        program.append_circuit_item(transpiled, circuit_arguments=circuit_arguments)
+        program.append_samplex_item(
+            template_circuit,
+            samplex=samplex,
+            samplex_arguments={"parameter_values": parameter_values},
+        )
 
-        executor = AerExecutor(AerSimulator(method="stabilizer"), angle_decimals=5)
-        result = executor.run(program).result()
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -258,19 +392,22 @@ class TestAerExecutor(IBMTestCase):
         # Result shape: (4, shots, 2)
         self.assertEqual(item_data["c"].shape, (4, shots, 2))
 
+        # bit flip correction
+        corrected_data = item_data["c"] ^ item_data["measurement_flips.c"]
+
         # phi=0, theta=0 → |00⟩
-        self.assertTrue((item_data["c"][0] == [False, False]).all())
+        self.assertTrue((corrected_data[0] == [False, False]).all())
         # phi=π, theta=0 → |01⟩ (phi acts on q1, LSB-first: bit1=True)
-        self.assertTrue((item_data["c"][1] == [False, True]).all())
+        self.assertTrue((corrected_data[1] == [False, True]).all())
         # phi=0, theta=π → |10⟩ (theta acts on q0, LSB-first: bit0=True)
-        self.assertTrue((item_data["c"][2] == [True, False]).all())
+        self.assertTrue((corrected_data[2] == [True, False]).all())
         # phi=π, theta=π → |11⟩
-        self.assertTrue((item_data["c"][3] == [True, True]).all())
+        self.assertTrue((corrected_data[3] == [True, True]).all())
 
     def test_samplex_item_with_broadcast_sweep(self):
         """Run a Pauli-twirled circuit with a parameter sweep over input bitflips.
 
-        This test verifies that broadcast dimensions in samplex_arguments are handled correctly.
+        This test verifies that broadcast dimensions in samplex arguments are handled correctly.
 
         The circuit applies RX(theta) on qubit 0 before CX and RX(phi) on qubit 1
         after CX, where theta, phi ∈ {0, π} act as bitflips. This keeps the circuit
@@ -321,9 +458,9 @@ class TestAerExecutor(IBMTestCase):
             shape=(r0, 2, 2, r1),
         )
 
-        executor = AerExecutor(AerSimulator(method="stabilizer"), angle_decimals=5)
-        job = executor.run(program)
-        result = job.result()
+        result = run_quantum_program(
+            AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+        )
 
         self.assertEqual(len(result), 1)
         item_data = result[0]
@@ -355,3 +492,18 @@ class TestAerExecutor(IBMTestCase):
 
         # theta=π, phi=π: CX|10⟩ = |11⟩, X on q1 → |10⟩
         self.assert_correct({"c": np.array([True, False])}, sweep_slice(1, 1))
+
+    def test_unsupported_item_type_raises_type_error(self):
+        """Test unsupported types."""
+        fake_item = MagicMock()
+        fake_item.circuit = QuantumCircuit(1)
+
+        program = MagicMock()
+        program.items = [fake_item]
+        program.shots = 64
+        program.passthrough_data = None
+
+        with self.assertRaisesRegex(TypeError, "Unsupported QuantumProgramItem type"):
+            run_quantum_program(
+                AerSimulator(method="stabilizer"), program, ExperimentalSimulatorOptions()
+            )

@@ -25,15 +25,10 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from ..base_primitive import get_mode_service_backend
 from ..exceptions import IBMInputValueError
 from ..executor import Executor
-from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options_models.converters import estimator_options_to_executor_options
 from ..options_models.estimator import EstimatorOptions
-from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
-from .prepare_pea import prepare_pea
 from .utils import find_unique_layers, resolve_precision
-from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -124,7 +119,7 @@ class EstimatorV2(BaseEstimatorV2):
 
         options: Estimator options.
             See
-            :class:`~qiskit_ibm_runtime.options_models.estimator_options.EstimatorOptions`
+            :class:`~qiskit_ibm_runtime.options_models.estimator.EstimatorOptions`
             for all available options.
     """
 
@@ -140,12 +135,6 @@ class EstimatorV2(BaseEstimatorV2):
 
         # Store mode, service, and backend for simulator detection
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
-
-        # Only create executor for non-local backends
-        # For local simulators (QiskitRuntimeLocalService), we'll use BackendEstimatorV2 directly
-        self._executor = None
-        if not isinstance(self._service, QiskitRuntimeLocalService):
-            self._executor = Executor(mode=mode)
 
         # Coerced to `EstimatorOptions` via `__setattr__()`.
         self.options = options if options is not None else EstimatorOptions()  # type: ignore[assignment]
@@ -192,7 +181,7 @@ class EstimatorV2(BaseEstimatorV2):
             noise_model = results.to_dict(layers)
 
             # Assign the learned model so PEC uses it on the next run.
-            est.options.resilience.noise_model_mapping = noise_model
+            est.options.resilience.noise_model = noise_model
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
@@ -208,6 +197,7 @@ class EstimatorV2(BaseEstimatorV2):
             measure_noise_learning=options.resilience.measure_noise_learning,
             inject_noise=options.resilience.pec_mitigation
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
+            add_tags=True,
         )
 
     def finalize_options(self) -> EstimatorOptions:
@@ -275,10 +265,10 @@ class EstimatorV2(BaseEstimatorV2):
 
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits
-                  and observables or tuples ``(circuit, observables, parameter_values)``.
+                and observables or tuples ``(circuit, observables, parameter_values)``.
             precision: The target precision for expectation value estimates of each
-                       estimator pub that does not specify its own precision. If ``None``,
-                       the value from ``options.default_precision`` will be used.
+                estimator pub that does not specify its own precision. If ``None``,
+                the value from ``options.default_precision`` will be used.
 
         Returns:
             The submitted job.
@@ -299,9 +289,6 @@ class EstimatorV2(BaseEstimatorV2):
         #   * Enforcing required dependencies between option values
         options = self.finalize_options()
 
-        # Convert pubs to QuantumProgram and map options using the selected prepare function
-        logger.info("Starting pre-processing")
-
         resolved_precision = resolve_precision(coerced_pubs, precision)
         if resolved_precision is not None:
             shots = int(np.ceil(1.0 / (resolved_precision**2)))
@@ -311,7 +298,9 @@ class EstimatorV2(BaseEstimatorV2):
             shots = int(np.ceil(1.0 / (options.default_precision**2)))
 
         # Check if we're in local simulator mode
-        if self._executor is None:
+        if not self.options.experimental.get("local_mode", False) and isinstance(
+            self._service, QiskitRuntimeLocalService
+        ):
             logger.info("Running in local simulator mode")
 
             options_dict = options.model_dump()
@@ -324,83 +313,25 @@ class EstimatorV2(BaseEstimatorV2):
                 calibration_id=None,
             )
 
-        if options.dynamical_decoupling.enable:
-            for pub in coerced_pubs:
-                if pub.circuit.has_control_flow_op():
-                    raise IBMInputValueError(
-                        "Dynamical decoupling is not compatible with dynamic circuits "
-                        "(circuits with control flow operations)."
-                    )
-
         if options.resilience.pec_mitigation and options.resilience.zne_mitigation:
             raise IBMInputValueError(
                 "PEC mitigation and ZNE mitigation are incompatible with one another."
             )
 
-        # Route to appropriate prepare function
-        if options.resilience.pec_mitigation:
-            if options.resilience.noise_model_mapping is None:
-                raise IBMInputValueError(
-                    "When PEC mitigation is enabled, you must provide a noise model "
-                    "via options.resilience.noise_model_mapping"
-                )
-            quantum_program = prepare_pec(
-                pubs=coerced_pubs,
-                twirling_options=options.twirling,
-                shots=shots,
-                pec_options=options.resilience.pec,
-                noise_model_mapping=options.resilience.noise_model_mapping,
-                measure_noise_learning=options.resilience.measure_noise_learning
-                if options.resilience.measure_mitigation
-                else None,
-            )
-        elif options.resilience.zne_mitigation:
-            if options.resilience.zne.amplifier == "pea":
-                quantum_program = prepare_pea(
-                    pubs=coerced_pubs,
-                    twirling_options=options.twirling,
-                    shots=shots,
-                    zne_options=options.resilience.zne,
-                    noise_model_mapping=options.resilience.noise_model_mapping or {},
-                    measure_noise_learning=options.resilience.measure_noise_learning
-                    if options.resilience.measure_mitigation
-                    else None,
-                )
-            else:
-                quantum_program = prepare_zne(
-                    pubs=coerced_pubs,
-                    twirling_options=options.twirling,
-                    shots=shots,
-                    zne_options=options.resilience.zne,
-                    measure_noise_learning=options.resilience.measure_noise_learning
-                    if options.resilience.measure_mitigation
-                    else None,
-                )
-        else:
-            quantum_program = prepare(
-                pubs=coerced_pubs,
-                twirling_options=options.twirling,
-                shots=shots,
-                measure_noise_learning=options.resilience.measure_noise_learning
-                if options.resilience.measure_mitigation
-                else None,
-            )
-
-        if options.dynamical_decoupling.enable:
-            quantum_program = apply_dynamical_decoupling(
-                backend=self._backend,
-                dd_options=options.dynamical_decoupling,
-                quantum_program=quantum_program,
-            )
-        # Serialize options (assuming passthrough is correctly configured)
-        quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
-            "twirling": self.options.twirling.model_dump(),
-            "dynamical_decoupling": self.options.dynamical_decoupling.model_dump(),
-            "resilience": self.options.resilience.model_dump(exclude={"noise_model_mapping"}),
-        }
+        # Convert pubs to QuantumProgram and map options using the selected prepare function
+        logger.info("Starting pre-processing")
+        quantum_program, executor_options = prepare(
+            coerced_pubs, options, shots, backend=self._backend
+        )
+        # Store raw options, shots and precision for post-processing side to compute metadata.
+        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump(  # type: ignore[index, call-overload]
+            exclude={"resilience": {"noise_model"}}
+        )
+        quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
+        quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
 
         # Set executor options
-        self._executor.options = estimator_options_to_executor_options(options)
+        executor = Executor(mode=self._backend, options=executor_options)
 
         # Submit to executor
         logger.info(
@@ -410,4 +341,4 @@ class EstimatorV2(BaseEstimatorV2):
             quantum_program.shots,
         )
 
-        return self._executor.run(quantum_program)
+        return executor.run(quantum_program)

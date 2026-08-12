@@ -12,4 +12,4 @@
 
 """Module for vendor-specific instructions."""
 
-from .mid_circuit_measure import MidCircuitMeasure
+from .mid_circuit_measure import MidCircuitMeasure, MidCircuitReset

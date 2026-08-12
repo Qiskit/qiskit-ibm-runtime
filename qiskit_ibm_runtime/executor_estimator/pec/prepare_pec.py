@@ -51,11 +51,11 @@ def prepare_pec(
     twirling_options: TwirlingOptions,
     shots: int,
     pec_options: PecOptions,
-    noise_model_mapping: dict[str, PauliLindbladMap],
+    noise_model: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program with PEC mitigation.
+    """Convert estimator PUBs to a quantum program with PEC mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.
@@ -66,7 +66,7 @@ def prepare_pec(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         pec_options: The options for PEC mitigation.
-        noise_model_mapping: Mapping between layer ref to a noise model to use for PEC mitigation
+        noise_model: Mapping between layer ref to a noise model to use for PEC mitigation
             method. The dict contains layers from all pubs. Assumes that the unique layers
             used for noise learning were extracted using the ``find_unique_layers`` method.
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
@@ -84,7 +84,7 @@ def prepare_pec(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
+        IBMInputValueError: If ``noise_model`` is missing a noise map for at least one of
             the pubs layers.
     """
     if not twirling_options.enable_gates:
@@ -135,7 +135,7 @@ def prepare_pec(
         # add samplex_arguments related to noise injection
         if pec_options.noise_gain == "auto":
             # calculate the gamma factor without scaling it by noise_factor
-            gamma = calculate_gamma(boxed_circuit, noise_model_mapping, 1)
+            gamma = calculate_gamma(boxed_circuit, noise_model, 1)
             # calculate the noise factor based on gamma and max_overhead, setting it to ``1``
             # if ``gamma`` is ``1``--i.e., if there is no noise to mitigate.
             noise_gain = 1 if gamma == 1 else 1 - np.log(max_overhead) / np.log(gamma**2)
@@ -161,7 +161,7 @@ def prepare_pec(
         for spec in specs:
             ref = spec.name.split(".")[-1]
             try:
-                pub_noise_model[ref] = noise_model_mapping[ref]
+                pub_noise_model[ref] = noise_model[ref]
             except KeyError:
                 raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
             # noise_scales and pauli_lindblad_maps should have the same refs

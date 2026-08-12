@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from unittest import mock
 
+import numpy as np
 from ddt import data, unpack
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
@@ -37,7 +38,7 @@ from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 if TYPE_CHECKING:
     import logging
 
-    from qiskit.providers.backend import Backend
+    from qiskit.providers.backend import Backend, BackendV2
 
 
 def most_busy_backend(
@@ -289,6 +290,73 @@ def bell():
     quantum_circuit.measure(quantum_register, classical_register)
 
     return quantum_circuit
+
+
+def make_mirror_circuit_with_phases(
+    backend: BackendV2,
+    num_qubits: int = 2,
+    layers: int = 4,
+    *,
+    seed: int | None = 7,
+    add_measurement: bool = True,
+) -> QuantumCircuit:
+    """Make a circuit that composes a mirror circuit with a final layer of RX gates.
+
+    The mirror circuit contains entanglers between nearest neighbours.
+    """
+    if "cz" in (basis_gates := backend.configuration().basis_gates):
+        entangler = "cz"
+    elif "cx" in basis_gates:
+        entangler = "cx"
+    elif "ecr" in basis_gates:
+        entangler = "ecr"
+    else:
+        # This should not be reachable
+        raise ValueError("No entangler found.")
+
+    even_pairs = zip(range(0, backend.num_qubits, 2), range(1, backend.num_qubits, 2))
+    layer1_pairs = [
+        (control, target)
+        for control, target in even_pairs
+        if backend.target.instruction_supported(entangler, (control, target))
+        and control < num_qubits
+        and target < num_qubits
+    ]
+    layer1 = QuantumCircuit(num_qubits)
+    for control, target in layer1_pairs:
+        getattr(layer1, entangler)(control, target)
+
+    odd_pairs = zip(range(1, backend.num_qubits, 2), range(2, backend.num_qubits, 2))
+    layer2_pairs = [
+        (control, target)
+        for control, target in odd_pairs
+        if backend.target.instruction_supported(entangler, (control, target))
+        and control < num_qubits
+        and target < num_qubits
+    ]
+    layer2 = QuantumCircuit(num_qubits)
+    for control, target in layer2_pairs:
+        getattr(layer2, entangler)(control, target)
+
+    rng = np.random.default_rng(seed)
+    mirror = QuantumCircuit(num_qubits)
+    for _ in range(layers):
+        mirror.compose(layer1, inplace=True)
+        mirror.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
+        mirror.compose(layer2, inplace=True)
+        mirror.rx(rng.uniform(0, 2 * np.pi), range(num_qubits))
+
+    circuit = QuantumCircuit(num_qubits)
+    circuit.compose(mirror, inplace=True)
+    circuit.barrier()  # keep U and U† from resolving to identity under transpilation
+    circuit.compose(mirror.inverse(), inplace=True)
+
+    circuit.barrier()
+    for qubit in range(num_qubits):
+        circuit.rx(Parameter(f"theta_{qubit}"), qubit)
+    if add_measurement:
+        circuit.measure_all()
+    return circuit
 
 
 def get_transpiled_circuit(backend, num_qubits=2, measure=False):

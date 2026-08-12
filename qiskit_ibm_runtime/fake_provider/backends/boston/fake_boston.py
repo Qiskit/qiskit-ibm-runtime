@@ -24,3 +24,4 @@ class FakeBoston(FakeBackendV2):
     conf_filename = "conf_boston.json"
     props_filename = "props_boston.json"
     backend_name = "fake_boston"
+    _physical_qubits = 332

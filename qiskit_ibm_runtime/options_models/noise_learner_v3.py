@@ -19,6 +19,7 @@ from typing import Annotated
 from pydantic import Field
 
 from .base import BaseOptionsModel
+from .bit_flip_checks_options import BitFlipChecksOptions
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .post_selection import PostSelectionOptions
@@ -53,6 +54,9 @@ class NoiseLearnerV3Options(BaseOptionsModel):
     .. note::
         This field is ignored by TREX experiments.
     """
+
+    bit_flip_checks: BitFlipChecksOptions = BitFlipChecksOptions()
+    """Options to apply bit-flip checks to the results of noise learning circuits."""
 
     post_selection: PostSelectionOptions = PostSelectionOptions()
     """Options for post selecting the results of noise learning circuits."""

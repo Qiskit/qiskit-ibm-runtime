@@ -29,12 +29,13 @@ from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
-    from qiskit.quantum_info import PauliLindbladMap
-    from qiskit_aer import AerSimulator
+    from qiskit.providers import BackendV2
 
+    from ..options_models.simulator import ExperimentalSimulatorOptions
     from ..quantum_program import QuantumProgram
 
 if HAS_AER:
+    from qiskit_aer import AerSimulator
     from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
 
 
@@ -49,40 +50,39 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
 
 @HAS_AER.require_in_call
 def run_quantum_program(
-    qasm_simulator: AerSimulator,
+    backend: BackendV2,
     program: QuantumProgram,
-    noise_dict: dict[str, PauliLindbladMap] | None = None,
-    angle_decimals: int = 5,
-    warn_absent: bool = True,
+    options: ExperimentalSimulatorOptions,
 ) -> QuantumProgramResult:
     """Run a quantum program on a simulator.
 
     Args:
-        qasm_simulator: The simulator to use.
+        backend: The backend to simulate.
         program: The program to run.
-        noise_dict: A map from barrier label refs to noise maps.
-        angle_decimals: Gate angles are rounded to the nearest multiple of π/2 at this
-            decimal precision before simulation.  See :func:`AerExecutor` for details.
-        warn_absent: Passed to :class:`InsertNoisePass`; see :class:`AerExecutor`.
+        options: The simulator options to use.
 
     Returns:
         Results of simulation.
     """
-    # Generate a sampler
-    backend = deepcopy(qasm_simulator)
-    backend.set_max_qubits(10000)
-    aer_sampler = AerSamplerV2.from_backend(backend)
+    seed = options.seed_simulator
 
-    # _seed is private but is the only way to obtain the sampler's RNG seed for reproducibility.
-    rng = np.random.default_rng(aer_sampler._seed)
+    # Generate a sampler
+    if isinstance(backend, AerSimulator):
+        backend = deepcopy(backend)
+        backend.set_max_qubits(10000)
+        backend.set_options(seed_simulator=seed)
+
+    aer_sampler = AerSamplerV2.from_backend(backend, seed=seed)
+
+    rng = np.random.default_rng(seed)
 
     result_list = []
     metadata_list = []
 
     for prog_item in program.items:
-        if noise_dict is not None:
+        if (noise_dict := options.noise_model) is not None:
             circuit = PassManager(
-                [InsertNoisePass(noise_dict=noise_dict, warn_absent=warn_absent)]
+                [InsertNoisePass(noise_dict=noise_dict, warn_absent=options.warn_absent)]
             ).run(prog_item.circuit)
         else:
             circuit = prog_item.circuit
@@ -93,7 +93,7 @@ def run_quantum_program(
                     {tuple(prog_item.circuit.parameters): prog_item.circuit_arguments}
                 )
                 for k, v in bindings_array._data.items():
-                    bindings_array._data[k] = _round_to_clifford(v, angle_decimals)
+                    bindings_array._data[k] = _round_to_clifford(v, options.angle_decimals)
             else:
                 bindings_array = None
             sampler_res = aer_sampler.run(
@@ -121,7 +121,7 @@ def run_quantum_program(
                 {tuple(prog_item.circuit.parameters): samplex_data.pop("parameter_values")}
             )
             for k, v in bindings_array._data.items():
-                bindings_array._data[k] = _round_to_clifford(v, angle_decimals)
+                bindings_array._data[k] = _round_to_clifford(v, options.angle_decimals)
             sampler_res = aer_sampler.run(
                 [
                     SamplerPub(
@@ -142,9 +142,10 @@ def run_quantum_program(
         else:
             raise TypeError(f"Unsupported QuantumProgramItem type: {type(prog_item)}")
 
-    return QuantumProgramResult(
+    ret = QuantumProgramResult(
         data=result_list,
-        # metadata=dict(enumerate(metadata_list)),
-        metadata=None,  # TODO: Figure this out
+        metadata=None,
         passthrough_data=program.passthrough_data,
     )
+    ret._semantic_role = program._semantic_role
+    return ret
