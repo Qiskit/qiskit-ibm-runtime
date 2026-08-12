@@ -26,6 +26,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -100,6 +101,9 @@ class TestEstimator(IBMTestCase):
                 # instead of connecting to a real backend.
                 experimental={
                     "local_mode": True,
+                    # Set a fixed seed for the simulator to reduce flakiness and to allow
+                    # tighter error asserts.
+                    "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
                 },
             )
             options.twirling.num_randomizations = 100
@@ -120,4 +124,6 @@ class TestEstimator(IBMTestCase):
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
 
         # Resilience level 2 should give very accurate expectation value:
-        np.testing.assert_array_less(errors[2], 0.04, err_msg=debug_message)
+        # With fixed simulator seed, we can have 0.025 here.
+        # Without we should set to something like 0.04 to reduce flakiness.
+        np.testing.assert_array_less(errors[2], 0.025, err_msg=debug_message)
