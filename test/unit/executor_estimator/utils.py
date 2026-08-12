@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -21,6 +22,8 @@ import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub, ObservablesArray
 from qiskit.quantum_info import SparsePauliOp
+
+from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -293,4 +296,121 @@ TEMPLATE_CIRCUIT_SCENARIO: TemplateCircuitScenario = _make_template_circuit_scen
 The circuit combines all three structural features exercised by template compilation:
 a CX gate (2Q), a parametric RZ gate, a mid-circuit measurement, and a second CX
 after the measurement.
+"""
+
+
+@dataclass(frozen=True)
+class TwirlingShapeScenario:
+    """A single twirling configuration with pre-computed expected shape outputs.
+
+    Used by ``test_shapes_twirling_configs`` in each prepare-function test class to
+    isolate the randomization axis (num_randomizations) and ``program.shots`` independently of the
+    PUB's observable structure.
+    """
+
+    label: str
+    """Human-readable name used in :meth:`~unittest.TestCase.subTest` labels."""
+
+    twirling_options: TwirlingOptions
+    """Fully configured twirling options to pass to the prepare function."""
+
+    shots: int
+    """Integer shots to pass to the prepare function."""
+
+    expected_num_randomizations: int
+    """Pre-computed num_randomizations: the expected randomization axis of the item shape."""
+
+    expected_shots_per_randomization: int
+    """Pre-computed ``program.shots``: the shots stored on the :class:`~.QuantumProgram`."""
+
+
+def _make_twirling_shape_scenarios() -> list[TwirlingShapeScenario]:
+    """Build the five canonical twirling configurations for shape testing.
+
+    All scenarios use ``shots=1024``.  Expected values are derived from
+    :func:`~qiskit_ibm_runtime.executor.calculate_twirling_shots`:
+
+    * No twirling: R=1, program.shots=1024
+    * Both auto:   shots_per_rand = max(64, ceil(1024/32)) = 64;
+                   num_rand = ceil(1024/64) = 16  →  R=16, program.shots=64
+    * num_rand=8:  shots_per_rand = ceil(1024/8) = 128  →  R=8,  program.shots=128
+    * spr=128:     num_rand = ceil(1024/128) = 8  →  R=8,  program.shots=128
+    * Both fixed (num_rand=4, spr=256): shots is ignored  →  R=4,  program.shots=256
+    """
+    shots = 1024
+
+    # No twirling
+    no_twirl = TwirlingOptions()
+    no_twirl.enable_gates = False
+    no_twirl.enable_measure = False
+
+    # Both auto
+    both_auto = TwirlingOptions()
+    both_auto.enable_gates = True
+    both_auto.enable_measure = True
+
+    # num_randomizations fixed, shots_per_randomization auto
+    num_rand_fixed = TwirlingOptions()
+    num_rand_fixed.enable_gates = True
+    num_rand_fixed.enable_measure = True
+    num_rand_fixed.num_randomizations = 8
+
+    # shots_per_randomization fixed, num_randomizations auto
+    spr_fixed = TwirlingOptions()
+    spr_fixed.enable_gates = True
+    spr_fixed.enable_measure = True
+    spr_fixed.shots_per_randomization = 128
+
+    # Both fixed — shots argument is completely ignored
+    both_fixed = TwirlingOptions()
+    both_fixed.enable_gates = True
+    both_fixed.enable_measure = True
+    both_fixed.num_randomizations = 4
+    both_fixed.shots_per_randomization = 256
+
+    return [
+        TwirlingShapeScenario(
+            label="no_twirling",
+            twirling_options=no_twirl,
+            shots=shots,
+            expected_num_randomizations=1,
+            expected_shots_per_randomization=shots,
+        ),
+        TwirlingShapeScenario(
+            label="both_auto",
+            twirling_options=both_auto,
+            shots=shots,
+            expected_num_randomizations=math.ceil(shots / max(64, math.ceil(shots / 32))),
+            expected_shots_per_randomization=max(64, math.ceil(shots / 32)),
+        ),
+        TwirlingShapeScenario(
+            label="num_rand_fixed",
+            twirling_options=num_rand_fixed,
+            shots=shots,
+            expected_num_randomizations=8,
+            expected_shots_per_randomization=math.ceil(shots / 8),
+        ),
+        TwirlingShapeScenario(
+            label="shots_per_rand_fixed",
+            twirling_options=spr_fixed,
+            shots=shots,
+            expected_num_randomizations=math.ceil(shots / 128),
+            expected_shots_per_randomization=128,
+        ),
+        TwirlingShapeScenario(
+            label="both_fixed",
+            twirling_options=both_fixed,
+            shots=shots,
+            expected_num_randomizations=4,
+            expected_shots_per_randomization=256,
+        ),
+    ]
+
+
+TWIRLING_SHAPE_SCENARIOS: list[TwirlingShapeScenario] = _make_twirling_shape_scenarios()
+"""Five twirling configurations for randomization-axis shape tests.
+
+Covers: no twirling, both-auto, num_rand fixed, shots_per_rand fixed, both fixed.
+All use shots=1024 with pre-computed expected_num_randomizations and
+expected_shots_per_randomization.
 """

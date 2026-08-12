@@ -30,7 +30,12 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase
 from ...utils import combine
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, TEMPLATE_CIRCUIT_SCENARIO
+from .utils import (
+    PARAM_BASIS_3Q_SCENARIOS,
+    SAMPLEX_CIRCUIT_SCENARIOS,
+    TEMPLATE_CIRCUIT_SCENARIO,
+    TWIRLING_SHAPE_SCENARIOS,
+)
 
 
 @ddt
@@ -576,3 +581,31 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
             (48,),
             "Expected TREX item shape (48,) for num_randomizations=48",
         )
+
+    def test_shapes_twirling_configs(self):
+        """Verify the number of randomization and program.shots."""
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        for scenario in TWIRLING_SHAPE_SCENARIOS:
+            with self.subTest(twirling=scenario.label):
+                program = prepare_vanilla(
+                    pubs=[pub],
+                    twirling_options=scenario.twirling_options,
+                    shots=scenario.shots,
+                )
+                item = program.items[0]
+                self.assertEqual(
+                    item.shape[0],
+                    scenario.expected_num_randomizations,
+                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+                    f"got {item.shape[0]}",
+                )
+                self.assertEqual(
+                    program.shots,
+                    scenario.expected_shots_per_randomization,
+                    msg=f"[{scenario.label}] expected program.shots="
+                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+                )

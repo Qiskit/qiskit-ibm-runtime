@@ -335,10 +335,10 @@ class EstimatorV2(BaseEstimatorV2):
 
         # Submit to executor
         logger.info(
-            "Submitting %d pub%s to executor with %d shots",
+            "Submitting %d pub%s to executor with %d total shots",
             len(coerced_pubs),
             "s" if len(coerced_pubs) > 1 else "",
-            quantum_program.shots,
+            quantum_program.shots * sum(item.size() for item in quantum_program.items),
         )
 
         return executor.run(quantum_program)

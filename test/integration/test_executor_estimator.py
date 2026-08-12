@@ -22,10 +22,7 @@ from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
-from qiskit_ibm_runtime.options_models.zne import (
-    PEA_DEFAULT_NOISE_FACTORS,
-    ZNE_DEFAULT_NOISE_FACTORS,
-)
+from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import make_mirror_circuit_with_phases
@@ -146,10 +143,7 @@ class TestEstimator(IBMIntegrationTestCase):
                 for layer in layers
                 if (annotation := get_annotation(layer.operation, InjectNoise))
             }
-            expected_num_noise_factors = len(PEA_DEFAULT_NOISE_FACTORS)
-        else:
-            expected_num_noise_factors = len(ZNE_DEFAULT_NOISE_FACTORS)
-
+        expected_num_noise_factors = len(DEFAULT_NOISE_FACTORS)
         # ``extrapolated_noise_factors`` defaults to ``[0, *noise_factors]``
         expected_num_extrapolated = expected_num_noise_factors + 1
         expected_num_extrapolators = len(estimator.options.resilience.zne.extrapolator)
