@@ -66,9 +66,9 @@ def prepare(
         default_shots: Default number of shots if not specified in PUBs. If ``None``,
             uses the value from ``self.options.default_shots``.
         add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
-            (will pass the `"none"` value to the relevant attribute), while ``True`` will cause tags
-            with the twirled boxes hash to be added (using the `"unique_box"` value of the relevant
-            attribute). These tags are used to inject noise when running in local mode.
+            (will pass the ``"none"`` value to the relevant attribute), while ``True`` will cause
+            tags with the twirled boxes hash to be added (using the ``"unique_box"`` value of the
+            relevant attribute). These tags are used to inject noise when running in local mode.
         backend: The backend for which the program is prepared. Only required when dynamical
             decoupling is enabled.
 
