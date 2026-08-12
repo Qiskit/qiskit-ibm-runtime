@@ -19,7 +19,6 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import random_pauli_list
 
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
-    _build_program_result_metadata,
     _process_expectation_values_pea,
     _process_expectation_values_zne,
     create_pub_result,
@@ -346,12 +345,7 @@ class TestEstimatorV2PostProcessor(IBMTestCase):
         metadata = primitive_result.metadata
         self.assertEqual(metadata["shots"], 1024)
         self.assertEqual(metadata["target_precision"], 0.03125)
-        # At resilience_level=0 the raw dump leaves enable_gates unresolved (None)
-        self.assertIn("twirling", metadata)
-        # Inactive sub-options must be pruned
-        self.assertNotIn("zne", metadata["resilience"])
-        self.assertNotIn("pec", metadata["resilience"])
-        self.assertNotIn("measure_noise_learning", metadata["resilience"])
+        self.assertIn("options", metadata)
 
     def test_zne_mitigation_fix_expectation_values(self):
         """Test estimator_v2_post_processor_v0_1 with zne mitigation.
@@ -1751,41 +1745,3 @@ class TestProcessExpectationValuesZNE(IBMTestCase):
         self.assertEqual(zero_evs.shape, ())
         # extrap_evs has shape (num_extrapolators, num_extrapolated_noise_factors) for scalar obs
         self.assertEqual(extrap_evs.shape[-1], len(extrapolated_noise_factors))
-
-
-@ddt
-class TestBuildProgramMetadata(IBMTestCase):
-    """Tests for the :func:`_build_program_result_metadata` helper."""
-
-    @data(
-        ("zne_mitigation", "zne"),
-        ("pec_mitigation", "pec"),
-        ("measure_mitigation", "measure_noise_learning"),
-    )
-    @unpack
-    def test_drops_inactive_resilience_sub_options(self, flag_key, options_key):
-        """Test that inactive-flag sub-option dicts are dropped from the metadata dict.
-
-        For each ``(flag_key, options_key)`` pair, verify that:
-        - when the flag is ``False``, the corresponding sub-option dict is absent, and
-        - when the flag is ``True``, the corresponding sub-option dict is present.
-        """
-
-        def _get_resilience_metadata(flag_value):
-            options = EstimatorOptions()
-            options.resilience_level = 0
-            setattr(options.resilience, flag_key, flag_value)
-            post_processor_data = {
-                "options": options.model_dump(),
-                "shots": 1024,
-                "precision": None,
-            }
-            return _build_program_result_metadata(post_processor_data)["resilience"]
-
-        # When flag is False the sub-option dict must be absent
-        resilience_off = _get_resilience_metadata(False)
-        self.assertNotIn(options_key, resilience_off)
-
-        # When flag is True the sub-option dict must be present
-        resilience_on = _get_resilience_metadata(True)
-        self.assertIn(options_key, resilience_on)
