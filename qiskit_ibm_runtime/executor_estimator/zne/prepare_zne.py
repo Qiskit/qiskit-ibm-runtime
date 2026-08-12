@@ -32,7 +32,7 @@ from samplomatic import build
 
 from ...exceptions import IBMInputValueError
 from ...executor.calculate_twirling_shots import calculate_twirling_shots
-from ...options_models.zne import ZNE_DEFAULT_NOISE_FACTORS
+from ...options_models.zne import DEFAULT_NOISE_FACTORS
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
 from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
@@ -94,7 +94,7 @@ def prepare_zne(
         )
 
     if zne_options.noise_factors == "auto":
-        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS, dtype=float)
+        noise_factors = np.array(DEFAULT_NOISE_FACTORS, dtype=float)
     else:
         noise_factors = np.array(zne_options.noise_factors, dtype=float)
     validate_noise_factors(noise_factors, zne_options.extrapolator)
