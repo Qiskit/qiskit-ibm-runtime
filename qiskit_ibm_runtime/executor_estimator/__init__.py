@@ -45,11 +45,12 @@ The end-to-end processing pipeline is:
 .. note::
 
     For moderate and complex workloads the client-side preparation step can be resource intensive
-    and may cause a delay before the job is submitted. Set your Python logging level to ``INFO``
-    to monitor preparation progress::
+    and may cause a delay before the job is submitted. Set the ``qiskit_ibm_runtime`` logger to
+    ``INFO`` to monitor preparation progress::
 
         import logging
-        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger("qiskit_ibm_runtime")
+        logger.setLevel(logging.INFO)
 
 Basic usage
 ===========
