@@ -321,7 +321,7 @@ class EstimatorV2(BaseEstimatorV2):
         # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            coerced_pubs, options, shots, backend=self._backend, add_tags=local_mode
+            coerced_pubs, options, shots, add_tags=local_mode, backend=self._backend
         )
         # Store raw options, shots and precision for post-processing side to compute metadata.
         quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump(  # type: ignore[index, call-overload]
