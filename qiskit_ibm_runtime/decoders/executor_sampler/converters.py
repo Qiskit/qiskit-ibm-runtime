@@ -70,11 +70,9 @@ def quantum_program_item_result_to_sampler_pub_result(
     data_bin = DataBin(**arrays, shape=pub_shape)
 
     # Construct the metadata for the result.
-    pub_metadata: dict[str, Any] = {"circuit_metadata": {}}
-    if circuit_metadata:
-        pub_metadata["circuit_metadata"] = circuit_metadata
-    if num_randomizations > 0:
-        pub_metadata["num_randomizations"] = num_randomizations
+    pub_metadata: dict[str, Any] = {
+        "circuit_metadata": circuit_metadata if circuit_metadata else {}
+    }
     if item.metadata.scheduler_timing:
         pub_metadata.setdefault("compilation", {})
         pub_metadata["compilation"]["scheduler_timing"] = {

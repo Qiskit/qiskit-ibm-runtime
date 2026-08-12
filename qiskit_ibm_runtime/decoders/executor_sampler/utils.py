@@ -15,15 +15,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from ...execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from ...results.quantum_program import ChunkSpan, Metadata, QuantumProgramItemResult
 
 TWIRLING_PREFIX = "measurement_flips."
@@ -51,37 +49,6 @@ def undo_twirling(item: QuantumProgramItemResult) -> None:
         # Apply XOR and remove flip key
         flip_data = item.pop(flip_key)
         item[target_key] ^= flip_data
-
-
-def executor_metadata_to_sampler_metadata(
-    metadata: Metadata,
-    num_randomizations: int,
-    shots: int,
-    pubs_shapes: list[tuple[int, ...]],
-) -> dict[str, Any]:
-    """Helper to map result metadata for executor job to result metadata for sampler jobs.
-
-    This function is meant to be used when post-processing results for an executor job triggered
-    by a SamplerV2.
-
-    Args:
-        metadata: The executor metadata.
-        num_randomizations: The number of randomizations per PUB, where ``0`` means that twirling
-            was not enabled.
-        shots: The shots per PUB. This corresponds to ``pub.shots`` if twirling was not enabled,
-            and to ``shots_per_randomization`` if twirling was enabled.
-        pubs_shapes: The shapes of the PUBs in the sampler job.
-
-    Returns:
-        A dictionary of metadata compatible with the format expected for a SamplerV2 job.
-    """
-    spans: Sequence[TwirledSliceSpanV2 | DoubleSliceSpan] = []
-    if num_randomizations != 0:
-        spans = _spans_for_twirled_execution(metadata, num_randomizations, shots, pubs_shapes)
-    else:
-        spans = _spans_for_untwirled_execution(metadata, shots, pubs_shapes)
-
-    return {"execution": {"execution_spans": spans}}
 
 
 def _spans_for_twirled_execution(
