@@ -26,6 +26,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -70,20 +71,28 @@ class TestEstimator(IBMTestCase):
         # Select values for the rz gates:
         np.random.seed(43)
         parameters = [
-            # Make qubit 0 sensitive to Z observable
-            np.random.uniform(0, np.pi / 4),
-            # Make qubit 1 sensitive to Y observable
-            np.random.uniform(np.pi / 4, 3 * np.pi / 4),
-            # Make qubit 2 sensitive to X observable
-            np.random.uniform(np.pi / 4, 3 * np.pi / 4),
-            np.random.uniform(np.pi / 4, 3 * np.pi / 4),
+            # Qubit 0: Expect <Z> close to 0.7
+            np.pi / 4,
+            # Qubit 1: Expect <Y> close to -0.7
+            5 * np.pi / 4,
+            # Qubit 2: Expect <X> to be close to -0.7
+            np.pi / 4,
+            np.pi / 2,
         ]
+        # parameters = [
+        #    # Make qubit 0 sensitive to Z observable
+        #    np.random.uniform(0, np.pi / 4),
+        #    # Make qubit 1 sensitive to Y observable
+        #    np.random.uniform(np.pi / 4, 3 * np.pi / 4),
+        #    # Make qubit 2 sensitive to X observable
+        #    np.random.uniform(np.pi / 4, 3 * np.pi / 4),
+        #    np.random.uniform(np.pi / 4, 3 * np.pi / 4),
+        # ]
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
         observables = [
             SparsePauliOp(pauli_string).apply_layout(isa_circuit.layout)
-            # for pauli_string in ["ZXY", "IZ", "ZI", "XI", "IX", "YI", "IY"]
-            for pauli_string in ["ZII", "IXI", "IIY", "XYZ"]
+            for pauli_string in ["ZII", "IYI", "IIX", "XYZ"]
         ]
         pub = (isa_circuit, observables, parameters)
 
@@ -91,6 +100,7 @@ class TestEstimator(IBMTestCase):
         statevector_estimator = StatevectorEstimator()
         statevector_result = statevector_estimator.run([pub]).result()
         statevector_evs = statevector_result[0].data.evs
+        print(f"statevector EVs: {statevector_evs}")
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
@@ -103,7 +113,10 @@ class TestEstimator(IBMTestCase):
                 resilience_level=resilience_level,
                 # Local mode means that the underlying Executor is running Aer simulation
                 # instead of connecting to a real backend.
-                experimental={"local_mode": True},
+                experimental={
+                    "local_mode": True,
+                    "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
+                },
             )
             options.twirling.num_randomizations = 100
             options.twirling.shots_per_randomization = 200
@@ -134,11 +147,8 @@ class TestEstimator(IBMTestCase):
             worse_error=errors[1],
         )
 
-        # error_to_std = errors[2] / results[2].stds
-        # np.testing.assert_array_less(error_to_std, 10)
-
         # Resilience level 2 should give very accurate expectation value:
-        np.testing.assert_array_less(errors[2], 0.1, err_msg=debug_message)
+        np.testing.assert_array_less(errors[2], 0.025, err_msg=debug_message)
 
     def compare_results(self, name: str, better_result, worse_result, better_error, worse_error):
         abs_difference_1_0 = np.abs(better_result.evs - worse_result.evs)
