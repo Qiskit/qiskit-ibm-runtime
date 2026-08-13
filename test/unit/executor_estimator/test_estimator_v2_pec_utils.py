@@ -24,6 +24,7 @@ from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.executor.calculate_twirling_shots import calculate_twirling_shots
 from qiskit_ibm_runtime.executor_estimator.pec.prepare_pec import prepare_pec
 from qiskit_ibm_runtime.executor_estimator.pec.utils import calculate_gamma
 from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
@@ -33,8 +34,13 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS
+from ...ibm_test_case import IBMEstimatorPrepareTestCase, IBMTestCase
+from .utils import (
+    PARAM_BASIS_3Q_SCENARIOS,
+    SAMPLEX_CIRCUIT_SCENARIOS,
+    TEMPLATE_CIRCUIT_SCENARIO,
+    TWIRLING_SHAPE_SCENARIOS,
+)
 
 
 class TestCalculateGamma(IBMTestCase):
@@ -49,16 +55,16 @@ class TestCalculateGamma(IBMTestCase):
             circuit.cx(0, 1)
 
         # Create a two-qubit noise model with known gamma
-        noise_model = PauliLindbladMap.from_sparse_list(
+        model = PauliLindbladMap.from_sparse_list(
             [("ZX", [0, 1], 0.1), ("XZ", [0, 1], 0.1)], num_qubits=2
         )
-        noise_model_mapping = {"layer_0": noise_model}
+        noise_model = {"layer_0": model}
 
         noise_factor = 1.0
-        result = calculate_gamma(circuit, noise_model_mapping, noise_factor)
+        result = calculate_gamma(circuit, noise_model, noise_factor)
 
         # Expected gamma is the gamma of the noise model
-        expected_gamma = noise_model.inverse().gamma()
+        expected_gamma = model.inverse().gamma()
         self.assertAlmostEqual(result, expected_gamma)
 
     def test_calculates_gamma_for_multiple_noisy_gates(self):
@@ -76,10 +82,10 @@ class TestCalculateGamma(IBMTestCase):
         noise_model_1 = PauliLindbladMap.from_sparse_list(
             [("XY", [1, 2], 0.2), ("ZX", [1, 2], 0.15)], num_qubits=3
         )
-        noise_model_mapping = {"layer_0": noise_model_0, "layer_1": noise_model_1}
+        noise_model = {"layer_0": noise_model_0, "layer_1": noise_model_1}
 
         noise_factor = 1.0
-        result = calculate_gamma(circuit, noise_model_mapping, noise_factor)
+        result = calculate_gamma(circuit, noise_model, noise_factor)
 
         # Expected gamma is the product of individual gammas
         expected_gamma = noise_model_0.inverse().gamma() * noise_model_1.inverse().gamma()
@@ -98,10 +104,10 @@ class TestCalculateGamma(IBMTestCase):
 
         # Create noise models
         noise_model_0 = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
-        noise_model_mapping = {"layer_0": noise_model_0}
+        noise_model = {"layer_0": noise_model_0}
 
         noise_factor = 1.0
-        result = calculate_gamma(circuit, noise_model_mapping, noise_factor)
+        result = calculate_gamma(circuit, noise_model, noise_factor)
 
         # Expected gamma is the product of individual gammas
         expected_gamma = noise_model_0.inverse().gamma() * noise_model_0.inverse().gamma()
@@ -115,10 +121,10 @@ class TestCalculateGamma(IBMTestCase):
             circuit.h(0)
             circuit.cx(0, 1)
 
-        noise_model_mapping = {}
+        noise_model = {}
         noise_factor = 1.0
 
-        result = calculate_gamma(circuit, noise_model_mapping, noise_factor)
+        result = calculate_gamma(circuit, noise_model, noise_factor)
 
         # Gamma should be 1.0 for noiseless circuit
         self.assertEqual(result, 1.0)
@@ -136,11 +142,11 @@ class TestCalculateGamma(IBMTestCase):
         noise_model = PauliLindbladMap.from_sparse_list(
             [("XX", [0, 1], err_rate), ("XZ", [0, 1], err_rate)], num_qubits=2
         )
-        noise_model_mapping = {"layer_0": noise_model}
+        noise_model = {"layer_0": noise_model}
 
         # Test with different noise factors
         noise_factor = 2.0
-        result = calculate_gamma(circuit, noise_model_mapping, noise_factor)
+        result = calculate_gamma(circuit, noise_model, noise_factor)
 
         # Expected gamma with amplified noise
         # gamma = w + abs(1-w), w = 0.5*(1+e^(-2*err))
@@ -167,10 +173,10 @@ class TestCalculateGamma(IBMTestCase):
         noise_model_1 = PauliLindbladMap.from_sparse_list(
             [("XZ", [1, 2], 0.15), ("XY", [1, 2], 0.2)], num_qubits=3
         )
-        noise_model_mapping = {"layer_0": noise_model_0, "layer_1": noise_model_1}
+        noise_model = {"layer_0": noise_model_0, "layer_1": noise_model_1}
 
         noise_factor = 1.0
-        result = calculate_gamma(circuit, noise_model_mapping, noise_factor)
+        result = calculate_gamma(circuit, noise_model, noise_factor)
 
         # Expected gamma is product of only the noisy gates
         expected_gamma = noise_model_0.inverse().gamma() * noise_model_1.inverse().gamma()
@@ -187,17 +193,17 @@ class TestCalculateGamma(IBMTestCase):
         noise_model = PauliLindbladMap.from_sparse_list(
             [("IX", [0, 1], 0.1), ("XI", [0, 1], 0.1)], num_qubits=2
         )
-        noise_model_mapping = {"layer_0": noise_model}
+        noise_model = {"layer_0": noise_model}
 
         # With zero noise factor, the noise is effectively removed
         noise_factor = 0.0
-        result = calculate_gamma(circuit, noise_model_mapping, noise_factor)
+        result = calculate_gamma(circuit, noise_model, noise_factor)
 
         # Gamma should be 1.0 when noise is scaled to zero
         self.assertAlmostEqual(result, 1.0)
 
     def test_missing_map_raises(self):
-        """Test that gamma calculation raises if maps are missing from ``noise_model_mapping``."""
+        """Test that gamma calculation raises if maps are missing from ``noise_model``."""
         # Create a simple circuit with one two-qubit gate annotated with noise
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[InjectNoise(ref="ref", site="after")]):
@@ -208,21 +214,19 @@ class TestCalculateGamma(IBMTestCase):
         noise_model = PauliLindbladMap.from_sparse_list(
             [("ZX", [0, 1], 0.1), ("XZ", [0, 1], 0.1)], num_qubits=2
         )
-        noise_model_mapping = {"another_ref": noise_model}
+        noise_model = {"another_ref": noise_model}
 
         with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
-            calculate_gamma(circuit, noise_model_mapping, noise_factor=1)
+            calculate_gamma(circuit, noise_model, noise_factor=1)
 
 
 @ddt
-class TestPreparePec(IBMTestCase):
+class TestPreparePec(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_pec`` function."""
 
-    @data([True, True, True], [True, False, False])
+    @data([True, True], [False, False])
     @unpack
-    def test_param_basis_expansion_3q(
-        self, enable_gates, enable_measure, enable_measure_noise_learning
-    ):
+    def test_param_basis_expansion_3q(self, enable_measure, enable_measure_noise_learning):
         """Test parameter-basis expansion with three-qubit observables."""
         observables = PARAM_BASIS_3Q_SCENARIOS.observables
         num_qubits = observables.num_qubits
@@ -231,7 +235,7 @@ class TestPreparePec(IBMTestCase):
         circuit.rz(Parameter("alpha"), 0)
 
         twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_gates = True
         twirling_options.enable_measure = enable_measure
 
         measure_noise_learning = (
@@ -256,7 +260,7 @@ class TestPreparePec(IBMTestCase):
                     twirling_options=twirling_options,
                     shots=10,
                     pec_options=PecOptions(),
-                    noise_model_mapping={},
+                    noise_model={},
                     measure_noise_learning=measure_noise_learning,
                 )
 
@@ -268,6 +272,78 @@ class TestPreparePec(IBMTestCase):
 
                 # Check that the quantum program has one element per param-basis pair
                 self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+
+    @data([True, False], [False, False], [True, True])
+    @unpack
+    def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
+        """Test that samplex arguments have the expected structure for each circuit type."""
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        # Build a noise model mapping covering the layers of all scenario pubs.
+        # Must use the same twirling_options as the prepare call, since different
+        # options produce different layer refs.
+        pubs = [scenario.pub for scenario in SAMPLEX_CIRCUIT_SCENARIOS]
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        noise_model = {
+            annot.ref: PauliLindbladMap.from_sparse_list(
+                [("Z" * len(layer.qubits), list(range(len(layer.qubits))), 0.1)],
+                num_qubits=len(layer.qubits),
+            )
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
+            with self.subTest(circuit=scenario.label):
+                program = prepare_pec(
+                    pubs=[scenario.pub],
+                    twirling_options=twirling_options,
+                    shots=10,
+                    pec_options=PecOptions(),
+                    noise_model=noise_model,
+                    measure_noise_learning=measure_noise_learning,
+                )
+                # PEC always requires enable_gates=True
+                self.assertSamplexArgumentsAreCorrect(program.items[0], scenario, inject_noise=True)
+
+    @data(True, False)
+    def test_template_circuit(self, enable_measure):
+        """Test that the template circuit has the expected clbits and parameter count.
+
+        Uses a single circuit combining 2Q gates, a parametric gate, and a mid-circuit
+        measurement — covering all structural features of template compilation.
+        PEC always runs with enable_gates=True.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = enable_measure
+
+        scenario = TEMPLATE_CIRCUIT_SCENARIO
+        pubs = [scenario.pub]
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        noise_model = {
+            annot.ref: PauliLindbladMap.from_sparse_list(
+                [("Z" * len(layer.qubits), list(range(len(layer.qubits))), 0.1)],
+                num_qubits=len(layer.qubits),
+            )
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+        program = prepare_pec(
+            pubs=pubs,
+            twirling_options=twirling_options,
+            shots=10,
+            pec_options=PecOptions(),
+            noise_model=noise_model,
+        )
+        self.assertTemplateCircuitIsCorrect(program.items[0], scenario, enable_gates=True)
 
     def test_prepare_pec_basic(self):
         """Test prepare_pec with basic PEC options and noise model."""
@@ -289,7 +365,7 @@ class TestPreparePec(IBMTestCase):
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
-        noise_model_mapping = {noise_layer_ref: noise_model}
+        noise_model = {noise_layer_ref: noise_model}
 
         pec_options = PecOptions()
         pec_options.noise_gain = 0.5
@@ -299,9 +375,7 @@ class TestPreparePec(IBMTestCase):
         twirling_options.enable_measure = True
 
         shots = 1024
-        quantum_program = prepare_pec(
-            [pub], twirling_options, shots, pec_options, noise_model_mapping
-        )
+        quantum_program = prepare_pec([pub], twirling_options, shots, pec_options, noise_model)
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, 64)
@@ -315,7 +389,7 @@ class TestPreparePec(IBMTestCase):
         self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
         self.assertEqual(
             item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
-            noise_model_mapping[noise_layer_ref],
+            noise_model[noise_layer_ref],
         )
 
         # Check that samplex_arguments contains noise_scales for the layer
@@ -367,7 +441,7 @@ class TestPreparePec(IBMTestCase):
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_refs.append(annot.ref)
 
-        noise_model_mapping = {
+        noise_model = {
             noise_layer_refs[0]: noise_model_1,
             noise_layer_refs[1]: noise_model_2a,
             noise_layer_refs[2]: noise_model_2b,
@@ -382,7 +456,7 @@ class TestPreparePec(IBMTestCase):
 
         shots = 2048
         quantum_program = prepare_pec(
-            [pub1, pub2], twirling_options, shots, pec_options, noise_model_mapping
+            [pub1, pub2], twirling_options, shots, pec_options, noise_model
         )
 
         self.assertEqual(len(quantum_program.items), 2)
@@ -392,7 +466,7 @@ class TestPreparePec(IBMTestCase):
         self.assertIn(f"pauli_lindblad_maps.{noise_layer_refs[0]}", item1.samplex_arguments)
         self.assertEqual(
             item1.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_refs[0]}"],
-            noise_model_mapping[noise_layer_refs[0]],
+            noise_model[noise_layer_refs[0]],
         )
         self.assertIn(f"noise_scales.{noise_layer_refs[0]}", item1.samplex_arguments)
 
@@ -402,11 +476,11 @@ class TestPreparePec(IBMTestCase):
         self.assertIn(f"pauli_lindblad_maps.{noise_layer_refs[2]}", item2.samplex_arguments)
         self.assertEqual(
             item2.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_refs[1]}"],
-            noise_model_mapping[noise_layer_refs[1]],
+            noise_model[noise_layer_refs[1]],
         )
         self.assertEqual(
             item2.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_refs[2]}"],
-            noise_model_mapping[noise_layer_refs[2]],
+            noise_model[noise_layer_refs[2]],
         )
         self.assertIn(f"noise_scales.{noise_layer_refs[1]}", item2.samplex_arguments)
         self.assertIn(f"noise_scales.{noise_layer_refs[2]}", item2.samplex_arguments)
@@ -435,7 +509,7 @@ class TestPreparePec(IBMTestCase):
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
-        noise_model_mapping = {noise_layer_ref: noise_model}
+        noise_model = {noise_layer_ref: noise_model}
 
         pec_options = PecOptions()
         pec_options.noise_gain = "auto"  # Should default to 0
@@ -446,9 +520,7 @@ class TestPreparePec(IBMTestCase):
         twirling_options.enable_measure = True
 
         shots = 1024
-        quantum_program = prepare_pec(
-            [pub], twirling_options, shots, pec_options, noise_model_mapping
-        )
+        quantum_program = prepare_pec([pub], twirling_options, shots, pec_options, noise_model)
 
         item = cast("SamplexItem", quantum_program.items[0])
 
@@ -460,8 +532,8 @@ class TestPreparePec(IBMTestCase):
             item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], expected_noise_gain
         )
 
-    def test_prepare_pec_raises_error_with_empty_noise_model_mapping(self):
-        """Test that prepare_pec raises error when noise_model_mapping is empty."""
+    def test_prepare_pec_raises_error_with_empty_noise_model(self):
+        """Test that prepare_pec raises error when noise_model is empty."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
@@ -480,7 +552,7 @@ class TestPreparePec(IBMTestCase):
             prepare_pec([pub], twirling_options, 1024, pec_options, {})
 
     def test_prepare_pec_raises_error_with_missing_noise_model_key(self):
-        """Test that prepare_pec raises error when noise_model_mapping is missing a noise model."""
+        """Test that prepare_pec raises error when noise_model is missing a noise model."""
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
         circuit1.cx(0, 1)
@@ -502,7 +574,7 @@ class TestPreparePec(IBMTestCase):
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
-        noise_model_mapping = {noise_layer_ref: noise_model}
+        noise_model = {noise_layer_ref: noise_model}
 
         pec_options = PecOptions()
         pec_options.noise_gain = 0.5
@@ -512,7 +584,7 @@ class TestPreparePec(IBMTestCase):
         twirling_options.enable_measure = True
 
         with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
-            prepare_pec([pub1, pub2], twirling_options, 1024, pec_options, noise_model_mapping)
+            prepare_pec([pub1, pub2], twirling_options, 1024, pec_options, noise_model)
 
     def test_prepare_pec_with_measure_noise_learning(self):
         """Test prepare_pec with measure noise learning (TREX)."""
@@ -531,7 +603,7 @@ class TestPreparePec(IBMTestCase):
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
-        noise_model_mapping = {noise_layer_ref: noise_model}
+        noise_model = {noise_layer_ref: noise_model}
 
         pec_options = PecOptions()
         pec_options.noise_gain = 0.5
@@ -544,7 +616,7 @@ class TestPreparePec(IBMTestCase):
         twirling_options.enable_measure = True
 
         quantum_program = prepare_pec(
-            [pub], twirling_options, 1024, pec_options, noise_model_mapping, measure_noise_learning
+            [pub], twirling_options, 1024, pec_options, noise_model, measure_noise_learning
         )
 
         # Should have 2 items: 1 for pub + 1 TREX calibration
@@ -555,7 +627,7 @@ class TestPreparePec(IBMTestCase):
         self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
         self.assertEqual(
             item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
-            noise_model_mapping[noise_layer_ref],
+            noise_model[noise_layer_ref],
         )
         self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
         expected_noise_factor = pec_options.noise_gain - 1
@@ -583,7 +655,7 @@ class TestPreparePec(IBMTestCase):
         for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
-        noise_model_mapping = {noise_layer_ref: PauliLindbladMap.identity(num_qubits=2)}
+        noise_model = {noise_layer_ref: PauliLindbladMap.identity(num_qubits=2)}
 
         pec_options = PecOptions()
         twirling_options = TwirlingOptions()
@@ -591,9 +663,7 @@ class TestPreparePec(IBMTestCase):
         twirling_options.enable_measure = True
 
         shots = 1024
-        quantum_program = prepare_pec(
-            [pub], twirling_options, shots, pec_options, noise_model_mapping
-        )
+        quantum_program = prepare_pec([pub], twirling_options, shots, pec_options, noise_model)
         item = cast("SamplexItem", quantum_program.items[0])
         self.assertEqual(item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], 0)
 
@@ -618,7 +688,7 @@ class TestPreparePec(IBMTestCase):
         noise_layer_ref = next(
             annot.ref for layer in layers if (annot := get_annotation(layer.operation, InjectNoise))
         )
-        noise_model_mapping = {noise_layer_ref: noise_model}
+        noise_model = {noise_layer_ref: noise_model}
 
         pec_options = PecOptions()
         pec_options.noise_gain = 0.5
@@ -627,13 +697,102 @@ class TestPreparePec(IBMTestCase):
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
 
-        quantum_program = prepare_pec(
-            [pub, pub], twirling_options, 1024, pec_options, noise_model_mapping
-        )
+        quantum_program = prepare_pec([pub, pub], twirling_options, 1024, pec_options, noise_model)
 
         item0 = cast("SamplexItem", quantum_program.items[0])
         item1 = cast("SamplexItem", quantum_program.items[1])
         self.assertEqual(
             item0.shape[0],
             item1.shape[0],
+        )
+
+    def _build_trivial_noise_model(self, pubs, twirling_options):
+        """Build a trivial (zero-rate) noise model mapping for the given PUBs."""
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        return {
+            annot.ref: PauliLindbladMap.from_sparse_list([], num_qubits=len(layer.qubits))
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+    def test_shapes_twirling_configs(self):
+        """Verify the number of randomization and program.shots."""
+        pec_options = PecOptions()
+        pec_options.noise_gain = 1.0  # no noise removal → gamma=1, no randomization overhead
+
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        for scenario in TWIRLING_SHAPE_SCENARIOS:
+            if not scenario.twirling_options.enable_gates:
+                continue  # PEC requires enable_gates=True
+            with self.subTest(twirling=scenario.label):
+                noise_model = self._build_trivial_noise_model([pub], scenario.twirling_options)
+                program = prepare_pec(
+                    pubs=[pub],
+                    twirling_options=scenario.twirling_options,
+                    shots=scenario.shots,
+                    pec_options=pec_options,
+                    noise_model=noise_model,
+                )
+                item = program.items[0]
+                self.assertEqual(
+                    item.shape[0],
+                    scenario.expected_num_randomizations,
+                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+                    f"got {item.shape[0]}",
+                )
+                self.assertEqual(
+                    program.shots,
+                    scenario.expected_shots_per_randomization,
+                    msg=f"[{scenario.label}] expected program.shots="
+                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+                )
+
+    def test_shapes_overhead_scaling(self):
+        """PEC overhead: num randomizations exceeds baseline when gamma > 1.
+
+        Uses a non-trivial noise model with a known error rate so that gamma > 1 and
+        the scaled num_randomizations exceeds the baseline.
+        """
+        pec_options = PecOptions()
+        # noise_gain=0 means full PEC (maximum overhead scaling)
+        pec_options.noise_gain = 0.0
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        # Build a non-trivial noise model with a meaningful error rate
+        layers = find_unique_layers([pub], twirling_options, inject_noise=True)
+        noise_model = {
+            annot.ref: PauliLindbladMap.from_sparse_list(
+                [("ZZ", [0, 1], 0.1)], num_qubits=len(layer.qubits)
+            )
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+        shots = 1024
+        program = prepare_pec(
+            pubs=[pub],
+            twirling_options=twirling_options,
+            shots=shots,
+            pec_options=pec_options,
+            noise_model=noise_model,
+        )
+
+        baseline_num_rand, _ = calculate_twirling_shots(shots, "auto", "auto")
+        item = program.items[0]
+        self.assertGreater(
+            item.shape[0],
+            baseline_num_rand,
+            msg=f"Expected overhead-scaled R > baseline R={baseline_num_rand}, got {item.shape[0]}",
         )

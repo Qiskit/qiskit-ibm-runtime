@@ -21,12 +21,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
     from qiskit.circuit import CircuitInstruction
-    from qiskit.primitives import EstimatorPub
+    from qiskit.primitives import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
@@ -47,6 +47,33 @@ from ..exceptions import IBMInputValueError
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
+
+_REQUIRED_NOISE_FACTORS = {
+    "linear": 2,
+    "exponential": 2,
+    "double_exponential": 4,
+    "fallback": 1,
+    **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
+}
+
+
+def validate_noise_factors(
+    noise_factors: Sequence[float], extrapolator: str | Sequence[str]
+) -> None:
+    """Check that ``noise_factors`` has enough points for every requested extrapolator.
+
+    Args:
+        noise_factors: The resolved noise factors that will be used for amplification.
+        extrapolator: The extrapolator(s) requested in the ZNE options.
+
+    Raises:
+        IBMInputValueError: If ``noise_factors`` is under-specified for any extrapolator.
+    """
+    extrapolators = [extrapolator] if isinstance(extrapolator, str) else extrapolator
+    for extrap in extrapolators:
+        required = _REQUIRED_NOISE_FACTORS[extrap]
+        if len(noise_factors) < required:
+            raise IBMInputValueError(f"{extrap} requires at least {required} noise_factors")
 
 
 def get_pauli_basis(basis: str) -> Pauli:
@@ -273,7 +300,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
 
 
 def find_unique_layers(
-    pubs: Iterable[EstimatorPub],
+    pubs: Iterable[EstimatorPub | SamplerPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
@@ -288,7 +315,7 @@ def find_unique_layers(
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates.
-        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+        add_tags: Whether to include tags for the boxes.
 
     Returns:
         Unique boxed layers found across the given PUBs.
@@ -391,13 +418,12 @@ def compute_samplex_arguments(
     )
     change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
 
+    parameter_values_array = parameter_values.as_array(pub.circuit.parameters)
     basis_idx = 0
     for ndindex, basis in param_basis_map.items():
         for bases in basis:
             change_basis[basis_idx] = pauli_to_ints(bases)
-            flat_parameter_values[basis_idx] = parameter_values.as_array(pub.circuit.parameters)[
-                ndindex
-            ]
+            flat_parameter_values[basis_idx] = parameter_values_array[ndindex]
             basis_idx += 1
 
     # Step 4. Log info.

@@ -58,11 +58,10 @@ def prepare(
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
-        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
-            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
-            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
-            (using the "unique_box" value of the relevant attribute). These tags can help
-            injecting noise in simulators.
+        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
+            (will pass the ``"none"`` value to the relevant attribute), while ``True`` will cause
+            tags with the twirled boxes hash to be added (using the ``"unique_box"`` value of the
+            relevant attribute). These tags are used to inject noise when running in local mode.
         backend: The backend for which the program is prepared. Only required when dynamical
             decoupling is enabled.
 
@@ -95,7 +94,7 @@ def prepare(
             twirling_options=options.twirling,
             shots=shots,
             pec_options=options.resilience.pec,
-            noise_model_mapping=options.resilience.noise_model_mapping,
+            noise_model=options.resilience.noise_model,
             measure_noise_learning=options.resilience.measure_noise_learning
             if options.resilience.measure_mitigation
             else None,
@@ -109,7 +108,7 @@ def prepare(
                 twirling_options=options.twirling,
                 shots=shots,
                 zne_options=options.resilience.zne,
-                noise_model_mapping=options.resilience.noise_model_mapping,
+                noise_model=options.resilience.noise_model,
                 measure_noise_learning=options.resilience.measure_noise_learning
                 if options.resilience.measure_mitigation
                 else None,

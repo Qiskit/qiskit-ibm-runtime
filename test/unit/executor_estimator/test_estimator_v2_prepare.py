@@ -16,6 +16,8 @@ from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
+from samplomatic import Tag
+from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
@@ -30,6 +32,38 @@ from ...ibm_test_case import IBMTestCase
 @ddt
 class TestPrepare(IBMTestCase):
     """Test the ``prepare`` function."""
+
+    @data("vanilla", "pec", "zne", "pea")
+    def test_add_tags(self, path):
+        """Test that ``prepare`` adds tags when ``add_tags=True``."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        pubs = [EstimatorPub.coerce((circuit, observable))]
+
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        match path:
+            case "vanilla":
+                options.twirling.enable_measure = True
+            case "pec":
+                options.resilience.pec_mitigation = True
+                options.resilience.noise_model = {
+                    "layer_0": PauliLindbladMap.identity(num_qubits=2)
+                }
+            case "zne":
+                options.resilience.zne_mitigation = True
+            case "pea":
+                options.resilience.zne_mitigation = True
+                options.resilience.zne.amplifier = "pea"
+
+        program, _ = prepare(pubs, options, shots=100, add_tags=True)
+
+        for item in program.items:
+            unique_instructions = find_unique_box_instructions(item.circuit)
+            for inst in unique_instructions:
+                self.assertIsNotNone(get_annotation(inst.operation, Tag))
 
     def test_vanilla_path(self):
         """Test the ``prepare`` function when no mitigation is requested."""
@@ -54,9 +88,7 @@ class TestPrepare(IBMTestCase):
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         options.resilience.pec_mitigation = True
-        options.resilience.noise_model_mapping = {
-            "layer_0": PauliLindbladMap.identity(num_qubits=2)
-        }
+        options.resilience.noise_model = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
 
         circuit = QuantumCircuit(2)
         circuit.h(0)

@@ -22,6 +22,7 @@ from ..executor_local_mode import SimRuntimeJob
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
+from ..options_models.simulator import ExperimentalSimulatorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from ..utils.default_session import get_cm_session
 
@@ -78,7 +79,7 @@ class Executor:
     """
 
     _PROGRAM_ID = "executor"
-    _SCHEMA_VERSION = "v1.1"
+    _SCHEMA_VERSION = "v2.0"
 
     options: ExecutorOptions
     """The options of this executor."""
@@ -96,6 +97,11 @@ class Executor:
         local_mode = self.options.experimental.get("local_mode", False)
         if isinstance(self._service, QiskitRuntimeLocalService) and not local_mode:
             raise ValueError("The executor is currently not supported in local mode.")
+
+        if local_mode:
+            self.options.experimental["simulator_options"] = self.options.experimental.get(
+                "simulator_options", ExperimentalSimulatorOptions()
+            )
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -123,7 +129,9 @@ class Executor:
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
             return SimRuntimeJob(
-                backend=self._backend, program=program, options=self.options.simulator
+                backend=self._backend,
+                program=program,
+                options=self.options.experimental["simulator_options"],
             )
 
         try:

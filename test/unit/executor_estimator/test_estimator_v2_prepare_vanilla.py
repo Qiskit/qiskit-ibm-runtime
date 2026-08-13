@@ -28,13 +28,18 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMEstimatorPrepareTestCase
 from ...utils import combine
-from .utils import PARAM_BASIS_3Q_SCENARIOS
+from .utils import (
+    PARAM_BASIS_3Q_SCENARIOS,
+    SAMPLEX_CIRCUIT_SCENARIOS,
+    TEMPLATE_CIRCUIT_SCENARIO,
+    TWIRLING_SHAPE_SCENARIOS,
+)
 
 
 @ddt
-class TestPrepareVanilla(IBMTestCase):
+class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
     """Tests for the ``prepare_vanilla`` function."""
 
     @data([True, True, True], [False, True, True], [False, False, False])
@@ -85,6 +90,58 @@ class TestPrepareVanilla(IBMTestCase):
 
                 # Check that the quantum program has one element per param-basis pair
                 self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+
+    @data(
+        [True, True, True],
+        [False, True, True],
+        [False, False, False],
+        [True, False, False],
+        [False, True, False],
+        [True, True, False],
+    )
+    @unpack
+    def test_samplex_arguments_structure(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
+        """Test that samplex arguments have the expected structure for each circuit type."""
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
+            with self.subTest(circuit=scenario.label):
+                program = prepare_vanilla(
+                    pubs=[scenario.pub],
+                    twirling_options=twirling_options,
+                    shots=10,
+                    measure_noise_learning=measure_noise_learning,
+                )
+                self.assertSamplexArgumentsAreCorrect(
+                    program.items[0], scenario, inject_noise=False
+                )
+
+    @combine(enable_gates=[True, False], enable_measure=[True, False])
+    def test_template_circuit(self, enable_gates, enable_measure):
+        """Test that the template circuit has the expected clbits and parameter count.
+
+        Uses a single circuit combining 2Q gates, a parametric gate, and a mid-circuit
+        measurement — covering all structural features of template compilation.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        scenario = TEMPLATE_CIRCUIT_SCENARIO
+        program = prepare_vanilla(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+        )
+        self.assertTemplateCircuitIsCorrect(program.items[0], scenario, enable_gates=enable_gates)
 
     @data(
         [(2, 2), (2, 2), (1, 4)],
@@ -524,3 +581,31 @@ class TestPrepareVanilla(IBMTestCase):
             (48,),
             "Expected TREX item shape (48,) for num_randomizations=48",
         )
+
+    def test_shapes_twirling_configs(self):
+        """Verify the number of randomization and program.shots."""
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        for scenario in TWIRLING_SHAPE_SCENARIOS:
+            with self.subTest(twirling=scenario.label):
+                program = prepare_vanilla(
+                    pubs=[pub],
+                    twirling_options=scenario.twirling_options,
+                    shots=scenario.shots,
+                )
+                item = program.items[0]
+                self.assertEqual(
+                    item.shape[0],
+                    scenario.expected_num_randomizations,
+                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+                    f"got {item.shape[0]}",
+                )
+                self.assertEqual(
+                    program.shots,
+                    scenario.expected_shots_per_randomization,
+                    msg=f"[{scenario.label}] expected program.shots="
+                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+                )

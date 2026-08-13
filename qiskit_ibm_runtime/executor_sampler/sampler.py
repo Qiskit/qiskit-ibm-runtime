@@ -23,6 +23,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
+from ..executor_estimator.utils import find_unique_layers
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
@@ -31,6 +32,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
@@ -106,12 +108,6 @@ class SamplerV2(BaseSamplerV2):
         # Store mode, service, and backend for simulator detection
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
-        # Only create executor for non-local backends
-        # For local simulators (QiskitRuntimeLocalService), we'll use BackendSamplerV2 directly
-        self._executor = None
-        if not isinstance(self._service, QiskitRuntimeLocalService):
-            self._executor = Executor(mode=mode)
-
         # Coerced to `SamplerOptions` via `__setattr__()`.
         self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
 
@@ -129,6 +125,47 @@ class SamplerV2(BaseSamplerV2):
                 raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def find_unique_layers(self, pubs: Iterable[SamplerPubLike]) -> list[CircuitInstruction]:
+        """Return the unique boxed layers found across the given PUBs.
+
+        The returned list contains one instance of each distinct boxed layer (represented as a
+        :class:`~.CircuitInstruction`) appearing in the input PUBs.
+
+        Args:
+            pubs: The list of PUBs to return a list of unique boxes for.
+
+        Returns:
+            The unique boxed layers found across the given PUBs.
+        """
+        coerced_pubs = [SamplerPub.coerce(pub, None) for pub in pubs]
+        options = self.finalize_options()
+        return find_unique_layers(
+            pubs=coerced_pubs,
+            twirling_options=options.twirling,
+            measure_noise_learning=None,
+            inject_noise=False,
+            add_tags=True,
+        )
+
+    def finalize_options(self) -> SamplerOptions:
+        """Construct and finalize the Sampler options.
+
+        This method produces the final :class:`~.SamplerOptions` instance used inside a call to
+        :meth:`~.Sampler.run` by resolving the ``None`` in the twirling options as documented in
+        :class:`~.TwirlingOptions`.
+
+        Returns:
+            The finalized :class:`~.SamplerOptions` object.
+        """
+        finalized_options = deepcopy(self.options)
+
+        if finalized_options.twirling.enable_gates is None:
+            finalized_options.twirling.enable_gates = False
+        if finalized_options.twirling.enable_measure is None:
+            finalized_options.twirling.enable_measure = False
+
+        return finalized_options
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
@@ -156,15 +193,15 @@ class SamplerV2(BaseSamplerV2):
 
         # Finalize the options--namely, resolve the ``None`` in the twirling options
         # as documented.
-        options = deepcopy(self.options)
-        options.twirling.enable_gates = options.twirling.enable_gates or False
-        options.twirling.enable_measure = options.twirling.enable_measure or False
+        options = self.finalize_options()
 
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else options.default_shots
 
-        # Check if we're in local simulator mode
-        if self._executor is None:
+        # Legacy simulator path (no executor)
+        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
+            self._service, QiskitRuntimeLocalService
+        ):
             logger.info("Running in local simulator mode")
 
             options_dict = options.model_dump()
@@ -177,15 +214,16 @@ class SamplerV2(BaseSamplerV2):
                 calibration_id=None,
             )
 
-        # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            coerced_pubs, options, default_shots, backend=self._backend
+            coerced_pubs, options, default_shots, add_tags=local_mode, backend=self._backend
         )
+        # Store raw options for post-processing side to compute metadata.
+        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]
 
-        # Set executor options
-        self._executor.options = executor_options
+        # Initialize executor with settings
+        executor = Executor(mode=self._backend, options=executor_options)
 
         # Submit to executor
         logger.info(
@@ -195,4 +233,4 @@ class SamplerV2(BaseSamplerV2):
             quantum_program.shots,
         )
 
-        return self._executor.run(quantum_program)
+        return executor.run(quantum_program)

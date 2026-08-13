@@ -136,12 +136,6 @@ class EstimatorV2(BaseEstimatorV2):
         # Store mode, service, and backend for simulator detection
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
-        # Only create executor for non-local backends
-        # For local simulators (QiskitRuntimeLocalService), we'll use BackendEstimatorV2 directly
-        self._executor = None
-        if not isinstance(self._service, QiskitRuntimeLocalService):
-            self._executor = Executor(mode=mode)
-
         # Coerced to `EstimatorOptions` via `__setattr__()`.
         self.options = options if options is not None else EstimatorOptions()  # type: ignore[assignment]
 
@@ -187,7 +181,7 @@ class EstimatorV2(BaseEstimatorV2):
             noise_model = results.to_dict(layers)
 
             # Assign the learned model so PEC uses it on the next run.
-            est.options.resilience.noise_model_mapping = noise_model
+            est.options.resilience.noise_model = noise_model
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
@@ -203,6 +197,7 @@ class EstimatorV2(BaseEstimatorV2):
             measure_noise_learning=options.resilience.measure_noise_learning,
             inject_noise=options.resilience.pec_mitigation
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
+            add_tags=True,
         )
 
     def finalize_options(self) -> EstimatorOptions:
@@ -303,7 +298,9 @@ class EstimatorV2(BaseEstimatorV2):
             shots = int(np.ceil(1.0 / (options.default_precision**2)))
 
         # Check if we're in local simulator mode
-        if self._executor is None:
+        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
+            self._service, QiskitRuntimeLocalService
+        ):
             logger.info("Running in local simulator mode")
 
             options_dict = options.model_dump()
@@ -324,22 +321,24 @@ class EstimatorV2(BaseEstimatorV2):
         # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            coerced_pubs, options, shots, backend=self._backend
+            coerced_pubs, options, shots, add_tags=local_mode, backend=self._backend
         )
-        # Store raw options, shots and precision for post-processing side to compute metadata
-        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]
+        # Store raw options, shots and precision for post-processing side to compute metadata.
+        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump(  # type: ignore[index, call-overload]
+            exclude={"resilience": {"noise_model"}}
+        )
         quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
         quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
 
         # Set executor options
-        self._executor.options = executor_options
+        executor = Executor(mode=self._backend, options=executor_options)
 
         # Submit to executor
         logger.info(
-            "Submitting %d pub%s to executor with %d shots",
+            "Submitting %d pub%s to executor with %d total shots",
             len(coerced_pubs),
             "s" if len(coerced_pubs) > 1 else "",
-            quantum_program.shots,
+            quantum_program.shots * sum(item.size() for item in quantum_program.items),
         )
 
-        return self._executor.run(quantum_program)
+        return executor.run(quantum_program)

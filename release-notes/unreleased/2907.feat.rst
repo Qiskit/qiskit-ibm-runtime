@@ -1,1 +1,0 @@
-Added `bit_flip_checks` field to `NoiseLearnerV3Options`, allowing users to request bit-flip checks to the results of noise learning circuits.
