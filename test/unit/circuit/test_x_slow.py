@@ -31,7 +31,7 @@ class TestXSlowGate(IBMTestCase):
         gate = XSlowGate()
         self.assertIs(gate.base_class, XSlowGate)
         self.assertIsInstance(gate, Gate)
-        self.assertEqual(gate.name, "x_slow")
+        self.assertEqual(gate.name, "xslow")
         self.assertEqual(gate.num_qubits, 1)
         self.assertEqual(gate.num_clbits, 0)
 
@@ -45,7 +45,7 @@ class TestXSlowGate(IBMTestCase):
         self.assertIs(qc.data[1].operation, gate)
 
     def test_transpiler_compat_without(self):
-        """Test that the default pass manager fails if x_slow is not inthe target."""
+        """Test that the default pass manager fails if xslow is not inthe target."""
         gate = XSlowGate()
         backend = FakeVigoV2()
         pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
@@ -55,7 +55,7 @@ class TestXSlowGate(IBMTestCase):
             pm.run(qc)
 
     def test_transpiler_compat_with(self):
-        """Test that the default pass manager passes if x_slow is in the target.
+        """Test that the default pass manager passes if xslow is in the target.
 
         Test also that the pass manager does not modify the instruction.
         """
@@ -66,6 +66,6 @@ class TestXSlowGate(IBMTestCase):
         qc = QuantumCircuit(1)
         qc.append(gate, [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "x_slow")
+        self.assertEqual(transpiled.data[0].operation.name, "xslow")
 
 

@@ -16,9 +16,9 @@ from qiskit.circuit import Gate
 
 
 class XSlowGate(Gate):
-    """A class for a ``x_slow`` gate."""
+    """A class for a ``xslow`` gate."""
 
     def __init__(self) -> None:
-        super().__init__("x_slow", 1, [])
+        super().__init__("xslow", 1, [])
 
 
