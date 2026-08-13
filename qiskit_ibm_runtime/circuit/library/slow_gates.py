@@ -22,8 +22,3 @@ class XSlowGate(Gate):
         super().__init__("x_slow", 1, [])
 
 
-class CZSlowGate(Gate):
-    """A class for a ``cz_slow`` gate."""
-
-    def __init__(self) -> None:
-        super().__init__("cz_slow", 2, [])
