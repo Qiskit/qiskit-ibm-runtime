@@ -56,7 +56,7 @@ class TestExecutor(IBMTestCase):
 
         pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
         pm.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True, enable_measures=True, add_tags="unique_box"
+            enable_gates=True, enable_measures=True, add_tags="unique_box", inject_noise_site="after"
         )
 
         boxed_isa_circuit = pm.run(circuit)
