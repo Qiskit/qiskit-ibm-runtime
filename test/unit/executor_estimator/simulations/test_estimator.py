@@ -129,7 +129,6 @@ class TestEstimatorWithNoise(IBMTestCase):
         estimator.options.resilience.noise_model = injected_noise_model
         result = estimator.run([pub]).result()
         errors[True] = np.abs(result[0].data.evs - ideal_evs)
-        print(errors[True], errors[False])
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
