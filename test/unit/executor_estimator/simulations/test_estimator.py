@@ -99,10 +99,9 @@ def create_local_mode_estimator(backend):
     )
 
     # Increase number of shots to have better statistics:
-    options.default_precision = 0.01
-    # options.twirling.num_randomizations = 100
-    # options.twirling.shots_per_randomization = 200
-    # options.default_shots = 100 * 200
+    options.twirling.num_randomizations = 100
+    options.twirling.shots_per_randomization = 200
+    options.default_shots = 100 * 200
 
     return EstimatorV2(mode=backend, options=options)
 
