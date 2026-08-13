@@ -419,75 +419,53 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
         with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
             prepare_pea([pub1, pub2], twirling_options, 1024, zne_options, noise_model)
 
-    def test_prepare_pea_with_measure_noise_learning(self):
-        """Test prepare_pea with measure noise learning (TREX)."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
+    @data(32, "auto")
+    def test_prepare_pea_with_measure_noise_learning(self, num_randomizations):
+        """Test that measure_noise_learning adds a correctly built TREX calibration item.
 
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pub = EstimatorPub.coerce((circuit, observable))
+        Uses two pubs of different widths (2q and 3q).  Verifies item count, circuit gate
+        structure, shape, and passthrough data via :meth:`assertTrexItemIsCorrect`.
+        """
+        circuit1 = QuantumCircuit(2)
+        circuit1.h(0)
+        circuit1.cx(0, 1)
+        circuit2 = QuantumCircuit(3)
+        circuit2.h(0)
+        circuit2.cx(0, 1)
+        circuit2.cx(1, 2)
 
-        noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
+        pubs = [pub1, pub2]
 
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
+        twirling_options.num_randomizations = 64
 
-        # find layers first to extract the layers ref
-        layers = find_unique_layers([pub], twirling_options, inject_noise=True)
-        noise_layer_ref = ""
-        for layer in layers:
-            if annot := get_annotation(layer.operation, InjectNoise):
-                noise_layer_ref = annot.ref
+        noise_model = self._build_trivial_noise_model(pubs, twirling_options)
 
-        noise_model = {noise_layer_ref: noise_model}
-
-        noise_factors = [1, 1.5, 2, 2.5, 3]
         zne_options = ZneOptions()
         zne_options.amplifier = "pea"
-        zne_options.noise_factors = noise_factors
+        zne_options.noise_factors = [1.0, 2.0]
 
         measure_noise_learning = MeasureNoiseLearningOptions()
-        measure_noise_learning.num_randomizations = 16
+        measure_noise_learning.num_randomizations = num_randomizations
 
-        quantum_program = prepare_pea(
-            [pub],
-            twirling_options,
-            1024,
-            zne_options,
-            noise_model,
-            measure_noise_learning,
+        program = prepare_pea(
+            pubs, twirling_options, 1024, zne_options, noise_model, measure_noise_learning
         )
 
-        # Should have 2 items: 1 for pub + 1 TREX calibration
-        self.assertEqual(len(quantum_program.items), 2)
-
-        # Check first item has PEA arguments
-        item = cast("SamplexItem", quantum_program.items[0])
-        self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
-        self.assertEqual(
-            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
-            noise_model[noise_layer_ref],
+        # 2 pubs + 1 TREX calibration item.
+        self.assertEqual(len(program.items), 3)
+        # For "auto", TREX follows the twirling randomizations of the estimation items.
+        expected_trex_randomizations = (
+            twirling_options.num_randomizations
+            if num_randomizations == "auto"
+            else num_randomizations
         )
-        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
-        # noise_scales shape is (num_noise_factors, 1, 1)
-        expected_noise_scales = np.array([[[factor - 1]] for factor in noise_factors])
-        self.assertTrue(
-            np.all(
-                item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
-            )
-        )
-
-        # Check passthrough data
-        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-        self.assertTrue(passthrough["post_processor"]["measure_mitigation"])
-        self.assertIn("pea_noise_factors", passthrough["post_processor"])
-        self.assertTrue(
-            np.array_equal(
-                np.array(passthrough["post_processor"]["pea_noise_factors"]),
-                np.array(noise_factors),
-            )
+        self.assertTrexItemIsCorrect(
+            program, pubs, expected_num_randomizations=expected_trex_randomizations
         )
 
     def test_prepare_pea_with_parameters(self):
