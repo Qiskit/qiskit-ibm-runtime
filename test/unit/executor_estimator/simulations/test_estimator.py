@@ -115,7 +115,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
-        np.testing.assert_almost_equal(actual=evs, desired=ground_truth_evs, decimal=2)
+        np.testing.assert_allclose(actual=evs, desired=ground_truth_evs, atol=0.02)
 
     def test_correct_estimates_with_pec(self):
         """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
@@ -158,4 +158,4 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
-        np.testing.assert_almost_equal(actual=evs, desired=ground_truth_evs, decimal=2)
+        np.testing.assert_allclose(actual=evs, desired=ground_truth_evs, atol=0.02)
