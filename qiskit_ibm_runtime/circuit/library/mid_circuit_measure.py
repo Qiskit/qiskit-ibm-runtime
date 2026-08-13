@@ -19,7 +19,7 @@ class MidCircuitMeasure(Instruction):
     """Alternative 'named' measurement definition.
 
     This instruction implements an alternative 'named' measurement definition
-    (1 classical bit, 1 quantum bit), whose name can be used to map to a corresponding
+    (one classical bit, one quantum bit), whose name can be used to map to a corresponding
     mid-circuit measurement instruction implementation on hardware.
     """
 
@@ -37,7 +37,7 @@ class MidCircuitReset(Instruction):
     """Alternative 'named' reset definition.
 
     This instruction implements an alternative 'named' reset definition
-    (1 quantum bit), whose name can be used to map to a corresponding
+    (one quantum bit), whose name can be used to map to a corresponding
     mid-circuit reset instruction implementation on hardware.
     """
 
@@ -56,7 +56,8 @@ class MeasureReset(Instruction):
 
     This instruction implements a reset operation whose intermediate measurement
     result is captured in a classical bit, making it observable to the user.
-    It uses one quantum bit and one classical bit, and its name must start with
+    It uses one quantum bit and one classical bit, and its name can be used to
+    map to a corresponding hardware-level implementation, and must start with
     ``measure_reset``.
 
     The semantics are: measure the qubit into the classical bit, then
