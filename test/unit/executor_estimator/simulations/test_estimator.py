@@ -89,6 +89,8 @@ class TestEstimatorWithNoise(IBMTestCase):
         estimator.options.resilience.measure_mitigation = True
         estimator.options.twirling.enable_gates = True
         estimator.options.twirling.enable_measure = True
+        estimator.options.twirling.num_randomizations = 1000
+        estimator.options.twirling.shots_per_randomization = 200
 
         # maps bool (whether we applied PEC or not) to errors for each observable
         errors: dict[bool, npt.NDArray[np.float64]] = {}
@@ -127,6 +129,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         estimator.options.resilience.noise_model = injected_noise_model
         result = estimator.run([pub]).result()
         errors[True] = np.abs(result[0].data.evs - ideal_evs)
+        print(errors[True], errors[False])
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
