@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import numpy as np
 from qiskit.primitives.containers import BitArray
 from qiskit.quantum_info import Statevector, hellinger_fidelity
@@ -25,11 +23,6 @@ from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime import Executor, QuantumProgram
-
-if TYPE_CHECKING:
-    from qiskit.circuit import QuantumCircuit
-
-    from qiskit_ibm_runtime.results.quantum_program import QuantumProgramItemResult
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -51,40 +44,13 @@ class TestExecutor(IBMTestCase):
         # Hellinger distance.
         self.tolerance = 0.01
 
-    def verify_result(
-        self,
-        circuit: QuantumCircuit,
-        parameter_values: np.ndarray,
-        result: QuantumProgramItemResult,
-    ) -> None:
-        """A helper to verify the correctness of results.
-
-        It computes the probabilities of each outcome exactly using Qiskit's StateVector class.
-        Then, it compares them to the given ``counts`` via Hellinger distance.
-        """
-        circuit_cp = circuit.copy()
-        circuit_cp.remove_final_measurements()
-
-        array = result["meas"] ^ result["measurement_flips.meas"]
-        for index in np.ndindex(parameter_values.shape[:-1]):
-            assigned_parameters = parameter_values[index]
-            bound_circuit = circuit_cp.assign_parameters(assigned_parameters)
-            probabilities = Statevector(bound_circuit).probabilities_dict()
-            self.assertAlmostEqual(
-                fidelity := hellinger_fidelity(
-                    BitArray.from_bool_array(array[index], order="little").get_counts(),
-                    probabilities,
-                ),
-                1.0,
-                msg=f"Fidelity: {fidelity}",
-                delta=self.tolerance,
-            )
-
-    def test_simulation(self):
-        """Test local mode simulations with the executor.
+    def test_noiseless_simulation(self):
+        """Test noiseless local mode simulations with the executor.
 
         Checks that:
-        * The pub results match with the correct results.
+        * The result shape is correct.
+        * The results are correct via Hellinger distance. Probabilities of each outcome are computed
+          exactly using Qiskit's StateVector class.
         """
         circuit = make_mirror_circuit_with_phases(self.backend)
 
@@ -110,5 +76,20 @@ class TestExecutor(IBMTestCase):
         job = executor.run(program)
         result = job.result()
 
-        for qp_result in result:
-            self.verify_result(circuit, parameter_values, qp_result)
+        array = result[0]["meas"] ^ result[0]["measurement_flips.meas"]
+        self.assertEqual(array.shape, shape + (shots,) + (circuit.num_parameters,))
+
+        circuit.remove_final_measurements()
+        for index in np.ndindex(parameter_values.shape[:-1]):
+            assigned_parameters = parameter_values[index]
+            bound_circuit = circuit.assign_parameters(assigned_parameters)
+            probabilities = Statevector(bound_circuit).probabilities_dict()
+            self.assertAlmostEqual(
+                fidelity := hellinger_fidelity(
+                    BitArray.from_bool_array(array[index], order="little").get_counts(),
+                    probabilities,
+                ),
+                1.0,
+                msg=f"Fidelity: {fidelity}",
+                delta=self.tolerance,
+            )
