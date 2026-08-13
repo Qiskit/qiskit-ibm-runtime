@@ -106,4 +106,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         result.metadata, num_randomizations, shots, pub_shapes
     )
 
+    if (options := post_processor_data.get("options", None)) is not None:
+        metadata["options"] = options
+
     return PrimitiveResult(pub_results, metadata=metadata or {})

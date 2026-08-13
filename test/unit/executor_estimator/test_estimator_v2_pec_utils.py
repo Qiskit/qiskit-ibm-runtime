@@ -24,6 +24,7 @@ from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.executor.calculate_twirling_shots import calculate_twirling_shots
 from qiskit_ibm_runtime.executor_estimator.pec.prepare_pec import prepare_pec
 from qiskit_ibm_runtime.executor_estimator.pec.utils import calculate_gamma
 from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
@@ -34,7 +35,12 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase, IBMTestCase
-from .utils import PARAM_BASIS_3Q_SCENARIOS, SAMPLEX_CIRCUIT_SCENARIOS, TEMPLATE_CIRCUIT_SCENARIO
+from .utils import (
+    PARAM_BASIS_3Q_SCENARIOS,
+    SAMPLEX_CIRCUIT_SCENARIOS,
+    TEMPLATE_CIRCUIT_SCENARIO,
+    TWIRLING_SHAPE_SCENARIOS,
+)
 
 
 class TestCalculateGamma(IBMTestCase):
@@ -698,4 +704,95 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
         self.assertEqual(
             item0.shape[0],
             item1.shape[0],
+        )
+
+    def _build_trivial_noise_model(self, pubs, twirling_options):
+        """Build a trivial (zero-rate) noise model mapping for the given PUBs."""
+        layers = find_unique_layers(pubs, twirling_options, inject_noise=True)
+        return {
+            annot.ref: PauliLindbladMap.from_sparse_list([], num_qubits=len(layer.qubits))
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+    def test_shapes_twirling_configs(self):
+        """Verify the number of randomization and program.shots."""
+        pec_options = PecOptions()
+        pec_options.noise_gain = 1.0  # no noise removal → gamma=1, no randomization overhead
+
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        for scenario in TWIRLING_SHAPE_SCENARIOS:
+            if not scenario.twirling_options.enable_gates:
+                continue  # PEC requires enable_gates=True
+            with self.subTest(twirling=scenario.label):
+                noise_model = self._build_trivial_noise_model([pub], scenario.twirling_options)
+                program = prepare_pec(
+                    pubs=[pub],
+                    twirling_options=scenario.twirling_options,
+                    shots=scenario.shots,
+                    pec_options=pec_options,
+                    noise_model=noise_model,
+                )
+                item = program.items[0]
+                self.assertEqual(
+                    item.shape[0],
+                    scenario.expected_num_randomizations,
+                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+                    f"got {item.shape[0]}",
+                )
+                self.assertEqual(
+                    program.shots,
+                    scenario.expected_shots_per_randomization,
+                    msg=f"[{scenario.label}] expected program.shots="
+                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+                )
+
+    def test_shapes_overhead_scaling(self):
+        """PEC overhead: num randomizations exceeds baseline when gamma > 1.
+
+        Uses a non-trivial noise model with a known error rate so that gamma > 1 and
+        the scaled num_randomizations exceeds the baseline.
+        """
+        pec_options = PecOptions()
+        # noise_gain=0 means full PEC (maximum overhead scaling)
+        pec_options.noise_gain = 0.0
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        # Build a non-trivial noise model with a meaningful error rate
+        layers = find_unique_layers([pub], twirling_options, inject_noise=True)
+        noise_model = {
+            annot.ref: PauliLindbladMap.from_sparse_list(
+                [("ZZ", [0, 1], 0.1)], num_qubits=len(layer.qubits)
+            )
+            for layer in layers
+            if (annot := get_annotation(layer.operation, InjectNoise))
+        }
+
+        shots = 1024
+        program = prepare_pec(
+            pubs=[pub],
+            twirling_options=twirling_options,
+            shots=shots,
+            pec_options=pec_options,
+            noise_model=noise_model,
+        )
+
+        baseline_num_rand, _ = calculate_twirling_shots(shots, "auto", "auto")
+        item = program.items[0]
+        self.assertGreater(
+            item.shape[0],
+            baseline_num_rand,
+            msg=f"Expected overhead-scaled R > baseline R={baseline_num_rand}, got {item.shape[0]}",
         )
