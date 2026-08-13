@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import numpy as np
 from qiskit.circuit import Parameter
-from qiskit.primitives import ObservablesArray
+from qiskit.quantum_info import Operator, SparsePauliOp
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
@@ -59,9 +59,13 @@ def create_estimator_test_data(backend, preset_pass_manager, add_projector_obser
         )
 
     # Prepare a PUB with multiple observables to estimate expectation values on.
-    observables = ObservablesArray.coerce(
-        [obs_string for obs_string, _ in observable_ground_truth_pairs]
-    ).apply_layout(isa_circuit.layout)
+    observables = [
+        SparsePauliOp.from_operator(Operator.from_label(obs_string)).apply_layout(
+            isa_circuit.layout
+        )
+        for obs_string, _ in observable_ground_truth_pairs
+    ]
+
     pub = (isa_circuit, observables, parameters)
 
     return pub, [ev for _, ev in observable_ground_truth_pairs]
