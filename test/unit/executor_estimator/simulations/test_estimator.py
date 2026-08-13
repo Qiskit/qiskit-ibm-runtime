@@ -18,92 +18,19 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from ddt import data, ddt
-from qiskit.circuit import Parameter
-from qiskit.primitives import ObservablesArray
 from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
-from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 
 from ....ibm_test_case import IBMTestCase
-from ....utils import make_mirror_circuit_with_phases
+from .utils import create_estimator_test_data, create_local_mode_estimator
 
 if TYPE_CHECKING:
     import numpy.typing as npt
-
-
-def create_estimator_test_data(backend, preset_pass_manager, add_projector_observables=True):
-    """Create a pub and ground truth expectation values for it."""
-    # Use standard mirror circuit.
-    # - No measurements, as StatevectorEstimator does not support them.
-    # - No trailing Rx gates, as we want to add our own rotations
-    circuit = make_mirror_circuit_with_phases(
-        backend, num_qubits=3, add_measurement=False, add_rx=False
-    )
-
-    # Add rotations to become sensitive to X, Y, Z observables:
-    circuit.rx(Parameter("rx_0"), 0)
-    circuit.rx(Parameter("rx_1"), 1)
-    circuit.ry(Parameter("ry_2"), 2)
-    isa_circuit = preset_pass_manager.run(circuit)
-    theta = np.pi / 8
-    parameters = [theta, -np.pi / 2, np.pi / 2]
-
-    observable_ground_truth_pairs: list[tuple[str, float]] = [
-        ("IIZ", np.cos(theta)),
-        ("IYZ", np.cos(theta)),
-        ("XIZ", np.cos(theta)),
-    ]
-    if add_projector_observables:
-        observable_ground_truth_pairs.extend(
-            [
-                ("1IZ", 0.5 * np.cos(theta)),
-                ("IYr", np.sin(np.pi / 4 - theta / 2) ** 2),
-                ("X+I", 0.5),
-                ("0IZ", 0.5 * np.cos(theta)),
-                ("IYl", np.cos(np.pi / 4 - theta / 2) ** 2),
-                ("X-I", 0.5),
-            ]
-        )
-
-    # Prepare a PUB with multiple observables to estimate expectation values on.
-    observables = ObservablesArray.coerce(
-        [obs_string for obs_string, _ in observable_ground_truth_pairs]
-    ).apply_layout(isa_circuit.layout)
-    pub = (isa_circuit, observables, parameters)
-
-    return pub, [ev for _, ev in observable_ground_truth_pairs]
-
-
-def create_local_mode_estimator(backend):
-    """Creates an estimator instance running local mode simulation.
-
-    The returned instance has all mitigation disabled (resilience_level 0)
-    """
-    options = EstimatorOptions(
-        # Select resilience level 0 by default, disabling all mitigation:
-        resilience_level=0,
-        # Local mode means that the underlying Executor is running Aer simulation
-        # instead of connecting to a real backend.
-        experimental={
-            "local_mode": True,
-            ## Set a fixed seed for the simulator to reduce flakiness and to allow
-            ## tighter error asserts.
-            # "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
-        },
-    )
-
-    # Increase number of shots to have better statistics:
-    options.twirling.num_randomizations = 100
-    options.twirling.shots_per_randomization = 200
-    options.default_shots = 100 * 200
-
-    return EstimatorV2(mode=backend, options=options)
 
 
 @ddt
