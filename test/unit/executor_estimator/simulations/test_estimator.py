@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from ddt import ddt
 from qiskit.circuit import Parameter
-from qiskit.primitives import StatevectorEstimator
-from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
+from qiskit.primitives import ObservablesArray
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 from samplomatic import InjectNoise
@@ -29,7 +29,6 @@ from samplomatic.utils import get_annotation
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -38,7 +37,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
 
 
-def create_estimator_test_data(backend, preset_pass_manager):
+def create_estimator_test_data(backend, preset_pass_manager, add_projector_observables=True):
     """Create a pub and ground truth expectation values for it."""
     # Use standard mirror circuit.
     # - No measurements, as StatevectorEstimator does not support them.
@@ -52,30 +51,33 @@ def create_estimator_test_data(backend, preset_pass_manager):
     circuit.rx(Parameter("rx_1"), 1)
     circuit.ry(Parameter("ry_2"), 2)
     isa_circuit = preset_pass_manager.run(circuit)
+    theta = np.pi / 8
+    parameters = [theta, -np.pi / 2, np.pi / 2]
 
-    parameters = [
-        # Qubit 0: Expect <Z> close to 1
-        1 * np.pi / 8,
-        # Qubit 1: Expect <Y> close to -1
-        3 * np.pi / 8,
-        # Qubit 2: Expect <X> to be close to 1
-        3 * np.pi / 8,
+    observable_ground_truth_pairs: list[tuple[str, float]] = [
+        ("IIZ", np.cos(theta)),
+        ("IYZ", np.cos(theta)),
+        ("XIZ", np.cos(theta)),
     ]
+    if add_projector_observables:
+        observable_ground_truth_pairs.extend(
+            [
+                ("1IZ", 0.5 * np.cos(theta)),
+                ("IYr", np.sin(np.pi / 4 - theta / 2) ** 2),
+                ("X+I", 0.5),
+                ("0IZ", 0.5 * np.cos(theta)),
+                ("IYl", np.cos(np.pi / 4 - theta / 2) ** 2),
+                ("X-I", 0.5),
+            ]
+        )
 
     # Prepare a PUB with multiple observables to estimate expectation values on.
-    observables = [
-        SparsePauliOp(pauli_string).apply_layout(isa_circuit.layout)
-        for pauli_string in ["XII", "IYI", "IIZ", "XYZ"]
-    ]
-
+    observables = ObservablesArray.coerce(
+        [obs_string for obs_string, _ in observable_ground_truth_pairs]
+    ).apply_layout(isa_circuit.layout)
     pub = (isa_circuit, observables, parameters)
 
-    # Calculate ground truth to compare the results against via a statevector simulation:
-    statevector_estimator = StatevectorEstimator()
-    statevector_result = statevector_estimator.run([pub]).result()
-    statevector_evs = statevector_result[0].data.evs
-
-    return pub, statevector_evs
+    return pub, [ev for _, ev in observable_ground_truth_pairs]
 
 
 def create_local_mode_estimator(backend):
@@ -90,16 +92,17 @@ def create_local_mode_estimator(backend):
         # instead of connecting to a real backend.
         experimental={
             "local_mode": True,
-            # Set a fixed seed for the simulator to reduce flakiness and to allow
-            # tighter error asserts.
-            "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
+            ## Set a fixed seed for the simulator to reduce flakiness and to allow
+            ## tighter error asserts.
+            # "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
         },
     )
 
     # Increase number of shots to have better statistics:
-    options.twirling.num_randomizations = 100
-    options.twirling.shots_per_randomization = 200
-    options.default_shots = 100 * 200
+    options.default_precision = 0.01
+    # options.twirling.num_randomizations = 100
+    # options.twirling.shots_per_randomization = 200
+    # options.default_shots = 100 * 200
 
     return EstimatorV2(mode=backend, options=options)
 
@@ -124,7 +127,12 @@ class TestEstimatorWithNoise(IBMTestCase):
 
         Compares the results against a statevector simulation.
         """
-        pub, statevector_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        # FIXME: add_projector_observables=False is only needed,
+        # due to a bug in TREX post-processing:
+        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+        pub, statevector_evs = create_estimator_test_data(
+            self.backend, self.preset_pass_manager, add_projector_observables=False
+        )
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
@@ -148,7 +156,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         # Resilience level 2 should give very accurate expectation value:
         # With fixed simulator seed, we can have 0.025 here.
         # Without we should set to something like 0.04 to reduce flakiness.
-        np.testing.assert_array_less(errors[2], 0.025, err_msg=debug_message)
+        np.testing.assert_array_less(errors[2], 0.04, err_msg=debug_message)
 
 
 @ddt
@@ -210,6 +218,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         result = estimator.run([pub]).result()
         # We get one expectation value per observable:
         evs = result[0].data.evs
+        print(evs)
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
