@@ -25,7 +25,7 @@ from ....utils import make_mirror_circuit_with_phases
 
 
 def create_estimator_test_data(backend, preset_pass_manager, add_projector_observables=True):
-    """Create a pub and ground truth expectation values for it."""
+    """Create a pub and ideal expectation values for it."""
     # Use standard mirror circuit.
     # - No measurements, as StatevectorEstimator does not support them.
     # - No trailing Rx gates, as we want to add our own rotations
@@ -33,7 +33,7 @@ def create_estimator_test_data(backend, preset_pass_manager, add_projector_obser
         backend, num_qubits=3, add_measurement=False, add_rx=False
     )
 
-    # Add rotations to become sensitive to X, Y, Z observables:
+    # Add rotations to produce eigenstates of X, Y and Z:
     circuit.rx(Parameter("rx_0"), 0)
     circuit.rx(Parameter("rx_1"), 1)
     circuit.ry(Parameter("ry_2"), 2)
@@ -41,13 +41,13 @@ def create_estimator_test_data(backend, preset_pass_manager, add_projector_obser
     theta = np.pi / 8
     parameters = [theta, -np.pi / 2, np.pi / 2]
 
-    observable_ground_truth_pairs: list[tuple[str, float]] = [
+    observable_ideal_ev_pairs: list[tuple[str, float]] = [
         ("IIZ", np.cos(theta)),
         ("IYZ", np.cos(theta)),
         ("XIZ", np.cos(theta)),
     ]
     if add_projector_observables:
-        observable_ground_truth_pairs.extend(
+        observable_ideal_ev_pairs.extend(
             [
                 ("1IZ", 0.5 * np.cos(theta)),
                 ("IYr", np.sin(np.pi / 4 - theta / 2) ** 2),
@@ -63,12 +63,12 @@ def create_estimator_test_data(backend, preset_pass_manager, add_projector_obser
         SparsePauliOp.from_operator(Operator.from_label(obs_string)).apply_layout(
             isa_circuit.layout
         )
-        for obs_string, _ in observable_ground_truth_pairs
+        for obs_string, _ in observable_ideal_ev_pairs
     ]
 
     pub = (isa_circuit, observables, parameters)
 
-    return pub, [ev for _, ev in observable_ground_truth_pairs]
+    return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
 
 def create_local_mode_estimator(backend):

@@ -53,7 +53,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         # FIXME: add_projector_observables=False is only needed,
         # due to a bug in TREX post-processing:
         # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        pub, ground_truth_evs = create_estimator_test_data(
+        pub, ideal_evs = create_estimator_test_data(
             self.backend, self.preset_pass_manager, add_projector_observables=False
         )
 
@@ -68,7 +68,7 @@ class TestEstimatorWithNoise(IBMTestCase):
             result = estimator.run([pub]).result()
             # We get one expectation value per observable:
             evs = result[0].data.evs
-            errors[resilience_level] = np.abs(evs - ground_truth_evs)
+            errors[resilience_level] = np.abs(evs - ideal_evs)
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
@@ -100,7 +100,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
         add_projector_observables = True if resilience_level == 0 else False
 
-        pub, ground_truth_evs = create_estimator_test_data(
+        pub, ideal_evs = create_estimator_test_data(
             self.backend,
             self.preset_pass_manager,
             add_projector_observables=add_projector_observables,
@@ -115,11 +115,11 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
-        np.testing.assert_allclose(actual=evs, desired=ground_truth_evs, atol=0.02)
+        np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
 
     def test_correct_estimates_with_pec(self):
         """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
-        pub, ground_truth_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
 
         estimator = create_local_mode_estimator(self.backend)
         estimator.options.resilience.pec_mitigation = True
@@ -154,8 +154,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         result = estimator.run([pub]).result()
         # We get one expectation value per observable:
         evs = result[0].data.evs
-        print(evs)
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
-        np.testing.assert_allclose(actual=evs, desired=ground_truth_evs, atol=0.02)
+        np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
