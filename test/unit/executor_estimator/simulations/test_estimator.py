@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from ddt import ddt
+from qiskit.circuit import Parameter
 from qiskit.primitives import StatevectorEstimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -54,21 +55,34 @@ class TestEstimator(IBMTestCase):
 
         Compares the results against a statevector simulation.
         """
-        # Use standard mirror circuit, but without measurements, as StatevectorEstimator does
-        # not support them.
-        circuit = make_mirror_circuit_with_phases(self.backend, add_measurement=False)
+        # Use standard mirror circuit.
+        # - No measurements, as StatevectorEstimator does not support them.
+        # - No trailing Rx gates, as we want to add our own rotations
+        circuit = make_mirror_circuit_with_phases(
+            self.backend, num_qubits=3, add_measurement=False, add_rx=False
+        )
+
+        # Add rotations to become sensitive to X, Y, Z observables:
+        circuit.rx(Parameter("rx_0"), 0)
+        circuit.rx(Parameter("rx_1"), 1)
+        circuit.ry(Parameter("ry_2"), 2)
         isa_circuit = self.preset_pass_manager.run(circuit)
 
-        # Select values for the rx gates:
-        parameters = np.array([3.5 * np.pi / 4] * circuit.num_parameters)
+        parameters = [
+            # Qubit 0: Expect <Z> close to 1
+            1 * np.pi / 8,
+            # Qubit 1: Expect <Y> close to -1
+            3 * np.pi / 8,
+            # Qubit 2: Expect <X> to be close to 1
+            3 * np.pi / 8,
+        ]
 
         # Prepare a PUB with multiple observables to estimate expectation values on.
-        # Using "Z" observables, as the mirror circuit has parametric rx gates, which should yield
-        # variations on Z projection.
         observables = [
             SparsePauliOp(pauli_string).apply_layout(isa_circuit.layout)
-            for pauli_string in ["ZZ", "IZ", "ZI"]
+            for pauli_string in ["XII", "IYI", "IIZ", "XYZ"]
         ]
+
         pub = (isa_circuit, observables, parameters)
 
         # Calculate ground truth to compare the results against via a statevector simulation:
@@ -88,6 +102,8 @@ class TestEstimator(IBMTestCase):
                 # instead of connecting to a real backend.
                 experimental={
                     "local_mode": True,
+                    # Set a fixed seed for the simulator to reduce flakiness and to allow
+                    # tighter error asserts.
                     "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
                 },
             )
@@ -104,8 +120,11 @@ class TestEstimator(IBMTestCase):
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
+
         np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
 
         # Resilience level 2 should give very accurate expectation value:
+        # With fixed simulator seed, we can have 0.025 here.
+        # Without we should set to something like 0.04 to reduce flakiness.
         np.testing.assert_array_less(errors[2], 0.025, err_msg=debug_message)
