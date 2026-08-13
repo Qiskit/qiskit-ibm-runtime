@@ -43,7 +43,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         super().setUp()
         self.backend = FakeManilaV2()
         self.preset_pass_manager = generate_preset_pass_manager(
-            optimization_level=1, target=self.backend.target
+            optimization_level=1, backend=self.backend
         )
 
     def test_result_quality_for_different_resilience_levels(self):
@@ -142,9 +142,9 @@ class TestEstimatorWithoutNoise(IBMTestCase):
     def setUp(self):
         """Test level setup."""
         super().setUp()
-        self.backend = AerSimulator()
+        self.backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         self.preset_pass_manager = generate_preset_pass_manager(
-            optimization_level=1, basis_gates=["cz", "rz", "sx", "x"]
+            optimization_level=1, backend=self.backend
         )
 
     @data(0, 1, 2)
