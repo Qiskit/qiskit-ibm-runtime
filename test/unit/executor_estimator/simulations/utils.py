@@ -83,9 +83,6 @@ def create_local_mode_estimator(backend):
         # instead of connecting to a real backend.
         experimental={
             "local_mode": True,
-            ## Set a fixed seed for the simulator to reduce flakiness and to allow
-            ## tighter error asserts.
-            # "simulator_options": ExperimentalSimulatorOptions(seed_simulator=42),
         },
     )
 
