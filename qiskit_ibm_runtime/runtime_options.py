@@ -31,7 +31,7 @@ class RuntimeOptions:
     """(DEPRECATED) Class for representing generic runtime execution options.
 
     The ``RuntimeOptions`` class is deprecated. This class was originally only used to support
-    custom programs, it should not import imported externally.
+    custom programs, it should not be imported externally.
 
     Args:
         backend: target backend to run on.
