@@ -60,7 +60,7 @@ class MeasureReset(Instruction):
     ``measure_reset``.
 
     The semantics are: measure the qubit into the classical bit, then
-    conditionally flip the qubit back to |0> — i.e., a reset whose measurement
+    conditionally flip the qubit back to ``|0>`` — i.e., a reset whose measurement
     outcome is retained.
     """
 
