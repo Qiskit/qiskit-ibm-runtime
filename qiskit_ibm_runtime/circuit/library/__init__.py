@@ -13,4 +13,4 @@
 """Module for vendor-specific instructions."""
 
 from .mid_circuit_measure import MidCircuitMeasure
-from .slow_gates import XSlowGate
+from .x_slow import XSlowGate
