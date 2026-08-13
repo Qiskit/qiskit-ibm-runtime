@@ -56,7 +56,7 @@ class MeasureReset(Instruction):
 
     This instruction implements a reset operation whose intermediate measurement
     result is captured in a classical bit, making it observable to the user.
-    It uses 1 quantum bit and 1 classical bit, and its name must start with
+    It uses one quantum bit and one classical bit, and its name must start with
     ``measure_reset``.
 
     The semantics are: measure the qubit into the classical bit, then
