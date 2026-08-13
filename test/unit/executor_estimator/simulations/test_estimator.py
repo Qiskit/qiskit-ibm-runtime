@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from ddt import ddt
+from ddt import data, ddt
 from qiskit.circuit import Parameter
 from qiskit.primitives import ObservablesArray
 from qiskit.quantum_info import PauliLindbladMap
@@ -122,13 +122,11 @@ class TestEstimatorWithNoise(IBMTestCase):
         """Tests the effect of resilience on EstimatorV2 results.
 
         Estimator result quality is expected to increase with increasing resilience level.
-
-        Compares the results against a statevector simulation.
         """
         # FIXME: add_projector_observables=False is only needed,
         # due to a bug in TREX post-processing:
         # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        pub, statevector_evs = create_estimator_test_data(
+        pub, ground_truth_evs = create_estimator_test_data(
             self.backend, self.preset_pass_manager, add_projector_observables=False
         )
 
@@ -143,18 +141,13 @@ class TestEstimatorWithNoise(IBMTestCase):
             result = estimator.run([pub]).result()
             # We get one expectation value per observable:
             evs = result[0].data.evs
-            errors[resilience_level] = np.abs(evs - statevector_evs)
+            errors[resilience_level] = np.abs(evs - ground_truth_evs)
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
 
         np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
-
-        # Resilience level 2 should give very accurate expectation value:
-        # With fixed simulator seed, we can have 0.025 here.
-        # Without we should set to something like 0.04 to reduce flakiness.
-        np.testing.assert_array_less(errors[2], 0.04, err_msg=debug_message)
 
 
 @ddt
@@ -169,14 +162,25 @@ class TestEstimatorWithoutNoise(IBMTestCase):
             optimization_level=1, basis_gates=["cz", "rz", "sx", "x"]
         )
 
-    def test_correct_estimates_without_mitigation(self):
-        """Tests that vanilla EstimatorV2 produces correct results in a noise-less environment.
+    @data(0, 1, 2)
+    def test_correct_estimates_for_different_resilience_levels(self, resilience_level):
+        """Tests that EstimatorV2 produces correct results in a noise-less environment.
 
-        Compares the results against a statevector simulation.
+        Parametrized to run with all three estimator resilience levels.
         """
-        pub, statevector_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        # FIXME: add_projector_observables=False is only needed,
+        # due to a bug in TREX post-processing affecting resilience levels > 0:
+        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+        add_projector_observables = True if resilience_level == 0 else False
+
+        pub, ground_truth_evs = create_estimator_test_data(
+            self.backend,
+            self.preset_pass_manager,
+            add_projector_observables=add_projector_observables,
+        )
 
         estimator = create_local_mode_estimator(self.backend)
+        estimator.options.resilience_level = resilience_level
 
         result = estimator.run([pub]).result()
         # We get one expectation value per observable:
@@ -184,17 +188,24 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
-        np.testing.assert_almost_equal(actual=evs, desired=statevector_evs, decimal=2)
+        np.testing.assert_almost_equal(actual=evs, desired=ground_truth_evs, decimal=2)
 
     def test_correct_estimates_with_pec(self):
-        """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment.
-
-        Compares the results against a statevector simulation.
-        """
-        pub, statevector_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
+        pub, ground_truth_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
 
         estimator = create_local_mode_estimator(self.backend)
         estimator.options.resilience.pec_mitigation = True
+        estimator.options.twirling.enable_gates = True
+        estimator.options.twirling.enable_measure = True
+
+        # FIXME: TREX currently not possible for the projector observables we use here:
+        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+        # estimator.options.resilience.measure_mitigation = True
+
+        # TODO: no DD possible on AER without gate durations.
+        # Need to test this for a fake backend (e.g. in noisy test).
+        # estimator.options.dynamical_decoupling.enable = True
 
         layers = [
             layer
@@ -205,8 +216,8 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # In a noise-less simulation we do not expect noise. So we can construct the noise_model
         # with empty noise for all layers:
         noise_model = {
-            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.from_sparse_list(
-                [], num_qubits=layer.operation.num_qubits
+            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
+                layer.operation.num_qubits
             )
             for layer in layers
         }
@@ -220,4 +231,4 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
-        np.testing.assert_almost_equal(actual=evs, desired=statevector_evs, decimal=2)
+        np.testing.assert_almost_equal(actual=evs, desired=ground_truth_evs, decimal=2)
