@@ -54,7 +54,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         # due to a bug in TREX post-processing:
         # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
         pub, ideal_evs = create_estimator_test_data(
-            self.backend, self.preset_pass_manager, add_projector_observables=False
+            self.backend, self.preset_pass_manager, add_projector_observables=True
         )
 
         # maps resilience level to error (compared to statevector simulation) for each observable
@@ -98,7 +98,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # FIXME: add_projector_observables=False is only needed,
         # due to a bug in TREX post-processing affecting resilience levels > 0:
         # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        add_projector_observables = True if resilience_level == 0 else False
+        add_projector_observables = True  # if resilience_level == 0 else False
 
         pub, ideal_evs = create_estimator_test_data(
             self.backend,
@@ -117,93 +117,64 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # ground truth.
         np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
 
-    def test_correct_estimates_with_pec(self):
-        """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
-        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
-
-        estimator = create_local_mode_estimator(self.backend)
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.twirling.enable_gates = True
-        estimator.options.twirling.enable_measure = True
-
-        # FIXME: TREX currently not possible for the projector observables we use here:
-        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        # estimator.options.resilience.measure_mitigation = True
-
-        # TODO: no DD possible on AER without gate durations.
-        # Need to test this for a fake backend (e.g. in noisy test).
-        # estimator.options.dynamical_decoupling.enable = True
-
-        layers = [
-            layer
-            for layer in estimator.find_unique_layers([pub])
-            if get_annotation(layer.operation, InjectNoise)
-        ]
-
-        # In a noise-less simulation we do not expect noise. So we can construct the noise_model
-        # with empty noise for all layers:
-        noise_model = {
-            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
-                layer.operation.num_qubits
-            )
-            for layer in layers
-        }
-
-        estimator.options.resilience.noise_model = noise_model
-
-        result = estimator.run([pub]).result()
-        # We get one expectation value per observable:
-        evs = result[0].data.evs
-
-        # With no noise, we should get expectation values which are more or less equal to
-        # ground truth.
-        np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
-
+    # FIXME: TREX / measure_mitigation currently not possible for the projector observables we use here:
+    # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+    # estimator.options.resilience.measure_mitigation = True
     @data(
+        # Vanilla
+        {"resilience_level": 0},
+        # Measurement Twirling + TREX
+        {"resilience_level": 1},
+        # ZNE (Gate folding)
+        {"resilience_level": 2},
+        # PEC
         {
-            "resilience": {"pec_mitigation": True, "zne_mitigation": False},
-            "zne": {}
+            "twirling": {"enable_gates": True, "enable_measure": True},
+            "resilience": {
+                "pec_mitigation": True,
+                "zne_mitigation": False,
+                "measure_mitigation": False,
+            },
         },
+        # ZNE (PEA)
         {
-            "resilience": {"pec_mitigation": False, "zne_mitigation": True},
-            "zne": {"amplifier": "pea"}
+            "twirling": {"enable_gates": True, "enable_measure": True},
+            "resilience": {
+                "pec_mitigation": False,
+                "zne_mitigation": True,
+                "zne": {"amplifier": "pea"},
+                "measure_mitigation": False,
+            },
         },
-            )
-    def test_correct_estimates_with_zne_pea(self, resilience_options):
-        """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
+    )
+    def test_correct_estimates_for_different_mitigation_modes(self, option_overrides):
+        """Tests that EstimatorV2 with ZNE/PEA produces correct results in a noise-less environment."""
         pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
 
         estimator = create_local_mode_estimator(self.backend)
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.resilience.zne_mitigation = True
-        estimator.options.resilience.zne.amplifier = "pea"
-        estimator.options.twirling.enable_gates = True
-        estimator.options.twirling.enable_measure = True
-
-        # FIXME: TREX currently not possible for the projector observables we use here:
-        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        # estimator.options.resilience.measure_mitigation = True
+        estimator.options.update(**option_overrides)
 
         # TODO: no DD possible on AER without gate durations.
         # Need to test this for a fake backend (e.g. in noisy test).
         # estimator.options.dynamical_decoupling.enable = True
 
-        layers = [
-            layer
-            for layer in estimator.find_unique_layers([pub])
-            if get_annotation(layer.operation, InjectNoise)
-        ]
+        if "resilience_level" not in option_overrides:
+            layers = [
+                layer
+                for layer in estimator.find_unique_layers([pub])
+                if get_annotation(layer.operation, InjectNoise)
+            ]
 
-        # In a noise-less simulation we do not expect noise. So we can construct the noise_model
-        # with empty noise for all layers:
-        noise_model = {
-            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
-                layer.operation.num_qubits
-            )
-            for layer in layers
-        }
+            # In a noise-less simulation we do not expect noise. So we can construct the noise_model
+            # with empty noise for all layers:
+            noise_model = {
+                get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
+                    layer.operation.num_qubits
+                )
+                for layer in layers
+            }
 
-        estimator.options.resilience.noise_model = noise_model
+            estimator.options.resilience.noise_model = noise_model
 
         result = estimator.run([pub]).result()
         # We get one expectation value per observable:
