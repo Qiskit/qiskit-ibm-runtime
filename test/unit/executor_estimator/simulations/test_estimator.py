@@ -158,3 +158,57 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
         np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
+
+    @data(
+        {
+            "resilience": {"pec_mitigation": True, "zne_mitigation": False},
+            "zne": {}
+        },
+        {
+            "resilience": {"pec_mitigation": False, "zne_mitigation": True},
+            "zne": {"amplifier": "pea"}
+        },
+            )
+    def test_correct_estimates_with_zne_pea(self, resilience_options):
+        """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
+        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+
+        estimator = create_local_mode_estimator(self.backend)
+        estimator.options.resilience.pec_mitigation = True
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.zne.amplifier = "pea"
+        estimator.options.twirling.enable_gates = True
+        estimator.options.twirling.enable_measure = True
+
+        # FIXME: TREX currently not possible for the projector observables we use here:
+        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+        # estimator.options.resilience.measure_mitigation = True
+
+        # TODO: no DD possible on AER without gate durations.
+        # Need to test this for a fake backend (e.g. in noisy test).
+        # estimator.options.dynamical_decoupling.enable = True
+
+        layers = [
+            layer
+            for layer in estimator.find_unique_layers([pub])
+            if get_annotation(layer.operation, InjectNoise)
+        ]
+
+        # In a noise-less simulation we do not expect noise. So we can construct the noise_model
+        # with empty noise for all layers:
+        noise_model = {
+            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
+                layer.operation.num_qubits
+            )
+            for layer in layers
+        }
+
+        estimator.options.resilience.noise_model = noise_model
+
+        result = estimator.run([pub]).result()
+        # We get one expectation value per observable:
+        evs = result[0].data.evs
+
+        # With no noise, we should get expectation values which are more or less equal to
+        # ground truth.
+        np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
