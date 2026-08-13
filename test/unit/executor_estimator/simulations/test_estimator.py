@@ -117,7 +117,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # ground truth.
         np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
 
-    def test_correct_estimates_with_pec(self):
+    def test_correct_estimates_with_pectest_correct_estimates_with_pec(self):
         """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
         pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
 
@@ -134,11 +134,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # Need to test this for a fake backend (e.g. in noisy test).
         # estimator.options.dynamical_decoupling.enable = True
 
-        layers = [
-            layer
-            for layer in estimator.find_unique_layers([pub])
-            if get_annotation(layer.operation, InjectNoise)
-        ]
+        layers = estimator.find_unique_layers([pub], types="2Q")
 
         # In a noise-less simulation we do not expect noise. So we can construct the noise_model
         # with empty noise for all layers:
