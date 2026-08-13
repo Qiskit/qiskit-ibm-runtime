@@ -142,7 +142,7 @@ class NoiseLearnerV3Results:
         self,
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
-        mode: Literal["inject", "simulate"] = "inject",
+        mode: Literal["injection", "simulation"] = "injection",
     ) -> dict[str, PauliLindbladMap]:
         """Convert to a dictionary from references to :class:`PauliLindbladMap` objects.
 
@@ -159,7 +159,7 @@ class NoiseLearnerV3Results:
             require_refs: Whether to raise if some of the instructions do not own an
                 annotation. If ``False``, all the instructions that do not contain an
                 annotation are simply skipped when constructing the returned dictionary.
-            mode: If ``"simulate"``, it groups by :class:`~.Tag` annotations. Otherwise, by
+            mode: If ``"simulation"``, it groups by :class:`~.Tag` annotations. Otherwise, by
                 :class:`~.InjectNoise` annotations.
 
         Raise:
@@ -177,7 +177,7 @@ class NoiseLearnerV3Results:
 
         noise_source = {}
         num_instr = 0
-        annotation_type = Tag if mode == "simulate" else InjectNoise
+        annotation_type = Tag if mode == "simulation" else InjectNoise
         for instr, datum in zip(instructions, self.data):
             if not isinstance(instr.operation, BoxOp):
                 raise ValueError("Found an instruction that does not contain a box.")

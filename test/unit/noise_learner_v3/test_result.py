@@ -140,10 +140,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         self.assertEqual(results[1], self.results[1])
         self.assertEqual(len(results), 3)
 
-    @data("inject", "simulate")
+    @data("injection", "simulation")
     def test_to_dict_valid_input_require_refs_true(self, mode):
         """Test ``NoiseLearnerV3Results.to_dict`` when ``require_refs`` is ``True``."""
-        annotations = self.inject_noise_annotations if mode == "inject" else self.tag_annotations
+        annotations = self.inject_noise_annotations if mode == "injection" else self.tag_annotations
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
@@ -163,10 +163,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             returned_dict,
         )
 
-    @data("inject", "simulate")
+    @data("injection", "simulation")
     def test_to_dict_valid_input_require_refs_false(self, mode):
         """Test ``NoiseLearnerV3Results.to_dict`` when ``require_refs`` is ``True``."""
-        annotations = self.inject_noise_annotations if mode == "inject" else self.tag_annotations
+        annotations = self.inject_noise_annotations if mode == "injection" else self.tag_annotations
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
@@ -187,10 +187,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             returned_dict,
         )
 
-    @data("inject", "simulate")
+    @data("injection", "simulation")
     def test_to_dict_wrong_num_of_instructions(self, mode):
         """Test ``.to_dict`` raises if number of instructions does not match number of results."""
-        annotations = self.inject_noise_annotations if mode == "inject" else self.tag_annotations
+        annotations = self.inject_noise_annotations if mode == "injection" else self.tag_annotations
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
@@ -200,14 +200,14 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         with self.assertRaisesRegex(ValueError, "Expected 3 instructions but found 2"):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data, True, mode=mode)
 
-    @data("inject", "simulate")
+    @data("injection", "simulation")
     def test_to_dict_invalid_for_require_refs_true(self, mode):
         """Test raising if an instruction does not contain annotations when requires_ref.
 
         Test that ``NoiseLearnerV3Results.to_dict`` raises if an instruction does not contain
         an annotation, when ``requires_ref`` is ``True``.
         """
-        annotations = self.inject_noise_annotations if mode == "inject" else self.tag_annotations
+        annotations = self.inject_noise_annotations if mode == "injection" else self.tag_annotations
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
@@ -219,10 +219,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         with self.assertRaisesRegex(ValueError, "without an inject noise"):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data, True, mode=mode)
 
-    @data("inject", "simulate")
+    @data("injection", "simulation")
     def test_to_dict_unboxed_instruction(self, mode):
         """Test ``.to_dict`` raises if there is an instruction not in a box."""
-        annotations = self.inject_noise_annotations if mode == "inject" else self.tag_annotations
+        annotations = self.inject_noise_annotations if mode == "injection" else self.tag_annotations
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
@@ -233,10 +233,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         with self.assertRaisesRegex(ValueError, "contain a box"):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data, mode=mode)
 
-    @data("inject", "simulate")
+    @data("injection", "simulation")
     def test_to_dict_ref_used_twice(self, mode):
         """Test ``.to_dict`` raises if an annotation reference is repeated."""
-        annotations = self.inject_noise_annotations if mode == "inject" else self.tag_annotations
+        annotations = self.inject_noise_annotations if mode == "injection" else self.tag_annotations
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
