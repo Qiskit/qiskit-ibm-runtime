@@ -114,7 +114,6 @@ class TestEstimatorWithNoise(IBMTestCase):
         """Test level setup."""
         super().setUp()
         self.backend = FakeManilaV2()
-        # self.backend = AerSimulator()
         self.preset_pass_manager = generate_preset_pass_manager(
             optimization_level=1, target=self.backend.target
         )
