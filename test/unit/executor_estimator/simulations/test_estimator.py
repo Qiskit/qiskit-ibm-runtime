@@ -28,7 +28,11 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
-from .utils import create_estimator_test_data, create_local_mode_estimator
+from .utils import (
+    create_estimator_test_data,
+    create_local_mode_estimator,
+    create_noise_model_without_noise,
+)
 
 if TYPE_CHECKING:
     import numpy.typing as npt
@@ -170,58 +174,60 @@ class TestEstimatorWithoutNoise(IBMTestCase):
             optimization_level=1, backend=self.backend
         )
 
-    @data(0, 1, 2)
-    def test_correct_estimates_for_different_resilience_levels(self, resilience_level):
-        """Tests that EstimatorV2 produces correct results in a noise-less environment.
-
-        Parametrized to run with all three estimator resilience levels.
-        """
-        pub, ideal_evs = create_estimator_test_data(
-            self.backend,
-            self.preset_pass_manager,
-        )
-
-        estimator = create_local_mode_estimator(self.backend)
-        estimator.options.resilience_level = resilience_level
-
-        result = estimator.run([pub]).result()
-        # We get one expectation value per observable:
-        evs = result[0].data.evs
-
-        # With no noise, we should get expectation values which are more or less equal to
-        # ground truth.
-        np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
-
-    def test_correct_estimates_with_pec(self):
-        """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
+    @data(
+        # Vanilla
+        {"resilience_level": 0},
+        # Measurement Twirling + TREX
+        {"resilience_level": 1},
+        # ZNE (Gate folding)
+        {
+            "resilience_level": 2,
+            "resilience": {
+                "zne": {
+                    # Force linear extrapolation to avoid introducing error due to no noise:
+                    "extrapolator": "linear"
+                }
+            },
+        },
+        # PEC
+        {
+            "twirling": {"enable_gates": True, "enable_measure": True},
+            "resilience": {
+                "pec_mitigation": True,
+                "measure_mitigation": True,
+            },
+        },
+        # ZNE (PEA)
+        {
+            "twirling": {"enable_gates": True, "enable_measure": True},
+            "resilience": {
+                "zne_mitigation": True,
+                "zne": {
+                    "amplifier": "pea",
+                    # Force linear extrapolation to avoid introducing error due to no noise:
+                    "extrapolator": "linear",
+                },
+                "measure_mitigation": True,
+            },
+        },
+    )
+    def test_correct_estimates_for_different_mitigation_modes(self, option_overrides):
+        """Tests Estimator configurations to produce correct results in a noise-less environment."""
         pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
 
         estimator = create_local_mode_estimator(self.backend)
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.twirling.enable_gates = True
-        estimator.options.twirling.enable_measure = True
-        estimator.options.resilience.measure_mitigation = True
+        estimator.options.update(**option_overrides)
 
         # TODO: no DD possible on AER without gate durations.
         # Need to test this for a fake backend (e.g. in noisy test).
         # estimator.options.dynamical_decoupling.enable = True
 
-        layers = [
-            layer
-            for layer in estimator.find_unique_layers([pub])
-            if get_annotation(layer.operation, InjectNoise)
-        ]
-
-        # In a noise-less simulation we do not expect noise. So we can construct the noise_model
-        # with empty noise for all layers:
-        noise_model = {
-            get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
-                layer.operation.num_qubits
+        if "resilience_level" not in option_overrides:
+            # resilience_level defaults do not need a noise-model.
+            # Only adding this for PEC / PEA:
+            estimator.options.resilience.noise_model = create_noise_model_without_noise(
+                estimator, pub
             )
-            for layer in layers
-        }
-
-        estimator.options.resilience.noise_model = noise_model
 
         result = estimator.run([pub]).result()
         # We get one expectation value per observable:

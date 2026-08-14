@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import numpy as np
 from qiskit.circuit import Parameter
-from qiskit.quantum_info import Operator, SparsePauliOp
+from qiskit.quantum_info import Operator, PauliLindbladMap, SparsePauliOp
+from samplomatic import InjectNoise
+from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
@@ -79,6 +81,26 @@ def create_estimator_test_data(backend, preset_pass_manager):
     pub = (isa_circuit, observables, parameters)
 
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
+
+
+def create_noise_model_without_noise(estimator, pub):
+    """Creates a noise-model, mapping each layer to the identity (no noise)."""
+    layers = [
+        layer
+        for layer in estimator.find_unique_layers([pub])
+        if get_annotation(layer.operation, InjectNoise)
+    ]
+
+    # In a noise-less simulation we do not expect noise. So we can construct the noise_model
+    # with empty noise for all layers:
+    noise_model = {
+        get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
+            layer.operation.num_qubits
+        )
+        for layer in layers
+    }
+
+    return noise_model
 
 
 def create_local_mode_estimator(backend):
