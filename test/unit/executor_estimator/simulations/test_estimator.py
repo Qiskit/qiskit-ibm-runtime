@@ -139,7 +139,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         )
         estimator.options.update(**base_level_option_overrides)
         estimator.options.update(**option_overrides)
-        # Run a noisy simulation with , injecting the same noise as in the simulation
+        # Run a noisy simulation, injecting the same noise as in the simulation
         injected_noise_model = {
             inject_noise_annotation.ref: simulated_noise_model[
                 get_annotation(layer.operation, Tag).ref
