@@ -33,26 +33,6 @@ def create_estimator_test_data(backend, preset_pass_manager):
         backend, num_qubits=4, add_measurement=False, add_rx=False
     )
 
-    ## Add rotations to produce eigenstates of X, Y and Z:
-    # circuit.rx(Parameter("rx_0"), 0)
-    # circuit.rx(Parameter("rx_1"), 1)
-    # circuit.ry(Parameter("ry_2"), 2)
-    # isa_circuit = preset_pass_manager.run(circuit)
-    # theta = np.pi / 8
-    # parameters = [theta, -np.pi / 2, np.pi / 2]
-
-    # observable_ideal_ev_pairs: list[tuple[str, float]] = [
-    #    ("IIZ", np.cos(theta)),
-    #    ("IYZ", np.cos(theta)),
-    #    ("XIZ", np.cos(theta)),
-    #    ("IrZ", np.cos(theta)),
-    #    ("IYl", np.cos(np.pi / 4 - theta / 2) ** 2),
-    #    ("1IZ", 0.5 * np.cos(theta)),
-    #    ("X+I", 0.5),
-    #    ("0IZ", 0.5 * np.cos(theta)),
-    #    ("X-I", 0.5),
-    # ]
-
     circuit.rx(Parameter("rx_0"), 0)
     circuit.rx(Parameter("rx_1"), 1)
     circuit.ry(Parameter("ry_2"), 2)
