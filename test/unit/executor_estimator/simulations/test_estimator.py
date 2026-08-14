@@ -79,20 +79,9 @@ class TestEstimatorWithNoise(IBMTestCase):
 
     @data(
         # PEC
-        {
-            "resilience": {
-                "pec_mitigation": True,
-            },
-        },
+        {"resilience": {"pec_mitigation": True}},
         # ZNE (PEA)
-        {
-            "resilience": {
-                "zne_mitigation": True,
-                "zne": {
-                    "amplifier": "pea",
-                },
-            },
-        },
+        {"resilience": {"zne_mitigation": True, "zne": {"amplifier": "pea"}}},
     )
     def test_result_quality_with_noise_injection(self, option_overrides):
         """Tests the effect of resilience on EstimatorV2 results.
@@ -181,15 +170,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # Measurement Twirling + TREX
         {"resilience_level": 1},
         # ZNE (Gate folding)
-        {
-            "resilience_level": 2,
-            "resilience": {
-                "zne": {
-                    # Force linear extrapolation to avoid introducing error due to no noise:
-                    "extrapolator": "linear"
-                }
-            },
-        },
+        {"resilience_level": 2, "resilience": {"zne": {"extrapolator": "linear"}}},
         # PEC
         {
             "twirling": {"enable_gates": True, "enable_measure": True},
