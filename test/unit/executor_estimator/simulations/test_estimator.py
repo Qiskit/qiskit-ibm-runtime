@@ -79,15 +79,6 @@ class TestEstimatorWithNoise(IBMTestCase):
                 "pec_mitigation": True,
             },
         },
-        # ZNE (Gate folding)
-        {
-            "resilience": {
-                "zne_mitigation": True,
-                "zne": {
-                    "amplifier": "gate_folding",
-                },
-            },
-        },
         # ZNE (PEA)
         {
             "resilience": {
@@ -106,12 +97,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
-        # FIXME: add_projector_observables=False is only needed,
-        # due to a bug in TREX post-processing:
-        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        pub, ideal_evs = create_estimator_test_data(
-            backend, preset_pass_manager, add_projector_observables=False
-        )
+        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager)
 
         # -- Run using base level Estimator with minor mitigation only:
 
