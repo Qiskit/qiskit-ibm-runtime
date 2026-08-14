@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import numpy as np
 from qiskit.circuit import Parameter
-from qiskit.quantum_info import Operator, PauliLindbladMap, SparsePauliOp
+from qiskit.primitives.containers.estimator_pub import ObservablesArray
+from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
@@ -51,26 +52,18 @@ def create_estimator_test_data(backend, preset_pass_manager):
     x_q2 = np.sqrt(2) / 2
 
     observable_ideal_ev_pairs: list[tuple[str, float]] = [
-        ("IYZ", y_q1 * z_q0),  # ≈ 0.701
-        ("Irl", r_q1 * l_q0),  # ≈ 0.741
-        ("XII", x_q2),  # ≈ 0.707
+        ({"IYZ": 1.0}, y_q1 * z_q0),  # ≈ 0.741
+        ({"Irl": 1.0}, r_q1 * l_q0),  # ≈ 0.755
+        ({"XII": 1.0}, x_q2),  # ≈ 0.740
     ]
 
-    # FIXME: Composing observables from plain `Operator` instead of directly passing strings,
-    # due to a bug in TREX post-processing affecting resilience levels > 0:
-    # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-    # Once this is fixed, we can do:
-    # observables = [obs_string for obs_string, _ in observable_ideal_ev_pairs]
-    observables = [
-        SparsePauliOp.from_operator(Operator.from_label(obs_string)).apply_layout(
-            isa_circuit.layout
-        )
-        for obs_string, _ in observable_ideal_ev_pairs
-    ]
+    observables = ObservablesArray([obs for obs, _ in observable_ideal_ev_pairs])
+    isa_observables = observables.apply_layout(isa_circuit.layout)
+    pub = (isa_circuit, isa_observables, parameters)
 
-    pub = (isa_circuit, observables, parameters)
+    ideal_evs = [evs for _, evs in observable_ideal_ev_pairs]
 
-    return pub, [ev for _, ev in observable_ideal_ev_pairs]
+    return pub, ideal_evs
 
 
 def create_estimator_test_data_extended(backend, preset_pass_manager):
@@ -104,33 +97,28 @@ def create_estimator_test_data_extended(backend, preset_pass_manager):
     proj_q2 = (1 + sq2_half) / 2
     z0_q0 = (1 + np.cos(theta)) / 2
 
-    # FIXME: Composing observables from plain `Operator` instead of directly passing strings,
-    # due to a bug in TREX post-processing affecting resilience levels > 0:
-    # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-    # Once this is fixed, we can pass the label strings directly.
-    def _obs(label):
-        return SparsePauliOp.from_operator(Operator.from_label(label)).apply_layout(
-            isa_circuit.layout
-        )
-
-    observable_ideal_ev_pairs: list[tuple[SparsePauliOp, float]] = [
-        (_obs("IIrl"), r_q1 * l_q0),  # ≈ 0.741
-        (_obs("IIrZ"), r_q1 * z_q0),  # ≈ 0.755
-        (_obs("I+YI"), proj_q2 * y_q1),  # ≈ 0.740
-        (_obs("-IYI"), proj_q2 * y_q1),  # ≈ 0.740
-        (_obs("IIY0"), y_q1 * z0_q0),  # ≈ 0.783
-        (_obs("I1YI"), proj_q2 * y_q1),  # ≈ 0.740
-        (_obs("IXII"), x_q2),  # ≈ 0.707
+    observable_ideal_ev_pairs = [
+        ({"IIrl": 1.0}, r_q1 * l_q0),  # ≈ 0.741
+        ({"IIrZ": 1.0}, r_q1 * z_q0),  # ≈ 0.755
+        ({"I+YI": 1.0}, proj_q2 * y_q1),  # ≈ 0.740
+        ({"-IYI": 1.0}, proj_q2 * y_q1),  # ≈ 0.740
+        ({"IIY0": 1.0}, y_q1 * z0_q0),  # ≈ 0.783
+        ({"I1YI": 1.0}, proj_q2 * y_q1),  # ≈ 0.740
+        ({"IXII": 1.0}, x_q2),  # ≈ 0.707
         # Weighted linear combination:
         (
-            2.0 * _obs("-IrI") - 1.0 * _obs("1IYI"),
+            {"-IrI": 2.0, "1IYI": -1.0},
             2.0 * proj_q2 * r_q1 - 1.0 * proj_q2 * y_q1,
         ),  # ≈ 0.854
     ]
 
-    pub = (isa_circuit, [obs for obs, _ in observable_ideal_ev_pairs], parameters)
+    observables = ObservablesArray([obs for obs, _ in observable_ideal_ev_pairs])
+    isa_observables = observables.apply_layout(isa_circuit.layout)
+    pub = (isa_circuit, isa_observables, parameters)
 
-    return pub, [ev for _, ev in observable_ideal_ev_pairs]
+    ideal_evs = [evs for _, evs in observable_ideal_ev_pairs]
+
+    return pub, ideal_evs
 
 
 def create_noise_model_without_noise(estimator, pub):
