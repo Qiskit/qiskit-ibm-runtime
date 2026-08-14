@@ -21,10 +21,11 @@ from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
-from samplomatic import InjectNoise
+from samplomatic import InjectNoise, Tag
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from .utils import create_estimator_test_data, create_local_mode_estimator
@@ -70,6 +71,61 @@ class TestEstimatorWithNoise(IBMTestCase):
 
         np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
+
+    def test_result_quality_for_pec(self):
+        """Tests the effect of resilience on EstimatorV2 results.
+
+        Estimator result quality is expected to increase with PEC.
+        """
+        backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
+        preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
+
+        estimator = create_local_mode_estimator(backend)
+        estimator.options.resilience.measure_mitigation = True
+        estimator.options.twirling.enable_gates = True
+        estimator.options.twirling.enable_measure = True
+        estimator.options.twirling.num_randomizations = 1000
+        estimator.options.twirling.shots_per_randomization = 200
+
+        # maps bool (whether we applied PEC or not) to errors for each observable
+        errors: dict[bool, npt.NDArray[np.float64]] = {}
+
+        # FIXME: add_projector_observables=False is only needed,
+        # due to a bug in TREX post-processing:
+        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+        pub, ideal_evs = create_estimator_test_data(
+            backend, preset_pass_manager, add_projector_observables=False
+        )
+
+        # Add noise to every unique layer, independent of its content (gates or measurements).
+        simulated_noise_model = {
+            annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)])
+            for layer in estimator.find_unique_layers([pub])
+            if (annotation := get_annotation(layer.operation, Tag))
+        }
+        estimator.options.experimental["simulator_options"] = ExperimentalSimulatorOptions(
+            noise_model=simulated_noise_model,
+        )
+
+        # Run a noisy simulation without PEC
+        estimator.options.resilience.pec_mitigation = False
+        result = estimator.run([pub]).result()
+        errors[False] = np.abs(result[0].data.evs - ideal_evs)
+
+        # Run a noisy simulation with PEC, injecting the same noise as in the simulation
+        estimator.options.resilience.pec_mitigation = True
+        injected_noise_model = {
+            inject_noise_annotation.ref: simulated_noise_model[
+                get_annotation(layer.operation, Tag).ref
+            ]
+            for layer in estimator.find_unique_layers([pub])
+            if (inject_noise_annotation := get_annotation(layer.operation, InjectNoise))
+        }
+        estimator.options.resilience.noise_model = injected_noise_model
+        result = estimator.run([pub]).result()
+        errors[True] = np.abs(result[0].data.evs - ideal_evs)
+
+        np.testing.assert_array_less(errors[True], errors[False])
 
 
 @ddt
