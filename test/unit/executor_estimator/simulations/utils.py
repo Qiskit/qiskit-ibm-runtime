@@ -24,41 +24,51 @@ from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from ....utils import make_mirror_circuit_with_phases
 
 
-def create_estimator_test_data(backend, preset_pass_manager, add_projector_observables=True):
+def create_estimator_test_data(backend, preset_pass_manager):
     """Create a pub and ideal expectation values for it."""
     # Use standard mirror circuit.
     # - No measurements, as StatevectorEstimator does not support them.
     # - No trailing Rx gates, as we want to add our own rotations
     circuit = make_mirror_circuit_with_phases(
-        backend, num_qubits=3, add_measurement=False, add_rx=False
+        backend, num_qubits=4, add_measurement=False, add_rx=False
     )
 
-    # Add rotations to produce eigenstates of X, Y and Z:
     circuit.rx(Parameter("rx_0"), 0)
     circuit.rx(Parameter("rx_1"), 1)
     circuit.ry(Parameter("ry_2"), 2)
+    circuit.ry(Parameter("ry_3"), 3)
     isa_circuit = preset_pass_manager.run(circuit)
-    theta = np.pi / 8
-    parameters = [theta, -np.pi / 2, np.pi / 2]
+
+    theta = np.pi / 5
+    phi = np.pi / 3
+    parameters = [theta, -phi, 3 * np.pi / 4, -3 * np.pi / 4]
+
+    sq2_half = np.sqrt(2) / 2
+    r_q1 = (1 + np.sin(phi)) / 2
+    y_q1 = np.sin(phi)
+    l_q0 = (1 + np.sin(theta)) / 2
+    z_q0 = np.cos(theta)
+    x_q2 = sq2_half
+    proj_q2 = (1 + sq2_half) / 2
+    z0_q0 = (1 + np.cos(theta)) / 2
 
     observable_ideal_ev_pairs: list[tuple[str, float]] = [
-        ("IIZ", np.cos(theta)),
-        ("IYZ", np.cos(theta)),
-        ("XIZ", np.cos(theta)),
+        ("IIrl", r_q1 * l_q0),
+        ("IIrZ", r_q1 * z_q0),
+        ("I+YI", proj_q2 * y_q1),
+        ("-IYI", proj_q2 * y_q1),
+        ("IIY0", y_q1 * z0_q0),
+        ("I1YI", proj_q2 * y_q1),
+        ("IXII", x_q2),
     ]
-    if add_projector_observables:
-        observable_ideal_ev_pairs.extend(
-            [
-                ("1IZ", 0.5 * np.cos(theta)),
-                ("IYr", np.sin(np.pi / 4 - theta / 2) ** 2),
-                ("X+I", 0.5),
-                ("0IZ", 0.5 * np.cos(theta)),
-                ("IYl", np.cos(np.pi / 4 - theta / 2) ** 2),
-                ("X-I", 0.5),
-            ]
-        )
 
     # Prepare a PUB with multiple observables to estimate expectation values on.
+
+    # FIXME: Composing observables from plain `Operator` instead of directly passing strings,
+    # due to a bug in TREX post-processing affecting resilience levels > 0:
+    # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+    # Once this is fixed, we can do:
+    # observables = [obs_string for obs_string, _ in observable_ideal_ev_pairs]
     observables = [
         SparsePauliOp.from_operator(Operator.from_label(obs_string)).apply_layout(
             isa_circuit.layout
