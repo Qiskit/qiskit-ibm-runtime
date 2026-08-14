@@ -24,6 +24,8 @@ if TYPE_CHECKING:
 import numpy as np
 from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauli
 
+from .utils import project_to_z
+
 
 def get_processed_calibration_data(calibration_result: QuantumProgramItemResult) -> np.ndarray:
     """Process data from TREX calibration circuit results.
@@ -55,16 +57,22 @@ def calculate_trex_factor(
     Returns:
         TREX factor for the observable term.
     """
-    sparse_pauli = QubitSparsePauli(observable_term)
+    # Reverse to match the qubit ordering: the rightmost character is qubit 0.
+    z_term = project_to_z(observable_term)[::-1]
+
+    # Every non-identity operator--meaning both Pauli Zs and projectors in `z_term`--
+    # is treated as a Pauli Z, regardless of whether the term is a Pauli
+    # or a projector, since the TREX factor only depends on the readout-error support.
+    indices = np.where(z_term != "I")[0]
+
     if isinstance(noise_data, PauliLindbladMap):
         z_sparse_pauli = QubitSparsePauli(
-            ("Z" * len(sparse_pauli.indices), sparse_pauli.indices),
-            num_qubits=sparse_pauli.num_qubits,
+            ("Z" * len(indices), indices),
+            num_qubits=len(z_term),
         )
         return 1 / noise_data.pauli_fidelity(z_sparse_pauli)
-    # The input is a result of TREX calibration execution
-    # treat every non identity Pauli as Z
-    evals = np.prod(1 - 2 * noise_data[..., sparse_pauli.indices], axis=-1)
+
+    evals = np.prod(1 - 2 * noise_data[..., indices], axis=-1)
     shots = noise_data.shape[0] * noise_data.shape[-2]  # randomizations * shots_per_randomizations
 
     # Compute trex factor
