@@ -139,6 +139,19 @@ class TestPrepare(IBMTestCase):
         self.assertIsInstance(executor_options, ExecutorOptions)
         self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "pea")
 
+    def test_pub_with_boxes_raises(self):
+        """Test that a when a PUB contains a box, the estimator raises."""
+        circuit = QuantumCircuit(2)
+        with circuit.box():
+            circuit.noop(0)
+        circuit.measure_all()
+
+        observable = "ZZ"
+
+        pubs = [EstimatorPub.coerce((circuit, observable))]
+        with self.assertRaisesRegex(IBMInputValueError, "not supported"):
+            prepare(pubs=pubs, options=EstimatorOptions(), shots=100)
+
     @data(True, False)
     def test_dd_applied_when_enabled(self, twirling_enabled):
         """Test apply_dynamical_decoupling is called when DD is enabled.
