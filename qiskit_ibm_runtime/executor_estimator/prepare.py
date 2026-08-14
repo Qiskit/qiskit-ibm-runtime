@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 from ..exceptions import IBMInputValueError
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
+from ..utils.utils import validate_no_boxes
 from .pec.prepare_pec import prepare_pec
 from .prepare_pea import prepare_pea
 from .prepare_vanilla import prepare_vanilla
@@ -77,19 +78,20 @@ def prepare(
             "PEC mitigation and ZNE mitigation are incompatible with one another."
         )
 
-    if options.dynamical_decoupling.enable:
-        for pub in pubs:
+    for pub in pubs:
+        validate_no_boxes(pub.circuit)
+
+        if options.dynamical_decoupling.enable:
             if pub.circuit.has_control_flow_op():
                 raise IBMInputValueError(
                     "Dynamical decoupling is not compatible with dynamic circuits "
                     "(circuits with control flow operations)."
                 )
-        if backend is None:
-            raise IBMInputValueError(
-                "A backend must be provided when dynamical decoupling is enabled."
-            )
+            if backend is None:
+                raise IBMInputValueError(
+                    "A backend must be provided when dynamical decoupling is enabled."
+                )
 
-    # Map options to executor options
     executor_options = estimator_options_to_executor_options(options)
 
     if options.resilience.pec_mitigation:

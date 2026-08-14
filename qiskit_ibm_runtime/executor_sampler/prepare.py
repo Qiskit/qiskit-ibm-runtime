@@ -89,34 +89,27 @@ def prepare(
     validate_twirling_option_fields_are_not_none(options.twirling)
     validate_meas_type_twirling(options.execution.meas_type, options.twirling.enable_measure)
 
-    # Extract and validate shots from pubs
-    shots = extract_shots_from_pubs(pubs, default_shots)
+    for pub in pubs:
+        validate_no_boxes(pub.circuit)
 
-    twirling_enabled = options.twirling.enable_gates or options.twirling.enable_measure
-
-    # Validate DD compatibility if enabled
-    if options.dynamical_decoupling.enable:
-        for pub in pubs:
+        if options.dynamical_decoupling.enable:
             if pub.circuit.has_control_flow_op():
                 raise IBMInputValueError(
                     "Dynamical decoupling is not compatible with dynamic circuits "
                     "(circuits with control flow operations)."
                 )
-        if backend is None:
-            raise IBMInputValueError(
-                "A backend must be provided when dynamical decoupling is enabled."
-            )
+            if backend is None:
+                raise IBMInputValueError(
+                    "A backend must be provided when dynamical decoupling is enabled."
+                )
 
-    # Create items based on whether twirling is enabled
+    program_shots = (shots := extract_shots_from_pubs(pubs, default_shots))
+
     items: list[QuantumProgramItem] = []
-    program_shots = shots  # Default: use pub shots
-
-    if not twirling_enabled:
+    if not (options.twirling.enable_gates or options.twirling.enable_measure):
         # No twirling path: validate no boxes, create CircuitItem objects
         for i, pub in enumerate(pubs):
             logger.info("Processing pub %d/%d", i + 1, len(pubs))
-            validate_no_boxes(pub.circuit)
-
             # Convert parameter values to numpy array. Pass the circuit's
             # parameters so the columns are ordered to match ``circuit.parameters``.
             if pub.parameter_values.num_parameters > 0:
