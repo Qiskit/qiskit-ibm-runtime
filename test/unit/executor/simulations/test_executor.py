@@ -103,9 +103,9 @@ class TestExecutor(IBMTestCase):
         """Test noisy local mode simulations with the executor.
 
         Checks that:
-        * The result shape is correct.
-        * The results diverge from the expected via Hellinger distance.
-          Probabilities of each outcome are computed exactly using Qiskit's StateVector class.
+        * The results increasingly diverge from the expected with increasing levels of noise.
+          Probabilities of each outcome are computed exactly using Qiskit's StateVector class
+          and fidelities are computed via Hellinger distance.
         """
         circuit = make_mirror_circuit_with_phases(self.backend)
 
@@ -140,13 +140,10 @@ class TestExecutor(IBMTestCase):
             if (anno := get_annotation(inst.operation, Tag)) is not None
         ]
 
-        pauli_maps = [
-            PauliLindbladMap.from_list([("XY", 0.001)]),
-            PauliLindbladMap.from_list([("XY", 0.01)]),
-            PauliLindbladMap.from_list([("XY", 0.1)]),
-        ]
-
-        noise_models = [dict.fromkeys(tag_refs, pauli_map) for pauli_map in pauli_maps]
+        circuit_cp = circuit.copy()
+        circuit_cp.remove_final_measurements()
+        bound_circuit = circuit_cp.assign_parameters(parameter_values)
+        probabilities = Statevector(bound_circuit).probabilities_dict()
 
         executor = Executor(
             mode=AerSimulator(),
@@ -158,22 +155,27 @@ class TestExecutor(IBMTestCase):
             },
         )
 
-        circuit_cp = circuit.copy()
-        circuit_cp.remove_final_measurements()
-        bound_circuit = circuit_cp.assign_parameters(parameter_values)
-        probabilities = Statevector(bound_circuit).probabilities_dict()
-
+        pauli_maps = [
+            PauliLindbladMap.from_list([("XY", 0.001)]),
+            PauliLindbladMap.from_list([("XY", 0.01)]),
+            PauliLindbladMap.from_list([("XY", 0.1)]),
+        ]
         fidelities = []
-        for noise_model in noise_models:
-            executor.options.experimental["simulator_options"].noise_model = noise_model
+        for pauli_map in pauli_maps:
+            executor.options.experimental["simulator_options"].noise_model = dict.fromkeys(
+                tag_refs, pauli_map
+            )
             job = executor.run(program)
             result = job.result()
 
             array = result[0]["meas"] ^ result[0]["measurement_flips.meas"]
 
-            fidelity = hellinger_fidelity(
-                BitArray.from_bool_array(array, order="little").get_counts(), probabilities
+            fidelities.append(
+                hellinger_fidelity(
+                    BitArray.from_bool_array(array, order="little").get_counts(), probabilities
+                )
             )
-            fidelities.append(fidelity)
 
-        self.assertTrue(all(a > b for a, b in zip(fidelities, fidelities[1:])))
+        self.assertTrue(
+            all((a > b) and (a < 1 and b < 1) for a, b in zip(fidelities, fidelities[1:]))
+        )
