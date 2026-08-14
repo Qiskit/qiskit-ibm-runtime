@@ -13,23 +13,20 @@
 """Tests for runtime job retrieval."""
 
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
+
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
+from qiskit_ibm_runtime.ibm_backend import IBMRetiredBackend
 
 from ..decorators import run_cloud_fake
 from ..ibm_test_case import IBMTestCase
 from ..program import run_program
 from ..utils import mock_wait_for_final_state
-from .mock.fake_runtime_service import FakeRuntimeService
+from .mock.fake_runtime_service import BaseFakeRuntimeClient, FakeRuntimeService
 
 
 class TestRetrieveJobs(IBMTestCase):
     """Class for testing job retrieval."""
-
-    def setUp(self):
-        """Initial test setup."""
-        super().setUp()
-        self._ibm_quantum_service = FakeRuntimeService(
-            channel="ibm_quantum_platform", token="my_token"
-        )
 
     @run_cloud_fake
     def test_retrieve_job(self, service):
@@ -91,9 +88,9 @@ class TestRetrieveJobs(IBMTestCase):
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
             service.job(job.job_id())
 
-    def test_jobs_skip_limit(self):
+    @run_cloud_fake
+    def test_jobs_skip_limit(self, service):
         """Test retrieving jobs with skip and limit."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         jobs = []
@@ -113,9 +110,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(pending=True)
         self.assertEqual(pending_jobs_count, len(rjobs))
 
-    def test_jobs_limit_pending(self):
+    @run_cloud_fake
+    def test_jobs_limit_pending(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -123,9 +120,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, pending=True)
         self.assertEqual(limit, len(rjobs))
 
-    def test_jobs_skip_pending(self):
+    @run_cloud_fake
+    def test_jobs_skip_pending(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING) with skip."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         _, pending_jobs_count, _ = self._populate_jobs_with_all_statuses(
@@ -135,9 +132,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(skip=skip, pending=True)
         self.assertEqual(pending_jobs_count - skip, len(rjobs))
 
-    def test_jobs_limit_skip_pending(self):
+    @run_cloud_fake
+    def test_jobs_limit_skip_pending(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit and skip."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -146,9 +143,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, skip=skip, pending=True)
         self.assertEqual(limit, len(rjobs))
 
-    def test_jobs_returned(self):
+    @run_cloud_fake
+    def test_jobs_returned(self, service):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         _, _, returned_jobs_count = self._populate_jobs_with_all_statuses(
@@ -157,9 +154,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(pending=False)
         self.assertEqual(returned_jobs_count, len(rjobs))
 
-    def test_jobs_limit_returned(self):
+    @run_cloud_fake
+    def test_jobs_limit_returned(self, service):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -167,9 +164,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, pending=False)
         self.assertEqual(limit, len(rjobs))
 
-    def test_jobs_skip_returned(self):
+    @run_cloud_fake
+    def test_jobs_skip_returned(self, service):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with skip."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         _, _, returned_jobs_count = self._populate_jobs_with_all_statuses(
@@ -179,9 +176,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(skip=skip, pending=False)
         self.assertEqual(returned_jobs_count - skip, len(rjobs))
 
-    def test_jobs_limit_skip_returned(self):
+    @run_cloud_fake
+    def test_jobs_limit_skip_returned(self, service):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit and skip."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -190,9 +187,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, skip=skip, pending=False)
         self.assertEqual(limit, len(rjobs))
 
-    def test_jobs_filter_by_job_tags(self):
+    @run_cloud_fake
+    def test_jobs_filter_by_job_tags(self, service):
         """Test retrieving jobs by job tags."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
         job_tags = ["test_tag"]
 
@@ -205,9 +202,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(program_id=program_id, job_tags=["no_test_tag"])
         self.assertFalse(rjobs)
 
-    def test_jobs_filter_by_session_id(self):
+    @run_cloud_fake
+    def test_jobs_filter_by_session_id(self, service):
         """Test retrieving jobs by session id."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         job = run_program(service=service, program_id=program_id)
@@ -221,9 +218,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(program_id=program_id, session_id="no_test_session_id")
         self.assertFalse(rjobs)
 
-    def test_jobs_filter_by_date(self):
+    @run_cloud_fake
+    def test_jobs_filter_by_date(self, service):
         """Test retrieving jobs filtered by date."""
-        service = self._ibm_quantum_service
         current_time = datetime.now(timezone.utc) - timedelta(seconds=5)
         job = run_program(service=service)
         with mock_wait_for_final_state(service, job):
@@ -237,9 +234,9 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertTrue(job._creation_date <= time_after_job)
         self.assertTrue(job._creation_date >= current_time)
 
-    def test_jobs_sort_by_date(self):
+    @run_cloud_fake
+    def test_jobs_sort_by_date(self, service):
         """Test retrieving jobs sorted by the date."""
-        service = self._ibm_quantum_service
         program_id = "sampler"
 
         job = run_program(service=service, program_id=program_id)
@@ -254,9 +251,9 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertTrue(rjobs[1], rjobs_asc[0])
         self.assertEqual([job.job_id() for job in rjobs], [job.job_id() for job in rjobs_desc])
 
-    def test_jobs_bad_instance(self):
+    @run_cloud_fake
+    def test_jobs_bad_instance(self, service):
         """Test retrieving jobs with bad instance values."""
-        service = self._ibm_quantum_service
         with self.assertRaises(Exception):
             _ = service.jobs(instance="foo")
 
@@ -276,6 +273,27 @@ class TestRetrieveJobs(IBMTestCase):
 
         rjob = service.job(job.job_id())
         self.assertIsNotNone(rjob.backend())
+
+    @run_cloud_fake
+    def test_jobs_returned_from_retired_backend(self, service):
+        """Test retrieving jobs that use a retired backend."""
+        program_id = "sampler"
+        job = run_program(service, program_id, final_status="COMPLETED")
+
+        # Make the service forget the backend, so its configuration is requested from the API.
+        service._backend_configs = {}
+
+        # Mimick a 404 when getting backend properties.
+        with patch.object(
+            BaseFakeRuntimeClient, "backend_configuration", side_effect=RequestsApiError("404")
+        ):
+            # Retrieving a job should succeed, and produce a retired backend.
+            rjob = service.job(job.job_id())
+            self.assertIsInstance(rjob.backend(), IBMRetiredBackend)
+
+            # Retrieving all (1) jobs should succeed, and produce retired backends.
+            jobs = service.jobs()
+            self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
 
     def _populate_jobs_with_all_statuses(self, service, program_id):
         """Populate the database with jobs of all statuses."""
