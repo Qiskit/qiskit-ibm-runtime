@@ -28,7 +28,11 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
-from .utils import create_estimator_test_data, create_local_mode_estimator
+from .utils import (
+    create_estimator_test_data_big,
+    create_estimator_test_data_small,
+    create_local_mode_estimator,
+)
 
 if TYPE_CHECKING:
     import numpy.typing as npt
@@ -51,7 +55,7 @@ class TestEstimatorWithNoise(IBMTestCase):
 
         Estimator result quality is expected to increase with increasing resilience level.
         """
-        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data_small(self.backend, self.preset_pass_manager)
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
@@ -90,12 +94,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         # maps bool (whether we applied PEC or not) to errors for each observable
         errors: dict[bool, npt.NDArray[np.float64]] = {}
 
-        # FIXME: add_projector_observables=False is only needed,
-        # due to a bug in TREX post-processing:
-        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        pub, ideal_evs = create_estimator_test_data(
-            backend, preset_pass_manager, add_projector_observables=False
-        )
+        pub, ideal_evs = create_estimator_test_data_small(backend, preset_pass_manager)
 
         # Add noise to every unique layer, independent of its content (gates or measurements).
         simulated_noise_model = {
@@ -146,7 +145,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         Parametrized to run with all three estimator resilience levels.
         """
-        pub, ideal_evs = create_estimator_test_data(
+        pub, ideal_evs = create_estimator_test_data_big(
             self.backend,
             self.preset_pass_manager,
         )
@@ -164,7 +163,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
     def test_correct_estimates_with_pec(self):
         """Tests that EstimatorV2 with PEC produces correct results in a noise-less environment."""
-        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data_big(self.backend, self.preset_pass_manager)
 
         estimator = create_local_mode_estimator(self.backend)
         estimator.options.resilience.pec_mitigation = True
