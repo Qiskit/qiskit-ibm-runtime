@@ -50,12 +50,7 @@ class TestEstimatorWithNoise(IBMTestCase):
 
         Estimator result quality is expected to increase with increasing resilience level.
         """
-        # FIXME: add_projector_observables=False is only needed,
-        # due to a bug in TREX post-processing:
-        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        pub, ideal_evs = create_estimator_test_data(
-            self.backend, self.preset_pass_manager, add_projector_observables=False
-        )
+        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
@@ -95,15 +90,9 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         Parametrized to run with all three estimator resilience levels.
         """
-        # FIXME: add_projector_observables=False is only needed,
-        # due to a bug in TREX post-processing affecting resilience levels > 0:
-        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        add_projector_observables = True if resilience_level == 0 else False
-
         pub, ideal_evs = create_estimator_test_data(
             self.backend,
             self.preset_pass_manager,
-            add_projector_observables=add_projector_observables,
         )
 
         estimator = create_local_mode_estimator(self.backend)
@@ -125,10 +114,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         estimator.options.resilience.pec_mitigation = True
         estimator.options.twirling.enable_gates = True
         estimator.options.twirling.enable_measure = True
-
-        # FIXME: TREX currently not possible for the projector observables we use here:
-        # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-        # estimator.options.resilience.measure_mitigation = True
+        estimator.options.resilience.measure_mitigation = True
 
         # TODO: no DD possible on AER without gate durations.
         # Need to test this for a fake backend (e.g. in noisy test).

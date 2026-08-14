@@ -24,7 +24,7 @@ from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from ....utils import make_mirror_circuit_with_phases
 
 
-def create_estimator_test_data(backend, preset_pass_manager, add_projector_observables=True):
+def create_estimator_test_data(backend, preset_pass_manager):
     """Create a pub and ideal expectation values for it."""
     # Use standard mirror circuit.
     # - No measurements, as StatevectorEstimator does not support them.
@@ -45,20 +45,21 @@ def create_estimator_test_data(backend, preset_pass_manager, add_projector_obser
         ("IIZ", np.cos(theta)),
         ("IYZ", np.cos(theta)),
         ("XIZ", np.cos(theta)),
+        ("1IZ", 0.5 * np.cos(theta)),
+        ("IrZ", np.cos(theta)),
+        ("X+I", 0.5),
+        ("0IZ", 0.5 * np.cos(theta)),
+        ("IYl", np.cos(np.pi / 4 - theta / 2) ** 2),
+        ("X-I", 0.5),
     ]
-    if add_projector_observables:
-        observable_ideal_ev_pairs.extend(
-            [
-                ("1IZ", 0.5 * np.cos(theta)),
-                ("IYr", np.sin(np.pi / 4 - theta / 2) ** 2),
-                ("X+I", 0.5),
-                ("0IZ", 0.5 * np.cos(theta)),
-                ("IYl", np.cos(np.pi / 4 - theta / 2) ** 2),
-                ("X-I", 0.5),
-            ]
-        )
 
     # Prepare a PUB with multiple observables to estimate expectation values on.
+
+    # FIXME: Composing observables from plain `Operator` instead of directly passing strings,
+    # due to a bug in TREX post-processing affecting resilience levels > 0:
+    # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
+    # Once this is fixed, we can do:
+    # observables = [obs_string for obs_string, _ in observable_ideal_ev_pairs]
     observables = [
         SparsePauliOp.from_operator(Operator.from_label(obs_string)).apply_layout(
             isa_circuit.layout
