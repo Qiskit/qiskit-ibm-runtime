@@ -29,7 +29,8 @@ from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOpt
 
 from ....ibm_test_case import IBMTestCase
 from .utils import (
-    create_estimator_test_data,
+    create_estimator_test_data_big,
+    create_estimator_test_data_small,
     create_local_mode_estimator,
     create_noise_model_without_noise,
 )
@@ -55,7 +56,7 @@ class TestEstimatorWithNoise(IBMTestCase):
 
         Estimator result quality is expected to increase with increasing resilience level.
         """
-        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data_small(self.backend, self.preset_pass_manager)
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
@@ -101,7 +102,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
-        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data_small(backend, preset_pass_manager)
 
         # -- Run using base level Estimator with minor mitigation only:
 
@@ -213,7 +214,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
     )
     def test_correct_estimates_for_different_mitigation_modes(self, option_overrides):
         """Tests Estimator configurations to produce correct results in a noise-less environment."""
-        pub, ideal_evs = create_estimator_test_data(self.backend, self.preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data_big(self.backend, self.preset_pass_manager)
 
         estimator = create_local_mode_estimator(self.backend)
         estimator.options.update(**option_overrides)
