@@ -31,10 +31,7 @@ from ....utils import make_mirror_circuit_with_phases
 
 
 class TestExecutor(IBMTestCase):
-    """Executor tests centered around qiskit-aer simulations.
-
-    All the tests in this class perform noiseless simulations.
-    """
+    """Executor tests centered around qiskit-aer simulations."""
 
     def setUp(self):
         """Test level setup."""
