@@ -186,7 +186,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
             },
         },
     )
-    def test_correct_estimates_for_different_mitigation_modes(self, option_overrides):
+    def test_correct_estimates_with_noise_injection(self, option_overrides):
         """Tests Estimator configurations to produce correct results in a noise-less environment."""
         pub, ideal_evs = create_estimator_test_data_extended(self.backend, self.preset_pass_manager)
 
