@@ -110,6 +110,7 @@ def create_estimator_test_data_extended(backend, preset_pass_manager):
             {"-IrI": 2.0, "1IYI": -1.0},
             2.0 * proj_q2 * r_q1 - 1.0 * proj_q2 * y_q1,
         ),  # ≈ 0.854
+        ({"I+r0": 1.0}, x_q2),  # ≈ 0.707
     ]
 
     observables = ObservablesArray([obs for obs, _ in observable_ideal_ev_pairs])
