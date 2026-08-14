@@ -72,6 +72,11 @@ def prepare(
             objects for each pub, with passthrough_data configured for post-processing.
         - :class:`~.ExecutorOptions` mapped from the estimator's options.
     """
+    if options.resilience.pec_mitigation and options.resilience.zne_mitigation:
+        raise IBMInputValueError(
+            "PEC mitigation and ZNE mitigation are incompatible with one another."
+        )
+
     if options.dynamical_decoupling.enable:
         for pub in pubs:
             if pub.circuit.has_control_flow_op():

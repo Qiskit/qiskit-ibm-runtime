@@ -26,10 +26,10 @@ from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import sampler_option_to_executor_options
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
+from ..utils.utils import validate_no_boxes
 from .utils import (
     extract_shots_from_pubs,
     validate_meas_type_twirling,
-    validate_no_boxes,
     validate_twirling_option_fields_are_not_none,
 )
 
