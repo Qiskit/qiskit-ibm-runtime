@@ -48,6 +48,7 @@ def create_estimator_test_data(backend, preset_pass_manager):
     y_q1 = np.sin(phi)
     l_q0 = (1 + np.sin(theta)) / 2
     z_q0 = np.cos(theta)
+    x_q2 = sq2_half
     proj_q2 = (1 + sq2_half) / 2
     z0_q0 = (1 + np.cos(theta)) / 2
 
@@ -58,6 +59,7 @@ def create_estimator_test_data(backend, preset_pass_manager):
         ("-IYI", proj_q2 * y_q1),
         ("IIY0", y_q1 * z0_q0),
         ("I1YI", proj_q2 * y_q1),
+        ("IXII", x_q2),
     ]
 
     # Prepare a PUB with multiple observables to estimate expectation values on.
