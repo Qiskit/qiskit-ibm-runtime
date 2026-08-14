@@ -53,31 +53,31 @@ def create_estimator_test_data_big(backend, preset_pass_manager):
     proj_q2 = (1 + sq2_half) / 2
     z0_q0 = (1 + np.cos(theta)) / 2
 
-    observable_ideal_ev_pairs: list[tuple[str, float]] = [
-        ("IIrl", r_q1 * l_q0),  # ≈ 0.741
-        ("IIrZ", r_q1 * z_q0),  # ≈ 0.755
-        ("I+YI", proj_q2 * y_q1),  # ≈ 0.740
-        ("-IYI", proj_q2 * y_q1),  # ≈ 0.740
-        ("IIY0", y_q1 * z0_q0),  # ≈ 0.783
-        ("I1YI", proj_q2 * y_q1),  # ≈ 0.740
-        ("IXII", x_q2),  # ≈ 0.707
-    ]
-
-    # Prepare a PUB with multiple observables to estimate expectation values on.
-
     # FIXME: Composing observables from plain `Operator` instead of directly passing strings,
     # due to a bug in TREX post-processing affecting resilience levels > 0:
     # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-    # Once this is fixed, we can do:
-    # observables = [obs_string for obs_string, _ in observable_ideal_ev_pairs]
-    observables = [
-        SparsePauliOp.from_operator(Operator.from_label(obs_string)).apply_layout(
+    # Once this is fixed, we can pass the label strings directly.
+    def _obs(label):
+        return SparsePauliOp.from_operator(Operator.from_label(label)).apply_layout(
             isa_circuit.layout
         )
-        for obs_string, _ in observable_ideal_ev_pairs
+
+    observable_ideal_ev_pairs: list[tuple[SparsePauliOp, float]] = [
+        (_obs("IIrl"), r_q1 * l_q0),  # ≈ 0.741
+        (_obs("IIrZ"), r_q1 * z_q0),  # ≈ 0.755
+        (_obs("I+YI"), proj_q2 * y_q1),  # ≈ 0.740
+        (_obs("-IYI"), proj_q2 * y_q1),  # ≈ 0.740
+        (_obs("IIY0"), y_q1 * z0_q0),  # ≈ 0.783
+        (_obs("I1YI"), proj_q2 * y_q1),  # ≈ 0.740
+        (_obs("IXII"), x_q2),  # ≈ 0.707
+        # Weighted linear combination:
+        (
+            2.0 * _obs("-IrI") - 1.0 * _obs("1IYI"),
+            2.0 * proj_q2 * r_q1 - 1.0 * proj_q2 * y_q1,
+        ),  # ≈ 0.854
     ]
 
-    pub = (isa_circuit, observables, parameters)
+    pub = (isa_circuit, [obs for obs, _ in observable_ideal_ev_pairs], parameters)
 
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
