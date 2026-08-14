@@ -77,23 +77,39 @@ class TestEstimatorWithNoise(IBMTestCase):
         np.testing.assert_array_less(errors[2], errors[1], err_msg=debug_message)
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
 
-    def test_result_quality_for_pec(self):
+    @data(
+        # PEC
+        {
+            "resilience": {
+                "pec_mitigation": True,
+            },
+        },
+        # ZNE (Gate folding)
+        {
+            "resilience": {
+                "zne_mitigation": True,
+                "zne": {
+                    "amplifier": "gate_folding",
+                },
+            },
+        },
+        # ZNE (PEA)
+        {
+            "resilience": {
+                "zne_mitigation": True,
+                "zne": {
+                    "amplifier": "pea",
+                },
+            },
+        },
+    )
+    def test_result_quality_for_different_mitigation_modes(self, option_overrides):
         """Tests the effect of resilience on EstimatorV2 results.
 
         Estimator result quality is expected to increase with PEC.
         """
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
-
-        estimator = create_local_mode_estimator(backend)
-        estimator.options.resilience.measure_mitigation = True
-        estimator.options.twirling.enable_gates = True
-        estimator.options.twirling.enable_measure = True
-        estimator.options.twirling.num_randomizations = 1000
-        estimator.options.twirling.shots_per_randomization = 200
-
-        # maps bool (whether we applied PEC or not) to errors for each observable
-        errors: dict[bool, npt.NDArray[np.float64]] = {}
 
         # FIXME: add_projector_observables=False is only needed,
         # due to a bug in TREX post-processing:
@@ -102,23 +118,47 @@ class TestEstimatorWithNoise(IBMTestCase):
             backend, preset_pass_manager, add_projector_observables=False
         )
 
+        # -- Run using base level Estimator with minor mitigation only:
+
+        base_level_option_overrides = {
+            "twirling": {
+                "enable_gates": True,
+                "enable_measure": True,
+                "num_randomizations": 1000,
+                "shots_per_randomization": 200,
+            },
+            "resilience": {
+                "measure_mitigation": True,
+            },
+        }
+        base_level_estimator = create_local_mode_estimator(backend)
+        base_level_estimator.options.update(**base_level_option_overrides)
+
         # Add noise to every unique layer, independent of its content (gates or measurements).
         simulated_noise_model = {
             annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)])
-            for layer in estimator.find_unique_layers([pub])
+            for layer in base_level_estimator.find_unique_layers([pub])
             if (annotation := get_annotation(layer.operation, Tag))
         }
+        base_level_estimator.options.experimental["simulator_options"] = (
+            ExperimentalSimulatorOptions(
+                noise_model=simulated_noise_model,
+            )
+        )
+
+        # Run a noisy simulation using baselevel estimator:
+        result = base_level_estimator.run([pub]).result()
+        base_level_errors = np.abs(result[0].data.evs - ideal_evs)
+
+        # -- Run using the Estimator in the test configuration (defined by test parametrization):
+
+        estimator = create_local_mode_estimator(backend)
         estimator.options.experimental["simulator_options"] = ExperimentalSimulatorOptions(
             noise_model=simulated_noise_model,
         )
-
-        # Run a noisy simulation without PEC
-        estimator.options.resilience.pec_mitigation = False
-        result = estimator.run([pub]).result()
-        errors[False] = np.abs(result[0].data.evs - ideal_evs)
-
-        # Run a noisy simulation with PEC, injecting the same noise as in the simulation
-        estimator.options.resilience.pec_mitigation = True
+        estimator.options.update(**base_level_option_overrides)
+        estimator.options.update(**option_overrides)
+        # Run a noisy simulation with , injecting the same noise as in the simulation
         injected_noise_model = {
             inject_noise_annotation.ref: simulated_noise_model[
                 get_annotation(layer.operation, Tag).ref
@@ -128,11 +168,13 @@ class TestEstimatorWithNoise(IBMTestCase):
         }
         estimator.options.resilience.noise_model = injected_noise_model
         result = estimator.run([pub]).result()
-        errors[True] = np.abs(result[0].data.evs - ideal_evs)
+        errors = np.abs(result[0].data.evs - ideal_evs)
+
+        # -- Compare tested Estimator EVs to base level Estimator:
 
         # Increased resilience level should translate into increased expectation value quality:
         debug_message = f"Error per resilience level: {errors}"
-        np.testing.assert_array_less(errors[True], errors[False], err_msg=debug_message)
+        np.testing.assert_array_less(errors, base_level_errors, err_msg=debug_message)
 
 
 @ddt
