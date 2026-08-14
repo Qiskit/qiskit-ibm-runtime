@@ -313,11 +313,6 @@ class EstimatorV2(BaseEstimatorV2):
                 calibration_id=None,
             )
 
-        if options.resilience.pec_mitigation and options.resilience.zne_mitigation:
-            raise IBMInputValueError(
-                "PEC mitigation and ZNE mitigation are incompatible with one another."
-            )
-
         # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(

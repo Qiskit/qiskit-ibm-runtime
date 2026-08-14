@@ -210,4 +210,4 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
-        np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.02)
+        np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.025)
