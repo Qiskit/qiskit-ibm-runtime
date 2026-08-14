@@ -66,10 +66,7 @@ def calculate_trex_factor(
     indices = np.where(z_term != "I")[0]
 
     if isinstance(noise_data, PauliLindbladMap):
-        z_sparse_pauli = QubitSparsePauli(
-            ("Z" * len(indices), indices),
-            num_qubits=len(z_term),
-        )
+        z_sparse_pauli = QubitSparsePauli(("Z" * len(indices), indices), num_qubits=len(z_term))
         return 1 / noise_data.pauli_fidelity(z_sparse_pauli)
 
     evals = np.prod(1 - 2 * noise_data[..., indices], axis=-1)
