@@ -89,7 +89,7 @@ class TestEstimatorWithNoise(IBMTestCase):
             },
         },
     )
-    def test_result_quality_for_different_mitigation_modes(self, option_overrides):
+    def test_result_quality_with_noise_injection(self, option_overrides):
         """Tests the effect of resilience on EstimatorV2 results.
 
         Estimator result quality is expected to increase with PEC.
