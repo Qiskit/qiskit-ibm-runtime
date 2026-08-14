@@ -174,21 +174,14 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # PEC
         {
             "twirling": {"enable_gates": True, "enable_measure": True},
-            "resilience": {
-                "pec_mitigation": True,
-                "measure_mitigation": True,
-            },
+            "resilience": {"pec_mitigation": True, "measure_mitigation": True},
         },
         # ZNE (PEA)
         {
             "twirling": {"enable_gates": True, "enable_measure": True},
             "resilience": {
                 "zne_mitigation": True,
-                "zne": {
-                    "amplifier": "pea",
-                    # Force linear extrapolation to avoid introducing error due to no noise:
-                    "extrapolator": "linear",
-                },
+                "zne": {"amplifier": "pea", "extrapolator": "linear"},
                 "measure_mitigation": True,
             },
         },
