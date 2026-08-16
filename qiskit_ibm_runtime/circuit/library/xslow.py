@@ -20,5 +20,3 @@ class XSlowGate(Gate):
 
     def __init__(self) -> None:
         super().__init__("xslow", 1, [])
-
-

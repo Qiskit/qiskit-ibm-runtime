@@ -67,5 +67,3 @@ class TestXSlowGate(IBMTestCase):
         qc.append(gate, [0])
         transpiled = pm.run(qc)
         self.assertEqual(transpiled.data[0].operation.name, "xslow")
-
-
