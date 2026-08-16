@@ -294,6 +294,10 @@ def _process_expectation_values(
     stds = np.empty(output_shape, dtype=float)
     ensemble_stds = np.empty(output_shape, dtype=float)
 
+    # Cache TREX factors: computed once per unique observable_term string, reused across the
+    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
+    trex_factor_cache: dict[str, float] = {}
+
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
         # Unbroadcast to get the actual parameter and observable indices
@@ -328,12 +332,15 @@ def _process_expectation_values(
                 observable_term, datum
             )
 
-            # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = (
-                calculate_trex_factor(measure_noise_data, observable_term)
-                if measure_noise_data is not None
-                else 1
-            )
+            # Calculate scale factor in case TREX mitigation is used (cached per term)
+            if measure_noise_data is not None:
+                if observable_term not in trex_factor_cache:
+                    trex_factor_cache[observable_term] = calculate_trex_factor(
+                        measure_noise_data, observable_term
+                    )
+                term_scale_factor = trex_factor_cache[observable_term]
+            else:
+                term_scale_factor = 1
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
@@ -424,6 +431,10 @@ def _process_expectation_values_pec(
     stds = np.empty(output_shape, dtype=float)
     ensemble_stds = np.empty(output_shape, dtype=float)
 
+    # Cache TREX factors: computed once per unique observable_term string, reused across the
+    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
+    trex_factor_cache: dict[str, float] = {}
+
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
         # Unbroadcast to get the actual parameter and observable indices
@@ -461,12 +472,15 @@ def _process_expectation_values_pec(
                 observable_term, datum, pec_signs_datum
             )
 
-            # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = (
-                calculate_trex_factor(measure_noise_data, observable_term)
-                if measure_noise_data is not None
-                else 1
-            )
+            # Calculate scale factor in case TREX mitigation is used (cached per term)
+            if measure_noise_data is not None:
+                if observable_term not in trex_factor_cache:
+                    trex_factor_cache[observable_term] = calculate_trex_factor(
+                        measure_noise_data, observable_term
+                    )
+                term_scale_factor = trex_factor_cache[observable_term]
+            else:
+                term_scale_factor = 1
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
@@ -989,6 +1003,10 @@ def calculate_extrapolated_expectation_values(
     # configuration), the selected extrapolator
     selected_extrapolators = []
 
+    # Cache TREX factors: computed once per unique observable_term string, reused across the
+    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
+    trex_factor_cache: dict[str, float] = {}
+
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
         # Unbroadcast to get the actual parameter and observable indices
@@ -1023,12 +1041,15 @@ def calculate_extrapolated_expectation_values(
             # Use identify_measure_basis to find the configuration index directly
             config_idx = identify_measure_basis(pauli_basis, param_basis_list)
 
-            # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = (
-                calculate_trex_factor(measure_noise_data, observable_term)
-                if measure_noise_data is not None
-                else 1
-            )
+            # Calculate scale factor in case TREX mitigation is used (cached per term)
+            if measure_noise_data is not None:
+                if observable_term not in trex_factor_cache:
+                    trex_factor_cache[observable_term] = calculate_trex_factor(
+                        measure_noise_data, observable_term
+                    )
+                term_scale_factor = trex_factor_cache[observable_term]
+            else:
+                term_scale_factor = 1
 
             noise_scaled_exp_vals = []
             noise_scaled_ensemble_std = []
