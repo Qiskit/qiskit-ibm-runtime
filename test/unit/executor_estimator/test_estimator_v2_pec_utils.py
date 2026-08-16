@@ -586,59 +586,50 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
         with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
             prepare_pec([pub1, pub2], twirling_options, 1024, pec_options, noise_model)
 
-    def test_prepare_pec_with_measure_noise_learning(self):
-        """Test prepare_pec with measure noise learning (TREX)."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
+    @data(32, "auto")
+    def test_prepare_pec_with_measure_noise_learning(self, num_randomizations):
+        """Test that measure_noise_learning adds a correctly built TREX calibration item.
 
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pub = EstimatorPub.coerce((circuit, observable))
+        Uses two pubs of different widths (2q and 3q).  Verifies item count, circuit gate
+        structure, shape, and passthrough data via :meth:`assertTrexItemIsCorrect`.
+        """
+        circuit1 = QuantumCircuit(2)
+        circuit1.h(0)
+        circuit1.cx(0, 1)
+        circuit2 = QuantumCircuit(3)
+        circuit2.h(0)
+        circuit2.cx(0, 1)
+        circuit2.cx(1, 2)
 
-        noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
-        # find layers first to extract the layers ref
-        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
-        noise_layer_ref = ""
-        for layer in layers:
-            if annot := get_annotation(layer.operation, InjectNoise):
-                noise_layer_ref = annot.ref
-
-        noise_model = {noise_layer_ref: noise_model}
-
-        pec_options = PecOptions()
-        pec_options.noise_gain = 0.5
-
-        measure_noise_learning = MeasureNoiseLearningOptions()
-        measure_noise_learning.num_randomizations = 16
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
+        pubs = [pub1, pub2]
 
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
+        twirling_options.num_randomizations = 64
 
-        quantum_program = prepare_pec(
-            [pub], twirling_options, 1024, pec_options, noise_model, measure_noise_learning
+        noise_model = self._build_trivial_noise_model(pubs, twirling_options)
+
+        measure_noise_learning = MeasureNoiseLearningOptions()
+        measure_noise_learning.num_randomizations = num_randomizations
+
+        program = prepare_pec(
+            pubs, twirling_options, 1024, PecOptions(), noise_model, measure_noise_learning
         )
 
-        # Should have 2 items: 1 for pub + 1 TREX calibration
-        self.assertEqual(len(quantum_program.items), 2)
-
-        # Check first item has PEC arguments
-        item = cast("SamplexItem", quantum_program.items[0])
-        self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
-        self.assertEqual(
-            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
-            noise_model[noise_layer_ref],
+        # 2 pubs + 1 TREX calibration item.
+        self.assertEqual(len(program.items), 3)
+        # For "auto", TREX follows the twirling randomizations of the estimation items.
+        expected_trex_randomizations = (
+            twirling_options.num_randomizations
+            if num_randomizations == "auto"
+            else num_randomizations
         )
-        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
-        expected_noise_factor = pec_options.noise_gain - 1
-        self.assertEqual(
-            item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], expected_noise_factor
+        self.assertTrexItemIsCorrect(
+            program, pubs, expected_num_randomizations=expected_trex_randomizations
         )
-
-        # Check passthrough data
-        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-        self.assertTrue(passthrough["post_processor"]["measure_mitigation"])
-        self.assertIn("pec_gammas", passthrough["post_processor"])
 
     def test_prepare_pec_with_trivial_noise_maps(self):
         """Test ``prepare_pec`` with noise maps set to identity."""
