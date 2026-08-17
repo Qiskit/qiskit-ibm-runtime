@@ -150,14 +150,23 @@ class TestInsertNoisePass(IBMTestCase):
         np.testing.assert_allclose(actual_p1, expected_p1, atol=1e-10)
 
     def test_noise_injected_inside_control_flow_block(self):
-        """Test that noise is injected into barriers inside control flow blocks."""
+        """Test that noise is injected into barriers inside control flow blocks.
+
+        "XI" is LSB-rightmost, so X acts on the higher physical index of the pair.
+        Every barrier below spans physical qubits {0, 2}, so X must land on physical qubit 2
+        regardless of the qubit order written in the barrier or how the block attaches to the
+        outer circuit.
+        """
         separate_body = QuantumCircuit(QuantumRegister(2, "inner"))
         separate_body.append(Barrier(2, label="R0@tag=r0"), [0, 1])
 
         circuit = QuantumCircuit(3, 1)
         circuit.measure(0, 0)
         with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.append(Barrier(2, label="R0@tag=r0"), [0, 2])
+        with circuit.if_test((circuit.clbits[0], 1)):
             circuit.append(Barrier(2, label="R0@tag=r0"), [2, 0])
+        circuit.if_test((circuit.clbits[0], True), separate_body, [0, 2], [])
         circuit.if_test((circuit.clbits[0], True), separate_body, [2, 0], [])
 
         noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
@@ -165,32 +174,24 @@ class TestInsertNoisePass(IBMTestCase):
             circuit
         )
 
-        if_instrs = [instr for instr in result.data if instr.operation.name == "if_else"]
-        self.assertEqual(len(if_instrs), 2)
-        for if_instr in if_instrs:
+        def get_noise_physical_qubits(if_instr):
+            """Return the physical qubit indices the single noise channel in if_instr acts on."""
             if_body = if_instr.operation.blocks[0]
+            noise_instrs = [i for i in if_body.data if i.operation.name == "quantum_channel"]
+            self.assertEqual(len(noise_instrs), 1)
+            noise_instr = noise_instrs[0]
+            physical_qubits = []
+            for local_qubit in noise_instr.qubits:
+                local_idx = if_body.find_bit(local_qubit).index
+                parent_qubit = if_instr.qubits[local_idx]
+                physical_qubits.append(result.find_bit(parent_qubit).index)
+            return physical_qubits
 
-            # if_instr.qubits = [circuit.qubits[2], circuit.qubits[0]], so:
-            #   if_body.qubits[0] -> parent qubit 2
-            #   if_body.qubits[1] -> parent qubit 0
+        if_instrs = [instr for instr in result.data if instr.operation.name == "if_else"]
+        self.assertEqual(len(if_instrs), 4)
 
-            self.assertEqual(if_body.num_qubits, 2)
-            self.assertEqual(result.find_bit(if_instr.qubits[0]).index, 2)
-            self.assertEqual(result.find_bit(if_instr.qubits[1]).index, 0)
-
-            self.assertEqual(len(_noise_error_ops(if_body)), 1)
-            barrier_instr = next(
-                instr for instr in if_body.data if instr.operation.name == "barrier"
-            )
-            noise_instr = next(
-                instr for instr in if_body.data if instr.operation.name == "quantum_channel"
-            )
-
-            # The barrier preserves its original local qubit order [0, 1].
-            self.assertEqual(if_body.find_bit(barrier_instr.qubits[0]).index, 0)
-            self.assertEqual(if_body.find_bit(barrier_instr.qubits[1]).index, 1)
-
-            # Barrier qargs [2, 0] sorted ascending -> [0, 2], so the noise channel must
-            # be applied to local qubit 1 (parent qubit 0) then local qubit 0 (parent qubit 2).
-            self.assertEqual(if_body.find_bit(noise_instr.qubits[0]).index, 1)
-            self.assertEqual(if_body.find_bit(noise_instr.qubits[1]).index, 0)
+        # All four cases span physical qubits {0, 2}; "XI" (LSB-right) -> X on physical qubit 2.
+        self.assertEqual(get_noise_physical_qubits(if_instrs[0]), [0, 2])  # barrier [0, 2]
+        self.assertEqual(get_noise_physical_qubits(if_instrs[1]), [0, 2])  # barrier [2, 0]
+        self.assertEqual(get_noise_physical_qubits(if_instrs[2]), [0, 2])  # separate_body, attached [0, 2]
+        self.assertEqual(get_noise_physical_qubits(if_instrs[3]), [0, 2])  # separate_body, attached [2, 0]
