@@ -193,5 +193,9 @@ class TestInsertNoisePass(IBMTestCase):
         # All four cases span physical qubits {0, 2}; "XI" (LSB-right) -> X on physical qubit 2.
         self.assertEqual(get_noise_physical_qubits(if_instrs[0]), [0, 2])  # barrier [0, 2]
         self.assertEqual(get_noise_physical_qubits(if_instrs[1]), [0, 2])  # barrier [2, 0]
-        self.assertEqual(get_noise_physical_qubits(if_instrs[2]), [0, 2])  # separate_body, attached [0, 2]
-        self.assertEqual(get_noise_physical_qubits(if_instrs[3]), [0, 2])  # separate_body, attached [2, 0]
+        self.assertEqual(
+            get_noise_physical_qubits(if_instrs[2]), [0, 2]
+        )  # separate_body, attached [0, 2]
+        self.assertEqual(
+            get_noise_physical_qubits(if_instrs[3]), [0, 2]
+        )  # separate_body, attached [2, 0]
