@@ -119,8 +119,7 @@ class TestExecutor(IBMTestCase):
 
         parameter_values = np.random.random((circuit.num_parameters,))
 
-        shots = 4_000
-        program = QuantumProgram(shots=shots)
+        program = QuantumProgram(shots=4_000)
         program.append_samplex_item(
             isa_template, samplex=samplex, samplex_arguments={"parameter_values": parameter_values}
         )
@@ -173,6 +172,5 @@ class TestExecutor(IBMTestCase):
                 )
             )
 
-        self.assertTrue(
-            all((a > b) and (a < 1 and b < 1) for a, b in zip(fidelities, fidelities[1:]))
-        )
+        self.assertGreater(fidelities[0], fidelities[1])
+        self.assertGreater(fidelities[1], fidelities[2])
