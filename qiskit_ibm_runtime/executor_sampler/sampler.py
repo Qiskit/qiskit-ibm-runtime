@@ -129,18 +129,18 @@ class SamplerV2(BaseSamplerV2):
         super().__setattr__(name, value)
 
     def find_unique_layers(
-        self, pubs: Iterable[SamplerPubLike], types: Literal["2Q", "all"] = "2Q"
+        self, pubs: Iterable[SamplerPubLike], types: Literal["gates", "all"] = "gates"
     ) -> list[CircuitInstruction]:
         """Return the unique boxed layers found across the given PUBs of a given type.
 
-        The ``types`` of layers can be either ``"2Q"`` or ``"all"``, corresponding to 2-qubit
+        The ``types`` of layers can be either ``"gates"`` or ``"all"``, corresponding to only
         gate layers or all layers, respectively. The returned list then contains one instance of
         each distinct boxed layer (represented as a :class:`~.CircuitInstruction`) appearing
         in the input PUBs.
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
-            types: The types of layers to return. Can be either ``"2Q"`` or ``"all"``.
+            types: The types of layers to return. Can be either ``"gates"`` or ``"all"``.
 
         Returns:
             The unique boxed layers found across the given PUBs.
