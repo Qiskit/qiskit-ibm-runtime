@@ -27,17 +27,19 @@ import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
+from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from .decorators import integration_test_setup
 from .utils import bell
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
 
     from plotly.graph_objects import Figure as PlotlyFigure
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
     from qiskit_ibm_runtime import QiskitRuntimeService
-    from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
+    from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
     from .decorators import IntegrationTestDependencies
     from .unit.executor_estimator.utils import SamplexCircuitScenario, TemplateCircuitScenario
@@ -338,6 +340,75 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
                 f"(enable_gates={enable_gates}, noise_factor={noise_factor}); "
                 f"got {circuit.num_parameters}, expected {expected_num_params}"
             ),
+        )
+
+    def assertTrexItemIsCorrect(
+        self,
+        program: QuantumProgram,
+        pubs: Sequence[EstimatorPub],
+        expected_num_randomizations: int,
+    ) -> None:
+        """Assert that a TREX calibration item was correctly added to a :class:`~.QuantumProgram`.
+
+        Checks:
+
+        * The last item is a :class:`~.SamplexItem`.
+        * ``trex_item.shape == (expected_num_randomizations,)``.
+        * ``trex_item.circuit.num_qubits`` equals ``max(pub.circuit.num_qubits for pub in pubs)``.
+        * Every qubit has exactly one ``measure`` instruction — the circuit measures all qubits.
+        * The gate counts are exactly ``3 * n`` ``rz`` and ``2 * n`` ``sx`` for ``n`` qubits,
+          with no other non-barrier, non-measure gates.
+        * ``program.passthrough_data["post_processor"]["measure_mitigation"]`` is ``True``.
+
+        Args:
+            program: The :class:`~.QuantumProgram` returned by the prepare function.
+            pubs: The PUBs passed to the prepare function, used to derive the expected
+                TREX circuit width.
+            expected_num_randomizations: The expected randomization count encoded in
+                ``trex_item.shape[0]``.
+        """
+        trex_item = program.items[-1]
+        self.assertIsInstance(trex_item, SamplexItem, "Last item must be a SamplexItem (TREX)")
+
+        self.assertEqual(
+            trex_item.shape,
+            (expected_num_randomizations,),
+            f"Expected TREX item shape ({expected_num_randomizations},), got {trex_item.shape}",
+        )
+
+        n = max(pub.circuit.num_qubits for pub in pubs)
+        self.assertEqual(
+            trex_item.circuit.num_qubits,
+            n,
+            f"Expected TREX circuit width {n}, got {trex_item.circuit.num_qubits}",
+        )
+
+        op_counts = trex_item.circuit.count_ops()
+        self.assertEqual(
+            op_counts["measure"],
+            n,
+            f"Expected {n} measure operations (one per qubit), got {op_counts['measure']}",
+        )
+        self.assertEqual(
+            op_counts["rz"],
+            3 * n,
+            f"Expected {3 * n} rz operations (3 per qubit), got {op_counts['rz']}",
+        )
+        self.assertEqual(
+            op_counts["sx"],
+            2 * n,
+            f"Expected {2 * n} sx operations (2 per qubit), got {op_counts['sx']}",
+        )
+        self.assertEqual(
+            set(op_counts) - {"barrier"},
+            {"measure", "rz", "sx"},
+            f"Expected exactly gate types {{measure, rz, sx}} (plus barriers),"
+            f"got {dict(op_counts)}",
+        )
+
+        self.assertTrue(
+            program.passthrough_data["post_processor"]["measure_mitigation"],  # type: ignore[index, call-overload]
+            "passthrough_data['post_processor']['measure_mitigation'] must be True",
         )
 
 
