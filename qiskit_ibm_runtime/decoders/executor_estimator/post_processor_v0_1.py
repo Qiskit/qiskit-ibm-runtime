@@ -475,7 +475,10 @@ def _process_expectation_values_pec(
 
         exp_vals[bcast_index] = exp_val * pec_gamma
         ensemble_stds[bcast_index] = np.sqrt(ensemble_variance * pec_gamma**2 / total_shots)
-        stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
+        if num_randomizations == 1:
+            stds[bcast_index] = ensemble_stds[bcast_index]
+        else:
+            stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
 
     return exp_vals, stds, ensemble_stds
 

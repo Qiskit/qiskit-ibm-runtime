@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 from ..exceptions import IBMInputValueError
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
+from ..utils.utils import validate_no_boxes
 from .pec.prepare_pec import prepare_pec
 from .prepare_pea import prepare_pea
 from .prepare_vanilla import prepare_vanilla
@@ -58,11 +59,10 @@ def prepare(
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
-        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
-            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
-            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
-            (using the "unique_box" value of the relevant attribute). These tags can help
-            injecting noise in simulators.
+        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
+            (will pass the ``"none"`` value to the relevant attribute), while ``True`` will cause
+            tags with the twirled boxes hash to be added (using the ``"unique_box"`` value of the
+            relevant attribute). These tags are used to inject noise when running in local mode.
         backend: The backend for which the program is prepared. Only required when dynamical
             decoupling is enabled.
 
@@ -73,19 +73,25 @@ def prepare(
             objects for each pub, with passthrough_data configured for post-processing.
         - :class:`~.ExecutorOptions` mapped from the estimator's options.
     """
-    if options.dynamical_decoupling.enable:
-        for pub in pubs:
+    if options.resilience.pec_mitigation and options.resilience.zne_mitigation:
+        raise IBMInputValueError(
+            "PEC mitigation and ZNE mitigation are incompatible with one another."
+        )
+
+    for pub in pubs:
+        validate_no_boxes(pub.circuit)
+
+        if options.dynamical_decoupling.enable:
             if pub.circuit.has_control_flow_op():
                 raise IBMInputValueError(
                     "Dynamical decoupling is not compatible with dynamic circuits "
                     "(circuits with control flow operations)."
                 )
-        if backend is None:
-            raise IBMInputValueError(
-                "A backend must be provided when dynamical decoupling is enabled."
-            )
+            if backend is None:
+                raise IBMInputValueError(
+                    "A backend must be provided when dynamical decoupling is enabled."
+                )
 
-    # Map options to executor options
     executor_options = estimator_options_to_executor_options(options)
 
     if options.resilience.pec_mitigation:

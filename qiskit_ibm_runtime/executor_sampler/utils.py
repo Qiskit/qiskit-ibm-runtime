@@ -16,35 +16,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import BoxOp
-
 from ..exceptions import IBMInputValueError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from qiskit.circuit import QuantumCircuit
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
     from ..options_models.twirling import TwirlingOptions
-
-
-def validate_no_boxes(circuit: QuantumCircuit) -> None:
-    """Validate that a circuit contains no :class:`~qiskit.circuit.BoxOp` instructions.
-
-    Args:
-        circuit: The circuit to validate.
-
-    Raises:
-        IBMInputValueError: If the circuit contains :class:`~qiskit.circuit.BoxOp` instructions.
-    """
-    for instruction in circuit.data:
-        if isinstance(instruction.operation, BoxOp):
-            raise IBMInputValueError(
-                f"Circuit contains a BoxOp instruction '{instruction.operation.name}' "
-                "which is not supported in this minimal implementation. "
-                "BoxOp support (for twirling) will be added in a future phase."
-            )
 
 
 def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | None) -> None:
