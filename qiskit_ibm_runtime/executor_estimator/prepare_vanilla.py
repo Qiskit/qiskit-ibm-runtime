@@ -161,7 +161,7 @@ def prepare_vanilla(
         )
         trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
-        logger.debug("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
+        logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
         passthrough_data["post_processor"]["measure_mitigation"] = True
 
     # Set semantic role for post-processing dispatch

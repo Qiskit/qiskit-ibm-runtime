@@ -134,7 +134,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
     if measure_mitigation:
-        logger.debug("TREX (measure mitigation) enabled.")
+        logger.info("TREX (measure mitigation) enabled.")
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
         try:
@@ -184,7 +184,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Calculate exp vals and build an EstimatorPubResult
         if mitigation == "pec":
-            logger.debug("Applying PEC mitigation for pub %d.", pub_idx)
+            logger.info("Applying PEC mitigation for pub %d.", pub_idx)
             pub_result = create_pub_result_pec(
                 item_result,
                 observables,
@@ -194,7 +194,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 pec_gamma=pec_gammas[pub_idx],
             )
         elif mitigation == "zne":
-            logger.debug("Applying ZNE mitigation for pub %d.", pub_idx)
+            logger.info("Applying ZNE mitigation for pub %d.", pub_idx)
             # In case each pub is associated with several items - create a list in which each
             # element is a list containing all relevant items for that pub
             combined_results = result[pub_idx * res_step : (pub_idx + 1) * res_step]
@@ -210,7 +210,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 extrapolator=extrapolator,
             )
         elif mitigation == "pea":
-            logger.debug("Applying PEA mitigation for pub %d.", pub_idx)
+            logger.info("Applying PEA mitigation for pub %d.", pub_idx)
             pub_result = create_pub_result_pea(
                 item_result,
                 observables,
@@ -224,7 +224,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         elif mitigation is not None:
             raise ValueError(f"Unknown mitigation technique {mitigation}")
         else:
-            logger.debug("Post processing pub %d.", pub_idx)
+            logger.info("Post processing pub %d.", pub_idx)
             pub_result = create_pub_result(
                 item_result, observables, param_shape, param_basis_pairs, readout_noise_data
             )
