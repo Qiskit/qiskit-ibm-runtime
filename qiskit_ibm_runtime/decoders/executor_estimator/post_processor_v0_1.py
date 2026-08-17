@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+import logging
+import warnings
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
@@ -33,8 +35,10 @@ from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...executor_estimator.zne.extrapolation import process_extrapolated_expectation_values
 from ...results.estimator_pub import EstimatorPubResult
 from ...results.quantum_program import QuantumProgramResult
-from .trex_utils import calculate_trex_factor, get_processed_calibration_data
+from .trex_utils import calculate_trex_factor, expand_obs_dict, get_processed_calibration_data
 from .utils import compute_exp_val, identify_measure_basis
+
+logger = logging.getLogger(__name__)
 
 
 def _build_program_result_metadata(post_processor_data: dict) -> dict:
@@ -72,6 +76,54 @@ def _build_program_result_metadata(post_processor_data: dict) -> dict:
     program_metadata["target_precision"] = post_processor_data.get("precision", None)
     program_metadata["shots"] = post_processor_data.get("shots", None)
     return program_metadata
+
+
+def _expand_observables_lists(observables_lists: list) -> list:
+    """Walk the nested list-of-dicts from ``ObservablesArray.tolist()`` and expand projectors.
+
+    Replaces every observable dict with its projector-expanded equivalent.
+
+    The structure mirrors the shape of the ``ObservablesArray``: a nested list whose leaf
+    elements are dicts mapping observable term strings to coefficients. Non-dict nodes are
+    lists and are recursed into.
+
+    Args:
+        observables_lists: The ``"observables"`` value from the passthrough data — a list
+            whose elements are either nested lists (for multi-dimensional observable arrays)
+            or dicts (scalar / innermost cells).
+
+    Returns:
+        A new nested list with the same shape where every leaf dict has been passed through
+        :func:`expand_obs_dict`.
+    """
+    original_count = 0
+    expanded_count = 0
+
+    def _recurse(node: dict | list) -> dict | list:
+        nonlocal original_count, expanded_count
+        if isinstance(node, dict):
+            original_count += len(node)
+            expanded = expand_obs_dict(node)
+            expanded_count += len(expanded)
+            return expanded
+        return [_recurse(child) for child in node]
+
+    result = [_recurse(pub_obs) for pub_obs in observables_lists]
+
+    logger.debug(
+        "TREX observable expansion: %d original terms → %d expanded terms.",
+        original_count,
+        expanded_count,
+    )
+    if expanded_count > 2 * original_count:
+        warnings.warn(
+            f"TREX observable expansion increased the number of observable terms from "
+            f"{original_count} to {expanded_count}. Post-processing may take longer than usual.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    return result
 
 
 def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
@@ -144,6 +196,10 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             metadata=result.metadata,
             passthrough_data=result.passthrough_data,
         )
+
+        # When TREX is active, expand projector terms in every observable dict into pure-Pauli
+        # components before any further processing.
+        observables_lists = _expand_observables_lists(observables_lists)
 
     # In case each pub is associated with several items - create a list in which each element
     # is a list containing all relevant items for that pub

@@ -15,8 +15,12 @@
 import numpy as np
 from qiskit.quantum_info import Pauli, PauliLindbladMap
 
+from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
+    _expand_observables_lists,
+)
 from qiskit_ibm_runtime.decoders.executor_estimator.trex_utils import (
     calculate_trex_factor,
+    expand_obs_dict,
     get_processed_calibration_data,
 )
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramItemResult
@@ -146,3 +150,79 @@ class TestCalculateTrexFactor(IBMTestCase):
         result = calculate_trex_factor(cal_data_flipped, "I")
 
         self.assertEqual(result, 1.0)
+
+
+class TestExpandObsDict(IBMTestCase):
+    """Tests for expand_obs_dict.
+
+    Each entry in TEST_CASES is:
+        (input_dict, expected_output_dict)
+    """
+
+    TEST_CASES = [
+        # --- Pure-Pauli dicts: returned unchanged ---
+        ({"ZZZ": 2.0}, {"ZZZ": 2.0}),
+        ({"IXYZ": 1.0, "ZZZ": 0.5}, {"IXYZ": 1.0, "ZZZ": 0.5}),
+        # --- Projector adjacent to a Pauli ---
+        ({"0Z": 1.0}, {"IZ": 0.5, "ZZ": 0.5}),
+        ({"1Z": 1.0}, {"IZ": 0.5, "ZZ": -0.5}),
+        ({"+Z": 1.0}, {"IZ": 0.5, "XZ": 0.5}),
+        ({"-Z": 1.0}, {"IZ": 0.5, "XZ": -0.5}),
+        ({"rZ": 1.0}, {"IZ": 0.5, "YZ": 0.5}),
+        ({"lZ": 1.0}, {"IZ": 0.5, "YZ": -0.5}),
+        ({"Z0": 1.0}, {"ZI": 0.5, "ZZ": 0.5}),
+        ({"I0": 1.0}, {"II": 0.5, "IZ": 0.5}),
+        # --- Merging: projector expansion collides with existing pure-Pauli term ---
+        ({"0Z": 0.5, "IZ": 1.0}, {"IZ": 1.25, "ZZ": 0.25}),
+        # --- Multiple projector terms, all merged ---
+        ({"0": 1.0, "1": 1.0}, {"I": 1.0, "Z": 0.0}),
+    ]
+
+    def test_expand_obs_dict(self):
+        """Parameterised test covering all projector characters and merging behaviour."""
+        for obs_dict, expected in self.TEST_CASES:
+            with self.subTest(obs_dict=obs_dict):
+                result = expand_obs_dict(obs_dict)
+
+                # Same set of keys
+                self.assertEqual(
+                    set(result.keys()),
+                    set(expected.keys()),
+                    f"input={obs_dict}: key mismatch\n  got:      {result}\n  expected: {expected}",
+                )
+
+                # Coefficients match within float tolerance
+                for key in expected:
+                    self.assertAlmostEqual(
+                        result[key],
+                        expected[key],
+                        places=14,
+                        msg=f"input={obs_dict}, key='{key}': got {result[key]}, "
+                        f"expected {expected[key]}",
+                    )
+
+
+class TestExpandObservablesLists(IBMTestCase):
+    """Tests for _expand_observables_lists."""
+
+    TEST_CASES = [
+        # Flat list (1D ObservablesArray shape): each element is a dict
+        (
+            [{"0Z": 1.0}, {"ZZ": 2.0}],
+            [{"IZ": 0.5, "ZZ": 0.5}, {"ZZ": 2.0}],
+        ),
+        # Nested list (2D ObservablesArray shape): outer list per pub, inner per cell
+        (
+            [[{"0Z": 1.0, "IZ": 1.0}, {"ZZ": 2.0}], [{"I0": 1.0}]],
+            [[{"IZ": 1.5, "ZZ": 0.5}, {"ZZ": 2.0}], [{"II": 0.5, "IZ": 0.5}]],
+        ),
+    ]
+
+    def test_expand_observables_lists(self):
+        """Parameterised test: shape is preserved and every leaf dict is expanded."""
+        for obs_lists, expected in self.TEST_CASES:
+            with self.subTest(obs_lists=obs_lists):
+                result = _expand_observables_lists(obs_lists)
+
+                # Shape (nesting structure) must be identical
+                self.assertEqual(result, expected)
