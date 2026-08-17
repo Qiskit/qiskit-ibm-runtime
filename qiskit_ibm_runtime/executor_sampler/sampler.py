@@ -20,12 +20,10 @@ from typing import TYPE_CHECKING, Literal
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-from samplomatic import InjectNoise, Tag
-from samplomatic.utils import get_annotation
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..executor_estimator.utils import find_unique_layers
+from ..executor_estimator.utils import find_box_type, find_unique_layers
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .prepare import prepare
@@ -143,7 +141,7 @@ class SamplerV2(BaseSamplerV2):
             types: The types of layers to return. Can be either ``"gates"`` or ``"all"``.
 
         Returns:
-            The unique boxed layers found across the given PUBs.
+            The unique boxed layers of a certain type found across the given PUBs.
         """
         coerced_pubs = [SamplerPub.coerce(pub, None) for pub in pubs]
         options = self.finalize_options()
@@ -154,8 +152,8 @@ class SamplerV2(BaseSamplerV2):
             inject_noise=False,
             add_tags=True,
         )
-        annotated_type = Tag if types == "all" else InjectNoise
-        return [layer for layer in layers if get_annotation(layer, annotated_type)]
+        box_types = ("gate", "measurement", "unknown") if types == "all" else ("gate",)
+        return [layer for layer in layers if find_box_type(layer) in box_types]
 
     def finalize_options(self) -> SamplerOptions:
         """Construct and finalize the Sampler options.

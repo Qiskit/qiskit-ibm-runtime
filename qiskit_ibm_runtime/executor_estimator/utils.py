@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
-    from qiskit.circuit import CircuitInstruction
+    from qiskit.circuit import BoxOp, CircuitInstruction
     from qiskit.primitives import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
@@ -41,7 +41,7 @@ from qiskit.circuit.exceptions import CircuitError
 from qiskit.quantum_info import Pauli, PauliList
 from samplomatic import ChangeBasis
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions, get_annotation
+from samplomatic.utils import find_unique_box_instructions, get_annotation, undress_box
 
 from ..exceptions import IBMInputValueError
 
@@ -331,6 +331,38 @@ def find_unique_layers(
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True
     )
+
+
+def find_box_type(instruction: BoxOp) -> Literal["gate", "measurement", "unknown"]:
+    """Find the type of :class:`~qiskit.circuit.BoxOp` that ``instruction`` contains.
+
+    Args:
+        instruction: The instruction to get the type of.
+
+    Returns:
+        The box type. Can be one of ``"gate"``, ``"measurement"``, or ``"unknown"``.
+
+    Raises:
+        IBMInputValueError: If ``instruction`` does not contain a box.
+    """
+    box = instruction.operation
+    if (name := box.name) != "box":
+        raise IBMInputValueError(f"Expected a 'box' but found '{name}'.")
+
+    undressed_box = undress_box(box)
+
+    if len(undressed_box.body) == 0:
+        return "gate"
+
+    all_gates = all(op.is_standard_gate() or op.name == "barrier" for op in undressed_box.body)
+    all_measurement = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
+
+    if all_gates and not all_measurement:
+        return "gate"
+    elif not all_gates and all_measurement:
+        return "measurement"
+
+    return "unknown"
 
 
 def compute_samplex_arguments(

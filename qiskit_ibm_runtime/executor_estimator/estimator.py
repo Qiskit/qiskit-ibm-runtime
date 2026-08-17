@@ -22,8 +22,6 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from samplomatic import InjectNoise, Tag
-from samplomatic.utils import get_annotation
 
 from ..base_primitive import get_mode_service_backend
 from ..exceptions import IBMInputValueError
@@ -31,7 +29,7 @@ from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .prepare import prepare
-from .utils import find_unique_layers, resolve_precision
+from .utils import find_box_type, find_unique_layers, resolve_precision
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -201,7 +199,7 @@ class EstimatorV2(BaseEstimatorV2):
             est = EstimatorV2(mode, options)
             est.options.resilience.pec_mitigation = True
 
-            layers = est.find_unique_layers(pubs, mode="gates")
+            layers = est.find_unique_layers(pubs, types="gates")
 
             results = NoiseLearnerV3(mode).run(layers).result()
             noise_model = results.to_dict(layers)
@@ -214,7 +212,7 @@ class EstimatorV2(BaseEstimatorV2):
             types: The types of layers to return. Can be either ``"gates"`` or ``"all"``.
 
         Returns:
-            The unique boxed layers found across the given PUBs.
+            The unique boxed layers of a certain type found across the given PUBs.
         """
         coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
         options = self.finalize_options()
@@ -226,8 +224,8 @@ class EstimatorV2(BaseEstimatorV2):
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
             add_tags=True,
         )
-        annotation_type = Tag if types == "all" else InjectNoise
-        return [layer for layer in layers if get_annotation(layer.operation, annotation_type)]
+        box_types = ("gate", "measurement", "unknown") if types == "all" else ("gate",)
+        return [layer for layer in layers if find_box_type(layer) in box_types]
 
     def finalize_options(self) -> EstimatorOptions:
         """Construct and finalize the Estimator options.
