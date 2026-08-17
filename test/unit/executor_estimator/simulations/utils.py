@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from qiskit.circuit import Parameter
 from qiskit.quantum_info import Operator, PauliLindbladMap, SparsePauliOp
@@ -24,6 +26,11 @@ from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 
 from ....utils import make_mirror_circuit_with_phases
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    from qiskit.providers import BackendV2
 
 
 def create_estimator_test_data(backend, preset_pass_manager):
@@ -153,7 +160,12 @@ def create_noise_model_without_noise(estimator, pub):
     return noise_model
 
 
-def create_local_mode_estimator(backend):
+def create_local_mode_estimator(
+    backend: BackendV2,
+    num_randomizations: int,
+    shots_per_randomization: int,
+    options_overrides: dict[str, Any] = {},
+) -> EstimatorV2:
     """Creates an estimator instance running local mode simulation.
 
     The returned instance has all mitigation disabled (resilience_level 0)
@@ -167,10 +179,11 @@ def create_local_mode_estimator(backend):
             "local_mode": True,
         },
     )
+    options.update(**options_overrides)
 
     # Increase number of shots to have better statistics:
-    options.twirling.num_randomizations = 100
-    options.twirling.shots_per_randomization = 200
-    options.default_shots = 100 * 200
+    options.twirling.num_randomizations = num_randomizations
+    options.twirling.shots_per_randomization = shots_per_randomization
+    options.default_shots = num_randomizations * shots_per_randomization
 
     return EstimatorV2(mode=backend, options=options)
