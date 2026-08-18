@@ -22,6 +22,7 @@ from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     _build_program_result_metadata,
     _process_expectation_values_pea,
     _process_expectation_values_zne,
+    combine_selected_extrapolators_per_observable,
     create_pub_result,
     create_pub_result_pec,
     estimator_v2_post_processor_v0_1,
@@ -1350,10 +1351,10 @@ class TestProcessExpectationValuesPEA(IBMTestCase):
             measure_noise_data=None,
         )
 
-        # sel_extrapolators is a nested list: [per_bcast_index][per_term][per_extrap_point]
-        # For a scalar observable with one term, the first element contains the chosen name
-        self.assertIsInstance(sel_extrapolators[0][0][0], str)
-        self.assertEqual(sel_extrapolators[0][0][0], "linear")
+        # sel_extrapolators is a nested list: [per_bcast_index][per_term] of the selected
+        # extrapolator for each term of the zero noise extrapolation point
+        self.assertIsInstance(sel_extrapolators[0][0], str)
+        self.assertEqual(sel_extrapolators[0][0], "linear")
 
     def test_multiple_extrapolators_selects_highest_priority_pea(self):
         """Test that with multiple extrapolators the highest-priority valid one is selected.
@@ -1389,8 +1390,9 @@ class TestProcessExpectationValuesPEA(IBMTestCase):
             extrapolator=["linear", "exponential"],
             measure_noise_data=None,
         )
-        # sel_extrapolators is a nested list: [per_bcast_index][per_term][per_extrap_point]
-        self.assertEqual(sel_first[0][0][0], "linear")
+        # sel_extrapolators is a nested list: [per_bcast_index][per_term] of the selected
+        # extrapolator for each term of the zero noise extrapolation point
+        self.assertEqual(sel_first[0][0], "linear")
 
         # "exponential" first: exponential fit is rejected (value way outside [-1,1]);
         # selection falls through to "linear" which is valid
@@ -1404,7 +1406,7 @@ class TestProcessExpectationValuesPEA(IBMTestCase):
             extrapolator=["exponential", "linear"],
             measure_noise_data=None,
         )
-        self.assertEqual(sel_second[0][0][0], "linear")
+        self.assertEqual(sel_second[0][0], "linear")
 
         # Both orderings resolve to "linear" and give the same extrapolated value
         self.assertAlmostEqual(float(evs_first), float(evs_second), places=5)
@@ -1685,9 +1687,9 @@ class TestProcessExpectationValuesZNE(IBMTestCase):
             measure_noise_data=None,
         )
 
-        # sel_extrapolators[bcast_idx][term_idx] is an array of extrapolator names,
-        # one per extrapolated noise factor.  For a single-term scalar observable:
-        self.assertEqual(sel_extrapolators[0][0][0], "linear")
+        # sel_extrapolators[bcast_idx][term_idx] is the extrapolator name of the
+        # zero noise extrapolation point
+        self.assertEqual(sel_extrapolators[0][0], "linear")
 
     def test_fallback_extrapolator_zne(self):
         """Test ZNE with only the ``fallback`` extrapolator returns the lowest-noise-factor ev."""
@@ -1718,8 +1720,8 @@ class TestProcessExpectationValuesZNE(IBMTestCase):
         # fallback always returns the value at the lowest noise factor
         # (noise_factor=1 → all 00 → +1)
         self.assertAlmostEqual(float(zero_evs), 1.0)
-        # sel_extrapolators[bcast_idx][term_idx][extrap_idx]
-        self.assertEqual(sel_extrapolators[0][0][0], "fallback")
+        # sel_extrapolators[bcast_idx][term_idx]
+        self.assertEqual(sel_extrapolators[0][0], "fallback")
 
     def test_multiple_extrapolated_noise_factors_zne(self):
         """Test ZNE with multiple extrapolated noise factors returns results for each."""
@@ -1789,3 +1791,82 @@ class TestBuildProgramMetadata(IBMTestCase):
         # When flag is True the sub-option dict must be present
         resilience_on = _get_resilience_metadata(True)
         self.assertIn(options_key, resilience_on)
+
+
+@ddt
+class TestCombineSelectedExtrapolatorsPerObservable(IBMTestCase):
+    """Tests for the ``combine_selected_extrapolators_per_observable`` function."""
+
+    def test_single_observable_single_term_returns_extrapolator_name(self):
+        """Single observable with one term returns that term's extrapolator name."""
+        selected_extrapolators = [["linear"]]
+        result = combine_selected_extrapolators_per_observable(selected_extrapolators, (1,))
+        self.assertEqual(result.shape, (1,))
+        self.assertEqual(result[0], "linear")
+
+    def test_single_observable_all_same_terms_returns_extrapolator_name(self):
+        """Single observable with multiple terms using same extrapolator returns that name."""
+        selected_extrapolators = [["linear", "linear", "linear"]]
+        result = combine_selected_extrapolators_per_observable(selected_extrapolators, (1,))
+        self.assertEqual(result.shape, (1,))
+        self.assertEqual(result[0], "linear")
+
+    def test_single_observable_mixed_terms_returns_multiple(self):
+        """Single observable with different extrapolators per term returns 'multiple'."""
+        selected_extrapolators = [["linear", "exponential"]]
+        result = combine_selected_extrapolators_per_observable(selected_extrapolators, (1,))
+        self.assertEqual(result.shape, (1,))
+        self.assertEqual(result[0], "multiple")
+
+    def test_multiple_observables_all_same_terms_returns_correct_names(self):
+        """Multiple observables all using the same extrapolator per observable."""
+        selected_extrapolators = [
+            ["linear", "linear"],
+            ["exponential", "exponential"],
+            ["fallback"],
+        ]
+        result = combine_selected_extrapolators_per_observable(selected_extrapolators, (3,))
+        self.assertEqual(result.shape, (3,))
+        self.assertEqual(result[0], "linear")
+        self.assertEqual(result[1], "exponential")
+        self.assertEqual(result[2], "fallback")
+
+    def test_multiple_observables_with_some_mixed_returns_multiple_for_those(self):
+        """Observables with mixed extrapolators per term get 'multiple'; others keep their name."""
+        selected_extrapolators = [
+            ["linear", "linear"],  # all same -> "linear"
+            ["linear", "exponential"],  # mixed -> "multiple"
+            ["fallback", "fallback"],  # all same -> "fallback"
+        ]
+        result = combine_selected_extrapolators_per_observable(selected_extrapolators, (3,))
+        self.assertEqual(result.shape, (3,))
+        self.assertEqual(result[0], "linear")
+        self.assertEqual(result[1], "multiple")
+        self.assertEqual(result[2], "fallback")
+
+    def test_output_reshaped_to_2d_output_shape(self):
+        """Result is reshaped into the requested 2D output_shape."""
+        selected_extrapolators = [
+            ["linear"],
+            ["linear"],
+            ["exponential"],
+            ["linear", "exponential"],  # mixed -> "multiple"
+        ]
+        result = combine_selected_extrapolators_per_observable(selected_extrapolators, (2, 2))
+        self.assertEqual(result.shape, (2, 2))
+        self.assertEqual(result[0, 0], "linear")
+        self.assertEqual(result[0, 1], "linear")
+        self.assertEqual(result[1, 0], "exponential")
+        self.assertEqual(result[1, 1], "multiple")
+
+    @data(
+        (["linear", "linear", "linear"], "linear"),
+        (["linear", "exponential"], "multiple"),
+        (["fallback"], "fallback"),
+    )
+    @unpack
+    def test_scalar_output_shape_single_observable(self, terms, expected):
+        """Scalar output_shape () produces a 0-d array with the correct value."""
+        result = combine_selected_extrapolators_per_observable([terms], ())
+        self.assertEqual(result.shape, ())
+        self.assertEqual(str(result), expected)
