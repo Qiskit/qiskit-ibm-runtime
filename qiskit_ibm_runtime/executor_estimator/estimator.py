@@ -224,7 +224,7 @@ class EstimatorV2(BaseEstimatorV2):
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
             add_tags=True,
         )
-        box_types = ("gate", "measurement", "unknown") if types == "all" else ("gate",)
+        box_types = ("gates", "measurement", "unknown") if types == "all" else ("gates",)
         return [layer for layer in layers if find_box_type(layer) in box_types]
 
     def finalize_options(self) -> EstimatorOptions:
