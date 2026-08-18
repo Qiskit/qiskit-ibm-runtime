@@ -173,7 +173,7 @@ class TestEstimatorWithNoise(IBMTestCase):
             inject_noise_annotation.ref: simulated_noise_model[
                 get_annotation(layer.operation, Tag).ref
             ]
-            for layer in estimator.find_unique_layers([pub])
+            for layer in estimator.find_unique_layers([pub], types="gates")
             if (inject_noise_annotation := get_annotation(layer.operation, InjectNoise))
         }
         estimator.options.resilience.noise_model = injected_noise_model
