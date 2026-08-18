@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
@@ -29,8 +29,10 @@ from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOpt
 
 from ....ibm_test_case import IBMTestCase
 from .utils import (
+    compute_sem_theoretical,
     create_estimator_test_data,
     create_estimator_test_data_extended,
+    create_estimator_test_data_statistical,
     create_local_mode_estimator,
     create_noise_model_without_noise,
 )
@@ -235,3 +237,137 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         # With no noise, we should get expectation values which are more or less equal to
         # ground truth.
         np.testing.assert_allclose(actual=evs, desired=ideal_evs, atol=0.025)
+
+
+@ddt
+class TestEstimatorNoiselessStatistical(IBMTestCase):
+    """Statistical validation of noiseless EstimatorV2 results.
+
+    For a noiseless simulation with R randomizations of S shots (N = R×S total), the
+    estimator output x̄ is the mean of R independent per-randomization expectation values.
+    Each per-randomization value is itself the mean of S bounded, independent shot outcomes
+    (eigenvalues ±1 for Paulis). By the CLT with R ≥ 100, x̄ is extremely well-approximated
+    as normally distributed:
+
+        x̄ ~ N(μ, SEM²)   where SEM = sqrt(Var_pp[O] / N)
+
+    The theoretical SEM is derived from an exact statevector simulation, mirroring the
+    post-processor's grouping of Pauli terms by measurement basis. Within each group,
+    all terms share the same shots and their combined variance is computed as
+    Var[Σ c_k P_k] (including cross-covariances). Groups use independent shot batches
+    so their variances add. No shot data is involved. Tests then verify:
+
+    1. The point estimate lies within 5 standard errors of the ideal value:
+       |evs − ideal| ≤ 5 × SEM_theoretical
+       (false-positive probability ≈ 5.7 × 10⁻⁷ per observable)
+
+    2. The reported ``ensemble_standard_error`` matches the theoretical SEM to
+       within 5 standard deviations of its own estimation error:
+       |ese − SEM_theoretical| / SEM_theoretical ≤ 5 / sqrt(2 × (N − 1))
+       ≈ 2.5% for N = 20 000 — a tight regression test on the variance calculation.
+
+       ``ensemble_standard_error`` uses all N shots as an iid ensemble (relative
+       precision ~1/sqrt(2N) ≈ 0.5% for N = 20 000), making it far more tightly
+       constrained than ``stds`` (which uses only R per-twirl averages, ~7%).
+
+       Testing ``ensemble_standard_error ≈ SEM_theoretical`` also implicitly verifies
+       the simulation is truly noiseless: in a noisy run, twirling adds inter-randomization
+       variance so that ``stds > ensemble_standard_error``, which would break this assertion.
+
+    Two PUBs are tested per configuration:
+    - PUB 0: three single-Pauli-string observables (each a single measurement config).
+    - PUB 1: one multi-term observable ``1·IYI + 2·IYY + 3·IZI`` where IYI and IYY
+      commute (same measurement config, non-trivial cross-covariances) while IZI
+      anticommutes with both (independent config). This exercises the cross-covariance
+      correction in the post-processor.
+
+    Configurations tested: vanilla (resilience_level=0) and PEC with identity noise model.
+    PEC with an identity noise model is statistically identical to vanilla because the PEC
+    gamma factor equals 1 (all Lindblad rates are zero) and no errors are ever injected.
+    """
+
+    NUM_RANDOMIZATIONS = 100
+    SHOTS_PER_RANDOMIZATION = 200
+    K_SIGMA = 5.0
+
+    def setUp(self):
+        """Test level setup."""
+        super().setUp()
+        self.backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
+        self.preset_pass_manager = generate_preset_pass_manager(
+            optimization_level=1, backend=self.backend
+        )
+
+    @data(
+        ("vanilla", RESILIENCE_LEVEL_0),
+        ("pec", TWIRLING_TREX_PEC),
+    )
+    @unpack
+    def test_statistical_accuracy(self, name, option_overrides):
+        """Tests point-estimate accuracy and reported uncertainty against theoretical predictions.
+
+        Runs both PUBs from ``create_estimator_test_data_statistical`` and for each
+        observable checks:
+        1. The EV is within 5 × SEM_theoretical of the ideal value.
+        2. The reported ``ensemble_standard_error`` is within 2.5% of SEM_theoretical
+           (5σ on the variance estimator itself).
+        """
+        pubs, ideal_evs_list = create_estimator_test_data_statistical(
+            self.backend, self.preset_pass_manager
+        )
+
+        estimator = create_local_mode_estimator(
+            self.backend,
+            num_randomizations=self.NUM_RANDOMIZATIONS,
+            shots_per_randomization=self.SHOTS_PER_RANDOMIZATION,
+            options_overrides=option_overrides,
+        )
+
+        if name == "pec":
+            # Build a combined noise model covering all unique layers across both pubs.
+            noise_model = create_noise_model_without_noise(estimator, pubs[0])
+            noise_model.update(create_noise_model_without_noise(estimator, pubs[1]))
+            estimator.options.resilience.noise_model = noise_model
+
+        result = estimator.run(pubs).result()
+        n_total = self.NUM_RANDOMIZATIONS * self.SHOTS_PER_RANDOMIZATION
+        # ese tolerance: 5σ on the chi-squared estimator sqrt(ensemble_variance/N)
+        ese_tolerance = self.K_SIGMA / np.sqrt(2 * (n_total - 1))
+
+        for pub_idx, (pub, ideal_evs) in enumerate(zip(pubs, ideal_evs_list)):
+            isa_circuit, observables, parameters = pub
+            evs = result[pub_idx].data.evs
+            ese = result[pub_idx].data.ensemble_standard_error
+            ideal_evs_arr = np.asarray(ideal_evs)
+
+            sem_theoretical = compute_sem_theoretical(
+                observables if isinstance(observables, list) else [observables],
+                isa_circuit,
+                parameters,
+                self.NUM_RANDOMIZATIONS,
+                self.SHOTS_PER_RANDOMIZATION,
+            )
+
+            # --- Assertion 1: point estimate within 5σ of ideal ---
+            ev_deviations = np.abs(evs.flatten() - ideal_evs_arr)
+            np.testing.assert_array_less(
+                ev_deviations,
+                self.K_SIGMA * sem_theoretical,
+                err_msg=(
+                    f"[{name}, pub{pub_idx}] EV deviations exceed {self.K_SIGMA}σ: "
+                    f"deviations={ev_deviations}, sem_theoretical={sem_theoretical}"
+                ),
+            )
+
+            # --- Assertion 2: ensemble_standard_error within 5σ of theoretical SEM ---
+            ese_rel_deviations = np.abs(ese.flatten() - sem_theoretical) / sem_theoretical
+            np.testing.assert_array_less(
+                ese_rel_deviations,
+                ese_tolerance,
+                err_msg=(
+                    f"[{name}, pub{pub_idx}] ensemble_standard_error deviations exceed "
+                    f"{self.K_SIGMA}σ: relative deviations={ese_rel_deviations}, "
+                    f"tolerance={ese_tolerance:.4f}, ese={ese}, "
+                    f"sem_theoretical={sem_theoretical}"
+                ),
+            )
