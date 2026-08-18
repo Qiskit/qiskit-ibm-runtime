@@ -18,7 +18,7 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -55,6 +55,9 @@ _REQUIRED_NOISE_FACTORS = {
     "fallback": 1,
     **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
 }
+
+# TypeAlias for a BoxOp type
+BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
 def validate_noise_factors(
@@ -333,14 +336,14 @@ def find_unique_layers(
     )
 
 
-def find_box_type(instruction: BoxOp) -> Literal["gate", "measurement", "unknown"]:
+def find_box_type(instruction: BoxOp) -> BoxType:
     """Find the type of :class:`~qiskit.circuit.BoxOp` that ``instruction`` contains.
 
     Args:
         instruction: The instruction to get the type of.
 
     Returns:
-        The box type. Can be one of ``"gate"``, ``"measurement"``, or ``"unknown"``.
+        The box type. Can be one of ``"gates"``, ``"measurement"``, or ``"unknown"``.
 
     Raises:
         IBMInputValueError: If ``instruction`` does not contain a box.
@@ -352,13 +355,13 @@ def find_box_type(instruction: BoxOp) -> Literal["gate", "measurement", "unknown
     undressed_box = undress_box(box)
 
     if len(undressed_box.body) == 0:
-        return "gate"
+        return "gates"
 
     all_gates = all(op.is_standard_gate() or op.name == "barrier" for op in undressed_box.body)
     all_measurement = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
 
     if all_gates and not all_measurement:
-        return "gate"
+        return "gates"
     elif not all_gates and all_measurement:
         return "measurement"
 
