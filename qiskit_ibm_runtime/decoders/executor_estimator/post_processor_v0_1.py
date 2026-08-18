@@ -40,6 +40,43 @@ from .utils import compute_exp_val, identify_measure_basis
 logger = logging.getLogger(__name__)
 
 
+def _build_program_result_metadata(post_processor_data: dict) -> dict:
+    """Compute the program result metadata dict from the raw inputs stored in the passthrough data.
+
+    The estimator stores the finalized ``options`` dict, ``shots``, and ``precision`` in
+    the passthrough data.  This function reconstructs the metadata that is exposed on
+    ``PrimitiveResult.metadata`` by pruning inactive resilience sub-options and appending
+    ``target_precision`` and ``shots``.
+
+    Args:
+        post_processor_data: The ``passthrough_data["post_processor"]`` dict.
+
+    Returns:
+        The computed program-metadata dict, or ``{}`` when no options are present (e.g.
+        results produced by an older passthrough schema that stored ``program_metadata``
+        directly).
+    """
+    options = post_processor_data.get("options", None)
+    if options is None:
+        return {}
+
+    metadata = {"options": dict(options)}
+    if "resilience" in metadata["options"]:
+        resilience = dict(metadata["options"]["resilience"])
+        for flag_key, options_key in [
+            ("zne_mitigation", "zne"),
+            ("pec_mitigation", "pec"),
+            ("measure_mitigation", "measure_noise_learning"),
+        ]:
+            if not resilience.get(flag_key):
+                resilience.pop(options_key, None)
+        metadata["options"]["resilience"] = resilience
+
+    metadata["target_precision"] = post_processor_data.get("precision", None)
+    metadata["shots"] = post_processor_data.get("shots", None)
+    return metadata
+
+
 def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
     """Convert a quantum program result to a primitives result, for a V2 estimator.
 
@@ -193,12 +230,9 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             pub_result.metadata["circuit_metadata"] = circuit_meta
         pub_results.append(pub_result)
 
-    metadata = {
-        "executor": result.metadata,
-        "options": post_processor_data.get("options", None),
-        "target_precision": post_processor_data.get("precision", None),
-        "shots": post_processor_data.get("shots", None),
-    }
+    # Build program_metadata from the raw inputs stored by the estimator
+    metadata = _build_program_result_metadata(post_processor_data)
+    metadata["executor"] = result.metadata
 
     return PrimitiveResult(pub_results, metadata=metadata)
 
