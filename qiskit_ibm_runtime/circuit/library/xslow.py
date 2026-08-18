@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025-2026.
+# (C) Copyright IBM 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Module for vendor-specific instructions."""
+"""Slow gate instructions."""
 
-from .mid_circuit_measure import MeasureReset, MidCircuitMeasure, MidCircuitReset
-from .xslow import XSlowGate
+from qiskit.circuit import Gate
+
+
+class XSlowGate(Gate):
+    """A class for a ``xslow`` gate."""
+
+    def __init__(self) -> None:
+        super().__init__("xslow", 1, [])
