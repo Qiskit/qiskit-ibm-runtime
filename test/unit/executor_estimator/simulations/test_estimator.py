@@ -144,7 +144,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         # Add noise to every unique layer, independent of its content (gates or measurements).
         simulated_noise_model = {
             annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)])
-            for layer in base_level_estimator.find_unique_layers([pub])
+            for layer in base_level_estimator.find_unique_layers([pub], types="all")
             if (annotation := get_annotation(layer.operation, Tag))
         }
         base_level_estimator.options.experimental["simulator_options"] = (
