@@ -352,84 +352,53 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
             item_cast = cast("SamplexItem", item)
             self.assertEqual(item_cast.shape, (8, 2))
 
-    def test_prepare_zne_single_pub_with_measure_noise_learning(self):
-        """Test prepare_zne with measure noise learning (TREX)."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
+    @data(32, "auto")
+    def test_prepare_zne_with_measure_noise_learning(self, num_randomizations):
+        """Test that measure_noise_learning adds a correctly built TREX calibration item.
 
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pub = EstimatorPub.coerce((circuit, observable))
-
-        noise_factors = [1.0, 2.0]
-        zne_options = ZneOptions()
-        zne_options.amplifier = "gate_folding"
-        zne_options.noise_factors = noise_factors
-        measure_noise_learning = MeasureNoiseLearningOptions()
-        measure_noise_learning.num_randomizations = 16
-
-        twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = True
-        twirling_options.enable_measure = True
-
-        quantum_program = prepare_zne(
-            [pub],
-            twirling_options,
-            1024,
-            zne_options,
-            measure_noise_learning=measure_noise_learning,
-        )
-
-        # Should have len(noise_factors) items + 1 TREX calibration
-        self.assertEqual(len(quantum_program.items), len(noise_factors) + 1)
-
-        # Check passthrough data
-        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-        self.assertTrue(passthrough["post_processor"]["measure_mitigation"])
-
-    def test_prepare_zne_multiple_pubs_with_measure_noise_learning(self):
-        """Test prepare_zne with multiple pubs and TREX."""
+        Uses two pubs of different widths (2q and 3q).  Verifies item count, circuit gate
+        structure, shape, and passthrough data via :meth:`assertTrexItemIsCorrect`.
+        """
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
         circuit1.cx(0, 1)
-
         circuit2 = QuantumCircuit(3)
         circuit2.h(0)
         circuit2.cx(0, 1)
         circuit2.cx(1, 2)
 
-        observable1 = SparsePauliOp.from_list([("ZZ", 1)])
-        observable2 = SparsePauliOp.from_list([("ZZZ", 1)])
-
-        pub1 = EstimatorPub.coerce((circuit1, observable1))
-        pub2 = EstimatorPub.coerce((circuit2, observable2))
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
+        pubs = [pub1, pub2]
 
         noise_factors = [1.0, 2.0]
         zne_options = ZneOptions()
         zne_options.amplifier = "gate_folding"
         zne_options.noise_factors = noise_factors
-        measure_noise_learning = MeasureNoiseLearningOptions()
-        measure_noise_learning.num_randomizations = 32
 
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
+        twirling_options.num_randomizations = 64
 
-        quantum_program = prepare_zne(
-            [pub1, pub2],
-            twirling_options,
-            1024,
-            zne_options,
-            measure_noise_learning=measure_noise_learning,
+        measure_noise_learning = MeasureNoiseLearningOptions()
+        measure_noise_learning.num_randomizations = num_randomizations
+
+        program = prepare_zne(
+            pubs, twirling_options, 1024, zne_options, measure_noise_learning=measure_noise_learning
         )
 
-        # Should have 2 pubs * 2 noise_factors + 1 TREX calibration = 5 items
-        self.assertEqual(len(quantum_program.items), 5)
-
-        # Last item should be TREX calibration
-        trex_item = quantum_program.items[-1]
-        self.assertIsInstance(trex_item, SamplexItem)
-        self.assertEqual(trex_item.shape, (32,))
+        # 2 pubs * 2 noise_factors + 1 TREX calibration item.
+        self.assertEqual(len(program.items), len(pubs) * len(noise_factors) + 1)
+        # For "auto", TREX follows the twirling randomizations of the estimation items.
+        expected_trex_randomizations = (
+            twirling_options.num_randomizations
+            if num_randomizations == "auto"
+            else num_randomizations
+        )
+        self.assertTrexItemIsCorrect(
+            program, pubs, expected_num_randomizations=expected_trex_randomizations
+        )
 
     def test_prepare_zne_raises_error_with_less_than_2_noise_factors(self):
         """Test that prepare_zne raises when noise_factors has less than 2 points."""

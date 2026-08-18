@@ -199,7 +199,7 @@ class SamplerV2(BaseSamplerV2):
         default_shots = shots if shots is not None else options.default_shots
 
         # Legacy simulator path (no executor)
-        if not self.options.experimental.get("local_mode", False) and isinstance(
+        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
             self._service, QiskitRuntimeLocalService
         ):
             logger.info("Running in local simulator mode")
@@ -217,7 +217,7 @@ class SamplerV2(BaseSamplerV2):
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            coerced_pubs, options, default_shots, backend=self._backend
+            coerced_pubs, options, default_shots, add_tags=local_mode, backend=self._backend
         )
         # Store raw options for post-processing side to compute metadata.
         quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]

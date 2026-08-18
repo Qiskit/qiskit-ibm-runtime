@@ -24,7 +24,7 @@ from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
 
 from ..quantum_program import CircuitItem, SamplexItem
-from ..results import QuantumProgramResult
+from ..results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
@@ -77,7 +77,6 @@ def run_quantum_program(
     rng = np.random.default_rng(seed)
 
     result_list = []
-    metadata_list = []
 
     for prog_item in program.items:
         if (noise_dict := options.noise_model) is not None:
@@ -105,10 +104,11 @@ def run_quantum_program(
                     )  # type: ignore
                 ]
             ).result()
-            metadata_list.append(sampler_res[0].metadata)
             bit_array = sampler_res[0].data
             data = {key: ba.to_bool_array(order="little") for key, ba in dict(bit_array).items()}
-            result_list.append(data)
+            result_list.append(
+                QuantumProgramItemResult(result=data, metadata=sampler_res[0].metadata)
+            )
 
         elif isinstance(prog_item, SamplexItem):
             samplex_data = broadcast_sample(
@@ -131,13 +131,14 @@ def run_quantum_program(
                     )  # type: ignore
                 ]
             ).result()
-            metadata_list.append(sampler_res[0].metadata)
             bit_array = sampler_res[0].data
             bool_arrays = {
                 key: ba.to_bool_array(order="little") for key, ba in dict(bit_array).items()
             }
             data = {**samplex_data, **bool_arrays}
-            result_list.append(data)
+            result_list.append(
+                QuantumProgramItemResult(result=data, metadata=sampler_res[0].metadata)
+            )
 
         else:
             raise TypeError(f"Unsupported QuantumProgramItem type: {type(prog_item)}")
