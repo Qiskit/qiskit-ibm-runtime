@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 import warnings
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
@@ -29,7 +29,7 @@ from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .prepare import prepare
-from .utils import find_box_type, find_unique_layers, resolve_precision
+from .utils import BoxType, find_box_type, find_unique_layers, resolve_precision
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -224,7 +224,7 @@ class EstimatorV2(BaseEstimatorV2):
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
             add_tags=True,
         )
-        box_types = ("gates", "measurement", "unknown") if types == "all" else ("gates",)
+        box_types = get_args(BoxType) if types == "all" else ("gates",)
         return [layer for layer in layers if find_box_type(layer) in box_types]
 
     def finalize_options(self) -> EstimatorOptions:
