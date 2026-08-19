@@ -25,9 +25,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
-    estimator_v2_post_processor_v0_1,
-)
+from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
@@ -72,7 +70,7 @@ def test_executor_estimator_prepare(benchmark):
 
 @pytest.mark.benchmark
 def test_executor_estimator_post_processor(benchmark):
-    """Benchmark the estimator_v2_post_processor_v0_1() method."""
+    """Benchmark the estimator post-processor via QuantumProgramResultDecoder."""
     backend = FakeBrisbane()
 
     if benchmark.disabled:
@@ -112,7 +110,7 @@ def test_executor_estimator_post_processor(benchmark):
     quantum_program_result = create_dummy_result(quantum_program)
 
     def run_post_processor():
-        estimator_v2_post_processor_v0_1(quantum_program_result)
+        QuantumProgramResultDecoder._apply_post_processing(quantum_program_result)
 
     benchmark(run_post_processor)
 
