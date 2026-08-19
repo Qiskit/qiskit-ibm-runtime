@@ -197,7 +197,7 @@ class NoiseLearnerV3Results:
         return noise_source
 
     def to_pauli_lindblad_maps(self) -> list[PauliLindbladMap]:
-        """Return the Pauli-Lindblad maps of the items stored in this :class:`NoiseLearnerV3Results` object."""
+        """Return the :class:`PauliLindbladMap`s of the items stored in this results object."""
         return [datum.to_pauli_lindblad_map() for datum in self.data]
 
     def __getitem__(self, idx: int) -> NoiseLearnerV3Result:
