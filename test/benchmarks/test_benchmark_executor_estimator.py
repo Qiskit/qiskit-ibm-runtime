@@ -10,7 +10,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from typing import Any, cast
+"""Benchmarks for executor_estimator."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
 
 import numpy as np
 import pytest
@@ -30,36 +37,6 @@ from qiskit_ibm_runtime.results.quantum_program import (
 )
 
 from ..utils import make_mirror_circuit_with_phases
-
-
-def create_test_pubs(backend, num_qubits, num_layers):
-    """Helper to set up pubs for both benchmarks."""
-    pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-
-    circuit = make_mirror_circuit_with_phases(
-        backend,
-        num_qubits=num_qubits,
-        layers=num_layers,
-        add_measurement=False,
-        add_rx=True,
-    )
-    isa_circuit = pm.run(circuit)
-
-    observables = [
-        SparsePauliOp("Z" * num_qubits).apply_layout(isa_circuit.layout),
-        SparsePauliOp("X" * num_qubits).apply_layout(isa_circuit.layout),
-    ]
-
-    parameter_values = np.array(
-        [
-            [0.1] * num_qubits,
-            [0.2] * num_qubits,
-        ]
-    )
-
-    pubs = [(isa_circuit, observables, parameter_values)]
-    coerced_pubs = [EstimatorPub.coerce(pub, precision=None) for pub in pubs]  # type: ignore[arg-type]
-    return coerced_pubs
 
 
 @pytest.mark.benchmark
@@ -122,17 +99,58 @@ def test_executor_estimator_post_processor(benchmark):
         backend=backend,
     )
 
+    # Wrapper estimator would add additional things to the passthrough data, required for
+    # post-processing. Add it manually here:
     passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-
-    # Manually attach post-processor run context fields
     passthrough["post_processor"]["options"] = options.model_dump(
         exclude={"resilience": {"noise_model"}}
     )
     passthrough["post_processor"]["shots"] = num_shots
     passthrough["post_processor"]["precision"] = None
 
-    # Simulate executor's execution by creating a dummy QuantumProgramResult
+    # Generate dummy results
+    quantum_program_result = create_dummy_result(quantum_program)
+
+    def run_post_processor():
+        estimator_v2_post_processor_v0_1(quantum_program_result)
+
+    benchmark(run_post_processor)
+
+
+def create_test_pubs(backend, num_qubits, num_layers):
+    """Helper to set up pubs based on mirror circuit."""
+    pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+
+    circuit = make_mirror_circuit_with_phases(
+        backend,
+        num_qubits=num_qubits,
+        layers=num_layers,
+        add_measurement=False,
+        add_rx=True,
+    )
+    isa_circuit = pm.run(circuit)
+
+    observables = [
+        SparsePauliOp("Z" * num_qubits).apply_layout(isa_circuit.layout),
+        SparsePauliOp("X" * num_qubits).apply_layout(isa_circuit.layout),
+    ]
+
+    parameter_values = np.array(
+        [
+            [0.1] * num_qubits,
+            [0.2] * num_qubits,
+        ]
+    )
+
+    pubs = [(isa_circuit, observables, parameter_values)]
+    coerced_pubs = [EstimatorPub.coerce(pub, precision=None) for pub in pubs]  # type: ignore[arg-type]
+    return coerced_pubs
+
+
+def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult:
+    """Simulate execution by creating a QuantumProgramResult matching the program structure."""
     result_data = []
+    passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
     post_processor_data = passthrough["post_processor"]
     param_basis_pairs_lists = post_processor_data["param_basis_pairs"]
 
@@ -153,8 +171,4 @@ def test_executor_estimator_post_processor(benchmark):
         passthrough_data=quantum_program.passthrough_data,
     )
     quantum_program_result._semantic_role = "estimator_v2"
-
-    def run_post_processor():
-        return estimator_v2_post_processor_v0_1(quantum_program_result)
-
-    benchmark(run_post_processor)
+    return quantum_program_result
