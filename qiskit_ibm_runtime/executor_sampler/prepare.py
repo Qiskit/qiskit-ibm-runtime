@@ -82,14 +82,16 @@ def prepare(
         - :class:`~.ExecutorOptions` The finalized sampler options.
 
     Raises:
-        IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions
-            (when twirling is disabled), if shots are not properly specified, if
-            measurement twirling is enabled with a non-classified ``meas_type``, if
-            dynamical decoupling is enabled with dynamic circuits, or if dynamical
-            decoupling is enabled without a backend.
+        IBMInputValueError: If no pubs are provided, if circuits contain
+            :class:`~qiskit.circuit.BoxOp` instructions (when twirling is disabled),
+            if shots are not properly specified, if measurement twirling is enabled
+            with a non-classified ``meas_type``, if dynamical decoupling is enabled
+            with dynamic circuits, or if dynamical decoupling is enabled without a backend.
     """
     # Coerce PUBs
     coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+    if not coerced_pubs:
+        raise IBMInputValueError("No pubs provided. At least one pub is required.")
 
     # Finalize options (resolve None twirling fields)
     finalized_options = finalize_sampler_options(options)

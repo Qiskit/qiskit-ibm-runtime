@@ -160,6 +160,30 @@ class SamplerV2(BaseSamplerV2):
         """
         return finalize_sampler_options(self.options)
 
+    def _run_legacy_simulation(
+        self, pubs: Iterable[SamplerPubLike], shots: int | None
+    ) -> RuntimeJobV2:
+        """Run on the legacy local simulator (no Executor).
+
+        Args:
+            pubs: The raw PUB-like objects passed to :meth:`run`.
+            shots: The per-run shots override, forwarded from :meth:`run`.
+
+        Returns:
+            The submitted job.
+        """
+        logger.info("Running in local simulator mode")
+        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+        options = self.finalize_options()
+        options_dict = options.model_dump()
+        options_dict["default_shots"] = shots
+        return self._service._run(
+            program_id="sampler",
+            inputs={"pubs": coerced_pubs, "options": options_dict},
+            options={"backend": self._backend},
+            calibration_id=None,
+        )
+
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
@@ -185,19 +209,9 @@ class SamplerV2(BaseSamplerV2):
         if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
             self._service, QiskitRuntimeLocalService
         ):
-            logger.info("Running in local simulator mode")
-            coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
-            options = self.finalize_options()
-            options_dict = options.model_dump()
-            options_dict["default_shots"] = shots
-            return self._service._run(
-                program_id="sampler",
-                inputs={"pubs": coerced_pubs, "options": options_dict},
-                options={"backend": self._backend},
-                calibration_id=None,
-            )
+            return self._run_legacy_simulation(pubs, shots)
 
-        # Pre-process: coerce PUBs, finalize options, compute shots, build QuantumProgram
+        # Pre-process: Convert Sampler input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
             pubs, self.options, shots, add_tags=local_mode, backend=self._backend

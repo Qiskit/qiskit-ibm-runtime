@@ -193,6 +193,36 @@ class EstimatorV2(BaseEstimatorV2):
         """
         return finalize_estimator_options(self.options)
 
+    def _run_legacy_simulation(
+        self, pubs: Iterable[EstimatorPubLike], precision: float | None
+    ) -> RuntimeJobV2:
+        """Run on the legacy local simulator (no Executor).
+
+        Args:
+            pubs: The raw PUB-like objects passed to :meth:`run`.
+            precision: The per-pub precision override, forwarded from :meth:`run`.
+
+        Returns:
+            The submitted job.
+        """
+        logger.info("Running in local simulator mode")
+        coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        options = self.finalize_options()
+        options_dict = options.model_dump()
+        resolved_precision = resolve_precision(coerced_pubs, precision)
+        if resolved_precision is not None:
+            options_dict["default_shots"] = int(np.ceil(1.0 / (resolved_precision**2)))
+        elif options.default_shots is not None:
+            options_dict["default_shots"] = int(options.default_shots)
+        else:
+            options_dict["default_shots"] = int(np.ceil(1.0 / (options.default_precision**2)))
+        return self._service._run(
+            program_id="estimator",
+            inputs={"pubs": coerced_pubs, "options": options_dict},
+            options={"backend": self._backend},
+            calibration_id=None,
+        )
+
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
     ) -> RuntimeJobV2:
@@ -225,25 +255,9 @@ class EstimatorV2(BaseEstimatorV2):
         if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
             self._service, QiskitRuntimeLocalService
         ):
-            logger.info("Running in local simulator mode")
-            coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-            options = self.finalize_options()
-            options_dict = options.model_dump()
-            resolved_precision = resolve_precision(coerced_pubs, precision)
-            if resolved_precision is not None:
-                options_dict["default_shots"] = int(np.ceil(1.0 / (resolved_precision**2)))
-            elif options.default_shots is not None:
-                options_dict["default_shots"] = int(options.default_shots)
-            else:
-                options_dict["default_shots"] = int(np.ceil(1.0 / (options.default_precision**2)))
-            return self._service._run(
-                program_id="estimator",
-                inputs={"pubs": coerced_pubs, "options": options_dict},
-                options={"backend": self._backend},
-                calibration_id=None,
-            )
+            return self._run_legacy_simulation(pubs, precision)
 
-        # Pre-process: coerce PUBs, finalize options, compute shots, build QuantumProgram
+        # Pre-process: Convert Estimator input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
             pubs, self.options, precision, add_tags=local_mode, backend=self._backend
