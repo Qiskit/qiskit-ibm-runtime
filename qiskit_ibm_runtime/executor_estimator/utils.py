@@ -105,6 +105,16 @@ def get_pauli_basis(basis: str) -> Pauli:
     return Pauli(basis)
 
 
+def has_projection_operators(pub: EstimatorPub) -> bool:
+    """Return whether an estimator pub contains projection operators in its observables."""
+    projection_set = set("01rl+-")
+    for observable in pub.observables.ravel():
+        for observable_term in observable:
+            if bool(set(observable_term) & projection_set):
+                return True
+    return False
+
+
 def pauli_to_ints(pauli: Pauli) -> list[int]:
     """Convert Pauli to list of ints following samplomatic convention.
 
