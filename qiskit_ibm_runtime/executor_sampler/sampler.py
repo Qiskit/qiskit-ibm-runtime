@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from qiskit.primitives.base import BaseSamplerV2
@@ -26,6 +25,7 @@ from ..executor import Executor
 from ..executor_estimator.utils import find_unique_layers
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
+from .finalize_options import finalize_sampler_options
 from .prepare import prepare
 
 if TYPE_CHECKING:
@@ -158,14 +158,7 @@ class SamplerV2(BaseSamplerV2):
         Returns:
             The finalized :class:`~.SamplerOptions` object.
         """
-        finalized_options = deepcopy(self.options)
-
-        if finalized_options.twirling.enable_gates is None:
-            finalized_options.twirling.enable_gates = False
-        if finalized_options.twirling.enable_measure is None:
-            finalized_options.twirling.enable_measure = False
-
-        return finalized_options
+        return finalize_sampler_options(self.options)
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.

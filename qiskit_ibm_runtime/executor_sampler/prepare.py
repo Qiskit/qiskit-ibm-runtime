@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -29,6 +28,7 @@ from ..options_models.converters import sampler_option_to_executor_options
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
 from ..utils.utils import validate_no_boxes
+from .finalize_options import finalize_sampler_options
 from .utils import (
     extract_shots_from_pubs,
     validate_meas_type_twirling,
@@ -92,11 +92,7 @@ def prepare(
     coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
     # Finalize options (resolve None twirling fields)
-    finalized_options = deepcopy(options)
-    if finalized_options.twirling.enable_gates is None:
-        finalized_options.twirling.enable_gates = False
-    if finalized_options.twirling.enable_measure is None:
-        finalized_options.twirling.enable_measure = False
+    finalized_options = finalize_sampler_options(options)
 
     # Determine default shots: run parameter takes precedence over options.default_shots
     default_shots = shots if shots is not None else finalized_options.default_shots
