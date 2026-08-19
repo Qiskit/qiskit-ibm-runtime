@@ -75,6 +75,8 @@ def quantum_program_item_result_to_sampler_pub_result(
     pub_metadata: dict[str, Any] = {
         "circuit_metadata": circuit_metadata if circuit_metadata else {}
     }
+    if num_randomizations > 0:
+        pub_metadata["num_randomizations"] = num_randomizations
     if isinstance(item.metadata, ItemMetadata):
         if item.metadata.scheduler_timing:
             pub_metadata.setdefault("compilation", {})
