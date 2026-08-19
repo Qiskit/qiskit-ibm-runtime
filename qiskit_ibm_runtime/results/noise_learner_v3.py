@@ -196,7 +196,7 @@ class NoiseLearnerV3Results:
 
         return noise_source
 
-    def to_pauli_lindblad_maps(self) -> Iterable[PauliLindbladMap]:
+    def to_pauli_lindblad_maps(self) -> list[PauliLindbladMap]:
         """The :class:`~.PauliLindbladMap`s stored in this :class:`NoiseLearnerV3Results` object."""
         return [datum.to_pauli_lindblad_map() for datum in self.data]
 
