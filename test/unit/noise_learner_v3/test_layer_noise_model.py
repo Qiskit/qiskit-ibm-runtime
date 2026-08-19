@@ -94,7 +94,7 @@ class TestLayerNoiseModel(IBMTestCase):
         )
 
     @data("injection", "simulation")
-    def test_to_dict_wrong_num_of_instructions(self, mode):
+    def test_init_raises(self, mode):
         """Test ``LayerNoiseModel.__init__`` raises if number of layers does not match maps."""
         circuit = QuantumCircuit(2)
         annotations = self.inject_noise_annotations if mode == "injection" else self.tag_annotations
