@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 import warnings
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
@@ -29,7 +29,7 @@ from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .prepare import prepare
-from .utils import find_unique_layers, resolve_precision
+from .utils import BoxType, find_box_type, find_unique_layers, resolve_precision
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -182,28 +182,24 @@ class EstimatorV2(BaseEstimatorV2):
 
         super().__setattr__(name, value)
 
-    def find_unique_layers(self, pubs: Iterable[EstimatorPubLike]) -> list[CircuitInstruction]:
+    def find_unique_layers(
+        self, pubs: Iterable[EstimatorPubLike], types: Literal["gates", "all"] = "gates"
+    ) -> list[CircuitInstruction]:
         """Return the unique boxed layers found across the given PUBs.
 
-        The returned list contains one instance of each distinct boxed layer (represented as a
-        :class:`~.CircuitInstruction`) appearing in the input PUBs.
+        The ``types`` of layers can be either ``"gates"`` or ``"all"``, corresponding to only
+        gate layers or all layers, respectively. The returned list then contains one instance of
+        each distinct boxed layer (represented as a :class:`~.CircuitInstruction`) appearing
+        in the input PUBs.
 
-        For noise learning, keep only the boxes that carry an :class:`~samplomatic.InjectNoise`
-        annotation:
+        For example, for noise learning, keep only the qubit gate layers:
 
         .. code-block:: python
-
-            from samplomatic import InjectNoise
-            from samplomatic.utils import get_annotation
 
             est = EstimatorV2(mode, options)
             est.options.resilience.pec_mitigation = True
 
-            layers = [
-                layer
-                for layer in est.find_unique_layers(pubs)
-                if get_annotation(layer.operation, InjectNoise)
-            ]
+            layers = est.find_unique_layers(pubs, types="gates")
 
             results = NoiseLearnerV3(mode).run(layers).result()
             noise_model = results.to_dict(layers)
@@ -213,13 +209,14 @@ class EstimatorV2(BaseEstimatorV2):
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
+            types: The types of layers to return. Can be either ``"gates"`` or ``"all"``.
 
         Returns:
-            The unique boxed layers found across the given PUBs.
+            The unique boxed layers of a certain type found across the given PUBs.
         """
         coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
         options = self.finalize_options()
-        return find_unique_layers(
+        layers = find_unique_layers(
             pubs=coerced_pubs,
             twirling_options=options.twirling,
             measure_noise_learning=options.resilience.measure_noise_learning,
@@ -227,6 +224,8 @@ class EstimatorV2(BaseEstimatorV2):
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
             add_tags=True,
         )
+        box_types = get_args(BoxType) if types == "all" else ("gates",)
+        return [layer for layer in layers if find_box_type(layer) in box_types]
 
     def finalize_options(self) -> EstimatorOptions:
         """Construct and finalize the Estimator options.
