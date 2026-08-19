@@ -10,20 +10,20 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from typing import cast, Any
+from typing import Any, cast
+
 import numpy as np
 import pytest
-from qiskit_ibm_runtime.fake_provider import FakeBrisbane
-
-from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     estimator_v2_post_processor_v0_1,
 )
+from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
+from qiskit_ibm_runtime.executor_estimator.prepare import prepare
+from qiskit_ibm_runtime.fake_provider import FakeBrisbane
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramItemResult,
     QuantumProgramResult,
@@ -32,59 +32,60 @@ from qiskit_ibm_runtime.results.quantum_program import (
 from ..utils import make_mirror_circuit_with_phases
 
 
-def _setup_test_pubs(benchmark, backend):
+def create_test_pubs(backend, num_qubits, num_layers):
     """Helper to set up pubs for both benchmarks."""
-    if benchmark.disabled:
-        # Fast execution for non-benchmark runs
-        num_qubits = 5
-    else:
-        # Realistic workload for benchmarking
-        num_qubits = 100
-
     pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
-    # Generate mirror circuit with parameterized RX gates on each qubit
     circuit = make_mirror_circuit_with_phases(
         backend,
         num_qubits=num_qubits,
-        layers=400,
+        layers=num_layers,
         add_measurement=False,
         add_rx=True,
     )
     isa_circuit = pm.run(circuit)
 
-    # Create observables with layout applied
     observables = [
         SparsePauliOp("Z" * num_qubits).apply_layout(isa_circuit.layout),
         SparsePauliOp("X" * num_qubits).apply_layout(isa_circuit.layout),
     ]
 
-    # Create 2 parameter sets as a numpy array
-    parameter_values = np.array([
-        [0.1] * num_qubits,
-        [0.2] * num_qubits,
-    ])
+    parameter_values = np.array(
+        [
+            [0.1] * num_qubits,
+            [0.2] * num_qubits,
+        ]
+    )
 
     pubs = [(isa_circuit, observables, parameter_values)]
     coerced_pubs = [EstimatorPub.coerce(pub, precision=None) for pub in pubs]  # type: ignore[arg-type]
-    return coerced_pubs, num_qubits
+    return coerced_pubs
 
 
 @pytest.mark.benchmark
 def test_executor_estimator_prepare(benchmark):
     """Benchmark the prepare() method from executor_estimator/prepare.py."""
     backend = FakeBrisbane()
-    coerced_pubs, _ = _setup_test_pubs(benchmark, backend)
+    if benchmark.disabled:
+        num_qubits = 5
+        num_layers = 10
+        num_shots = 100
+    else:
+        num_qubits = 100
+        num_layers = 20
+        num_shots = 100000
+
+    coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
+
     estimator = EstimatorV2(backend)
     estimator.options.resilience_level = 0
     options = estimator.finalize_options()
-    shots = 100000
 
     def run_prepare():
         prepare(
             coerced_pubs,
             options,
-            shots=shots,
+            shots=num_shots,
             add_tags=False,
             backend=backend,
         )
@@ -96,28 +97,38 @@ def test_executor_estimator_prepare(benchmark):
 def test_executor_estimator_post_processor(benchmark):
     """Benchmark the estimator_v2_post_processor_v0_1() method."""
     backend = FakeBrisbane()
-    coerced_pubs, _ = _setup_test_pubs(benchmark, backend)
+
+    if benchmark.disabled:
+        num_qubits = 5
+        num_layers = 10
+        num_shots = 100
+    else:
+        num_qubits = 100
+        num_layers = 20
+        num_shots = 100000
+
+    coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
+
     estimator = EstimatorV2(backend)
     estimator.options.resilience_level = 0
     options = estimator.finalize_options()
-    shots = 1000
 
     # First, run prepare once to get the baseline quantum program structure
     quantum_program, _ = prepare(
         coerced_pubs,
         options,
-        shots=shots,
+        shots=num_shots,
         add_tags=False,
         backend=backend,
     )
 
-    passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
+    passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
 
     # Manually attach post-processor run context fields
     passthrough["post_processor"]["options"] = options.model_dump(
         exclude={"resilience": {"noise_model"}}
     )
-    passthrough["post_processor"]["shots"] = shots
+    passthrough["post_processor"]["shots"] = num_shots
     passthrough["post_processor"]["precision"] = None
 
     # Simulate executor's execution by creating a dummy QuantumProgramResult
