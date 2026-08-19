@@ -16,27 +16,21 @@ from __future__ import annotations
 
 import re
 import warnings
-from functools import partial
 from typing import TYPE_CHECKING
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.converters import circuit_to_dag
+from qiskit.circuit.controlflow import ControlFlowOp
+from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.transpiler import TransformationPass
 from qiskit.utils.optionals import HAS_AER
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from qiskit.circuit import Qubit
     from qiskit.dagcircuit import DAGCircuit, DAGOpNode
     from qiskit.quantum_info import PauliLindbladMap
 
 if HAS_AER:
     from qiskit_aer.noise import PauliLindbladError
-
-
-def _find_qubit(dag: DAGCircuit, qubit: Qubit) -> int:
-    return dag.find_bit(qubit).index
 
 
 @HAS_AER.require_in_instance
@@ -77,14 +71,30 @@ class InsertNoisePass(TransformationPass):
         if not self._noise_dict:
             return dag
 
-        for op_node in reversed(list(dag.topological_op_nodes())):
-            if op_node.name != "barrier":
-                continue
+        physical_index = {q: dag.find_bit(q).index for q in dag.qubits}
+        return self._process_dag(dag, physical_index)
 
-            if _new_subdag := self._new_subdag(op_node, partial(_find_qubit, dag)):
-                dag.substitute_node_with_dag(
-                    node=op_node,
-                    input_dag=_new_subdag,
+    def _process_dag(self, dag: DAGCircuit, physical_index: dict[Qubit, int]) -> DAGCircuit:
+        """Process a DAG, recursing into control-flow blocks."""
+        for op_node in reversed(list(dag.topological_op_nodes())):
+            if op_node.name == "barrier":
+                if _new_subdag := self._new_subdag(op_node, physical_index):
+                    dag.substitute_node_with_dag(node=op_node, input_dag=_new_subdag)
+            elif isinstance(op_node.op, ControlFlowOp):
+                new_blocks = []
+                for block in op_node.op.blocks:
+                    # Map each local qubit of the block to the physical index in the
+                    # parent DAG via the op_node's qargs list.
+                    block_physical_index = {
+                        q: physical_index[op_node.qargs[i]] for i, q in enumerate(block.qubits)
+                    }
+                    block_dag = circuit_to_dag(block)
+                    new_block_dag = self._process_dag(block_dag, block_physical_index)
+                    new_blocks.append(dag_to_circuit(new_block_dag))
+
+                dag.substitute_node(
+                    op_node,
+                    op_node.op.replace_blocks(new_blocks),
                 )
 
         return dag
@@ -105,7 +115,7 @@ class InsertNoisePass(TransformationPass):
         return tag
 
     def _new_subdag(
-        self, op_node: DAGOpNode, find_qubit: Callable[[Qubit], int]
+        self, op_node: DAGOpNode, physical_index: dict[Qubit, int]
     ) -> DAGCircuit | None:
         # Qiskit has no public API for reading barrier labels; _label is the only option.
         label = op_node.op._label
@@ -135,7 +145,7 @@ class InsertNoisePass(TransformationPass):
         # The PauliLindbladMap's indices are interpreted in ascending physical-qubit order
         # of the parent DAG, so we apply the resulting error to the local qc.qubits in the
         # permutation that orders op_node.qargs by their physical index.
-        physical_indices = [find_qubit(q) for q in op_node.qargs]
+        physical_indices = [physical_index[q] for q in op_node.qargs]
         plm_indices = sorted(range(len(physical_indices)), key=physical_indices.__getitem__)
 
         qc = QuantumCircuit(op_node.num_qubits)
