@@ -178,12 +178,13 @@ class NoiseLearnerV3Results:
         noise_source = {}
         num_instr = 0
         annotation_type = Tag if mode == "simulation" else InjectNoise
-        for instr, datum in zip(instructions, self.data):
+        pauli_maps = self.to_pauli_lindblad_maps()
+        for instr, pauli_map in zip(instructions, pauli_maps):
             if not isinstance(instr.operation, BoxOp):
                 raise ValueError("Found an instruction that does not contain a box.")
             if annotation := get_annotation(instr.operation, annotation_type):
                 num_instr += 1
-                noise_source[annotation.ref] = datum.to_pauli_lindblad_map()
+                noise_source[annotation.ref] = pauli_map
             elif require_refs:
                 raise ValueError(
                     "Found an instruction without an inject noise annotation. "
@@ -194,6 +195,10 @@ class NoiseLearnerV3Results:
             raise ValueError("Found multiple instructions with the same ``ref``.")
 
         return noise_source
+
+    def to_pauli_lindblad_maps(self) -> Iterable[PauliLindbladMap]:
+        """The :class:`~.PauliLindbladMap`s stored in this :class:`NoiseLearnerV3Results` object."""
+        return [datum.to_pauli_lindblad_map() for datum in self.data]
 
     def __getitem__(self, idx: int) -> NoiseLearnerV3Result:
         return self.data[idx]
