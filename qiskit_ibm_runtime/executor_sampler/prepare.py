@@ -15,8 +15,10 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
@@ -34,9 +36,9 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable
 
-    from qiskit.primitives.containers.sampler_pub import SamplerPub
+    from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
     from ..options_models.executor import ExecutorOptions
@@ -48,9 +50,9 @@ logger = logging.getLogger(__name__)
 
 
 def prepare(
-    pubs: Sequence[SamplerPub],
+    pubs: Iterable[SamplerPubLike],
     options: SamplerOptions,
-    default_shots: int | None = None,
+    shots: int | None = None,
     add_tags: bool = False,
     backend: BackendV2 | None = None,
 ) -> tuple[QuantumProgram, ExecutorOptions]:
@@ -61,10 +63,10 @@ def prepare(
     :class:`~.ExecutorOptions`.
 
     Args:
-        pubs: List of sampler PUBs to convert.
-        options: The options.
-        default_shots: Default number of shots if not specified in PUBs. If ``None``,
-            uses the value from ``self.options.default_shots``.
+        pubs: Iterable of PUB-like objects to convert.
+        options: The sampler options.
+        shots: The total number of shots to sample for each sampler pub that does not specify its
+            own shots. If ``None``, the value from ``options.default_shots`` will be used.
         add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
             (will pass the ``"none"`` value to the relevant attribute), while ``True`` will cause
             tags with the twirled boxes hash to be added (using the ``"unique_box"`` value of the
@@ -77,7 +79,7 @@ def prepare(
 
         - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
             objects for each pub, with passthrough_data configured for post-processing.
-        - :class:`~.ExecutorOptions` mapped from the sampler's options.
+        - :class:`~.ExecutorOptions` The finalized sampler options.
 
     Raises:
         IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions
@@ -86,13 +88,28 @@ def prepare(
             dynamical decoupling is enabled with dynamic circuits, or if dynamical
             decoupling is enabled without a backend.
     """
-    validate_twirling_option_fields_are_not_none(options.twirling)
-    validate_meas_type_twirling(options.execution.meas_type, options.twirling.enable_measure)
+    # Coerce PUBs
+    coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
-    for pub in pubs:
+    # Finalize options (resolve None twirling fields)
+    finalized_options = deepcopy(options)
+    if finalized_options.twirling.enable_gates is None:
+        finalized_options.twirling.enable_gates = False
+    if finalized_options.twirling.enable_measure is None:
+        finalized_options.twirling.enable_measure = False
+
+    # Determine default shots: run parameter takes precedence over options.default_shots
+    default_shots = shots if shots is not None else finalized_options.default_shots
+
+    validate_twirling_option_fields_are_not_none(finalized_options.twirling)
+    validate_meas_type_twirling(
+        finalized_options.execution.meas_type, finalized_options.twirling.enable_measure
+    )
+
+    for pub in coerced_pubs:
         validate_no_boxes(pub.circuit)
 
-        if options.dynamical_decoupling.enable:
+        if finalized_options.dynamical_decoupling.enable:
             if pub.circuit.has_control_flow_op():
                 raise IBMInputValueError(
                     "Dynamical decoupling is not compatible with dynamic circuits "
@@ -103,13 +120,13 @@ def prepare(
                     "A backend must be provided when dynamical decoupling is enabled."
                 )
 
-    program_shots = (shots := extract_shots_from_pubs(pubs, default_shots))
+    program_shots = (resolved_shots := extract_shots_from_pubs(coerced_pubs, default_shots))
 
     items: list[QuantumProgramItem] = []
-    if not (options.twirling.enable_gates or options.twirling.enable_measure):
-        # No twirling path: validate no boxes, create CircuitItem objects
-        for i, pub in enumerate(pubs):
-            logger.info("Processing pub %d/%d", i + 1, len(pubs))
+    if not (finalized_options.twirling.enable_gates or finalized_options.twirling.enable_measure):
+        # No twirling path: create CircuitItem objects
+        for i, pub in enumerate(coerced_pubs):
+            logger.info("Processing pub %d/%d", i + 1, len(coerced_pubs))
             # Convert parameter values to numpy array. Pass the circuit's
             # parameters so the columns are ordered to match ``circuit.parameters``.
             if pub.parameter_values.num_parameters > 0:
@@ -130,23 +147,23 @@ def prepare(
     else:
         # Twirling path: create SamplexItem objects
         num_rand, shots_per_rand = calculate_twirling_shots(
-            shots,
-            options.twirling.num_randomizations,
-            options.twirling.shots_per_randomization,
+            resolved_shots,
+            finalized_options.twirling.num_randomizations,
+            finalized_options.twirling.shots_per_randomization,
         )
 
         program_shots = shots_per_rand
 
         boxing_pm = generate_boxing_pass_manager(
-            enable_gates=bool(options.twirling.enable_gates),
-            enable_measures=bool(options.twirling.enable_measure),
-            twirling_strategy=options.twirling.strategy.replace("-", "_"),
+            enable_gates=bool(finalized_options.twirling.enable_gates),
+            enable_measures=bool(finalized_options.twirling.enable_measure),
+            twirling_strategy=finalized_options.twirling.strategy.replace("-", "_"),
             inject_noise_site="after",
             add_tags="unique_box" if add_tags else "none",
         )
 
-        for i, pub in enumerate(pubs):
-            logger.info("Processing pub %d/%d", i + 1, len(pubs))
+        for i, pub in enumerate(coerced_pubs):
+            logger.info("Processing pub %d/%d", i + 1, len(coerced_pubs))
             boxed_circuit = boxing_pm.run(pub.circuit)
             template_circuit, samplex = build(boxed_circuit)
 
@@ -175,10 +192,11 @@ def prepare(
     passthrough_data = {
         "post_processor": {
             "version": "v0.1",
-            "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
-            "meas_type": options.execution.meas_type,
+            "twirling": finalized_options.twirling.enable_gates
+            or finalized_options.twirling.enable_measure,
+            "meas_type": finalized_options.execution.meas_type,
             "shots": program_shots,
-            "circuits_metadata": [pub.circuit.metadata for pub in pubs],
+            "circuits_metadata": [pub.circuit.metadata for pub in coerced_pubs],
         }
     }
 
@@ -187,19 +205,22 @@ def prepare(
         shots=program_shots,
         items=items,
         passthrough_data=passthrough_data,
-        meas_level=options.execution.meas_type,
+        meas_level=finalized_options.execution.meas_type,
     )
     quantum_program._semantic_role = "sampler_v2"
 
     # Map options to executor options
-    executor_options = sampler_option_to_executor_options(options)
+    executor_options = sampler_option_to_executor_options(finalized_options)
 
-    if options.dynamical_decoupling.enable:
+    if finalized_options.dynamical_decoupling.enable:
         logger.info("Apply dynamical decoupling")
         quantum_program = apply_dynamical_decoupling(
             backend=backend,
-            dd_options=options.dynamical_decoupling,
+            dd_options=finalized_options.dynamical_decoupling,
             quantum_program=quantum_program,
         )
+
+    # Annotate passthrough_data for post-processing
+    quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump()  # type: ignore[index, call-overload]
 
     return quantum_program, executor_options
