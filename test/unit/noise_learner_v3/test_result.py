@@ -247,3 +247,8 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
         with self.assertRaisesRegex(ValueError, "multiple instructions with the same ``ref``"):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data, mode=mode)
+
+    def test_to_pauli_lindblad_maps(self):
+        """Test ``.to_pauli_lindblad_maps``."""
+        results = NoiseLearnerV3Results(self.results)
+        self.assertEqual(results.to_pauli_lindblad_maps(), self.pauli_lindblad_maps)
