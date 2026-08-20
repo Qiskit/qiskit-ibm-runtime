@@ -36,7 +36,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
@@ -90,14 +90,49 @@ def prepare(
     """
     # Coerce PUBs
     coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
-    if not coerced_pubs:
-        raise IBMInputValueError("No pubs provided. At least one pub is required.")
 
     # Finalize options (resolve None twirling fields)
     finalized_options = finalize_sampler_options(options)
 
-    # Determine default shots: run parameter takes precedence over options.default_shots
+    _validate(coerced_pubs, finalized_options, backend)
+
+    executor_options = sampler_option_to_executor_options(finalized_options)
+
+    # Resolve shots: run parameter takes precedence over options.default_shots
     default_shots = shots if shots is not None else finalized_options.default_shots
+    resolved_shots = extract_shots_from_pubs(coerced_pubs, default_shots)
+
+    quantum_program = _build_quantum_program(
+        coerced_pubs, finalized_options, resolved_shots, add_tags, backend
+    )
+
+    # Annotate passthrough_data for post-processing
+    quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump()  # type: ignore[index, call-overload]
+
+    return quantum_program, executor_options
+
+
+def _validate(
+    coerced_pubs: Sequence[SamplerPub],
+    finalized_options: SamplerOptions,
+    backend: BackendV2 | None,
+) -> None:
+    """Validate the coerced pubs and finalized options.
+
+    Args:
+        coerced_pubs: The coerced sampler pubs.
+        finalized_options: The finalized sampler options.
+        backend: The backend for which the program is prepared.
+
+    Raises:
+        IBMInputValueError: If no pubs are provided, if circuits contain
+            :class:`~qiskit.circuit.BoxOp` instructions (when twirling is disabled),
+            if measurement twirling is enabled with a non-classified ``meas_type``,
+            if dynamical decoupling is enabled with dynamic circuits, or if dynamical
+            decoupling is enabled without a backend.
+    """
+    if not coerced_pubs:
+        raise IBMInputValueError("No pubs provided. At least one pub is required.")
 
     validate_twirling_option_fields_are_not_none(finalized_options.twirling)
     validate_meas_type_twirling(
@@ -118,7 +153,27 @@ def prepare(
                     "A backend must be provided when dynamical decoupling is enabled."
                 )
 
-    program_shots = (resolved_shots := extract_shots_from_pubs(coerced_pubs, default_shots))
+
+def _build_quantum_program(
+    coerced_pubs: Sequence[SamplerPub],
+    finalized_options: SamplerOptions,
+    resolved_shots: int,
+    add_tags: bool,
+    backend: BackendV2 | None,
+) -> QuantumProgram:
+    """Build the quantum program, applying twirling and dynamical decoupling.
+
+    Args:
+        coerced_pubs: The coerced sampler pubs.
+        finalized_options: The finalized sampler options.
+        resolved_shots: The number of shots resolved from the pubs and options.
+        add_tags: Whether to include tags for the boxes.
+        backend: The backend for which the program is prepared.
+
+    Returns:
+        The prepared quantum program.
+    """
+    program_shots = resolved_shots
 
     items: list[QuantumProgramItem] = []
     if not (finalized_options.twirling.enable_gates or finalized_options.twirling.enable_measure):
@@ -198,7 +253,6 @@ def prepare(
         }
     }
 
-    # Create QuantumProgram
     quantum_program = QuantumProgram(
         shots=program_shots,
         items=items,
@@ -206,9 +260,6 @@ def prepare(
         meas_level=finalized_options.execution.meas_type,
     )
     quantum_program._semantic_role = "sampler_v2"
-
-    # Map options to executor options
-    executor_options = sampler_option_to_executor_options(finalized_options)
 
     if finalized_options.dynamical_decoupling.enable:
         logger.info("Apply dynamical decoupling")
@@ -218,7 +269,4 @@ def prepare(
             quantum_program=quantum_program,
         )
 
-    # Annotate passthrough_data for post-processing
-    quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump()  # type: ignore[index, call-overload]
-
-    return quantum_program, executor_options
+    return quantum_program

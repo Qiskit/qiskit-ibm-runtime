@@ -45,7 +45,77 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _validate_pubs(
+def prepare(
+    pubs: Iterable[EstimatorPubLike],
+    options: EstimatorOptions,
+    precision: float | None = None,
+    add_tags: bool = False,
+    backend: BackendV2 | None = None,
+) -> tuple[QuantumProgram, ExecutorOptions]:
+    """Convert a sequence of estimator PUBs to a quantum program and map options.
+
+    This method processes estimator PUBs (Primitive Unified Blocs) and converts them into
+    a :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+    :class:`~.ExecutorOptions`.
+
+    Args:
+        pubs: Iterable of PUB-like objects to convert.
+        options: The estimator options.
+        precision: The target precision for expectation value estimates of each estimator pub
+            that does not specify its own precision. If ``None``, the value from
+            ``options.default_precision`` or ``options.default_shots`` will be used.
+        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
+            (will pass the ``"none"`` value to the relevant attribute), while ``True`` will cause
+            tags with the twirled boxes hash to be added (using the ``"unique_box"`` value of the
+            relevant attribute). These tags are used to inject noise when running in local mode.
+        backend: The backend for which the program is prepared. Only required when dynamical
+            decoupling is enabled.
+
+    Returns:
+        A tuple containing:
+
+        - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
+            objects for each pub, with ``passthrough_data`` fully populated for post-processing.
+        - :class:`~.ExecutorOptions` mapped from the finalized estimator options.
+
+    Raises:
+        IBMInputValueError: If no pubs are provided, if precision is not properly specified,
+            or if unsupported option combinations are detected.
+    """
+    # Coerce PUBs
+    coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+
+    # Finalize options (resilience-level defaults + dependency enforcement)
+    finalized_options = finalize_estimator_options(options)
+
+    _validate(coerced_pubs, finalized_options, backend)
+
+    executor_options = estimator_options_to_executor_options(finalized_options)
+
+    # Resolve shots
+    resolved_precision = resolve_precision(coerced_pubs, precision)
+    if resolved_precision is not None:
+        shots = int(np.ceil(1.0 / (resolved_precision**2)))
+    elif finalized_options.default_shots is not None:
+        shots = int(finalized_options.default_shots)
+    else:
+        shots = int(np.ceil(1.0 / (finalized_options.default_precision**2)))
+
+    quantum_program = _build_quantum_program(
+        coerced_pubs, finalized_options, shots, add_tags, backend
+    )
+
+    # Annotate passthrough_data for post-processing
+    quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump(  # type: ignore[index, call-overload]
+        exclude={"resilience": {"noise_model"}}
+    )
+    quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
+    quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
+
+    return quantum_program, executor_options
+
+
+def _validate(
     coerced_pubs: Sequence[EstimatorPub],
     finalized_options: EstimatorOptions,
     backend: BackendV2 | None,
@@ -160,73 +230,3 @@ def _build_quantum_program(
         )
 
     return quantum_program
-
-
-def prepare(
-    pubs: Iterable[EstimatorPubLike],
-    options: EstimatorOptions,
-    precision: float | None = None,
-    add_tags: bool = False,
-    backend: BackendV2 | None = None,
-) -> tuple[QuantumProgram, ExecutorOptions]:
-    """Convert a sequence of estimator PUBs to a quantum program and map options.
-
-    This method processes estimator PUBs (Primitive Unified Blocs) and converts them into
-    a :class:`~.QuantumProgram` suitable for execution, along with the corresponding
-    :class:`~.ExecutorOptions`.
-
-    Args:
-        pubs: Iterable of PUB-like objects to convert.
-        options: The estimator options.
-        precision: The target precision for expectation value estimates of each estimator pub
-            that does not specify its own precision. If ``None``, the value from
-            ``options.default_precision`` or ``options.default_shots`` will be used.
-        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
-            (will pass the ``"none"`` value to the relevant attribute), while ``True`` will cause
-            tags with the twirled boxes hash to be added (using the ``"unique_box"`` value of the
-            relevant attribute). These tags are used to inject noise when running in local mode.
-        backend: The backend for which the program is prepared. Only required when dynamical
-            decoupling is enabled.
-
-    Returns:
-        A tuple containing:
-
-        - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
-            objects for each pub, with ``passthrough_data`` fully populated for post-processing.
-        - :class:`~.ExecutorOptions` mapped from the finalized estimator options.
-
-    Raises:
-        IBMInputValueError: If no pubs are provided, if precision is not properly specified,
-            or if unsupported option combinations are detected.
-    """
-    # Coerce PUBs
-    coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-
-    # Finalize options (resilience-level defaults + dependency enforcement)
-    finalized_options = finalize_estimator_options(options)
-
-    _validate_pubs(coerced_pubs, finalized_options, backend)
-
-    executor_options = estimator_options_to_executor_options(finalized_options)
-
-    # Resolve shots
-    resolved_precision = resolve_precision(coerced_pubs, precision)
-    if resolved_precision is not None:
-        shots = int(np.ceil(1.0 / (resolved_precision**2)))
-    elif finalized_options.default_shots is not None:
-        shots = int(finalized_options.default_shots)
-    else:
-        shots = int(np.ceil(1.0 / (finalized_options.default_precision**2)))
-
-    quantum_program = _build_quantum_program(
-        coerced_pubs, finalized_options, shots, add_tags, backend
-    )
-
-    # Annotate passthrough_data for post-processing
-    quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump(  # type: ignore[index, call-overload]
-        exclude={"resilience": {"noise_model"}}
-    )
-    quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
-    quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
-
-    return quantum_program, executor_options
