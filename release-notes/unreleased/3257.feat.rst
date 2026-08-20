@@ -1,0 +1,3 @@
+Added :meth:`~qiskit_ibm_runtime.results.noise_learner_v3.NoiseLearnerV3Results.to_pauli_lindblad_maps`,
+a method to return the list of :class:`qiskit.quantum_info.PauliLindbladMap` of the items stored in a
+:class:`~qiskit_ibm_runtime.results.noise_learner_v3.NoiseLearnerV3Results`.

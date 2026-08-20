@@ -60,9 +60,9 @@ def _build_program_result_metadata(post_processor_data: dict) -> dict:
     if options is None:
         return {}
 
-    program_metadata = dict(options)
-    if "resilience" in program_metadata:
-        resilience = dict(program_metadata["resilience"])
+    metadata = {"options": dict(options)}
+    if "resilience" in metadata["options"]:
+        resilience = dict(metadata["options"]["resilience"])
         for flag_key, options_key in [
             ("zne_mitigation", "zne"),
             ("pec_mitigation", "pec"),
@@ -70,11 +70,11 @@ def _build_program_result_metadata(post_processor_data: dict) -> dict:
         ]:
             if not resilience.get(flag_key):
                 resilience.pop(options_key, None)
-        program_metadata["resilience"] = resilience
+        metadata["options"]["resilience"] = resilience
 
-    program_metadata["target_precision"] = post_processor_data.get("precision", None)
-    program_metadata["shots"] = post_processor_data.get("shots", None)
-    return program_metadata
+    metadata["target_precision"] = post_processor_data.get("precision", None)
+    metadata["shots"] = post_processor_data.get("shots", None)
+    return metadata
 
 
 def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
@@ -116,9 +116,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
-
-    # Build program_metadata from the raw inputs stored by the estimator
-    program_metadata = _build_program_result_metadata(post_processor_data)
 
     # Extract mitigation data
     mitigation = post_processor_data.get("mitigation", None)
@@ -229,12 +226,15 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 item_result, observables, param_shape, param_basis_pairs, readout_noise_data
             )
 
-        # Attach circuit metadata (shared across all branches — metadata is mutable)
         if (circuit_meta := circuits_metadata[pub_idx]) is not None:
             pub_result.metadata["circuit_metadata"] = circuit_meta
         pub_results.append(pub_result)
 
-    return PrimitiveResult(pub_results, metadata=program_metadata)
+    # Build program_metadata from the raw inputs stored by the estimator
+    metadata = _build_program_result_metadata(post_processor_data)
+    metadata["executor"] = result.metadata
+
+    return PrimitiveResult(pub_results, metadata=metadata)
 
 
 def _process_expectation_values(

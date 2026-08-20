@@ -219,11 +219,7 @@ def create_estimator_test_data_extended(backend, preset_pass_manager):
 
 def create_noise_model_without_noise(estimator, pub):
     """Creates a noise-model, mapping each layer to the identity (no noise)."""
-    layers = [
-        layer
-        for layer in estimator.find_unique_layers([pub])
-        if get_annotation(layer.operation, InjectNoise)
-    ]
+    layers = estimator.find_unique_layers([pub], types="gates")
 
     # In a noise-less simulation we do not expect noise. So we can construct the noise_model
     # with empty noise for all layers:
