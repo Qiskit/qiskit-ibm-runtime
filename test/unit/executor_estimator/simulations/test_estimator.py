@@ -32,7 +32,7 @@ from .utils import (
     compute_sem_theoretical,
     create_estimator_test_data,
     create_estimator_test_data_extended,
-    create_estimator_test_data_statistical,
+    create_estimator_test_data_with_groupings,
     create_local_mode_estimator,
     create_noise_model_without_noise,
 )
@@ -319,10 +319,6 @@ class TestEstimatorNoiselessStatistical(IBMTestCase):
         shot-noise-only tolerance without indicating a bug. Assertion 1 already exercises
         the PEC code path for correctness of the point estimate.
         """
-        pubs, ideal_evs_list = create_estimator_test_data_statistical(
-            self.backend, self.preset_pass_manager
-        )
-
         estimator = create_local_mode_estimator(
             self.backend,
             num_randomizations=self.NUM_RANDOMIZATIONS,
@@ -330,10 +326,15 @@ class TestEstimatorNoiselessStatistical(IBMTestCase):
             options_overrides=option_overrides,
         )
 
+        pubs, ideal_evs_list, groupings = create_estimator_test_data_with_groupings(
+            self.backend, self.preset_pass_manager, estimator.options.resilience.measure_mitigation
+        )
+
         if name == "pec":
             # Build a combined noise model covering all unique layers across both pubs.
             noise_model = create_noise_model_without_noise(estimator, pubs[0])
-            noise_model.update(create_noise_model_without_noise(estimator, pubs[1]))
+            for pub in pubs[1:]:
+                noise_model.update(create_noise_model_without_noise(estimator, pub))
             estimator.options.resilience.noise_model = noise_model
 
         result = estimator.run(pubs).result()
@@ -341,18 +342,20 @@ class TestEstimatorNoiselessStatistical(IBMTestCase):
         # ese tolerance: 5σ on the chi-squared estimator sqrt(ensemble_variance/N)
         ese_tolerance = self.K_SIGMA / np.sqrt(2 * (n_total - 1))
 
-        for pub_idx, (pub, ideal_evs) in enumerate(zip(pubs, ideal_evs_list)):
-            isa_circuit, observables, parameters = pub
+        for pub_idx, (pub, ideal_evs, term_group_indices_per_pub) in enumerate(
+            zip(pubs, ideal_evs_list, groupings)
+        ):
             evs = result[pub_idx].data.evs
             ese = result[pub_idx].data.ensemble_standard_error
             ideal_evs_arr = np.asarray(ideal_evs)
 
             sem_theoretical = compute_sem_theoretical(
-                observables if isinstance(observables, list) else [observables],
-                isa_circuit,
-                parameters,
+                pub.observables.tolist(),
+                pub.circuit,
+                pub.parameter_values.as_array(),
                 self.NUM_RANDOMIZATIONS,
                 self.SHOTS_PER_RANDOMIZATION,
+                term_group_indices_per_pub,
             )
 
             # --- Assertion 1: point estimate within 5σ of ideal ---
