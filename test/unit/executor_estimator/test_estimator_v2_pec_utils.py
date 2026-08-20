@@ -379,7 +379,6 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, 64)
-        self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         self.assertEqual(len(quantum_program.items), 1)
 
         item = cast("SamplexItem", quantum_program.items[0])

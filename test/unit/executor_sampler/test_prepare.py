@@ -609,7 +609,6 @@ class TestPreparePassthroughData(IBMTestCase):
 
         # Verify passthrough_data contains post-processor info
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertEqual(qp._semantic_role, "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "classified")
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], enable_gates)
@@ -632,7 +631,6 @@ class TestPreparePassthroughData(IBMTestCase):
         # Verify options dictionary is present in passthrough_data
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertEqual(qp._semantic_role, "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
         self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "kerneled")

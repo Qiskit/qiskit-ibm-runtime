@@ -259,7 +259,6 @@ def _build_quantum_program(
         passthrough_data=passthrough_data,
         meas_level=finalized_options.execution.meas_type,
     )
-    quantum_program._semantic_role = "sampler_v2"
 
     if finalized_options.dynamical_decoupling.enable:
         logger.info("Apply dynamical decoupling")
