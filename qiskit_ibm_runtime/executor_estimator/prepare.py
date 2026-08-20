@@ -84,21 +84,12 @@ def prepare(
     """
     # Coerce PUBs
     coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-    if not coerced_pubs:
-        raise IBMInputValueError("No pubs provided. At least one pub is required.")
 
     # Finalize options (resilience-level defaults + dependency enforcement)
     finalized_options = finalize_estimator_options(options)
 
-    # Resolve shots
-    resolved_precision = resolve_precision(coerced_pubs, precision)
-    if resolved_precision is not None:
-        shots = int(np.ceil(1.0 / (resolved_precision**2)))
-    elif finalized_options.default_shots is not None:
-        shots = int(finalized_options.default_shots)
-    else:
-        shots = int(np.ceil(1.0 / (finalized_options.default_precision**2)))
-
+    if not coerced_pubs:
+        raise IBMInputValueError("No pubs provided. At least one pub is required.")
     if finalized_options.resilience.pec_mitigation and finalized_options.resilience.zne_mitigation:
         raise IBMInputValueError(
             "PEC mitigation and ZNE mitigation are incompatible with one another."
@@ -119,6 +110,15 @@ def prepare(
                 )
 
     executor_options = estimator_options_to_executor_options(finalized_options)
+
+    # Resolve shots
+    resolved_precision = resolve_precision(coerced_pubs, precision)
+    if resolved_precision is not None:
+        shots = int(np.ceil(1.0 / (resolved_precision**2)))
+    elif finalized_options.default_shots is not None:
+        shots = int(finalized_options.default_shots)
+    else:
+        shots = int(np.ceil(1.0 / (finalized_options.default_precision**2)))
 
     if finalized_options.resilience.pec_mitigation:
         logger.info("Running ``prepare_pec``.")
