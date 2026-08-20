@@ -22,8 +22,8 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
+from samplomatic.quantum_program import CircuitItem, SamplexItem
 
-from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass

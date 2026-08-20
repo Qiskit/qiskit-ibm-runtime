@@ -39,4 +39,21 @@ Classes
     SamplexItem
 """
 
-from .quantum_program import CircuitItem, QuantumProgram, QuantumProgramItem, SamplexItem
+from ..utils.deprecation import issue_deprecation_msg
+from .quantum_program import QuantumProgram
+
+_DEPRECATED_NAMES = ("CircuitItem", "QuantumProgramItem", "SamplexItem")
+
+
+def __getattr__(name: str) -> object:
+    if name in _DEPRECATED_NAMES:
+        import samplomatic.quantum_program as _sq
+
+        issue_deprecation_msg(
+            msg=f"Importing '{name}' from 'qiskit_ibm_runtime.quantum_program' is deprecated",
+            version="0.50.0",
+            remedy=f"Import '{name}' from 'samplomatic.quantum_program' instead.",
+            stacklevel=2,
+        )
+        return getattr(_sq, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
