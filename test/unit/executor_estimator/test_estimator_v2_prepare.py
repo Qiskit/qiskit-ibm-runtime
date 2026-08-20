@@ -211,3 +211,17 @@ class TestPrepare(IBMTestCase):
             "A backend must be provided when dynamical decoupling is enabled",
         ):
             prepare(pubs, options, precision=0.1)
+
+    def test_measure_mitigation_rejects_projection_operators(self):
+        """Test measurement mitigation raises when observables contain projectors."""
+        options = EstimatorOptions()
+        options.resilience.measure_mitigation = True
+
+        circuit = QuantumCircuit(3)
+        pubs = [(circuit, "Z0Z")]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "Measurement mitigation is currently not supported when observables contain projection",
+        ):
+            prepare(pubs, options, precision=0.1)

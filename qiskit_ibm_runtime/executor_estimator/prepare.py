@@ -28,7 +28,7 @@ from .finalize_options import finalize_estimator_options
 from .pec.prepare_pec import prepare_pec
 from .prepare_pea import prepare_pea
 from .prepare_vanilla import prepare_vanilla
-from .utils import resolve_precision
+from .utils import has_projection_operators, resolve_precision
 from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
@@ -140,6 +140,13 @@ def _validate(
 
     for pub in coerced_pubs:
         validate_no_boxes(pub.circuit)
+
+        if finalized_options.resilience.measure_mitigation and has_projection_operators(pub):
+            raise IBMInputValueError(
+                "Measurement mitigation is currently not supported when observables contain "
+                "projection operators. You can decompose into pauli operators if the "
+                "exponential cost is acceptable."
+            )
 
         if finalized_options.dynamical_decoupling.enable:
             if pub.circuit.has_control_flow_op():
