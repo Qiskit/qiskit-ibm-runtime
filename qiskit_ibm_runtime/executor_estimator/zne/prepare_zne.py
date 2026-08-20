@@ -33,7 +33,7 @@ from samplomatic.quantum_program import SamplexItem
 
 from ...exceptions import IBMInputValueError
 from ...executor.calculate_twirling_shots import calculate_twirling_shots
-from ...options_models.zne import ZNE_DEFAULT_NOISE_FACTORS
+from ...options_models.zne import DEFAULT_NOISE_FACTORS
 from ...quantum_program import QuantumProgram
 from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from ..utils import (
@@ -94,7 +94,7 @@ def prepare_zne(
         )
 
     if zne_options.noise_factors == "auto":
-        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS, dtype=float)
+        noise_factors = np.array(DEFAULT_NOISE_FACTORS, dtype=float)
     else:
         noise_factors = np.array(zne_options.noise_factors, dtype=float)
     validate_noise_factors(noise_factors, zne_options.extrapolator)
@@ -204,9 +204,7 @@ def prepare_zne(
         )
         trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
+        logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
         passthrough_data["post_processor"]["measure_mitigation"] = True
-
-    # Set semantic role for post-processing dispatch
-    quantum_program._semantic_role = "estimator_v2"
 
     return quantum_program

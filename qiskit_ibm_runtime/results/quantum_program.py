@@ -270,7 +270,7 @@ class QuantumProgramItemResult(BaseQuantumProgramItemResult):
     def __init__(
         self,
         result: dict[str, np.ndarray],
-        metadata: ItemMetadata | None = None,
+        metadata: ItemMetadata | dict | None = None,
     ):
         super().__init__(result=result, metadata=metadata or ItemMetadata())
 

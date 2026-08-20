@@ -18,14 +18,14 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
-    from qiskit.circuit import CircuitInstruction
+    from qiskit.circuit import BoxOp, CircuitInstruction
     from qiskit.primitives import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
@@ -41,7 +41,7 @@ from qiskit.circuit.exceptions import CircuitError
 from qiskit.quantum_info import Pauli, PauliList
 from samplomatic import ChangeBasis
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions, get_annotation
+from samplomatic.utils import find_unique_box_instructions, get_annotation, undress_box
 
 from ..exceptions import IBMInputValueError
 
@@ -55,6 +55,9 @@ _REQUIRED_NOISE_FACTORS = {
     "fallback": 1,
     **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
 }
+
+# TypeAlias for a BoxOp type
+BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
 def validate_noise_factors(
@@ -100,6 +103,16 @@ def get_pauli_basis(basis: str) -> Pauli:
         .replace("l", "Y")
     )
     return Pauli(basis)
+
+
+def has_projection_operators(pub: EstimatorPub) -> bool:
+    """Return whether an estimator pub contains projection operators in its observables."""
+    projection_set = set("01rl+-")
+    for observable in pub.observables.ravel():
+        for observable_term in observable:
+            if bool(set(observable_term) & projection_set):
+                return True
+    return False
 
 
 def pauli_to_ints(pauli: Pauli) -> list[int]:
@@ -331,6 +344,38 @@ def find_unique_layers(
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True
     )
+
+
+def find_box_type(instruction: BoxOp) -> BoxType:
+    """Find the type of :class:`~qiskit.circuit.BoxOp` that ``instruction`` contains.
+
+    Args:
+        instruction: The instruction to get the type of.
+
+    Returns:
+        The box type. Can be one of ``"gates"``, ``"measurement"``, or ``"unknown"``.
+
+    Raises:
+        IBMInputValueError: If ``instruction`` does not contain a box.
+    """
+    box = instruction.operation
+    if (name := box.name) != "box":
+        raise IBMInputValueError(f"Expected a 'box' but found '{name}'.")
+
+    undressed_box = undress_box(box)
+
+    if len(undressed_box.body) == 0:
+        return "gates"
+
+    all_gates = all(op.is_standard_gate() or op.name == "barrier" for op in undressed_box.body)
+    all_measurement = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
+
+    if all_gates and not all_measurement:
+        return "gates"
+    elif not all_gates and all_measurement:
+        return "measurement"
+
+    return "unknown"
 
 
 def compute_samplex_arguments(
