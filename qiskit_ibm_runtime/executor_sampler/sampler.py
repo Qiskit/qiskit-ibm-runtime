@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
 from typing import TYPE_CHECKING, Literal, get_args
 
 from qiskit.primitives.base import BaseSamplerV2
@@ -26,6 +25,7 @@ from ..executor import Executor
 from ..executor_estimator.utils import BoxType, find_box_type, find_unique_layers
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
+from .finalize_options import finalize_sampler_options
 from .prepare import prepare
 
 if TYPE_CHECKING:
@@ -165,14 +165,31 @@ class SamplerV2(BaseSamplerV2):
         Returns:
             The finalized :class:`~.SamplerOptions` object.
         """
-        finalized_options = deepcopy(self.options)
+        return finalize_sampler_options(self.options)
 
-        if finalized_options.twirling.enable_gates is None:
-            finalized_options.twirling.enable_gates = False
-        if finalized_options.twirling.enable_measure is None:
-            finalized_options.twirling.enable_measure = False
+    def _run_legacy_simulation(
+        self, pubs: Iterable[SamplerPubLike], shots: int | None
+    ) -> RuntimeJobV2:
+        """Run on the legacy local simulator (no Executor).
 
-        return finalized_options
+        Args:
+            pubs: The raw PUB-like objects passed to :meth:`run`.
+            shots: The per-run shots override, forwarded from :meth:`run`.
+
+        Returns:
+            The submitted job.
+        """
+        logger.info("Running in local simulator mode")
+        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+        options = self.finalize_options()
+        options_dict = options.model_dump()
+        options_dict["default_shots"] = shots
+        return self._service._run(
+            program_id="sampler",
+            inputs={"pubs": coerced_pubs, "options": options_dict},
+            options={"backend": self._backend},
+            calibration_id=None,
+        )
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
@@ -195,48 +212,24 @@ class SamplerV2(BaseSamplerV2):
         Returns:
             The submitted job.
         """
-        # Coerce pubs to SamplerPub objects
-        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
-
-        # Finalize the options--namely, resolve the ``None`` in the twirling options
-        # as documented.
-        options = self.finalize_options()
-
-        # Determine default shots: run parameter takes precedence over options.default_shots
-        default_shots = shots if shots is not None else options.default_shots
-
         # Legacy simulator path (no executor)
         if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
             self._service, QiskitRuntimeLocalService
         ):
-            logger.info("Running in local simulator mode")
+            return self._run_legacy_simulation(pubs, shots)
 
-            options_dict = options.model_dump()
-            options_dict["default_shots"] = shots
-
-            return self._service._run(
-                program_id="sampler",
-                inputs={"pubs": coerced_pubs, "options": options_dict},
-                options={"backend": self._backend},
-                calibration_id=None,
-            )
-
-        # Convert pubs to QuantumProgram and map options using the prepare method
+        # Pre-process: Convert Sampler input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            coerced_pubs, options, default_shots, add_tags=local_mode, backend=self._backend
+            pubs, self.options, shots, add_tags=local_mode, backend=self._backend
         )
-        # Store raw options for post-processing side to compute metadata.
-        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump()  # type: ignore[index, call-overload]
 
-        # Initialize executor with settings
         executor = Executor(mode=self._backend, options=executor_options)
 
-        # Submit to executor
         logger.info(
             "Submitting %d pub%s to executor with %d shots",
-            len(coerced_pubs),
-            "s" if len(coerced_pubs) > 1 else "",
+            len(quantum_program.items),
+            "s" if len(quantum_program.items) > 1 else "",
             quantum_program.shots,
         )
 
