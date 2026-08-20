@@ -35,7 +35,7 @@ from ...executor_estimator.zne.extrapolation import process_extrapolated_expecta
 from ...results.estimator_pub import EstimatorPubResult
 from ...results.quantum_program import QuantumProgramResult
 from .trex_utils import calculate_trex_factor, get_processed_calibration_data
-from .utils import compute_exp_val, identify_measure_basis
+from .utils import compute_evals, compute_exp_val, identify_measure_basis, variances_from_evals
 
 logger = logging.getLogger(__name__)
 
@@ -324,8 +324,10 @@ def _process_expectation_values(
             )
 
         exp_val = 0.0
-        ensemble_variance = 0.0
-        twirl_variance = 0.0
+        # combined_evals_per_config accumulates the weighted per-shot values for all terms
+        # that share the same measurement shots (same config_idx). Variance is computed from
+        # the combined array so that cross-covariances between commuting terms are captured.
+        combined_evals_per_config: dict[int, np.ndarray] = {}
         for observable_term, coeff in observable.items():
             # Find which basis can measure this term
             pauli_basis = Pauli(get_pauli_basis(observable_term))
@@ -336,9 +338,8 @@ def _process_expectation_values(
             # Get measurement data for this configuration
             # datum shape: (num_randomizations, shots_per_randomization, num_qubits)
             datum = data[:, config_idx, :, :]
-            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
-                observable_term, datum
-            )
+            term_evals = compute_evals(observable_term, datum)
+            term_exp_val = np.sum(term_evals) / total_shots
 
             # Calculate scale factor in case TREX mitigation is used (cached per term)
             if measure_noise_data is not None:
@@ -350,10 +351,24 @@ def _process_expectation_values(
             else:
                 term_scale_factor = 1
 
-            # Accumulate with coefficient
-            exp_val += coeff * term_exp_val * term_scale_factor
-            ensemble_variance += (coeff**2) * term_ensemble_variance * (term_scale_factor**2)
-            twirl_variance += (coeff**2) * term_twirl_variance * (term_scale_factor**2)
+            scaled_coeff = coeff * term_scale_factor
+            exp_val += scaled_coeff * term_exp_val
+            # Accumulate weighted evals into the combined array for this config.
+            # Terms sharing config_idx are measured from the same shots, so their
+            # contributions must be summed before computing variance.
+            if config_idx not in combined_evals_per_config:
+                combined_evals_per_config[config_idx] = scaled_coeff * term_evals
+            else:
+                combined_evals_per_config[config_idx] += scaled_coeff * term_evals
+
+        # Compute variance from the combined evals of each independent config group.
+        # Groups with different config_idx use separate shot batches and are independent.
+        ensemble_variance = 0.0
+        twirl_variance = 0.0
+        for group_evals in combined_evals_per_config.values():
+            grp_ensemble_var, grp_twirl_var = variances_from_evals(group_evals)
+            ensemble_variance += grp_ensemble_var
+            twirl_variance += grp_twirl_var
 
         exp_vals[bcast_index] = exp_val
         ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
@@ -461,8 +476,10 @@ def _process_expectation_values_pec(
             )
 
         exp_val = 0.0
-        ensemble_variance = 0.0
-        twirl_variance = 0.0
+        # combined_evals_per_config accumulates the weighted per-shot values for all terms
+        # that share the same measurement shots (same config_idx). Variance is computed from
+        # the combined array so that cross-covariances between commuting terms are captured.
+        combined_evals_per_config: dict[int, np.ndarray] = {}
         for observable_term, coeff in observable.items():
             # Find which basis can measure this term
             pauli_basis = Pauli(get_pauli_basis(observable_term))
@@ -476,9 +493,8 @@ def _process_expectation_values_pec(
             # Get measurement data for this configuration
             # Shape: (num_randomizations, shots, num_qubits)
             datum = data[:, config_idx, :, :]
-            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
-                observable_term, datum, pec_signs_datum
-            )
+            term_evals = compute_evals(observable_term, datum, pec_signs_datum)
+            term_exp_val = np.sum(term_evals) / total_shots
 
             # Calculate scale factor in case TREX mitigation is used (cached per term)
             if measure_noise_data is not None:
@@ -490,10 +506,24 @@ def _process_expectation_values_pec(
             else:
                 term_scale_factor = 1
 
-            # Accumulate with coefficient
-            exp_val += coeff * term_exp_val * term_scale_factor
-            ensemble_variance += (coeff**2) * term_ensemble_variance * term_scale_factor**2
-            twirl_variance += (coeff**2) * term_twirl_variance * term_scale_factor**2
+            scaled_coeff = coeff * term_scale_factor
+            exp_val += scaled_coeff * term_exp_val
+            # Accumulate weighted evals into the combined array for this config.
+            # Terms sharing config_idx are measured from the same shots, so their
+            # contributions must be summed before computing variance.
+            if config_idx not in combined_evals_per_config:
+                combined_evals_per_config[config_idx] = scaled_coeff * term_evals
+            else:
+                combined_evals_per_config[config_idx] += scaled_coeff * term_evals
+
+        # Compute variance from the combined evals of each independent config group.
+        # Groups with different config_idx use separate shot batches and are independent.
+        ensemble_variance = 0.0
+        twirl_variance = 0.0
+        for group_evals in combined_evals_per_config.values():
+            grp_ensemble_var, grp_twirl_var = variances_from_evals(group_evals)
+            ensemble_variance += grp_ensemble_var
+            twirl_variance += grp_twirl_var
 
         exp_vals[bcast_index] = exp_val * pec_gamma
         ensemble_stds[bcast_index] = np.sqrt(ensemble_variance * pec_gamma**2 / total_shots)
