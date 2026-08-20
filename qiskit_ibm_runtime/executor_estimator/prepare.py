@@ -32,7 +32,7 @@ from .utils import resolve_precision
 from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
     from qiskit.providers import BackendV2
@@ -43,6 +43,123 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_pubs(
+    coerced_pubs: Sequence[EstimatorPub],
+    finalized_options: EstimatorOptions,
+    backend: BackendV2 | None,
+) -> None:
+    """Validate the coerced pubs and finalized options.
+
+    Args:
+        coerced_pubs: The coerced estimator pubs.
+        finalized_options: The finalized estimator options.
+        backend: The backend for which the program is prepared.
+
+    Raises:
+        IBMInputValueError: If no pubs are provided, if unsupported option combinations
+            are detected, or if a required backend is missing.
+    """
+    if not coerced_pubs:
+        raise IBMInputValueError("No pubs provided. At least one pub is required.")
+    if finalized_options.resilience.pec_mitigation and finalized_options.resilience.zne_mitigation:
+        raise IBMInputValueError(
+            "PEC mitigation and ZNE mitigation are incompatible with one another."
+        )
+
+    for pub in coerced_pubs:
+        validate_no_boxes(pub.circuit)
+
+        if finalized_options.dynamical_decoupling.enable:
+            if pub.circuit.has_control_flow_op():
+                raise IBMInputValueError(
+                    "Dynamical decoupling is not compatible with dynamic circuits "
+                    "(circuits with control flow operations)."
+                )
+            if backend is None:
+                raise IBMInputValueError(
+                    "A backend must be provided when dynamical decoupling is enabled."
+                )
+
+
+def _build_quantum_program(
+    coerced_pubs: Sequence[EstimatorPub],
+    finalized_options: EstimatorOptions,
+    shots: int,
+    add_tags: bool,
+    backend: BackendV2 | None,
+) -> QuantumProgram:
+    """Dispatch to the appropriate prepare function and apply dynamical decoupling.
+
+    Args:
+        coerced_pubs: The coerced estimator pubs.
+        finalized_options: The finalized estimator options.
+        shots: The number of shots to use.
+        add_tags: Whether to include tags for the boxes.
+        backend: The backend for which the program is prepared.
+
+    Returns:
+        The prepared quantum program.
+    """
+    measure_noise_learning = (
+        finalized_options.resilience.measure_noise_learning
+        if finalized_options.resilience.measure_mitigation
+        else None
+    )
+
+    if finalized_options.resilience.pec_mitigation:
+        logger.info("Running ``prepare_pec``.")
+        quantum_program = prepare_pec(
+            pubs=coerced_pubs,
+            twirling_options=finalized_options.twirling,
+            shots=shots,
+            pec_options=finalized_options.resilience.pec,
+            noise_model=finalized_options.resilience.noise_model,
+            measure_noise_learning=measure_noise_learning,
+            add_tags=add_tags,
+        )
+    elif finalized_options.resilience.zne_mitigation:
+        if finalized_options.resilience.zne.amplifier == "pea":
+            logger.info("Running ``prepare_pea``.")
+            quantum_program = prepare_pea(
+                pubs=coerced_pubs,
+                twirling_options=finalized_options.twirling,
+                shots=shots,
+                zne_options=finalized_options.resilience.zne,
+                noise_model=finalized_options.resilience.noise_model,
+                measure_noise_learning=measure_noise_learning,
+                add_tags=add_tags,
+            )
+        else:
+            logger.info("Running ``prepare_zne``.")
+            quantum_program = prepare_zne(
+                pubs=coerced_pubs,
+                twirling_options=finalized_options.twirling,
+                shots=shots,
+                zne_options=finalized_options.resilience.zne,
+                measure_noise_learning=measure_noise_learning,
+                add_tags=add_tags,
+            )
+    else:
+        logger.info("Running ``prepare_vanilla``.")
+        quantum_program = prepare_vanilla(
+            pubs=coerced_pubs,
+            twirling_options=finalized_options.twirling,
+            shots=shots,
+            measure_noise_learning=measure_noise_learning,
+            add_tags=add_tags,
+        )
+
+    if finalized_options.dynamical_decoupling.enable:
+        logger.info("Apply dynamical decoupling")
+        quantum_program = apply_dynamical_decoupling(
+            backend=backend,
+            dd_options=finalized_options.dynamical_decoupling,
+            quantum_program=quantum_program,
+        )
+
+    return quantum_program
 
 
 def prepare(
@@ -88,26 +205,7 @@ def prepare(
     # Finalize options (resilience-level defaults + dependency enforcement)
     finalized_options = finalize_estimator_options(options)
 
-    if not coerced_pubs:
-        raise IBMInputValueError("No pubs provided. At least one pub is required.")
-    if finalized_options.resilience.pec_mitigation and finalized_options.resilience.zne_mitigation:
-        raise IBMInputValueError(
-            "PEC mitigation and ZNE mitigation are incompatible with one another."
-        )
-
-    for pub in coerced_pubs:
-        validate_no_boxes(pub.circuit)
-
-        if finalized_options.dynamical_decoupling.enable:
-            if pub.circuit.has_control_flow_op():
-                raise IBMInputValueError(
-                    "Dynamical decoupling is not compatible with dynamic circuits "
-                    "(circuits with control flow operations)."
-                )
-            if backend is None:
-                raise IBMInputValueError(
-                    "A backend must be provided when dynamical decoupling is enabled."
-                )
+    _validate_pubs(coerced_pubs, finalized_options, backend)
 
     executor_options = estimator_options_to_executor_options(finalized_options)
 
@@ -120,63 +218,9 @@ def prepare(
     else:
         shots = int(np.ceil(1.0 / (finalized_options.default_precision**2)))
 
-    if finalized_options.resilience.pec_mitigation:
-        logger.info("Running ``prepare_pec``.")
-        quantum_program = prepare_pec(
-            pubs=coerced_pubs,
-            twirling_options=finalized_options.twirling,
-            shots=shots,
-            pec_options=finalized_options.resilience.pec,
-            noise_model=finalized_options.resilience.noise_model,
-            measure_noise_learning=finalized_options.resilience.measure_noise_learning
-            if finalized_options.resilience.measure_mitigation
-            else None,
-            add_tags=add_tags,
-        )
-    elif finalized_options.resilience.zne_mitigation:
-        if finalized_options.resilience.zne.amplifier == "pea":
-            logger.info("Running ``prepare_pea``.")
-            quantum_program = prepare_pea(
-                pubs=coerced_pubs,
-                twirling_options=finalized_options.twirling,
-                shots=shots,
-                zne_options=finalized_options.resilience.zne,
-                noise_model=finalized_options.resilience.noise_model,
-                measure_noise_learning=finalized_options.resilience.measure_noise_learning
-                if finalized_options.resilience.measure_mitigation
-                else None,
-                add_tags=add_tags,
-            )
-        else:
-            logger.info("Running ``prepare_zne``.")
-            quantum_program = prepare_zne(
-                pubs=coerced_pubs,
-                twirling_options=finalized_options.twirling,
-                shots=shots,
-                zne_options=finalized_options.resilience.zne,
-                measure_noise_learning=finalized_options.resilience.measure_noise_learning
-                if finalized_options.resilience.measure_mitigation
-                else None,
-                add_tags=add_tags,
-            )
-    else:
-        logger.info("Running ``prepare_vanilla``.")
-        quantum_program = prepare_vanilla(
-            pubs=coerced_pubs,
-            twirling_options=finalized_options.twirling,
-            shots=shots,
-            measure_noise_learning=finalized_options.resilience.measure_noise_learning
-            if finalized_options.resilience.measure_mitigation
-            else None,
-            add_tags=add_tags,
-        )
-    if finalized_options.dynamical_decoupling.enable:
-        logger.info("Apply dynamical decoupling")
-        quantum_program = apply_dynamical_decoupling(
-            backend=backend,
-            dd_options=finalized_options.dynamical_decoupling,
-            quantum_program=quantum_program,
-        )
+    quantum_program = _build_quantum_program(
+        coerced_pubs, finalized_options, shots, add_tags, backend
+    )
 
     # Annotate passthrough_data for post-processing
     quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump(  # type: ignore[index, call-overload]
