@@ -93,10 +93,9 @@ def create_estimator_test_data(backend, preset_pass_manager):
 def create_estimator_test_data_with_groupings(backend, preset_pass_manager, measure_mitigation):
     """Create test pubs together with their ideal expectation values and term groupings.
 
-    Besides the ideal expectation values, this also returns, for each observable, which
-    of its Pauli terms are measured together (i.e. share the same measurement basis).
-    This grouping information is needed to compute the theoretical uncertainty of a
-    result with :func:`compute_sem_theoretical`.
+    This is similar to `create_estimator_test_data` except term's measurement grouping
+    is controlled (by splitting into different PUBs) and tracked. Note that in general
+    we are not promised that commuting terms will be estimated based on the same shots.
     """
     circuit = make_mirror_circuit_with_phases(
         backend, layers=1, num_qubits=3, add_measurement=False, add_rx=False
@@ -145,6 +144,7 @@ def create_estimator_test_data_with_groupings(backend, preset_pass_manager, meas
     expected_evs_list.append(evs)
     groupings_list.append(groupings)
 
+    # Can't run projection operators with measure mitigation on.
     if not measure_mitigation:
         observables = [SparseObservable("Irl")]
         evs = [r_q1 * l_q0]
