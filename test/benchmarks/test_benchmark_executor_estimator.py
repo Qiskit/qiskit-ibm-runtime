@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
@@ -134,17 +134,12 @@ def create_test_pubs(backend, num_qubits, num_layers):
 def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult:
     """Simulate execution by creating a QuantumProgramResult matching the program structure."""
     result_data = []
-    passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-    post_processor_data = passthrough["post_processor"]
-    param_basis_pairs_lists = post_processor_data["param_basis_pairs"]
 
-    for i, item in enumerate(quantum_program.items):
-        num_configs = len(param_basis_pairs_lists[i])
-        num_randomizations = 1
+    for item in quantum_program.items:
         num_shots = quantum_program.shots
         num_bits = item.circuit.num_qubits
 
-        meas_shape = (num_randomizations, num_configs, num_shots, num_bits)
+        meas_shape = quantum_program.items[0].shape + (num_shots, num_bits)
         meas_data = np.random.randint(0, 2, size=meas_shape).astype(bool)
 
         result_data.append(QuantumProgramItemResult({"_meas": meas_data}))
