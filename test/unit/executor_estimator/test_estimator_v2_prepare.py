@@ -161,6 +161,7 @@ class TestPrepare(IBMTestCase):
         options.dynamical_decoupling.enable = True
         options.twirling.enable_gates = twirling_enabled
         options.twirling.enable_measure = False
+        options.resilience.measure_mitigation = False
 
         # Create a circuit with a large delay on qubit 0.
         circuit = QuantumCircuit(3)
