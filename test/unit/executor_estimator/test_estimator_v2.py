@@ -85,6 +85,9 @@ class TestEstimatorV2Run(IBMTestCase):
         # precision=0.03125 -> shots = ceil(1/0.03125^2) = 1024
         self.assertEqual(quantum_program.shots, 1024)
 
+        # Verify that information needed for post-processing dispatch were attached
+        self.assertEqual(quantum_program._semantic_role, "estimator_v2")
+
         # Verify job was returned
         self.assertEqual(job, self.mock_job)
 
