@@ -91,12 +91,15 @@ def create_estimator_test_data(backend, preset_pass_manager):
 
 
 def create_estimator_test_data_with_groupings(backend, preset_pass_manager, measure_mitigation):
-    """Create a pub and ideal expectation values for it.
+    """Create test pubs together with their ideal expectation values and term groupings.
 
-    The circuit will use 3 qubits and only a subset of observable combinations.
+    Besides the ideal expectation values, this also returns, for each observable, which
+    of its Pauli terms are measured together (i.e. share the same measurement basis).
+    This grouping information is needed to compute the theoretical uncertainty of a
+    result with :func:`compute_sem_theoretical`.
     """
     circuit = make_mirror_circuit_with_phases(
-        backend, num_qubits=3, add_measurement=False, add_rx=False
+        backend, layers=1, num_qubits=3, add_measurement=False, add_rx=False
     )
 
     pubs_list = []
@@ -270,30 +273,26 @@ def compute_sem_theoretical(
     shots_per_randomization: int,
     term_group_indices: list[dict[str, int]],
 ) -> npt.NDArray[np.float64]:
-    """Compute the theoretical standard error of the mean for each observable.
+    """Compute the expected standard error of the mean (SEM) for each observable.
 
-    Pauli terms of each observable are partitioned into measurement groups by the
-    caller via ``term_group_indices``. Within each group all terms share the same
-    shot data, so their combined per-shot value is
-    ``x_group = Σ_k c_k · eigenvalue(P_k, shot)``. The group variance
-    ``Var[x_group] = ⟨(Σ_k c_k P_k)²⟩ − ⟨Σ_k c_k P_k⟩²`` is computed from an
-    exact statevector simulation. Groups use independent shot batches, so their
-    variances add independently.
+    This gives us a "ground truth" uncertainty to compare against the one reported
+    by the Estimator. It's computed from an exact statevector simulation (no shot
+    noise), by looking at how much each observable's value would vary across
+    independent measurements given the number of shots taken.
 
-    Returns ``sqrt(Σ_groups Var_group / N)`` where
-    ``N = num_randomizations × shots_per_randomization``.
+    Terms of an observable that are measured together (as given by
+    ``term_group_indices``) contribute a combined variance, while terms measured
+    independently simply add their variances together.
 
     Args:
         observables: List of observables, each as a ``{pauli_label: coefficient}`` dict
             (e.g. from ``pub.observables.tolist()``).
         circuit: The ISA circuit to simulate (parameters not yet bound).
         parameters: Parameter values to bind, in the order of ``circuit.parameters``.
-        num_randomizations: Number of twirl randomizations (R).
-        shots_per_randomization: Number of shots per randomization (S). N = R × S.
-        term_group_indices: One ``{pauli_label: group_index}`` dict per observable.
-            Terms with the same group index share one shot batch; terms with different
-            indices are independent. Labels must match those in the corresponding
-            observable dict.
+        num_randomizations: Number of twirl randomizations.
+        shots_per_randomization: Number of shots per randomization.
+        term_group_indices: One ``{pauli_label: group_index}`` dict per observable,
+            describing which terms are measured together.
 
     Returns:
         Array of shape ``(len(observables),)`` containing the theoretical SEM for

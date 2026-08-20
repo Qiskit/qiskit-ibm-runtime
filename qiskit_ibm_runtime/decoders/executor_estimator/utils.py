@@ -77,13 +77,11 @@ def project_to_z(term: str) -> np.ndarray[int]:
 def compute_evals(
     observable_term: str, datum: np.ndarray, signs: np.ndarray | None = None
 ) -> np.ndarray:
-    """Compute the per-shot eigenvalue array for a single observable term.
+    """Compute the per-shot eigenvalue for a single observable term.
 
-    This is the low-level building block used by :func:`compute_exp_val` and by the
-    post-processor's variance accumulation.  Returning the raw ``(R, S)`` array lets
-    callers combine contributions from multiple terms **before** computing statistics,
-    which is necessary to correctly capture cross-covariances between commuting Pauli
-    terms that share the same measurement shots.
+    This is a building block used by :func:`compute_exp_val`. It's kept separate so
+    that callers can combine several terms' eigenvalues *before* computing statistics
+    on them, which is needed to correctly account for terms that share the same shots.
 
     Args:
         observable_term: Observable term string (e.g., ``"ZZZ"``, ``"0X1"``, ``"IXI"``).
@@ -134,10 +132,9 @@ def compute_evals(
 def variances_from_evals(evals: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Compute ensemble variance and twirl variance from a combined per-shot evals array.
 
-    The caller is responsible for building ``evals`` as the sum of all weighted per-term
-    contributions that share the same measurement shots (same ``config_idx``).  Computing
-    statistics on the combined array — rather than summing per-term variances — correctly
-    captures cross-covariances between commuting Pauli terms.
+    ``evals`` should already combine all terms that share the same measurement shots
+    (i.e. the same ``config_idx``), so that cross-covariances between those terms are
+    captured correctly.
 
     Args:
         evals: Combined per-shot values, shape ``(num_randomizations, shots_per_randomization)``.
@@ -145,7 +142,7 @@ def variances_from_evals(evals: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     Returns:
         Tuple ``(ensemble_variance, twirl_variance)``:
 
-        - ``ensemble_variance``: ``E[X²] - E[X]²`` treating all shots as a single iid ensemble.
+        - ``ensemble_variance``: variance treating all shots as a single ensemble.
         - ``twirl_variance``: variance of per-randomization means across randomizations.
           Equal to ``ensemble_variance`` when ``num_randomizations == 1``.
     """

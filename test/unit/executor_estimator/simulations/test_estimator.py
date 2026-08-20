@@ -243,52 +243,23 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 class TestEstimatorNoiselessStatistical(IBMTestCase):
     """Statistical validation of noiseless EstimatorV2 results.
 
-    For a noiseless simulation with R randomizations of S shots (N = R×S total), the
-    estimator output x̄ is the mean of R independent per-randomization expectation values.
-    Each per-randomization value is itself the mean of S bounded, independent shot outcomes
-    (eigenvalues ±1 for Paulis). By the CLT with R ≥ 100, x̄ is extremely well-approximated
-    as normally distributed:
+    In a noiseless run, the reported expectation values should be very close to the
+    true (ideal) values, and how close depends only on the number of shots taken.
+    These tests check that both:
 
-        x̄ ~ N(μ, SEM²)   where SEM = sqrt(Var_pp[O] / N)
+    1. The expectation values are close to the ideal values, within a tolerance
+       derived from shot noise.
+    2. The uncertainty the Estimator reports (``ensemble_standard_error``) matches
+       what we'd theoretically expect for that number of shots.
 
-    The theoretical SEM is derived from an exact statevector simulation, mirroring the
-    post-processor's grouping of Pauli terms by measurement basis. Within each group,
-    all terms share the same shots and their combined variance is computed as
-    Var[Σ c_k P_k] (including cross-covariances). Groups use independent shot batches
-    so their variances add. No shot data is involved. Tests then verify:
-
-    1. The point estimate lies within 5 standard errors of the ideal value:
-       |evs − ideal| ≤ 5 × SEM_theoretical
-       (false-positive probability ≈ 5.7 × 10⁻⁷ per observable)
-
-    2. The reported ``ensemble_standard_error`` matches the theoretical SEM to
-       within 5 standard deviations of its own estimation error:
-       |ese − SEM_theoretical| / SEM_theoretical ≤ 5 / sqrt(2 × (N − 1))
-       ≈ 2.5% for N = 20 000 — a tight regression test on the variance calculation.
-
-       ``ensemble_standard_error`` uses all N shots as an iid ensemble (relative
-       precision ~1/sqrt(2N) ≈ 0.5% for N = 20 000), making it far more tightly
-       constrained than ``stds`` (which uses only R per-twirl averages, ~7%).
-
-       Testing ``ensemble_standard_error ≈ SEM_theoretical`` also implicitly verifies
-       the simulation is truly noiseless: in a noisy run, twirling adds inter-randomization
-       variance so that ``stds > ensemble_standard_error``, which would break this assertion.
-
-    Two PUBs are tested per configuration:
-    - PUB 0: three single-Pauli-string observables (each a single measurement config).
-    - PUB 1: one multi-term observable ``1·IYI + 2·IYY + 3·IZI`` where IYI and IYY
-      commute (same measurement config, non-trivial cross-covariances) while IZI
-      anticommutes with both (independent config). This exercises the cross-covariance
-      correction in the post-processor.
-
-    Configurations tested: vanilla (resilience_level=0) and PEC with identity noise model.
-    PEC with an identity noise model is statistically identical to vanilla because the PEC
-    gamma factor equals 1 (all Lindblad rates are zero) and no errors are ever injected.
+    Increasing NUM_RANDOMIZATIONS and SHOTS_PER_RANDOMIZATION improves test accuracy
+    (tightens the bounds), while reducing K_SIGMA improves test accuracy at the cost of higher
+    false negative rate.
     """
 
     NUM_RANDOMIZATIONS = 100
     SHOTS_PER_RANDOMIZATION = 200
-    K_SIGMA = 5.0
+    K_SIGMA = 4.5  # False negative rate 1 in 147000
 
     def setUp(self):
         """Test level setup."""
@@ -304,20 +275,12 @@ class TestEstimatorNoiselessStatistical(IBMTestCase):
     )
     @unpack
     def test_statistical_accuracy(self, name, option_overrides):
-        """Tests point-estimate accuracy and reported uncertainty against theoretical predictions.
+        """Checks expectation values and reported uncertainty against theoretical predictions.
 
-        Runs both PUBs from ``create_estimator_test_data_statistical`` and for each
-        observable checks:
-        1. The EV is within 5 × SEM_theoretical of the ideal value.
-        2. (vanilla only) The reported ``ensemble_standard_error`` is within 2.5% of
-           SEM_theoretical (5σ on the chi-squared variance estimator).
-
-        Assertion 2 is skipped for PEC because the TREX scale factor is a deterministic
-        constant in the post-processor (its estimation uncertainty from the calibration
-        circuit is not propagated into ``ensemble_standard_error``). This means the
-        reported ``ese`` under PEC can differ from ``SEM_theoretical`` by more than the
-        shot-noise-only tolerance without indicating a bug. Assertion 1 already exercises
-        the PEC code path for correctness of the point estimate.
+        For each observable, this verifies that:
+        1. The expectation value is sufficiently close to the ideal value.
+        2. The reported ``ensemble_standard_error`` is sufficiently close to the
+           theoretically expected uncertainty.
         """
         estimator = create_local_mode_estimator(
             self.backend,
@@ -370,15 +333,16 @@ class TestEstimatorNoiselessStatistical(IBMTestCase):
             )
 
             # --- Assertion 2: ese within 5σ of theoretical SEM (vanilla only) ---
-            if name == "vanilla":
-                ese_rel_deviations = np.abs(ese.flatten() - sem_theoretical) / sem_theoretical
-                np.testing.assert_array_less(
-                    ese_rel_deviations,
-                    ese_tolerance,
-                    err_msg=(
-                        f"[{name}, pub{pub_idx}] ensemble_standard_error deviations exceed "
-                        f"{self.K_SIGMA}σ: relative deviations={ese_rel_deviations}, "
-                        f"tolerance={ese_tolerance:.4f}, ese={ese}, "
-                        f"sem_theoretical={sem_theoretical}"
-                    ),
-                )
+            # Note: TREX error propagation is not accounted for (issue #2858)
+            # in neither the test nor the code.
+            ese_rel_deviations = np.abs(ese.flatten() - sem_theoretical) / sem_theoretical
+            np.testing.assert_array_less(
+                ese_rel_deviations,
+                ese_tolerance,
+                err_msg=(
+                    f"[{name}, pub{pub_idx}] ensemble_standard_error deviations exceed "
+                    f"{self.K_SIGMA}σ: relative deviations={ese_rel_deviations}, "
+                    f"tolerance={ese_tolerance:.4f}, ese={ese}, "
+                    f"sem_theoretical={sem_theoretical}"
+                ),
+            )
