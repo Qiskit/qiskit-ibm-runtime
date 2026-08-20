@@ -21,14 +21,13 @@ if TYPE_CHECKING:
 
 import numpy as np
 import pytest
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
-from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramItemResult,
     QuantumProgramResult,
@@ -52,15 +51,14 @@ def test_executor_estimator_prepare(benchmark):
 
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
 
-    estimator = EstimatorV2(backend)
-    estimator.options.resilience_level = 0
-    options = estimator.finalize_options()
+    options = EstimatorOptions()
+    options.resilience_level = 0
 
     def run_prepare():
         prepare(
             coerced_pubs,
             options,
-            shots=num_shots,
+            precision=1 / np.sqrt(num_shots),
             add_tags=False,
             backend=backend,
         )
@@ -82,29 +80,19 @@ def test_executor_estimator_post_processor(benchmark):
         num_layers = 20
         num_shots = 100000
 
-    coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
+    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
 
-    estimator = EstimatorV2(backend)
-    estimator.options.resilience_level = 0
-    options = estimator.finalize_options()
+    options = EstimatorOptions()
+    options.resilience_level = 0
 
     # First, run prepare once to get the baseline quantum program structure
     quantum_program, _ = prepare(
-        coerced_pubs,
+        pubs,
         options,
-        shots=num_shots,
+        precision=1 / np.sqrt(num_shots),
         add_tags=False,
         backend=backend,
     )
-
-    # Wrapper estimator would add additional things to the passthrough data, required for
-    # post-processing. Add it manually here:
-    passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-    passthrough["post_processor"]["options"] = options.model_dump(
-        exclude={"resilience": {"noise_model"}}
-    )
-    passthrough["post_processor"]["shots"] = num_shots
-    passthrough["post_processor"]["precision"] = None
 
     # Generate dummy results
     quantum_program_result = create_dummy_result(quantum_program)
@@ -140,9 +128,7 @@ def create_test_pubs(backend, num_qubits, num_layers):
         ]
     )
 
-    pubs = [(isa_circuit, observables, parameter_values)]
-    coerced_pubs = [EstimatorPub.coerce(pub, precision=None) for pub in pubs]  # type: ignore[arg-type]
-    return coerced_pubs
+    return [(isa_circuit, observables, parameter_values)]
 
 
 def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult:
