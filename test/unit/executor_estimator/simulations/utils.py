@@ -95,7 +95,8 @@ def create_estimator_test_data_with_groupings(backend, preset_pass_manager, meas
 
     This is similar to `create_estimator_test_data` except term's measurement grouping
     is controlled (by splitting into different PUBs) and tracked. Note that in general
-    we are not promised that commuting terms will be estimated based on the same shots.
+    we are not promised that commuting terms will be estimated based on the same shots
+    (and hence the PUB splitting is needed).
     """
     circuit = make_mirror_circuit_with_phases(
         backend, layers=1, num_qubits=3, add_measurement=False, add_rx=False
