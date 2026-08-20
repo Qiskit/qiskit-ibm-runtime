@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit import QuantumCircuit
     from qiskit.circuit import BoxOp, CircuitInstruction
-    from qiskit.primitives import EstimatorPub, SamplerPub
+    from qiskit.primitives.containers import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions

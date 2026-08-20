@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.circuit import Parameter
-from qiskit.primitives import EstimatorPub
+from qiskit.primitives.containers import EstimatorPub
 from qiskit.quantum_info import (
     Operator,
     PauliLindbladMap,
