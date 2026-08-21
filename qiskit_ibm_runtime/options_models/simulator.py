@@ -14,9 +14,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Annotated, TypeAlias
 
 from pydantic import Field, InstanceOf
+from qiskit.circuit import CircuitInstruction
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.quantum_info import PauliLindbladMap
@@ -46,8 +48,15 @@ class ExperimentalSimulatorOptions(BaseOptionsModel):
     angles are nominally Clifford.
     """
 
-    noise_model: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
-    """A map from ``ref`` of a :class:`~samplomatic.Tag` annotations to PauliLindblad noise maps."""
+    layer_noise_model: (
+        Sequence[
+            tuple[
+                Annotated[CircuitInstruction, InstanceOf], Annotated[PauliLindbladMap, InstanceOf]
+            ]
+        ]
+        | None
+    ) = None
+    """Noise model specified by a collection of instructions and the noise that affects them."""
 
     seed_simulator: int | None = None
     """Random seed to control sampling."""

@@ -29,6 +29,7 @@ from qiskit.utils import optionals
 from samplomatic import Tag, Twirl
 from samplomatic.builders.build import build
 from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.executor_local_mode.run_quantum_program import run_quantum_program
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
@@ -325,18 +326,25 @@ class TestRunQuantumProgram(IBMTestCase):
             return "".join(reversed(ll))
 
         if noise:
-            noise_dict = {
-                "r0": PauliLindbladMap.from_list(
-                    [(_xi(i), 1e-1) for i in range(len(active_qubits))]
-                ),
-            }
+            layers = find_unique_box_instructions(
+                qc_boxed,
+                normalize_annotations=None,
+                undress_boxes=True,
+            )
+            noise_model = [
+                (
+                    layer,
+                    PauliLindbladMap.from_list([(_xi(i), 1e-1) for i in range(len(active_qubits))]),
+                )
+                for layer in layers
+            ]
         else:
-            noise_dict = None
+            noise_model = None
 
         result = run_quantum_program(
             AerSimulator(method="stabilizer"),
             program,
-            ExperimentalSimulatorOptions(noise_model=noise_dict),
+            ExperimentalSimulatorOptions(layer_noise_model=noise_model),
         )
 
         self.assertEqual(len(result), 1)

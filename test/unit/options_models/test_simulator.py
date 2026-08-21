@@ -34,7 +34,7 @@ class TestExperimentalSimulatorOptions(IBMTestCase):
         options = ExperimentalSimulatorOptions()
 
         self.assertEqual(options.angle_decimals, 5)
-        self.assertIsNone(options.noise_model)
+        self.assertIsNone(options.layer_noise_model)
         self.assertIsNone(options.seed_simulator)
         self.assertTrue(options.warn_absent)
 
