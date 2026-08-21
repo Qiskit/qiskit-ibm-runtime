@@ -47,7 +47,7 @@ def test_executor_estimator_prepare(benchmark):
     else:
         num_qubits = 100
         num_layers = 20
-        num_shots = 100000
+        num_shots = 200000
 
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
 
@@ -78,7 +78,7 @@ def test_executor_estimator_post_processor(benchmark):
     else:
         num_qubits = 100
         num_layers = 20
-        num_shots = 100000
+        num_shots = 200000
 
     pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
 
