@@ -42,19 +42,24 @@ class TestExperimentalSimulatorOptions(IBMTestCase):
 
     def test_layer_noise_model_validation(self):
         """Test that the validation for ``layer_noise_model`` works."""
-        circuit = QuantumCircuit(3)
+        circuit = QuantumCircuit(2)
         circuit.x(0)
-        circuit.measure_all()
+        with circuit.box():
+            circuit.cx(0, 1)
+        not_box, box = circuit.data
 
-        with self.assertRaises(ValidationError, msg="does not contain a box"):
+        options = ExperimentalSimulatorOptions(
+            layer_noise_model=[(box, PauliLindbladMap.identity(2))]
+        )
+        self.assertEqual(options.layer_noise_model, [(box, PauliLindbladMap.identity(2))])
+
+        with self.assertRaisesRegex(ValidationError, "does not contain a box"):
             ExperimentalSimulatorOptions(
-                layer_noise_model=[(circuit, PauliLindbladMap.identity(circuit.num_qubits))]
+                layer_noise_model=[(not_box, PauliLindbladMap.identity(2))]
             )
 
-        with self.assertRaises(ValidationError, msg="qubits"):
-            ExperimentalSimulatorOptions(
-                layer_noise_model=[(circuit, PauliLindbladMap.identity(1))]
-            )
+        with self.assertRaisesRegex(ValidationError, "Found instruction with 2"):
+            ExperimentalSimulatorOptions(layer_noise_model=[(box, PauliLindbladMap.identity(1))])
 
 
 @ddt
