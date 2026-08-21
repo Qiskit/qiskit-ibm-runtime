@@ -70,6 +70,9 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
 
         self.assertEqual(quantum_program.items[2].circuit, circuit3)
 
+        # Verify that information needed for post-processing dispatch were attached
+        self.assertEqual(quantum_program._semantic_role, "sampler_v2")
+
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_shots(self, mock_run):
         """Test that default shots (4096) are used when not specified."""
