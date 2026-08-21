@@ -127,7 +127,7 @@ def test_executor_estimator_prepare(benchmark, variant):
     options = EstimatorOptions()
     options.update(**{k: v for k, v in variant.items() if k != "id"})
     if variant["id"] in _NEEDS_NOISE_MODEL:
-        options.resilience.noise_model = create_identity_noise_model(coerced_pubs, options)
+        options.resilience.noise_model = create_noise_model(coerced_pubs, options)
 
     def run_prepare():
         prepare(
@@ -178,7 +178,7 @@ def test_executor_estimator_post_processor(benchmark, variant):
     options = EstimatorOptions()
     options.update(**{k: v for k, v in variant.items() if k != "id"})
     if variant["id"] in _NEEDS_NOISE_MODEL:
-        options.resilience.noise_model = create_identity_noise_model(pubs, options)
+        options.resilience.noise_model = create_noise_model(pubs, options)
 
     # Run prepare once to get the quantum program structure for this variant
     quantum_program, _ = prepare(
@@ -226,8 +226,8 @@ def create_test_pubs(backend, num_qubits, num_layers):
     return [(isa_circuit, observables, parameter_values)]
 
 
-def create_identity_noise_model(pubs, options: EstimatorOptions) -> dict:
-    """Build a trivial identity noise model for PEC/PEA variants."""
+def create_noise_model(pubs, options: EstimatorOptions) -> dict:
+    """Build a simple Pauli-Lindblad noise model."""
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
     coerced_pubs = [EstimatorPub.coerce(pub) for pub in pubs]
@@ -244,23 +244,20 @@ def create_identity_noise_model(pubs, options: EstimatorOptions) -> dict:
     for layer in layers:
         annot = get_annotation(layer.operation, InjectNoise)
         if annot is not None:
-            noise_model[annot.ref] = PauliLindbladMap.identity(layer.operation.num_qubits)
+            n = layer.operation.num_qubits
+            noise_model[annot.ref] = PauliLindbladMap.from_list([("X" * n, 0.005)])
     return noise_model
 
 
 def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult:
-    """Simulate what the executor produces for a quantum program.
-
-    Mirrors :func:`~.run_quantum_program` exactly: runs ``broadcast_sample`` to
-    get all samplex outputs (flips, pauli_signs, etc.), pops ``parameter_values``,
-    then adds random bit-arrays for each classical register in place of real
-    AerSampler results.
-    """
+    """Simulate what the executor produces for a quantum program."""
     rng = np.random.default_rng(0)
     result_data = []
 
     for item in quantum_program.items:
-        assert isinstance(item, SamplexItem)
+        if not isinstance(item, SamplexItem):
+            raise ValueError("Only samplex items supported in this benchmark")
+
         shots = quantum_program.shots
 
         # Get all samplex outputs (flips, pauli_signs, …) with correct shapes
@@ -276,8 +273,6 @@ def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult
 
     quantum_program_result = QuantumProgramResult(
         data=result_data,
-        metadata=None,
         passthrough_data=quantum_program.passthrough_data,
     )
-    quantum_program_result._semantic_role = "estimator_v2"
     return quantum_program_result
