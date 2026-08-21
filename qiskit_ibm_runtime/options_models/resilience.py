@@ -14,14 +14,15 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from collections.abc import Sequence
 
-from pydantic import InstanceOf
-from qiskit.quantum_info import PauliLindbladMap
+from pydantic import field_validator
+from qiskit.circuit import BoxOp
 
 from .base import BaseOptionsModel
 from .measure_noise_learning import MeasureNoiseLearningOptions
 from .pec import PecOptions
+from .simulator import LayerNoiseModel
 from .zne import ZneOptions
 
 
@@ -69,10 +70,21 @@ class ResilienceOptions(BaseOptionsModel):
     zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options."""
 
-    noise_model: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = {}
-    """A noise model mapping for PEC mitigation.
+    layer_noise_model: Sequence[LayerNoiseModel] | None = None
+    """Noise model specified by a collection of instructions and the noise that affects them."""
 
-    Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that
-    describe the noise characteristics of that layer. The dict contains layers from all PUBs. This
-    is required when using PEC mitigation, or ZNE with PEA amplifier.
-    """
+    @field_validator("layer_noise_model", mode="after")
+    @classmethod
+    def _validate_layer_noise_model(
+        cls, value: Sequence[LayerNoiseModel] | None
+    ) -> Sequence[LayerNoiseModel] | None:
+        if value:
+            for instruction, noise in value:
+                if not isinstance(instruction.operation, BoxOp):
+                    raise ValueError("Found an instruction that does not contain a box.")
+                if len(instruction.qubits) != noise.num_qubits:
+                    raise ValueError(
+                        f"Found instruction with {len(instruction.qubits)}",
+                        f"qubits but a noise model with {noise.num_qubits}.",
+                    )
+        return value
