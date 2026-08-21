@@ -162,7 +162,10 @@ def test_executor_estimator_post_processor(benchmark, variant):
       - ``pec``              → :func:`prepare_pec`
     """
     if benchmark.disabled:
-        num_qubits = 4
+        # Qubit count smaller than 6 on Brisbane causes error:
+        # Results must contain ``'pauli_signs'`` in the data if PEC is used.
+        # Weirdly using AER as a backend can accept <6 qubits.
+        num_qubits = 6
         num_layers = 10
         num_shots = 100
     else:
@@ -227,13 +230,13 @@ def create_identity_noise_model(pubs, options: EstimatorOptions) -> dict:
     """Build a trivial identity noise model for PEC/PEA variants."""
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-    coerced = [EstimatorPub.coerce(pub) for pub in pubs]
-    finalized = finalize_estimator_options(options)
+    coerced_pubs = [EstimatorPub.coerce(pub) for pub in pubs]
+    finalized_options = finalize_estimator_options(options)
     layers = find_unique_layers(
-        coerced,
-        twirling_options=finalized.twirling,
-        measure_noise_learning=finalized.resilience.measure_noise_learning
-        if finalized.resilience.measure_mitigation
+        coerced_pubs,
+        twirling_options=finalized_options.twirling,
+        measure_noise_learning=finalized_options.resilience.measure_noise_learning
+        if finalized_options.resilience.measure_mitigation
         else None,
         inject_noise=True,
     )
