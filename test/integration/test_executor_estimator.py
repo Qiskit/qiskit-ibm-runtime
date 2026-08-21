@@ -18,8 +18,6 @@ import numpy as np
 from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
@@ -100,11 +98,10 @@ class TestEstimator(IBMIntegrationTestCase):
         estimator.options.resilience.pec_mitigation = True
 
         layers = estimator.find_unique_layers(self.pubs, types="gates")
-        estimator.options.resilience.noise_model = {
-            annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)])
+        estimator.options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)]))
             for layer in layers
-            if (annotation := get_annotation(layer.operation, InjectNoise))
-        }
+        ]
 
         results = estimator.run(self.pubs).result()
 
@@ -136,13 +133,11 @@ class TestEstimator(IBMIntegrationTestCase):
 
         if amplifier == "pea":
             layers = estimator.find_unique_layers(self.pubs, types="gates")
-            estimator.options.resilience.noise_model = {
-                annotation.ref: PauliLindbladMap.from_list(
-                    [("X" * layer.operation.num_qubits, 0.001)]
-                )
+            estimator.options.resilience.layer_noise_model = [
+                (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)]))
                 for layer in layers
-                if (annotation := get_annotation(layer.operation, InjectNoise))
-            }
+            ]
+
         expected_num_noise_factors = len(DEFAULT_NOISE_FACTORS)
         # ``extrapolated_noise_factors`` defaults to ``[0, *noise_factors]``
         expected_num_extrapolated = expected_num_noise_factors + 1
