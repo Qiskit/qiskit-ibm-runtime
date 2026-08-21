@@ -17,6 +17,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.primitives import EstimatorPubLike
+
     from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
 
 import numpy as np
@@ -104,15 +108,7 @@ _NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
     ids=[v["id"] for v in _PREPARE_VARIANTS],
 )
 def test_executor_estimator_prepare(benchmark, variant):
-    """Benchmark prepare() for each prepare-function dispatch branch.
-
-    Covered branches (see executor_estimator/prepare._build_quantum_program):
-      - ``vanilla``          → :func:`prepare_vanilla`
-      - ``vanilla_trex``     → :func:`prepare_vanilla` with measure-noise learning
-      - ``zne_gate_folding`` → :func:`prepare_zne`
-      - ``zne_pea``          → :func:`prepare_pea`
-      - ``pec``              → :func:`prepare_pec`
-    """
+    """Benchmark prepare() for different mitigation strategies."""
     if benchmark.disabled:
         num_qubits = 3
         num_layers = 10
@@ -148,19 +144,7 @@ def test_executor_estimator_prepare(benchmark, variant):
     ids=[v["id"] for v in _PREPARE_VARIANTS],
 )
 def test_executor_estimator_post_processor(benchmark, variant):
-    """Benchmark the estimator post-processor for each prepare-function dispatch branch.
-
-    Each branch produces a different ``passthrough_data`` structure, exercising
-    distinct post-processing code paths in
-    :meth:`~.QuantumProgramResultDecoder._apply_post_processing`.
-
-    Covered branches (see executor_estimator/prepare._build_quantum_program):
-      - ``vanilla``          → :func:`prepare_vanilla`
-      - ``vanilla_trex``     → :func:`prepare_vanilla` with measure-noise learning
-      - ``zne_gate_folding`` → :func:`prepare_zne`
-      - ``zne_pea``          → :func:`prepare_pea`
-      - ``pec``              → :func:`prepare_pec`
-    """
+    """Benchmark the estimator post-processor for different mitigation strategies."""
     if benchmark.disabled:
         # Qubit count smaller than 6 on Brisbane causes error:
         # Results must contain ``'pauli_signs'`` in the data if PEC is used.
@@ -226,7 +210,7 @@ def create_test_pubs(backend, num_qubits, num_layers):
     return [(isa_circuit, observables, parameter_values)]
 
 
-def create_noise_model(pubs, options: EstimatorOptions) -> dict:
+def create_noise_model(pubs: Iterable[EstimatorPubLike], options: EstimatorOptions) -> dict:
     """Build a simple Pauli-Lindblad noise model."""
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
