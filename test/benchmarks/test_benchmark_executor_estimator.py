@@ -21,13 +21,19 @@ if TYPE_CHECKING:
 
 import numpy as np
 import pytest
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from samplomatic import InjectNoise
+from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_estimator_options
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
+from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
+from qiskit_ibm_runtime.executor_local_mode.broadcast_sample import broadcast_sample
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.quantum_program import SamplexItem
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramItemResult,
     QuantumProgramResult,
@@ -87,6 +93,9 @@ PEC = {
 
 _PREPARE_VARIANTS = [VANILLA, VANILLA_TREX, ZNE_GATE_FOLDING, ZNE_PEA, PEC]
 
+# Variants that require a noise model (PEC and PEA use inject_noise=True in prepare)
+_NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
+
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize(
@@ -104,9 +113,8 @@ def test_executor_estimator_prepare(benchmark, variant):
       - ``zne_pea``          → :func:`prepare_pea`
       - ``pec``              → :func:`prepare_pec`
     """
-    backend = FakeBrisbane()
     if benchmark.disabled:
-        num_qubits = 5
+        num_qubits = 3
         num_layers = 10
         num_shots = 100
     else:
@@ -114,9 +122,12 @@ def test_executor_estimator_prepare(benchmark, variant):
         num_layers = 20
         num_shots = 200000
 
+    backend = FakeBrisbane()
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
     options = EstimatorOptions()
     options.update(**{k: v for k, v in variant.items() if k != "id"})
+    if variant["id"] in _NEEDS_NOISE_MODEL:
+        options.resilience.noise_model = create_identity_noise_model(coerced_pubs, options)
 
     def run_prepare():
         prepare(
@@ -150,10 +161,8 @@ def test_executor_estimator_post_processor(benchmark, variant):
       - ``zne_pea``          → :func:`prepare_pea`
       - ``pec``              → :func:`prepare_pec`
     """
-    backend = FakeBrisbane()
-
     if benchmark.disabled:
-        num_qubits = 5
+        num_qubits = 4
         num_layers = 10
         num_shots = 100
     else:
@@ -161,9 +170,12 @@ def test_executor_estimator_post_processor(benchmark, variant):
         num_layers = 20
         num_shots = 200000
 
+    backend = FakeBrisbane()
     pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
     options = EstimatorOptions()
     options.update(**{k: v for k, v in variant.items() if k != "id"})
+    if variant["id"] in _NEEDS_NOISE_MODEL:
+        options.resilience.noise_model = create_identity_noise_model(pubs, options)
 
     # Run prepare once to get the quantum program structure for this variant
     quantum_program, _ = prepare(
@@ -211,18 +223,53 @@ def create_test_pubs(backend, num_qubits, num_layers):
     return [(isa_circuit, observables, parameter_values)]
 
 
+def create_identity_noise_model(pubs, options: EstimatorOptions) -> dict:
+    """Build a trivial identity noise model for PEC/PEA variants."""
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
+
+    coerced = [EstimatorPub.coerce(pub) for pub in pubs]
+    finalized = finalize_estimator_options(options)
+    layers = find_unique_layers(
+        coerced,
+        twirling_options=finalized.twirling,
+        measure_noise_learning=finalized.resilience.measure_noise_learning
+        if finalized.resilience.measure_mitigation
+        else None,
+        inject_noise=True,
+    )
+    noise_model = {}
+    for layer in layers:
+        annot = get_annotation(layer.operation, InjectNoise)
+        if annot is not None:
+            noise_model[annot.ref] = PauliLindbladMap.identity(layer.operation.num_qubits)
+    return noise_model
+
+
 def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult:
-    """Simulate execution by creating a QuantumProgramResult matching the program structure."""
+    """Simulate what the executor produces for a quantum program.
+
+    Mirrors :func:`~.run_quantum_program` exactly: runs ``broadcast_sample`` to
+    get all samplex outputs (flips, pauli_signs, etc.), pops ``parameter_values``,
+    then adds random bit-arrays for each classical register in place of real
+    AerSampler results.
+    """
+    rng = np.random.default_rng(0)
     result_data = []
 
     for item in quantum_program.items:
-        num_shots = quantum_program.shots
-        num_bits = item.circuit.num_qubits
+        assert isinstance(item, SamplexItem)
+        shots = quantum_program.shots
 
-        meas_shape = quantum_program.items[0].shape + (num_shots, num_bits)
-        meas_data = np.random.randint(0, 2, size=meas_shape).astype(bool)
+        # Get all samplex outputs (flips, pauli_signs, …) with correct shapes
+        samplex_data = broadcast_sample(item.samplex, item.samplex_arguments, item.shape, rng)
+        samplex_data.pop("parameter_values", None)
 
-        result_data.append(QuantumProgramItemResult({"_meas": meas_data}))
+        # Replace circuit measurement registers with random data
+        for creg in item.circuit.cregs:
+            shape = item.shape + (shots, creg.size)
+            samplex_data[creg.name] = np.random.randint(0, 2, size=shape).astype(bool)
+
+        result_data.append(QuantumProgramItemResult(samplex_data))
 
     quantum_program_result = QuantumProgramResult(
         data=result_data,
