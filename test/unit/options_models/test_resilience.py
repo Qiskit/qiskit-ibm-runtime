@@ -44,8 +44,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         circuit = QuantumCircuit(2)
         with circuit.box():
             circuit.cx(0, 1)
-        _, box = circuit.data
-        layer_noise_model = [(box, PauliLindbladMap.identity(num_qubits=1))]
+        layer_noise_model = [(layer, PauliLindbladMap.identity(2)) for layer in circuit.data]
         opts = ResilienceOptions(
             measure_mitigation=False,
             measure_noise_learning={"num_randomizations": 64},
