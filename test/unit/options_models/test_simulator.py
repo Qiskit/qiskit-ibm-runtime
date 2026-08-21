@@ -16,6 +16,8 @@ from unittest.mock import patch
 
 from ddt import data, ddt
 from pydantic import ValidationError
+from qiskit.circuit import QuantumCircuit
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler import CouplingMap
 
 from qiskit_ibm_runtime.options_models.simulator import (
@@ -37,6 +39,22 @@ class TestExperimentalSimulatorOptions(IBMTestCase):
         self.assertIsNone(options.layer_noise_model)
         self.assertIsNone(options.seed_simulator)
         self.assertTrue(options.warn_absent)
+
+    def test_layer_noise_model_validation(self):
+        """Test that the validation for ``layer_noise_model`` works."""
+        circuit = QuantumCircuit(3)
+        circuit.x(0)
+        circuit.measure_all()
+
+        with self.assertRaises(ValidationError, msg="does not contain a box"):
+            ExperimentalSimulatorOptions(
+                layer_noise_model=[(circuit, PauliLindbladMap.identity(circuit.num_qubits))]
+            )
+
+        with self.assertRaises(ValidationError, msg="qubits"):
+            ExperimentalSimulatorOptions(
+                layer_noise_model=[(circuit, PauliLindbladMap.identity(1))]
+            )
 
 
 @ddt
