@@ -35,10 +35,75 @@ from qiskit_ibm_runtime.results.quantum_program import (
 
 from ..utils import make_mirror_circuit_with_phases
 
+# ---------------------------------------------------------------------------
+# Option configurations – one per dispatch branch in prepare._build_quantum_program
+# ---------------------------------------------------------------------------
+
+# Branch: prepare_vanilla (default – no ZNE, no PEC)
+VANILLA = {
+    "id": "vanilla",
+    "resilience_level": 0,
+}
+
+# Branch: prepare_vanilla with measure-error learning (TREX / measure_mitigation)
+VANILLA_TREX = {
+    "id": "vanilla_trex",
+    "resilience_level": 0,
+    "twirling": {"enable_gates": True, "enable_measure": True},
+    "resilience": {"measure_mitigation": True},
+}
+
+# Branch: prepare_zne  (ZNE with gate_folding amplifier)
+ZNE_GATE_FOLDING = {
+    "id": "zne_gate_folding",
+    "resilience_level": 0,
+    "twirling": {"enable_gates": True, "enable_measure": True},
+    "resilience": {
+        "zne_mitigation": True,
+        "zne": {"amplifier": "gate_folding"},
+    },
+}
+
+# Branch: prepare_pea  (ZNE with PEA amplifier)
+ZNE_PEA = {
+    "id": "zne_pea",
+    "resilience_level": 0,
+    "twirling": {"enable_gates": True, "enable_measure": True},
+    "resilience": {
+        "zne_mitigation": True,
+        "zne": {"amplifier": "pea"},
+    },
+}
+
+# Branch: prepare_pec
+PEC = {
+    "id": "pec",
+    "resilience_level": 0,
+    "twirling": {"enable_gates": True, "enable_measure": True},
+    "resilience": {
+        "pec_mitigation": True,
+    },
+}
+
+_PREPARE_VARIANTS = [VANILLA, VANILLA_TREX, ZNE_GATE_FOLDING, ZNE_PEA, PEC]
+
 
 @pytest.mark.benchmark
-def test_executor_estimator_prepare(benchmark):
-    """Benchmark the prepare() method from executor_estimator/prepare.py."""
+@pytest.mark.parametrize(
+    "variant",
+    _PREPARE_VARIANTS,
+    ids=[v["id"] for v in _PREPARE_VARIANTS],
+)
+def test_executor_estimator_prepare(benchmark, variant):
+    """Benchmark prepare() for each prepare-function dispatch branch.
+
+    Covered branches (see executor_estimator/prepare._build_quantum_program):
+      - ``vanilla``          → :func:`prepare_vanilla`
+      - ``vanilla_trex``     → :func:`prepare_vanilla` with measure-noise learning
+      - ``zne_gate_folding`` → :func:`prepare_zne`
+      - ``zne_pea``          → :func:`prepare_pea`
+      - ``pec``              → :func:`prepare_pec`
+    """
     backend = FakeBrisbane()
     if benchmark.disabled:
         num_qubits = 5
@@ -50,9 +115,8 @@ def test_executor_estimator_prepare(benchmark):
         num_shots = 200000
 
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
-
     options = EstimatorOptions()
-    options.resilience_level = 0
+    options.update(**{k: v for k, v in variant.items() if k != "id"})
 
     def run_prepare():
         prepare(
@@ -67,8 +131,25 @@ def test_executor_estimator_prepare(benchmark):
 
 
 @pytest.mark.benchmark
-def test_executor_estimator_post_processor(benchmark):
-    """Benchmark the estimator post-processor via QuantumProgramResultDecoder."""
+@pytest.mark.parametrize(
+    "variant",
+    _PREPARE_VARIANTS,
+    ids=[v["id"] for v in _PREPARE_VARIANTS],
+)
+def test_executor_estimator_post_processor(benchmark, variant):
+    """Benchmark the estimator post-processor for each prepare-function dispatch branch.
+
+    Each branch produces a different ``passthrough_data`` structure, exercising
+    distinct post-processing code paths in
+    :meth:`~.QuantumProgramResultDecoder._apply_post_processing`.
+
+    Covered branches (see executor_estimator/prepare._build_quantum_program):
+      - ``vanilla``          → :func:`prepare_vanilla`
+      - ``vanilla_trex``     → :func:`prepare_vanilla` with measure-noise learning
+      - ``zne_gate_folding`` → :func:`prepare_zne`
+      - ``zne_pea``          → :func:`prepare_pea`
+      - ``pec``              → :func:`prepare_pec`
+    """
     backend = FakeBrisbane()
 
     if benchmark.disabled:
@@ -81,11 +162,10 @@ def test_executor_estimator_post_processor(benchmark):
         num_shots = 200000
 
     pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
-
     options = EstimatorOptions()
-    options.resilience_level = 0
+    options.update(**{k: v for k, v in variant.items() if k != "id"})
 
-    # First, run prepare once to get the baseline quantum program structure
+    # Run prepare once to get the quantum program structure for this variant
     quantum_program, _ = prepare(
         pubs,
         options,
@@ -94,7 +174,7 @@ def test_executor_estimator_post_processor(benchmark):
         backend=backend,
     )
 
-    # Generate dummy results
+    # Generate dummy results matching the prepared program structure
     quantum_program_result = create_dummy_result(quantum_program)
 
     def run_post_processor():
