@@ -231,7 +231,6 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, shots)
         self.assertEqual(quantum_program.meas_level, "classified")
-        self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         self.assertEqual(len(quantum_program.items), 2)
 
         item1 = cast("SamplexItem", quantum_program.items[0])

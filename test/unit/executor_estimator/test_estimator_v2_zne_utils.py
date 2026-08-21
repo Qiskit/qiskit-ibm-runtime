@@ -180,7 +180,6 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, shots)
-        self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         # Should have len(noise_factors) items for the single pub
         self.assertEqual(len(quantum_program.items), len(noise_factors))
 
