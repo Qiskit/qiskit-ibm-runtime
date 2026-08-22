@@ -1,0 +1,6 @@
+Fixed control-flow padding in :class:`.BlockBasePadder` so nested block traversal no
+longer leaks timing state into the parent block. Rebuilt control-flow operations now
+retain their scheduled block index, and barriers after final fast-path operations use
+the correct block index and start time. This prevents incorrect scheduling metadata and
+padding when dynamic circuits contain nested or multi-branch control flow
+(:issue:`3077`; idle-qubit detection in :issue:`3005` remains separate).
