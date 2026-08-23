@@ -240,7 +240,9 @@ class TestEstimatorV2PostProcessor(IBMTestCase):
         pub_metadata = primitive_result[0].metadata
         self.assertIn("compilation", pub_metadata)
         for sub_result_metadata in pub_metadata["compilation"]:
-            self._assert_compilation_metadata({"compilation": sub_result_metadata}, stretch_values, scheduler_timing)
+            self._assert_compilation_metadata(
+                {"compilation": sub_result_metadata}, stretch_values, scheduler_timing
+            )
 
     def test_simulation_info_in_metadata(self):
         """For simulator results metadata is stored under ``executor``."""
