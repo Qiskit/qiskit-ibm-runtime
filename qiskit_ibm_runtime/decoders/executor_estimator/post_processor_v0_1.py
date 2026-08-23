@@ -535,6 +535,8 @@ def create_result_item_metadata(item_metadata: ItemMetadata | dict):
                 asdict(stretch_value, dict_factory=expanded_values_to_lists)
                 for stretch_value in item_metadata.stretch_values
             ]
+    else:  # simulator
+        result_item_metadata["executor"] = item_metadata
 
     return result_item_metadata
 
