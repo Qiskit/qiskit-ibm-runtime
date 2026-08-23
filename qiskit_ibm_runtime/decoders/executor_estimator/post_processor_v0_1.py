@@ -524,6 +524,18 @@ def _process_expectation_values_pec(
 
 
 def create_result_item_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
+    """Build the metadata dict for a single result item.
+
+    For hardware results (``ItemMetadata``), extracts compilation-related fields
+    such as ``scheduler_timing`` and ``stretch_values`` under a ``"compilation"`` key.
+    For simulator results (plain ``dict``), stores the raw metadata under ``"executor"``.
+
+    Args:
+        item_metadata: Metadata from a single quantum program item result.
+
+    Returns:
+        A dict containing the relevant metadata fields for the pub result.
+    """
     result_item_metadata: dict[str, Any] = {}
     if isinstance(item_metadata, ItemMetadata):
         result_item_metadata["compilation"] = {}
