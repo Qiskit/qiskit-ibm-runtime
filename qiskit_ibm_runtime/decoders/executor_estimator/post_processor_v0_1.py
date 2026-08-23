@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import numpy.typing as npt
+    from collections.abc import Iterable
     from qiskit.quantum_info import PauliLindbladMap
 
     from ...options_models.zne import ExtrapolatorType
@@ -30,6 +31,7 @@ import numpy as np
 from qiskit.primitives import DataBin, PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
+
 from qiskit_ibm_runtime.results.quantum_program import ItemMetadata
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
@@ -521,7 +523,7 @@ def _process_expectation_values_pec(
     return exp_vals, stds, ensemble_stds
 
 
-def create_result_item_metadata(item_metadata: ItemMetadata | dict):
+def create_result_item_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
     result_item_metadata: dict[str, Any] = {}
     if isinstance(item_metadata, ItemMetadata):
         result_item_metadata["compilation"] = {}
@@ -846,7 +848,9 @@ def create_pub_result_zne(
         shape=zero_noise_exp_vals.shape,
     )
 
-    result_item_metadata = [create_result_item_metadata(item_result.metadata) for item_result in item_results]
+    result_item_metadata = [
+        create_result_item_metadata(item_result.metadata) for item_result in item_results
+    ]
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
