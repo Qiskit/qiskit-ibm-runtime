@@ -237,9 +237,10 @@ class TestEstimatorV2PostProcessor(IBMTestCase):
         result._semantic_role = "estimator_v2"
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
-        # ZNE returns a list of per-noise-factor metadata
-        for item_metadata in primitive_result[0].metadata:
-            self._assert_compilation_metadata(item_metadata, stretch_values, scheduler_timing)
+        pub_metadata = primitive_result[0].metadata
+        self.assertIn("compilation", pub_metadata)
+        for sub_result_metadata in pub_metadata["compilation"]:
+            self._assert_compilation_metadata({"compilation": sub_result_metadata}, stretch_values, scheduler_timing)
 
     def test_simulation_info_in_metadata(self):
         """For simulator results metadata is stored under ``executor``."""
@@ -298,11 +299,11 @@ class TestEstimatorV2PostProcessor(IBMTestCase):
         result._semantic_role = "estimator_v2"
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
-        # ZNE returns a list of per-noise-factor metadata
-        for item_metadata in primitive_result[0].metadata:
-            self.assertIn("executor", item_metadata)
-            self.assertEqual(item_metadata["executor"], sim_metadata)
-            self.assertNotIn("compilation", item_metadata)
+        pub_metadata = primitive_result[0].metadata
+        self.assertIn("executor", pub_metadata)
+        self.assertNotIn("compilation", pub_metadata)
+        for sub_result_metadata in pub_metadata["executor"]:
+            self.assertEqual(sub_result_metadata, sim_metadata)
 
     def test_measure_mitigation_fix_expectation_values(self):
         """Test that measure_mitigation fix expectation values compared to no mitigation.
