@@ -20,8 +20,9 @@ from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    import numpy.typing as npt
     from collections.abc import Iterable
+
+    import numpy.typing as npt
     from qiskit.quantum_info import PauliLindbladMap
 
     from ...options_models.zne import ExtrapolatorType
