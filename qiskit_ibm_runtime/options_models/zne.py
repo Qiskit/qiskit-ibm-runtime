@@ -130,11 +130,10 @@ class ZneOptions(BaseOptionsModel):
         ]
         | Literal["auto"]
     ) = "auto"
-    """ noise_factors: Noise factors to use for noise amplification.
+    """Noise factors to use for noise amplification.
 
-    The default is
-    :data:`~.DEFAULT_NOISE_FACTORS`.
-    Must contain more values than DOF in all requested extrapolators.
+    The default is :data:`~.DEFAULT_NOISE_FACTORS`. Must contain more values than DOF in all
+    requested extrapolators.
     """
 
     extrapolator: ExtrapolatorType | Sequence[ExtrapolatorType] = ("exponential", "linear")
