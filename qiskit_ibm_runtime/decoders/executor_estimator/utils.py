@@ -74,6 +74,94 @@ def project_to_z(term: str) -> np.ndarray[int]:
     return np.array([CHAR_TO_Z_CHARS[ch] for ch in str(term)])
 
 
+def compute_evals(
+    observable_term: str, datum: np.ndarray, signs: np.ndarray | None = None
+) -> np.ndarray:
+    """Compute the per-shot eigenvalue for a single observable term.
+
+    This is a building block used by :func:`compute_exp_val`. It's kept separate so
+    that callers can combine several terms' eigenvalues *before* computing statistics
+    on them, which is needed to correctly account for terms that share the same shots.
+
+    Args:
+        observable_term: Observable term string (e.g., ``"ZZZ"``, ``"0X1"``, ``"IXI"``).
+        datum: Boolean measurement outcomes, shape
+            ``(num_randomizations, shots_per_randomization, num_qubits)``.
+        signs: Optional PEC sign array, shape
+            ``(num_randomizations, error_generators_indicators)``.
+
+    Returns:
+        Float array of per-shot eigenvalues, shape
+        ``(num_randomizations, shots_per_randomization)``.
+        Shots that do not satisfy a projector condition are set to ``0``.
+    """
+    z_term = project_to_z(observable_term)
+
+    # Reverse to match endian-ness
+    is_Z = (z_term == "Z")[::-1]
+    is_0 = (z_term == "0")[::-1]
+    is_1 = (z_term == "1")[::-1]
+
+    any_0s = np.any(is_0)
+    any_1s = np.any(is_1)
+    any_Zs = np.any(is_Z)
+
+    if any_Zs:
+        evals = np.prod(1 - 2 * datum[..., is_Z], axis=-1).astype(float)
+    else:
+        evals = np.ones(datum.shape[:-1], dtype=float)
+
+    # In case signs is provided - multiply the evals by -1 if the parity of the signs is odd
+    if signs is not None:
+        signs_per_rand = np.asarray(np.sum(signs, axis=-1) % 2, dtype=bool)
+        signs_per_rand = 1 - 2 * signs_per_rand
+        evals *= signs_per_rand[..., np.newaxis]
+
+    # Apply projector filters for "0" and "1"
+    if any_0s | any_1s:
+        keep = np.ones(datum.shape[:-1], dtype=bool)
+        if any_0s:
+            keep &= np.all(~datum[..., is_0], axis=-1)
+        if any_1s:
+            keep &= np.all(datum[..., is_1], axis=-1)
+        evals = np.where(keep, evals, 0.0)
+
+    return evals
+
+
+def variances_from_evals(evals: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Compute ensemble variance and twirl variance from a combined per-shot evals array.
+
+    ``evals`` should already combine all terms that share the same measurement shots
+    (i.e. the same ``config_idx``), so that cross-covariances between those terms are
+    captured correctly.
+
+    Args:
+        evals: Combined per-shot values, shape ``(num_randomizations, shots_per_randomization)``.
+
+    Returns:
+        Tuple ``(ensemble_variance, twirl_variance)``:
+
+        - ``ensemble_variance``: variance treating all shots as a single ensemble.
+        - ``twirl_variance``: variance of per-randomization means across randomizations.
+          Equal to ``ensemble_variance`` when ``num_randomizations == 1``.
+    """
+    num_randomizations = evals.shape[0]
+    shots_per_randomization = evals.shape[1]
+    total_shots = num_randomizations * shots_per_randomization
+
+    exp_val = np.sum(evals) / total_shots
+    ensemble_variance = np.sum(evals**2) / total_shots - exp_val**2
+
+    if num_randomizations == 1:
+        twirl_variance = ensemble_variance
+    else:
+        twirl_exp_vals = np.sum(evals, axis=-1) / shots_per_randomization
+        twirl_variance = np.var(twirl_exp_vals, ddof=0)
+
+    return np.asarray(ensemble_variance), np.asarray(twirl_variance)
+
+
 def compute_exp_val(
     observable_term: str, datum: np.ndarray, signs: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -93,70 +181,12 @@ def compute_exp_val(
             - ensemble_variance: Variance treating all shots as a single ensemble
             - twirl_variance: Variance of expectation values across twirls
     """
-    z_term = project_to_z(observable_term)
-
-    # Compute masks
-    # Reverse to match endian-ness
-    is_Z = (z_term == "Z")[::-1]
-    is_0 = (z_term == "0")[::-1]
-    is_1 = (z_term == "1")[::-1]
-
-    any_0s = np.any(is_0)
-    any_1s = np.any(is_1)
-    any_Zs = np.any(is_Z)
-
-    if any_Zs:
-        evals = np.prod(1 - 2 * datum[..., is_Z], axis=-1)
-    else:
-        evals = np.ones(datum.shape[:-1])
-
-    # in case signs is provided - multiply the evals by -1 if the parity of the signs is odd
-    if signs is not None:
-        # sum all the indicators of the error generators for each randomization
-        signs_per_rand = np.asarray(np.sum(signs, axis=-1) % 2, dtype=bool)
-        # transform the bool array into an array consisting -1 (for True values)
-        # and 1 (for False values)
-        signs_per_rand = 1 - 2 * signs_per_rand
-        # expand signs to the shape of evals
-        evals *= signs_per_rand[..., np.newaxis]
-
-    # Apply projector filters for "0" and "1"
-    if any_0s | any_1s:
-        keep = np.ones(datum.shape[:-1], dtype=bool)
-        if any_0s:
-            keep &= np.all(~datum[..., is_0], axis=-1)
-        if any_1s:
-            keep &= np.all(datum[..., is_1], axis=-1)
-        evals = np.where(keep, evals, 0)
-
-    # evals shape: (num_randomizations, shots_per_randomization)
-    # evals contains expectation values for each shot (may be 0 for filtered shots)
+    evals = compute_evals(observable_term, datum, signs)
     num_randomizations = datum.shape[0]
     shots_per_randomization = datum.shape[-2]
     total_shots = num_randomizations * shots_per_randomization
-
-    # Compute overall expectation value (mean across all shots)
     exp_val = np.sum(evals) / total_shots
-
-    # Compute ensemble variance: treating all shots as a single ensemble
-    # variance = E[X²] - E[X]²
-    evals_squared = evals**2
-    mean_squared = np.sum(evals_squared) / total_shots
-    ensemble_variance = mean_squared - exp_val**2
-
-    # Compute twirl variance: variance of expectation values across twirls
-    # When num_randomizations=1 (no twirling), twirl_variance should equal ensemble_variance
-    # so that stds and ensemble_standard_error are equal
-    if num_randomizations == 1:
-        twirl_variance = ensemble_variance
-    else:
-        # For each twirl (randomization), compute the expectation value
-        # Must normalize by shots_per_randomization (not actual count) to handle filtered shots
-        # Compute variance of these per-twirl expectation values
-        twirl_exp_vals = (
-            np.sum(evals, axis=-1) / shots_per_randomization
-        )  # Shape: (num_randomizations,)
-        twirl_variance = np.var(twirl_exp_vals, ddof=0)
-
-    # Ensure we always return numpy arrays (even for scalar results)
-    return np.asarray(exp_val), np.asarray(ensemble_variance), np.asarray(twirl_variance)
+    # Reshape to (R, S) so variances_from_evals gets a clean 2D array.
+    evals_2d = evals.reshape(num_randomizations, shots_per_randomization)
+    ensemble_variance, twirl_variance = variances_from_evals(evals_2d)
+    return np.asarray(exp_val), ensemble_variance, twirl_variance

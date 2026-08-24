@@ -14,11 +14,19 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.circuit import Parameter
-from qiskit.quantum_info import Operator, PauliLindbladMap, SparsePauliOp
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.quantum_info import (
+    Operator,
+    PauliLindbladMap,
+    SparseObservable,
+    SparsePauliOp,
+    Statevector,
+)
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
@@ -30,6 +38,8 @@ from ....utils import make_mirror_circuit_with_phases
 if TYPE_CHECKING:
     from typing import Any
 
+    import numpy.typing as npt
+    from qiskit.circuit import QuantumCircuit
     from qiskit.providers import BackendV2
 
 
@@ -80,6 +90,77 @@ def create_estimator_test_data(backend, preset_pass_manager):
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
 
+def create_estimator_test_data_with_groupings(backend, preset_pass_manager, measure_mitigation):
+    """Create test pubs together with their ideal expectation values and term groupings.
+
+    This is similar to `create_estimator_test_data` except term's measurement grouping
+    is controlled (by splitting into different PUBs) and tracked. Note that in general
+    we are not promised that commuting terms will be estimated based on the same shots
+    (and hence the PUB splitting is needed).
+    """
+    circuit = make_mirror_circuit_with_phases(
+        backend, layers=1, num_qubits=3, add_measurement=False, add_rx=False
+    )
+
+    pubs_list = []
+    expected_evs_list = []
+    groupings_list = []
+
+    circuit.rx(Parameter("rx_0"), 0)
+    circuit.rx(Parameter("rx_1"), 1)
+    circuit.ry(Parameter("ry_2"), 2)
+    isa_circuit = preset_pass_manager.run(circuit)
+
+    theta = np.pi / 5
+    phi = -np.pi / 3
+    parameters = [theta, phi, 3 * np.pi / 4]
+
+    y_q0 = -np.sin(theta)
+    y_q1 = -np.sin(phi)
+    z_q0 = np.cos(theta)
+    z_q1 = np.cos(phi)
+    r_q1 = (1 - np.sin(phi)) / 2
+    l_q0 = (1 + np.sin(theta)) / 2
+    x_q2 = np.sqrt(2) / 2
+
+    observables = [SparsePauliOp("IYZ"), SparsePauliOp("XII")]
+    evs = [y_q1 * z_q0, x_q2]
+    groupings = [{"IYZ": 0}, {"XII": 0}]
+
+    pub = (isa_circuit, observables, parameters)
+    pubs_list.append(pub)
+    expected_evs_list.append(evs)
+    groupings_list.append(groupings)
+
+    c_IYI, c_IYY, c_IZI = 1.0, 2.0, 3.0
+    evs = [c_IYI * y_q1 + c_IYY * y_q1 * y_q0 + c_IZI * z_q1]
+
+    # IYI and IYY share a measurement basis (Y on qubit 1) → group 0.
+    # IZI is independent → group 1.
+    observables = [SparsePauliOp.from_list([("IYI", c_IYI), ("IYY", c_IYY), ("IZI", c_IZI)])]
+    groupings = [{"IYI": 0, "IYY": 0, "IZI": 1}]
+
+    pub = (isa_circuit, observables, parameters)
+    pubs_list.append(pub)
+    expected_evs_list.append(evs)
+    groupings_list.append(groupings)
+
+    # Can't run projection operators with measure mitigation on.
+    if not measure_mitigation:
+        observables = [SparseObservable("Irl")]
+        evs = [r_q1 * l_q0]
+        groupings = [{"Irl": 0}]
+
+        pub = (isa_circuit, observables, parameters)
+        pubs_list.append(pub)
+        expected_evs_list.append(evs)
+        groupings_list.append(groupings)
+
+    pubs_list = [EstimatorPub.coerce(pub) for pub in pubs_list]
+
+    return pubs_list, expected_evs_list, groupings_list
+
+
 def create_estimator_test_data_extended(backend, preset_pass_manager):
     """Create a pub and ideal expectation values for it.
 
@@ -89,7 +170,7 @@ def create_estimator_test_data_extended(backend, preset_pass_manager):
     especially in noisy simulations.
     """
     circuit = make_mirror_circuit_with_phases(
-        backend, num_qubits=4, add_measurement=False, add_rx=False
+        backend, num_qubits=4, layers=1, add_measurement=False, add_rx=False
     )
 
     circuit.rx(Parameter("rx_0"), 0)
@@ -183,3 +264,70 @@ def create_local_mode_estimator(
     options.default_shots = num_randomizations * shots_per_randomization
 
     return EstimatorV2(mode=backend, options=options)
+
+
+def compute_sem_theoretical(
+    observables: list[dict[str, float]],
+    circuit: QuantumCircuit,
+    parameters: list[float],
+    num_randomizations: int,
+    shots_per_randomization: int,
+    term_group_indices: list[dict[str, int]],
+) -> npt.NDArray[np.float64]:
+    """Compute the expected standard error of the mean (SEM) for each observable.
+
+    This gives us a "ground truth" uncertainty to compare against the one reported
+    by the Estimator. It's computed from an exact statevector simulation (no shot
+    noise), by looking at how much each observable's value would vary across
+    independent measurements given the number of shots taken.
+
+    Terms of an observable that are measured together (as given by
+    ``term_group_indices``) contribute a combined variance, while terms measured
+    independently simply add their variances together.
+
+    Args:
+        observables: List of observables, each as a ``{pauli_label: coefficient}`` dict
+            (e.g. from ``pub.observables.tolist()``).
+        circuit: The ISA circuit to simulate (parameters not yet bound).
+        parameters: Parameter values to bind, in the order of ``circuit.parameters``.
+        num_randomizations: Number of twirl randomizations.
+        shots_per_randomization: Number of shots per randomization.
+        term_group_indices: One ``{pauli_label: group_index}`` dict per observable,
+            describing which terms are measured together.
+
+    Returns:
+        Array of shape ``(len(observables),)`` containing the theoretical SEM for
+        each observable.
+    """
+    bound_circuit = circuit.assign_parameters(dict(zip(circuit.parameters, parameters)))
+    sv = Statevector(bound_circuit)
+    n_total = num_randomizations * shots_per_randomization
+
+    num_qubits = bound_circuit.num_qubits
+    sems = np.empty(len(observables), dtype=float)
+    for i, obs in enumerate(observables):
+        groups: dict[int, list[tuple[str, float]]] = defaultdict(list)
+        for term, coeff in obs.items():
+            group_idx = term_group_indices[i][term]
+            groups[group_idx].append((term, coeff))
+
+        # Sum variance contributions across independent measurement groups.
+        total_var = 0.0
+        for terms_in_group in groups.values():
+            # Build via SparseObservable to handle both plain Pauli strings and
+            # projector-bit labels (e.g. "Irl"), then convert to SparsePauliOp
+            # so Statevector.expectation_value can consume it.
+            group_so = SparseObservable.from_list(
+                [(term, float(coeff)) for term, coeff in terms_in_group],
+                num_qubits=num_qubits,
+            ).as_paulis()
+            group_op = SparsePauliOp.from_sparse_list(
+                group_so.to_sparse_list(), num_qubits=num_qubits
+            )
+            ev_g = sv.expectation_value(group_op).real
+            ev_g_sq = sv.expectation_value(group_op @ group_op).real
+            total_var += max(ev_g_sq - ev_g**2, 0.0)
+
+        sems[i] = np.sqrt(total_var / n_total)
+
+    return sems
