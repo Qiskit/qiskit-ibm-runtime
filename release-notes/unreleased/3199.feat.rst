@@ -1,0 +1,8 @@
+Added :class:`~qiskit_ibm_runtime.circuit.library.MeasureReset` instruction to
+the :mod:`qiskit_ibm_runtime.circuit.library` package. This instruction
+represents a reset operation that also exposes its intermediate measurement
+result to the user: it measures a qubit into a classical bit and then
+conditionally flips the qubit back to :math:`|0\rangle`, so the measurement
+outcome is retained. The instruction name must start with ``measure_reset``
+(e.g. ``measure_reset``, ``measure_reset_2``), which allows it to be mapped
+to the corresponding hardware-level implementation.

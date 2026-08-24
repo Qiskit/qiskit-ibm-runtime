@@ -12,6 +12,7 @@
 
 """Unit tests for EstimatorV2 run method."""
 
+import warnings
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -21,11 +22,13 @@ from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
@@ -81,6 +84,9 @@ class TestEstimatorV2Run(IBMTestCase):
         self.assertIsInstance(quantum_program, QuantumProgram)
         # precision=0.03125 -> shots = ceil(1/0.03125^2) = 1024
         self.assertEqual(quantum_program.shots, 1024)
+
+        # Verify that information needed for post-processing dispatch were attached
+        self.assertEqual(quantum_program._semantic_role, "estimator_v2")
 
         # Verify job was returned
         self.assertEqual(job, self.mock_job)
@@ -222,10 +228,12 @@ class TestEstimatorV2Run(IBMTestCase):
 
         estimator.run([(circuit, observable)], precision=0.03125)
 
-        # Verify executor options were set
-        self.assertIsNotNone(self.mock_executor_instance.options)
-        self.assertTrue(self.mock_executor_instance.options.execution.init_qubits)
-        self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
+        # Verify Executor was constructed with the correctly mapped executor options
+        self.mock_executor_class.assert_called_once()
+        executor_options = self.mock_executor_class.call_args[1]["options"]
+        self.assertTrue(executor_options.execution.init_qubits)
+        self.assertEqual(executor_options.execution.rep_delay, 0.001)
+        self.assertEqual(executor_options.environment.max_execution_time, 300)
 
     def test_run_adds_options_to_passthrough_data(self):
         """Test that run adds options, shots and precision to passthrough data."""
@@ -391,53 +399,63 @@ class TestEstimatorV2Run(IBMTestCase):
 class TestEstimatorV2SimulatorMode(IBMTestCase):
     """Tests for EstimatorV2 with local simulator backends."""
 
-    def test_simulator_mode_skips_executor(self):
-        """Test that a local backend (non-IBMBackend) skips the Executor."""
-        backend = GenericBackendV2(num_qubits=5)
-        estimator = EstimatorV2(mode=backend)
-
-        self.assertIsNone(estimator._executor)
-
     def test_simulator_mode_returns_result(self):
         """Test that local mode returns expectation values close to the ideal.
 
         The Bell state (|00> + |11>)/sqrt(2) has <ZZ> = 1.0 exactly.
         With enough shots the noisy simulator should be within 0.1 of that.
         """
-        backend = GenericBackendV2(num_qubits=5, seed=42)
+        backend = GenericBackendV2(num_qubits=2, seed=42)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator = EstimatorV2(mode=backend)
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+
+        estimator = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator.options.default_shots = 10_000
-        estimator.options.simulator.seed_simulator = 42
-        result = estimator.run([(circuit, observable)]).result()
+        result = estimator.run([(transpiled, observable)]).result()
 
         self.assertEqual(len(result), 1)
         self.assertAlmostEqual(result[0].data.evs, 1.0, delta=0.1)
 
     def test_simulator_mode_seed_is_deterministic(self):
         """Test that seed_simulator produces deterministic expectation values."""
-        backend = GenericBackendV2(num_qubits=5)
+        backend = GenericBackendV2(num_qubits=2)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
+
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator1 = EstimatorV2(mode=backend)
-        estimator1.options.simulator.seed_simulator = 42
-        estimator1.options.default_shots = 100
-        result1 = estimator1.run([(circuit, observable)]).result()
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
 
-        estimator2 = EstimatorV2(mode=backend)
-        estimator2.options.simulator.seed_simulator = 42
+        estimator1 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
+        estimator1.options.default_shots = 100
+        result1 = estimator1.run([(transpiled, observable)]).result()
+
+        estimator2 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator2.options.default_shots = 100
-        result2 = estimator2.run([(circuit, observable)]).result()
+        result2 = estimator2.run([(transpiled, observable)]).result()
 
         np.testing.assert_array_equal(result1[0].data.evs, result2[0].data.evs)
 
@@ -447,22 +465,33 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
         Uses a single-qubit H gate whose <Z>=0 expectation value has shot-noise
         variance, so results differ between seeds with high probability.
         """
-        backend = GenericBackendV2(num_qubits=5)
+        backend = GenericBackendV2(num_qubits=2)
 
         # H|0> gives <Z>=0 with shot noise - results vary by seed
         circuit = QuantumCircuit(1)
         circuit.h(0)
-        observable = SparsePauliOp.from_list([("Z", 1)])
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
 
-        estimator1 = EstimatorV2(mode=backend)
-        estimator1.options.simulator.seed_simulator = 42
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+
+        estimator1 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator1.options.default_shots = 100
-        result1 = estimator1.run([(circuit, observable)]).result()
+        result1 = estimator1.run([(transpiled, observable)]).result()
 
-        estimator2 = EstimatorV2(mode=backend)
-        estimator2.options.simulator.seed_simulator = 99
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=99)
+
+        estimator2 = EstimatorV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         estimator2.options.default_shots = 100
-        result2 = estimator2.run([(circuit, observable)]).result()
+        result2 = estimator2.run([(transpiled, observable)]).result()
 
         self.assertFalse(np.array_equal(result1[0].data.evs, result2[0].data.evs))
 
@@ -547,3 +576,66 @@ class TestFinalizeOptions(IBMTestCase):
         finalized_options = estimator.finalize_options()
         self.assertTrue(finalized_options.twirling.enable_gates)
         self.assertTrue(finalized_options.twirling.enable_measure)
+
+    def test_no_warning_when_twirling_field_not_set_by_user(self):
+        """No warning when the user never set the twirling field that is being overridden."""
+        estimator = EstimatorV2(self.backend)
+        # Use resilience_level=0 so enable_measure defaults to False, ensuring the only
+        # thing suppressing the warning is the field being absent from model_fields_set.
+        estimator.options.resilience_level = 0
+        estimator.options.resilience.measure_mitigation = True
+        # enable_measure was not explicitly set by the user → no warning expected
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            estimator.finalize_options()
+        user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
+        self.assertEqual(user_warns, [])
+
+    def test_no_warning_when_user_set_field_to_true(self):
+        """No warning when the user already set the field to True (no conflict)."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.twirling.enable_measure = True
+        estimator.options.resilience.measure_mitigation = True
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            estimator.finalize_options()
+        user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
+        self.assertEqual(user_warns, [])
+
+    def test_warning_measure_mitigation_overrides_enable_measure_false(self):
+        """Warning when measure_mitigation=True overrides user-set enable_measure=False."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.twirling.enable_measure = False
+        estimator.options.resilience.measure_mitigation = True
+        with self.assertWarns(UserWarning) as ctx:
+            estimator.finalize_options()
+        msg = str(ctx.warning)
+        self.assertIn("enable_measure", msg)
+        self.assertIn("measurement mitigation", msg)
+
+    @data("enable_gates", "enable_measure")
+    def test_warning_pea_overrides_twirling_field_false(self, field):
+        """Warning when PEA overrides user-set enable_gates=False or enable_measure=False."""
+        estimator = EstimatorV2(self.backend)
+        setattr(estimator.options.twirling, field, False)
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.measure_mitigation = False
+        estimator.options.resilience.zne.amplifier = "pea"
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            estimator.finalize_options()
+        msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
+        self.assertTrue(any(field in m and "PEA mitigation" in m for m in msgs))
+
+    @data("enable_gates", "enable_measure")
+    def test_warning_pec_overrides_twirling_field_false(self, field):
+        """Warning when PEC overrides user-set enable_gates=False or enable_measure=False."""
+        estimator = EstimatorV2(self.backend)
+        setattr(estimator.options.twirling, field, False)
+        estimator.options.resilience.pec_mitigation = True
+        estimator.options.resilience.measure_mitigation = False
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            estimator.finalize_options()
+        msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
+        self.assertTrue(any(field in m and "PEC mitigation" in m for m in msgs))

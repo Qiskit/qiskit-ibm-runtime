@@ -35,11 +35,8 @@ ExtrapolatorType = Literal[
     "fallback",
 ]
 
-PEA_DEFAULT_NOISE_FACTORS = (1, 1.5, 2, 2.5, 3)
-"""The values of ``noise_factors`` used by default when PEA is selected."""
-
-ZNE_DEFAULT_NOISE_FACTORS = (1, 3, 5)
-"""The values of ``noise_factors`` used by default when gate folding is selected."""
+DEFAULT_NOISE_FACTORS = (1, 3, 5)
+"""The values of ``noise_factors`` used by default when ZNE is selected."""
 
 
 class ZneOptions(BaseOptionsModel):
@@ -116,10 +113,9 @@ class ZneOptions(BaseOptionsModel):
     noise_factors: Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"] = "auto"
     """ noise_factors: Noise factors to use for noise amplification.
 
-    The default depends on the amplifier method - the default for pea is
-    :data:`~.PEA_DEFAULT_NOISE_FACTORS` and the default for the other methods
-    is :data:`~.ZNE_DEFAULT_NOISE_FACTORS`.
-    Must contain at least two points in order to do an extrapolation.
+    The default is
+    :data:`~.DEFAULT_NOISE_FACTORS`.
+    Must contain more values than DOF in all requested extrapolators.
     """
 
     extrapolator: ExtrapolatorType | Sequence[ExtrapolatorType] = ("exponential", "linear")

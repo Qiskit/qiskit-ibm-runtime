@@ -1,0 +1,12 @@
+Added :class:`~qiskit_ibm_runtime.circuit.library.XSlowGate`, a single-qubit gate
+that represents the hardware-native ``xslow`` instruction. The gate can be appended
+to a :class:`~qiskit.circuit.QuantumCircuit` and passes through the Qiskit transpiler
+unchanged when the backend target includes the ``xslow`` instruction.
+
+.. code:: python
+
+    from qiskit import QuantumCircuit
+    from qiskit_ibm_runtime.circuit.library import XSlowGate
+
+    qc = QuantumCircuit(1)
+    qc.append(XSlowGate(), [0])

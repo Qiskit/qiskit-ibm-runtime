@@ -21,10 +21,12 @@ from qiskit.primitives.primitive_job import PrimitiveJob
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
+    from qiskit.primitives.containers.primitive_result import PrimitiveResult
     from qiskit.providers import BackendV2
 
     from ..options_models.simulator import ExperimentalSimulatorOptions
     from ..quantum_program import QuantumProgram
+    from ..results import QuantumProgramResult
 
 
 class SimRuntimeJob(PrimitiveJob):
@@ -68,9 +70,17 @@ class SimRuntimeJob(PrimitiveJob):
             function=run_quantum_program,
             backend=backend,
             program=program,
-            noise_dict=options.noise_model,
-            angle_decimals=options.angle_decimals,
-            warn_absent=options.warn_absent,
+            options=options,
         )
 
         self._submit()
+
+    def result(self) -> QuantumProgramResult | PrimitiveResult:
+        """Return the post-processed results of the job.
+
+        Returns:
+            IBM Quantum Compute job result (post-processed if applicable).
+        """
+        from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
+
+        return QuantumProgramResultDecoder._apply_post_processing(super().result())

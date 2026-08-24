@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
@@ -36,6 +37,8 @@ from ...results.quantum_program import QuantumProgramResult
 from .trex_utils import calculate_trex_factor, get_processed_calibration_data
 from .utils import compute_exp_val, identify_measure_basis
 
+logger = logging.getLogger(__name__)
+
 
 def _build_program_result_metadata(post_processor_data: dict) -> dict:
     """Compute the program result metadata dict from the raw inputs stored in the passthrough data.
@@ -57,9 +60,9 @@ def _build_program_result_metadata(post_processor_data: dict) -> dict:
     if options is None:
         return {}
 
-    program_metadata = dict(options)
-    if "resilience" in program_metadata:
-        resilience = dict(program_metadata["resilience"])
+    metadata = {"options": dict(options)}
+    if "resilience" in metadata["options"]:
+        resilience = dict(metadata["options"]["resilience"])
         for flag_key, options_key in [
             ("zne_mitigation", "zne"),
             ("pec_mitigation", "pec"),
@@ -67,11 +70,11 @@ def _build_program_result_metadata(post_processor_data: dict) -> dict:
         ]:
             if not resilience.get(flag_key):
                 resilience.pop(options_key, None)
-        program_metadata["resilience"] = resilience
+        metadata["options"]["resilience"] = resilience
 
-    program_metadata["target_precision"] = post_processor_data.get("precision", None)
-    program_metadata["shots"] = post_processor_data.get("shots", None)
-    return program_metadata
+    metadata["target_precision"] = post_processor_data.get("precision", None)
+    metadata["shots"] = post_processor_data.get("shots", None)
+    return metadata
 
 
 def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
@@ -114,9 +117,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
-    # Build program_metadata from the raw inputs stored by the estimator
-    program_metadata = _build_program_result_metadata(post_processor_data)
-
     # Extract mitigation data
     mitigation = post_processor_data.get("mitigation", None)
     pec_gammas = post_processor_data.get("pec_gammas", None)
@@ -131,6 +131,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
     if measure_mitigation:
+        logger.info("TREX (measure mitigation) enabled.")
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
         try:
@@ -180,6 +181,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Calculate exp vals and build an EstimatorPubResult
         if mitigation == "pec":
+            logger.info("Applying PEC mitigation for pub %d.", pub_idx)
             pub_result = create_pub_result_pec(
                 item_result,
                 observables,
@@ -189,6 +191,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 pec_gamma=pec_gammas[pub_idx],
             )
         elif mitigation == "zne":
+            logger.info("Applying ZNE mitigation for pub %d.", pub_idx)
             # In case each pub is associated with several items - create a list in which each
             # element is a list containing all relevant items for that pub
             combined_results = result[pub_idx * res_step : (pub_idx + 1) * res_step]
@@ -204,6 +207,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 extrapolator=extrapolator,
             )
         elif mitigation == "pea":
+            logger.info("Applying PEA mitigation for pub %d.", pub_idx)
             pub_result = create_pub_result_pea(
                 item_result,
                 observables,
@@ -217,16 +221,20 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         elif mitigation is not None:
             raise ValueError(f"Unknown mitigation technique {mitigation}")
         else:
+            logger.info("Post processing pub %d.", pub_idx)
             pub_result = create_pub_result(
                 item_result, observables, param_shape, param_basis_pairs, readout_noise_data
             )
 
-        # Attach circuit metadata (shared across all branches — metadata is mutable)
         if (circuit_meta := circuits_metadata[pub_idx]) is not None:
             pub_result.metadata["circuit_metadata"] = circuit_meta
         pub_results.append(pub_result)
 
-    return PrimitiveResult(pub_results, metadata=program_metadata)
+    # Build program_metadata from the raw inputs stored by the estimator
+    metadata = _build_program_result_metadata(post_processor_data)
+    metadata["executor"] = result.metadata
+
+    return PrimitiveResult(pub_results, metadata=metadata)
 
 
 def _process_expectation_values(
@@ -294,6 +302,10 @@ def _process_expectation_values(
     stds = np.empty(output_shape, dtype=float)
     ensemble_stds = np.empty(output_shape, dtype=float)
 
+    # Cache TREX factors: computed once per unique observable_term string, reused across the
+    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
+    trex_factor_cache: dict[str, float] = {}
+
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
         # Unbroadcast to get the actual parameter and observable indices
@@ -328,12 +340,15 @@ def _process_expectation_values(
                 observable_term, datum
             )
 
-            # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = (
-                calculate_trex_factor(measure_noise_data, observable_term)
-                if measure_noise_data is not None
-                else 1
-            )
+            # Calculate scale factor in case TREX mitigation is used (cached per term)
+            if measure_noise_data is not None:
+                if observable_term not in trex_factor_cache:
+                    trex_factor_cache[observable_term] = calculate_trex_factor(
+                        measure_noise_data, observable_term
+                    )
+                term_scale_factor = trex_factor_cache[observable_term]
+            else:
+                term_scale_factor = 1
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
@@ -424,6 +439,10 @@ def _process_expectation_values_pec(
     stds = np.empty(output_shape, dtype=float)
     ensemble_stds = np.empty(output_shape, dtype=float)
 
+    # Cache TREX factors: computed once per unique observable_term string, reused across the
+    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
+    trex_factor_cache: dict[str, float] = {}
+
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
         # Unbroadcast to get the actual parameter and observable indices
@@ -461,12 +480,15 @@ def _process_expectation_values_pec(
                 observable_term, datum, pec_signs_datum
             )
 
-            # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = (
-                calculate_trex_factor(measure_noise_data, observable_term)
-                if measure_noise_data is not None
-                else 1
-            )
+            # Calculate scale factor in case TREX mitigation is used (cached per term)
+            if measure_noise_data is not None:
+                if observable_term not in trex_factor_cache:
+                    trex_factor_cache[observable_term] = calculate_trex_factor(
+                        measure_noise_data, observable_term
+                    )
+                term_scale_factor = trex_factor_cache[observable_term]
+            else:
+                term_scale_factor = 1
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
@@ -475,7 +497,10 @@ def _process_expectation_values_pec(
 
         exp_vals[bcast_index] = exp_val * pec_gamma
         ensemble_stds[bcast_index] = np.sqrt(ensemble_variance * pec_gamma**2 / total_shots)
-        stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
+        if num_randomizations == 1:
+            stds[bcast_index] = ensemble_stds[bcast_index]
+        else:
+            stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
 
     return exp_vals, stds, ensemble_stds
 
@@ -606,6 +631,7 @@ def create_pub_result_pea(
         ensemble_stds_noise_factors=noise_factors_ensemble_stds,
         evs_extrapolated=extrapolated_exp_vals,
         stds_extrapolated=extrapolated_stds,
+        shape=zero_noise_exp_vals.shape,
     )
     return EstimatorPubResult(data=data_bin)
 
@@ -772,6 +798,7 @@ def create_pub_result_zne(
         ensemble_stds_noise_factors=noise_factors_ensemble_stds,
         evs_extrapolated=extrapolated_exp_vals,
         stds_extrapolated=extrapolated_stds,
+        shape=zero_noise_exp_vals.shape,
     )
     return EstimatorPubResult(data=data_bin)
 
@@ -984,6 +1011,10 @@ def calculate_extrapolated_expectation_values(
     # configuration), the selected extrapolator
     selected_extrapolators = []
 
+    # Cache TREX factors: computed once per unique observable_term string, reused across the
+    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
+    trex_factor_cache: dict[str, float] = {}
+
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
         # Unbroadcast to get the actual parameter and observable indices
@@ -1018,12 +1049,15 @@ def calculate_extrapolated_expectation_values(
             # Use identify_measure_basis to find the configuration index directly
             config_idx = identify_measure_basis(pauli_basis, param_basis_list)
 
-            # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = (
-                calculate_trex_factor(measure_noise_data, observable_term)
-                if measure_noise_data is not None
-                else 1
-            )
+            # Calculate scale factor in case TREX mitigation is used (cached per term)
+            if measure_noise_data is not None:
+                if observable_term not in trex_factor_cache:
+                    trex_factor_cache[observable_term] = calculate_trex_factor(
+                        measure_noise_data, observable_term
+                    )
+                term_scale_factor = trex_factor_cache[observable_term]
+            else:
+                term_scale_factor = 1
 
             noise_scaled_exp_vals = []
             noise_scaled_ensemble_std = []

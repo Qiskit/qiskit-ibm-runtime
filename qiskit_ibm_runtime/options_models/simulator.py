@@ -14,9 +14,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Annotated, TypeAlias
 
-from pydantic import Field, InstanceOf
+from pydantic import Field, InstanceOf, field_validator
+from qiskit.circuit import BoxOp, CircuitInstruction
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.quantum_info import PauliLindbladMap
@@ -34,6 +36,10 @@ if optionals.HAS_AER:
 else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
+LayerNoiseModel: TypeAlias = tuple[
+    Annotated[CircuitInstruction, InstanceOf], Annotated[PauliLindbladMap, InstanceOf]
+]
+
 
 class ExperimentalSimulatorOptions(BaseOptionsModel):
     """Simulator options."""
@@ -46,14 +52,30 @@ class ExperimentalSimulatorOptions(BaseOptionsModel):
     angles are nominally Clifford.
     """
 
-    noise_model: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
-    """A map from ``ref`` of a :class:`~samplomatic.Tag` annotations to PauliLindblad noise maps."""
+    layer_noise_model: Sequence[LayerNoiseModel] | None = None
+    """Noise model specified by a collection of instructions and the noise that affects them."""
 
     seed_simulator: int | None = None
     """Random seed to control sampling."""
 
     warn_absent: bool = True
     """Whether to emit a warning when an entry is missing in :attr:`layer_noise_dict`."""
+
+    @field_validator("layer_noise_model", mode="after")
+    @classmethod
+    def _validate_layer_noise_model(
+        cls, value: Sequence[LayerNoiseModel] | None
+    ) -> Sequence[LayerNoiseModel] | None:
+        if value:
+            for instruction, noise in value:
+                if not isinstance(instruction.operation, BoxOp):
+                    raise ValueError("Found an instruction that does not contain a box.")
+                if len(instruction.qubits) != noise.num_qubits:
+                    raise ValueError(
+                        f"Found instruction with {len(instruction.qubits)}",
+                        f"qubits but a noise model with {noise.num_qubits}.",
+                    )
+        return value
 
 
 class SimulatorOptions(BaseOptionsModel):

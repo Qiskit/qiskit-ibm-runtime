@@ -19,13 +19,12 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.providers.fake_provider import GenericBackendV2
+from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
-
-if HAS_AER:
-    from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
@@ -70,6 +69,9 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
         self.assertEqual(quantum_program.items[1].circuit, circuit2)
 
         self.assertEqual(quantum_program.items[2].circuit, circuit3)
+
+        # Verify that information needed for post-processing dispatch were attached
+        self.assertEqual(quantum_program._semantic_role, "sampler_v2")
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_shots(self, mock_run):
@@ -372,13 +374,13 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         circuit.cx(0, 1)
         circuit.measure_all()
 
-        sampler = SamplerV2(mode=backend)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
 
-        # Verify executor is not created for simulator
-        self.assertIsNone(sampler._executor)
+        sampler = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
 
         # Run should work and return results
-        job = sampler.run([circuit], shots=100)
+        job = sampler.run([transpiled], shots=100)
         result = job.result()
 
         # Verify we got results
@@ -402,21 +404,29 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         circuit.h([0, 1, 2])
         circuit.measure_all()
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         # First sampler with seed
-        sampler1 = SamplerV2(mode=backend)
-        sampler1.options.simulator.seed_simulator = 42
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+        sampler1 = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         sampler1.options.default_shots = 200
 
-        job1 = sampler1.run([circuit])
+        job1 = sampler1.run([transpiled])
         result1 = job1.result()
         counts1 = result1[0].data.meas.get_counts()
 
         # Second sampler with same seed
-        sampler2 = SamplerV2(mode=backend)
-        sampler2.options.simulator.seed_simulator = 42
+        sampler2 = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         sampler2.options.default_shots = 200
 
-        job2 = sampler2.run([circuit])
+        job2 = sampler2.run([transpiled])
         result2 = job2.result()
         counts2 = result2[0].data.meas.get_counts()
 
@@ -424,11 +434,14 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         self.assertEqual(counts1, counts2)
 
         # Third sampler with different seed should give different results
-        sampler3 = SamplerV2(mode=backend)
-        sampler3.options.simulator.seed_simulator = 123
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=123)
+        sampler3 = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         sampler3.options.default_shots = 200
 
-        job3 = sampler3.run([circuit])
+        job3 = sampler3.run([transpiled])
         result3 = job3.result()
         counts3 = result3[0].data.meas.get_counts()
 
@@ -459,6 +472,9 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         circuit.cx(1, 2)
         circuit.measure_all()
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         # Parameter sweep with multiple parameter value sets
         param_values = [
             [0.0, 0.0],  # First parameter set
@@ -467,31 +483,14 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         ]
 
         # Create sampler with all simulator options
-        sampler = SamplerV2(mode=backend)
-
-        # Set noise model (simple depolarizing noise)
-
-        noise_model = NoiseModel()
-        # Add depolarizing error to single-qubit gates
-        error_1q = depolarizing_error(0.001, 1)
-        noise_model.add_all_qubit_quantum_error(error_1q, ["h", "rx", "ry"])
-        # Add depolarizing error to two-qubit gates
-        error_2q = depolarizing_error(0.01, 2)
-        noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
-
-        sampler.options.simulator.noise_model = noise_model
-
-        # Set coupling map (linear topology for 3 qubits)
-        sampler.options.simulator.coupling_map = [[0, 1], [1, 0], [1, 2], [2, 1]]
-
-        # Set basis gates
-        sampler.options.simulator.basis_gates = ["h", "rx", "ry", "cx", "id"]
-
-        # Set seed for reproducibility
-        sampler.options.simulator.seed_simulator = 42
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+        sampler = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
 
         # Run with parameter sweep
-        job = sampler.run([(circuit, param_values)], shots=1000)
+        job = sampler.run([(transpiled, param_values)], shots=1000)
         result = job.result()
 
         # Verify results structure

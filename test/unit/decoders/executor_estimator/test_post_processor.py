@@ -346,12 +346,7 @@ class TestEstimatorV2PostProcessor(IBMTestCase):
         metadata = primitive_result.metadata
         self.assertEqual(metadata["shots"], 1024)
         self.assertEqual(metadata["target_precision"], 0.03125)
-        # At resilience_level=0 the raw dump leaves enable_gates unresolved (None)
-        self.assertIn("twirling", metadata)
-        # Inactive sub-options must be pruned
-        self.assertNotIn("zne", metadata["resilience"])
-        self.assertNotIn("pec", metadata["resilience"])
-        self.assertNotIn("measure_noise_learning", metadata["resilience"])
+        self.assertIn("options", metadata)
 
     def test_zne_mitigation_fix_expectation_values(self):
         """Test estimator_v2_post_processor_v0_1 with zne mitigation.
@@ -1780,7 +1775,7 @@ class TestBuildProgramMetadata(IBMTestCase):
                 "shots": 1024,
                 "precision": None,
             }
-            return _build_program_result_metadata(post_processor_data)["resilience"]
+            return _build_program_result_metadata(post_processor_data)["options"]["resilience"]
 
         # When flag is False the sub-option dict must be absent
         resilience_off = _get_resilience_metadata(False)
