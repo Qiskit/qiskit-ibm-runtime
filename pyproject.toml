@@ -79,6 +79,7 @@ module = [
     "pydantic.*",
     "qiskit_aer.*",
     "qiskit.*",
+    "qiskit_mitigation.*",
     "requests_ntlm.*",
     "responses.*",
     "rustworkx",

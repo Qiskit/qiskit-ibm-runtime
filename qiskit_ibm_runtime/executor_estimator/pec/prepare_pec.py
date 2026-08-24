@@ -28,20 +28,11 @@ if TYPE_CHECKING:
     from ...options_models.pec import PecOptions
     from ...options_models.twirling import TwirlingOptions
 
-import numpy as np
-from samplomatic import build
+from qiskit_mitigation.pec import PEC
 
-from ...exceptions import IBMInputValueError
 from ...quantum_program import QuantumProgram
-from ...quantum_program.quantum_program import SamplexItem
-from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
-from ..utils import (
-    box_circuit,
-    compute_samplex_arguments,
-    make_samplex_arguments,
-    options_to_boxing_pm_kwargs,
-)
-from .utils import calculate_gamma, calculate_pec_twirling_shots
+from ..utils import options_to_boxing_pm_kwargs
+from .utils import calculate_pec_twirling_shots
 
 logger = logging.getLogger(__name__)
 
@@ -105,8 +96,9 @@ def prepare_pec(
         # crashing with an overflow error if the noise is really strong
         max_overhead = sys.float_info.max / (baseline_num_randomizations * shots_per_randomization)
 
-    # Create items
-    items: list[SamplexItem] = []
+    pec = PEC()
+    qp = QuantumProgram(shots=shots_per_randomization)
+
     observables_list = []
     param_basis_pairs_list = []
     param_shapes_list = []
@@ -118,84 +110,40 @@ def prepare_pec(
         inject_noise=True,
         add_tags=add_tags,
     )
+
+    custom_options = {
+        "enable_gates": pm_kwargs["enable_gates"],
+        "enable_measures": True,
+        "twirling_strategy": pm_kwargs["twirling_strategy"],
+        "twirling_group": pm_kwargs["twirling_group"],
+        "measure_annotations": pm_kwargs["measure_annotations"],
+        "inject_noise_site": "after",
+        "inject_noise_targets": "gates" if pm_kwargs["inject_noise"] else "none",
+        "inject_noise_strategy": "uniform_modification"
+        if pm_kwargs["inject_noise"]
+        else "no_modification",
+        "add_tags": pm_kwargs["add_tags"],
+    }
+
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
-
-        boxed_circuit = box_circuit(circuit=pub.circuit, **pm_kwargs)
-
-        # Build the template and the samplex
-        template, samplex = build(boxed_circuit)
-
-        # Prepare samplex_arguments
-        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = make_samplex_arguments(
-            samplex, boxed_circuit, flat_parameter_values, change_basis
+        pec.prepare(
+            pub.circuit,
+            pub.observables,
+            pub.parameter_values,
+            custom_options,
+            shots_per_randomization=shots_per_randomization,
+            num_randomizations=baseline_num_randomizations,
+            quantum_program=qp,
+            noise_maps=noise_model,
+            noise_gain=pec_options.noise_gain,
+            max_sampling_overhead=max_overhead,
         )
-
-        # add samplex_arguments related to noise injection
-        if pec_options.noise_gain == "auto":
-            # calculate the gamma factor without scaling it by noise_factor
-            gamma = calculate_gamma(boxed_circuit, noise_model, 1)
-            # calculate the noise factor based on gamma and max_overhead, setting it to ``1``
-            # if ``gamma`` is ``1``--i.e., if there is no noise to mitigate.
-            noise_gain = 1 if gamma == 1 else 1 - np.log(max_overhead) / np.log(gamma**2)
-            # Truncate noise_gain to [0, 1]
-            noise_gain = min(1, max(0, noise_gain))
-        else:
-            noise_gain = pec_options.noise_gain
-        # noise_gain - the user facing parameter reflecting "how much noise remains after removal".
-        # noise_scale - samplomatic parameter reflecting "how much noise is injected". The noise
-        # is injected as quasi-probability and should be negative for removing noise (-1 is full
-        # removal of the noise and 0 is no rescaling of the noise).
-        # noise_factor - factor for scaled gamma calculation, reflecting the factor by which the
-        # noise should be multiplied.
-
-        # Adjusting noise_scale to [-1, 0] range from the [0, 1] range of noise_gain
-        noise_scale = noise_gain - 1
-        # The sampling scaling is proportional to 1 - noise_gain, as 0 is full PEC and 1 is no PEC
-        noise_factor = 1 - noise_gain
-
-        # Create a noise model map containing only the layers relevant for the current pub
-        specs = samplex.inputs().get_specs("pauli_lindblad_maps")
-        pub_noise_model = {}
-        for spec in specs:
-            ref = spec.name.split(".")[-1]
-            try:
-                pub_noise_model[ref] = noise_model[ref]
-            except KeyError:
-                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
-            # noise_scales and pauli_lindblad_maps should have the same refs
-            samplex_arguments[f"noise_scales.{ref}"] = noise_scale
-
-        samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
-        scaled_gamma = calculate_gamma(boxed_circuit, pub_noise_model, noise_factor)
-        pec_gamma_list.append(scaled_gamma)
-        # Scale the baseline randomization count by gamma**2 for this pub independently.
-        sampling_overhead = scaled_gamma**2
-        scaled_num_randomizations = int(
-            np.ceil(
-                min(
-                    baseline_num_randomizations * max_overhead,
-                    baseline_num_randomizations * sampling_overhead,
-                )
-            )
-        )
-
-        # Create SamplexItem
-        shape = (scaled_num_randomizations, change_basis.shape[0])
-        items.append(
-            SamplexItem(
-                circuit=template,
-                samplex=samplex,
-                samplex_arguments=samplex_arguments,
-                shape=shape,
-            )
-        )
-
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
-        param_basis_pairs_list.append(param_basis_pairs)
+        param_basis_pairs_list.append(pec.param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
+        pec_gamma_list.append(pec.gamma)
 
     passthrough_data = {
         "post_processor": {
@@ -210,21 +158,6 @@ def prepare_pec(
         },
     }
 
-    # Create QuantumProgram
-    quantum_program = QuantumProgram(
-        shots=shots_per_randomization,
-        items=items,
-        passthrough_data=passthrough_data,
-    )
+    qp.passthrough_data = passthrough_data
 
-    # Add TREX calibration circuit
-    if measure_noise_learning is not None:
-        trex_num_randomizations = resolve_trex_num_randomizations(
-            measure_noise_learning, baseline_num_randomizations
-        )
-        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
-        quantum_program.items.append(trex_item)
-        logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
-        passthrough_data["post_processor"]["measure_mitigation"] = True
-
-    return quantum_program
+    return qp

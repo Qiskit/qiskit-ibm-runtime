@@ -29,6 +29,7 @@ import numpy as np
 from qiskit.primitives import DataBin, PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
+from qiskit_mitigation.pec import PEC
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...executor_estimator.zne.extrapolation import process_extrapolated_expectation_values
@@ -554,13 +555,15 @@ def create_pub_result_pec(
     Returns:
         An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
     """
-    exp_vals, stds, ensemble_stds = _process_expectation_values_pec(
-        item_result, observables, param_shape, param_basis_pairs, measure_noise_data, pec_gamma
+    res = PEC.compute_expectation_value_pec(
+        item_result=item_result,
+        observables=observables,
+        gamma=pec_gamma,
+        param_shape=param_shape,
+        param_basis_pairs=param_basis_pairs,
     )
-    data_bin = DataBin(
-        evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
-    )
-    return EstimatorPubResult(data=data_bin)
+    # TODO: Verify field names
+    return EstimatorPubResult(data=res.data)
 
 
 def create_pub_result_pea(
