@@ -218,8 +218,8 @@ def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
 
 
 def select_zne_extrapolated_result(
-    zne_values: npt.Array[float],
-    zne_std_errors: npt.Array[float],
+    zne_values: npt.NDArray[float],
+    zne_std_errors: npt.NDArray[float],
     observable_term: str,
     zne_extrapolator: Sequence[str],
 ) -> tuple[float, float, str]:
@@ -237,7 +237,7 @@ def select_zne_extrapolated_result(
         zne_extrapolator: The extrapolators used.
 
     Returns:
-        A tuple ``(accept_values, accept_stderrs, accept_extrap)`` of the chosen best expectation
+        A tuple ``(accept_value, accept_stderr, accept_extrap)`` of the chosen best expectation
         values, and the associated standard errors and extrapolator.
     """
     # Patterns for matching ev bases for range of ideal outcomes.

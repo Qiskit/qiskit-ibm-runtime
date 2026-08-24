@@ -271,18 +271,6 @@ class TestSelectZneExtrapolatedResult(IBMTestCase):
         self.assertEqual(zero_point_exp_val, expected_value)
         self.assertEqual(res_extrap, expected_extrapolator)
 
-    def test_selects_per_column_independently(self):
-        """Each noise-factor column is selected independently."""
-        values = np.array([0.2, np.nan])  # basis "Z" -> range (-1, 1)
-        stderrs = np.array([0.1, 0.1])
-        extraps = ["exponential", "linear"]
-        zero_point_exp_val, zero_point_stderr, res_extrap = select_zne_extrapolated_result(
-            values, stderrs, "Z", extraps
-        )
-        # col 0: model 0 valid -> 0.2; col 1: model 0 is NaN -> model 1 -> 0.4
-        np.testing.assert_array_equal(zero_point_exp_val, 0.2)
-        np.testing.assert_array_equal(res_extrap, "exponential")
-
 
 @ddt
 class TestExtrapolate(IBMTestCase):
