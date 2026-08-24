@@ -147,7 +147,7 @@ class EstimatorV2(BaseEstimatorV2):
             pauli_linblad_maps = results.to_pauli_lindblad_maps()
 
             # Assign the learned model so PEC uses it on the next run.
-            est.options.resilience.layer_noise_model = list(zip(layers, pauli_linblad_maps))
+            est.options.resilience.layer_noise_model = zip(layers, pauli_linblad_maps)
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.

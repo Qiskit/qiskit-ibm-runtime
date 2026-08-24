@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 from .base import BaseOptionsModel
 from .measure_noise_learning import MeasureNoiseLearningOptions
 from .pec import PecOptions
@@ -67,5 +65,5 @@ class ResilienceOptions(BaseOptionsModel):
     zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options."""
 
-    layer_noise_model: Sequence[LayerNoiseModel] | None = None
+    layer_noise_model: list[LayerNoiseModel] | None = None
     """Noise model specified by a collection of instructions and the noise that affects them."""

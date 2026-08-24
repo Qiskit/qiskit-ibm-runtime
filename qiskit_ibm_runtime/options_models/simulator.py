@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Annotated, TypeAlias
 
 from pydantic import AfterValidator, Field, InstanceOf
@@ -68,7 +67,7 @@ class ExperimentalSimulatorOptions(BaseOptionsModel):
     angles are nominally Clifford.
     """
 
-    layer_noise_model: Sequence[LayerNoiseModel] | None = None
+    layer_noise_model: list[LayerNoiseModel] | None = None
     """Noise model specified by a collection of instructions and the noise that affects them."""
 
     seed_simulator: int | None = None
