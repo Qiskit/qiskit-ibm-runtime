@@ -21,7 +21,7 @@ from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
-from samplomatic import InjectNoise, Tag
+from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
@@ -142,14 +142,15 @@ class TestEstimatorWithNoise(IBMTestCase):
         )
 
         # Add noise to every unique layer, independent of its content (gates or measurements).
-        simulated_noise_model = {
-            annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)])
-            for layer in base_level_estimator.find_unique_layers([pub], types="all")
-            if (annotation := get_annotation(layer.operation, Tag))
-        }
+        layers = base_level_estimator.find_unique_layers([pub], types="all")
+        simulated_noise_model = [
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
+            for layer in layers
+        ]
+
         base_level_estimator.options.experimental["simulator_options"] = (
             ExperimentalSimulatorOptions(
-                noise_model=simulated_noise_model,
+                layer_noise_model=simulated_noise_model,
             )
         )
 
@@ -166,13 +167,13 @@ class TestEstimatorWithNoise(IBMTestCase):
             options_overrides=option_overrides,
         )
         estimator.options.experimental["simulator_options"] = ExperimentalSimulatorOptions(
-            noise_model=simulated_noise_model,
+            layer_noise_model=simulated_noise_model,
         )
         # Run a noisy simulation, injecting the same noise as in the simulation
         injected_noise_model = {
-            inject_noise_annotation.ref: simulated_noise_model[
-                get_annotation(layer.operation, Tag).ref
-            ]
+            inject_noise_annotation.ref: PauliLindbladMap.from_list(
+                [("X" * layer.operation.num_qubits, 0.005)]
+            )
             for layer in estimator.find_unique_layers([pub], types="gates")
             if (inject_noise_annotation := get_annotation(layer.operation, InjectNoise))
         }

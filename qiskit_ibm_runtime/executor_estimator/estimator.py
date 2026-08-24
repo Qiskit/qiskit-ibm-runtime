@@ -262,6 +262,9 @@ class EstimatorV2(BaseEstimatorV2):
             pubs, self.options, precision, add_tags=local_mode, backend=self._backend
         )
 
+        # Set semantic role for post-processing dispatch
+        quantum_program._semantic_role = "estimator_v2"
+
         executor = Executor(mode=self._backend, options=executor_options)
 
         logger.info(
