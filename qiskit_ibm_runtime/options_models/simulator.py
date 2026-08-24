@@ -44,8 +44,8 @@ def _validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseMode
             raise ValueError("Found an instruction that does not contain a box.")
         if len(instruction.qubits) != noise.num_qubits:
             raise ValueError(
-                f"Found instruction with {len(instruction.qubits)}",
-                f"qubits but a noise model with {noise.num_qubits}.",
+                f"Found instruction with {len(instruction.qubits)}"
+                f"qubits but a noise model with {noise.num_qubits}."
             )
     return value
 
