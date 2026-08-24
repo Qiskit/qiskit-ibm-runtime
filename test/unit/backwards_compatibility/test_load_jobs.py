@@ -14,23 +14,22 @@
 
 from pathlib import Path
 
-from qiskit.primitives import PrimitiveResult
-
 from qiskit_ibm_runtime.fake_provider import FakeFez
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
 
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import Backend, Job, OneInstanceNoBackendsRegistry
 
 
-class SamplerTestCase(IBMTestCase):
-    """Test for loading Sampler jobs from earlier versions."""
+class StoredJobsTestCase(IBMTestCase):
+    """Test for loading stored jobs from earlier versions."""
 
     @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_wrapper_sampler_jobs(self, registry: OneInstanceNoBackendsRegistry) -> None:
-        """Test stored WrapperSampler jobs."""
-        job_id = "d9qp8cvpemts73crjmsg"
+    def test_executor_jobs(self, registry: OneInstanceNoBackendsRegistry) -> None:
+        """Test stored Executor jobs."""
+        job_id = "da66nicgd8dc73doc6mg"
 
         resources_path = Path(__file__).resolve().parent / "resources"
         job_details = (resources_path / f"{job_id}_details.json").read_text(encoding="utf-8")
@@ -48,6 +47,5 @@ class SamplerTestCase(IBMTestCase):
 
         # Job should be an executor (wrapped sampler) job.
         self.assertEqual(job.primitive_id, "executor")
-        # Result should be loaded correctly
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertIsInstance(result.metadata, dict)
+        # Result should be loaded correctly.
+        self.assertIsInstance(result, QuantumProgramResult)

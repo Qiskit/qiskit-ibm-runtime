@@ -13,7 +13,7 @@
 """Tests for backwards compatibility.
 
 Stored jobs:
-* `d9qp8cvpemts73crjmsg` - circuit from
-    `test/integration/test_executor_sampler/TestSampler::test_sampler_with_parametric_circuits`
-    with no twirling, against `ibm_fez`, with version `0.49`.
+* `da66nicgd8dc73doc6mg` - circuit from
+    `test/integration/test_executor.py::TestExecutor::test_executor_with_samplex_item`,
+    against `ibm_fez`, with version `0.49`.
 """
