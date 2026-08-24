@@ -19,8 +19,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 from qiskit.circuit import Parameter
 from qiskit.quantum_info import Operator, PauliLindbladMap, SparsePauliOp
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
@@ -146,13 +144,9 @@ def create_noise_model_without_noise(estimator, pub):
 
     # In a noise-less simulation we do not expect noise. So we can construct the noise_model
     # with empty noise for all layers:
-    noise_model = {
-        get_annotation(layer.operation, InjectNoise).ref: PauliLindbladMap.identity(
-            layer.operation.num_qubits
-        )
-        for layer in layers
-    }
-
+    noise_model = [
+        (layer, PauliLindbladMap.identity(layer.operation.num_qubits)) for layer in layers
+    ]
     return noise_model
 
 
