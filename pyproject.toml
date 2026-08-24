@@ -186,7 +186,7 @@ dependencies = [
     "ibm-platform-services>=0.61.1",
     "ibm-quantum-schemas>=0.10.20260723,<1",
     "pydantic>=2.13.0",
-    "qiskit>=2.3.0",
+    "qiskit[qpy-compat] @ git+https://github.com/Qiskit/qiskit@main",
     "pybase64>=1.4.0",
     "samplomatic>=0.18.0"
 ]
