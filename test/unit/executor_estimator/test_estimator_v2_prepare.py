@@ -41,6 +41,12 @@ class TestPrepare(IBMTestCase):
 
         pubs = [(circuit, observable)]
 
+        layers = find_unique_box_instructions(
+            circuit,
+            normalize_annotations=None,
+            undress_boxes=True,
+        )
+
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         match path:
@@ -48,9 +54,9 @@ class TestPrepare(IBMTestCase):
                 options.twirling.enable_measure = True
             case "pec":
                 options.resilience.pec_mitigation = True
-                options.resilience.noise_model = {
-                    "layer_0": PauliLindbladMap.identity(num_qubits=2)
-                }
+                options.resilience.layer_noise_model = [
+                    (layer, PauliLindbladMap.identity(num_qubits=2)) for layer in layers
+                ]
             case "zne":
                 options.resilience.zne_mitigation = True
             case "pea":
@@ -84,16 +90,24 @@ class TestPrepare(IBMTestCase):
 
     def test_pec_path(self):
         """Test the ``prepare`` function when PEC is requested."""
-        options = EstimatorOptions()
-        options.twirling.enable_gates = True
-        options.resilience.pec_mitigation = True
-        options.resilience.noise_model = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
-
         circuit = QuantumCircuit(2)
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
         pubs = [(circuit, observable)]
+
+        layers = find_unique_box_instructions(
+            circuit,
+            normalize_annotations=None,
+            undress_boxes=True,
+        )
+
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        options.resilience.pec_mitigation = True
+        options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.identity(num_qubits=2)) for layer in layers
+        ]
 
         program, executor_options = prepare(pubs, options, precision=0.1)
 

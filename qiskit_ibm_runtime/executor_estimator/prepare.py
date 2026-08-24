@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from samplomatic import InjectNoise
+from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
@@ -185,6 +187,12 @@ def _build_quantum_program(
         else None
     )
 
+    noise_model = {}
+    if layer_noise_model := finalized_options.resilience.layer_noise_model:
+        for instr, pauli_map in layer_noise_model:
+            if annotation := get_annotation(instr.operation, InjectNoise):
+                noise_model[annotation.ref] = pauli_map
+
     if finalized_options.resilience.pec_mitigation:
         logger.info("Running ``prepare_pec``.")
         quantum_program = prepare_pec(
@@ -192,7 +200,7 @@ def _build_quantum_program(
             twirling_options=finalized_options.twirling,
             shots=shots,
             pec_options=finalized_options.resilience.pec,
-            noise_model=finalized_options.resilience.noise_model,
+            noise_model=noise_model,
             measure_noise_learning=measure_noise_learning,
             add_tags=add_tags,
         )
@@ -204,7 +212,7 @@ def _build_quantum_program(
                 twirling_options=finalized_options.twirling,
                 shots=shots,
                 zne_options=finalized_options.resilience.zne,
-                noise_model=finalized_options.resilience.noise_model,
+                noise_model=noise_model,
                 measure_noise_learning=measure_noise_learning,
                 add_tags=add_tags,
             )
