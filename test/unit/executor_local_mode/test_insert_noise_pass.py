@@ -17,7 +17,7 @@ from unittest import skipUnless
 
 import numpy as np
 from ddt import data, ddt, unpack
-from qiskit.circuit import Barrier, QuantumCircuit
+from qiskit.circuit import Barrier, QuantumCircuit, QuantumRegister
 from qiskit.quantum_info import DensityMatrix, PauliLindbladMap
 from qiskit.transpiler import PassManager
 from qiskit.utils import optionals
@@ -148,3 +148,54 @@ class TestInsertNoisePass(IBMTestCase):
         expected_p1 = (1 - np.exp(-2 * rates_per_physical_qubit)) / 2
         actual_p1 = np.array([dm.probabilities([q])[1] for q in range(circuit.num_qubits)])
         np.testing.assert_allclose(actual_p1, expected_p1, atol=1e-10)
+
+    def test_noise_injected_inside_control_flow_block(self):
+        """Test that noise is injected into barriers inside control flow blocks.
+
+        "XI" is LSB-rightmost, so X acts on the higher physical index of the pair.
+        Every barrier below spans physical qubits {0, 2}, so X must land on physical qubit 2
+        regardless of the qubit order written in the barrier or how the block attaches to the
+        outer circuit.
+        """
+        separate_body = QuantumCircuit(QuantumRegister(2, "inner"))
+        separate_body.append(Barrier(2, label="R0@tag=r0"), [0, 1])
+
+        circuit = QuantumCircuit(3, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.append(Barrier(2, label="R0@tag=r0"), [0, 2])
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.append(Barrier(2, label="R0@tag=r0"), [2, 0])
+        circuit.if_test((circuit.clbits[0], True), separate_body, [0, 2], [])
+        circuit.if_test((circuit.clbits[0], True), separate_body, [2, 0], [])
+
+        noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
+        result = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_after=True)]).run(
+            circuit
+        )
+
+        def get_noise_physical_qubits(if_instr):
+            """Return the physical qubit indices the single noise channel in if_instr acts on."""
+            if_body = if_instr.operation.blocks[0]
+            noise_instrs = [i for i in if_body.data if i.operation.name == "quantum_channel"]
+            self.assertEqual(len(noise_instrs), 1)
+            noise_instr = noise_instrs[0]
+            physical_qubits = []
+            for local_qubit in noise_instr.qubits:
+                local_idx = if_body.find_bit(local_qubit).index
+                parent_qubit = if_instr.qubits[local_idx]
+                physical_qubits.append(result.find_bit(parent_qubit).index)
+            return physical_qubits
+
+        if_instrs = [instr for instr in result.data if instr.operation.name == "if_else"]
+        self.assertEqual(len(if_instrs), 4)
+
+        # All four cases span physical qubits {0, 2}; "XI" (LSB-right) -> X on physical qubit 2.
+        self.assertEqual(get_noise_physical_qubits(if_instrs[0]), [0, 2])  # barrier [0, 2]
+        self.assertEqual(get_noise_physical_qubits(if_instrs[1]), [0, 2])  # barrier [2, 0]
+        self.assertEqual(
+            get_noise_physical_qubits(if_instrs[2]), [0, 2]
+        )  # separate_body, attached [0, 2]
+        self.assertEqual(
+            get_noise_physical_qubits(if_instrs[3]), [0, 2]
+        )  # separate_body, attached [2, 0]
