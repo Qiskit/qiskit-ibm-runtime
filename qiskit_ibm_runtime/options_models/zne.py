@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Annotated, Literal
 
-from pydantic import Field, field_validator
+from pydantic import AfterValidator, Field
 
 from .base import BaseOptionsModel
 
@@ -37,6 +37,19 @@ ExtrapolatorType = Literal[
 
 DEFAULT_NOISE_FACTORS = (1, 3, 5)
 """The values of ``noise_factors`` used by default when ZNE is selected."""
+
+
+def _at_least_two_noise_factors(
+    value: Sequence[float],
+) -> Sequence[float]:
+    """Validate that `noise_factors` contains at least two factors.
+
+    This is used instead of `pydantic` `Field(..., min_length=2)` in order to provide a more
+    meaningful error message.
+    """
+    if len(value) < 2:
+        raise ValueError("Must have at least two noise factors in order to do an extrapolation.")
+    return value
 
 
 class ZneOptions(BaseOptionsModel):
@@ -110,7 +123,13 @@ class ZneOptions(BaseOptionsModel):
             proportional to the corresponding learned noise model.
     """
 
-    noise_factors: Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"] = "auto"
+    noise_factors: (
+        Annotated[
+            Sequence[Annotated[float, Field(ge=1)]],
+            AfterValidator(_at_least_two_noise_factors),
+        ]
+        | Literal["auto"]
+    ) = "auto"
     """ noise_factors: Noise factors to use for noise amplification.
 
     The default is
@@ -147,16 +166,3 @@ class ZneOptions(BaseOptionsModel):
     points at which the ``extrapolator``\s are evaluated to be returned in the data
     fields called ``evs_extrapolated`` and ``stds_extrapolated``.
     """
-
-    @field_validator("noise_factors", mode="plain")
-    @classmethod
-    def _validate_noise_factors(
-        cls, value: Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"]
-    ) -> Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"]:
-        if value == "auto":
-            return value
-        if len(value) < 2:
-            raise ValueError(
-                "Must have at least two noise factors in order to do an extrapolation."
-            )
-        return value
