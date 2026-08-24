@@ -142,12 +142,12 @@ class NoiseLearnerV3Results:
         self,
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
-        mode: Literal["injection", "simulation"] = "injection",
+        group_by: Literal["inject_noise", "tag"] = "inject_noise",
     ) -> dict[str, PauliLindbladMap]:
         """Convert to a dictionary from references to :class:`PauliLindbladMap` objects.
 
         References can be one of :attr:`InjectNoise.ref` or :attr:`Tag.ref` depending on
-        ``mode`` selection.
+        ``group_by`` selection.
 
         This function iterates over a sequence of instructions, extracts the ``ref`` value
         from the annotation of each instruction, and returns a dictionary mapping
@@ -159,7 +159,7 @@ class NoiseLearnerV3Results:
             require_refs: Whether to raise if some of the instructions do not own an
                 annotation. If ``False``, all the instructions that do not contain an
                 annotation are simply skipped when constructing the returned dictionary.
-            mode: If ``"simulation"``, it groups by :class:`~.Tag` annotations. Otherwise, by
+            group_by: If ``"tag"``, it groups by :class:`~.Tag` annotations. Otherwise, by
                 :class:`~.InjectNoise` annotations.
 
         Raise:
@@ -177,7 +177,7 @@ class NoiseLearnerV3Results:
 
         noise_source = {}
         num_instr = 0
-        annotation_type = Tag if mode == "simulation" else InjectNoise
+        annotation_type = Tag if group_by == "tag" else InjectNoise
         pauli_maps = self.to_pauli_lindblad_maps()
         for instr, pauli_map in zip(instructions, pauli_maps):
             if not isinstance(instr.operation, BoxOp):
