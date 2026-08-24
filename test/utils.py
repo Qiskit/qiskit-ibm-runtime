@@ -293,13 +293,19 @@ def bell():
 
 
 def make_mirror_circuit_with_phases(
-    backend: BackendV2, num_qubits: int = 2, layers: int = 4, *, seed: int | None = 7
+    backend: BackendV2,
+    num_qubits: int = 2,
+    layers: int = 4,
+    *,
+    seed: int | None = 7,
+    add_measurement: bool = True,
+    add_rx: bool = True,
 ) -> QuantumCircuit:
     """Make a circuit that composes a mirror circuit with a final layer of RX gates.
 
     The mirror circuit contains entanglers between nearest neighbours.
     """
-    if "cz" in (basis_gates := backend.basis_gates):
+    if "cz" in (basis_gates := backend.configuration().basis_gates):
         entangler = "cz"
     elif "cx" in basis_gates:
         entangler = "cx"
@@ -347,9 +353,11 @@ def make_mirror_circuit_with_phases(
     circuit.compose(mirror.inverse(), inplace=True)
 
     circuit.barrier()
-    for qubit in range(num_qubits):
-        circuit.rx(Parameter(f"theta_{qubit}"), qubit)
-    circuit.measure_all()
+    if add_rx:
+        for qubit in range(num_qubits):
+            circuit.rx(Parameter(f"theta_{qubit}"), qubit)
+    if add_measurement:
+        circuit.measure_all()
     return circuit
 
 

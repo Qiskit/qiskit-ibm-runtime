@@ -14,8 +14,9 @@
 
 from ddt import data, ddt
 from qiskit import QuantumCircuit
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
+from samplomatic import Tag
+from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
@@ -31,6 +32,38 @@ from ...ibm_test_case import IBMTestCase
 class TestPrepare(IBMTestCase):
     """Test the ``prepare`` function."""
 
+    @data("vanilla", "pec", "zne", "pea")
+    def test_add_tags(self, path):
+        """Test that ``prepare`` adds tags when ``add_tags=True``."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        pubs = [(circuit, observable)]
+
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        match path:
+            case "vanilla":
+                options.twirling.enable_measure = True
+            case "pec":
+                options.resilience.pec_mitigation = True
+                options.resilience.noise_model = {
+                    "layer_0": PauliLindbladMap.identity(num_qubits=2)
+                }
+            case "zne":
+                options.resilience.zne_mitigation = True
+            case "pea":
+                options.resilience.zne_mitigation = True
+                options.resilience.zne.amplifier = "pea"
+
+        program, _ = prepare(pubs, options, precision=0.1, add_tags=True)
+
+        for item in program.items:
+            unique_instructions = find_unique_box_instructions(item.circuit)
+            for inst in unique_instructions:
+                self.assertIsNotNone(get_annotation(inst.operation, Tag))
+
     def test_vanilla_path(self):
         """Test the ``prepare`` function when no mitigation is requested."""
         options = EstimatorOptions()
@@ -41,9 +74,9 @@ class TestPrepare(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        pubs = [EstimatorPub.coerce((circuit, observable))]
+        pubs = [(circuit, observable)]
 
-        program, executor_options = prepare(pubs, options, shots=100)
+        program, executor_options = prepare(pubs, options, precision=0.1)
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
@@ -54,17 +87,15 @@ class TestPrepare(IBMTestCase):
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         options.resilience.pec_mitigation = True
-        options.resilience.noise_model_mapping = {
-            "layer_0": PauliLindbladMap.identity(num_qubits=2)
-        }
+        options.resilience.noise_model = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        pubs = [EstimatorPub.coerce((circuit, observable))]
+        pubs = [(circuit, observable)]
 
-        program, executor_options = prepare(pubs, options, shots=100)
+        program, executor_options = prepare(pubs, options, precision=0.1)
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
@@ -80,9 +111,9 @@ class TestPrepare(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        pubs = [EstimatorPub.coerce((circuit, observable))]
+        pubs = [(circuit, observable)]
 
-        program, executor_options = prepare(pubs, options, shots=100)
+        program, executor_options = prepare(pubs, options, precision=0.1)
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
@@ -99,13 +130,26 @@ class TestPrepare(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        pubs = [EstimatorPub.coerce((circuit, observable))]
+        pubs = [(circuit, observable)]
 
-        program, executor_options = prepare(pubs, options, shots=100)
+        program, executor_options = prepare(pubs, options, precision=0.1)
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
         self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "pea")
+
+    def test_pub_with_boxes_raises(self):
+        """Test that a when a PUB contains a box, the estimator raises."""
+        circuit = QuantumCircuit(2)
+        with circuit.box():
+            circuit.noop(0)
+        circuit.measure_all()
+
+        observable = "ZZ"
+
+        pubs = [(circuit, observable)]
+        with self.assertRaisesRegex(IBMInputValueError, "not supported"):
+            prepare(pubs=pubs, options=EstimatorOptions(), precision=0.1)
 
     @data(True, False)
     def test_dd_applied_when_enabled(self, twirling_enabled):
@@ -117,6 +161,7 @@ class TestPrepare(IBMTestCase):
         options.dynamical_decoupling.enable = True
         options.twirling.enable_gates = twirling_enabled
         options.twirling.enable_measure = False
+        options.resilience.measure_mitigation = False
 
         # Create a circuit with a large delay on qubit 0.
         circuit = QuantumCircuit(3)
@@ -125,12 +170,9 @@ class TestPrepare(IBMTestCase):
         circuit.cx(0, 1)
         observable = SparsePauliOp.from_list([("ZZZ", 1)])
 
-        pubs = [
-            EstimatorPub.coerce((circuit, observable)),
-            EstimatorPub.coerce((circuit, observable)),
-        ]
+        pubs = [(circuit, observable), (circuit, observable)]
 
-        program, _ = prepare(pubs, options, shots=100, backend=FakeManilaV2())
+        program, _ = prepare(pubs, options, precision=0.1, backend=FakeManilaV2())
 
         # DD inserts X gates into idle slots of each circuit item
         for item in program.items:
@@ -147,13 +189,13 @@ class TestPrepare(IBMTestCase):
         circuit.if_else((0, True), QuantumCircuit(2, 1), QuantumCircuit(2, 1), [0, 1], [0])
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pubs = [EstimatorPub.coerce((circuit, observable))]
+        pubs = [(circuit, observable)]
 
         with self.assertRaisesRegex(
             IBMInputValueError,
             "Dynamical decoupling is not compatible with dynamic circuits",
         ):
-            prepare(pubs, options, shots=100, backend=FakeManilaV2())
+            prepare(pubs, options, precision=0.1, backend=FakeManilaV2())
 
     def test_dd_raises_when_no_backend(self):
         """Test DD raises an error when no backend is provided."""
@@ -162,10 +204,24 @@ class TestPrepare(IBMTestCase):
 
         circuit = QuantumCircuit(2)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pubs = [EstimatorPub.coerce((circuit, observable))]
+        pubs = [(circuit, observable)]
 
         with self.assertRaisesRegex(
             IBMInputValueError,
             "A backend must be provided when dynamical decoupling is enabled",
         ):
-            prepare(pubs, options, shots=100)
+            prepare(pubs, options, precision=0.1)
+
+    def test_measure_mitigation_rejects_projection_operators(self):
+        """Test measurement mitigation raises when observables contain projectors."""
+        options = EstimatorOptions()
+        options.resilience.measure_mitigation = True
+
+        circuit = QuantumCircuit(3)
+        pubs = [(circuit, "Z0Z")]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "Measurement mitigation is currently not supported when observables contain projection",
+        ):
+            prepare(pubs, options, precision=0.1)

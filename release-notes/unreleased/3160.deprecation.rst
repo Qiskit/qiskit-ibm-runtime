@@ -1,2 +1,0 @@
-The ``post_selection`` option of :class:`.NoiseLearnerV3` is now deprecated and will be removed in a
-future release.

@@ -13,43 +13,12 @@
 """Tests for executor-based SamplerV2 utility functions."""
 
 from qiskit import QuantumCircuit
-from qiskit.circuit import BoxOp
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_sampler.utils import extract_shots_from_pubs, validate_no_boxes
+from qiskit_ibm_runtime.executor_sampler.utils import extract_shots_from_pubs
 
 from ...ibm_test_case import IBMTestCase
-
-
-class TestValidateNoBoxes(IBMTestCase):
-    """Tests for validate_no_boxes function."""
-
-    def test_valid_circuit_no_boxes(self):
-        """Test that a circuit without boxes passes validation."""
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        # Should not raise
-        validate_no_boxes(circuit)
-
-    def test_circuit_with_box_raises_error(self):
-        """Test that a circuit with a BoxOp raises an error."""
-        inner_circuit = QuantumCircuit(2)
-        inner_circuit.h(0)
-        inner_circuit.cx(0, 1)
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.append(BoxOp(inner_circuit), [0, 1])
-        circuit.measure_all()
-
-        with self.assertRaises(IBMInputValueError) as context:
-            validate_no_boxes(circuit)
-
-        self.assertIn("BoxOp", str(context.exception))
-        self.assertIn("not supported", str(context.exception))
 
 
 class TestExtractShotsFromPubs(IBMTestCase):

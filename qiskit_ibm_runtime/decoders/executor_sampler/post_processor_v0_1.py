@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, cast
 from qiskit.primitives import PrimitiveResult
 
 from .converters import quantum_program_item_result_to_sampler_pub_result
-from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes, undo_twirling
+from .utils import flatten_twirling_axes, undo_twirling
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
@@ -60,6 +60,8 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Missing 'meas_type' in passthrough data.")
     if (shots := post_processor_data.get("shots", None)) is None:
         raise ValueError("Missing 'shots' in passthrough data.")
+    if (options := post_processor_data.get("options", None)) is None:
+        raise ValueError("Missing 'options' in passthrough data.")
 
     # Compute the ``num_randomizations`` from the left-most axis of the result arrays
     if twirling:
@@ -102,8 +104,5 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         )
         pub_results.append(pub_result)
 
-    metadata = executor_metadata_to_sampler_metadata(
-        result.metadata, num_randomizations, shots, pub_shapes
-    )
-
+    metadata = {"executor": result.metadata, "options": options, "shots": shots}
     return PrimitiveResult(pub_results, metadata=metadata or {})

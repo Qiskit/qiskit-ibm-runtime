@@ -15,20 +15,19 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from ..base_primitive import get_mode_service_backend
-from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
+from .finalize_options import finalize_estimator_options
 from .prepare import prepare
-from .utils import find_unique_layers, resolve_precision
+from .utils import BoxType, find_box_type, find_unique_layers, resolve_precision
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -42,35 +41,6 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
-
-RESILIENCE_LEVEL_DEFAULTS = {
-    0: {
-        "enable_gates": False,
-        "enable_measure": False,
-        "measure_mitigation": False,
-        "zne_mitigation": False,
-    },
-    1: {
-        "enable_gates": False,
-        "enable_measure": True,
-        "measure_mitigation": True,
-        "zne_mitigation": False,
-    },
-    2: {
-        "enable_gates": True,
-        "enable_measure": True,
-        "measure_mitigation": True,
-        "zne_mitigation": True,
-    },
-}
-"""Default configuration for resilience levels used to finalize estimator options.
-
-Fields:
-* ``enable_gates``: Whether to enable twirling for gates.
-* ``enable_measure``: Whether to enable twirling for measurements.
-* ``measure_mitigation``: Whether to apply measurement error mitigation.
-* ``zne_mitigation``: Whether to apply zero-noise extrapolation (ZNE).
-"""
 
 
 class EstimatorV2(BaseEstimatorV2):
@@ -154,50 +124,50 @@ class EstimatorV2(BaseEstimatorV2):
 
         super().__setattr__(name, value)
 
-    def find_unique_layers(self, pubs: Iterable[EstimatorPubLike]) -> list[CircuitInstruction]:
+    def find_unique_layers(
+        self, pubs: Iterable[EstimatorPubLike], types: Literal["gates", "all"] = "gates"
+    ) -> list[CircuitInstruction]:
         """Return the unique boxed layers found across the given PUBs.
 
-        The returned list contains one instance of each distinct boxed layer (represented as a
-        :class:`~.CircuitInstruction`) appearing in the input PUBs.
+        The ``types`` of layers can be either ``"gates"`` or ``"all"``, corresponding to only
+        gate layers or all layers, respectively. The returned list then contains one instance of
+        each distinct boxed layer (represented as a :class:`~.CircuitInstruction`) appearing
+        in the input PUBs.
 
-        For noise learning, keep only the boxes that carry an :class:`~samplomatic.InjectNoise`
-        annotation:
+        For example, for noise learning, keep only the qubit gate layers:
 
         .. code-block:: python
-
-            from samplomatic import InjectNoise
-            from samplomatic.utils import get_annotation
 
             est = EstimatorV2(mode, options)
             est.options.resilience.pec_mitigation = True
 
-            layers = [
-                layer
-                for layer in est.find_unique_layers(pubs)
-                if get_annotation(layer.operation, InjectNoise)
-            ]
+            layers = est.find_unique_layers(pubs, types="gates")
 
             results = NoiseLearnerV3(mode).run(layers).result()
             noise_model = results.to_dict(layers)
 
             # Assign the learned model so PEC uses it on the next run.
-            est.options.resilience.noise_model_mapping = noise_model
+            est.options.resilience.noise_model = noise_model
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
+            types: The types of layers to return. Can be either ``"gates"`` or ``"all"``.
 
         Returns:
-            The unique boxed layers found across the given PUBs.
+            The unique boxed layers of a certain type found across the given PUBs.
         """
         coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
         options = self.finalize_options()
-        return find_unique_layers(
+        layers = find_unique_layers(
             pubs=coerced_pubs,
             twirling_options=options.twirling,
             measure_noise_learning=options.resilience.measure_noise_learning,
             inject_noise=options.resilience.pec_mitigation
             or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
+            add_tags=True,
         )
+        box_types = get_args(BoxType) if types == "all" else ("gates",)
+        return [layer for layer in layers if find_box_type(layer) in box_types]
 
     def finalize_options(self) -> EstimatorOptions:
         """Construct and finalize the Estimator options.
@@ -220,34 +190,37 @@ class EstimatorV2(BaseEstimatorV2):
         Returns:
             The finalized :class:`~.EstimatorOptions` object.
         """
-        finalized_options = deepcopy(self.options)
+        return finalize_estimator_options(self.options)
 
-        # Begin by initializing options based on resilience level
-        defaults = RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]
+    def _run_legacy_simulation(
+        self, pubs: Iterable[EstimatorPubLike], precision: float | None
+    ) -> RuntimeJobV2:
+        """Run on the legacy local simulator (no Executor).
 
-        if finalized_options.twirling.enable_gates is None:
-            finalized_options.twirling.enable_gates = defaults["enable_gates"]
-        if finalized_options.twirling.enable_measure is None:
-            finalized_options.twirling.enable_measure = defaults["enable_measure"]
-        if finalized_options.resilience.measure_mitigation is None:
-            finalized_options.resilience.measure_mitigation = defaults["measure_mitigation"]
-        if finalized_options.resilience.zne_mitigation is None:
-            finalized_options.resilience.zne_mitigation = defaults["zne_mitigation"]
+        Args:
+            pubs: The raw PUB-like objects passed to :meth:`run`.
+            precision: The per-pub precision override, forwarded from :meth:`run`.
 
-        # Force-set some values based on mitigation
-        if finalized_options.resilience.measure_mitigation is True:
-            finalized_options.twirling.enable_measure = True
-        if (
-            finalized_options.resilience.zne_mitigation is True
-            and finalized_options.resilience.zne.amplifier == "pea"
-        ):
-            finalized_options.twirling.enable_gates = True
-            finalized_options.twirling.enable_measure = True
-        if finalized_options.resilience.pec_mitigation is True:
-            finalized_options.twirling.enable_gates = True
-            finalized_options.twirling.enable_measure = True
-
-        return finalized_options
+        Returns:
+            The submitted job.
+        """
+        logger.info("Running in local simulator mode")
+        coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        options = self.finalize_options()
+        options_dict = options.model_dump()
+        resolved_precision = resolve_precision(coerced_pubs, precision)
+        if resolved_precision is not None:
+            options_dict["default_shots"] = int(np.ceil(1.0 / (resolved_precision**2)))
+        elif options.default_shots is not None:
+            options_dict["default_shots"] = int(options.default_shots)
+        else:
+            options_dict["default_shots"] = int(np.ceil(1.0 / (options.default_precision**2)))
+        return self._service._run(
+            program_id="estimator",
+            inputs={"pubs": coerced_pubs, "options": options_dict},
+            options={"backend": self._backend},
+            calibration_id=None,
+        )
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
@@ -277,67 +250,28 @@ class EstimatorV2(BaseEstimatorV2):
             IBMInputValueError: If no pubs are provided, if precision is not properly
                 specified, or if unsupported options are detected.
         """
-        # Coerce pubs to EstimatorPub objects
-        coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-        if not coerced_pubs:
-            raise IBMInputValueError("No pubs provided. At least one pub is required.")
-
-        # Finalize the options dynamically by:
-        #   * Generating new options according to the specified resilience level
-        #   * Combining these options with the user-provided options
-        #   * Enforcing required dependencies between option values
-        options = self.finalize_options()
-
-        resolved_precision = resolve_precision(coerced_pubs, precision)
-        if resolved_precision is not None:
-            shots = int(np.ceil(1.0 / (resolved_precision**2)))
-        elif options.default_shots is not None:
-            shots = int(options.default_shots)
-        else:
-            shots = int(np.ceil(1.0 / (options.default_precision**2)))
-
-        # Check if we're in local simulator mode
-        if not self.options.experimental.get("local_mode", False) and isinstance(
+        # Legacy simulator path (no executor)
+        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
             self._service, QiskitRuntimeLocalService
         ):
-            logger.info("Running in local simulator mode")
+            return self._run_legacy_simulation(pubs, precision)
 
-            options_dict = options.model_dump()
-            options_dict["default_shots"] = shots
-
-            return self._service._run(
-                program_id="estimator",
-                inputs={"pubs": coerced_pubs, "options": options_dict},
-                options={"backend": self._backend},
-                calibration_id=None,
-            )
-
-        if options.resilience.pec_mitigation and options.resilience.zne_mitigation:
-            raise IBMInputValueError(
-                "PEC mitigation and ZNE mitigation are incompatible with one another."
-            )
-
-        # Convert pubs to QuantumProgram and map options using the selected prepare function
+        # Pre-process: Convert Estimator input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            coerced_pubs, options, shots, backend=self._backend
+            pubs, self.options, precision, add_tags=local_mode, backend=self._backend
         )
-        # Store raw options, shots and precision for post-processing side to compute metadata.
-        quantum_program.passthrough_data["post_processor"]["options"] = options.model_dump(  # type: ignore[index, call-overload]
-            exclude={"resilience": {"noise_model_mapping"}}
-        )
-        quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
-        quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
 
-        # Set executor options
+        # Set semantic role for post-processing dispatch
+        quantum_program._semantic_role = "estimator_v2"
+
         executor = Executor(mode=self._backend, options=executor_options)
 
-        # Submit to executor
         logger.info(
-            "Submitting %d pub%s to executor with %d shots",
-            len(coerced_pubs),
-            "s" if len(coerced_pubs) > 1 else "",
-            quantum_program.shots,
+            "Submitting %d pub%s to executor with %d total shots",
+            len(quantum_program.items),
+            "s" if len(quantum_program.items) > 1 else "",
+            quantum_program.shots * sum(item.size() for item in quantum_program.items),
         )
 
         return executor.run(quantum_program)
