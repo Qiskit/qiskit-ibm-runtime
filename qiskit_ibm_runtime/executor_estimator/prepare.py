@@ -109,7 +109,7 @@ def prepare(
 
     # Annotate passthrough_data for post-processing
     quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump(  # type: ignore[index, call-overload]
-        exclude={"resilience": {"noise_model"}}
+        exclude={"resilience": {"layer_noise_model"}}
     )
     quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
     quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
