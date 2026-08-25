@@ -99,7 +99,9 @@ def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
         num_shots = 200000
 
     backend = FakeBrisbane()
+
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
+
     options = EstimatorOptions()
     options.update(**variant_options)
     if variant_id in NEEDS_NOISE_MODEL:
@@ -135,7 +137,9 @@ def test_executor_estimator_post_processor(benchmark, variant_id, variant_option
         num_shots = 200000
 
     backend = FakeBrisbane()
+
     pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=10)
+
     options = EstimatorOptions()
     options.update(**variant_options)
     if variant_id in NEEDS_NOISE_MODEL:
@@ -149,6 +153,7 @@ def test_executor_estimator_post_processor(benchmark, variant_id, variant_option
         add_tags=False,
         backend=backend,
     )
+    quantum_program._semantic_role = "estimator_v2"
 
     # Generate dummy results matching the prepared program structure
     quantum_program_result = create_dummy_result(quantum_program)
@@ -236,4 +241,5 @@ def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult
         data=result_data,
         passthrough_data=quantum_program.passthrough_data,
     )
+    quantum_program_result._semantic_role = quantum_program._semantic_role
     return quantum_program_result
