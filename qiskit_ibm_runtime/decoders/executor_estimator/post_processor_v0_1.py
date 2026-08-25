@@ -865,7 +865,9 @@ def create_pub_result_zne(
     )
 
     per_item = [create_pub_result_metadata(item_result.metadata) for item_result in item_results]
-    result_item_metadata = {key: [item[key] for item in per_item] for key in per_item[0]}
+    result_item_metadata: dict[str, Any] = {
+        key: [item[key] for item in per_item] for key in per_item[0]
+    }
     result_item_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
