@@ -439,7 +439,7 @@ class TestBoxCircuit(IBMTestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy="all",
-            twirling_group="pauli",
+            twirling_group="balanced_pauli",
             add_tags=add_tags,
         )
 
@@ -449,7 +449,7 @@ class TestBoxCircuit(IBMTestCase):
             twirling_strategy="all",
             add_tags=add_tags,
             inject_noise_site="after",
-            twirling_group="pauli",
+            twirling_group="balanced_pauli",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
