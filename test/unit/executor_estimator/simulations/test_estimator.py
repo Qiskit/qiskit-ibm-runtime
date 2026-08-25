@@ -91,7 +91,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         backend = FakeManilaV2()
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
-        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
@@ -128,7 +128,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
-        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
 
         # -- Run using base level Estimator with minor mitigation only:
 
@@ -201,15 +201,18 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         TWIRLING_TREX_PEC,
         TWIRLING_TREX_PEA,
     )
-    def test_correct_estimates_with_noise_injection(self, option_overrides):
+    def test_correct_estimates(self, option_overrides):
         """Tests Estimator configurations to produce correct results in a noise-less environment."""
-        pub, ideal_evs = create_estimator_test_data_extended(self.backend, self.preset_pass_manager)
-
         estimator = create_local_mode_estimator(
             self.backend,
             num_randomizations=100,
             shots_per_randomization=200,
             options_overrides=option_overrides,
+        )
+
+        include_projections = not estimator.finalize_options().resilience.measure_mitigation
+        pub, ideal_evs = create_estimator_test_data_extended(
+            self.backend, self.preset_pass_manager, include_projections
         )
 
         # TODO: no DD possible on AER without gate durations.
