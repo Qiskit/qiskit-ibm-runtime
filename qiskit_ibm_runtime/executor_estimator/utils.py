@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from qiskit_ibm_runtime.decoders.executor_estimator.utils import unbroadcast_index
+from qiskit_ibm_runtime.decoders.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -78,32 +78,6 @@ def validate_noise_factors(
         required = _REQUIRED_NOISE_FACTORS[extrap]
         if len(noise_factors) < required:
             raise IBMInputValueError(f"{extrap} requires at least {required} noise_factors")
-
-
-def get_pauli_basis(basis: str) -> Pauli:
-    """Map computational basis to Pauli measurement basis.
-
-    Converts basis strings like "000", "++0", "rl1" to Pauli operators.
-    - 0, 1 → Z
-    - +, - → X
-    - r, l → Y
-    - I → I
-
-    Args:
-        basis: Basis string to convert.
-
-    Returns:
-        Pauli operator representing the measurement basis.
-    """
-    basis = (
-        basis.replace("0", "Z")
-        .replace("1", "Z")
-        .replace("+", "X")
-        .replace("-", "X")
-        .replace("r", "Y")
-        .replace("l", "Y")
-    )
-    return Pauli(basis)
 
 
 def has_projection_operators(pub: EstimatorPub) -> bool:

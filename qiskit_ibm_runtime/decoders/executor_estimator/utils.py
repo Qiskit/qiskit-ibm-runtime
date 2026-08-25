@@ -18,6 +18,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import numpy as np
+from qiskit.quantum_info import Pauli
 
 if TYPE_CHECKING:
     from qiskit.quantum_info import Pauli
@@ -196,3 +197,29 @@ def unbroadcast_index(
     pad_shape = _pad_broadcast_shape(shape, len(bc_index))
     bc_index = tuple(0 if dim == 1 else i for i, dim in zip(bc_index, pad_shape))
     return bc_index[-shape_ndims:]
+
+
+def get_pauli_basis(basis: str) -> Pauli:
+    """Map computational basis to Pauli measurement basis.
+
+    Converts basis strings like "000", "++0", "rl1" to Pauli operators.
+    - 0, 1 → Z
+    - +, - → X
+    - r, l → Y
+    - I → I
+
+    Args:
+        basis: Basis string to convert.
+
+    Returns:
+        Pauli operator representing the measurement basis.
+    """
+    basis = (
+        basis.replace("0", "Z")
+        .replace("1", "Z")
+        .replace("+", "X")
+        .replace("-", "X")
+        .replace("r", "Y")
+        .replace("l", "Y")
+    )
+    return Pauli(basis)

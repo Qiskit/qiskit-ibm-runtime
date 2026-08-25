@@ -27,8 +27,7 @@ from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     create_pub_result_pec,
     estimator_v2_post_processor_v0_1,
 )
-from qiskit_ibm_runtime.decoders.executor_estimator.utils import unbroadcast_index
-from qiskit_ibm_runtime.executor_estimator.utils import get_pauli_basis
+from qiskit_ibm_runtime.decoders.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramItemResult,

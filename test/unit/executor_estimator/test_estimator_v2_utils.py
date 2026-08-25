@@ -27,7 +27,6 @@ from qiskit_ibm_runtime.executor_estimator.utils import (
     box_circuit,
     compute_samplex_arguments,
     find_box_type,
-    get_pauli_basis,
     pauli_to_ints,
     resolve_precision,
 )
@@ -149,31 +148,6 @@ class TestComputeSamplexArguments(IBMTestCase):
 
         _, _, param_basis_pairs = compute_samplex_arguments(pub)
         self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
-
-
-class TestGetPauliBasis(IBMTestCase):
-    """Tests for get_pauli_basis function."""
-
-    def test_single_qubit_bases(self):
-        """Test single-qubit basis conversions."""
-        for basis, expected in [
-            ("0", Pauli("Z")),
-            ("1", Pauli("Z")),
-            ("+", Pauli("X")),
-            ("-", Pauli("X")),
-            ("r", Pauli("Y")),
-            ("l", Pauli("Y")),
-            ("I", Pauli("I")),
-        ]:
-            with self.subTest(basis=basis):
-                result = get_pauli_basis(basis)
-                self.assertEqual(result, expected)
-
-    def test_multi_qubit(self):
-        """Test multi-qubit basis conversion."""
-        result = get_pauli_basis("0+r")
-        expected = Pauli("ZXY")
-        self.assertEqual(result, expected)
 
 
 class TestPauliToInts(IBMTestCase):
