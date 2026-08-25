@@ -93,7 +93,7 @@ class Executor:
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
         self.options.environment.image = (
-            "qiskit-ibm-primitives:ce1353323cf396813be52479d33b0fd4a5c365bb"  # noqa: E501
+            "qiskit-ibm-primitives:9f8fd2865d32a895eefb4c8be3043c7124c2c70e"  # noqa: E501
         )
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
