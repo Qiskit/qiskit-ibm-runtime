@@ -39,7 +39,7 @@ DEFAULT_NOISE_FACTORS = (1, 3, 5)
 """The values of ``noise_factors`` used by default when ZNE is selected."""
 
 
-def _at_least_two_noise_factors(
+def at_least_two_noise_factors(
     value: Sequence[float],
 ) -> Sequence[float]:
     """Validate that `noise_factors` contains at least two factors.
@@ -126,7 +126,7 @@ class ZneOptions(BaseOptionsModel):
     noise_factors: (
         Annotated[
             Sequence[Annotated[float, Field(ge=1)]],
-            AfterValidator(_at_least_two_noise_factors),
+            AfterValidator(at_least_two_noise_factors),
         ]
         | Literal["auto"]
     ) = "auto"
