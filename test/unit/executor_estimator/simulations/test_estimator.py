@@ -21,8 +21,6 @@ from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
@@ -172,14 +170,10 @@ class TestEstimatorWithNoise(IBMTestCase):
             layer_noise_model=simulated_noise_model,
         )
         # Run a noisy simulation, injecting the same noise as in the simulation
-        injected_noise_model = {
-            inject_noise_annotation.ref: PauliLindbladMap.from_list(
-                [("X" * layer.operation.num_qubits, 0.005)]
-            )
+        estimator.options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
-            if (inject_noise_annotation := get_annotation(layer.operation, InjectNoise))
-        }
-        estimator.options.resilience.noise_model = injected_noise_model
+        ]
         result = estimator.run([pub]).result()
         errors = np.abs(result[0].data.evs - ideal_evs)
 
@@ -231,7 +225,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         if "resilience_level" not in option_overrides:
             # resilience_level defaults do not need a noise-model.
             # Only adding this for PEC / PEA:
-            estimator.options.resilience.noise_model = create_noise_model_without_noise(
+            estimator.options.resilience.layer_noise_model = create_noise_model_without_noise(
                 estimator, pub
             )
 
