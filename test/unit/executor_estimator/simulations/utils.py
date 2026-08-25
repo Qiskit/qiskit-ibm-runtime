@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.circuit import Parameter
-from qiskit.primitives import ObservablesArray
+from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
