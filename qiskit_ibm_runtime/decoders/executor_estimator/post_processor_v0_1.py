@@ -527,7 +527,7 @@ def _process_expectation_values_pec(
 def create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
     """Build the metadata dict for a single result item.
 
-    For hardware results (``ItemMetadata``), extracts compilation-related fields
+    For IBM backend results (``ItemMetadata``), extracts compilation-related fields
     such as ``scheduler_timing`` and ``stretch_values`` under a ``"compilation"`` key.
     For simulator results (plain ``dict``), stores the raw metadata under ``"executor"``.
 
