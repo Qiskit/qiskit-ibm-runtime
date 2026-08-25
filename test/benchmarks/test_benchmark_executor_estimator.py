@@ -45,69 +45,49 @@ from qiskit_ibm_runtime.results.quantum_program import (
 
 from ..utils import make_mirror_circuit_with_phases
 
-# ---------------------------------------------------------------------------
-# Option configurations – one per dispatch branch in prepare._build_quantum_program
-# ---------------------------------------------------------------------------
-
-# Branch: prepare_vanilla (default – no ZNE, no PEC)
-VANILLA = {
-    "id": "vanilla",
-    "resilience_level": 0,
-}
-
-# Branch: prepare_vanilla with measure-error learning (TREX / measure_mitigation)
-VANILLA_TREX = {
-    "id": "vanilla_trex",
-    "resilience_level": 0,
-    "twirling": {"enable_gates": True, "enable_measure": True},
-    "resilience": {"measure_mitigation": True},
-}
-
-# Branch: prepare_zne  (ZNE with gate_folding amplifier)
-ZNE_GATE_FOLDING = {
-    "id": "zne_gate_folding",
-    "resilience_level": 0,
-    "twirling": {"enable_gates": True, "enable_measure": True},
-    "resilience": {
-        "zne_mitigation": True,
-        "zne": {"amplifier": "gate_folding"},
+PREPARE_VARIANTS = {
+    "vanilla": {
+        "resilience_level": 0,
+    },
+    "vanilla_trex": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {"measure_mitigation": True},
+    },
+    "zne_gate_folding": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {
+            "zne_mitigation": True,
+            "zne": {"amplifier": "gate_folding"},
+        },
+    },
+    "zne_pea": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {
+            "zne_mitigation": True,
+            "zne": {"amplifier": "pea"},
+        },
+    },
+    "pec": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {
+            "pec_mitigation": True,
+        },
     },
 }
 
-# Branch: prepare_pea  (ZNE with PEA amplifier)
-ZNE_PEA = {
-    "id": "zne_pea",
-    "resilience_level": 0,
-    "twirling": {"enable_gates": True, "enable_measure": True},
-    "resilience": {
-        "zne_mitigation": True,
-        "zne": {"amplifier": "pea"},
-    },
-}
-
-# Branch: prepare_pec
-PEC = {
-    "id": "pec",
-    "resilience_level": 0,
-    "twirling": {"enable_gates": True, "enable_measure": True},
-    "resilience": {
-        "pec_mitigation": True,
-    },
-}
-
-_PREPARE_VARIANTS = [VANILLA, VANILLA_TREX, ZNE_GATE_FOLDING, ZNE_PEA, PEC]
-
-# Variants that require a noise model (PEC and PEA use inject_noise=True in prepare)
-_NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
+NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize(
-    "variant",
-    _PREPARE_VARIANTS,
-    ids=[v["id"] for v in _PREPARE_VARIANTS],
+    "variant_id,variant_options",
+    PREPARE_VARIANTS.items(),
 )
-def test_executor_estimator_prepare(benchmark, variant):
+def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
     """Benchmark prepare() for different mitigation strategies."""
     if benchmark.disabled:
         num_qubits = 3
@@ -121,8 +101,8 @@ def test_executor_estimator_prepare(benchmark, variant):
     backend = FakeBrisbane()
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
     options = EstimatorOptions()
-    options.update(**{k: v for k, v in variant.items() if k != "id"})
-    if variant["id"] in _NEEDS_NOISE_MODEL:
+    options.update(**variant_options)
+    if variant_id in NEEDS_NOISE_MODEL:
         options.resilience.noise_model = create_noise_model(coerced_pubs, options)
 
     def run_prepare():
@@ -139,29 +119,26 @@ def test_executor_estimator_prepare(benchmark, variant):
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize(
-    "variant",
-    _PREPARE_VARIANTS,
-    ids=[v["id"] for v in _PREPARE_VARIANTS],
+    "variant_id,variant_options",
+    PREPARE_VARIANTS.items(),
 )
-def test_executor_estimator_post_processor(benchmark, variant):
+def test_executor_estimator_post_processor(benchmark, variant_id, variant_options):
     """Benchmark the estimator post-processor for different mitigation strategies."""
     if benchmark.disabled:
         # Qubit count smaller than 6 on Brisbane causes error:
         # Results must contain ``'pauli_signs'`` in the data if PEC is used.
         # Weirdly using AER as a backend can accept <6 qubits.
         num_qubits = 6
-        num_layers = 10
         num_shots = 100
     else:
         num_qubits = 100
-        num_layers = 20
         num_shots = 200000
 
     backend = FakeBrisbane()
-    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
+    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=10)
     options = EstimatorOptions()
-    options.update(**{k: v for k, v in variant.items() if k != "id"})
-    if variant["id"] in _NEEDS_NOISE_MODEL:
+    options.update(**variant_options)
+    if variant_id in NEEDS_NOISE_MODEL:
         options.resilience.noise_model = create_noise_model(pubs, options)
 
     # Run prepare once to get the quantum program structure for this variant
