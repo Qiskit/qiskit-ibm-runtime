@@ -26,7 +26,6 @@ Functions
     :toctree: ../stubs/
     :nosignatures:
 
-    draw_chunk_timings
     draw_execution_spans
     draw_layer_error_map
     draw_layer_errors_swarm
@@ -35,8 +34,27 @@ Functions
     draw_circuit_schedule_timing
 """
 
-from .draw_chunk_timings import draw_chunk_timings
+from ..utils.deprecation import issue_deprecation_msg
 from .draw_circuit_schedule_timings import draw_circuit_schedule_timing
 from .draw_execution_spans import draw_execution_spans
 from .draw_layer_error import draw_layer_error_map, draw_layer_errors_swarm
 from .draw_zne import draw_zne_evs, draw_zne_extrapolators
+
+_DEPRECATED_NAMES = frozenset({"draw_chunk_timings"})
+
+
+def __getattr__(name: str) -> object:
+    if name in _DEPRECATED_NAMES:
+        import samplomatic.quantum_program as _sq
+
+        issue_deprecation_msg(
+            msg="Importing 'draw_chunk_timings' from 'qiskit_ibm_runtime.visualization' is "
+            "deprecated",
+            version="0.50.0",
+            remedy="Import 'draw_chunk_timings' from "
+            "'samplomatic.visualization.draw_chunk_timings' "
+            "instead.",
+            stacklevel=2,
+        )
+        return getattr(_sq, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

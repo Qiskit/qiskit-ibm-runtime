@@ -15,53 +15,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import datetime
-    from collections.abc import Iterable, Iterator, Sequence
-    from datetime import timezone
+    from collections.abc import Iterator, Sequence
 
     import numpy as np
-    from plotly.graph_objects import Figure as PlotlyFigure
+    from samplomatic.quantum_program import ChunkSpan
     from samplomatic.quantum_program.datatree import DataTree
 
+from samplomatic.quantum_program import ChunkTiming
 from samplomatic.quantum_program import QuantumProgramItemResult as BaseQuantumProgramItemResult
 from samplomatic.quantum_program import QuantumProgramResult as BaseQuantumProgramResult
-
-
-@dataclass
-class ChunkPart:
-    """A description of the contents of a single part of an execution chunk."""
-
-    idx_item: int
-    """The index of an item in a quantum program."""
-
-    size: int
-    """The number of elements from the quantum program item that were executed.
-
-    For example, if a quantum program item has shape ``(10, 5)``, then it has a total of ``50``
-    elements, so that if this ``size`` is ``10``, it constitutes 20% of the total work for the item.
-    """
-
-
-@dataclass
-class ChunkSpan:
-    """Timing information about a single chunk of execution.
-
-    .. note::
-
-        This span may include some amount of non-circuit time.
-    """
-
-    start: datetime.datetime
-    """The start time of the execution chunk in UTC."""
-
-    stop: datetime.datetime
-    """The stop time of the execution chunk in UTC."""
-
-    parts: list[ChunkPart]
-    """A description of which parts of a quantum program are contained in this chunk."""
 
 
 @dataclass
@@ -152,113 +117,6 @@ class Metadata:
     """Timing information about all executed chunks of a quantum program."""
 
 
-class ChunkTiming:
-    """A collection of chunk timing information for a :class:`QuantumProgramResult`.
-
-    This class is a readonly list-like containing :class:`~.ChunkSpan` objects, where each span
-    represents a single execution chunk on the backend and contains timing information and a
-    description of which parts of the :class:`~.QuantumProgram` were executed in that chunk.
-
-    To iterate over chunks:
-
-    .. code-block:: python
-
-        chunk_timings = job.result().timing
-        for chunk in chunk_timings:
-            print(chunk)
-
-    To draw the timings for a single result:
-
-    .. code-block:: python
-
-        chunk_timings.draw()
-
-    To draw the timings for several results on one plot:
-
-    .. code-block:: python
-
-        from qiskit_ibm_runtime.visualization import draw_chunk_timings
-
-        draw_chunk_timings(
-            chunk_timings1,
-            chunk_timings2,
-            names=["job 1", "job 2"],
-            common_start=True,
-        )
-    """
-
-    def __init__(self, spans: Iterable[ChunkSpan]):
-        self._spans = list(spans)
-
-    def __len__(self) -> int:
-        return len(self._spans)
-
-    @overload
-    def __getitem__(self, idxs: int) -> ChunkSpan: ...
-
-    @overload
-    def __getitem__(self, idxs: slice) -> ChunkTiming: ...
-
-    def __getitem__(self, idxs):  # type: ignore[no-untyped-def]
-        if isinstance(idxs, int):
-            return self._spans[idxs]
-        return ChunkTiming(self._spans[idxs])
-
-    def __iter__(self) -> Iterator[ChunkSpan]:
-        return iter(self._spans)
-
-    def __repr__(self) -> str:
-        return f"ChunkTiming({repr(self._spans)})"
-
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, ChunkTiming) and self._spans == other._spans
-
-    @property
-    def start(self) -> datetime.datetime:
-        """The start time of the earliest chunk, in UTC."""
-        return min(span.start for span in self)
-
-    @property
-    def stop(self) -> datetime.datetime:
-        """The stop time of the latest chunk, in UTC."""
-        return max(span.stop for span in self)
-
-    @property
-    def duration(self) -> float:
-        """The total duration from first start to last stop, in seconds."""
-        return (self.stop - self.start).total_seconds()
-
-    def draw(
-        self,
-        name: str | None = None,
-        normalize_y: bool = False,
-        line_width: int = 4,
-        tz: timezone | None = None,
-    ) -> PlotlyFigure:
-        """Draw timing information on a bar plot.
-
-        To draw chunk timings with additional options like ``common_start``, or to draw
-        timings of several jobs on the same axis, consider calling
-        :meth:`~qiskit_ibm_runtime.visualization.draw_chunk_timings` directly.
-
-        Args:
-            name: A label for this set of chunks.
-            normalize_y: Whether to display the y-axis units as a percentage of work complete,
-                rather than cumulative elements completed.
-            line_width: The thickness of line segments.
-            tz: The timezone to use for displaying times. ``None`` (default) uses the local system
-                timezone. Pass ``datetime.timezone.utc`` to display times in UTC.
-
-        Returns:
-            A plotly figure.
-        """
-        from ..visualization import draw_chunk_timings
-
-        return draw_chunk_timings(
-            self, names=name, normalize_y=normalize_y, line_width=line_width, tz=tz
-        )
-
-
 class QuantumProgramItemResult(BaseQuantumProgramItemResult):
     """A container to store results for a single item of a :class:`QuantumProgram`.
 
@@ -272,7 +130,8 @@ class QuantumProgramItemResult(BaseQuantumProgramItemResult):
         result: dict[str, np.ndarray],
         metadata: ItemMetadata | dict | None = None,
     ):
-        super().__init__(result=result, metadata=metadata or ItemMetadata())
+        super().__init__(result=result)
+        self.metadata = metadata or ItemMetadata()
 
     def __getitem__(self, key: str) -> np.ndarray:
         return self._result[key]
@@ -315,9 +174,9 @@ class QuantumProgramResult(BaseQuantumProgramResult):
                 else QuantumProgramItemResult(datum)
                 for datum in data
             ],
-            metadata=metadata or Metadata(),
             passthrough_data=passthrough_data,
         )
+        self.metadata = metadata or Metadata()
 
         # Semantic role indicating how execution results may be post-processed by runtime clients.
         # Reserved system values include 'sampler-v2' and 'estimator-v2', and are subject to change
@@ -343,7 +202,7 @@ class QuantumProgramResult(BaseQuantumProgramResult):
 
         .. code-block:: python
 
-            from qiskit_ibm_runtime.visualization import draw_chunk_timings
+            from samplomatic.visualization.draw_chunk_timings import draw_chunk_timings
 
             draw_chunk_timings(
                 job1.result().timing,
