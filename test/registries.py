@@ -126,7 +126,7 @@ class Job:
     backend_name: str
     """Backend name."""
 
-    program: Literal["sampler", "estimator"] = "sampler"
+    program: Literal["sampler", "estimator", "executor"] = "sampler"
 
     status: Literal["queued", "running", "completed", "cancelled", "failed"] = "completed"
     """Job status."""
