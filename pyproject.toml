@@ -148,12 +148,6 @@ split-on-trailing-comma = false
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.pytest.ini_options]
-# By default do not run benchmarks in benchmarking mode, but as normal tests.
-# This will - depending on the benchmark - reduce test time by selecting a reduced problem size,
-# skip warmup and execute only a single round.
-addopts = "--benchmark-disable"
-
 [project]
 name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]

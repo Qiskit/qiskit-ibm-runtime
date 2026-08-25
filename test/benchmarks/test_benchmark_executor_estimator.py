@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
 
 import numpy as np
-import pytest
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -36,7 +35,6 @@ from qiskit_ibm_runtime.results.quantum_program import (
 from ..utils import make_mirror_circuit_with_phases
 
 
-@pytest.mark.benchmark
 def test_executor_estimator_prepare(benchmark):
     """Benchmark the prepare() method from executor_estimator/prepare.py."""
     backend = FakeBrisbane()
@@ -66,7 +64,6 @@ def test_executor_estimator_prepare(benchmark):
     benchmark(run_prepare)
 
 
-@pytest.mark.benchmark
 def test_executor_estimator_post_processor(benchmark):
     """Benchmark the estimator post-processor via QuantumProgramResultDecoder."""
     backend = FakeBrisbane()
