@@ -524,7 +524,7 @@ def _process_expectation_values_pec(
     return exp_vals, stds, ensemble_stds
 
 
-def create_result_item_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
+def create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
     """Build the metadata dict for a single result item.
 
     For hardware results (``ItemMetadata``), extracts compilation-related fields
@@ -582,7 +582,7 @@ def create_pub_result(
         evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
     )
 
-    result_item_metadata = create_result_item_metadata(item_result.metadata)
+    result_item_metadata = create_pub_result_metadata(item_result.metadata)
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
@@ -615,7 +615,7 @@ def create_pub_result_pec(
         evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
     )
 
-    result_item_metadata = create_result_item_metadata(item_result.metadata)
+    result_item_metadata = create_pub_result_metadata(item_result.metadata)
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
@@ -691,7 +691,7 @@ def create_pub_result_pea(
         shape=zero_noise_exp_vals.shape,
     )
 
-    result_item_metadata = create_result_item_metadata(item_result.metadata)
+    result_item_metadata = create_pub_result_metadata(item_result.metadata)
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
@@ -861,7 +861,7 @@ def create_pub_result_zne(
         shape=zero_noise_exp_vals.shape,
     )
 
-    per_item = [create_result_item_metadata(item_result.metadata) for item_result in item_results]
+    per_item = [create_pub_result_metadata(item_result.metadata) for item_result in item_results]
     result_item_metadata = {key: [item[key] for item in per_item] for key in per_item[0]}
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
