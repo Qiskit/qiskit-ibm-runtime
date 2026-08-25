@@ -22,7 +22,9 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
+from samplomatic import Tag
 from samplomatic.quantum_program import CircuitItem, SamplexItem
+from samplomatic.utils import get_annotation
 
 from ..results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
@@ -76,10 +78,15 @@ def run_quantum_program(
 
     rng = np.random.default_rng(seed)
 
-    result_list = []
+    noise_dict = {}
+    if layer_noise_model := options.layer_noise_model:
+        for instr, pauli_map in layer_noise_model:
+            if annotation := get_annotation(instr.operation, Tag):
+                noise_dict[annotation.ref] = pauli_map
 
+    result_list = []
     for prog_item in program.items:
-        if (noise_dict := options.noise_model) is not None:
+        if noise_dict:
             circuit = PassManager(
                 [InsertNoisePass(noise_dict=noise_dict, warn_absent=options.warn_absent)]
             ).run(prog_item.circuit)

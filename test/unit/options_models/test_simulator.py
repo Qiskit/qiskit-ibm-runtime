@@ -16,6 +16,8 @@ from unittest.mock import patch
 
 from ddt import data, ddt
 from pydantic import ValidationError
+from qiskit.circuit import QuantumCircuit
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler import CouplingMap
 
 from qiskit_ibm_runtime.options_models.simulator import (
@@ -34,9 +36,30 @@ class TestExperimentalSimulatorOptions(IBMTestCase):
         options = ExperimentalSimulatorOptions()
 
         self.assertEqual(options.angle_decimals, 5)
-        self.assertIsNone(options.noise_model)
+        self.assertIsNone(options.layer_noise_model)
         self.assertIsNone(options.seed_simulator)
         self.assertTrue(options.warn_absent)
+
+    def test_layer_noise_model_validation(self):
+        """Test that the validation for ``layer_noise_model`` works."""
+        circuit = QuantumCircuit(2)
+        circuit.x(0)
+        with circuit.box():
+            circuit.cx(0, 1)
+        not_box, box = circuit.data
+
+        options = ExperimentalSimulatorOptions(
+            layer_noise_model=[(box, PauliLindbladMap.identity(2))]
+        )
+        self.assertEqual(options.layer_noise_model, [(box, PauliLindbladMap.identity(2))])
+
+        with self.assertRaisesRegex(ValidationError, "does not contain a box"):
+            ExperimentalSimulatorOptions(
+                layer_noise_model=[(not_box, PauliLindbladMap.identity(2))]
+            )
+
+        with self.assertRaisesRegex(ValidationError, "Found instruction with 2"):
+            ExperimentalSimulatorOptions(layer_noise_model=[(box, PauliLindbladMap.identity(1))])
 
 
 @ddt

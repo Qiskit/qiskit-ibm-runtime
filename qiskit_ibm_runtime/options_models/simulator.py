@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from typing import Annotated, TypeAlias
 
-from pydantic import Field, InstanceOf
+from pydantic import AfterValidator, Field, InstanceOf
+from qiskit.circuit import BoxOp, CircuitInstruction
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.quantum_info import PauliLindbladMap
@@ -35,6 +36,26 @@ else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
+def validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseModel | None:
+    """Validate the ``LayerNoiseModel``."""
+    if value:
+        instruction, noise = value
+        if not isinstance(instruction.operation, BoxOp):
+            raise ValueError("Found an instruction that does not contain a box.")
+        if len(instruction.qubits) != noise.num_qubits:
+            raise ValueError(
+                f"Found instruction with {len(instruction.qubits)}"
+                f"qubits but a noise model with {noise.num_qubits}."
+            )
+    return value
+
+
+LayerNoiseModel: TypeAlias = Annotated[
+    tuple[Annotated[CircuitInstruction, InstanceOf], Annotated[PauliLindbladMap, InstanceOf]],
+    AfterValidator(validate_layer_noise_model),
+]
+
+
 class ExperimentalSimulatorOptions(BaseOptionsModel):
     """Simulator options."""
 
@@ -46,8 +67,8 @@ class ExperimentalSimulatorOptions(BaseOptionsModel):
     angles are nominally Clifford.
     """
 
-    noise_model: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
-    """A map from ``ref`` of a :class:`~samplomatic.Tag` annotations to PauliLindblad noise maps."""
+    layer_noise_model: list[LayerNoiseModel] | None = None
+    """Noise model specified by a collection of instructions and the noise that affects them."""
 
     seed_simulator: int | None = None
     """Random seed to control sampling."""
