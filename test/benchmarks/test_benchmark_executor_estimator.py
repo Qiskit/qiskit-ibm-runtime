@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives import EstimatorPubLike
 
     from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
@@ -104,7 +105,7 @@ def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
     options = EstimatorOptions()
     options.update(**variant_options)
     if variant_id in NEEDS_NOISE_MODEL:
-        options.resilience.noise_model = create_noise_model(coerced_pubs, options)
+        options.resilience.layer_noise_model = create_noise_model(coerced_pubs, options)
 
     def run_prepare():
         prepare(
@@ -141,7 +142,7 @@ def test_executor_estimator_post_processor(benchmark, variant_id, variant_option
     options = EstimatorOptions()
     options.update(**variant_options)
     if variant_id in NEEDS_NOISE_MODEL:
-        options.resilience.noise_model = create_noise_model(pubs, options)
+        options.resilience.layer_noise_model = create_noise_model(pubs, options)
 
     # Run prepare once to get the quantum program structure for this variant
     quantum_program, _ = prepare(
@@ -190,7 +191,9 @@ def create_test_pubs(backend, num_qubits, num_layers):
     return [(isa_circuit, observables, parameter_values)]
 
 
-def create_noise_model(pubs: Iterable[EstimatorPubLike], options: EstimatorOptions) -> dict:
+def create_noise_model(
+    pubs: Iterable[EstimatorPubLike], options: EstimatorOptions
+) -> list[tuple[CircuitInstruction, PauliLindbladMap]]:
     """Build a simple Pauli-Lindblad noise model."""
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
@@ -204,12 +207,11 @@ def create_noise_model(pubs: Iterable[EstimatorPubLike], options: EstimatorOptio
         else None,
         inject_noise=True,
     )
-    noise_model = {}
+    noise_model = []
     for layer in layers:
-        annot = get_annotation(layer.operation, InjectNoise)
-        if annot is not None:
+        if get_annotation(layer.operation, InjectNoise) is not None:
             n = layer.operation.num_qubits
-            noise_model[annot.ref] = PauliLindbladMap.from_list([("X" * n, 0.005)])
+            noise_model.append((layer, PauliLindbladMap.from_list([("X" * n, 0.005)])))
     return noise_model
 
 
