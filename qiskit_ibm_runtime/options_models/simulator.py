@@ -36,7 +36,7 @@ else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
-def _validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseModel | None:
+def validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseModel | None:
     """Validate the ``LayerNoiseModel``."""
     if value:
         instruction, noise = value
@@ -52,7 +52,7 @@ def _validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseMode
 
 LayerNoiseModel: TypeAlias = Annotated[
     tuple[Annotated[CircuitInstruction, InstanceOf], Annotated[PauliLindbladMap, InstanceOf]],
-    AfterValidator(_validate_layer_noise_model),
+    AfterValidator(validate_layer_noise_model),
 ]
 
 
