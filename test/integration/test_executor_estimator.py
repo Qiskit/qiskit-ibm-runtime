@@ -178,4 +178,6 @@ class TestEstimator(IBMIntegrationTestCase):
 
             # Selected extrapolators must be one the requested extrapolators or `multiple`
             allowed = {*estimator.options.resilience.zne.extrapolator, "multiple"}
-            self.assertTrue(set(metadata["resilience"]["zne"]["extrapolators"]).issubset(allowed))
+            self.assertTrue(
+                set(metadata["resilience"]["zne"]["extrapolators"].flatten()).issubset(allowed)
+            )
