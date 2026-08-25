@@ -82,7 +82,6 @@ PREPARE_VARIANTS = {
 NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
 
 
-@pytest.mark.benchmark
 @pytest.mark.parametrize(
     "variant_id,variant_options",
     PREPARE_VARIANTS.items(),
@@ -119,7 +118,6 @@ def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
     benchmark(run_prepare)
 
 
-@pytest.mark.benchmark
 @pytest.mark.parametrize(
     "variant_id,variant_options",
     PREPARE_VARIANTS.items(),
