@@ -862,8 +862,7 @@ def create_pub_result_zne(
     )
 
     per_item = [create_result_item_metadata(item_result.metadata) for item_result in item_results]
-    key = next(iter(per_item[0]))  # either "compilation" or "executor"
-    result_item_metadata = {key: [item[key] for item in per_item]}
+    result_item_metadata = {key: [item[key] for item in per_item] for key in per_item[0]}
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
