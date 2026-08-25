@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.circuit import Parameter
-from qiskit.quantum_info import Operator, PauliLindbladMap, SparsePauliOp
+from qiskit.primitives.containers.estimator_pub import ObservablesArray
+from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
 
-def create_estimator_test_data(backend, preset_pass_manager):
+def create_estimator_test_data(backend, preset_pass_manager, include_projectors):
     """Create a pub and ideal expectation values for it.
 
     The circuit will use 3 qubits and only a subset of observable combinations.
@@ -57,28 +58,21 @@ def create_estimator_test_data(backend, preset_pass_manager):
 
     observable_ideal_ev_pairs: list[tuple[str, float]] = [
         ("IYZ", y_q1 * z_q0),  # ≈ 0.701
-        ("Irl", r_q1 * l_q0),  # ≈ 0.741
         ("XII", x_q2),  # ≈ 0.707
     ]
 
-    # FIXME: Composing observables from plain `Operator` instead of directly passing strings,
-    # due to a bug in TREX post-processing affecting resilience levels > 0:
-    # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-    # Once this is fixed, we can do:
-    # observables = [obs_string for obs_string, _ in observable_ideal_ev_pairs]
-    observables = [
-        SparsePauliOp.from_operator(Operator.from_label(obs_string)).apply_layout(
-            isa_circuit.layout
-        )
-        for obs_string, _ in observable_ideal_ev_pairs
-    ]
+    if include_projectors:
+        observable_ideal_ev_pairs.append(("Irl", r_q1 * l_q0))  # ≈ 0.741
+
+    observables = ObservablesArray([obs for obs, _ in observable_ideal_ev_pairs])
+    observables = observables.apply_layout(isa_circuit.layout)
 
     pub = (isa_circuit, observables, parameters)
 
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
 
-def create_estimator_test_data_extended(backend, preset_pass_manager):
+def create_estimator_test_data_extended(backend, preset_pass_manager, include_projectors):
     """Create a pub and ideal expectation values for it.
 
     The circuit will use 4 qubits and try to use an extensive list of observables to provide
@@ -109,31 +103,33 @@ def create_estimator_test_data_extended(backend, preset_pass_manager):
     proj_q2 = (1 + sq2_half) / 2
     z0_q0 = (1 + np.cos(theta)) / 2
 
-    # FIXME: Composing observables from plain `Operator` instead of directly passing strings,
-    # due to a bug in TREX post-processing affecting resilience levels > 0:
-    # https://github.com/Qiskit/qiskit-ibm-runtime/issues/3225
-    # Once this is fixed, we can pass the label strings directly.
-    def _obs(label):
-        return SparsePauliOp.from_operator(Operator.from_label(label)).apply_layout(
-            isa_circuit.layout
-        )
-
-    observable_ideal_ev_pairs: list[tuple[SparsePauliOp, float]] = [
-        (_obs("IIrl"), r_q1 * l_q0),  # ≈ 0.741
-        (_obs("IIrZ"), r_q1 * z_q0),  # ≈ 0.755
-        (_obs("I+YI"), proj_q2 * y_q1),  # ≈ 0.740
-        (_obs("-IYI"), proj_q2 * y_q1),  # ≈ 0.740
-        (_obs("IIY0"), y_q1 * z0_q0),  # ≈ 0.783
-        (_obs("I1YI"), proj_q2 * y_q1),  # ≈ 0.740
-        (_obs("IXII"), x_q2),  # ≈ 0.707
+    observable_ideal_ev_pairs = [
+        ("IIYZ", z_q0 * y_q1),  # ≈ 0.700
+        ("IXII", x_q2),  # ≈ 0.707
         # Weighted linear combination:
         (
-            2.0 * _obs("-IrI") - 1.0 * _obs("1IYI"),
-            2.0 * proj_q2 * r_q1 - 1.0 * proj_q2 * y_q1,
-        ),  # ≈ 0.854
+            SparsePauliOp.from_list([("IIYZ", 0.7), ("IXII", 0.5)]),
+            0.7 * z_q0 * y_q1 + 0.5 * x_q2,
+        ),  # ≈ 0.843
     ]
 
-    pub = (isa_circuit, [obs for obs, _ in observable_ideal_ev_pairs], parameters)
+    if include_projectors:
+        observable_ideal_ev_pairs.extend(
+            [
+                ("IIrl", r_q1 * l_q0),  # ≈ 0.741
+                ("IIrZ", r_q1 * z_q0),  # ≈ 0.755
+                ("I+YI", proj_q2 * y_q1),  # ≈ 0.740
+                ("-IYI", proj_q2 * y_q1),  # ≈ 0.740
+                ("IIY0", y_q1 * z0_q0),  # ≈ 0.783
+                ("I1YI", proj_q2 * y_q1),  # ≈ 0.740
+            ]
+        )
+
+    observables = ObservablesArray([obs for obs, _ in observable_ideal_ev_pairs]).apply_layout(
+        isa_circuit.layout
+    )
+
+    pub = (isa_circuit, observables, parameters)
 
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
