@@ -439,7 +439,7 @@ class TestBoxCircuit(IBMTestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy="all",
-            twirling_group="balanced_pauli",
+            twirling_group="local_pauli",
             add_tags=add_tags,
         )
 
