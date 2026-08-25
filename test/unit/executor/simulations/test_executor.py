@@ -152,8 +152,8 @@ class TestExecutor(IBMTestCase):
         ]
         fidelities = []
         for pauli_map in pauli_maps:
-            executor.options.experimental["simulator_options"].layer_noise_model = list(
-                zip(unique_instructions, (pauli_map,) * len(unique_instructions))
+            executor.options.experimental["simulator_options"].layer_noise_model = zip(
+                unique_instructions, (pauli_map,) * len(unique_instructions)
             )
             job = executor.run(program)
             result = job.result()

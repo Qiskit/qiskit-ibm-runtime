@@ -14,14 +14,10 @@
 
 from __future__ import annotations
 
-from typing import Annotated
-
-from pydantic import InstanceOf
-from qiskit.quantum_info import PauliLindbladMap
-
 from .base import BaseOptionsModel
 from .measure_noise_learning import MeasureNoiseLearningOptions
 from .pec import PecOptions
+from .simulator import LayerNoiseModel
 from .zne import ZneOptions
 
 
@@ -69,10 +65,5 @@ class ResilienceOptions(BaseOptionsModel):
     zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options."""
 
-    noise_model: dict[str, Annotated[PauliLindbladMap, InstanceOf]] = {}
-    """A noise model mapping for PEC mitigation.
-
-    Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that
-    describe the noise characteristics of that layer. The dict contains layers from all PUBs. This
-    is required when using PEC mitigation, or ZNE with PEA amplifier.
-    """
+    layer_noise_model: list[LayerNoiseModel] | None = None
+    """Noise model specified by a collection of instructions and the noise that affects them."""
