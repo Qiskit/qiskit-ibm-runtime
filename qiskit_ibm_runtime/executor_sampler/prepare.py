@@ -213,6 +213,7 @@ def _build_quantum_program(
             twirling_strategy=finalized_options.twirling.strategy.replace("-", "_"),
             inject_noise_site="after",
             add_tags="unique_box" if add_tags else "none",
+            twirling_group=finalized_options.twirling.group,
         )
 
         for i, pub in enumerate(coerced_pubs):

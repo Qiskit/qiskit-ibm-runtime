@@ -19,6 +19,7 @@ from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from samplomatic import Tag
+from samplomatic.exceptions import BuildError
 from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -31,6 +32,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, Samp
 from ...ibm_test_case import IBMTestCase
 
 
+@ddt
 class TestPrepare(IBMTestCase):
     """Tests for prepare method."""
 
@@ -196,6 +198,28 @@ class TestPrepare(IBMTestCase):
 
         self.assertIn("BoxOp", str(context.exception))
         self.assertIn("not supported", str(context.exception))
+
+    @data("pauli", "balanced_pauli", "local_c1", "local_pauli")
+    def test_circuit_with_parametric_rzz_and_twirling(self, group):
+        """Test the ``prepare`` function for PUBs that contain parametric RZZ gates.
+
+        ``prepare`` should not raise when ``group`` is ``"local_pauli``.
+        """
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.twirling.group = group
+
+        circuit = QuantumCircuit(2)
+        circuit.rzz(Parameter("theta"), 0, 1)
+        params = np.random.random((1,))
+
+        pubs = [(circuit, params)]
+
+        if group in {"pauli", "balanced_pauli", "local_c1"}:
+            with self.assertRaisesRegex(BuildError, "GroupMode LOCAL_PAULI"):
+                prepare(pubs, options)
+        else:
+            prepare(pubs, options)
 
 
 class TestPrepareOptionsHandling(IBMTestCase):
