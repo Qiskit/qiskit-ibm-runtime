@@ -126,6 +126,9 @@ class TestEstimator(IBMIntegrationTestCase):
               ``ensemble_stds_noise_factors``: ``(*pub_shape, num_noise_factors)``
             * ``evs_extrapolated``, ``stds_extrapolated``:
               ``(*pub_shape, num_extrapolators, num_extrapolated_noise_factors)``
+
+        - Correct shape and make-up for all ZNE-specific pub metadata fields:
+            * ``extrapolators``: pub shape, only requested extrapolators or `multiple`.
         """
         estimator = EstimatorV2(self.backend)
         estimator.options.resilience.zne_mitigation = True
@@ -150,10 +153,14 @@ class TestEstimator(IBMIntegrationTestCase):
 
         for pub_idx, expected_pub_shape in enumerate([(2, 2), (2,)]):
             data_bin = results[pub_idx].data
+            metadata = results[pub_idx].metadata
 
-            # evs and stds: pub shape only
+            # evs, stds and selected extrapolators metadata: pub shape only
             self.assertEqual(data_bin.evs.shape, expected_pub_shape)
             self.assertEqual(data_bin.stds.shape, expected_pub_shape)
+            self.assertEqual(
+                metadata["resilience"]["zne"]["extrapolators"].shape, expected_pub_shape
+            )
 
             # noise-factor arrays: (*pub_shape, num_noise_factors)
             expected_nf_shape = expected_pub_shape + (expected_num_noise_factors,)
@@ -168,3 +175,7 @@ class TestEstimator(IBMIntegrationTestCase):
             )
             self.assertEqual(data_bin.evs_extrapolated.shape, expected_extrap_shape)
             self.assertEqual(data_bin.stds_extrapolated.shape, expected_extrap_shape)
+
+            # Selected extrapolators must be one the requested extrapolators or `multiple`
+            allowed = {*estimator.options.resilience.zne.extrapolator, "multiple"}
+            self.assertTrue(set(metadata["resilience"]["zne"]["extrapolators"]).issubset(allowed))
