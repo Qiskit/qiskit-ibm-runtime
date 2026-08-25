@@ -144,10 +144,10 @@ class EstimatorV2(BaseEstimatorV2):
             layers = est.find_unique_layers(pubs, types="gates")
 
             results = NoiseLearnerV3(mode).run(layers).result()
-            noise_model = results.to_dict(layers)
+            pauli_linblad_maps = results.to_pauli_lindblad_maps()
 
             # Assign the learned model so PEC uses it on the next run.
-            est.options.resilience.noise_model = noise_model
+            est.options.resilience.layer_noise_model = zip(layers, pauli_linblad_maps)
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
@@ -261,6 +261,9 @@ class EstimatorV2(BaseEstimatorV2):
         quantum_program, executor_options = prepare(
             pubs, self.options, precision, add_tags=local_mode, backend=self._backend
         )
+
+        # Set semantic role for post-processing dispatch
+        quantum_program._semantic_role = "estimator_v2"
 
         executor = Executor(mode=self._backend, options=executor_options)
 

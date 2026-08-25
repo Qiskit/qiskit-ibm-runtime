@@ -164,7 +164,4 @@ def prepare_vanilla(
         logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
         passthrough_data["post_processor"]["measure_mitigation"] = True
 
-    # Set semantic role for post-processing dispatch
-    quantum_program._semantic_role = "estimator_v2"
-
     return quantum_program

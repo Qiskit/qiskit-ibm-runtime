@@ -658,8 +658,6 @@ def create_pub_result_pea(
             "parameters ``(pea_noise_factors, extrapolated_noise_factors, "
             "extrapolator)`` in the ``passthrough_data`` is ``None``."
         )
-    # TODO: The last returned value is the selected extrapolators, that should be saved in the
-    # metadata
     (
         zero_noise_exp_vals,
         zero_noise_stds,
@@ -679,6 +677,9 @@ def create_pub_result_pea(
         extrapolator,
         measure_noise_data,
     )
+    selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
+        selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
+    )
 
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
@@ -692,6 +693,7 @@ def create_pub_result_pea(
     )
 
     result_item_metadata = create_pub_result_metadata(item_result.metadata)
+    result_item_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
@@ -747,8 +749,8 @@ def _process_expectation_values_pea(
         ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
         points.
         ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
-        observable term.
+        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
+        observable term for the zero noise extrapolation point.
          ).
 
     Raises:
@@ -828,8 +830,6 @@ def create_pub_result_zne(
             "parameters ``(zne_noise_factors, extrapolated_noise_factors, "
             "extrapolator)`` in the ``passthrough_data`` is ``None``."
         )
-    # TODO: The last returned value is the selected extrapolators, that should be saved in the
-    # metadata
     (
         zero_noise_exp_vals,
         zero_noise_stds,
@@ -849,6 +849,9 @@ def create_pub_result_zne(
         extrapolator,
         measure_noise_data,
     )
+    selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
+        selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
+    )
 
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
@@ -863,6 +866,7 @@ def create_pub_result_zne(
 
     per_item = [create_pub_result_metadata(item_result.metadata) for item_result in item_results]
     result_item_metadata = {key: [item[key] for item in per_item] for key in per_item[0]}
+    result_item_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
 
     return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
@@ -917,8 +921,8 @@ def _process_expectation_values_zne(
         ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
         points.
         ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
-        observable term.
+        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
+        observable term for the zero noise extrapolation point.
          ).
 
     Raises:
@@ -962,6 +966,34 @@ def _process_expectation_values_zne(
         extrapolator,
         measure_noise_data,
     )
+
+
+def combine_selected_extrapolators_per_observable(
+    selected_extrapolators: list[list[str]], output_shape: tuple[int, ...]
+) -> np.ndarray:
+    """Combines multiple extrapolator records into a single record for each observable.
+
+    Args:
+        selected_extrapolators: list of lists selected extrapolator names. Each element in the
+            list is a list of all the selected extrapolator records of the different observable
+            terms associated with a single observable.
+        output_shape: Shape of the output of the estimator.
+
+    Returns:
+        An array of the same shape as ``output_shape`` containing the selected extrapolator for
+        each observable (for each parameters set). If different extrapolators were selected for
+        different terms of an observable, ``"multiple"`` will be returned for this observable.
+    """
+    extrapolator_per_observable = []
+    for observable_terms_extrapolators in selected_extrapolators:
+        common_extrapolator = observable_terms_extrapolators[0]
+        if all(
+            extrapolator == common_extrapolator for extrapolator in observable_terms_extrapolators
+        ):
+            extrapolator_per_observable.append(common_extrapolator)
+        else:
+            extrapolator_per_observable.append("multiple")
+    return np.array(extrapolator_per_observable).reshape(output_shape)
 
 
 def calculate_extrapolated_expectation_values(
@@ -1015,8 +1047,8 @@ def calculate_extrapolated_expectation_values(
         ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
         points.
         ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, he valid extrapolators used to extrapolate the data for each
-        observable term.
+        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
+        observable term for the zero noise extrapolation point.
          ).
 
     Raises:
@@ -1146,7 +1178,7 @@ def calculate_extrapolated_expectation_values(
                     (coeff**2) * term_twirl_variance * term_scale_factor**2
                 )
 
-            selected_exp_vals, selected_stds, sel_extrapolators, extrap_exp_vals, extrap_stds = (
+            zero_noise_exp_val, zero_noise_std, sel_extrapolator, extrap_exp_vals, extrap_stds = (
                 process_extrapolated_expectation_values(
                     noise_scaled_exp_vals,
                     noise_scaled_ensemble_std,
@@ -1157,12 +1189,13 @@ def calculate_extrapolated_expectation_values(
                 )
             )
 
-            selected_extrapolators_per_term.append(sel_extrapolators)
+            # Only the selected extrapolator of the zero point is returned
+            selected_extrapolators_per_term.append(sel_extrapolator)
             zero_extrapolated_exp_vals[bcast_index] += (
-                coeff * selected_exp_vals[0] * term_scale_factor
+                coeff * zero_noise_exp_val * term_scale_factor
             )
             zero_extrapolated_vars[bcast_index] += (
-                (coeff**2) * (selected_stds[0] ** 2) * (term_scale_factor**2)
+                (coeff**2) * (zero_noise_std**2) * (term_scale_factor**2)
             )
 
             for model_index, (extrap_model_exp_val, extrap_model_std) in enumerate(

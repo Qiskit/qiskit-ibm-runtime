@@ -265,26 +265,11 @@ class TestSelectZneExtrapolatedResult(IBMTestCase):
         """Picks the highest-priority valid model, else the lowest-stderr fallback."""
         values = np.array(values, dtype=float)
         stderrs = np.array(stderrs, dtype=float)
-        res_values, res_stderrs, res_extraps = select_zne_extrapolated_result(
+        zero_point_exp_val, zero_point_stderr, res_extrap = select_zne_extrapolated_result(
             values, stderrs, observable_term, extraps
         )
-        self.assertEqual(res_values[0], expected_value)
-        self.assertEqual(res_extraps[0], expected_extrapolator)
-
-    def test_selects_per_column_independently(self):
-        """Each noise-factor column is selected independently."""
-        values = np.array([[0.2, np.nan], [0.3, 0.4]])  # basis "Z" -> range (-1, 1)
-        stderrs = np.array([[0.1, 0.1], [0.1, 0.1]])
-        extraps = ["exponential", "linear"]
-        res_values, res_stderrs, res_extraps = select_zne_extrapolated_result(
-            values, stderrs, "Z", extraps
-        )
-        # col 0: model 0 valid -> 0.2; col 1: model 0 is NaN -> model 1 -> 0.4
-        np.testing.assert_array_equal(res_values, [0.2, 0.4])
-        np.testing.assert_array_equal(res_extraps, ["exponential", "linear"])
-        # output shape matches the number of extrapolation columns (not stacked)
-        self.assertEqual(res_values.shape, (2,))
-        self.assertEqual(res_stderrs.shape, (2,))
+        self.assertEqual(zero_point_exp_val, expected_value)
+        self.assertEqual(res_extrap, expected_extrapolator)
 
 
 @ddt
@@ -411,7 +396,7 @@ class TestProcessExtrapolatedExpectationValues(IBMTestCase):
 
     def test_end_to_end_returns_selected_values(self):
         """Returns the selected extrapolated value at the target noise factor."""
-        result_vals, result_stds, result_extraps, extrapolated_vals, extrapolated_std = (
+        zero_noise_exp_val, zero_noise_std, result_extrap, extrapolated_vals, extrapolated_std = (
             process_extrapolated_expectation_values(
                 self._EXP_VALS,
                 self._STDERRS,
@@ -421,15 +406,15 @@ class TestProcessExtrapolatedExpectationValues(IBMTestCase):
                 extrapolated_noise_factors=0.0,
             )
         )
-        # shape: (2,) because zero is added to the extrapolated noise factor
-        self.assertEqual(result_vals.shape, (2,))
-        np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
-        self.assertTrue(np.all(np.isfinite(result_stds)))
-        np.testing.assert_array_equal(result_extraps[0], "linear")
+        # The shape is (1,2) because there are extrapolator methods and 1 extrapolation factor
+        self.assertEqual(extrapolated_vals.shape, (2, 1))
+        self.assertAlmostEqual(zero_noise_exp_val, 0.65, 3)
+        self.assertTrue(np.isfinite(zero_noise_std))
+        self.assertEqual(result_extrap, "linear")
 
     def test_string_extrapolator_is_wrapped(self):
         """A single model name (not a list) is accepted."""
-        result_vals, result_stds, result_extraps, extrapolated_vals, extrapolated_std = (
+        zero_noise_exp_val, zero_noise_std, result_extrap, extrapolated_vals, extrapolated_std = (
             process_extrapolated_expectation_values(
                 self._EXP_VALS,
                 self._STDERRS,
@@ -439,12 +424,11 @@ class TestProcessExtrapolatedExpectationValues(IBMTestCase):
                 extrapolated_noise_factors=0.0,
             )
         )
-        self.assertEqual(result_vals.shape, (2,))
-        np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
+        self.assertAlmostEqual(zero_noise_exp_val, 0.65, 3)
 
     def test_multiple_extrapolated_noise_factors(self):
         """When multiple extrapolation targets are given, output has one entry per target."""
-        result_vals, result_stds, result_extraps, extrapolated_vals, extrapolated_std = (
+        zero_noise_exp_val, zero_noise_std, result_extrap, extrapolated_vals, extrapolated_std = (
             process_extrapolated_expectation_values(
                 self._EXP_VALS,
                 self._STDERRS,
@@ -454,11 +438,11 @@ class TestProcessExtrapolatedExpectationValues(IBMTestCase):
                 extrapolated_noise_factors=[0.0, 1.0],
             )
         )
-        # shape: (3,) because zero is added to the extrapolated noise factor
-        self.assertEqual(result_vals.shape, (3,))
-        np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
-        np.testing.assert_allclose(result_vals[1], 0.65, rtol=1e-6)
-        np.testing.assert_allclose(result_vals[2], 0.6, rtol=1e-6)
+        # The shape is (1,2) because there is 1 extrapolator method and 2 extrapolation factors
+        self.assertEqual(extrapolated_vals.shape, (1, 2))
+        self.assertAlmostEqual(zero_noise_exp_val, 0.65, 3)
+        np.testing.assert_allclose(extrapolated_vals[0, 0], 0.65, rtol=1e-6)
+        np.testing.assert_allclose(extrapolated_vals[0, 1], 0.6, rtol=1e-6)
 
     def test_unsupported_model_name_raises(self):
         """An unrecognized extrapolator name raises ``ValueError``."""
