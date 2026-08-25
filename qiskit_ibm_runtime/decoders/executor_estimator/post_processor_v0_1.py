@@ -620,10 +620,12 @@ def create_pub_result_pea(
         extrapolator,
         measure_noise_data,
     )
-    # TODO: save selected_extrapolators_per_obs in the metadata
-    # selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
-    #     selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
-    # )
+    selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
+        selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
+    )
+
+    pub_metadata = {}
+    pub_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
 
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
@@ -635,7 +637,7 @@ def create_pub_result_pea(
         stds_extrapolated=extrapolated_stds,
         shape=zero_noise_exp_vals.shape,
     )
-    return EstimatorPubResult(data=data_bin)
+    return EstimatorPubResult(data=data_bin, metadata=pub_metadata)
 
 
 def _process_expectation_values_pea(
@@ -789,10 +791,12 @@ def create_pub_result_zne(
         extrapolator,
         measure_noise_data,
     )
-    # TODO: save selected_extrapolators_per_obs in the metadata
-    # selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
-    #     selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
-    # )
+    selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
+        selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
+    )
+
+    pub_metadata = {}
+    pub_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
 
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
@@ -804,7 +808,7 @@ def create_pub_result_zne(
         stds_extrapolated=extrapolated_stds,
         shape=zero_noise_exp_vals.shape,
     )
-    return EstimatorPubResult(data=data_bin)
+    return EstimatorPubResult(data=data_bin, metadata=pub_metadata)
 
 
 def _process_expectation_values_zne(
