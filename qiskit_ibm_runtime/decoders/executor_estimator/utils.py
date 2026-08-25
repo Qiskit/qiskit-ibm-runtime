@@ -15,13 +15,9 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.quantum_info import Pauli
-
-if TYPE_CHECKING:
-    from qiskit.quantum_info import Pauli
 
 # Mapping for projecting observable terms to Z computational basis
 CHAR_TO_Z_CHARS = (

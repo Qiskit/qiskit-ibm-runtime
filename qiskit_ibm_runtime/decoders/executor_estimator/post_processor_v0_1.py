@@ -30,11 +30,11 @@ from qiskit.primitives import DataBin, PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
-from ...executor_estimator.zne.extrapolation import process_extrapolated_expectation_values
 from ...results.estimator_pub import EstimatorPubResult
 from ...results.quantum_program import QuantumProgramResult
 from .trex_utils import calculate_trex_factor, get_processed_calibration_data
 from .utils import compute_exp_val, get_pauli_basis, identify_measure_basis, unbroadcast_index
+from .zne_extrapolation import process_extrapolated_expectation_values
 
 logger = logging.getLogger(__name__)
 
