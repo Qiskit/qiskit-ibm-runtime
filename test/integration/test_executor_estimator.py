@@ -150,10 +150,14 @@ class TestEstimator(IBMIntegrationTestCase):
 
         for pub_idx, expected_pub_shape in enumerate([(2, 2), (2,)]):
             data_bin = results[pub_idx].data
+            metadata = results[pub_idx].metadata
 
-            # evs and stds: pub shape only
+            # evs, stds and selected extrapolators metadata: pub shape only
             self.assertEqual(data_bin.evs.shape, expected_pub_shape)
             self.assertEqual(data_bin.stds.shape, expected_pub_shape)
+            self.assertEqual(
+                metadata["resilience"]["zne"]["extrapolators"].shape, expected_pub_shape
+            )
 
             # noise-factor arrays: (*pub_shape, num_noise_factors)
             expected_nf_shape = expected_pub_shape + (expected_num_noise_factors,)
