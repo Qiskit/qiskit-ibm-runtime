@@ -16,9 +16,12 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from dataclasses import asdict
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     import numpy.typing as npt
     from qiskit.quantum_info import PauliLindbladMap
 
@@ -31,12 +34,26 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
 from ...results.estimator_pub import EstimatorPubResult
-from ...results.quantum_program import QuantumProgramResult
+from ...results.quantum_program import ItemMetadata, QuantumProgramResult
 from .trex_utils import calculate_trex_factor, get_processed_calibration_data
 from .utils import compute_exp_val, get_pauli_basis, identify_measure_basis, unbroadcast_index
 from .zne_extrapolation import process_extrapolated_expectation_values
 
 logger = logging.getLogger(__name__)
+
+
+def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict[str, Any]:
+    """Dict factory that converts `expanded_values` tuples to lists.
+
+    Args:
+        key_value_pairs: pairs of (key, value) items
+
+    Returns:
+        A dictionary built from `key_value_pairs`, with the key `expanded_values` containing lists.
+    """
+    stretch_value = dict(key_value_pairs)
+    stretch_value["expanded_values"] = [list(i) for i in stretch_value["expanded_values"]]
+    return stretch_value
 
 
 def _build_program_result_metadata(post_processor_data: dict) -> dict:
@@ -504,6 +521,38 @@ def _process_expectation_values_pec(
     return exp_vals, stds, ensemble_stds
 
 
+def create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
+    """Build the metadata dict for a single result item.
+
+    For IBM backend results (``ItemMetadata``), extracts compilation-related fields
+    such as ``scheduler_timing`` and ``stretch_values`` under a ``"compilation"`` key.
+    For simulator results (plain ``dict``), stores the raw metadata under ``"executor"``.
+
+    Args:
+        item_metadata: Metadata from a single quantum program item result.
+
+    Returns:
+        A dict containing the relevant metadata fields for the pub result.
+    """
+    result_item_metadata: dict[str, Any] = {}
+    if isinstance(item_metadata, ItemMetadata):
+        result_item_metadata["compilation"] = {}
+        if item_metadata.scheduler_timing:
+            result_item_metadata["compilation"]["scheduler_timing"] = {
+                "timing": item_metadata.scheduler_timing.timing,
+                "circuit_duration": item_metadata.scheduler_timing.circuit_duration,
+            }
+        if item_metadata.stretch_values:
+            result_item_metadata["compilation"]["stretch_values"] = [
+                asdict(stretch_value, dict_factory=expanded_values_to_lists)
+                for stretch_value in item_metadata.stretch_values
+            ]
+    else:  # simulator
+        result_item_metadata["executor"] = item_metadata
+
+    return result_item_metadata
+
+
 def create_pub_result(
     item_result: QuantumProgramItemResult,
     observables: ObservablesArray,
@@ -529,7 +578,10 @@ def create_pub_result(
     data_bin = DataBin(
         evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
     )
-    return EstimatorPubResult(data=data_bin)
+
+    result_item_metadata = create_pub_result_metadata(item_result.metadata)
+
+    return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
 
 def create_pub_result_pec(
@@ -559,7 +611,10 @@ def create_pub_result_pec(
     data_bin = DataBin(
         evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
     )
-    return EstimatorPubResult(data=data_bin)
+
+    result_item_metadata = create_pub_result_metadata(item_result.metadata)
+
+    return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
 
 def create_pub_result_pea(
@@ -623,9 +678,6 @@ def create_pub_result_pea(
         selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
     )
 
-    pub_metadata = {}
-    pub_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
-
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
         stds=zero_noise_stds,
@@ -636,7 +688,11 @@ def create_pub_result_pea(
         stds_extrapolated=extrapolated_stds,
         shape=zero_noise_exp_vals.shape,
     )
-    return EstimatorPubResult(data=data_bin, metadata=pub_metadata)
+
+    result_item_metadata = create_pub_result_metadata(item_result.metadata)
+    result_item_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
+
+    return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
 
 def _process_expectation_values_pea(
@@ -794,9 +850,6 @@ def create_pub_result_zne(
         selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
     )
 
-    pub_metadata = {}
-    pub_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
-
     data_bin = DataBin(
         evs=zero_noise_exp_vals,
         stds=zero_noise_stds,
@@ -807,7 +860,14 @@ def create_pub_result_zne(
         stds_extrapolated=extrapolated_stds,
         shape=zero_noise_exp_vals.shape,
     )
-    return EstimatorPubResult(data=data_bin, metadata=pub_metadata)
+
+    per_item = [create_pub_result_metadata(item_result.metadata) for item_result in item_results]
+    result_item_metadata: dict[str, Any] = {
+        key: [item[key] for item in per_item] for key in per_item[0]
+    }
+    result_item_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
+
+    return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
 
 
 def _process_expectation_values_zne(
