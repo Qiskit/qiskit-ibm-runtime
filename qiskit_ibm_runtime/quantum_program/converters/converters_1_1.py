@@ -39,7 +39,8 @@ from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 if TYPE_CHECKING:
     from ibm_quantum_schemas.executor.version_1_1.models import DataTree as DataTreeModel
     from qiskit.circuit import QuantumCircuit
-    from samplomatic.quantum_program.datatree import DataTree
+
+    from ..datatree import DataTree
 
 
 def passthrough_data_to_1_1(passthrough_data: DataTree) -> DataTreeModel:

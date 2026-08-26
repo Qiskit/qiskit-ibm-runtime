@@ -32,7 +32,8 @@ import numpy as np
 from samplomatic import build
 
 from ...exceptions import IBMInputValueError
-from ...quantum_program import QuantumProgram, SamplexItem
+from ...quantum_program import QuantumProgram
+from ...quantum_program.quantum_program import SamplexItem
 from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from ..utils import (
     box_circuit,

@@ -27,7 +27,7 @@ from qiskit.circuit import ClassicalRegister, QuantumCircuit
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
-from ..quantum_program import SamplexItem
+from ..quantum_program.quantum_program import SamplexItem
 
 
 def resolve_trex_num_randomizations(

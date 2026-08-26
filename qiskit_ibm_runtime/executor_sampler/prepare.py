@@ -25,7 +25,8 @@ from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import sampler_option_to_executor_options
-from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
+from ..quantum_program import QuantumProgram
+from ..quantum_program.quantum_program import CircuitItem, SamplexItem
 from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_sampler_options
 from .utils import (

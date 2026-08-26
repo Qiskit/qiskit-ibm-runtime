@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..options_models.dynamical_decoupling import DynamicalDecouplingOptions
-    from ..quantum_program import QuantumProgram
+    from ..quantum_program.quantum_program import QuantumProgram
 
 
 def make_dd_sequence(
