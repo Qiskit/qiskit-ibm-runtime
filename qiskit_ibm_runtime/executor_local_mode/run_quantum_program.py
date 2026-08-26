@@ -25,8 +25,7 @@ from qiskit.utils.optionals import HAS_AER
 from samplomatic import Tag
 from samplomatic.utils import get_annotation
 
-from qiskit_ibm_runtime.quantum_program import CircuitItem, SamplexItem
-
+from ..quantum_program import CircuitItem, SamplexItem
 from ..results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass

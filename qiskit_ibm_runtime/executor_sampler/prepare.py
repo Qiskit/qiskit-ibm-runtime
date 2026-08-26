@@ -21,13 +21,11 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
-from qiskit_ibm_runtime.quantum_program import CircuitItem, SamplexItem
-
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import sampler_option_to_executor_options
-from ..quantum_program import QuantumProgram
+from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_sampler_options
 from .utils import (
@@ -42,10 +40,9 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
-    from qiskit_ibm_runtime.quantum_program import QuantumProgramItem
-
     from ..options_models.executor import ExecutorOptions
     from ..options_models.sampler import SamplerOptions
+    from ..quantum_program import QuantumProgramItem
 
 
 logger = logging.getLogger(__name__)

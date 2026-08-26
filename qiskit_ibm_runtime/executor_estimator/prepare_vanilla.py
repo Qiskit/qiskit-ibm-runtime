@@ -27,10 +27,8 @@ if TYPE_CHECKING:
 
 from samplomatic import build
 
-from qiskit_ibm_runtime.quantum_program import SamplexItem
-
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..quantum_program import QuantumProgram
+from ..quantum_program import QuantumProgram, SamplexItem
 from .trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from .utils import (
     box_circuit,
