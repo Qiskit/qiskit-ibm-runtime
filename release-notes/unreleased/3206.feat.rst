@@ -1,2 +1,2 @@
-- `QuantumProgram`, `QuantumProgramResult`, and related classes are now imported from Samplomatic. Importing them from qiskit-ibm-runtime is deprecated and will be removed in a subsequent release.
+- `QuantumProgramItem`, `CircuitItem`, `SamplexItem`, `DataTree`, `ChunkPart`, `ChunkSpan`, `ChunkTiming`, and `draw_chunk_timings` are now imported from Samplomatic. Importing them from qiskit-ibm-runtime is deprecated and will be removed in a subsequent release.
 - The minimal version of Samplomatic required is now ``0.21.0``.
