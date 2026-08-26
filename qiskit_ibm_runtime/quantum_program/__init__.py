@@ -42,7 +42,7 @@ Classes
 from ..utils.deprecation import issue_deprecation_msg
 from .quantum_program import QuantumProgram
 
-_DEPRECATED_NAMES = frozenset({"CircuitItem", "QuantumProgramItem", "SamplexItem"})
+_DEPRECATED_NAMES = frozenset({"CircuitItem", "QuantumProgramItem", "SamplexItem", "DataTree"})
 
 
 def __getattr__(name: str) -> object:
