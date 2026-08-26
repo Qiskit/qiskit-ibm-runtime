@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from ibm_quantum_schemas.common import BaseParamsModel
 
     from ..options_models import ExecutorOptions
-    from ..quantum_program import QuantumProgram
+    from .quantum_program import QuantumProgram
 
 
 class ParamsConverter(NamedTuple):
