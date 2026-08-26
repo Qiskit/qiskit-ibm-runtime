@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Sequence
 
     import numpy as np
     from samplomatic.quantum_program import ChunkSpan
@@ -132,21 +132,6 @@ class QuantumProgramItemResult(BaseQuantumProgramItemResult):
     ):
         super().__init__(result=result)
         self.metadata = metadata or ItemMetadata()
-
-    def __getitem__(self, key: str) -> np.ndarray:
-        return self._result[key]
-
-    def __setitem__(self, key: str, value: np.array) -> None:
-        self._result[key] = value
-
-    def __delitem__(self, key: str) -> None:
-        del self._result[key]
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self._result)
-
-    def __len__(self) -> int:
-        return len(self._result)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._result}, metadata={self.metadata})"
