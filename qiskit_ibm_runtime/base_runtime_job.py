@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-import queue
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from concurrent import futures
