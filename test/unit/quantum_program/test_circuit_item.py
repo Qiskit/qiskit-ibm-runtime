@@ -15,7 +15,7 @@
 import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 
-from qiskit_ibm_runtime.quantum_program import CircuitItem
+from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem
 
 from ...ibm_test_case import IBMTestCase
 

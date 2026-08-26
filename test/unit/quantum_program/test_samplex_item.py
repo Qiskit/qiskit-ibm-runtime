@@ -17,7 +17,7 @@ from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
 
-from qiskit_ibm_runtime.quantum_program import SamplexItem
+from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMTestCase
 

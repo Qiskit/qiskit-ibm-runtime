@@ -17,7 +17,7 @@ import datetime
 import numpy as np
 from ddt import ddt
 
-from qiskit_ibm_runtime.results import (
+from qiskit_ibm_runtime.results.quantum_program import (
     ChunkPart,
     ChunkSpan,
     ChunkTiming,
