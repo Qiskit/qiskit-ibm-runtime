@@ -27,7 +27,7 @@ import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.quantum_program import SamplexItem
+from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from .decorators import integration_test_setup
 from .utils import bell

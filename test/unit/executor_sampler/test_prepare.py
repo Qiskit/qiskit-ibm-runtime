@@ -25,7 +25,8 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
-from qiskit_ibm_runtime.quantum_program import CircuitItem, QuantumProgram, SamplexItem
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
+from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 
 from ...ibm_test_case import IBMTestCase
 

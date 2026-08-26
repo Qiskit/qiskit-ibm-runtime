@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.executor_estimator.trex_utils import (
     resolve_trex_num_randomizations,
 )
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
-from qiskit_ibm_runtime.quantum_program import SamplexItem
+from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMTestCase
 
