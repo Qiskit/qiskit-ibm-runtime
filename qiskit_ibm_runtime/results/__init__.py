@@ -38,7 +38,6 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
    StretchValues
 """  # noqa: D205, D212, D415
 
-from ..utils.deprecation import issue_deprecation_msg
 from .estimator_pub import EstimatorPubResult
 from .noise_learner import LayerError, NoiseLearnerResult, PauliLindbladError
 from .noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results

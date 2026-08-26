@@ -39,5 +39,4 @@ Classes
     SamplexItem
 """
 
-from ..utils.deprecation import issue_deprecation_msg
 from .quantum_program import CircuitItem, QuantumProgram, QuantumProgramItem, SamplexItem
