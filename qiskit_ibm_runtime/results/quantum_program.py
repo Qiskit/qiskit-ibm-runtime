@@ -15,10 +15,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import numpy as np
 
@@ -200,3 +200,9 @@ class QuantumProgramResult(BaseQuantumProgramResult):
             A :class:`~.ChunkTiming` collection.
         """
         return ChunkTiming(self.metadata.chunk_timing)
+
+    def __getitem__(self, index: int | slice) -> QuantumProgramItemResult:
+        return cast("QuantumProgramItemResult", super().__getitem__(index))
+
+    def __iter__(self) -> Iterator[QuantumProgramItemResult]:
+        return cast("Iterator[QuantumProgramItemResult]", super().__iter__())
