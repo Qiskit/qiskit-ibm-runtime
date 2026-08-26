@@ -29,7 +29,8 @@ if TYPE_CHECKING:
 
 import numpy as np
 from samplomatic import build
-from samplomatic.quantum_program import SamplexItem
+
+from qiskit_ibm_runtime.quantum_program import SamplexItem
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots

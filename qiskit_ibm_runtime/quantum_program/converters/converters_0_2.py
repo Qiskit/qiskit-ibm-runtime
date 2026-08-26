@@ -30,8 +30,9 @@ from ibm_quantum_schemas.executor.version_0_2 import (
     QuantumProgramModel,
     SamplexItemModel,
 )
-from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
+
+from qiskit_ibm_runtime.quantum_program import CircuitItem, SamplexItem
 
 from ...options_models.executor import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version

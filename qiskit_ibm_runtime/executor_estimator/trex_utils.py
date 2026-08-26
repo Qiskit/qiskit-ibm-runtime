@@ -25,8 +25,9 @@ if TYPE_CHECKING:
 
 from qiskit.circuit import ClassicalRegister, QuantumCircuit
 from samplomatic import build
-from samplomatic.quantum_program import SamplexItem
 from samplomatic.transpiler import generate_boxing_pass_manager
+
+from qiskit_ibm_runtime.quantum_program import SamplexItem
 
 
 def resolve_trex_num_randomizations(

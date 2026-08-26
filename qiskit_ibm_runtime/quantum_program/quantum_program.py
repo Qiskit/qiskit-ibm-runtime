@@ -20,10 +20,14 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from qiskit.quantum_info import PauliLindbladMap
-    from samplomatic.quantum_program import QuantumProgramItem
-    from samplomatic.quantum_program.datatree import DataTree
 
+from samplomatic.quantum_program import (  # noqa: F401,TC002
+    CircuitItem,
+    QuantumProgramItem,
+    SamplexItem,
+)
 from samplomatic.quantum_program import QuantumProgram as BaseQuantumProgram
+from samplomatic.quantum_program.datatree import DataTree  # noqa: TC002
 
 
 class QuantumProgram(BaseQuantumProgram):

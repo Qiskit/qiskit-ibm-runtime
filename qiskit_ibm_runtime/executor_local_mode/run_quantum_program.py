@@ -23,8 +23,9 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
 from samplomatic import Tag
-from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.utils import get_annotation
+
+from qiskit_ibm_runtime.quantum_program import CircuitItem, SamplexItem
 
 from ..results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample

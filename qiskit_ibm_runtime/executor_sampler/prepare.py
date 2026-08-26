@@ -19,8 +19,9 @@ from typing import TYPE_CHECKING
 
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
-from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.transpiler import generate_boxing_pass_manager
+
+from qiskit_ibm_runtime.quantum_program import CircuitItem, SamplexItem
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
@@ -40,7 +41,8 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
-    from samplomatic.quantum_program import QuantumProgramItem
+
+    from qiskit_ibm_runtime.quantum_program import QuantumProgramItem
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.sampler import SamplerOptions

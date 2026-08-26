@@ -16,9 +16,11 @@ import datetime
 
 import numpy as np
 from ddt import ddt
-from samplomatic.quantum_program import ChunkPart, ChunkSpan, ChunkTiming
 
 from qiskit_ibm_runtime.results import (
+    ChunkPart,
+    ChunkSpan,
+    ChunkTiming,
     ItemMetadata,
     Metadata,
     QuantumProgramItemResult,

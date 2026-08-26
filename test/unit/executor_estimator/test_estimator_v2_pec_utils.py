@@ -21,7 +21,6 @@ from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import InjectNoise
-from samplomatic.quantum_program import SamplexItem
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -32,7 +31,7 @@ from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.options_models.pec import PecOptions
 from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
+from qiskit_ibm_runtime.quantum_program import QuantumProgram, SamplexItem
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase, IBMTestCase
 from .utils import (

@@ -26,7 +26,8 @@ if TYPE_CHECKING:
     from ..options_models.twirling import TwirlingOptions
 
 from samplomatic import build
-from samplomatic.quantum_program import SamplexItem
+
+from qiskit_ibm_runtime.quantum_program import SamplexItem
 
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram

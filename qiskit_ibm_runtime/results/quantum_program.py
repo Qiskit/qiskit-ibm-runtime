@@ -21,10 +21,9 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     import numpy as np
-    from samplomatic.quantum_program import ChunkSpan
     from samplomatic.quantum_program.datatree import DataTree
 
-from samplomatic.quantum_program import ChunkTiming
+from samplomatic.quantum_program import ChunkPart, ChunkSpan, ChunkTiming  # noqa: F401,TC002
 from samplomatic.quantum_program import QuantumProgramItemResult as BaseQuantumProgramItemResult
 from samplomatic.quantum_program import QuantumProgramResult as BaseQuantumProgramResult
 

@@ -17,9 +17,9 @@ from __future__ import annotations
 from datetime import timezone
 from typing import TYPE_CHECKING
 
-from samplomatic.quantum_program import ChunkPart, ChunkSpan
-
 from ...results.quantum_program import (
+    ChunkPart,
+    ChunkSpan,
     ItemMetadata,
     Metadata,
     QuantumProgramItemResult,
