@@ -20,33 +20,56 @@ from typing import TYPE_CHECKING, Any, Literal
 from qiskit.primitives.primitive_job import PrimitiveJob
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from concurrent.futures import Future
+
+    from qiskit.primitives.containers import PrimitiveResult
+
     from ..models import BackendProperties
+    from ..quantum_program.quantum_program import QuantumProgram
+    from ..results.quantum_program import QuantumProgramResult
     from .fake_backend import FakeBackendV2
 
 
 class LocalRuntimeJob(PrimitiveJob):
     """Job class for qiskit-ibm-runtime's local mode.
 
+    This job supports both V2 primitives, and the Executor primitive. For the Executor primitive,
+    the results are post-processed, and the ``function`` is expected to have the signature:
+    ```
+    (
+    backend: BackendV2,
+    program: QuantumProgram,
+    options: ExperimentalSimulatorOptions,
+    ) -> QuantumProgramResult:
+    ```
+
     Args:
-        future: Thread executor the job is run on.
+        function: The callable that is invoked when the job is submitted.
+        future: Thread executor the job is run on. If not specified, a new ``future`` is created
+            when the job is submitted.
         backend: The backend to run the primitive on.
         primitive: Name of the primitive.
-        inputs: Program input parameters. These input values are passed
-            to the runtime program.
-        args: Additional arguments.
-        kwargs: Additional keyword arguments.
+        inputs: Program input parameters.
+        args: Additional arguments to pass to the ``function``.
+        kwargs: Additional keyword arguments to pass to the ``function``.
     """
 
     def __init__(  # type: ignore[no-untyped-def]
         self,
-        future,
+        function: Callable,
         backend: FakeBackendV2,
-        primitive: Literal["sampler", "estimator"],
-        inputs: dict,
+        primitive: Literal["sampler", "estimator", "executor"],
+        inputs: dict | QuantumProgram,
+        future: Future | None = None,
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(*args, **kwargs)
+        if primitive == "executor":
+            # Pass extra arguments for the function used for executor jobs.
+            kwargs.update({"backend": backend, "program": inputs})
+        super().__init__(function, *args, **kwargs)
+
         self._future = future
         self._backend = backend
         self._primitive = primitive
@@ -97,7 +120,7 @@ class LocalRuntimeJob(PrimitiveJob):
         return ""
 
     @property
-    def inputs(self) -> dict:
+    def inputs(self) -> dict | QuantumProgram:
         """Return job input parameters."""
         return self._inputs
 
@@ -115,3 +138,14 @@ class LocalRuntimeJob(PrimitiveJob):
     def primitive_id(self) -> str:
         """Primitive name."""
         return self._primitive
+
+    def result(self) -> PrimitiveResult | QuantumProgramResult:
+        """Return the results of the job."""
+        result = super().result()
+
+        if self.primitive_id == "executor":
+            from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
+
+            return QuantumProgramResultDecoder._apply_post_processing(result)
+
+        return result
