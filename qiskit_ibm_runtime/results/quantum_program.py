@@ -207,10 +207,11 @@ class QuantumProgramResult(BaseQuantumProgramResult):
     def __getitem__(
         self, index: int | slice
     ) -> QuantumProgramItemResult | list[QuantumProgramItemResult]:
+        get_item = super().__getitem__
         if isinstance(index, int):
-            return cast("QuantumProgramItemResult", super().__getitem__(index))
+            return cast("QuantumProgramItemResult", get_item(index))
         return [
-            cast("QuantumProgramItemResult", super().__getitem__(idx))
+            cast("QuantumProgramItemResult", get_item(idx))
             for idx in range(*index.indices(len(self)))
         ]
 
