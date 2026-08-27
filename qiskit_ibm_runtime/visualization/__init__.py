@@ -26,6 +26,7 @@ Functions
     :toctree: ../stubs/
     :nosignatures:
 
+    draw_chunk_timings
     draw_execution_spans
     draw_layer_error_map
     draw_layer_errors_swarm
