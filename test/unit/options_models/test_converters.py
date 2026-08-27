@@ -121,8 +121,8 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
         self.assertEqual(executor_options.environment.image, "custom:image")
         self.assertEqual(executor_options.experimental, options.experimental)
 
-    def test_to_executor_options_resilence_fallback(self):
-        """Test the simulator ``layer_noise_model`` fallback to resilence ``layer_noise_model``."""
+    def test_to_executor_options_resilience_fallback(self):
+        """Test the simulator ``layer_noise_model`` fallback to resilience ``layer_noise_model``."""
         options = EstimatorOptions()
         simulator_options = ExperimentalSimulatorOptions()
         options.experimental = {"simulator_options": simulator_options}
