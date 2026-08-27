@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
-    from ..executor_local_mode import SimRuntimeJob
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
@@ -118,7 +118,7 @@ class Executor:
 
         super().__setattr__(name, value)
 
-    def run(self, program: QuantumProgram) -> RuntimeJobV2 | SimRuntimeJob:
+    def run(self, program: QuantumProgram) -> RuntimeJobV2 | LocalRuntimeJob:
         """Run a quantum program.
 
         Args:
