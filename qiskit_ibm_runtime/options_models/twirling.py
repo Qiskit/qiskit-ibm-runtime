@@ -45,6 +45,18 @@ class TwirlingOptions(BaseOptionsModel):
       ``False`` for resilience level ``0``, and ``True`` for resilience levels ``1`` and ``2``.
     """
 
+    group: Literal["pauli", "balanced_pauli", "local_c1", "local_pauli"] = "pauli"
+    """The group used to twirl the content of the identified layers.
+
+      * ``'pauli'`` uses the Pauli group.
+      * ``'balanced_pauli'`` uses the Pauli group with a balanced distribution.
+      * ``'local_c1'`` uses the subgroup of single-qubit Cliffords that are conjugated to
+        single-qubit Cliffords on any entangling gates in the box, and the Pauli group
+        everywhere else.
+      * ``'local_pauli'`` uses the Pauli subgroup that commutes with an entangler for
+        non-Clifford gates, and the Pauli group everywhere else.
+    """
+
     num_randomizations: Annotated[int, Field(ge=1)] | Literal["auto"] = "auto"
     """The number of random samples to use when twirling or performing sampled mitigation.
 
