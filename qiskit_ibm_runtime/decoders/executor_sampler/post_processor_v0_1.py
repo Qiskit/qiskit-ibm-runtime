@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from qiskit.primitives import PrimitiveResult
 
@@ -51,7 +51,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
             f"'{type(result.passthrough_data)}'."
         )
 
-    passthrough = cast("dict", result.passthrough_data or {})
+    passthrough = result.passthrough_data or {}
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (twirling := post_processor_data.get("twirling", None)) is None:
