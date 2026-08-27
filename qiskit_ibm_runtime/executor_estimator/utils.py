@@ -277,7 +277,7 @@ def box_circuit(
     return boxed_circuit
 
 
-def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
+def options_to_boxing_pm_kwargs(
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None,
     inject_noise: bool,
