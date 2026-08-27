@@ -84,6 +84,7 @@ module = [
     "rustworkx",
     "samplomatic.*",
     "urllib3.*",
+    "pytest",
 ]
 ignore_missing_imports = true
 

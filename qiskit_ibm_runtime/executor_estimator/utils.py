@@ -281,7 +281,6 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None,
     inject_noise: bool,
-    twirling_group: str = "balanced_pauli",
     add_tags: bool = False,
 ) -> dict[str, Any]:
     """A helper to map options to kwargs for the boxing passmanager.
@@ -306,7 +305,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
         if twirling_options.enable_measure or (measure_noise_learning is not None)
         else "change_basis",
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
-        "twirling_group": twirling_group,
+        "twirling_group": twirling_options.group,
         "inject_noise": inject_noise,
         "add_tags": "unique_box" if add_tags else "none",
     }
