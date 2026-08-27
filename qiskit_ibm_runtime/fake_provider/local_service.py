@@ -25,6 +25,7 @@ from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
+from ..executor_local_mode import SimRuntimeJob
 from ..ibm_backend import IBMBackend
 from .fake_provider import FakeProviderForBackendV2
 from .local_runtime_job import LocalRuntimeJob
@@ -35,6 +36,8 @@ if TYPE_CHECKING:
     from qiskit.primitives.primitive_job import PrimitiveJob
     from qiskit.providers.backend import BackendV2
 
+    from ..options_models.simulator import ExperimentalSimulatorOptions
+    from ..quantum_program import QuantumProgram
     from ..runtime_options import RuntimeOptions
     from .fake_backend import FakeBackendV2
 
@@ -284,3 +287,24 @@ class QiskitRuntimeLocalService:
         )
 
         return local_runtime_job
+
+    def _run_executor(
+        self,
+        backend: BackendV2,
+        options: ExperimentalSimulatorOptions,
+        inputs: QuantumProgram,
+    ) -> SimRuntimeJob:
+        """Run an executor program.
+
+        Args:
+            backend: The backend to run the executor program on.
+            options: Simulator options to use.
+            inputs: The executor program to run.
+
+        Returns:
+            The job object that runs the program.
+        """
+        job = SimRuntimeJob(backend, inputs, options)
+        job._submit()
+
+        return job

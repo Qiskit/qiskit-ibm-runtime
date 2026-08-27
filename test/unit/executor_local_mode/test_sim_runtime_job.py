@@ -36,4 +36,5 @@ class TestSimRuntimeJob(IBMTestCase):
         job = SimRuntimeJob(
             AerSimulator(method="stabilizer"), QuantumProgram(1), ExperimentalSimulatorOptions()
         )
+        job._submit()
         self.assertIsInstance(job.result(), QuantumProgramResult)

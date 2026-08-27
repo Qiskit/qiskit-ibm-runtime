@@ -73,8 +73,6 @@ class SimRuntimeJob(PrimitiveJob):
             options=options,
         )
 
-        self._submit()
-
     def result(self) -> QuantumProgramResult | PrimitiveResult:
         """Return the post-processed results of the job.
 
