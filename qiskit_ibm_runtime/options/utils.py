@@ -23,48 +23,12 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from pydantic import ConfigDict, field_validator
 from pydantic.dataclasses import dataclass
 
-from ..utils.utils import is_simulator
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from pydantic import ValidationInfo
-    from qiskit.providers.backend import Backend
 
     from ..options.options import BaseOptions
-
-
-def set_default_error_levels(
-    options: dict,
-    backend: Backend,
-    default_optimization_level: int,
-    default_resilience_level: int,
-) -> dict:
-    """Set default resilience and optimization levels.
-
-    Args:
-        options: user passed in options.
-        backend: backend the job will run on.
-        default_optimization_level: the default optimization level from the options class
-        default_resilience_level: the default resilience level from the options class
-
-    Returns:
-        options with correct error level defaults.
-    """
-    is_sim = is_simulator(backend)
-
-    if options.get("optimization_level") is None:
-        if is_sim and not options.get("simulator", {}).get("noise_model"):
-            options["optimization_level"] = 1
-        else:
-            options["optimization_level"] = default_optimization_level
-
-    if options.get("resilience_level") is None:
-        if is_sim and not options.get("simulator", {}).get("noise_model"):
-            options["resilience_level"] = 0
-        else:
-            options["resilience_level"] = default_resilience_level
-    return options
 
 
 def remove_dict_unset_values(in_dict: dict) -> None:
@@ -86,84 +50,10 @@ def remove_empty_dict(in_dict: dict) -> None:
                 del in_dict[key]
 
 
-def _to_obj(cls_, data):  # type: ignore
-    if data is None:
-        return cls_()
-    if isinstance(data, cls_):
-        return data
-    if isinstance(data, dict):
-        return cls_(**data)
-    raise TypeError(
-        f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary."
-    )
-
-
-def merge_options(old_options: dict | BaseOptions, new_options: dict | None = None) -> dict:
-    """Merge current options with the new ones.
-
-    Args:
-        old_options: Old options to merge.
-        new_options: New options to merge.
-
-    Returns:
-        Merged dictionary.
-
-    Raises:
-        TypeError: if input type is invalid.
-    """
-
-    def _update_options(old: dict, new: dict, matched: dict | None = None) -> None:
-        if not new and not matched:
-            return
-        matched = matched or {}
-
-        for key, val in old.items():
-            if isinstance(val, dict):
-                new_matched = new.pop(key, {})
-                _update_options(val, new, new_matched)
-            elif key in new.keys():
-                old[key] = new.pop(key)
-            elif key in matched.keys():
-                old[key] = matched.pop(key)
-
-        # Add new keys.
-        for key, val in matched.items():
-            old[key] = val
-
-        # Clear the matched dict so it's not reused
-        matched.clear()
-
-    if is_dataclass(old_options):
-        combined = asdict(old_options)
-    elif isinstance(old_options, dict):
-        combined = copy.deepcopy(old_options)
-    else:
-        raise TypeError("'old_options' can only be a dictionary or dataclass.")
-
-    if not new_options:
-        return combined
-    new_options_copy = copy.deepcopy(new_options)
-
-    # First update values of the same key.
-    _update_options(combined, new_options_copy)
-
-    # Add new keys.
-    combined.update(new_options_copy)
-
-    return combined
-
-
 def merge_options_v2(old_options: dict | BaseOptions, new_options: dict | None = None) -> dict:
     """Merge current options with the new ones for V2 primitives.
 
-    Unlike ``merge_options``, this function does not attempt to
-    merge values of the same keys from different nesting levels.
-
-    For example, if
-    ``old_options`` is ``{"nested_foo": {"foo": "bar1"}}`` and
-    ``new_options`` is ``{"foo": "bar2"}``, then
-    ``merge_options()`` would return {'nested_foo': {'foo': 'bar2'}}
-    but ``merge_options_v2()`` would return ``{'nested_foo': {'foo': 'bar1'}, 'foo': 'bar2'}``.
+    This function does not attempt to merge values of the same keys from different nesting levels.
 
     Args:
         old_options: Old options to merge.
