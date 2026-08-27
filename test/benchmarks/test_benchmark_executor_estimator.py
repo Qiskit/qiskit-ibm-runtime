@@ -17,16 +17,28 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.circuit import CircuitInstruction
+    from qiskit.primitives import EstimatorPubLike
+
     from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
 
 import numpy as np
-from qiskit.quantum_info import SparsePauliOp
+import pytest
+from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from samplomatic import InjectNoise
+from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_estimator_options
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
+from qiskit_ibm_runtime.executor_local_mode.broadcast_sample import broadcast_sample
+from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.quantum_program import SamplexItem
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramItemResult,
     QuantumProgramResult,
@@ -34,12 +46,51 @@ from qiskit_ibm_runtime.results.quantum_program import (
 
 from ..utils import make_mirror_circuit_with_phases
 
+PREPARE_VARIANTS = {
+    "vanilla": {
+        "resilience_level": 0,
+    },
+    "vanilla_trex": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {"measure_mitigation": True},
+    },
+    "zne_gate_folding": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {
+            "zne_mitigation": True,
+            "zne": {"amplifier": "gate_folding"},
+        },
+    },
+    "zne_pea": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {
+            "zne_mitigation": True,
+            "zne": {"amplifier": "pea"},
+        },
+    },
+    "pec": {
+        "resilience_level": 0,
+        "twirling": {"enable_gates": True, "enable_measure": True},
+        "resilience": {
+            "pec_mitigation": True,
+        },
+    },
+}
 
-def test_executor_estimator_prepare(benchmark):
-    """Benchmark the prepare() method from executor_estimator/prepare.py."""
-    backend = FakeBrisbane()
+NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
+
+
+@pytest.mark.parametrize(
+    "variant_id,variant_options",
+    PREPARE_VARIANTS.items(),
+)
+def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
+    """Benchmark prepare() for different mitigation strategies."""
     if benchmark.disabled:
-        num_qubits = 5
+        num_qubits = 3
         num_layers = 10
         num_shots = 100
     else:
@@ -47,10 +98,14 @@ def test_executor_estimator_prepare(benchmark):
         num_layers = 20
         num_shots = 200000
 
+    backend = FakeMarrakesh()
+
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
 
     options = EstimatorOptions()
-    options.resilience_level = 0
+    options.update(**variant_options)
+    if variant_id in NEEDS_NOISE_MODEL:
+        options.resilience.layer_noise_model = create_noise_model(coerced_pubs, options)
 
     def run_prepare():
         prepare(
@@ -64,25 +119,29 @@ def test_executor_estimator_prepare(benchmark):
     benchmark(run_prepare)
 
 
-def test_executor_estimator_post_processor(benchmark):
-    """Benchmark the estimator post-processor via QuantumProgramResultDecoder."""
-    backend = FakeBrisbane()
-
+@pytest.mark.parametrize(
+    "variant_id,variant_options",
+    PREPARE_VARIANTS.items(),
+)
+def test_executor_estimator_post_processor(benchmark, variant_id, variant_options):
+    """Benchmark the estimator post-processor for different mitigation strategies."""
     if benchmark.disabled:
-        num_qubits = 5
-        num_layers = 10
+        num_qubits = 3
         num_shots = 100
     else:
         num_qubits = 100
-        num_layers = 20
         num_shots = 200000
 
-    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
+    backend = FakeMarrakesh()
+
+    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=10)
 
     options = EstimatorOptions()
-    options.resilience_level = 0
+    options.update(**variant_options)
+    if variant_id in NEEDS_NOISE_MODEL:
+        options.resilience.layer_noise_model = create_noise_model(pubs, options)
 
-    # First, run prepare once to get the baseline quantum program structure
+    # Run prepare once to get the quantum program structure for this variant
     quantum_program, _ = prepare(
         pubs,
         options,
@@ -90,8 +149,9 @@ def test_executor_estimator_post_processor(benchmark):
         add_tags=False,
         backend=backend,
     )
+    quantum_program._semantic_role = "estimator_v2"
 
-    # Generate dummy results
+    # Generate dummy results matching the prepared program structure
     quantum_program_result = create_dummy_result(quantum_program)
 
     def run_post_processor():
@@ -128,23 +188,55 @@ def create_test_pubs(backend, num_qubits, num_layers):
     return [(isa_circuit, observables, parameter_values)]
 
 
+def create_noise_model(
+    pubs: Iterable[EstimatorPubLike], options: EstimatorOptions
+) -> list[tuple[CircuitInstruction, PauliLindbladMap]]:
+    """Build a simple Pauli-Lindblad noise model."""
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
+
+    coerced_pubs = [EstimatorPub.coerce(pub) for pub in pubs]
+    finalized_options = finalize_estimator_options(options)
+    layers = find_unique_layers(
+        coerced_pubs,
+        twirling_options=finalized_options.twirling,
+        measure_noise_learning=finalized_options.resilience.measure_noise_learning
+        if finalized_options.resilience.measure_mitigation
+        else None,
+        inject_noise=True,
+    )
+    noise_model = []
+    for layer in layers:
+        if get_annotation(layer.operation, InjectNoise) is not None:
+            n = layer.operation.num_qubits
+            noise_model.append((layer, PauliLindbladMap.from_list([("X" * n, 0.005)])))
+    return noise_model
+
+
 def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult:
-    """Simulate execution by creating a QuantumProgramResult matching the program structure."""
+    """Simulate what the executor produces for a quantum program."""
+    rng = np.random.default_rng(0)
     result_data = []
 
     for item in quantum_program.items:
-        num_shots = quantum_program.shots
-        num_bits = item.circuit.num_qubits
+        if not isinstance(item, SamplexItem):
+            raise ValueError("Only samplex items supported in this benchmark")
 
-        meas_shape = quantum_program.items[0].shape + (num_shots, num_bits)
-        meas_data = np.random.randint(0, 2, size=meas_shape).astype(bool)
+        shots = quantum_program.shots
 
-        result_data.append(QuantumProgramItemResult({"_meas": meas_data}))
+        # Get all samplex outputs (flips, pauli_signs, …) with correct shapes
+        samplex_data = broadcast_sample(item.samplex, item.samplex_arguments, item.shape, rng)
+        samplex_data.pop("parameter_values", None)
+
+        # Replace circuit measurement registers with random data
+        for creg in item.circuit.cregs:
+            shape = item.shape + (shots, creg.size)
+            samplex_data[creg.name] = np.random.randint(0, 2, size=shape).astype(bool)
+
+        result_data.append(QuantumProgramItemResult(samplex_data))
 
     quantum_program_result = QuantumProgramResult(
         data=result_data,
-        metadata=None,
         passthrough_data=quantum_program.passthrough_data,
     )
-    quantum_program_result._semantic_role = "estimator_v2"
+    quantum_program_result._semantic_role = quantum_program._semantic_role
     return quantum_program_result

@@ -17,7 +17,7 @@ import warnings
 import numpy as np
 from ddt import data, ddt, unpack
 
-from qiskit_ibm_runtime.executor_estimator.zne.extrapolation import (
+from qiskit_ibm_runtime.decoders.executor_estimator.zne_extrapolation import (
     as_noise_factors,
     build_model_spec,
     clamp_degenerate_stds,
@@ -32,7 +32,7 @@ from qiskit_ibm_runtime.executor_estimator.zne.extrapolation import (
     select_zne_extrapolated_result,
 )
 
-from ...ibm_test_case import IBMTestCase
+from ....ibm_test_case import IBMTestCase
 
 
 @ddt

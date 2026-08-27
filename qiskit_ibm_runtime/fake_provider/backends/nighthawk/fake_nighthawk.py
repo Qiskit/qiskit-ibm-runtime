@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import os
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ...fake_backend import FakeBackendV2
 
@@ -71,7 +71,7 @@ class FakeNighthawk(FakeBackendV2):
     props_filename = "props_nighthawk.json"
     backend_name = "fake_nighthawk"
 
-    def __init__(self, *args, **kwargs) -> None:  # type: ignore
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         # Only display the warning statement once
         global DISPLAY_WARNING
         if DISPLAY_WARNING:

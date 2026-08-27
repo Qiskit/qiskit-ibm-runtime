@@ -28,18 +28,18 @@ from .utils.converters import hms_to_seconds
 from .utils.default_session import set_cm_session
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
     from types import TracebackType
 
     from .decoders.result_decoder import ResultDecoder
     from .runtime_job_v2 import RuntimeJobV2
 
 
-def _active_session(func):  # type: ignore
+def _active_session(func: Callable) -> Callable:
     """Decorator used to ensure the session is active."""
 
     @wraps(func)
-    def _wrapper(self, *args, **kwargs):  # type: ignore
+    def _wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         if not self._active:
             raise IBMRuntimeError("The session is closed.")
         return func(self, *args, **kwargs)
