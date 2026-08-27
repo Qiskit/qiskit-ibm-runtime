@@ -91,7 +91,7 @@ def estimator_options_to_executor_options(options: EstimatorOptions) -> Executor
         executor_options.environment.image = options.experimental.get("image", None)
         executor_options.experimental.update(options.experimental)
 
-        # have the simulator layer noise model fallback onto the resilence layer noise model
+        # have the simulator layer noise model fallback onto the resilience layer noise model
         if sim_options := executor_options.experimental.get("simulator_options", None):
             if (layer_noise_model := sim_options.layer_noise_model) is None:
                 layer_noise_model = options.resilience.layer_noise_model
