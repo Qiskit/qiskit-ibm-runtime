@@ -22,7 +22,7 @@ from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
@@ -88,7 +88,7 @@ class TestEstimatorWithNoise(IBMTestCase):
 
         Estimator result quality is expected to increase with increasing resilience level.
         """
-        backend = FakeManilaV2()
+        backend = FakeMarrakesh()
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
         pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
