@@ -79,10 +79,6 @@ TWIRLING_TREX = {
 class TestEstimatorWithNoise(IBMTestCase):
     """Tests Executor based EstimatorV2 using simulator with noise through local mode."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
     def test_result_quality_for_different_resilience_levels(self):
         """Tests the effect of resilience on EstimatorV2 results.
 
