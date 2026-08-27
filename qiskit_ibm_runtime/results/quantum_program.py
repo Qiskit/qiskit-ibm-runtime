@@ -133,9 +133,6 @@ class QuantumProgramItemResult(BaseQuantumProgramItemResult):
         super().__init__(result=result)
         self.metadata = metadata or ItemMetadata()
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._result}, metadata={self.metadata})"
-
 
 class QuantumProgramResult(BaseQuantumProgramResult):
     """A container to store results from executing a :class:`~.QuantumProgram`.
