@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from qiskit_ibm_runtime.decoders.executor_estimator.utils import get_pauli_basis, unbroadcast_index
+from ..decoders.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
