@@ -428,7 +428,6 @@ class TestBoxCircuit(IBMBoxedCircuitTestCase):
             twirling_group="balanced_pauli",
             add_tags=add_tags,
             inject_noise_site="after",
-            twirling_group="balanced_pauli",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
