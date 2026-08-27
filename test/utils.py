@@ -305,15 +305,9 @@ def make_mirror_circuit_with_phases(
 
     The mirror circuit contains entanglers between nearest neighbours.
     """
-    if "cz" in (basis_gates := backend.configuration().basis_gates):
-        entangler = "cz"
-    elif "cx" in basis_gates:
-        entangler = "cx"
-    elif "ecr" in basis_gates:
-        entangler = "ecr"
-    else:
-        # This should not be reachable
-        raise ValueError("No entangler found.")
+    entangler = "cz"
+    if "cz" not in backend.configuration().basis_gates:
+        raise ValueError(f"Mirror circuit only supports {entangler} entangler.")
 
     even_pairs = zip(range(0, backend.num_qubits, 2), range(1, backend.num_qubits, 2))
     layer1_pairs = [
