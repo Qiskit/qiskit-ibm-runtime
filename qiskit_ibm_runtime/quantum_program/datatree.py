@@ -12,13 +12,4 @@
 
 """DataTree."""
 
-from __future__ import annotations
-
-from typing import TypeAlias
-
-from numpy.typing import NDArray
-
-DataTree: TypeAlias = (
-    list["DataTree"] | dict[str, "DataTree"] | NDArray[float] | str | float | int | bool | None
-)
-"""Arbitrary nesting of lists and dicts with typed leaves."""
+from samplomatic.quantum_program.datatree import DataTree  # noqa: F401
