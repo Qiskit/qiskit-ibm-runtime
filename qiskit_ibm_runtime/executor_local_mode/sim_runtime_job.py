@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 from qiskit.primitives.primitive_job import PrimitiveJob
 
+from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from .run_quantum_program import run_quantum_program
 
 if TYPE_CHECKING:
@@ -81,6 +82,4 @@ class SimRuntimeJob(PrimitiveJob):
         Returns:
             IBM Quantum Compute job result (post-processed if applicable).
         """
-        from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
-
         return QuantumProgramResultDecoder._apply_post_processing(super().result())
