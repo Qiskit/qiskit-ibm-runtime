@@ -36,7 +36,7 @@ from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_esti
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
 from qiskit_ibm_runtime.executor_local_mode.broadcast_sample import broadcast_sample
-from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import SamplexItem
 from qiskit_ibm_runtime.results.quantum_program import (
@@ -98,7 +98,7 @@ def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
         num_layers = 20
         num_shots = 200000
 
-    backend = FakeBrisbane()
+    backend = FakeMarrakesh()
 
     coerced_pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=num_layers)
 
@@ -129,13 +129,13 @@ def test_executor_estimator_post_processor(benchmark, variant_id, variant_option
         # Qubit count smaller than 6 on Brisbane causes error:
         # Results must contain ``'pauli_signs'`` in the data if PEC is used.
         # Weirdly using AER as a backend can accept <6 qubits.
-        num_qubits = 6
+        num_qubits = 3
         num_shots = 100
     else:
         num_qubits = 100
         num_shots = 200000
 
-    backend = FakeBrisbane()
+    backend = FakeMarrakesh()
 
     pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=10)
 
