@@ -50,7 +50,7 @@ Suboptions
 
 """
 
-from .bit_flip_checks_options import (
+from .bit_flip_checks import (
     BitFlipChecksOptions,
     PostCircuitBitFlipChecksOptions,
     PreCircuitBitFlipChecksOptions,

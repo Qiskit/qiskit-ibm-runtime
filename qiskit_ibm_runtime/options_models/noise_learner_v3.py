@@ -19,7 +19,7 @@ from typing import Annotated
 from pydantic import Field
 
 from .base import BaseOptionsModel
-from .bit_flip_checks_options import BitFlipChecksOptions
+from .bit_flip_checks import BitFlipChecksOptions
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .post_selection import PostSelectionOptions
