@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-import queue
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from concurrent import futures
@@ -292,19 +291,6 @@ class BaseRuntimeJob(ABC):
         else:
             error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
             return error_msg.format(self.job_id(), self._reason or job_result_raw)
-
-    @staticmethod
-    def _empty_result_queue(result_queue: queue.Queue) -> None:
-        """Empty the result queue.
-
-        Args:
-            result_queue: Result queue to empty.
-        """
-        try:
-            while True:
-                result_queue.get_nowait()
-        except queue.Empty:
-            pass
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}('{self._job_id}', '{self._program_id}')>"
