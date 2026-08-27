@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, overload
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -201,8 +201,21 @@ class QuantumProgramResult(BaseQuantumProgramResult):
         """
         return ChunkTiming(self.metadata.chunk_timing)
 
-    def __getitem__(self, index: int | slice) -> QuantumProgramItemResult:
-        return cast("QuantumProgramItemResult", super().__getitem__(index))
+    @overload
+    def __getitem__(self, idx: int) -> QuantumProgramItemResult: ...
+
+    @overload
+    def __getitem__(self, idx: slice) -> list[QuantumProgramItemResult]: ...
+
+    def __getitem__(
+        self, index: int | slice
+    ) -> QuantumProgramItemResult | list[QuantumProgramItemResult]:
+        if isinstance(index, int):
+            return cast("QuantumProgramItemResult", super().__getitem__(index))
+        return [
+            cast("QuantumProgramItemResult", super().__getitem__(idx))
+            for idx in range(*index.indices(len(self)))
+        ]
 
     def __iter__(self) -> Iterator[QuantumProgramItemResult]:
         return cast("Iterator[QuantumProgramItemResult]", super().__iter__())
