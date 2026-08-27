@@ -126,9 +126,6 @@ def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
 def test_executor_estimator_post_processor(benchmark, variant_id, variant_options):
     """Benchmark the estimator post-processor for different mitigation strategies."""
     if benchmark.disabled:
-        # Qubit count smaller than 6 on Brisbane causes error:
-        # Results must contain ``'pauli_signs'`` in the data if PEC is used.
-        # Weirdly using AER as a backend can accept <6 qubits.
         num_qubits = 3
         num_shots = 100
     else:
