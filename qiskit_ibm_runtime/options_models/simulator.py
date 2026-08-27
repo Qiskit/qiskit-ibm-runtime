@@ -70,8 +70,9 @@ class ExperimentalSimulatorOptions(BaseOptionsModel):
     layer_noise_model: list[LayerNoiseModel] | None = None
     """Noise model specified by a collection of instructions and the noise that affects them.
 
-    If ``None``, it inherits the default of :attr:`~.ResilienceOptions.layer_noise_model` when
-    simulating with the V2 Estimator.
+    When simulating an estimator job, if this value is set to ``None``,
+    it defaults to the value of
+    :attr:`qiskit_ibm_runtime.options_models.ResilienceOptions.layer_noise_model`.
     """
 
     seed_simulator: int | None = None
