@@ -25,8 +25,8 @@ from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from ..executor_local_mode.run_quantum_program import run_quantum_program
 from ..ibm_backend import IBMBackend
+from .executor.run_quantum_program import run_quantum_program
 from .fake_provider import FakeProviderForBackendV2
 from .local_runtime_job import LocalRuntimeJob
 

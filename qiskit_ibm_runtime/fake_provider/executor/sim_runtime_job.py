@@ -24,9 +24,9 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.primitive_result import PrimitiveResult
     from qiskit.providers import BackendV2
 
-    from ..options_models.simulator import ExperimentalSimulatorOptions
-    from ..quantum_program import QuantumProgram
-    from ..results import QuantumProgramResult
+    from ...options_models.simulator import ExperimentalSimulatorOptions
+    from ...quantum_program import QuantumProgram
+    from ...results import QuantumProgramResult
 
 
 class SimRuntimeJob(PrimitiveJob):
@@ -79,6 +79,6 @@ class SimRuntimeJob(PrimitiveJob):
         Returns:
             IBM Quantum Compute job result (post-processed if applicable).
         """
-        from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
+        from ...decoders.quantum_program.decoder import QuantumProgramResultDecoder
 
         return QuantumProgramResultDecoder._apply_post_processing(super().result())
