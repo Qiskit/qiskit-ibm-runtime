@@ -12,8 +12,6 @@
 
 """Unit tests for EstimatorV2 helper functions."""
 
-import itertools
-
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit import ClassicalRegister, QuantumCircuit
@@ -22,7 +20,6 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub, Observables
 from qiskit.quantum_info import Pauli, SparsePauliOp
 from samplomatic import Tag
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.transpiler.passes.group_meas_into_boxes import GroupMeasIntoBoxes
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -35,7 +32,7 @@ from qiskit_ibm_runtime.executor_estimator.utils import (
     resolve_precision,
 )
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMBoxedCircuitTestCase, IBMTestCase
 
 
 @ddt
@@ -288,18 +285,8 @@ class TestResolvePrecision(IBMTestCase):
 
 
 @ddt
-class TestBoxCircuit(IBMTestCase):
+class TestBoxCircuit(IBMBoxedCircuitTestCase):
     """Tests for ``box_circuit``."""
-
-    def _reset_ref_counter(self):
-        """Reset the GroupMeasIntoBoxes class-level ref counter to zero.
-
-        GroupMeasIntoBoxes uses a class-level counter to generate unique ``ref`` strings for
-        ChangeBasis annotations. Resetting it before each pass-manager run ensures that
-        box_circuit and the test's own pm.run both start from the same counter value,
-        making the two circuits directly comparable with assertEqual.
-        """
-        GroupMeasIntoBoxes._REF_COUNTER = itertools.count()
 
     @data(True, False)
     def test_enable_gates(self, enable_gates):
@@ -310,7 +297,6 @@ class TestBoxCircuit(IBMTestCase):
         circuit.cx(1, 2)
         circuit.measure_all()
 
-        self._reset_ref_counter()
         circuit_out = box_circuit(
             circuit,
             enable_gates=enable_gates,
@@ -327,13 +313,13 @@ class TestBoxCircuit(IBMTestCase):
             twirling_group="pauli",
         )
 
-        self._reset_ref_counter()
         expected_circuit = circuit.remove_final_measurements(inplace=False)
         expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
 
     @data("change_basis", "all")
     def test_measure_annotations(self, measure_annotations):
@@ -344,7 +330,6 @@ class TestBoxCircuit(IBMTestCase):
         circuit.cx(1, 2)
         circuit.measure_all()
 
-        self._reset_ref_counter()
         circuit_out = box_circuit(
             circuit,
             enable_gates=True,
@@ -361,13 +346,13 @@ class TestBoxCircuit(IBMTestCase):
             twirling_group="pauli",
         )
 
-        self._reset_ref_counter()
         expected_circuit = circuit.remove_final_measurements(inplace=False)
         expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
 
     @data("active", "active_accum", "active_circuit", "all")
     def test_twirling_strategy(self, twirling_strategy):
@@ -378,7 +363,6 @@ class TestBoxCircuit(IBMTestCase):
         circuit.cx(1, 2)
         circuit.measure_all()
 
-        self._reset_ref_counter()
         circuit_out = box_circuit(
             circuit,
             enable_gates=True,
@@ -395,13 +379,13 @@ class TestBoxCircuit(IBMTestCase):
             twirling_group="pauli",
         )
 
-        self._reset_ref_counter()
         expected_circuit = circuit.remove_final_measurements(inplace=False)
         expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
 
     @data(True, False)
     def test_inject_noise(self, inject_noise):
@@ -412,7 +396,6 @@ class TestBoxCircuit(IBMTestCase):
         circuit.cx(1, 2)
         circuit.measure_all()
 
-        self._reset_ref_counter()
         circuit_out = box_circuit(
             circuit,
             enable_gates=True,
@@ -432,13 +415,13 @@ class TestBoxCircuit(IBMTestCase):
             inject_noise_site="after",
         )
 
-        self._reset_ref_counter()
         expected_circuit = circuit.remove_final_measurements(inplace=False)
         expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
 
     @data("none", "unique_box", "unique_instance", "noise_ref")
     def test_add_tags(self, add_tags):
@@ -455,7 +438,6 @@ class TestBoxCircuit(IBMTestCase):
         circuit.cx(1, 2)
         circuit.measure_all()
 
-        self._reset_ref_counter()
         circuit_out = box_circuit(
             circuit,
             enable_gates=True,
@@ -474,14 +456,14 @@ class TestBoxCircuit(IBMTestCase):
             inject_noise_site="after",
         )
 
-        self._reset_ref_counter()
         expected_circuit = circuit.remove_final_measurements(inplace=False)
         expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
         expected_circuit.barrier()
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
 
         # Verify Tag annotations on box instructions.
         # "noise_ref" only tags boxes that are paired with injected-noise boxes; without
