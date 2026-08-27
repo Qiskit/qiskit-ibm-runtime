@@ -68,7 +68,11 @@ class ExperimentalSimulatorOptions(BaseOptionsModel):
     """
 
     layer_noise_model: list[LayerNoiseModel] | None = None
-    """Noise model specified by a collection of instructions and the noise that affects them."""
+    """Noise model specified by a collection of instructions and the noise that affects them.
+
+    If ``None``, it inherits the default of :attr:`~.ResilienceOptions.layer_noise_model` when
+    simulating with the V2 Estimator.
+    """
 
     seed_simulator: int | None = None
     """Random seed to control sampling."""
