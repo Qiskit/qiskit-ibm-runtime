@@ -31,7 +31,7 @@ from qiskit_ibm_runtime.executor_estimator.utils import (
     resolve_precision,
 )
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMBoxedCircuitTestCase, IBMTestCase
 
 
 @ddt
@@ -284,7 +284,7 @@ class TestResolvePrecision(IBMTestCase):
 
 
 @ddt
-class TestBoxCircuit(IBMTestCase):
+class TestBoxCircuit(IBMBoxedCircuitTestCase):
     """Tests for ``box_circuit``."""
 
     @data(True, False)
@@ -317,7 +317,8 @@ class TestBoxCircuit(IBMTestCase):
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
 
     @data("change_basis", "all")
     def test_measure_annotations(self, measure_annotations):
@@ -349,7 +350,8 @@ class TestBoxCircuit(IBMTestCase):
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
 
     @data("active", "active_accum", "active_circuit", "all")
     def test_twirling_strategy(self, twirling_strategy):
@@ -381,7 +383,8 @@ class TestBoxCircuit(IBMTestCase):
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
 
     @data(True, False)
     def test_inject_noise(self, inject_noise):
@@ -416,7 +419,8 @@ class TestBoxCircuit(IBMTestCase):
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
 
     @data("none", "unique_box", "unique_instance", "noise_ref")
     def test_add_tags(self, add_tags):
@@ -446,6 +450,7 @@ class TestBoxCircuit(IBMTestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy="all",
+            twirling_group="balanced_pauli",
             add_tags=add_tags,
             inject_noise_site="after",
         )
@@ -456,7 +461,8 @@ class TestBoxCircuit(IBMTestCase):
         expected_circuit.measure(range(3), range(3))
         expected_circuit = pm.run(expected_circuit)
 
-        self.assertEqual(circuit_out, expected_circuit)
+        self.assertCircuitsEqualIgnoringAnnotations(circuit_out, expected_circuit)
+        self.assertCircuitsAnnotationsAreEqual(circuit_out, expected_circuit)
 
         # Verify Tag annotations on box instructions.
         # "noise_ref" only tags boxes that are paired with injected-noise boxes; without
