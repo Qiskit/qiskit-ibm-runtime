@@ -187,7 +187,7 @@ class QuantumProgramResult(BaseQuantumProgramResult):
 
         .. code-block:: python
 
-            from samplomatic.visualization.draw_chunk_timings import draw_chunk_timings
+            from qiskit_ibm_runtime.visualization import draw_chunk_timings
 
             draw_chunk_timings(
                 job1.result().timing,
