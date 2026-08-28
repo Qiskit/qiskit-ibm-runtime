@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -33,7 +32,7 @@ from ibm_quantum_schemas.executor.version_1_1 import (
 )
 from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
 
-from ...options_models.executor_options import ExecutorOptions
+from ...options_models.executor import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 
@@ -157,7 +156,7 @@ def quantum_program_to_1_1(program: QuantumProgram, options: ExecutorOptions) ->
         model_items.append(model_item)
 
     # Build options dict starting with execution options
-    options_dict = asdict(options.execution)  # type: ignore[call-overload]
+    options_dict = options.execution.model_dump()
 
     # Add experimental options if provided
     if options.experimental:

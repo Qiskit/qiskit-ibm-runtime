@@ -12,24 +12,44 @@
 
 """Tests for the prepare function."""
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
-from qiskit.primitives.containers.sampler_pub import SamplerPub
+from samplomatic import Tag
+from samplomatic.exceptions import BuildError
+from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 
+from ...ibm_test_case import IBMTestCase
 
-class TestPrepare(unittest.TestCase):
+
+@ddt
+class TestPrepare(IBMTestCase):
     """Tests for prepare method."""
+
+    def test_add_tags(self):
+        """Test that tags are added when ``add_tags=True``."""
+        circuit1 = QuantumCircuit(2, 2)
+        circuit1.h(0)
+        circuit1.measure_all()
+
+        pubs = [(circuit1, None, 1024)]
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+        program, _ = prepare(pubs, options, add_tags=True)
+
+        for item in program.items:
+            unique_instructions = find_unique_box_instructions(item.circuit)
+            for inst in unique_instructions:
+                self.assertIsNotNone(get_annotation(inst.operation, Tag))
 
     def test_multiple_pubs(self):
         """Test conversion of multiple pubs, including parametric circuits."""
@@ -51,11 +71,12 @@ class TestPrepare(unittest.TestCase):
         circuit3.measure_all()
 
         pubs = [
-            SamplerPub.coerce(circuit1, shots=1024),
-            SamplerPub.coerce((circuit2, param_values), shots=1024),
-            SamplerPub.coerce(circuit3, shots=1024),
+            (circuit1, None, 1024),
+            (circuit2, param_values, 1024),
+            (circuit3, None, 1024),
         ]
-        program, executor_options = prepare(pubs, SamplerOptions())
+        options = SamplerOptions(**{"twirling": {"enable_gates": False, "enable_measure": False}})
+        program, executor_options = prepare(pubs, options)
 
         self.assertEqual(program.shots, 1024)
         self.assertEqual(len(program.items), 3)
@@ -74,14 +95,53 @@ class TestPrepare(unittest.TestCase):
 
         self.assertIsNotNone(executor_options)
 
+    def test_binding_array_key_order_bound_by_circuit_parameters(self):
+        """Parameter values must be ordered by ``circuit.parameters``.
+
+        Regression: ``prepare`` used to call ``as_array()`` without passing the
+        circuit's parameters, so a dict/BindingsArray whose key order differed
+        from ``circuit.parameters`` bound values to the wrong parameters silently.
+        """
+        a = Parameter("a")
+        b = Parameter("b")
+        circuit = QuantumCircuit(1, 1)
+        circuit.rx(a, 0)
+        circuit.rz(b, 0)
+        circuit.measure(0, 0)
+        # circuit.parameters is canonically sorted -> (a, b).
+        self.assertEqual([p.name for p in circuit.parameters], ["a", "b"])
+
+        # Key the bindings in the opposite order (b, a); intended a=0.1, b=0.7.
+        pub = (circuit, {("b", "a"): [0.7, 0.1]}, 1024)
+
+        # No-twirling path -> CircuitItem.circuit_arguments ordered (a, b).
+        options = options = SamplerOptions(
+            **{"twirling": {"enable_gates": False, "enable_measure": False}}
+        )
+        program, _ = prepare([pub], options, shots=1024)
+        self.assertIsInstance(program.items[0], CircuitItem)
+        np.testing.assert_array_equal(program.items[0].circuit_arguments, [0.1, 0.7])
+
+        # Twirling path -> SamplexItem parameter_values ordered (a, b).
+        options = options = SamplerOptions(
+            **{"twirling": {"enable_gates": True, "enable_measure": True}}
+        )
+        program_tw, _ = prepare([pub], options, shots=1024)
+        self.assertIsInstance(program_tw.items[0], SamplexItem)
+        np.testing.assert_array_equal(
+            np.asarray(program_tw.items[0].samplex_arguments["parameter_values"]).reshape(-1),
+            [0.1, 0.7],
+        )
+
     def test_default_shots(self):
         """Test that default shots are used when not specified in pub."""
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit)  # No shots specified
-        program, executor_options = prepare([pub], SamplerOptions(), 123)
+        pub = circuit  # No shots specified
+        options = SamplerOptions(**{"twirling": {"enable_gates": False, "enable_measure": False}})
+        program, executor_options = prepare([pub], options, 123)
 
         self.assertEqual(program.shots, 123)
         self.assertIsNotNone(executor_options)
@@ -97,12 +157,13 @@ class TestPrepare(unittest.TestCase):
         circuit2.measure_all()
 
         pubs = [
-            SamplerPub.coerce(circuit1, shots=1024),
-            SamplerPub.coerce(circuit2, shots=2048),
+            (circuit1, None, 1024),
+            (circuit2, None, 2048),
         ]
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare(pubs, SamplerOptions())
+            prepare(pubs, options)
 
         self.assertIn("same number of shots", str(context.exception))
 
@@ -112,10 +173,13 @@ class TestPrepare(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit)  # No shots
+        pub = circuit  # No shots
+        options = SamplerOptions(
+            **{"twirling": {"enable_gates": True, "enable_measure": True}, "default_shots": None}
+        )
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], SamplerOptions(), default_shots=None)
+            prepare([pub], options, shots=None)
 
         self.assertIn("Shots must be specified", str(context.exception))
 
@@ -126,15 +190,39 @@ class TestPrepare(unittest.TestCase):
             circuit.x(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": False, "enable_measure": False}})
+
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], SamplerOptions())
+            prepare([pub], options)
 
         self.assertIn("BoxOp", str(context.exception))
         self.assertIn("not supported", str(context.exception))
 
+    @data("pauli", "balanced_pauli", "local_c1", "local_pauli")
+    def test_circuit_with_parametric_rzz_and_twirling(self, group):
+        """Test the ``prepare`` function for PUBs that contain parametric RZZ gates.
 
-class TestPrepareOptionsHandling(unittest.TestCase):
+        ``prepare`` should not raise when ``group`` is ``"local_pauli``.
+        """
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.twirling.group = group
+
+        circuit = QuantumCircuit(2)
+        circuit.rzz(Parameter("theta"), 0, 1)
+        params = np.random.random((1,))
+
+        pubs = [(circuit, params)]
+
+        if group in {"pauli", "balanced_pauli", "local_c1"}:
+            with self.assertRaisesRegex(BuildError, "GroupMode LOCAL_PAULI"):
+                prepare(pubs, options)
+        else:
+            prepare(pubs, options)
+
+
+class TestPrepareOptionsHandling(IBMTestCase):
     """Tests for options handling in prepare() method."""
 
     def test_prepare_returns_executor_options(self):
@@ -143,8 +231,10 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        result = prepare([pub], SamplerOptions())
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+
+        result = prepare([pub], options)
 
         # Should return a tuple
         self.assertIsInstance(result, tuple)
@@ -160,8 +250,8 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.execution.init_qubits = False
         options.execution.rep_delay = 0.0005
 
@@ -176,8 +266,8 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.environment.log_level = "DEBUG"
         options.environment.job_tags = ["test", "prepare"]
         options.environment.private = True
@@ -194,8 +284,8 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.max_execution_time = 500
 
         _, executor_options = prepare([pub], options)
@@ -208,8 +298,8 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.experimental = {"image": "custom-runtime:v2"}
 
         _, executor_options = prepare([pub], options)
@@ -222,8 +312,8 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": False, "enable_measure": False}})
         options.execution.meas_type = "kerneled"
 
         quantum_program, _ = prepare([pub], options)
@@ -236,8 +326,9 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        quantum_program, _ = prepare([pub], SamplerOptions())
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+        quantum_program, _ = prepare([pub], options)
 
         self.assertEqual(quantum_program.meas_level, "classified")
 
@@ -247,8 +338,8 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.experimental = {"image": "allowed:v1"}
 
         # Should not raise
@@ -261,8 +352,8 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=2048)
-        options = SamplerOptions()
+        pub = (circuit, None, 2048)
+        options = SamplerOptions(**{"twirling": {"enable_gates": False, "enable_measure": False}})
         options.execution.init_qubits = False
         options.execution.rep_delay = 0.0003
         options.execution.meas_type = "avg_kerneled"
@@ -288,7 +379,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         self.assertEqual(executor_options.environment.image, "full-test:v1")
 
 
-class TestPrepareTwirling(unittest.TestCase):
+class TestPrepareTwirling(IBMTestCase):
     """Unit tests for prepare() method with twirling enabled."""
 
     def test_prepare_creates_samplex_items(self):
@@ -298,12 +389,12 @@ class TestPrepareTwirling(unittest.TestCase):
         circuit.measure_all()
 
         # Create pub and options
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.twirling.enable_gates = True
 
         # Call prepare
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, shots=1024)
 
         # Verify SamplexItem was created
         self.assertEqual(len(qp.items), 1)
@@ -333,12 +424,14 @@ class TestPrepareTwirling(unittest.TestCase):
             with self.subTest(enable_gates=enable_gates, enable_measure=enable_measure):
                 mock_boxing_pm.reset_mock()
 
-                pub = SamplerPub.coerce(circuit, shots=1024)
-                options = SamplerOptions()
+                pub = (circuit, None, 1024)
+                options = SamplerOptions(
+                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
+                )
                 options.twirling.enable_gates = enable_gates
                 options.twirling.enable_measure = enable_measure
 
-                prepare([pub], options, default_shots=1024)
+                prepare([pub], options, shots=1024)
 
                 # Verify boxing PM was called with correct parameters
                 mock_boxing_pm.assert_called_once()
@@ -355,22 +448,24 @@ class TestPrepareTwirling(unittest.TestCase):
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
-        pub = SamplerPub.coerce(circuit, shots=1024)
+        pub = (circuit, None, 1024)
 
         # enable_measure + kerneled / avg_kerneled is rejected up front.
         for meas_type in ("kerneled", "avg_kerneled"):
             with self.subTest(meas_type=meas_type):
-                options = SamplerOptions()
+                options = SamplerOptions(
+                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
+                )
                 options.twirling.enable_measure = True
                 options.execution.meas_type = meas_type
                 with self.assertRaisesRegex(IBMInputValueError, "not compatible"):
-                    prepare([pub], options, default_shots=1024)
+                    prepare([pub], options, shots=1024)
 
         # The same kerneled meas_type is allowed when measurement twirling is off.
-        options = SamplerOptions()
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.twirling.enable_measure = False
         options.execution.meas_type = "kerneled"
-        prepare([pub], options, default_shots=1024)  # must not raise
+        prepare([pub], options, shots=1024)  # must not raise
 
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
@@ -391,11 +486,11 @@ class TestPrepareTwirling(unittest.TestCase):
 
         mock_build.return_value = (boxed_circuit, MagicMock())
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.twirling.enable_gates = True
 
-        prepare([pub], options, default_shots=1024)
+        prepare([pub], options, shots=1024)
 
         # Verify build was called with boxed circuit
         mock_build.assert_called_once_with(boxed_circuit)
@@ -425,13 +520,15 @@ class TestPrepareTwirling(unittest.TestCase):
             with self.subTest(
                 pub_shots=pub_shots, num_rand=num_rand, shots_per_rand=shots_per_rand
             ):
-                pub = SamplerPub.coerce(circuit, shots=pub_shots)
-                options = SamplerOptions()
+                pub = (circuit, None, pub_shots)
+                options = SamplerOptions(
+                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
+                )
                 options.twirling.enable_gates = True
                 options.twirling.num_randomizations = num_rand
                 options.twirling.shots_per_randomization = shots_per_rand
 
-                qp, _ = prepare([pub], options, default_shots=pub_shots)
+                qp, _ = prepare([pub], options, shots=pub_shots)
 
                 # Verify QuantumProgram shots (should be shots_per_randomization)
                 self.assertEqual(qp.shots, expected_qp_shots)
@@ -458,12 +555,14 @@ class TestPrepareTwirling(unittest.TestCase):
             with self.subTest(strategy=strategy):
                 mock_boxing_pm.reset_mock()
 
-                pub = SamplerPub.coerce(circuit, shots=1024)
-                options = SamplerOptions()
+                pub = (circuit, None, 1024)
+                options = SamplerOptions(
+                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
+                )
                 options.twirling.enable_gates = True
                 options.twirling.strategy = strategy  # type: ignore[assignment]
 
-                prepare([pub], options, default_shots=1024)
+                prepare([pub], options, shots=1024)
 
                 # Verify strategy was passed (with hyphen replaced by underscore)
                 call_kwargs = mock_boxing_pm.call_args[1]
@@ -478,11 +577,11 @@ class TestPrepareTwirling(unittest.TestCase):
 
         # Test with parameter values - use numpy array format
         param_values = np.array([[0.5], [1.0], [1.5]])
-        pub = SamplerPub.coerce((circuit, param_values), shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, param_values, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.twirling.enable_gates = True
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, shots=1024)
 
         # Verify SamplexItem was created with parameter values
 
@@ -503,19 +602,19 @@ class TestPrepareTwirling(unittest.TestCase):
         circuit2.h([0, 1])
         circuit2.measure_all()
 
-        pub1 = SamplerPub.coerce(circuit1, shots=1024)
-        pub2 = SamplerPub.coerce(circuit2, shots=1024)
-        options = SamplerOptions()
+        pub1 = (circuit1, None, 1024)
+        pub2 = (circuit2, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.twirling.enable_gates = True
 
-        qp, _ = prepare([pub1, pub2], options, default_shots=1024)
+        qp, _ = prepare([pub1, pub2], options, shots=1024)
 
         # Verify both pubs were processed
         self.assertEqual(len(qp.items), 2)
 
 
 @ddt
-class TestPreparePassthroughData(unittest.TestCase):
+class TestPreparePassthroughData(IBMTestCase):
     """Unit tests for prepare() method, checking passthrough_data."""
 
     @data(True, False)
@@ -525,15 +624,15 @@ class TestPreparePassthroughData(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        options.twirling.enable_gates = enable_gates
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(
+            **{"twirling": {"enable_gates": enable_gates, "enable_measure": False}}
+        )
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, shots=1024)
 
         # Verify passthrough_data contains post-processor info
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertEqual(qp._semantic_role, "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "classified")
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], enable_gates)
@@ -544,20 +643,88 @@ class TestPreparePassthroughData(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": False}})
         options.default_shots = 2048
-        options.twirling.enable_gates = True
         options.twirling.strategy = "all"  # type: ignore[assignment]
         options.execution.meas_type = "kerneled"
         options.environment.log_level = "DEBUG"
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, shots=1024)
 
         # Verify options dictionary is present in passthrough_data
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertEqual(qp._semantic_role, "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
         self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "kerneled")
+
+
+@ddt
+class TestPrepareDynamicalDecoupling(IBMTestCase):
+    """Tests for the DD logic inside ``prepare``."""
+
+    @data(True, False)
+    def test_dd_applied_when_enabled(self, twirling_enabled):
+        """Test DD inserts X gates into circuit items when enabled."""
+        options = SamplerOptions()
+        options.dynamical_decoupling.enable = True
+        options.twirling.enable_gates = twirling_enabled
+        options.twirling.enable_measure = twirling_enabled
+
+        # Create a circuit with a large delay on qubit 0.
+        circuit = QuantumCircuit(3)
+        for _ in range(10):
+            circuit.cx(1, 2)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pubs = [(circuit, None, 100), (circuit, None, 100)]
+
+        program, _ = prepare(pubs, options, shots=100, backend=FakeManilaV2())
+
+        # DD inserts X gates into idle slots of each circuit item
+        for item in program.items:
+            self.assertIn("x", item.circuit.count_ops())
+
+    def test_dd_rejects_dynamic_circuits(self):
+        """Test DD raises an error for circuits with control flow."""
+        options = SamplerOptions()
+        options.dynamical_decoupling.enable = True
+        options.twirling.enable_gates = False
+        options.twirling.enable_measure = False
+
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.measure(0, 0)
+        with circuit.if_test((0, 1)):
+            circuit.x(1)
+        circuit.measure(1, 1)
+
+        pubs = [(circuit, None, 100)]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "Dynamical decoupling is not compatible with dynamic circuits",
+        ):
+            prepare(pubs, options, shots=100, backend=FakeManilaV2())
+
+    def test_dd_raises_when_no_backend(self):
+        """Test DD raises an error when no backend is provided."""
+        options = SamplerOptions()
+        options.dynamical_decoupling.enable = True
+        options.twirling.enable_gates = False
+        options.twirling.enable_measure = False
+
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pubs = [(circuit, None, 100)]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "A backend must be provided when dynamical decoupling is enabled",
+        ):
+            prepare(pubs, options, shots=100)

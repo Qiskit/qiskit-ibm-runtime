@@ -14,13 +14,14 @@
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 
-class FakeFez(fake_backend.FakeBackendV2):
+class FakeFez(FakeBackendV2):
     """A fake 156 qubit backend."""
 
     dirname = os.path.dirname(__file__)
     conf_filename = "conf_fez.json"
     props_filename = "props_fez.json"
     backend_name = "fake_fez"
+    _physical_qubits = 332

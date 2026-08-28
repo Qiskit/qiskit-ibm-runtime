@@ -18,22 +18,23 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+
+from ..decoders.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
-    from qiskit.circuit import CircuitInstruction
-    from qiskit.primitives import EstimatorPub
+    from qiskit.circuit import BoxOp, CircuitInstruction
+    from qiskit.primitives import EstimatorPub, SamplerPub
     from samplomatic.samplex import Samplex
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.twirling_options import TwirlingOptions
+    from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ..options_models.twirling import TwirlingOptions
 
 from collections import defaultdict
-from functools import lru_cache
 
 import numpy as np
 from qiskit.circuit import ClassicalRegister
@@ -41,38 +42,52 @@ from qiskit.circuit.exceptions import CircuitError
 from qiskit.quantum_info import Pauli, PauliList
 from samplomatic import ChangeBasis
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions, get_annotation
+from samplomatic.utils import find_unique_box_instructions, get_annotation, undress_box
 
 from ..exceptions import IBMInputValueError
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
 
+_REQUIRED_NOISE_FACTORS = {
+    "linear": 2,
+    "exponential": 2,
+    "double_exponential": 4,
+    "fallback": 1,
+    **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
+}
 
-def get_pauli_basis(basis: str) -> Pauli:
-    """Map computational basis to Pauli measurement basis.
+# TypeAlias for a BoxOp type
+BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
-    Converts basis strings like "000", "++0", "rl1" to Pauli operators.
-    - 0, 1 → Z
-    - +, - → X
-    - r, l → Y
-    - I → I
+
+def validate_noise_factors(
+    noise_factors: Sequence[float], extrapolator: str | Sequence[str]
+) -> None:
+    """Check that ``noise_factors`` has enough points for every requested extrapolator.
 
     Args:
-        basis: Basis string to convert.
+        noise_factors: The resolved noise factors that will be used for amplification.
+        extrapolator: The extrapolator(s) requested in the ZNE options.
 
-    Returns:
-        Pauli operator representing the measurement basis.
+    Raises:
+        IBMInputValueError: If ``noise_factors`` is under-specified for any extrapolator.
     """
-    basis = (
-        basis.replace("0", "Z")
-        .replace("1", "Z")
-        .replace("+", "X")
-        .replace("-", "X")
-        .replace("r", "Y")
-        .replace("l", "Y")
-    )
-    return Pauli(basis)
+    extrapolators = [extrapolator] if isinstance(extrapolator, str) else extrapolator
+    for extrap in extrapolators:
+        required = _REQUIRED_NOISE_FACTORS[extrap]
+        if len(noise_factors) < required:
+            raise IBMInputValueError(f"{extrap} requires at least {required} noise_factors")
+
+
+def has_projection_operators(pub: EstimatorPub) -> bool:
+    """Return whether an estimator pub contains projection operators in its observables."""
+    projection_set = set("01rl+-")
+    for observable in pub.observables.ravel():
+        for observable_term in observable:
+            if bool(set(observable_term) & projection_set):
+                return True
+    return False
 
 
 def pauli_to_ints(pauli: Pauli) -> list[int]:
@@ -92,41 +107,6 @@ def pauli_to_ints(pauli: Pauli) -> list[int]:
         so we reverse the list.
     """
     return [LOOKUP_TABLE[p] for p in pauli.to_label()][::-1]
-
-
-def unbroadcast_index(
-    bc_index: tuple[int | slice, ...], shape: tuple[int, ...]
-) -> tuple[int | slice, ...]:
-    """Index an array using an index from a compatible broadcasted shape.
-
-    An ND-array ``arr`` is broadcastable to any shape ``bc_shape = (*pad_shape, *arr.shape)``.
-    This function allows indexing ``arr`` using an ND-index or slice from ``bc_shape`` and
-    will return the index for ``arr`` that accesses the same value.
-
-    Args:
-        bc_index: An ND-index from a broadcasted shape.
-        shape: The shape of the broadcasting compatible array to index.
-
-    Returns:
-        The equivalent un-broadcasted ND-index of the array with specified shape.
-    """
-
-    @lru_cache
-    def _pad_broadcast_shape(shape: tuple[int, ...], ndims: int) -> tuple[int | slice, ...]:
-        # Pad a shape with trivial dimensions.
-        shape_ndims = len(shape)
-        pad = ndims - shape_ndims
-        if pad > 0:
-            return pad * (1,) + shape
-        return shape
-
-    shape_ndims = len(shape)
-    if shape_ndims == 0:
-        return ()
-
-    pad_shape = _pad_broadcast_shape(shape, len(bc_index))
-    bc_index = tuple(0 if dim == 1 else i for i, dim in zip(bc_index, pad_shape))
-    return bc_index[-shape_ndims:]
 
 
 def resolve_precision(
@@ -169,6 +149,7 @@ def box_circuit(
     enable_gates: bool,
     measure_annotations: str,
     twirling_strategy: str,
+    twirling_group: str,
     inject_noise: bool = False,
     add_tags: Literal["none", "unique_box", "unique_instance", "noise_ref"] = "none",
 ) -> QuantumCircuit:
@@ -194,6 +175,9 @@ def box_circuit(
             argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
             API docs for a full list of supported values.
+        twirling_group: The group to use for the twirling boxes.
+            Check the :meth:`~.samplomatic.transpiler.generate_boxing_pass_manager` documentation
+            for supported values.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates. If ``True``, :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` is
             called with arguments ``inject_noise_targets`` and ``inject_noise_strategy`` set to
@@ -222,6 +206,7 @@ def box_circuit(
         enable_gates=enable_gates,
         enable_measures=True,
         twirling_strategy=twirling_strategy,
+        twirling_group=twirling_group,
         measure_annotations=measure_annotations,
         inject_noise_site="after",
         inject_noise_targets="gates" if inject_noise else "none",
@@ -232,7 +217,7 @@ def box_circuit(
     return boxed_circuit
 
 
-def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
+def options_to_boxing_pm_kwargs(
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None,
     inject_noise: bool,
@@ -245,6 +230,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to inject noise.
+        twirling_group: The group to use for the twirling boxes.
         add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
             (will pass the "none" value to the relevant attribute), while ``True`` will cause tags
             with the twirled boxes hash to be added (using the "unique_box" value of the relevant
@@ -259,13 +245,14 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
         if twirling_options.enable_measure or (measure_noise_learning is not None)
         else "change_basis",
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
+        "twirling_group": twirling_options.group,
         "inject_noise": inject_noise,
         "add_tags": "unique_box" if add_tags else "none",
     }
 
 
 def find_unique_layers(
-    pubs: Iterable[EstimatorPub],
+    pubs: Iterable[EstimatorPub | SamplerPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
@@ -280,7 +267,7 @@ def find_unique_layers(
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates.
-        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+        add_tags: Whether to include tags for the boxes.
 
     Returns:
         Unique boxed layers found across the given PUBs.
@@ -296,6 +283,38 @@ def find_unique_layers(
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True
     )
+
+
+def find_box_type(instruction: BoxOp) -> BoxType:
+    """Find the type of :class:`~qiskit.circuit.BoxOp` that ``instruction`` contains.
+
+    Args:
+        instruction: The instruction to get the type of.
+
+    Returns:
+        The box type. Can be one of ``"gates"``, ``"measurement"``, or ``"unknown"``.
+
+    Raises:
+        IBMInputValueError: If ``instruction`` does not contain a box.
+    """
+    box = instruction.operation
+    if (name := box.name) != "box":
+        raise IBMInputValueError(f"Expected a 'box' but found '{name}'.")
+
+    undressed_box = undress_box(box)
+
+    if len(undressed_box.body) == 0:
+        return "gates"
+
+    all_gates = all(op.is_standard_gate() or op.name == "barrier" for op in undressed_box.body)
+    all_measurement = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
+
+    if all_gates and not all_measurement:
+        return "gates"
+    elif not all_gates and all_measurement:
+        return "measurement"
+
+    return "unknown"
 
 
 def compute_samplex_arguments(
@@ -383,11 +402,12 @@ def compute_samplex_arguments(
     )
     change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
 
+    parameter_values_array = parameter_values.as_array(pub.circuit.parameters)
     basis_idx = 0
     for ndindex, basis in param_basis_map.items():
         for bases in basis:
             change_basis[basis_idx] = pauli_to_ints(bases)
-            flat_parameter_values[basis_idx] = parameter_values.as_array()[ndindex]
+            flat_parameter_values[basis_idx] = parameter_values_array[ndindex]
             basis_idx += 1
 
     # Step 4. Log info.

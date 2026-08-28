@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Helper functions for the PEC error mitigation method."""
+"""Helper functions for the PEA error mitigation method."""
 
 from __future__ import annotations
 
@@ -23,24 +23,25 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.twirling_options import TwirlingOptions
-    from ..options_models.zne_options import ZneOptions
+    from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ..options_models.twirling import TwirlingOptions
+    from ..options_models.zne import ZneOptions
 
 import numpy as np
 from samplomatic import build
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..options_models.zne_options import PEA_DEFAULT_NOISE_FACTORS
+from ..options_models.zne import DEFAULT_NOISE_FACTORS
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
-from .trex_utils import create_trex_calibration_circuit
+from .trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from .utils import (
     box_circuit,
     compute_samplex_arguments,
     make_samplex_arguments,
     options_to_boxing_pm_kwargs,
+    validate_noise_factors,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,11 +52,11 @@ def prepare_pea(
     twirling_options: TwirlingOptions,
     shots: int,
     zne_options: ZneOptions,
-    noise_model_mapping: dict[str, PauliLindbladMap],
+    noise_model: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program.
+    """Convert estimator PUBs to a quantum program with PEA mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.
@@ -66,7 +67,7 @@ def prepare_pea(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         zne_options: The options for PEA mitigation (which have the same options as ZNE).
-        noise_model_mapping: Mapping between layer ref to a noise model to use for noise
+        noise_model: Mapping between layer ref to a noise model to use for noise
             amplification. The dict contains layers from all pubs. Assumes that the unique
             layers used for noise learning were extracted using the ``find_unique_layers`` method.
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
@@ -84,17 +85,27 @@ def prepare_pea(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If noise_model_mapping is missing a noise map for at least one of
+        IBMInputValueError: If noise_model is missing a noise map for at least one of
             the pubs layers.
+        IBMInputValueError: If ``noise_factors`` is under-specified for the requested extrapolator.
 
     """
+    if not twirling_options.enable_gates:
+        raise ValueError("PEA requires enabling twirling for gates.")
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
     if zne_options.amplifier != "pea":
         raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")
 
     if zne_options.noise_factors == "auto":
-        noise_factors = np.array(PEA_DEFAULT_NOISE_FACTORS)
+        noise_factors = np.array(DEFAULT_NOISE_FACTORS, dtype=float)
     else:
-        noise_factors = np.array(zne_options.noise_factors)
+        noise_factors = np.array(zne_options.noise_factors, dtype=float)
+    validate_noise_factors(noise_factors, zne_options.extrapolator)
+
+    extrapolated_noise_factors = zne_options.extrapolated_noise_factors
+    if extrapolated_noise_factors == "auto":
+        extrapolated_noise_factors = np.insert(noise_factors, 0, 0.0)
 
     num_randomizations, shots_per_randomization = calculate_twirling_shots(
         shots,
@@ -134,25 +145,25 @@ def prepare_pea(
 
         # Subtract 1 from noise_factors, since a value of 1 represents the noise
         # that is present in the circuit in the absence of amplification.
-        # Also, make noise_scales broadcastable with the parameters.
-        noise_scales = np.expand_dims(np.array(noise_factors) - 1, -1)
+        # Also, make noise_scales broadcastable with the parameters and randomizations.
+        noise_scales = np.expand_dims(np.array(noise_factors) - 1, (-1, -2))
 
         # Create a noise model map containing only the layers relevant for the current pub
         specs = samplex.inputs().get_specs("pauli_lindblad_maps")
         pub_noise_model = {}
         for spec in specs:
             ref = spec.name.split(".")[-1]
-            if ref not in noise_model_mapping.keys():
-                raise IBMInputValueError(
-                    f"noise_model_mapping is missing noise map for layer reference {ref}"
-                )
-            pub_noise_model[ref] = noise_model_mapping[ref]
+            try:
+                model = noise_model[ref]
+            except KeyError:
+                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
+            pub_noise_model[ref] = model
             samplex_arguments[f"noise_scales.{ref}"] = noise_scales
 
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
 
-        # Create SamplexItem
-        shape = (num_randomizations, len(noise_scales), change_basis.shape[0])
+        # Create SamplexItem with noise_factors as first axis
+        shape = (len(noise_scales), num_randomizations, change_basis.shape[0])
         items.append(
             SamplexItem(
                 circuit=template,
@@ -170,12 +181,15 @@ def prepare_pea(
     passthrough_data = {
         "post_processor": {
             "version": "v0.1",
+            "mitigation": "pea",
             "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
-            "measure_mitigation": measure_noise_learning is not None,
+            "measure_mitigation": False,
             "pea_noise_factors": noise_factors,
+            "extrapolated_noise_factors": extrapolated_noise_factors,
+            "extrapolator": zne_options.extrapolator,
         },
     }
 
@@ -188,18 +202,12 @@ def prepare_pea(
 
     # Add TREX calibration circuit
     if measure_noise_learning is not None:
-        if (
-            isinstance(measure_noise_learning.shots_per_randomization, int)
-            and measure_noise_learning.shots_per_randomization != shots_per_randomization
-        ):
-            raise IBMInputValueError(
-                "shots_per_randomization must be the same for twirling and measure_noise_learning"
-            )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        trex_num_randomizations = resolve_trex_num_randomizations(
+            measure_noise_learning, num_randomizations
+        )
+        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
-        passthrough_data["post_processor"]["measure_mitigation"] = "True"
-
-    # Set semantic role for post-processing dispatch
-    quantum_program._semantic_role = "estimator_v2"
+        logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
+        passthrough_data["post_processor"]["measure_mitigation"] = True
 
     return quantum_program

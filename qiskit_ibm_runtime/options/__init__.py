@@ -17,7 +17,7 @@ Primitive options (:mod:`qiskit_ibm_runtime.options`)
 
 .. currentmodule:: qiskit_ibm_runtime.options
 
-Options that can be passed to the Qiskit Runtime primitives.
+Options that can be passed to the IBM Quantum Compute (formerly Qiskit Runtime) primitives.
 
 V2 Primitives
 =============

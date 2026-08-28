@@ -18,11 +18,13 @@ from itertools import chain
 from typing import TYPE_CHECKING
 
 import numpy as np
-from qiskit.circuit import ControlFlowOp, ParameterExpression
+from qiskit.circuit import BoxOp, ControlFlowOp, ParameterExpression, QuantumCircuit
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.library.standard_gates import PhaseGate, RZGate, U1Gate
 from qiskit.qpy import QPY_VERSION
 from samplomatic.ssv import SSV
+
+from ..exceptions import IBMInputValueError
 
 if TYPE_CHECKING:
     from qiskit.circuit import Parameter, QuantumCircuit
@@ -281,3 +283,21 @@ def is_crn(locator: str) -> bool:
         Whether the input is a CRN.
     """
     return isinstance(locator, str) and locator.startswith("crn:")
+
+
+def validate_no_boxes(circuit: QuantumCircuit) -> None:
+    """Validate that a circuit contains no :class:`~qiskit.circuit.BoxOp` instructions.
+
+    Args:
+        circuit: The circuit to validate.
+
+    Raises:
+        IBMInputValueError: If the circuit contains :class:`~qiskit.circuit.BoxOp` instructions.
+    """
+    for instruction in circuit.data:
+        if isinstance(instruction.operation, BoxOp):
+            raise IBMInputValueError(
+                f"Circuit contains a BoxOp instruction '{instruction.operation.name}' "
+                "which is not supported in this minimal implementation. "
+                "BoxOp support (for twirling) will be added in a future phase."
+            )

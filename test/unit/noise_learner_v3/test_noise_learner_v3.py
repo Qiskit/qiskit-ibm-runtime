@@ -23,9 +23,9 @@ from qiskit_ibm_runtime.options_models import (
     NoiseLearnerV3Options,
     PostSelectionOptions,
 )
-from test.utils import get_mocked_backend, get_mocked_session
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend, get_mocked_session
 
 
 class TestNoiseLearnerV3Options(IBMTestCase):
@@ -37,18 +37,29 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertIsInstance(nlv3.options, NoiseLearnerV3Options)
         self.assertEqual(nlv3.options, NoiseLearnerV3Options())
 
+    def test_post_selection_warns(self):
+        """Test that enabling post-selection issues a deprecation warning."""
+        options = NoiseLearnerV3Options()
+        with self.assertWarnsRegex(DeprecationWarning, "0.49.0"):
+            options.post_selection.enable = True
+
+        with self.assertWarnsRegex(DeprecationWarning, "0.49.0"):
+            NoiseLearnerV3Options(post_selection={"enable": True})
+
     def test_options_from_instance(self):
         """Test constructing with an NoiseLearnerV3Options instance."""
         opts_dict = {
-            "post_selection": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"},
+            "bit_flip_checks": {
+                "pre_circuit": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"}
+            },
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"], "image": "my:image"},
             "execution": {"rep_delay": 42},
         }
         options = NoiseLearnerV3Options(**opts_dict)
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=options)
-        self.assertTrue(nlv3.options.post_selection.enable)
-        self.assertEqual(nlv3.options.post_selection.x_pulse_type, "rx")
-        self.assertEqual(nlv3.options.post_selection.strategy, "edge")
+        self.assertTrue(nlv3.options.bit_flip_checks.pre_circuit.enable)
+        self.assertEqual(nlv3.options.bit_flip_checks.pre_circuit.x_pulse_type, "rx")
+        self.assertEqual(nlv3.options.bit_flip_checks.pre_circuit.strategy, "edge")
         self.assertEqual(nlv3.options.environment.log_level, "DEBUG")
         self.assertEqual(nlv3.options.environment.job_tags, ["tag1"])
         self.assertEqual(nlv3.options.environment.image, "my:image")
@@ -60,14 +71,16 @@ class TestNoiseLearnerV3Options(IBMTestCase):
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
         opts_dict = {
-            "post_selection": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"},
+            "bit_flip_checks": {
+                "pre_circuit": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"}
+            },
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"], "image": "my:image"},
             "execution": {"rep_delay": 42},
         }
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts_dict)
-        self.assertTrue(nlv3.options.post_selection.enable)
-        self.assertEqual(nlv3.options.post_selection.x_pulse_type, "rx")
-        self.assertEqual(nlv3.options.post_selection.strategy, "edge")
+        self.assertTrue(nlv3.options.bit_flip_checks.pre_circuit.enable)
+        self.assertEqual(nlv3.options.bit_flip_checks.pre_circuit.x_pulse_type, "rx")
+        self.assertEqual(nlv3.options.bit_flip_checks.pre_circuit.strategy, "edge")
         self.assertEqual(nlv3.options.environment.log_level, "DEBUG")
         self.assertEqual(nlv3.options.environment.job_tags, ["tag1"])
         self.assertEqual(nlv3.options.environment.image, "my:image")
@@ -79,11 +92,12 @@ class TestNoiseLearnerV3Options(IBMTestCase):
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
         nlv3 = NoiseLearnerV3(
-            mode=get_mocked_backend(), options={"post_selection": {"strategy": "edge"}}
+            mode=get_mocked_backend(),
+            options={"bit_flip_checks": {"pre_circuit": {"strategy": "edge"}}},
         )
-        self.assertFalse(nlv3.options.post_selection.enable)
-        self.assertEqual(nlv3.options.post_selection.x_pulse_type, "xslow")
-        self.assertEqual(nlv3.options.post_selection.strategy, "edge")
+        self.assertFalse(nlv3.options.bit_flip_checks.pre_circuit.enable)
+        self.assertEqual(nlv3.options.bit_flip_checks.pre_circuit.x_pulse_type, "xslow")
+        self.assertEqual(nlv3.options.bit_flip_checks.pre_circuit.strategy, "edge")
         self.assertEqual(nlv3.options.environment, EnvironmentOptions())
         self.assertEqual(nlv3.options.execution, ExecutionOptions())
 

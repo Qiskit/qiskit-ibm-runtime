@@ -35,13 +35,13 @@ from qiskit.providers.backend import QubitProperties
 from qiskit.transpiler.passes.utils.wrap_angles import WrapAngles
 from qiskit.transpiler.target import InstructionProperties, Target
 
-from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
-from qiskit_ibm_runtime.utils.utils import is_fractional_gate
+from ..models.exceptions import BackendPropertyError
+from ..utils.utils import is_fractional_gate
 
 if TYPE_CHECKING:
     from qiskit.dagcircuit import DAGCircuit
 
-    from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
+    from ..models import BackendConfiguration, BackendProperties
 
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ are supported by a given backend, one can inspect ``backend.supported_operations
 
 def rzz_wrapper(angles: list[float], qubits: list[Qubit]) -> DAGCircuit:
     """A wrapper to instruct the transpiler how to fold out-of-bounds Rzz angles."""
-    from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import FoldRzzAngle
+    from ..transpiler.passes.basis.fold_rzz_angle import FoldRzzAngle
 
     fold_rzz = FoldRzzAngle()
     angle = float(angles[0])

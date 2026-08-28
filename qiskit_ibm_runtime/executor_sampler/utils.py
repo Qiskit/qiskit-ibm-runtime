@@ -16,33 +16,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import BoxOp
-
 from ..exceptions import IBMInputValueError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from qiskit.circuit import QuantumCircuit
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-
-def validate_no_boxes(circuit: QuantumCircuit) -> None:
-    """Validate that a circuit contains no :class:`~qiskit.circuit.BoxOp` instructions.
-
-    Args:
-        circuit: The circuit to validate.
-
-    Raises:
-        IBMInputValueError: If the circuit contains :class:`~qiskit.circuit.BoxOp` instructions.
-    """
-    for instruction in circuit.data:
-        if isinstance(instruction.operation, BoxOp):
-            raise IBMInputValueError(
-                f"Circuit contains a BoxOp instruction '{instruction.operation.name}' "
-                "which is not supported in this minimal implementation. "
-                "BoxOp support (for twirling) will be added in a future phase."
-            )
+    from ..options_models.twirling import TwirlingOptions
 
 
 def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | None) -> None:
@@ -64,6 +45,21 @@ def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | No
             f"'meas_type={meas_type}' and measurement twirling are not compatible. "
             "Set `twirling.enable_measure=False` or `execution.meas_type='classified'`"
         )
+
+
+def validate_twirling_option_fields_are_not_none(options: TwirlingOptions) -> None:
+    """Validate that twirling options fields are not ``None``.
+
+    Args:
+        options: The options to validate
+
+    Raises:
+        IBMInputValueError: If ``options.enable_gates`` or ``options.enable_measure`` are ``None``.
+    """
+    if options.enable_gates is None:
+        raise IBMInputValueError("``enable_gates`` is ``None``, expected ``True`` or ``False``.")
+    if options.enable_measure is None:
+        raise IBMInputValueError("``enable_measure`` is ``None``, expected ``True`` or ``False``.")
 
 
 def extract_shots_from_pubs(pubs: Sequence[SamplerPub], default_shots: int | None = None) -> int:

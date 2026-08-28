@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.options.utils import (
 )
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal
 
 
 @ddt
@@ -61,15 +60,9 @@ class TestOptionsUtils(IBMTestCase):
                 combined = merge_options_v2(asdict(options), new_ops)
 
                 # Make sure the values are equal.
-                self.assertTrue(
-                    dict_paritally_equal(combined, new_ops),
-                    f"new_ops={new_ops}, combined={combined}",
-                )
+                self.assertDictPartiallyEqual(combined, new_ops)
                 # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(combined, asdict(options), exclude_keys=["experimental"]),
-                    f"options={options}, combined={combined}",
-                )
+                self.assertDictKeysEqual(combined, asdict(options), exclude_keys=["experimental"])
 
     @data(
         {},
@@ -84,15 +77,9 @@ class TestOptionsUtils(IBMTestCase):
         combined = merge_options_v2(asdict(options), new_ops)
 
         # Make sure the values are equal.
-        self.assertTrue(
-            dict_paritally_equal(combined, new_ops),
-            f"new_ops={new_ops}, combined={combined}",
-        )
+        self.assertDictPartiallyEqual(combined, new_ops)
         # Make sure the structure didn't change.
-        self.assertTrue(
-            dict_keys_equal(combined, asdict(options), exclude_keys=["experimental"]),
-            f"options={options}, combined={combined}",
-        )
+        self.assertDictKeysEqual(combined, asdict(options), exclude_keys=["experimental"])
 
     def test_merge_options_v2_no_flat(self):
         """Test merge_options_v2 does not combine keys at different level."""

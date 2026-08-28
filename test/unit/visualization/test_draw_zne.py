@@ -18,10 +18,10 @@ from qiskit.primitives.containers import DataBin
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 from qiskit_ibm_runtime.visualization import draw_zne_evs, draw_zne_extrapolators
 
-from ...ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMVisualizationTestCase
 
 
-class DrawZNEBase(IBMTestCase):
+class DrawZNEBase(IBMVisualizationTestCase):
     """Base class for testing the functions that visualize ZNE expectation values."""
 
     def setUp(self):

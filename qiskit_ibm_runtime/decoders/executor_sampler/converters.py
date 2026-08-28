@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
+from ...results.quantum_program import ItemMetadata
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -41,7 +43,7 @@ def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict
 
 def quantum_program_item_result_to_sampler_pub_result(
     item: QuantumProgramItemResult,
-    pub_shape: list[tuple[int, ...]],
+    pub_shape: tuple[int, ...],
     num_randomizations: int,
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
     circuit_metadata: dict | None = None,
@@ -70,22 +72,25 @@ def quantum_program_item_result_to_sampler_pub_result(
     data_bin = DataBin(**arrays, shape=pub_shape)
 
     # Construct the metadata for the result.
-    pub_metadata: dict[str, Any] = {"circuit_metadata": {}}
-    if circuit_metadata:
-        pub_metadata["circuit_metadata"] = circuit_metadata
+    pub_metadata: dict[str, Any] = {
+        "circuit_metadata": circuit_metadata if circuit_metadata else {}
+    }
     if num_randomizations > 0:
         pub_metadata["num_randomizations"] = num_randomizations
-    if item.metadata.scheduler_timing:
-        pub_metadata.setdefault("compilation", {})
-        pub_metadata["compilation"]["scheduler_timing"] = {
-            "timing": item.metadata.scheduler_timing.timing,
-            "circuit_duration": item.metadata.scheduler_timing.circuit_duration,
-        }
-    if item.metadata.stretch_values:
-        pub_metadata.setdefault("compilation", {})
-        pub_metadata["compilation"]["stretch_values"] = [
-            asdict(stretch_value, dict_factory=expanded_values_to_lists)
-            for stretch_value in item.metadata.stretch_values
-        ]
+    if isinstance(item.metadata, ItemMetadata):
+        if item.metadata.scheduler_timing:
+            pub_metadata.setdefault("compilation", {})
+            pub_metadata["compilation"]["scheduler_timing"] = {
+                "timing": item.metadata.scheduler_timing.timing,
+                "circuit_duration": item.metadata.scheduler_timing.circuit_duration,
+            }
+        if item.metadata.stretch_values:
+            pub_metadata.setdefault("compilation", {})
+            pub_metadata["compilation"]["stretch_values"] = [
+                asdict(stretch_value, dict_factory=expanded_values_to_lists)
+                for stretch_value in item.metadata.stretch_values
+            ]
+    else:  # simulator
+        pub_metadata["executor"] = item.metadata
 
     return SamplerPubResult(data=data_bin, metadata=pub_metadata)

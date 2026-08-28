@@ -139,10 +139,11 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
     def test_to_dict_valid_input_require_refs_true(self):
         """Test ``NoiseLearnerV3Results.to_dict`` when ``require_refs`` is ``True``."""
+        annotations = self.inject_noise_annotations
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+        with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
-        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+        with circuit.box(annotations=[annotations[1]]):
             circuit.cx(0, 1)
 
         returned_dict = NoiseLearnerV3Results(self.results[:2]).to_dict(circuit.data, True)
@@ -150,7 +151,7 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             {
                 annotation.ref: pauli_lindblad_map
                 for annotation, pauli_lindblad_map in zip(
-                    self.inject_noise_annotations[:2], self.pauli_lindblad_maps[:2]
+                    annotations[:2], self.pauli_lindblad_maps[:2]
                 )
             },
             returned_dict,
@@ -158,12 +159,13 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
     def test_to_dict_valid_input_require_refs_false(self):
         """Test ``NoiseLearnerV3Results.to_dict`` when ``require_refs`` is ``True``."""
+        annotations = self.inject_noise_annotations
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+        with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
         with circuit.box(annotations=[Twirl()]):
             circuit.cx(0, 1)
-        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+        with circuit.box(annotations=[annotations[1]]):
             circuit.cx(0, 1)
 
         returned_dict = NoiseLearnerV3Results(self.results).to_dict(circuit.data, False)
@@ -171,7 +173,7 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             {
                 annotation.ref: pauli_lindblad_map
                 for annotation, pauli_lindblad_map in zip(
-                    self.inject_noise_annotations,
+                    annotations,
                     [self.pauli_lindblad_maps[0], self.pauli_lindblad_maps[2]],
                 )
             },
@@ -180,27 +182,29 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
     def test_to_dict_wrong_num_of_instructions(self):
         """Test ``.to_dict`` raises if number of instructions does not match number of results."""
+        annotations = self.inject_noise_annotations
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+        with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
-        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+        with circuit.box(annotations=[annotations[1]]):
             circuit.cx(0, 1)
 
         with self.assertRaisesRegex(ValueError, "Expected 3 instructions but found 2"):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data, True)
 
     def test_to_dict_invalid_for_require_refs_true(self):
-        """Test raising if an instruction does not contain InjectNoise annotation when requires_ref.
+        """Test raising if an instruction does not contain annotations when requires_ref.
 
         Test that ``NoiseLearnerV3Results.to_dict`` raises if an instruction does not contain
-        the ``InjectNoise`` annotation, when ``requires_ref`` is ``True``.
+        an annotation, when ``requires_ref`` is ``True``.
         """
+        annotations = self.inject_noise_annotations
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+        with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
         with circuit.box(annotations=[Twirl()]):
             circuit.cx(0, 1)
-        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+        with circuit.box(annotations=[annotations[1]]):
             circuit.cx(0, 1)
 
         with self.assertRaisesRegex(ValueError, "without an inject noise"):
@@ -208,11 +212,12 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
     def test_to_dict_unboxed_instruction(self):
         """Test ``.to_dict`` raises if there is an instruction not in a box."""
+        annotations = self.inject_noise_annotations
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+        with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
         circuit.cx(0, 1)
-        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+        with circuit.box(annotations=[annotations[1]]):
             circuit.cx(0, 1)
 
         with self.assertRaisesRegex(ValueError, "contain a box"):
@@ -220,13 +225,19 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
     def test_to_dict_ref_used_twice(self):
         """Test ``.to_dict`` raises if an annotation reference is repeated."""
+        annotations = self.inject_noise_annotations
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+        with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
-        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+        with circuit.box(annotations=[Twirl(), annotations[0]]):
             circuit.cx(0, 1)
-        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+        with circuit.box(annotations=[annotations[1]]):
             circuit.cx(0, 1)
 
         with self.assertRaisesRegex(ValueError, "multiple instructions with the same ``ref``"):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data)
+
+    def test_to_pauli_lindblad_maps(self):
+        """Test ``.to_pauli_lindblad_maps``."""
+        results = NoiseLearnerV3Results(self.results)
+        self.assertEqual(results.to_pauli_lindblad_maps(), self.pauli_lindblad_maps)

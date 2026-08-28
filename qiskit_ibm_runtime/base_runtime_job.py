@@ -10,12 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Base runtime job class."""
+"""Base IBM Quantum Compute job class."""
 
 from __future__ import annotations
 
 import logging
-import queue
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from concurrent import futures
@@ -33,10 +32,9 @@ if TYPE_CHECKING:
     from qiskit.providers.backend import Backend
     from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 
-    from qiskit_ibm_runtime import qiskit_runtime_service
-
     from .api.clients import RuntimeClient
     from .models import BackendProperties
+    from .qiskit_runtime_service import QiskitRuntimeService
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +47,7 @@ API_TO_JOB_ERROR_MESSAGE = {
 
 
 class BaseRuntimeJob(ABC):
-    """Base Runtime Job class.
+    """Base IBM Quantum Compute Job class.
 
     Args:
         backend: The backend instance used to run this job.
@@ -61,9 +59,9 @@ class BaseRuntimeJob(ABC):
             of such subclasses. If more than one decoder is specified, they will be called in
             chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
             decoder. If not specified, the default ``ResultDecoder`` is used.
-        image: Runtime image used for this job: image_name:tag.
-        service: Runtime service.
-        session_id: Job ID of the first job in a runtime session.
+        image: IBM Quantum Compute image used for this job: image_name:tag.
+        service: IBM Quantum Compute (formerly Qiskit Runtime) service.
+        session_id: Job ID of the first job in a IBM Quantum Compute session.
         tags: Tags assigned to the job.
         version: Primitive version.
         private: Marks job as private.
@@ -80,7 +78,7 @@ class BaseRuntimeJob(ABC):
         api_client: RuntimeClient,
         job_id: str,
         program_id: str,
-        service: qiskit_runtime_service.QiskitRuntimeService,
+        service: QiskitRuntimeService,
         creation_date: str | None = None,
         result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         image: str | None = "",
@@ -235,7 +233,7 @@ class BaseRuntimeJob(ABC):
         """Set status.
 
         Args:
-            job_response: Job response from runtime API.
+            job_response: Job response from IBM Quantum Compute API.
 
         Raises:
             IBMError: If an unknown status is returned from the server.
@@ -258,7 +256,7 @@ class BaseRuntimeJob(ABC):
         """Set error message if the job failed.
 
         Args:
-            job_response: Job response from runtime API.
+            job_response: Job response from IBM Quantum Compute API.
         """
         if self._status == self.ERROR:
             self._error_message = self._error_msg_from_job_response(job_response)
@@ -274,7 +272,7 @@ class BaseRuntimeJob(ABC):
         """Returns the error message from an API response.
 
         Args:
-            response: Job response from the runtime API.
+            response: Job response from the IBM Quantum Compute API.
 
         Returns:
             Error message.
@@ -294,28 +292,15 @@ class BaseRuntimeJob(ABC):
             error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
             return error_msg.format(self.job_id(), self._reason or job_result_raw)
 
-    @staticmethod
-    def _empty_result_queue(result_queue: queue.Queue) -> None:
-        """Empty the result queue.
-
-        Args:
-            result_queue: Result queue to empty.
-        """
-        try:
-            while True:
-                result_queue.get_nowait()
-        except queue.Empty:
-            pass
-
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}('{self._job_id}', '{self._program_id}')>"
 
     @property
     def image(self) -> str:
-        """Return the runtime image used for the job.
+        """Return the IBM Quantum Compute image used for the job.
 
         Returns:
-            The runtime image ``image_name:tag`` or ``""`` if the default image is used.
+            The IBM Quantum Compute image ``image_name:tag`` or ``""`` if the default image is used.
         """
         return self._image
 

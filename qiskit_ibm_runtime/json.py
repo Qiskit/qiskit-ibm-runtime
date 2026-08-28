@@ -24,12 +24,12 @@ import sys
 import warnings
 import zlib
 from datetime import date
-from typing import TYPE_CHECKING, Any, get_args
+from typing import TYPE_CHECKING, Any, BinaryIO, get_args
 
 import dateutil.parser
 import numpy as np
 
-from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
+from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 
 try:
     from qiskit.quantum_info import PauliLindbladMap
@@ -52,22 +52,21 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.qpy import QPY_VERSION as QISKIT_QPY_VERSION
-from qiskit.qpy import dump, load
+from qiskit.qpy import dump, get_qpy_version, load
 from qiskit.qpy.binary_io.value import _read_parameter, _write_parameter
 from qiskit.result import Result
 from qiskit.transpiler import CouplingMap
 from qiskit.utils import LazyImportTester
 
-from qiskit_ibm_runtime.execution_span import (
+from .execution_span import (
     DoubleSliceSpan,
     ExecutionSpans,
     SliceSpan,
     TwirledSliceSpan,
     TwirledSliceSpanV2,
 )
-from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
-from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
-
+from .options.zne_options import ExtrapolatorType
+from .results.estimator_pub import EstimatorPubResult
 from .results.noise_learner import NoiseLearnerResult
 
 if TYPE_CHECKING:
@@ -125,6 +124,32 @@ def _serialize_and_encode(
     if compress:
         serialized_data = zlib.compress(serialized_data)
     return base64.standard_b64encode(serialized_data).decode("utf-8")
+
+
+def _load_qpy(file_obj: BinaryIO) -> list[Any]:
+    """Load circuits from QPY, warning when the payload uses a newer QPY format.
+
+    ``RuntimeDecoder`` receives QPY payloads from the Runtime API. When a job was
+    serialized with a newer Qiskit release, the embedded QPY format version can
+    exceed what the installed Qiskit supports. Emit a clear warning in that case
+    before delegating to :func:`~qiskit.qpy.load`.
+
+    Args:
+        file_obj: Binary stream containing QPY data.
+
+    Returns:
+        The programs deserialized from the QPY payload.
+    """
+    qpy_version = get_qpy_version(file_obj)
+    if qpy_version > QISKIT_QPY_VERSION:
+        warnings.warn(
+            "This job was serialized with a newer Qiskit release than you have "
+            "installed. Upgrade with 'pip install -U qiskit' to load the job's "
+            "circuits.",
+            UserWarning,
+            stacklevel=2,
+        )
+    return load(file_obj)
 
 
 def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool = True) -> Any:
@@ -238,7 +263,7 @@ def _cast_strings_keys_to_int(obj: dict) -> dict:
 
 
 class RuntimeEncoder(json.JSONEncoder):
-    """JSON Encoder used by runtime service."""
+    """JSON Encoder used by IBM Quantum Compute service."""
 
     def default(self, obj: Any) -> Any:
         """Return a serializable object for ``obj``."""
@@ -431,7 +456,7 @@ class RuntimeEncoder(json.JSONEncoder):
 
 
 class RuntimeDecoder(json.JSONDecoder):
-    """JSON Decoder used by runtime service."""
+    """JSON Decoder used by IBM Quantum Compute service."""
 
     def __init__(self, *args: Any, **kwargs: Any):
         if "encoding" in kwargs:
@@ -470,7 +495,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 try:
                     # importing here and not at the top of the file,
                     # to prevent circular imports
-                    from qiskit_ibm_runtime.noise_learner_v3.params_converters import (
+                    from .noise_learner_v3.params_converters import (
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
 
@@ -505,14 +530,14 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "set":
                 return set(obj_val)
             if obj_type == "QuantumCircuit":
-                return _decode_and_deserialize(obj_val, load)[0]
+                return _decode_and_deserialize(obj_val, _load_qpy)[0]
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "Instruction":
                 # Standalone instructions are encoded as the sole instruction in a QPY serialized
                 # circuit to deserialize load qpy circuit and return first instruction object in
                 # that circuit.
-                circuit = _decode_and_deserialize(obj_val, load)[0]
+                circuit = _decode_and_deserialize(obj_val, _load_qpy)[0]
                 return circuit.data[0].operation
             if obj_type == "settings":
                 if obj["__module__"].startswith(

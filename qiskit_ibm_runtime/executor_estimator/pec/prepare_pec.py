@@ -24,9 +24,9 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ...options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ...options_models.pec_options import PecOptions
-    from ...options_models.twirling_options import TwirlingOptions
+    from ...options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ...options_models.pec import PecOptions
+    from ...options_models.twirling import TwirlingOptions
 
 import numpy as np
 from samplomatic import build
@@ -34,7 +34,7 @@ from samplomatic import build
 from ...exceptions import IBMInputValueError
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
-from ..trex_utils import create_trex_calibration_circuit
+from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from ..utils import (
     box_circuit,
     compute_samplex_arguments,
@@ -51,11 +51,11 @@ def prepare_pec(
     twirling_options: TwirlingOptions,
     shots: int,
     pec_options: PecOptions,
-    noise_model_mapping: dict[str, PauliLindbladMap],
+    noise_model: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     add_tags: bool = False,
 ) -> QuantumProgram:
-    """Convert estimator PUBs to a quantum program with PEC mitigation.
+    """Convert estimator PUBs to a quantum program with PEC mitigation applied.
 
     Args:
         pubs: List of estimator pubs to convert.
@@ -66,7 +66,7 @@ def prepare_pec(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         pec_options: The options for PEC mitigation.
-        noise_model_mapping: Mapping between layer ref to a noise model to use for PEC mitigation
+        noise_model: Mapping between layer ref to a noise model to use for PEC mitigation
             method. The dict contains layers from all pubs. Assumes that the unique layers
             used for noise learning were extracted using the ``find_unique_layers`` method.
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
@@ -84,10 +84,15 @@ def prepare_pec(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
+        IBMInputValueError: If ``noise_model`` is missing a noise map for at least one of
             the pubs layers.
     """
-    num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
+    if not twirling_options.enable_gates:
+        raise ValueError("PEC requires enabling twirling for gates.")
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
+
+    baseline_num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
@@ -98,7 +103,7 @@ def prepare_pec(
     if max_overhead is None:
         # This is a backup max number of shots, intended to stop python
         # crashing with an overflow error if the noise is really strong
-        max_overhead = sys.float_info.max / (num_randomizations * shots_per_randomization)
+        max_overhead = sys.float_info.max / (baseline_num_randomizations * shots_per_randomization)
 
     # Create items
     items: list[SamplexItem] = []
@@ -130,9 +135,10 @@ def prepare_pec(
         # add samplex_arguments related to noise injection
         if pec_options.noise_gain == "auto":
             # calculate the gamma factor without scaling it by noise_factor
-            gamma = calculate_gamma(boxed_circuit, noise_model_mapping, 1)
-            # calculate the noise factor based on gamma and max_overhead
-            noise_gain = 1 - np.log(max_overhead) / np.log(gamma**2)
+            gamma = calculate_gamma(boxed_circuit, noise_model, 1)
+            # calculate the noise factor based on gamma and max_overhead, setting it to ``1``
+            # if ``gamma`` is ``1``--i.e., if there is no noise to mitigate.
+            noise_gain = 1 if gamma == 1 else 1 - np.log(max_overhead) / np.log(gamma**2)
             # Truncate noise_gain to [0, 1]
             noise_gain = min(1, max(0, noise_gain))
         else:
@@ -155,25 +161,28 @@ def prepare_pec(
         for spec in specs:
             ref = spec.name.split(".")[-1]
             try:
-                pub_noise_model[ref] = noise_model_mapping[ref]
+                pub_noise_model[ref] = noise_model[ref]
             except KeyError:
-                raise IBMInputValueError(
-                    f"noise_model_mapping is missing noise map for layer reference {ref}"
-                )
+                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
             # noise_scales and pauli_lindblad_maps should have the same refs
             samplex_arguments[f"noise_scales.{ref}"] = noise_scale
 
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
         scaled_gamma = calculate_gamma(boxed_circuit, pub_noise_model, noise_factor)
         pec_gamma_list.append(scaled_gamma)
-        # Scale the amount of randomizations by gamma**2
+        # Scale the baseline randomization count by gamma**2 for this pub independently.
         sampling_overhead = scaled_gamma**2
-        num_randomizations = int(
-            np.ceil(min(num_randomizations * max_overhead, num_randomizations * sampling_overhead))
+        scaled_num_randomizations = int(
+            np.ceil(
+                min(
+                    baseline_num_randomizations * max_overhead,
+                    baseline_num_randomizations * sampling_overhead,
+                )
+            )
         )
 
         # Create SamplexItem
-        shape = (num_randomizations, change_basis.shape[0])
+        shape = (scaled_num_randomizations, change_basis.shape[0])
         items.append(
             SamplexItem(
                 circuit=template,
@@ -195,7 +204,7 @@ def prepare_pec(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
-            "measure_mitigation": "False",
+            "measure_mitigation": False,
             "mitigation": "pec",
             "pec_gammas": pec_gamma_list,
         },
@@ -210,18 +219,12 @@ def prepare_pec(
 
     # Add TREX calibration circuit
     if measure_noise_learning is not None:
-        if (
-            isinstance(measure_noise_learning.shots_per_randomization, int)
-            and measure_noise_learning.shots_per_randomization != shots_per_randomization
-        ):
-            raise IBMInputValueError(
-                "shots_per_randomization must be the same for twirling and measure_noise_learning"
-            )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        trex_num_randomizations = resolve_trex_num_randomizations(
+            measure_noise_learning, baseline_num_randomizations
+        )
+        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
-        passthrough_data["post_processor"]["measure_mitigation"] = "True"
-
-    # Set semantic role for post-processing dispatch
-    quantum_program._semantic_role = "estimator_v2"
+        logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
+        passthrough_data["post_processor"]["measure_mitigation"] = True
 
     return quantum_program

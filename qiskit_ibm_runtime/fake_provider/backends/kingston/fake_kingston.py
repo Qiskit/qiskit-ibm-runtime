@@ -14,13 +14,14 @@
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 
-class FakeKingston(fake_backend.FakeBackendV2):
+class FakeKingston(FakeBackendV2):
     """A fake 156 qubit backend."""
 
     dirname = os.path.dirname(__file__)
     conf_filename = "conf_kingston.json"
     props_filename = "props_kingston.json"
     backend_name = "fake_kingston"
+    _physical_qubits = 332

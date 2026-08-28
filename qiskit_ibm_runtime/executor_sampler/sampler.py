@@ -15,28 +15,28 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, get_args
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..executor.dynamical_decoupling import apply_dynamical_decoupling
+from ..executor_estimator.utils import BoxType, find_box_type, find_unique_layers
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options_models.sampler_options import SamplerOptions
+from ..options_models.sampler import SamplerOptions
+from .finalize_options import finalize_sampler_options
 from .prepare import prepare
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable
     from typing import Any
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
-    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamplerV2(BaseSamplerV2):
-    """Executor-based Sampler primitive for Qiskit Runtime.
+    """Executor-based Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of SamplerV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
@@ -87,11 +87,11 @@ class SamplerV2(BaseSamplerV2):
             * A :class:`~qiskit_ibm_runtime.Session` if you are using session execution mode.
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
-            Refer to the `Qiskit Runtime documentation
+            Refer to the `IBM Quantum Compute documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
-        options: Sampler options. See :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
+        options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
             for all available options.
     """
 
@@ -107,12 +107,6 @@ class SamplerV2(BaseSamplerV2):
 
         # Store mode, service, and backend for simulator detection
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
-
-        # Only create executor for non-local backends
-        # For local simulators (QiskitRuntimeLocalService), we'll use BackendSamplerV2 directly
-        self._executor = None
-        if not isinstance(self._service, QiskitRuntimeLocalService):
-            self._executor = Executor(mode=mode)
 
         # Coerced to `SamplerOptions` via `__setattr__()`.
         self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
@@ -132,14 +126,79 @@ class SamplerV2(BaseSamplerV2):
 
         super().__setattr__(name, value)
 
+    def find_unique_layers(
+        self, pubs: Iterable[SamplerPubLike], types: Literal["gates", "all"] = "gates"
+    ) -> list[CircuitInstruction]:
+        """Return the unique boxed layers found across the given PUBs of a given type.
+
+        The ``types`` of layers can be either ``"gates"`` or ``"all"``, corresponding to only
+        gate layers or all layers, respectively. The returned list then contains one instance of
+        each distinct boxed layer (represented as a :class:`~.CircuitInstruction`) appearing
+        in the input PUBs.
+
+        Args:
+            pubs: The list of PUBs to return a list of unique boxes for.
+            types: The types of layers to return. Can be either ``"gates"`` or ``"all"``.
+
+        Returns:
+            The unique boxed layers of a certain type found across the given PUBs.
+        """
+        coerced_pubs = [SamplerPub.coerce(pub, None) for pub in pubs]
+        options = self.finalize_options()
+        layers = find_unique_layers(
+            pubs=coerced_pubs,
+            twirling_options=options.twirling,
+            measure_noise_learning=None,
+            inject_noise=False,
+            add_tags=True,
+        )
+        box_types = get_args(BoxType) if types == "all" else ("gates",)
+        return [layer for layer in layers if find_box_type(layer) in box_types]
+
+    def finalize_options(self) -> SamplerOptions:
+        """Construct and finalize the Sampler options.
+
+        This method produces the final :class:`~.SamplerOptions` instance used inside a call to
+        :meth:`~.Sampler.run` by resolving the ``None`` in the twirling options as documented in
+        :class:`~.TwirlingOptions`.
+
+        Returns:
+            The finalized :class:`~.SamplerOptions` object.
+        """
+        return finalize_sampler_options(self.options)
+
+    def _run_legacy_simulation(
+        self, pubs: Iterable[SamplerPubLike], shots: int | None
+    ) -> RuntimeJobV2:
+        """Run on the legacy local simulator (no Executor).
+
+        Args:
+            pubs: The raw PUB-like objects passed to :meth:`run`.
+            shots: The per-run shots override, forwarded from :meth:`run`.
+
+        Returns:
+            The submitted job.
+        """
+        logger.info("Running in local simulator mode")
+        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+        options = self.finalize_options()
+        options_dict = options.model_dump()
+        options_dict["default_shots"] = shots
+        return self._service._run(
+            program_id="sampler",
+            inputs={"pubs": coerced_pubs, "options": options_dict},
+            options={"backend": self._backend},
+            calibration_id=None,
+        )
+
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
         For moderate and complex workloads, the client-side processing done to map sampler inputs
-        to executor inputs can be resource intensive can be resource intensive and cause a delay
+        to executor inputs can be resource intensive and cause a delay
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
-        `Qiskit Runtime documentation
+        `IBM Quantum Compute documentation
         <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 
@@ -153,70 +212,28 @@ class SamplerV2(BaseSamplerV2):
         Returns:
             The submitted job.
         """
-        # Coerce pubs to SamplerPub objects
-        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+        # Legacy simulator path (no executor)
+        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
+            self._service, QiskitRuntimeLocalService
+        ):
+            return self._run_legacy_simulation(pubs, shots)
 
-        # Determine default shots: run parameter takes precedence over options.default_shots
-        default_shots = shots if shots is not None else self.options.default_shots
-
-        # Check if we're in local simulator mode
-        if self._executor is None:
-            logger.info("Running in local simulator mode")
-            return self._run_simulator(coerced_pubs, default_shots)
-
-        # Non-simulator path: use executor
-        # Convert pubs to QuantumProgram and map options using the prepare method
+        # Pre-process: Convert Sampler input into a QuantumProgram
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(coerced_pubs, self.options, default_shots)
+        quantum_program, executor_options = prepare(
+            pubs, self.options, shots, add_tags=local_mode, backend=self._backend
+        )
 
-        # Apply dynamical decoupling if enabled
-        if self.options.dynamical_decoupling.enable:
-            logger.info("Apply dynamical decoupling")
-            quantum_program = apply_dynamical_decoupling(
-                backend=self._backend,
-                dd_options=self.options.dynamical_decoupling,
-                quantum_program=quantum_program,
-            )
+        # Set semantic role for post-processing dispatch
+        quantum_program._semantic_role = "sampler_v2"
 
-        # Set executor options
-        self._executor.options = executor_options
+        executor = Executor(mode=self._backend, options=executor_options)
 
-        # Submit to executor
         logger.info(
             "Submitting %d pub%s to executor with %d shots",
-            len(coerced_pubs),
-            "s" if len(coerced_pubs) > 1 else "",
+            len(quantum_program.items),
+            "s" if len(quantum_program.items) > 1 else "",
             quantum_program.shots,
         )
 
-        return self._executor.run(quantum_program)
-
-    def _run_simulator(self, pubs: Sequence[SamplerPub], shots: int) -> LocalRuntimeJob:
-        """Run sampler in local simulator mode using BackendSamplerV2.
-
-        Args:
-            pubs: List of sampler PUBs to run.
-            shots: The number of shots to run.
-
-        Returns:
-            A LocalRuntimeJob.
-        """
-        # Prepare options dict - this goes in the inputs["options"] field
-        options_dict = asdict(self.options)  # type: ignore[call-overload]
-        options_dict["default_shots"] = shots
-
-        # Prepare inputs dict with pubs and options
-        inputs = {
-            "pubs": pubs,
-            "options": options_dict,
-        }
-
-        # Prepare runtime options with backend
-        runtime_options = {"backend": self._backend}
-
-        return self._service._run(
-            program_id="sampler",
-            inputs=inputs,
-            options=runtime_options,
-            calibration_id=None,
-        )
+        return executor.run(quantum_program)

@@ -12,29 +12,155 @@
 
 """Unit tests for EstimatorV2 ZNE helper functions."""
 
-import unittest
 from typing import Any, cast
 
 import numpy as np
-from ddt import data, ddt
-from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
+from ddt import data, ddt, unpack
+from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.zne.prepare_zne import prepare_zne
-from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
-    MeasureNoiseLearningOptions,
-)
-from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
-from qiskit_ibm_runtime.options_models.zne_options import ZneOptions
+from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
+from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
+from qiskit_ibm_runtime.options_models.zne import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
+from ...ibm_test_case import IBMEstimatorPrepareTestCase
+from ...utils import combine
+from .utils import (
+    PARAM_BASIS_3Q_SCENARIOS,
+    SAMPLEX_CIRCUIT_SCENARIOS,
+    TEMPLATE_CIRCUIT_SCENARIO,
+    TWIRLING_SHAPE_SCENARIOS,
+)
+
 
 @ddt
-class TestPrepareZneFunction(unittest.TestCase):
-    """Tests for the prepare_zne function."""
+class TestPrepareZne(IBMEstimatorPrepareTestCase):
+    """Tests for the ``prepare_zne`` function."""
+
+    @data([True, True, True], [False, True, True], [False, False, False])
+    @unpack
+    def test_param_basis_expansion_3q(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
+        """Test parameter-basis expansion with three-qubit observables."""
+        observables = PARAM_BASIS_3Q_SCENARIOS.observables
+        num_qubits = observables.num_qubits
+
+        circuit = QuantumCircuit(num_qubits)
+        circuit.rz(Parameter("alpha"), 0)
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
+            parameter_shape = scenario.parameter_shape
+            observables_shape = scenario.observables_shape
+            expected_pairs = scenario.expected_pairs
+
+            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
+                pub_like = (
+                    circuit,
+                    observables.reshape(observables_shape),
+                    np.random.random(parameter_shape + (circuit.num_parameters,)),
+                )
+                pubs = [EstimatorPub.coerce(pub_like)]
+
+                program = prepare_zne(
+                    pubs=pubs,
+                    twirling_options=twirling_options,
+                    shots=10,
+                    zne_options=ZneOptions(),
+                    measure_noise_learning=measure_noise_learning,
+                )
+
+                post_processor_data = program.passthrough_data["post_processor"]
+                param_basis_pairs = post_processor_data["param_basis_pairs"][0]
+
+                # Check that the param-basis pairs are the correct ones
+                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+
+                # Check that the quantum program has one element per param-basis pair
+                self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+
+    @data(
+        [True, True, True],
+        [False, True, True],
+        [False, False, False],
+        [True, False, False],
+        [False, True, False],
+        [True, True, False],
+    )
+    @unpack
+    def test_samplex_arguments_structure(
+        self, enable_gates, enable_measure, enable_measure_noise_learning
+    ):
+        """Test that samplex arguments have the expected structure for each circuit type."""
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        measure_noise_learning = (
+            MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
+        )
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = [1, 3, 5]
+
+        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
+            with self.subTest(circuit=scenario.label):
+                program = prepare_zne(
+                    pubs=[scenario.pub],
+                    twirling_options=twirling_options,
+                    shots=10,
+                    zne_options=zne_options,
+                    measure_noise_learning=measure_noise_learning,
+                )
+                # One item per noise factor; skip any trailing TREX item.
+                for item in program.items[: len(zne_options.noise_factors)]:
+                    self.assertSamplexArgumentsAreCorrect(item, scenario, inject_noise=False)
+
+    @combine(enable_gates=[True, False], enable_measure=[True, False])
+    def test_template_circuit(self, enable_gates, enable_measure):
+        """Test that the template circuit has the expected clbits and parameter count.
+
+        Uses a single circuit combining 2Q gates, a parametric gate, and a mid-circuit
+        measurement. Verifies that gate folding at each noise factor scales only the
+        gate-twirling parameters, leaving measurement-box parameters fixed.
+        """
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = [1, 3, 5]
+
+        scenario = TEMPLATE_CIRCUIT_SCENARIO
+        program = prepare_zne(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+            zne_options=zne_options,
+        )
+        # One item per noise factor; verify that the template scales correctly.
+        for noise_factor, item in zip(
+            zne_options.noise_factors, program.items[: len(zne_options.noise_factors)]
+        ):
+            with self.subTest(noise_factor=noise_factor):
+                self.assertTemplateCircuitIsCorrect(
+                    item, scenario, enable_gates=enable_gates, noise_factor=noise_factor
+                )
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""
@@ -54,7 +180,6 @@ class TestPrepareZneFunction(unittest.TestCase):
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, shots)
-        self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         # Should have len(noise_factors) items for the single pub
         self.assertEqual(len(quantum_program.items), len(noise_factors))
 
@@ -70,9 +195,14 @@ class TestPrepareZneFunction(unittest.TestCase):
                 np.array(noise_factors),
             )
         )
-        self.assertIn("item_id", passthrough["post_processor"])
-        expected_map = [(0, 1.0), (0, 2.0), (0, 3.0)]
-        self.assertEqual(passthrough["post_processor"]["item_id"], expected_map)
+        extrapolated_noise_factors = passthrough["post_processor"]["extrapolated_noise_factors"]
+        expected_extrapolated_noise_factors = [0.0, 1.0, 2.0, 3.0]
+        self.assertTrue(
+            np.array_equal(extrapolated_noise_factors, expected_extrapolated_noise_factors)
+        )
+        extrapolator = passthrough["post_processor"]["extrapolator"]
+        expected_extrapolator = ("exponential", "linear")
+        self.assertEqual(extrapolator, expected_extrapolator)
 
     def test_prepare_zne_multiple_pubs(self):
         """Test prepare_zne with multiple pubs."""
@@ -123,50 +253,22 @@ class TestPrepareZneFunction(unittest.TestCase):
                 np.array(noise_factors),
             )
         )
-        self.assertIn("item_id", passthrough["post_processor"])
-        expected_map = [(0, 1.0), (0, 2.0), (1, 1.0), (1, 2.0)]
-        self.assertEqual(passthrough["post_processor"]["item_id"], expected_map)
 
     def test_prepare_zne_with_single_noise_factor(self):
         """Test prepare_zne with a single noise factor."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pub = EstimatorPub.coerce((circuit, observable))
-
         noise_factors = [1.5]
         zne_options = ZneOptions()
         zne_options.amplifier = "gate_folding_back"
-        zne_options.noise_factors = noise_factors
-        shots = 1024
-        quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
-
-        # Should have 1 item for single pub and single noise factor
-        self.assertEqual(len(quantum_program.items), 1)
-
-        item = cast("SamplexItem", quantum_program.items[0])
-        self.assertIsInstance(item, SamplexItem)
+        with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
+            zne_options.noise_factors = noise_factors
 
     def test_prepare_zne_with_empty_noise_factors_list(self):
         """Test prepare_zne behavior with empty noise_factors list."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pub = EstimatorPub.coerce((circuit, observable))
-
         noise_factors = []
         zne_options = ZneOptions()
         zne_options.amplifier = "gate_folding"
-        zne_options.noise_factors = noise_factors
-        shots = 1024
-        quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
-
-        # Should have 0 items for empty noise_factors
-        self.assertEqual(len(quantum_program.items), 0)
+        with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
+            zne_options.noise_factors = noise_factors
 
     @data("gate_folding", "gate_folding_front", "gate_folding_back")
     def test_prepare_zne_with_different_folding_methods(self, folding_method):
@@ -249,73 +351,117 @@ class TestPrepareZneFunction(unittest.TestCase):
             item_cast = cast("SamplexItem", item)
             self.assertEqual(item_cast.shape, (8, 2))
 
-    def test_prepare_zne_single_pub_with_measure_noise_learning(self):
-        """Test prepare_zne with measure noise learning (TREX)."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
+    @data(32, "auto")
+    def test_prepare_zne_with_measure_noise_learning(self, num_randomizations):
+        """Test that measure_noise_learning adds a correctly built TREX calibration item.
 
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pub = EstimatorPub.coerce((circuit, observable))
-
-        noise_factors = [1.0, 2.0]
-        zne_options = ZneOptions()
-        zne_options.amplifier = "gate_folding"
-        zne_options.noise_factors = noise_factors
-        measure_noise_learning = MeasureNoiseLearningOptions()
-        measure_noise_learning.num_randomizations = 16
-
-        quantum_program = prepare_zne(
-            [pub],
-            TwirlingOptions(),
-            1024,
-            zne_options,
-            measure_noise_learning=measure_noise_learning,
-        )
-
-        # Should have len(noise_factors) items + 1 TREX calibration
-        self.assertEqual(len(quantum_program.items), len(noise_factors) + 1)
-
-        # Check passthrough data
-        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-        self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
-
-    def test_prepare_zne_multiple_pubs_with_measure_noise_learning(self):
-        """Test prepare_zne with multiple pubs and TREX."""
+        Uses two pubs of different widths (2q and 3q).  Verifies item count, circuit gate
+        structure, shape, and passthrough data via :meth:`assertTrexItemIsCorrect`.
+        """
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
         circuit1.cx(0, 1)
-
         circuit2 = QuantumCircuit(3)
         circuit2.h(0)
         circuit2.cx(0, 1)
         circuit2.cx(1, 2)
 
-        observable1 = SparsePauliOp.from_list([("ZZ", 1)])
-        observable2 = SparsePauliOp.from_list([("ZZZ", 1)])
-
-        pub1 = EstimatorPub.coerce((circuit1, observable1))
-        pub2 = EstimatorPub.coerce((circuit2, observable2))
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
+        pubs = [pub1, pub2]
 
         noise_factors = [1.0, 2.0]
         zne_options = ZneOptions()
         zne_options.amplifier = "gate_folding"
         zne_options.noise_factors = noise_factors
-        measure_noise_learning = MeasureNoiseLearningOptions()
-        measure_noise_learning.num_randomizations = 32
 
-        quantum_program = prepare_zne(
-            [pub1, pub2],
-            TwirlingOptions(),
-            1024,
-            zne_options,
-            measure_noise_learning=measure_noise_learning,
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+        twirling_options.num_randomizations = 64
+
+        measure_noise_learning = MeasureNoiseLearningOptions()
+        measure_noise_learning.num_randomizations = num_randomizations
+
+        program = prepare_zne(
+            pubs, twirling_options, 1024, zne_options, measure_noise_learning=measure_noise_learning
         )
 
-        # Should have 2 pubs * 2 noise_factors + 1 TREX calibration = 5 items
-        self.assertEqual(len(quantum_program.items), 5)
+        # 2 pubs * 2 noise_factors + 1 TREX calibration item.
+        self.assertEqual(len(program.items), len(pubs) * len(noise_factors) + 1)
+        # For "auto", TREX follows the twirling randomizations of the estimation items.
+        expected_trex_randomizations = (
+            twirling_options.num_randomizations
+            if num_randomizations == "auto"
+            else num_randomizations
+        )
+        self.assertTrexItemIsCorrect(
+            program, pubs, expected_num_randomizations=expected_trex_randomizations
+        )
 
-        # Last item should be TREX calibration
-        trex_item = quantum_program.items[-1]
-        self.assertIsInstance(trex_item, SamplexItem)
-        self.assertEqual(trex_item.shape, (32,))
+    def test_prepare_zne_raises_error_with_less_than_2_noise_factors(self):
+        """Test that prepare_zne raises when noise_factors has less than 2 points."""
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
+            zne_options.noise_factors = [1.5]
+
+    def test_prepare_zne_raises_error_with_too_few_noise_factors_for_extrapolator(self):
+        """Test that prepare_zne rejects noise_factors under-specified for the extrapolator."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        twirling_options = TwirlingOptions()
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.extrapolator = "double_exponential"
+        zne_options.noise_factors = [1.0, 3.0]
+
+        with self.assertRaisesRegex(
+            IBMInputValueError, "double_exponential requires at least 4 noise_factors"
+        ):
+            prepare_zne([pub], twirling_options, 100, zne_options)
+
+    def test_shapes_twirling_configs(self):
+        """Verify the number of randomization and program.shots."""
+        noise_factors = [1.0, 3.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = noise_factors
+
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
+
+        for scenario in TWIRLING_SHAPE_SCENARIOS:
+            with self.subTest(twirling=scenario.label):
+                program = prepare_zne(
+                    pubs=[pub],
+                    twirling_options=scenario.twirling_options,
+                    shots=scenario.shots,
+                    zne_options=zne_options,
+                )
+                self.assertEqual(
+                    len(program.items),
+                    len(noise_factors),
+                    msg=f"[{scenario.label}] expected {len(noise_factors)} items, "
+                    f"got {len(program.items)}",
+                )
+                for item in program.items:
+                    self.assertEqual(
+                        item.shape[0],
+                        scenario.expected_num_randomizations,
+                        msg=f"[{scenario.label}] expected R="
+                        f"{scenario.expected_num_randomizations}, "
+                        f"got {item.shape[0]}",
+                    )
+                self.assertEqual(
+                    program.shots,
+                    scenario.expected_shots_per_randomization,
+                    msg=f"[{scenario.label}] expected program.shots="
+                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+                )

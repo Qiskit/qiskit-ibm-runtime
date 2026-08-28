@@ -17,7 +17,7 @@ from qiskit.circuit import Instruction
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler.exceptions import TranspilerError
 
-from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+from qiskit_ibm_runtime.circuit import MeasureReset, MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
 from ...ibm_test_case import IBMTestCase
@@ -91,3 +91,122 @@ class TestMidCircuitMeasure(IBMTestCase):
         qc.append(mcm, [0], [0])
         transpiled = pm.run(qc)
         self.assertEqual(transpiled.data[0].operation.name, "measure_2")
+
+
+class TestMidCircuitReset(IBMTestCase):
+    """Test MidCircuitReset instruction."""
+
+    def test_instantiation(self):
+        """Test default instantiation."""
+        mcr = MidCircuitReset()
+        self.assertIs(mcr.base_class, MidCircuitReset)
+        self.assertIsInstance(mcr, Instruction)
+        self.assertEqual(mcr.name, "reset_2")
+        self.assertEqual(mcr.num_qubits, 1)
+        self.assertEqual(mcr.num_clbits, 0)
+
+    def test_instantiation_name(self):
+        """Test instantiation with custom name."""
+        with self.subTest("reset_3"):
+            mcr = MidCircuitReset("reset_3")
+            self.assertIs(mcr.base_class, MidCircuitReset)
+            self.assertIsInstance(mcr, Instruction)
+            self.assertEqual(mcr.name, "reset_3")
+            self.assertEqual(mcr.num_qubits, 1)
+            self.assertEqual(mcr.num_clbits, 0)
+
+        with self.subTest("invalid_name"):
+            with self.assertRaises(ValueError):
+                MidCircuitReset("invalid_name")
+
+    def test_circuit_integration(self):
+        """Test appending to circuit."""
+        mcr = MidCircuitReset()
+        qc = QuantumCircuit(1, 2)
+        qc.append(mcr, [0])
+        qc.append(mcr, [0])
+        qc.reset(0)
+        self.assertIs(qc.data[0].operation, mcr)
+        self.assertIs(qc.data[1].operation, mcr)
+
+    def test_transpiler_compat_without(self):
+        """Test that default pass manager FAILS if reset_2 is not in Target."""
+        mcr = MidCircuitReset()
+        backend = FakeVigoV2()
+        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        qc = QuantumCircuit(1, 2)
+        qc.append(mcr, [0])
+        with self.assertRaises(TranspilerError):
+            _ = pm.run(qc)
+
+    def test_transpiler_compat_with(self):
+        """Test default PM passes if reset_2 is in Target.
+
+        Verifies it does not modify the instruction.
+        """
+        mcr = MidCircuitReset()
+        backend = GenericBackendV2(num_qubits=5, seed=0)
+        backend.target.add_instruction(mcr, {(i,): None for i in range(5)})
+        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        qc = QuantumCircuit(1, 2)
+        qc.append(mcr, [0])
+        transpiled = pm.run(qc)
+        self.assertEqual(transpiled.data[0].operation.name, "reset_2")
+
+
+class TestMeasureReset(IBMTestCase):
+    """Test MeasureReset instruction."""
+
+    def test_instantiation(self):
+        """Test default instantiation."""
+        mr = MeasureReset()
+        self.assertIs(mr.base_class, MeasureReset)
+        self.assertIsInstance(mr, Instruction)
+        self.assertEqual(mr.name, "measure_reset")
+        self.assertEqual(mr.num_qubits, 1)
+        self.assertEqual(mr.num_clbits, 1)
+
+    def test_instantiation_name(self):
+        """Test instantiation with custom name."""
+        with self.subTest("measure_reset_2"):
+            mr = MeasureReset("measure_reset_2")
+            self.assertIs(mr.base_class, MeasureReset)
+            self.assertIsInstance(mr, Instruction)
+            self.assertEqual(mr.name, "measure_reset_2")
+            self.assertEqual(mr.num_qubits, 1)
+            self.assertEqual(mr.num_clbits, 1)
+
+        with self.subTest("invalid_name"):
+            with self.assertRaises(ValueError):
+                MeasureReset("invalid_name")
+
+    def test_circuit_integration(self):
+        """Test appending to circuit."""
+        mr = MeasureReset()
+        qc = QuantumCircuit(1, 1)
+        qc.append(mr, [0], [0])
+        self.assertIs(qc.data[0].operation, mr)
+
+    def test_transpiler_compat_without(self):
+        """Test that default pass manager FAILS if measure_reset is not in Target."""
+        mr = MeasureReset()
+        backend = FakeVigoV2()
+        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        qc = QuantumCircuit(1, 1)
+        qc.append(mr, [0], [0])
+        with self.assertRaises(TranspilerError):
+            _ = pm.run(qc)
+
+    def test_transpiler_compat_with(self):
+        """Test default PM passes if measure_reset is in Target.
+
+        Verifies it does not modify the instruction.
+        """
+        mr = MeasureReset()
+        backend = GenericBackendV2(num_qubits=5, seed=0)
+        backend.target.add_instruction(mr, {(i,): None for i in range(5)})
+        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        qc = QuantumCircuit(1, 1)
+        qc.append(mr, [0], [0])
+        transpiled = pm.run(qc)
+        self.assertEqual(transpiled.data[0].operation.name, "measure_reset")

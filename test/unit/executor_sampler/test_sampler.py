@@ -12,60 +12,30 @@
 
 """Tests for executor-based SamplerV2."""
 
-import unittest
+from unittest import skipUnless
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.providers.fake_provider import GenericBackendV2
-from qiskit_aer.noise import NoiseModel, depolarizing_error
+from qiskit.transpiler import generate_preset_pass_manager
+from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.options_models import SamplerOptions
+from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
+
+from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend
 
 
-def create_mock_backend():
-    """Create a mock IBMBackend for testing."""
-    backend = MagicMock(spec=IBMBackend)
-    backend.name = "fake_backend"
-    backend._instance = "ibm-q/open/main"
-
-    # Mock the service
-    service = MagicMock()
-    backend.service = service
-    backend.target = FakeManilaV2().target
-
-    return backend
-
-
-def create_sampler_for_prepare_tests(options=None):
-    """Create a SamplerV2 instance for testing the prepare method.
-
-    Args:
-        backend: Backend to use. If None, uses a mock backend.
-        options: SamplerOptions to use. If None, uses default SamplerOptions().
-
-    Returns:
-        SamplerV2 instance configured for testing.
-    """
-    backend = create_mock_backend()
-    if options is None:
-        options = SamplerOptions()
-
-    sampler = SamplerV2(mode=backend, options=options)
-    return sampler
-
-
-class TestSamplerV2SimpleCircuits(unittest.TestCase):
+class TestSamplerV2SimpleCircuits(IBMTestCase):
     """Tests for SamplerV2 with simple (non-parametric) circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_multiple_circuits_quantum_program_structure(self, mock_run):
@@ -100,6 +70,9 @@ class TestSamplerV2SimpleCircuits(unittest.TestCase):
 
         self.assertEqual(quantum_program.items[2].circuit, circuit3)
 
+        # Verify that information needed for post-processing dispatch were attached
+        self.assertEqual(quantum_program._semantic_role, "sampler_v2")
+
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_shots(self, mock_run):
         """Test that default shots (4096) are used when not specified."""
@@ -116,12 +89,12 @@ class TestSamplerV2SimpleCircuits(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 4096)
 
 
-class TestSamplerV2ParametricCircuits(unittest.TestCase):
+class TestSamplerV2ParametricCircuits(IBMTestCase):
     """Tests for SamplerV2 with parametric circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_single_parameter_multiple_values(self, mock_run):
@@ -205,12 +178,12 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         np.testing.assert_array_almost_equal(item2.circuit_arguments, [[0.5], [1.0]])
 
 
-class TestSamplerV2CircuitValidation(unittest.TestCase):
+class TestSamplerV2CircuitValidation(IBMTestCase):
     """Tests for circuit validation in SamplerV2."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_multiple_circuits_one_with_box_raises_error(self, mock_run):
@@ -235,12 +208,12 @@ class TestSamplerV2CircuitValidation(unittest.TestCase):
         mock_run.assert_not_called()
 
 
-class TestSamplerV2ShotsHandling(unittest.TestCase):
+class TestSamplerV2ShotsHandling(IBMTestCase):
     """Tests for shots handling in SamplerV2."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_shots_when_not_specified(self, mock_run):
@@ -279,16 +252,16 @@ class TestSamplerV2ShotsHandling(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 2048)
 
 
-class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
+class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
     """Tests verifying the integrity of QuantumProgram objects created by SamplerV2."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
+        self.backend = get_mocked_backend()
 
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_circuit_preservation(self, mock_run):
-        """Test that circuits are preserved exactly in QuantumProgram."""
+        """Test that circuits are preserved in QuantumProgram with empty metadata."""
         mock_run.return_value = MagicMock()
 
         # Create a circuit with specific structure
@@ -299,14 +272,22 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         circuit.barrier()
         circuit.measure([0, 1, 2], [0, 1, 2])
 
+        # add some metadata
+        metadata = {"foo": True, "bar": np.int64(1)}
+        circuit.metadata = metadata
+
         sampler = SamplerV2(mode=self.backend)
         sampler.run([circuit], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
         item = quantum_program.items[0]
 
-        # Verify circuit is the same object
-        self.assertIs(item.circuit, circuit)
+        # Verify circuit is equivalent and metadata is cleared on the copy
+        self.assertEqual(item.circuit, circuit)
+        self.assertEqual(item.circuit.metadata, {})
+
+        # Verify that the original circuit is not mutated
+        self.assertEqual(circuit.metadata, metadata)
 
         # Verify circuit structure is preserved
         self.assertEqual(item.circuit.num_qubits, 3)
@@ -381,117 +362,7 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         self.assertEqual(item.size(), 3)
 
 
-class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
-    """Tests for SamplerV2 with dynamical decoupling enabled."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = create_mock_backend()
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_pass_manager_called_when_enabled(self, mock_run, mock_apply_dd):
-        """Test that apply_dynamical_decoupling is called when DD is enabled."""
-        # Mock to return the quantum program unchanged
-        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
-        mock_run.return_value = MagicMock()
-
-        # Create a simple circuit
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        # Create sampler with DD enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-        sampler.options.dynamical_decoupling.sequence_type = "XX"
-
-        # Run the sampler
-        sampler.run([circuit], shots=1024)
-
-        # Verify apply_dynamical_decoupling was called once
-        mock_apply_dd.assert_called_once()
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_pass_manager_not_called_when_disabled(self, mock_run, mock_apply_dd):
-        """Test that apply_dynamical_decoupling is not called when DD is disabled."""
-        mock_run.return_value = MagicMock()
-
-        # Create a simple circuit
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        # Create sampler with DD disabled (default)
-        sampler = SamplerV2(mode=self.backend)
-        self.assertFalse(sampler.options.dynamical_decoupling.enable)
-
-        # Run the sampler
-        sampler.run([circuit], shots=1024)
-
-        # Verify apply_dynamical_decoupling was NOT called
-        mock_apply_dd.assert_not_called()
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_with_twirling_enabled(self, mock_run, mock_apply_dd):
-        """Test that apply_dynamical_decoupling is called when both DD and twirling are enabled."""
-        # Mock to return the quantum program unchanged
-        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
-        mock_run.return_value = MagicMock()
-
-        # Create a simple circuit
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        # Create sampler with both DD and twirling enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-        sampler.options.dynamical_decoupling.sequence_type = "XpXm"
-        sampler.options.twirling.enable_gates = True
-
-        # Run the sampler
-        sampler.run([circuit], shots=1024)
-
-        # Verify apply_dynamical_decoupling was called once
-        mock_apply_dd.assert_called_once()
-
-    def test_dd_raises_error_with_multiple_circuits_one_has_control_flow(self):
-        """Test that DD raises ValueError when one of multiple circuits has control flow."""
-        # Create a simple circuit without control flow
-        circuit1 = QuantumCircuit(2, 2)
-        circuit1.h(0)
-        circuit1.cx(0, 1)
-        circuit1.measure_all()
-
-        # Create a circuit with control flow
-        circuit2 = QuantumCircuit(2, 2)
-        circuit2.h(0)
-        circuit2.measure(0, 0)
-        with circuit2.if_test((0, 1)):
-            circuit2.x(1)
-        circuit2.measure(1, 1)
-
-        # Create sampler with DD enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-
-        # Verify that running with DD enabled raises ValueError
-        with self.assertRaises(ValueError) as context:
-            sampler.run([circuit1, circuit2], shots=1024)
-
-        # Check the error message
-        self.assertIn(
-            "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
-        )
-
-
-class TestSamplerV2SimulatorMode(unittest.TestCase):
+class TestSamplerV2SimulatorMode(IBMTestCase):
     """Tests for SamplerV2 with simulator backends (local mode)."""
 
     def test_simulator_mode_uses_backend_sampler(self):
@@ -503,13 +374,13 @@ class TestSamplerV2SimulatorMode(unittest.TestCase):
         circuit.cx(0, 1)
         circuit.measure_all()
 
-        sampler = SamplerV2(mode=backend)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
 
-        # Verify executor is not created for simulator
-        self.assertIsNone(sampler._executor)
+        sampler = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
 
         # Run should work and return results
-        job = sampler.run([circuit], shots=100)
+        job = sampler.run([transpiled], shots=100)
         result = job.result()
 
         # Verify we got results
@@ -533,21 +404,29 @@ class TestSamplerV2SimulatorMode(unittest.TestCase):
         circuit.h([0, 1, 2])
         circuit.measure_all()
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         # First sampler with seed
-        sampler1 = SamplerV2(mode=backend)
-        sampler1.options.simulator.seed_simulator = 42
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+        sampler1 = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         sampler1.options.default_shots = 200
 
-        job1 = sampler1.run([circuit])
+        job1 = sampler1.run([transpiled])
         result1 = job1.result()
         counts1 = result1[0].data.meas.get_counts()
 
         # Second sampler with same seed
-        sampler2 = SamplerV2(mode=backend)
-        sampler2.options.simulator.seed_simulator = 42
+        sampler2 = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         sampler2.options.default_shots = 200
 
-        job2 = sampler2.run([circuit])
+        job2 = sampler2.run([transpiled])
         result2 = job2.result()
         counts2 = result2[0].data.meas.get_counts()
 
@@ -555,17 +434,21 @@ class TestSamplerV2SimulatorMode(unittest.TestCase):
         self.assertEqual(counts1, counts2)
 
         # Third sampler with different seed should give different results
-        sampler3 = SamplerV2(mode=backend)
-        sampler3.options.simulator.seed_simulator = 123
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=123)
+        sampler3 = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
         sampler3.options.default_shots = 200
 
-        job3 = sampler3.run([circuit])
+        job3 = sampler3.run([transpiled])
         result3 = job3.result()
         counts3 = result3[0].data.meas.get_counts()
 
         # Results should be different with different seed
         self.assertNotEqual(counts1, counts3)
 
+    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_simulator_with_general_test_case(self):
         """Test simulator mode with comprehensive simulator options.
 
@@ -589,6 +472,9 @@ class TestSamplerV2SimulatorMode(unittest.TestCase):
         circuit.cx(1, 2)
         circuit.measure_all()
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        transpiled = pm.run(circuit)
+
         # Parameter sweep with multiple parameter value sets
         param_values = [
             [0.0, 0.0],  # First parameter set
@@ -597,31 +483,14 @@ class TestSamplerV2SimulatorMode(unittest.TestCase):
         ]
 
         # Create sampler with all simulator options
-        sampler = SamplerV2(mode=backend)
-
-        # Set noise model (simple depolarizing noise)
-
-        noise_model = NoiseModel()
-        # Add depolarizing error to single-qubit gates
-        error_1q = depolarizing_error(0.001, 1)
-        noise_model.add_all_qubit_quantum_error(error_1q, ["h", "rx", "ry"])
-        # Add depolarizing error to two-qubit gates
-        error_2q = depolarizing_error(0.01, 2)
-        noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
-
-        sampler.options.simulator.noise_model = noise_model
-
-        # Set coupling map (linear topology for 3 qubits)
-        sampler.options.simulator.coupling_map = [[0, 1], [1, 0], [1, 2], [2, 1]]
-
-        # Set basis gates
-        sampler.options.simulator.basis_gates = ["h", "rx", "ry", "cx", "id"]
-
-        # Set seed for reproducibility
-        sampler.options.simulator.seed_simulator = 42
+        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
+        sampler = SamplerV2(
+            mode=backend,
+            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+        )
 
         # Run with parameter sweep
-        job = sampler.run([(circuit, param_values)], shots=1000)
+        job = sampler.run([(transpiled, param_values)], shots=1000)
         result = job.result()
 
         # Verify results structure

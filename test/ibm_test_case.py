@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Custom TestCase for IBM Provider."""
+"""Custom TestCases for IBM Provider."""
 
 from __future__ import annotations
 
@@ -20,177 +20,135 @@ import os
 import warnings
 from collections import defaultdict
 from contextlib import contextmanager, suppress
+from copy import deepcopy
 from typing import TYPE_CHECKING
-from unittest import TestCase
-from unittest.util import safe_repr
+from unittest import TestCase  # noqa: TID251 -- IBMTestCase legitimatelly inherits from it.
 
+import numpy as np
+from qiskit.circuit import BoxOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from samplomatic import ChangeBasis, InjectNoise, Tag
+from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.utils.logging import QISKIT_IBM_RUNTIME_LOGGER_NAME
+from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from .decorators import integration_test_setup
-from .utils import bell, setup_test_logging
+from .utils import bell
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
 
     from plotly.graph_objects import Figure as PlotlyFigure
+    from qiskit.circuit import QuantumCircuit
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
     from qiskit_ibm_runtime import QiskitRuntimeService
+    from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
     from .decorators import IntegrationTestDependencies
+    from .unit.executor_estimator.utils import SamplexCircuitScenario, TemplateCircuitScenario
 
 
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
-    ARTIFACT_DIR = ".test_artifacts"
-    log: logging.Logger
-    dependencies: IntegrationTestDependencies
-    service: QiskitRuntimeService
-    program_ids: dict[str, str]
+    def assertDictPartiallyEqual(self, a: dict, b: dict) -> None:
+        """Assert that all keys in ``b`` are in ``a`` and have the same values."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.log = logging.getLogger(cls.__name__)
-        filename = f"{os.path.splitext(inspect.getfile(cls))[0]}.log"
-        setup_test_logging(cls.log, filename)
-        cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
+        def _dict_partially_equal(dict1: dict, dict2: dict) -> bool:
+            """Determine whether all keys in dict2 are in dict1 and have same values."""
+            for key, val in dict2.items():
+                if isinstance(val, dict):
+                    if not _dict_partially_equal(dict1.get(key, {}), val):
+                        return False
+                elif key not in dict1 or val != dict1[key]:
+                    return False
 
-        # ignore deprecation warnings for .unit and .duration coming from qiskit
-        # as no suitable migration alternative has been found yet
-        warnings.filterwarnings(
-            "ignore",
-            category=DeprecationWarning,
-            message=r"The property "
-            r"``qiskit\.dagcircuit\.dagcircuit\.DAGCircuit\.(unit|duration)`` is deprecated",
-        )
+            return True
 
-        # fail test on deprecation warnings from qiskit
-        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
+        if not _dict_partially_equal(a, b):
+            raise AssertionError(f"Dicts are not partially equal: {a}, {b}")
 
-        # Ensure the artifact directory exists
-        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
+    def assertDictFlatPartiallyEqual(self, a: dict, b: dict) -> None:
+        """Assert that (when flattened) all keys in ``b`` are in ``a`` and have the same values."""
 
-    @classmethod
-    def _set_logging_level(cls, logger: logging.Logger) -> None:
-        """Set logging level for the input logger.
+        def _flat_dict(in_dict, out_dict):
+            """Flat the dictionaries, and compare.
 
-        Args:
-            logger: Logger whose level is to be set.
-        """
-        if logger.level is logging.NOTSET:
-            try:
-                logger.setLevel(cls.log.level)
-            except Exception as ex:
-                logger.warning(
-                    'Error while trying to set the level for the "%s" logger to %s. %s.',
-                    logger,
-                    os.getenv("LOG_LEVEL"),
-                    str(ex),
-                )
-        if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
-            logger.addHandler(logging.StreamHandler())
-            logger.propagate = False
+            Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have
+            the same values.
+            """
+            for key_, val_ in in_dict.items():
+                if isinstance(val_, dict):
+                    _flat_dict(val_, out_dict)
+                else:
+                    out_dict[key_] = val_
 
-    def assert_dict_almost_equal(
-        self, dict1, dict2, delta=None, msg=None, places=None, default_value=0
-    ):
-        """Assert two dictionaries with numeric values are almost equal.
+        flat_dict1: dict = {}
+        flat_dict2: dict = {}
+        _flat_dict(a, flat_dict1)
+        _flat_dict(b, flat_dict2)
 
-        Fail if the two dictionaries are unequal as determined by
-        comparing that the difference between values with the same key are
-        not greater than delta (default 1e-8), or that difference rounded
-        to the given number of decimal places is not zero. If a key in one
-        dictionary is not in the other the default_value keyword argument
-        will be used for the missing value (default 0). If the two objects
-        compare equal then they will automatically compare almost equal.
+        for key, val in flat_dict2.items():
+            if key not in flat_dict1 or flat_dict1[key] != val:
+                raise AssertionError(f"Dicts are not partially equal when flattened: {a}, {b}")
 
-        Args:
-            dict1 (dict): a dictionary.
-            dict2 (dict): a dictionary.
-            delta (number): threshold for comparison (defaults to 1e-8).
-            msg (str): return a custom message on failure.
-            places (int): number of decimal places for comparison.
-            default_value (number): default value for missing keys.
+    def assertDictKeysEqual(self, a: dict, b: dict, exclude_keys: list | None = None) -> None:
+        """Assert recursively that ``a`` and ``b`` have the same keys, optionally excluding keys."""
 
-        Raises:
-            TypeError: if the arguments are not valid (both `delta` and
-                `places` are specified).
-            AssertionError: if the dictionaries are not almost equal.
-        """
-        error_msg = self.dicts_almost_equal(dict1, dict2, delta, places, default_value)
+        def _dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
+            """Recursively determine whether the dictionaries have the same keys.
 
-        if error_msg:
-            msg = self._formatMessage(msg, error_msg)
-            raise self.failureException(msg)
+            Args:
+                dict1: First dictionary.
+                dict2: Second dictionary.
+                exclude_keys: A list of keys in dictionary 1 to be excluded.
 
-    def dicts_almost_equal(self, dict1, dict2, delta=None, places=None, default_value=0):
-        """Test if two dictionaries with numeric values are almost equal.
+            Returns:
+                Whether the two dictionaries have the same keys.
+            """
+            exclude_keys = exclude_keys or []
+            for key, val in dict1.items():
+                if key in exclude_keys:
+                    continue
+                if key not in dict2:
+                    return False
+                if isinstance(val, dict):
+                    if not _dict_keys_equal(val, dict2[key]):
+                        return False
 
-        Fail if the two dictionaries are unequal as determined by
-        comparing that the difference between values with the same key are
-        not greater than delta (default 1e-8), or that difference rounded
-        to the given number of decimal places is not zero. If a key in one
-        dictionary is not in the other the default_value keyword argument
-        will be used for the missing value (default 0). If the two objects
-        compare equal then they will automatically compare almost equal.
+            return True
 
-        Args:
-            dict1 (dict): a dictionary.
-            dict2 (dict): a dictionary.
-            delta (number): threshold for comparison (defaults to 1e-8).
-            places (int): number of decimal places for comparison.
-            default_value (number): default value for missing keys.
-
-        Raises:
-            TypeError: if the arguments are not valid (both `delta` and
-                `places` are specified).
-
-        Returns:
-            String: Empty string if dictionaries are almost equal. A description
-                of their difference if they are deemed not almost equal.
-        """
-
-        def valid_comparison(value):
-            """Compare value to delta, within places accuracy."""
-            if places is not None:
-                return round(value, places) == 0
-            else:
-                return value < delta
-
-        # Check arguments.
-        if dict1 == dict2:
-            return ""
-        if places is not None:
-            if delta is not None:
-                raise TypeError("specify delta or places not both")
-            msg_suffix = f" within {places} places"
-        else:
-            delta = delta or 1e-8
-            msg_suffix = f" within {delta} delta"
-
-        # Compare all keys in both dicts, populating error_msg.
-        error_msg = ""
-        for key in set(dict1.keys()) | set(dict2.keys()):
-            val1 = dict1.get(key, default_value)
-            val2 = dict2.get(key, default_value)
-            if not valid_comparison(abs(val1 - val2)):
-                error_msg += f"({safe_repr(key)}: {safe_repr(val1)} != {safe_repr(val2)}), "
-
-        if error_msg:
-            return error_msg[:-2] + msg_suffix
-        else:
-            return ""
+        if not _dict_keys_equal(a, b, exclude_keys):
+            raise AssertionError(f"Dicts don't have the same keys: {a}, {b}")
 
     @contextmanager
-    def assert_warning_appears(
-        self, warning: type[Warning], msg: str, num_appearances: int
+    def assertWarnsStrict(
+        self,
+        warning: type[Warning],
+        msg: str,
+        num_appearances: int,
+        attributed_to_caller: bool = True,
     ) -> Iterator[None]:
-        """Assert that a warning matching the category and message appears a set number of times."""
+        """Assert that a warning matching the category and message appears a set number of times.
+
+        Args:
+            warning: The warning category to match.
+            msg: A substring that must appear in the warning message.
+            num_appearances: The exact number of matching warnings expected.
+            attributed_to_caller: When ``True`` (default), also assert that each matching
+                warning is blamed on this method's caller -- the frame that opened the
+                ``with`` block. This verifies the emitting call sets ``stacklevel`` so the warning
+                points at the user's own code, which is what makes it visible in scripts and
+                Jupyter notebooks. Assumes the warning-emitting call is made directly inside the
+                ``with`` block; set to ``False`` when the call is wrapped in a helper defined in
+                another file.
+        """
+        # The caller is the frame that opened the ``with`` block: this generator frame (0),
+        # contextlib's ``_GeneratorContextManager`` wrapper (1), then the caller (2).
+        caller = inspect.stack()[2]
+
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always", warning)
             yield
@@ -208,6 +166,332 @@ class IBMTestCase(TestCase):
             f"{msg!r}, found {len(matching_warnings)}. All warnings: {all_warnings}",
         )
 
+        if attributed_to_caller:
+            caller_file = os.path.abspath(caller.filename)
+            for w in matching_warnings:
+                self.assertEqual(
+                    os.path.abspath(w.filename),
+                    caller_file,
+                    f"Warning {msg!r} was blamed on {w.filename}:{w.lineno}, not the caller's "
+                    f"frame ({caller.filename}:{caller.lineno}). Its stacklevel must point at "
+                    f"the user's code -- past any qiskit_ibm_runtime or pydantic internals -- "
+                    f"so the warning is visible in scripts and Jupyter notebooks.",
+                )
+
+
+class IBMBoxedCircuitTestCase(IBMTestCase):
+    """TestCase with assertions for boxed circuits."""
+
+    def assertCircuitsEqualIgnoringAnnotations(
+        self, circuit_1: QuantumCircuit, circuit_2: QuantumCircuit
+    ) -> None:
+        """Assert two circuits are equal, ignoring any annotations on box operations."""
+
+        def strip_annotations(circuit):
+            """Return a copy of the circuit without annotations.
+
+            Annotations cannot be mutated in python space, so data is recreated.
+            """
+            new_data = []
+            for instr in circuit.data:
+                if isinstance(instr.operation, BoxOp):
+                    stripped_op = deepcopy(instr.operation)
+                    stripped_op.annotations = []
+                    new_data.append(instr.replace(operation=stripped_op))
+                else:
+                    new_data.append(instr)
+            circuit_copy = circuit.copy_empty_like()
+            circuit_copy.data = new_data
+            return circuit_copy
+
+        self.assertEqual(strip_annotations(circuit_1), strip_annotations(circuit_2))
+
+    def assertCircuitsAnnotationsAreEqual(
+        self, circuit_1: QuantumCircuit, circuit_2: QuantumCircuit
+    ) -> None:
+        """Assert annotations on box operations are equal between two circuits, up to ref."""
+        self.assertEqual(len(circuit_1.data), len(circuit_2.data))
+
+        for instr1, instr2 in zip(circuit_1.data, circuit_2.data):
+            if not isinstance(instr1.operation, BoxOp):
+                continue
+            self.assertIsInstance(instr2.operation, BoxOp)
+
+            annotations_1 = instr1.operation.annotations
+            annotations_2 = instr2.operation.annotations
+            self.assertEqual(len(annotations_1), len(annotations_2))
+
+            for ann1 in annotations_1:
+                # Look up the matching annotation in circuit_2 by type (order-independent).
+                ann2 = get_annotation(instr2.operation, type(ann1))
+                self.assertIsNotNone(
+                    ann2, msg=f"circuit_2 box is missing a {type(ann1).__name__} annotation"
+                )
+                if isinstance(ann1, (ChangeBasis, InjectNoise)):
+                    # ref is a runtime-unique identifier; normalise ann2's ref to ann1's before
+                    # comparing so only the semantically meaningful fields are checked.
+                    ann2_normalised = deepcopy(ann2)
+                    ann2_normalised.ref = ann1.ref
+                    self.assertEqual(ann1, ann2_normalised)
+                elif isinstance(ann1, Tag):
+                    # Tag has only ref. Nothing to compare beyond presence.
+                    continue
+                else:
+                    # Twirl has no ref; also future-proofs for new annotation types.
+                    self.assertEqual(ann1, ann2)
+
+
+class IBMEstimatorPrepareTestCase(IBMTestCase):
+    """TestCase with assertions for estimator prepare-function tests."""
+
+    def assertSamplexArgumentsAreCorrect(
+        self,
+        item: SamplexItem,
+        scenario: SamplexCircuitScenario,
+        inject_noise: bool,
+    ) -> None:
+        """Assert that a :class:`~.SamplexItem`'s samplex arguments have the expected structure.
+
+        Checks:
+
+        * ``parameter_values`` is present iff ``scenario.has_parameter_values``.
+        * Exactly ``scenario.num_basis_changes`` keys start with ``basis_changes.``.
+        * Exactly ``scenario.num_basis_changes - 1`` ``basis_changes.*`` keys are
+          all-zero arrays (mid-circuit measurement boxes), and exactly one is
+          non-zero (the final measurement box).
+        * When ``inject_noise`` is ``True`` (PEA, PEC): exactly
+          ``scenario.num_noise_maps`` ``noise_scales.*`` keys and the same number
+          of ``pauli_lindblad_maps.*`` keys exist.
+        * When ``inject_noise`` is ``False`` (vanilla, ZNE): no ``noise_scales.*``
+          or ``pauli_lindblad_maps.*`` keys exist.
+
+        Args:
+            item: The :class:`~.SamplexItem` to inspect.
+            scenario: The :class:`SamplexCircuitScenario` whose PUB was used to
+                produce ``item``.
+            inject_noise: ``True`` for methods that inject noise (PEA, PEC);
+                ``False`` for methods that do not (vanilla, ZNE).
+        """
+        keys = list(item.samplex_arguments)
+        basis_keys = [k for k in keys if k.startswith("basis_changes.")]
+        noise_keys = [k for k in keys if k.startswith("noise_scales.")]
+        plm_keys = [k for k in keys if k.startswith("pauli_lindblad_maps.")]
+
+        self.assertEqual(
+            "parameter_values" in keys,
+            scenario.has_parameter_values,
+            msg=f"[{scenario.label}] parameter_values presence mismatch; keys={keys}",
+        )
+        if scenario.has_parameter_values:
+            expected_pv = scenario.pub.parameter_values.as_array(scenario.pub.circuit.parameters)
+            actual_pv = np.squeeze(np.asarray(item.samplex_arguments["parameter_values"]))
+            self.assertTrue(
+                np.array_equal(actual_pv, np.squeeze(expected_pv)),
+                msg=(
+                    f"[{scenario.label}] parameter_values mismatch; "
+                    f"got {actual_pv!r}, expected {np.squeeze(expected_pv)!r}"
+                ),
+            )
+        self.assertEqual(
+            len(basis_keys),
+            scenario.num_basis_changes,
+            msg=(
+                f"[{scenario.label}] expected {scenario.num_basis_changes} "
+                f"basis_changes key(s), got {len(basis_keys)}; keys={keys}"
+            ),
+        )
+        zero_bc_keys = [k for k in basis_keys if np.all(np.asarray(item.samplex_arguments[k]) == 0)]
+        nonzero_bc_keys = [
+            k for k in basis_keys if not np.all(np.asarray(item.samplex_arguments[k]) == 0)
+        ]
+        self.assertEqual(
+            len(zero_bc_keys),
+            scenario.num_basis_changes - 1,
+            msg=(
+                f"[{scenario.label}] expected {scenario.num_basis_changes - 1} all-zero "
+                f"basis_changes key(s) (mid-circuit boxes), got {len(zero_bc_keys)}; "
+                f"keys={basis_keys}"
+            ),
+        )
+        self.assertEqual(
+            len(nonzero_bc_keys),
+            1,
+            msg=(
+                f"[{scenario.label}] expected exactly 1 non-zero basis_changes key "
+                f"(final measurement box), got {len(nonzero_bc_keys)}; keys={basis_keys}"
+            ),
+        )
+        if inject_noise:
+            self.assertEqual(
+                len(noise_keys),
+                scenario.num_noise_maps,
+                msg=(
+                    f"[{scenario.label}] expected {scenario.num_noise_maps} noise_scales "
+                    f"key(s), got {len(noise_keys)}; keys={keys}"
+                ),
+            )
+            self.assertEqual(
+                len(plm_keys),
+                scenario.num_noise_maps,
+                msg=(
+                    f"[{scenario.label}] expected {scenario.num_noise_maps} "
+                    f"pauli_lindblad_maps key(s), got {len(plm_keys)}; keys={keys}"
+                ),
+            )
+        else:
+            self.assertEqual(
+                noise_keys,
+                [],
+                msg=f"[{scenario.label}] noise_scales must be absent; keys={keys}",
+            )
+            self.assertEqual(
+                plm_keys,
+                [],
+                msg=f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}",
+            )
+
+    def assertTemplateCircuitIsCorrect(
+        self,
+        item: SamplexItem,
+        scenario: TemplateCircuitScenario,
+        enable_gates: bool,
+        noise_factor: int = 1,
+    ) -> None:
+        """Assert that the template circuit inside a :class:`~.SamplexItem` has the expected shape.
+
+        Checks:
+
+        * ``item.circuit.num_clbits`` matches ``scenario.expected_num_clbits``.
+        * ``item.circuit.num_parameters`` is consistent with the twirling options and
+          ``noise_factor``.  When ``enable_gates=True``, gate-folding scales the gate-twirling
+          parameters while the measurement-box parameters stay fixed.  ``noise_factor=1``
+          is the unfolded baseline, so each additional unit adds
+          ``scenario.num_parameters_per_noise_factor`` parameters::
+
+              expected = num_circuit_parameters_gates_on
+                         + num_parameters_per_noise_factor * (noise_factor - 1)
+
+          When ``enable_gates=False`` the noise factor does not apply and the expected
+          count is ``scenario.num_circuit_parameters_gates_off``.
+
+        Args:
+            item: The :class:`~.SamplexItem` to inspect.
+            scenario: The :class:`TemplateCircuitScenario` whose PUB was used to
+                produce ``item``.
+            enable_gates: Whether gate twirling was enabled for this prepare call.
+            noise_factor: The ZNE gate-folding noise factor (default ``1``, i.e. no
+                folding).  Only meaningful when ``enable_gates=True``.
+        """
+        circuit = item.circuit
+        if enable_gates:
+            expected_num_params = (
+                scenario.num_circuit_parameters_gates_on
+                + scenario.num_parameters_per_noise_factor * (noise_factor - 1)
+            )
+        else:
+            expected_num_params = scenario.num_circuit_parameters_gates_off
+
+        self.assertEqual(
+            circuit.num_clbits,
+            scenario.expected_num_clbits,
+            msg=(
+                f"[{scenario.label}] template num_clbits mismatch; "
+                f"got {circuit.num_clbits}, expected {scenario.expected_num_clbits}"
+            ),
+        )
+        self.assertEqual(
+            circuit.num_parameters,
+            expected_num_params,
+            msg=(
+                f"[{scenario.label}] template num_parameters mismatch "
+                f"(enable_gates={enable_gates}, noise_factor={noise_factor}); "
+                f"got {circuit.num_parameters}, expected {expected_num_params}"
+            ),
+        )
+
+    def assertTrexItemIsCorrect(
+        self,
+        program: QuantumProgram,
+        pubs: Sequence[EstimatorPub],
+        expected_num_randomizations: int,
+    ) -> None:
+        """Assert that a TREX calibration item was correctly added to a :class:`~.QuantumProgram`.
+
+        Checks:
+
+        * The last item is a :class:`~.SamplexItem`.
+        * ``trex_item.shape == (expected_num_randomizations,)``.
+        * ``trex_item.circuit.num_qubits`` equals ``max(pub.circuit.num_qubits for pub in pubs)``.
+        * Every qubit has exactly one ``measure`` instruction — the circuit measures all qubits.
+        * The gate counts are exactly ``3 * n`` ``rz`` and ``2 * n`` ``sx`` for ``n`` qubits,
+          with no other non-barrier, non-measure gates.
+        * ``program.passthrough_data["post_processor"]["measure_mitigation"]`` is ``True``.
+
+        Args:
+            program: The :class:`~.QuantumProgram` returned by the prepare function.
+            pubs: The PUBs passed to the prepare function, used to derive the expected
+                TREX circuit width.
+            expected_num_randomizations: The expected randomization count encoded in
+                ``trex_item.shape[0]``.
+        """
+        trex_item = program.items[-1]
+        self.assertIsInstance(trex_item, SamplexItem, "Last item must be a SamplexItem (TREX)")
+
+        self.assertEqual(
+            trex_item.shape,
+            (expected_num_randomizations,),
+            f"Expected TREX item shape ({expected_num_randomizations},), got {trex_item.shape}",
+        )
+
+        n = max(pub.circuit.num_qubits for pub in pubs)
+        self.assertEqual(
+            trex_item.circuit.num_qubits,
+            n,
+            f"Expected TREX circuit width {n}, got {trex_item.circuit.num_qubits}",
+        )
+
+        op_counts = trex_item.circuit.count_ops()
+        self.assertEqual(
+            op_counts["measure"],
+            n,
+            f"Expected {n} measure operations (one per qubit), got {op_counts['measure']}",
+        )
+        self.assertEqual(
+            op_counts["rz"],
+            3 * n,
+            f"Expected {3 * n} rz operations (3 per qubit), got {op_counts['rz']}",
+        )
+        self.assertEqual(
+            op_counts["sx"],
+            2 * n,
+            f"Expected {2 * n} sx operations (2 per qubit), got {op_counts['sx']}",
+        )
+        self.assertEqual(
+            set(op_counts) - {"barrier"},
+            {"measure", "rz", "sx"},
+            f"Expected exactly gate types {{measure, rz, sx}} (plus barriers),"
+            f"got {dict(op_counts)}",
+        )
+
+        self.assertTrue(
+            program.passthrough_data["post_processor"]["measure_mitigation"],  # type: ignore[index, call-overload]
+            "passthrough_data['post_processor']['measure_mitigation'] must be True",
+        )
+
+
+class IBMVisualizationTestCase(IBMTestCase):
+    """Test case for use with visualization-related features."""
+
+    ARTIFACT_DIR = ".test_artifacts"
+
+    @classmethod
+    def setUpClass(cls):
+        """Initial class level setup."""
+        super().setUpClass()
+
+        # Ensure the artifact directory exists
+        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
+
     def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
         """Save a Plotly figure as an HTML artifact."""
         # nested folder path based on the test module, class, and method
@@ -224,6 +508,9 @@ class IBMTestCase(TestCase):
 
 class IBMIntegrationTestCase(IBMTestCase):
     """Custom integration test case for use with qiskit-ibm-runtime."""
+
+    dependencies: IntegrationTestDependencies
+    service: QiskitRuntimeService
 
     @classmethod
     @integration_test_setup()
@@ -253,20 +540,19 @@ class IBMIntegrationTestCase(IBMTestCase):
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
+    log: logging.Logger
+    program_ids: dict[str, str]
+
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
         super().setUpClass()
+        cls.log = logging.getLogger(cls.__name__)
         cls.program_ids = {}
         cls.sim_backends = {}
         service = cls.service
         cls.program_ids[service.channel] = "sampler"
         cls._find_sim_backends()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        """Class level teardown."""
-        super().tearDownClass()
 
     @classmethod
     def _find_sim_backends(cls):

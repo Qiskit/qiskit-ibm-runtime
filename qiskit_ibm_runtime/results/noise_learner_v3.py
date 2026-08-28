@@ -142,7 +142,7 @@ class NoiseLearnerV3Results:
         self,
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
-    ) -> dict[int, PauliLindbladMap]:
+    ) -> dict[str, PauliLindbladMap]:
         """Convert to dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
 
         This function iterates over a sequence of instructions, extracts the ``ref`` value
@@ -152,9 +152,10 @@ class NoiseLearnerV3Results:
 
         Args:
             instructions: The instructions to get the refs from.
-            require_refs: Whether to raise if some of the instructions do not own an inject noise
-                annotation. If ``False``, all the instructions that do not contain an inject noise
-                annotations are simply skipped when constructing the returned dictionary.
+            require_refs: Whether to raise if some of the instructions do not own an
+                inject noise annotation. If ``False``, all the instructions that do not contain an
+                inject noise annotation are simply skipped when constructing the returned
+                dictionary.
 
         Raise:
             ValueError: If ``instructions`` contains a number of elements that is not equal to the
@@ -171,12 +172,13 @@ class NoiseLearnerV3Results:
 
         noise_source = {}
         num_instr = 0
-        for instr, datum in zip(instructions, self.data):
+        pauli_maps = self.to_pauli_lindblad_maps()
+        for instr, pauli_map in zip(instructions, pauli_maps):
             if not isinstance(instr.operation, BoxOp):
                 raise ValueError("Found an instruction that does not contain a box.")
             if annotation := get_annotation(instr.operation, InjectNoise):
                 num_instr += 1
-                noise_source[annotation.ref] = datum.to_pauli_lindblad_map()
+                noise_source[annotation.ref] = pauli_map
             elif require_refs:
                 raise ValueError(
                     "Found an instruction without an inject noise annotation. "
@@ -187,6 +189,10 @@ class NoiseLearnerV3Results:
             raise ValueError("Found multiple instructions with the same ``ref``.")
 
         return noise_source
+
+    def to_pauli_lindblad_maps(self) -> list[PauliLindbladMap]:
+        """Return the :class:`PauliLindbladMap` of the items stored in this results object."""
+        return [datum.to_pauli_lindblad_map() for datum in self.data]
 
     def __getitem__(self, idx: int) -> NoiseLearnerV3Result:
         return self.data[idx]

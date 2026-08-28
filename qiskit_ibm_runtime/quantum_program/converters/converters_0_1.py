@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-
 import numpy as np
 from ibm_quantum_schemas.common import (
     F64TensorModel,
@@ -32,7 +30,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 )
 from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
 
-from ...options_models.executor_options import ExecutorOptions
+from ...options_models.executor import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 
@@ -129,5 +127,5 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
 
     return ParamsModel(
         quantum_program=QuantumProgramModel(shots=program.shots, items=model_items),
-        options=asdict(options.execution),  # type: ignore[call-overload]
+        options=options.execution.model_dump(),
     )

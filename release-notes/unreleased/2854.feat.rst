@@ -1,5 +1,0 @@
-Added support for ``instance="auto"`` in :class:`.QiskitRuntimeService` and
-:meth:`.QiskitRuntimeService.save_account`. Passing ``instance="auto"`` explicitly
-opts in to automatic instance selection without triggering the "instance was not set"
-warning or the "Loading/Using instance" warnings during backend retrieval. The value
-can be saved to the account file so it takes effect on every subsequent instantiation.

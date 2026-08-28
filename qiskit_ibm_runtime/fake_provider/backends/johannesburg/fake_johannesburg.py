@@ -14,10 +14,10 @@
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from ...fake_backend import FakeBackendV2
 
 
-class FakeJohannesburgV2(fake_backend.FakeBackendV2):
+class FakeJohannesburgV2(FakeBackendV2):
     """A fake Johannesburg V2 backend.
 
     .. code-block:: text

@@ -1,1 +1,0 @@
-The deprecated transpiler plugin ``IBMFractionalTranslationPlugin`` has been removed.

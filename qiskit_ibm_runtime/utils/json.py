@@ -10,11 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utility functions for the runtime service."""
+"""Utility functions for the IBM Quantum Compute service."""
 
 import warnings
 
-from qiskit_ibm_runtime.json import (  # noqa: F401
+from ..json import (  # noqa: F401
     CURRENT_NOISE_LEARNER_MODULE,
     LEGACY_NOISE_LEARNER_MODULE,
     SERVICE_MAX_SUPPORTED_QPY_VERSION,
