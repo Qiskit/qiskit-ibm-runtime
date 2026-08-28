@@ -33,7 +33,6 @@ from .local_runtime_job import LocalRuntimeJob
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from qiskit.primitives.primitive_job import PrimitiveJob
     from qiskit.providers.backend import BackendV2
 
     from ..options_models.simulator import ExperimentalSimulatorOptions
@@ -154,7 +153,7 @@ class QiskitRuntimeLocalService:
         inputs: dict,
         options: RuntimeOptions | dict,
         calibration_id: str | None,
-    ) -> PrimitiveJob:
+    ) -> LocalRuntimeJob:
         """Execute the runtime program.
 
         Args:
@@ -210,7 +209,7 @@ class QiskitRuntimeLocalService:
         primitive: Literal["sampler", "estimator"],
         options: dict,
         inputs: dict,
-    ) -> PrimitiveJob:
+    ) -> LocalRuntimeJob:
         """Run V2 backend primitive.
 
         Args:
