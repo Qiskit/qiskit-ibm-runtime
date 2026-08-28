@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
-from qiskit_ibm_runtime.results.quantum_program import ItemMetadata
+from ...results.quantum_program import ItemMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

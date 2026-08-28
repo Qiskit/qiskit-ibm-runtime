@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.primitive_job import PrimitiveJob
 
+from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
+
 if TYPE_CHECKING:
     from collections.abc import Callable
     from concurrent.futures import Future
@@ -169,8 +171,6 @@ class LocalRuntimeJob(PrimitiveJob):
         result = super().result()
 
         if self.primitive_id == "executor":
-            from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
-
             return QuantumProgramResultDecoder._apply_post_processing(result)
 
         return result

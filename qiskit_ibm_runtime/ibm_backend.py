@@ -487,7 +487,7 @@ class IBMBackend(Backend):
         cpy._options = deepcopy(self._options, _memo)
         return cpy
 
-    def run(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def run(self, *args: Any, **kwargs: Any) -> None:
         """Run a job in the backend.
 
         Raises:

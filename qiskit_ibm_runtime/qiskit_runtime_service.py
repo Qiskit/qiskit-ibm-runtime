@@ -192,13 +192,13 @@ class QiskitRuntimeService:
         IBMInputValueError: If an input is invalid.
     """
 
-    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
+    def __new__(cls, *args: Any, **kwargs: Any) -> QiskitRuntimeService:
         """Construct a ``QiskitRuntimeService`` instance."""
         channel = kwargs.get("channel", None)
         if channel == "local":
             from .fake_provider.local_service import QiskitRuntimeLocalService
 
-            return super().__new__(QiskitRuntimeLocalService)
+            return super().__new__(QiskitRuntimeLocalService)  # type: ignore[return-value]
         else:
             return super().__new__(cls)
 
