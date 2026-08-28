@@ -218,9 +218,9 @@ class QasmBackendConfiguration:
         dynamic_reprate_enabled: whether delay between programs can be set dynamically
             (ie via ``rep_delay``). Defaults to False.
         rep_delay_range: 2d list defining supported range of repetition delays for backend in
-            μs. First entry is lower end of the range, second entry is higher end of the range.
+            seconds. First entry is lower end of the range, second entry is higher end of the range.
             Optional, but will be specified when ``dynamic_reprate_enabled=True``.
-        default_rep_delay: Value of ``rep_delay`` if not specified by user and
+        default_rep_delay: Value of ``rep_delay`` in seconds if not specified by user and
             ``dynamic_reprate_enabled=True``.
         sample_name: Sample name for the backend
         n_registers: Number of register slots available for feedback
