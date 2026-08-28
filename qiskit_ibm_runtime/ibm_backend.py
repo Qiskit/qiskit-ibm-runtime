@@ -81,10 +81,10 @@ class IBMBackend(Backend):
         * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
           (ie via ``rep_delay``). Defaults to False.
         * rep_delay_range (List[float]): 2d list defining supported range of repetition
-          delays for backend in μs. First entry is lower end of the range, second entry is
+          delays for backend in seconds. First entry is lower end of the range, second entry is
           higher end of the range. Optional, but will be specified when
           ``dynamic_reprate_enabled=True``.
-        * default_rep_delay (float): Value of ``rep_delay`` if not specified by user and
+        * default_rep_delay (float): Value of ``rep_delay`` in seconds if not specified by user and
           ``dynamic_reprate_enabled=True``.
         * n_uchannels: Number of u-channels.
         * u_channel_lo: U-channel relationship on device los.
