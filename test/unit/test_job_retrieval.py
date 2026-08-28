@@ -13,16 +13,16 @@
 """Tests for runtime job retrieval."""
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
 
-from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.ibm_backend import IBMRetiredBackend
+from qiskit_ibm_runtime.ibm_backend import IBMBackend, IBMRetiredBackend
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import run_cloud_fake
+from ..decorators import mock_responses, run_cloud_fake
 from ..ibm_test_case import IBMTestCase
 from ..program import run_program
+from ..registries import Backend, Job, OneInstanceNoBackendsRegistry
 from ..utils import mock_wait_for_final_state
-from .mock.fake_runtime_service import BaseFakeRuntimeClient, FakeRuntimeService
+from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestRetrieveJobs(IBMTestCase):
@@ -274,27 +274,6 @@ class TestRetrieveJobs(IBMTestCase):
         rjob = service.job(job.job_id())
         self.assertIsNotNone(rjob.backend())
 
-    @run_cloud_fake
-    def test_jobs_returned_from_retired_backend(self, service):
-        """Test retrieving jobs that use a retired backend."""
-        program_id = "sampler"
-        job = run_program(service, program_id, final_status="COMPLETED")
-
-        # Make the service forget the backend, so its configuration is requested from the API.
-        service._backend_configs = {}
-
-        # Mimick a 404 when getting backend properties.
-        with patch.object(
-            BaseFakeRuntimeClient, "backend_configuration", side_effect=RequestsApiError("404")
-        ):
-            # Retrieving a job should succeed, and produce a retired backend.
-            rjob = service.job(job.job_id())
-            self.assertIsInstance(rjob.backend(), IBMRetiredBackend)
-
-            # Retrieving all (1) jobs should succeed, and produce retired backends.
-            jobs = service.jobs()
-            self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
-
     def _populate_jobs_with_all_statuses(self, service, program_id):
         """Populate the database with jobs of all statuses."""
         jobs = []
@@ -316,3 +295,27 @@ class TestRetrieveJobs(IBMTestCase):
                 else:
                     returned_jobs_count += 1
         return jobs, pending_jobs_count, returned_jobs_count
+
+
+class TestRetrieveJobsRegistry(IBMTestCase):
+    """Test retrieval of jobs, using a mocked registry."""
+
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_jobs_returned_from_retired_backend(
+        self, registry: OneInstanceNoBackendsRegistry
+    ) -> None:
+        """Test retrieving jobs that use a retired backend."""
+        registry.add_backend(Backend("ibm_not_retired"))
+        registry.add_job(Job("1", "ibm_retired"), "a")
+        registry.add_job(Job("2", "ibm_not_retired"), "a")
+
+        service = QiskitRuntimeService(token="my_token")
+
+        # Retrieving a job should suceed, and produce a retired backend.
+        job_retired = service.job("1")
+        self.assertIsInstance(job_retired.backend(), IBMRetiredBackend)
+
+        # Retrieving all (2) jobs should suceed, and produce retired and non retired backends.
+        jobs = service.jobs()
+        self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
+        self.assertIsInstance(jobs[1].backend(), IBMBackend)

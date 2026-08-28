@@ -333,7 +333,7 @@ class BaseRegistry(FirstMatchRegistry):
         """
         # Validate the instance CRN.
         instance = self.get_crn_from_request(request)
-        if instance.name not in self.backends:
+        if instance.name not in self.instances:
             return (404, {"Content-Type": "application/json"}, "{}")
 
         response_body = {
