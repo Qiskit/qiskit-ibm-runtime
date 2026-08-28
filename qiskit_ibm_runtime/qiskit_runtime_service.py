@@ -637,13 +637,16 @@ class QiskitRuntimeService:
                             )
                 unique_backends.add(backend_name)
                 self._get_or_create_cloud_client(inst)
-                if backend := self._create_backend_obj(
-                    backend_name,
-                    instance=inst,
-                    use_fractional_gates=use_fractional_gates,
-                    calibration_id=calibration_id,
-                ):
-                    backends.append(backend)
+                try:
+                    if backend := self._create_backend_obj(
+                        backend_name,
+                        instance=inst,
+                        use_fractional_gates=use_fractional_gates,
+                        calibration_id=calibration_id,
+                    ):
+                        backends.append(backend)
+                except QiskitBackendNotFoundError as e:
+                    logger.warning("Backend %s creation failed: %s", backend_name, str(e))
         if name:
             kwargs["backend_name"] = name
         if min_num_qubits:
@@ -1164,7 +1167,8 @@ class QiskitRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: Filter by IBM Cloud instance crn.
+            instance: Filter by IBM Cloud instance crn. If not specified, the jobs returned will be
+                the ones of the active instance.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Filter by session id. All jobs in the session will be
                 returned in desceding order of the job creation date.
