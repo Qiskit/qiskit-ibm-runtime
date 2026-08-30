@@ -12,7 +12,13 @@
 
 """Backends Filtering Test."""
 
+from __future__ import annotations
+
+import json
+from copy import deepcopy
+from typing import TYPE_CHECKING
 from unittest import mock
+from urllib.parse import parse_qs, urlparse
 
 from ddt import ddt, named_data
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -24,6 +30,36 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceNoBackendsRegistry
+
+if TYPE_CHECKING:
+    from requests import PreparedRequest
+
+    from ..registries import CallbackResult
+
+
+class CalibrationRegistry(OneInstanceNoBackendsRegistry):
+    """Registry that returns different configurations for default and calibrated requests."""
+
+    def callback_backends_configuration(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/backends/{id}/configuration`` endpoint."""
+        instance = self.get_crn_from_request(request)
+        backend_name = request.path_url.split("/")[4]
+        if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        backend = self.backends[instance.name][backend_name]
+        parsed_url = urlparse(request.url)
+        query_params = parse_qs(parsed_url.query)
+        calibration_id = query_params.get("calibration_id", [None])[0]
+
+        config = deepcopy(backend.configuration)
+        if calibration_id == "abc1234":
+            supported = list(config.get("supported_instructions", []))
+            if "while_loop" not in supported:
+                supported.append("while_loop")
+            config["supported_instructions"] = supported
+
+        return (200, {"Content-Type": "application/json"}, json.dumps(config))
 
 
 class TestBackendFilters(IBMTestCase):
@@ -299,7 +335,7 @@ class TestGetBackend(IBMTestCase):
 
         self.assertIsNot(backend_with_fg, backend_without_fg)
 
-    @mock_responses(OneInstanceNoBackendsRegistry, expose_responses_mock=True)
+    @mock_responses(CalibrationRegistry, expose_responses_mock=True)
     def test_backend_with_custom_calibration(self, registry, requests_mock):
         """Test getting a backend with a custom calibration."""
         registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
