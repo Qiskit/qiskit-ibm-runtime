@@ -356,3 +356,23 @@ class TestGetBackend(IBMTestCase):
         self.assertIsNone(final_default_backend.calibration_id)
         self.assertEqual(final_default_backend.supported_instructions, default_instructions)
         self.assertNotIn("while_loop", final_default_backend.supported_instructions)
+
+    @mock_responses(CalibrationRegistry)
+    def test_backend_custom_calibration_empty_cache(self, registry):
+        """Test retrieving a calibrated backend with an initially empty cache."""
+        registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
+        service = QiskitRuntimeService(token="my_token")
+
+        self.assertNotIn("ibm_torino", service._backend_configs)
+        calibrated_backend = service.backend("ibm_torino", calibration_id="abc1234")
+        self.assertEqual(calibrated_backend.calibration_id, "abc1234")
+        self.assertIn("while_loop", calibrated_backend.supported_instructions)
+
+        default_backend = service.backend("ibm_torino")
+        self.assertIsNone(default_backend.calibration_id)
+        self.assertNotIn("while_loop", default_backend.supported_instructions)
+
+        self.assertIn("ibm_torino", service._backend_configs)
+        self.assertNotIn(
+            "while_loop", service._backend_configs["ibm_torino"].supported_instructions
+        )
