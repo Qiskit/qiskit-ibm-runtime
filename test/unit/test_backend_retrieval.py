@@ -337,11 +337,22 @@ class TestGetBackend(IBMTestCase):
 
     @mock_responses(CalibrationRegistry, expose_responses_mock=True)
     def test_backend_with_custom_calibration(self, registry, requests_mock):
-        """Test getting a backend with a custom calibration."""
+        """Test getting a backend with a custom calibration and reverting to default."""
         registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
         service = QiskitRuntimeService(token="my_token")
 
+        default_backend = service.backend("ibm_torino")
+        default_instructions = list(default_backend.supported_instructions)
+        self.assertIsNone(default_backend.calibration_id)
+        self.assertNotIn("while_loop", default_instructions)
+
         backend_with_calibration = service.backend("ibm_torino", calibration_id="abc1234")
         self.assertEqual(backend_with_calibration.calibration_id, "abc1234")
+        self.assertIn("while_loop", backend_with_calibration.supported_instructions)
         # Assert mock has api client calls with cal id set
         self.assertIn("calibration_id=abc1234", requests_mock.calls[-1].request.url)
+
+        final_default_backend = service.backend("ibm_torino")
+        self.assertIsNone(final_default_backend.calibration_id)
+        self.assertEqual(final_default_backend.supported_instructions, default_instructions)
+        self.assertNotIn("while_loop", final_default_backend.supported_instructions)
