@@ -29,6 +29,7 @@ import pytest
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic import InjectNoise
+from samplomatic.quantum_program import SamplexItem
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
@@ -38,7 +39,6 @@ from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.fake_provider.executor.broadcast_sample import broadcast_sample
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
-from qiskit_ibm_runtime.quantum_program import SamplexItem
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramItemResult,
     QuantumProgramResult,
