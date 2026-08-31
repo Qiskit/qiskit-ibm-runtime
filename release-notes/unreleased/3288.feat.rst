@@ -1,0 +1,2 @@
+- Added a new `Executor` local mode simulation mode when specifying either a `FakeBackendV2` or `AerSimulator`` as the backend for any `Executor`-based primitive.
+- Added `SimulatorOptions` to `ExecutorOptions` via the `simulator` attribute and deprecated the legacy `SimulatorOptions`.
