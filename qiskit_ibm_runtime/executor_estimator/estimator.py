@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, get_args
+from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -194,7 +195,7 @@ class EstimatorV2(BaseEstimatorV2):
 
     def _run_legacy_simulation(
         self, pubs: Iterable[EstimatorPubLike], precision: float | None
-    ) -> RuntimeJobV2:
+    ) -> LocalRuntimeJob:
         """Run on the legacy local simulator (no Executor).
 
         Args:
@@ -215,7 +216,9 @@ class EstimatorV2(BaseEstimatorV2):
             options_dict["default_shots"] = int(options.default_shots)
         else:
             options_dict["default_shots"] = int(np.ceil(1.0 / (options.default_precision**2)))
-        return self._service._run(
+
+        service = cast("QiskitRuntimeLocalService", self._service)
+        return service._run(
             program_id="estimator",
             inputs={"pubs": coerced_pubs, "options": options_dict},
             options={"backend": self._backend},
@@ -224,7 +227,7 @@ class EstimatorV2(BaseEstimatorV2):
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
-    ) -> RuntimeJobV2:
+    ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the estimator primitive.
 
         For moderate and complex workloads, the client-side processing done to map estimator inputs
