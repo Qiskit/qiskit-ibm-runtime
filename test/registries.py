@@ -19,6 +19,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypeAlias
+from urllib.parse import parse_qs, urlparse
 
 from responses import GET, POST, CallbackResponse, Response
 from responses.registries import FirstMatchRegistry
@@ -81,6 +82,9 @@ class Backend:
 
     queue_length: int = 0
     """Lenght of the queue for this backend."""
+
+    calibrations: dict[str, dict] = field(default_factory=dict)
+    """Configuration overrides keyed by calibration id."""
 
     def __post_init__(self) -> None:
         if not self.configuration:
@@ -363,7 +367,16 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
 
         backend = self.backends[instance.name][backend_name]
-        return (200, {"Content-Type": "application/json"}, json.dumps(backend.configuration))
+        query_params = parse_qs(urlparse(request.url).query)
+        calibration_id = query_params.get("calibration_id", [None])[0]
+
+        calibration = backend.calibrations.get(calibration_id)
+        if calibration_id is not None and calibration is None:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        configuration = backend.configuration | (calibration or {})
+
+        return (200, {"Content-Type": "application/json"}, json.dumps(configuration))
 
     def callback_backends_properties(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/backends/{id}/properties`` endpoint.
