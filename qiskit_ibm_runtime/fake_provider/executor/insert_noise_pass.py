@@ -14,7 +14,7 @@
 
 **Noise injection**
 
-When ``noise_model`` is provided in :class:`~.ExperimentalSimulatorOptions`, Pauli-Lindblad noise
+When ``noise_model`` is provided in :class:`~.SimulatorOptions`, Pauli-Lindblad noise
 is injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts
 three barriers around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
 labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default, noise is injected at

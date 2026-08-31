@@ -23,7 +23,7 @@ from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .resilience import ResilienceOptions
-from .simulator import ExperimentalSimulatorOptions
+from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
 
 
@@ -64,7 +64,7 @@ class EstimatorOptions(BaseOptionsModel):
     dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
     """Dynamical decoupling options."""
 
-    simulator: ExperimentalSimulatorOptions = ExperimentalSimulatorOptions()
+    simulator: SimulatorOptions = SimulatorOptions()
     """Options related to local mode simulations."""
 
     experimental: dict = {}

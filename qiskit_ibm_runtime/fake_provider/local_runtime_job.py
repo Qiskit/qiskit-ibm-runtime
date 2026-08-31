@@ -42,7 +42,7 @@ class LocalRuntimeJob(PrimitiveJob):
     (
     backend: BackendV2,
     program: QuantumProgram,
-    options: ExperimentalSimulatorOptions,
+    options: SimulatorOptions,
     ) -> QuantumProgramResult:
     ```
 

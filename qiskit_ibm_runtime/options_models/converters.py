@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .executor import ExecutorOptions
-from .simulator import ExperimentalSimulatorOptions
+from .simulator import SimulatorOptions
 
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
@@ -57,7 +57,7 @@ def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptio
     simulator_options = options.simulator.model_dump()
     executor_options.environment = EnvironmentOptions(**environment_options)
     executor_options.execution = ExecutionOptions(**execution_options)
-    executor_options.simulator = ExperimentalSimulatorOptions(**simulator_options)
+    executor_options.simulator = SimulatorOptions(**simulator_options)
 
     executor_options.environment.max_execution_time = options.max_execution_time
     if options.experimental:
@@ -89,7 +89,7 @@ def estimator_options_to_executor_options(options: EstimatorOptions) -> Executor
     simulator_options = options.simulator.model_dump()
     executor_options.environment = EnvironmentOptions(**environment_options)
     executor_options.execution = ExecutionOptions(**execution_options)
-    executor_options.simulator = ExperimentalSimulatorOptions(**simulator_options)
+    executor_options.simulator = SimulatorOptions(**simulator_options)
 
     executor_options.environment.max_execution_time = options.max_execution_time
     if options.experimental:

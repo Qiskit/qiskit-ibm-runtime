@@ -16,12 +16,9 @@ from __future__ import annotations
 
 from typing import Annotated, TypeAlias
 
-from pydantic import AfterValidator, Field, InstanceOf
+from pydantic import AfterValidator, InstanceOf
 from qiskit.circuit import BoxOp, CircuitInstruction
-from qiskit.exceptions import MissingOptionalLibraryError
-from qiskit.providers import BackendV2
 from qiskit.quantum_info import PauliLindbladMap
-from qiskit.transpiler import CouplingMap
 from qiskit.utils import optionals
 
 from .base import BaseOptionsModel
@@ -56,7 +53,7 @@ LayerNoiseModel: TypeAlias = Annotated[
 ]
 
 
-class ExperimentalSimulatorOptions(BaseOptionsModel):
+class SimulatorOptions(BaseOptionsModel):
     """Simulator options."""
 
     angle_decimals: int = 5
@@ -80,57 +77,3 @@ class ExperimentalSimulatorOptions(BaseOptionsModel):
 
     warn_absent: bool = True
     """Whether to emit a warning when an entry is missing in :attr:`layer_noise_dict`."""
-
-
-class SimulatorOptions(BaseOptionsModel):
-    """Legacy Simulator options.
-
-    Used to control local mode simulation.
-    """
-
-    noise_model: noise_model_type = None
-    """Noise model for the simulator."""
-
-    seed_simulator: int | None = None
-    """Random seed to control sampling."""
-
-    coupling_map: (
-        list[list[Annotated[int, Field(ge=0)]]] | Annotated[CouplingMap, InstanceOf] | None
-    ) = None
-    """Directed coupling map to target in mapping.
-
-    If the coupling map is symmetric, both directions need to be specified. Each entry in the list
-    specifies a directed two-qubit interaction, e.g:
-    ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``. ``None`` implies no connectivity
-    constraints.
-    """
-
-    basis_gates: list[str] | None = None
-    """List of basis gate names to unroll to.
-
-    For example, ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
-    """
-
-    def set_backend(self, backend: BackendV2) -> None:
-        """Set backend for simulation.
-
-        This method changes noise_model, coupling_map, basis_gates according to given backend.
-
-        Args:
-            backend: backend to be set.
-
-        Raises:
-            MissingOptionalLibraryError: if qiskit-aer is not found.
-        """
-        if not optionals.HAS_AER:
-            raise MissingOptionalLibraryError(
-                "qiskit-aer", "Aer provider", "pip install qiskit-aer"
-            )
-
-        from qiskit_aer.noise import NoiseModel as AerNoiseModel
-
-        self.noise_model = AerNoiseModel.from_backend(backend)
-
-        if isinstance(backend, BackendV2):
-            self.coupling_map = backend.coupling_map
-            self.basis_gates = backend.operation_names
