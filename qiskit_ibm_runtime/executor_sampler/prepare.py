@@ -40,10 +40,10 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
+    from samplomatic.quantum_program import QuantumProgramItem
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.sampler import SamplerOptions
-    from ..quantum_program import QuantumProgramItem
 
 
 logger = logging.getLogger(__name__)
