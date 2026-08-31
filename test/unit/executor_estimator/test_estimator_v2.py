@@ -28,7 +28,6 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
@@ -416,13 +415,12 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
-
         estimator = EstimatorV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
         estimator.options.default_shots = 10_000
+        estimator.options.simulator.seed_simulator = 42
         result = estimator.run([(transpiled, observable)]).result()
 
         self.assertEqual(len(result), 1)
@@ -441,20 +439,20 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
-
         estimator1 = EstimatorV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
         estimator1.options.default_shots = 100
+        estimator1.options.simulator.seed_simulator = 42
         result1 = estimator1.run([(transpiled, observable)]).result()
 
         estimator2 = EstimatorV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
         estimator2.options.default_shots = 100
+        estimator2.options.simulator.seed_simulator = 42
         result2 = estimator2.run([(transpiled, observable)]).result()
 
         np.testing.assert_array_equal(result1[0].data.evs, result2[0].data.evs)
@@ -475,21 +473,19 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
-
         estimator1 = EstimatorV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
         estimator1.options.default_shots = 100
+        estimator1.options.simulator.seed_simulator = 42
         result1 = estimator1.run([(transpiled, observable)]).result()
-
-        simulator_options = ExperimentalSimulatorOptions(seed_simulator=99)
 
         estimator2 = EstimatorV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
+        estimator2.options.simulator.seed_simulator = 99
         estimator2.options.default_shots = 100
         result2 = estimator2.run([(transpiled, observable)]).result()
 

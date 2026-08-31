@@ -24,7 +24,6 @@ from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
@@ -408,12 +407,12 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         transpiled = pm.run(circuit)
 
         # First sampler with seed
-        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
         sampler1 = SamplerV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
         sampler1.options.default_shots = 200
+        sampler1.options.simulator.seed_simulator = 42
 
         job1 = sampler1.run([transpiled])
         result1 = job1.result()
@@ -422,9 +421,10 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         # Second sampler with same seed
         sampler2 = SamplerV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
         sampler2.options.default_shots = 200
+        sampler2.options.simulator.seed_simulator = 42
 
         job2 = sampler2.run([transpiled])
         result2 = job2.result()
@@ -434,12 +434,12 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         self.assertEqual(counts1, counts2)
 
         # Third sampler with different seed should give different results
-        simulator_options = ExperimentalSimulatorOptions(seed_simulator=123)
         sampler3 = SamplerV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
         sampler3.options.default_shots = 200
+        sampler3.options.simulator.seed_simulator = 123
 
         job3 = sampler3.run([transpiled])
         result3 = job3.result()
@@ -483,11 +483,11 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         ]
 
         # Create sampler with all simulator options
-        simulator_options = ExperimentalSimulatorOptions(seed_simulator=42)
         sampler = SamplerV2(
             mode=backend,
-            options={"experimental": {"local_mode": True, "simulator_options": simulator_options}},
+            options={"experimental": {"local_mode": True}},
         )
+        sampler.options.simulator.seed_simulator = 42
 
         # Run with parameter sweep
         job = sampler.run([(transpiled, param_values)], shots=1000)
