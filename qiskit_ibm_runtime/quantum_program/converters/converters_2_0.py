@@ -30,11 +30,12 @@ from ibm_quantum_schemas.executor.version_2_0 import (
     QuantumProgramModel,
     SamplexItemModel,
 )
+from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
 
 from ...options_models.executor import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
-from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
+from ..quantum_program import QuantumProgram
 
 if TYPE_CHECKING:
     from ibm_quantum_schemas.executor.version_2_0.models import DataTree as DataTreeModel
