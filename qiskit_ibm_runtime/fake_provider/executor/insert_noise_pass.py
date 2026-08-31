@@ -10,7 +10,29 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Transpiler pass that inserts Pauli-Lindblad noise after labeled barriers."""
+"""Transpiler pass that inserts Pauli-Lindblad noise after labeled barriers.
+
+**Noise injection**
+
+When ``noise_model`` is provided in :class:`~.ExperimentalSimulatorOptions`, Pauli-Lindblad noise
+is injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts
+three barriers around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
+labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default, noise is injected at
+the ``R`` (right) barriers, i.e. *after* the gate.  Use ``noise_after=False`` on
+:class:`~.InsertNoisePass` to target ``M`` barriers instead (noise *before* the gate).
+
+The ``noise_model`` format is:
+
+- **Keys** — layer name tags (strings, e.g. ``"r0"``, ``"my_tag"``).  Each key must match the
+    ``ref`` of a ``Tag`` annotation used when building the ``QuantumProgram``. A warning is emitted
+    (if ``warn_absent=True``) when a tagged barrier's tag is absent from the dict; the barrier is
+    left as-is (no noise inserted for that layer).
+- **Values** — :class:`~qiskit.quantum_info.PauliLindbladMap` instances describing the
+    Pauli-Lindblad noise channel for that gate.  The map's ``num_qubits`` must equal the number of
+    qubits on the corresponding barrier in the circuit.
+- **Qubit indexing** — indices inside the map are *local* to the barrier's qubit set, independent
+    of global circuit qubit numbering.
+"""
 
 from __future__ import annotations
 

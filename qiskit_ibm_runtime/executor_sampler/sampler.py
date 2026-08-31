@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Literal, get_args
+from typing import TYPE_CHECKING, Literal, cast, get_args
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -169,7 +170,7 @@ class SamplerV2(BaseSamplerV2):
 
     def _run_legacy_simulation(
         self, pubs: Iterable[SamplerPubLike], shots: int | None
-    ) -> RuntimeJobV2:
+    ) -> LocalRuntimeJob:
         """Run on the legacy local simulator (no Executor).
 
         Args:
@@ -184,14 +185,18 @@ class SamplerV2(BaseSamplerV2):
         options = self.finalize_options()
         options_dict = options.model_dump()
         options_dict["default_shots"] = shots
-        return self._service._run(
+
+        service = cast("QiskitRuntimeLocalService", self._service)
+        return service._run(
             program_id="sampler",
             inputs={"pubs": coerced_pubs, "options": options_dict},
             options={"backend": self._backend},
             calibration_id=None,
         )
 
-    def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
+    def run(
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
+    ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the sampler primitive.
 
         For moderate and complex workloads, the client-side processing done to map sampler inputs
