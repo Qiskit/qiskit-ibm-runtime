@@ -14,14 +14,14 @@
 
 **Noise injection**
 
-When ``noise_model`` is provided in :class:`~.SimulatorOptions`, Pauli-Lindblad noise
+When ``layer_noise_model`` is provided in :class:`~.SimulatorOptions`, Pauli-Lindblad noise
 is injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts
 three barriers around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
 labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default, noise is injected at
 the ``R`` (right) barriers, i.e. *after* the gate.  Use ``noise_after=False`` on
 :class:`~.InsertNoisePass` to target ``M`` barriers instead (noise *before* the gate).
 
-The ``noise_model`` format is:
+The ``noise_dict`` format is:
 
 - **Keys** — layer name tags (strings, e.g. ``"r0"``, ``"my_tag"``).  Each key must match the
     ``ref`` of a ``Tag`` annotation used when building the ``QuantumProgram``. A warning is emitted
