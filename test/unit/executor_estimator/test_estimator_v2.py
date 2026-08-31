@@ -415,10 +415,7 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator = EstimatorV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        estimator = EstimatorV2(mode=backend)
         estimator.options.default_shots = 10_000
         estimator.options.simulator.seed_simulator = 42
         result = estimator.run([(transpiled, observable)]).result()
@@ -439,18 +436,12 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator1 = EstimatorV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        estimator1 = EstimatorV2(mode=backend)
         estimator1.options.default_shots = 100
         estimator1.options.simulator.seed_simulator = 42
         result1 = estimator1.run([(transpiled, observable)]).result()
 
-        estimator2 = EstimatorV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        estimator2 = EstimatorV2(mode=backend)
         estimator2.options.default_shots = 100
         estimator2.options.simulator.seed_simulator = 42
         result2 = estimator2.run([(transpiled, observable)]).result()
@@ -473,18 +464,12 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator1 = EstimatorV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        estimator1 = EstimatorV2(mode=backend)
         estimator1.options.default_shots = 100
         estimator1.options.simulator.seed_simulator = 42
         result1 = estimator1.run([(transpiled, observable)]).result()
 
-        estimator2 = EstimatorV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        estimator2 = EstimatorV2(mode=backend)
         estimator2.options.simulator.seed_simulator = 99
         estimator2.options.default_shots = 100
         result2 = estimator2.run([(transpiled, observable)]).result()

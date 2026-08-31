@@ -253,16 +253,14 @@ class EstimatorV2(BaseEstimatorV2):
             IBMInputValueError: If no pubs are provided, if precision is not properly
                 specified, or if unsupported options are detected.
         """
-        # Legacy simulator path (no executor)
-        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
-            self._service, QiskitRuntimeLocalService
-        ):
-            return self._run_legacy_simulation(pubs, precision)
-
         # Pre-process: Convert Estimator input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            pubs, self.options, precision, add_tags=local_mode, backend=self._backend
+            pubs,
+            self.options,
+            precision,
+            add_tags=isinstance(self._service, QiskitRuntimeLocalService),
+            backend=self._backend,
         )
 
         # Set semantic role for post-processing dispatch

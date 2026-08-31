@@ -72,7 +72,7 @@ class TestExecutor(IBMTestCase):
             isa_template, samplex=samplex, samplex_arguments={"parameter_values": parameter_values}
         )
 
-        executor = Executor(mode=AerSimulator(), options={"experimental": {"local_mode": True}})
+        executor = Executor(mode=AerSimulator())
 
         job = executor.run(program)
         result = job.result()
@@ -136,11 +136,6 @@ class TestExecutor(IBMTestCase):
 
         executor = Executor(
             mode=AerSimulator(),
-            options={
-                "experimental": {
-                    "local_mode": True,
-                }
-            },
         )
 
         pauli_maps = [

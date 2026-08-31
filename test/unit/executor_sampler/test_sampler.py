@@ -376,7 +376,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         transpiled = pm.run(circuit)
 
-        sampler = SamplerV2(mode=backend, options={"experimental": {"local_mode": True}})
+        sampler = SamplerV2(mode=backend)
 
         # Run should work and return results
         job = sampler.run([transpiled], shots=100)
@@ -407,10 +407,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         transpiled = pm.run(circuit)
 
         # First sampler with seed
-        sampler1 = SamplerV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        sampler1 = SamplerV2(mode=backend)
         sampler1.options.default_shots = 200
         sampler1.options.simulator.seed_simulator = 42
 
@@ -419,10 +416,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         counts1 = result1[0].data.meas.get_counts()
 
         # Second sampler with same seed
-        sampler2 = SamplerV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        sampler2 = SamplerV2(mode=backend)
         sampler2.options.default_shots = 200
         sampler2.options.simulator.seed_simulator = 42
 
@@ -434,10 +428,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         self.assertEqual(counts1, counts2)
 
         # Third sampler with different seed should give different results
-        sampler3 = SamplerV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        sampler3 = SamplerV2(mode=backend)
         sampler3.options.default_shots = 200
         sampler3.options.simulator.seed_simulator = 123
 
@@ -483,10 +474,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         ]
 
         # Create sampler with all simulator options
-        sampler = SamplerV2(
-            mode=backend,
-            options={"experimental": {"local_mode": True}},
-        )
+        sampler = SamplerV2(mode=backend)
         sampler.options.simulator.seed_simulator = 42
 
         # Run with parameter sweep

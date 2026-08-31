@@ -217,16 +217,14 @@ class SamplerV2(BaseSamplerV2):
         Returns:
             The submitted job.
         """
-        # Legacy simulator path (no executor)
-        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
-            self._service, QiskitRuntimeLocalService
-        ):
-            return self._run_legacy_simulation(pubs, shots)
-
         # Pre-process: Convert Sampler input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            pubs, self.options, shots, add_tags=local_mode, backend=self._backend
+            pubs,
+            self.options,
+            shots,
+            add_tags=isinstance(self._service, QiskitRuntimeLocalService),
+            backend=self._backend,
         )
 
         # Set semantic role for post-processing dispatch

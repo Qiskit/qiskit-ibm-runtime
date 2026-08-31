@@ -74,7 +74,6 @@ class Executor:
 
     Raises:
         TypeError: If ``options`` is not a valid type.
-        ValueError: If local mode is used.
     """
 
     _PROGRAM_ID = "executor"
@@ -92,10 +91,6 @@ class Executor:
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
-
-        local_mode = self.options.experimental.get("local_mode", False)
-        if isinstance(self._service, QiskitRuntimeLocalService) and not local_mode:
-            raise ValueError("The executor is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.

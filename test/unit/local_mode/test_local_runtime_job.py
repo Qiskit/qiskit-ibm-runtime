@@ -47,14 +47,7 @@ class TestLocalRuntimeJob(IBMTestCase):
     @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
     def test_executor(self):
         """Test executor on a local backend."""
-        executor = Executor(
-            AerSimulator(method="stabilizer"),
-            options={
-                "experimental": {
-                    "local_mode": True,
-                }
-            },
-        )
+        executor = Executor(AerSimulator(method="stabilizer"))
         job = executor.run(QuantumProgram(1))
         self.assertIsInstance(job, LocalRuntimeJob)
         self.assertTrue(job.metrics())
