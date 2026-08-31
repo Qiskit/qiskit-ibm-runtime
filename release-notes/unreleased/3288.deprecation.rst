@@ -1,0 +1,12 @@
+Several ``QuantumProgram`` related entities have been moved to the ``samplomatic`` package:
+
+* ``qiskit_ibm_runtime.quantum_program.CircuitItem```
+* ``qiskit_ibm_runtime.quantum_program.QuantumProgramItem``
+* ``qiskit_ibm_runtime.quantum_program.SamplexItem```
+* ``qiskit_ibm_runtime.quantum_program.datatree.DataTree```
+* ``qiskit_ibm_runtime.results.ChunkPart``
+* ``qiskit_ibm_runtime.results.ChunkSpan``
+* ``qiskit_ibm_runtime.results.ChunkTiming``
+
+They should now be imported from the ``samplomatic.quantum_program`` module. Importing them from
+``qiskit_ibm_runtime`` is now deprecated.
