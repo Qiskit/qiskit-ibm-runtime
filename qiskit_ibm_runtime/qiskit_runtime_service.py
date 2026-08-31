@@ -788,7 +788,8 @@ class QiskitRuntimeService:
         except Exception as ex:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             raise QiskitBackendNotFoundError(
-                f"Unable to create configuration for {backend_name}, assuming backend is retired"
+                f"Unable to create configuration for {backend_name}. "
+                "This might happen for example when a backend is retired."
             ) from ex
 
         # Retrieve `physical_qubits` from the stored `/backends` responses.
@@ -812,7 +813,8 @@ class QiskitRuntimeService:
             )
 
         raise QiskitBackendNotFoundError(
-            f"Unable to create configuration for {backend_name}, assuming backend is retired"
+            f"Unable to create configuration for {backend_name}. "
+            "This might happen for example when a backend is retired."
         )
 
     def active_account(self) -> dict[str, str] | None:
