@@ -1,2 +1,26 @@
-- Added a new `Executor` local mode simulation mode when specifying either a `FakeBackendV2` or `AerSimulator`` as the backend for any `Executor`-based primitive.
-- Added `SimulatorOptions` to `ExecutorOptions` via the `simulator` attribute and deprecated the legacy `SimulatorOptions`.
+Added local mode support to :class:`~qiskit_ibm_runtime.executor.Executor`.
+
+When specifying a :class:`~qiskit_ibm_runtime.fake_provider.FakeBackendV2` or
+:class:`~qiskit_aer.AerSimulator` as the backend; :meth:`~qiskit_ibm_runtime.executor.Executor.run`
+will operate as a `qiskit_aer` simulator. Behavior can be controlled by the new
+:class:`~qiskit_ibm_runtime.option_models.simulator.SimulatorOptions` class accessed via the
+:attr:`~qiskit_ibm_runtime.option_models.executor.ExecutorOptions.simulator` attribute.
+
+For example, the following code simulates a simple two-qubit circuit:
+
+.. code-block:: python
+
+    from qiskit import QuantumCircuit
+    from qiskit_aer import AerSimulator
+    from qiskit_ibm_runtime import Executor, QuantumProgram
+
+    circuit = QuantumCircuit(2)
+    circuit.cx(0, 1)
+    circuit.measure_all()
+
+    program = QuantumProgram(1)
+    program.append_circuit_item(circuit)
+
+    executor = Executor(AerSimulator())
+    job = executor.run(program)
+    job.result()

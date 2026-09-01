@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from ...ibm_test_case import IBMTestCase
 
 
-class TestExperimentalSimulatorOptions(IBMTestCase):
+class TestSimulatorOptions(IBMTestCase):
     """Tests for SimulatorOptions."""
 
     def test_simulator_options_default(self):

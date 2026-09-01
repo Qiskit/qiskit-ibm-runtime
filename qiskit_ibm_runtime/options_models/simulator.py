@@ -19,18 +19,8 @@ from typing import Annotated, TypeAlias
 from pydantic import AfterValidator, InstanceOf
 from qiskit.circuit import BoxOp, CircuitInstruction
 from qiskit.quantum_info import PauliLindbladMap
-from qiskit.utils import optionals
 
 from .base import BaseOptionsModel
-
-# Dynamically define the `noise_model` field type at runtime, as `NoiseModel`
-# is only a valid alternative if `qiskit_aer` is installed.
-if optionals.HAS_AER:
-    from qiskit_aer.noise import NoiseModel
-
-    noise_model_type: TypeAlias = dict | Annotated[NoiseModel, InstanceOf] | None
-else:
-    noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
 def validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseModel | None:
