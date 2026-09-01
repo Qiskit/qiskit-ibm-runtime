@@ -92,6 +92,10 @@ class Executor:
         # Coerced to `ExecutorOptions` via `__setattr__()`.
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
+        self.options.environment.image = (
+            "qiskit-ibm-primitives:9f8fd2865d32a895eefb4c8be3043c7124c2c70e"  # noqa: E501
+        )
+
         self._session, self._service, self._backend = get_mode_service_backend(mode)
 
         local_mode = self.options.experimental.get("local_mode", False)
