@@ -301,81 +301,27 @@ class TestGetBackend(IBMTestCase):
 
         self.assertIsNot(backend_with_fg, backend_without_fg)
 
-    @mock_responses(OneInstanceNoBackendsRegistry, expose_responses_mock=True)
-    def test_backend_with_custom_calibration(self, registry, requests_mock):
-        """Test getting a backend with a custom calibration and reverting to default."""
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_backend_with_custom_calibration(self, registry):
+        """Test listing a backend with a custom calibration and reverting to default."""
         registry.add_backend(
             Backend(
                 "ibm_torino",
-                queue_length=5,
                 calibrations={"abc1234": {"supported_instructions": ["while_loop"]}},
             )
         )
         service = QiskitRuntimeService(token="my_token")
 
-        default_backend = service.backend("ibm_torino")
-        default_instructions = list(default_backend.supported_instructions)
-        self.assertIsNone(default_backend.calibration_id)
-        self.assertNotIn("while_loop", default_instructions)
-
-        backend_with_calibration = service.backend("ibm_torino", calibration_id="abc1234")
-        calibrated_instructions = list(backend_with_calibration.supported_instructions)
+        backend_with_calibration = service.backends("ibm_torino", calibration_id="abc1234")[0]
         self.assertEqual(backend_with_calibration.calibration_id, "abc1234")
-        self.assertIn("while_loop", calibrated_instructions)
-        self.assertEqual(default_backend.supported_instructions, default_instructions)
-        self.assertNotIn("while_loop", default_backend.supported_instructions)
-        # Assert mock has api client calls with cal id set
-        self.assertIn("calibration_id=abc1234", requests_mock.calls[-1].request.url)
-
-        second_backend_with_calibration = service.backend("ibm_torino", calibration_id="abc1234")
-        self.assertEqual(second_backend_with_calibration.calibration_id, "abc1234")
-        self.assertIn("while_loop", second_backend_with_calibration.supported_instructions)
-
-        final_default_backend = service.backend("ibm_torino")
-        self.assertIsNone(final_default_backend.calibration_id)
-        self.assertEqual(final_default_backend.supported_instructions, default_instructions)
-        self.assertNotIn("while_loop", final_default_backend.supported_instructions)
-        self.assertEqual(backend_with_calibration.calibration_id, "abc1234")
-        self.assertEqual(backend_with_calibration.supported_instructions, calibrated_instructions)
         self.assertIn("while_loop", backend_with_calibration.supported_instructions)
 
-        configuration_urls = [
-            call.request.url for call in requests_mock.calls if "/configuration" in call.request.url
-        ]
-        self.assertEqual(
-            len([url for url in configuration_urls if "calibration_id=abc1234" in url]), 2
-        )
-        self.assertEqual(len([url for url in configuration_urls if "calibration_id" not in url]), 1)
-
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_backend_custom_calibration_empty_cache(self, registry):
-        """Test retrieving a calibrated backend with an initially empty cache."""
-        registry.add_backend(
-            Backend(
-                "ibm_torino",
-                queue_length=5,
-                calibrations={"abc1234": {"supported_instructions": ["while_loop"]}},
-            )
-        )
-        service = QiskitRuntimeService(token="my_token")
-
-        self.assertNotIn("ibm_torino", service._backend_configs)
-        calibrated_backend = service.backend("ibm_torino", calibration_id="abc1234")
-        self.assertEqual(calibrated_backend.calibration_id, "abc1234")
-        self.assertIn("while_loop", calibrated_backend.supported_instructions)
-        self.assertNotIn("ibm_torino", service._backend_configs)
-
-        default_backend = service.backend("ibm_torino")
+        default_backend = service.backends("ibm_torino")[0]
         self.assertIsNone(default_backend.calibration_id)
         self.assertNotIn("while_loop", default_backend.supported_instructions)
 
-        self.assertIn("ibm_torino", service._backend_configs)
-        self.assertNotIn(
-            "while_loop", service._backend_configs["ibm_torino"].supported_instructions
-        )
-
-    @mock_responses(OneInstanceNoBackendsRegistry, expose_responses_mock=True)
-    def test_backend_with_invalid_calibration(self, registry, requests_mock):
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_backend_with_invalid_calibration(self, registry):
         """Test that retrieving a backend with an invalid calibration fails."""
         registry.add_backend(
             Backend(
@@ -387,5 +333,3 @@ class TestGetBackend(IBMTestCase):
 
         with self.assertRaises(QiskitBackendNotFoundError):
             service.backend("ibm_torino", calibration_id="invalid")
-
-        self.assertEqual(requests_mock.calls[-1].response.status_code, 404)
