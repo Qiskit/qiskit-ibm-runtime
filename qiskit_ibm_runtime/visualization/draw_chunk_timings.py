@@ -20,6 +20,7 @@ issue_deprecation_msg(
     msg="Importing 'draw_chunk_timings' from 'qiskit_ibm_runtime.visualization.draw_chunk_timings' "
     "is deprecated",
     version="0.50.0",
-    remedy="Import 'draw_chunk_timings' from 'samplomatic.visualization' instead.",
+    remedy="Import 'draw_chunk_timings' from 'samplomatic.visualization.draw_chunk_timings' "
+    "instead.",
     stacklevel=2,
 )

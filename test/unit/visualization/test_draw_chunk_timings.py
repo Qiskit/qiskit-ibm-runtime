@@ -16,9 +16,9 @@ from datetime import datetime, timedelta
 
 import ddt
 from samplomatic.quantum_program import ChunkPart, ChunkSpan, ChunkTiming
+from samplomatic.visualization.draw_chunk_timings import draw_chunk_timings
 
 from qiskit_ibm_runtime.results.quantum_program import Metadata, QuantumProgramResult
-from qiskit_ibm_runtime.visualization import draw_chunk_timings
 
 from ...ibm_test_case import IBMVisualizationTestCase
 
