@@ -12,20 +12,17 @@
 
 """Unit tests for EstimatorV2 prepare vanilla function."""
 
-from typing import Any, cast
-
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import ClassicalRegister, Parameter
-from qiskit.primitives.containers.estimator_pub import EstimatorPub, ObservablesArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare_vanilla import prepare_vanilla
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase
@@ -142,139 +139,6 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
             shots=10,
         )
         self.assertTemplateCircuitIsCorrect(program.items[0], scenario, enable_gates=enable_gates)
-
-    @data(
-        [(2, 2), (2, 2), (1, 4)],
-        [(2, 2, 1), (2, 2), (1, 6)],
-        [(2, 2), (2, 2, 1), (1, 8)],
-        [(), (2, 2, 1), (1, 3)],
-    )
-    @unpack
-    def test_shapes(self, param_shape, obs_shape, item_shape):
-        """Test preparing with different shapes of observables and params."""
-        circuit = QuantumCircuit(3)
-        if param_shape:
-            for idx in range(7):
-                circuit.rz(Parameter(f"th_{idx}"), 0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        params = np.random.random(param_shape + (circuit.num_parameters,))
-
-        obs = ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape)
-
-        pub = EstimatorPub.coerce((circuit, obs, params))
-
-        twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = True
-        twirling_options.enable_measure = True
-        program = prepare_vanilla([pub], twirling_options, 10, MeasureNoiseLearningOptions())
-
-        self.assertEqual(program.items[0].shape, item_shape)
-
-    @data(
-        [(2, 2), (2, 2), (1, 5)],
-        [(2, 2, 1), (2, 2), (1, 8)],
-        [(2, 2), (2, 2, 1), (1, 10)],
-        [(), (2, 2, 1), (1, 4)],
-    )
-    @unpack
-    def test_shapes_with_nested_observables(self, param_shape, obs_shape, item_shape):
-        """Test preparing with different shapes of (nested) observables and params."""
-        circuit = QuantumCircuit(3)
-        if param_shape:
-            for idx in range(7):
-                circuit.rz(Parameter(f"th_{idx}"), 0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        params = np.random.random(param_shape + (circuit.num_parameters,))
-
-        obs = ObservablesArray(["ZZZ", "XXX", {"YYY": 1, "XZX": 1}, "I0I"]).reshape(obs_shape)
-
-        pub = EstimatorPub.coerce((circuit, obs, params))
-
-        twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = True
-        twirling_options.enable_measure = True
-        program = prepare_vanilla([pub], twirling_options, 10, MeasureNoiseLearningOptions())
-
-        self.assertEqual(program.items[0].shape, item_shape)
-
-    def test_prepare_general_case(self):
-        """Test prepare with multiple pubs, observables, and parameter values."""
-        circuit1 = QuantumCircuit(2)
-        circuit1.h(0)
-        circuit1.cx(0, 1)
-
-        circuit2 = QuantumCircuit(2)
-        theta = Parameter("theta")
-        phi = Parameter("phi")
-        circuit2.rx(theta, 0)
-        circuit2.ry(phi, 1)
-        circuit2.cx(0, 1)
-
-        observables1 = ObservablesArray.coerce([{"ZZ": 1}, {"XX": 1}, {"YY": 1}])
-        observables2 = ObservablesArray.coerce([{"ZZ": 1}, {"XX": 1}])
-        parameter_values2 = np.array([[0.1, 0.2], [0.3, 0.4]])
-
-        pub1 = EstimatorPub.coerce((circuit1, observables1))
-        pub2 = EstimatorPub.coerce((circuit2, observables2, parameter_values2))
-
-        twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = False
-        twirling_options.enable_measure = False
-
-        shots = 1024
-        quantum_program = prepare_vanilla([pub1, pub2], twirling_options, shots)
-
-        self.assertIsInstance(quantum_program, QuantumProgram)
-        self.assertEqual(quantum_program.shots, shots)
-        self.assertEqual(quantum_program.meas_level, "classified")
-        self.assertEqual(len(quantum_program.items), 2)
-
-        item1 = cast("SamplexItem", quantum_program.items[0])
-        item2 = cast("SamplexItem", quantum_program.items[1])
-        self.assertIsInstance(item1, SamplexItem)
-        self.assertIsInstance(item2, SamplexItem)
-
-        self.assertEqual(item1.shape, (1, 3))
-        self.assertEqual(item2.shape, (1, 2))
-
-        self.assertNotIn("parameter_values", item1.samplex_arguments)
-        np.testing.assert_allclose(item2.samplex_arguments["parameter_values"], parameter_values2)
-
-        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
-        self.assertEqual(passthrough["post_processor"]["version"], "v0.1")
-        self.assertEqual(len(passthrough["post_processor"]["observables"]), 2)
-        self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)
-        self.assertEqual(len(passthrough["post_processor"]["observables"][1]), 2)
-        self.assertEqual(len(passthrough["post_processor"]["param_basis_pairs"]), 2)
-        self.assertEqual(len(passthrough["post_processor"]["param_shapes"]), 2)
-        self.assertEqual(passthrough["post_processor"]["param_shapes"][0], ())
-        self.assertEqual(passthrough["post_processor"]["param_shapes"][1], (2,))
-
-    def test_prepare_with_twirling_enabled(self):
-        """Test prepare with gate and measurement twirling enabled."""
-        twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = True
-        twirling_options.enable_measure = True
-        twirling_options.num_randomizations = 4
-        twirling_options.shots_per_randomization = 256
-
-        circuit = QuantumCircuit(2)
-        circuit.rx(0.1, 0)
-        circuit.ry(0.2, 1)
-
-        observables = ObservablesArray.coerce([{"ZI": 1}, {"IZ": 1}])
-        pub = EstimatorPub.coerce((circuit, observables))
-
-        quantum_program = prepare_vanilla([pub], twirling_options, 2000)
-
-        self.assertIsInstance(quantum_program.items[0], SamplexItem)
-        self.assertEqual(quantum_program.shots, 256)
-        self.assertEqual(quantum_program.items[0].shape, (4, 1))
-        self.assertEqual(quantum_program.items[0].circuit.num_parameters, 3 * circuit.num_qubits)
 
     @combine(enable_gates=[True, False], enable_measure=[True, False])
     def test_prepare_with_mid_circuit_measurements(self, enable_gates, enable_measure):

@@ -18,6 +18,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.options_models.resilience import ResilienceOptions
+from qiskit_ibm_runtime.options_models.zne import ZneOptions
 
 from ...ibm_test_case import IBMTestCase
 
@@ -80,3 +81,14 @@ class TestResilienceOptionsDefaults(IBMTestCase):
 
         with self.assertRaisesRegex(ValidationError, "Found instruction with 2"):
             ResilienceOptions(layer_noise_model=[(box, PauliLindbladMap.identity(1))])
+
+
+class TestZneOptions(IBMTestCase):
+    """Tests for ``ZneOptions`` validation."""
+
+    def test_noise_factors_requires_at_least_two(self):
+        """Setting noise_factors to fewer than two elements raises ValueError."""
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
+            zne_options.noise_factors = [1.0]
