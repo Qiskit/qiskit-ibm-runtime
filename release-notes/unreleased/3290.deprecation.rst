@@ -1,4 +1,4 @@
-Several ``QuantumProgram`` related entities have been moved to the ``samplomatic`` package:
+The following ``QuantumProgram`` related entities have been moved to the ``samplomatic`` package:
 
 * ``qiskit_ibm_runtime.quantum_program.CircuitItem```
 * ``qiskit_ibm_runtime.quantum_program.QuantumProgramItem``
@@ -8,5 +8,13 @@ Several ``QuantumProgram`` related entities have been moved to the ``samplomatic
 * ``qiskit_ibm_runtime.results.ChunkSpan``
 * ``qiskit_ibm_runtime.results.ChunkTiming``
 
-They should now be imported from the ``samplomatic.quantum_program`` module. Importing them from
-``qiskit_ibm_runtime`` is now deprecated.
+They should now be imported from the ``samplomatic.quantum_program`` module.
+
+A visualization function has been moved to the ``samplomatic`` package:
+
+* ``qiskit_ibm_runtime.visualization.draw_chunk_timings``
+
+It should now be imported from the ``samplomatic.visualization`` module.
+
+Importing these from ``qiskit_ibm_runtime`` is now deprecated. The imports will continue to work
+until they are fully removed in a later version.

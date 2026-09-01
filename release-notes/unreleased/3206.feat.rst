@@ -1,4 +1,1 @@
-``QuantumProgram``, ``QuantumProgramResult``, and ``QuantumProgramItemResult`` now inherit from the
-corresponding classes in ``samplomatic``.
-
 The minimal version of Samplomatic required is now ``0.21.0``.
