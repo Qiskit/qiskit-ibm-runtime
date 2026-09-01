@@ -21,10 +21,9 @@ from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime import Batch, EstimatorV2, SamplerV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.fake_provider.local_runtime_job import LocalRuntimeJob
 
-from ..ibm_test_case import IBMTestCase
-from ..utils import combine, get_primitive_inputs
+from ...ibm_test_case import IBMTestCase
+from ...utils import combine, get_primitive_inputs
 
 
 @ddt
@@ -148,18 +147,3 @@ class TestLocalModeV2(IBMTestCase):
         session = Session(backend=backend)
         with self.assertRaisesRegex(ValueError, "Only sampler and estimator"):
             session._run(program_id="foo", inputs={})
-
-
-class TestLocalRuntimeJob(IBMTestCase):
-    """Class for testing local mode runtime jobs."""
-
-    def test_v2_sampler(self):
-        """Test V2 Sampler on a local backend."""
-        inst = SamplerV2(mode=FakeManilaV2())
-        job = inst.run(**get_primitive_inputs(inst))
-
-        self.assertIsInstance(job, LocalRuntimeJob)
-        self.assertTrue(job.metrics())
-        self.assertTrue(job.backend())
-        self.assertTrue(job.inputs)
-        self.assertEqual(job.usage(), 0)

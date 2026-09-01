@@ -637,13 +637,16 @@ class QiskitRuntimeService:
                             )
                 unique_backends.add(backend_name)
                 self._get_or_create_cloud_client(inst)
-                if backend := self._create_backend_obj(
-                    backend_name,
-                    instance=inst,
-                    use_fractional_gates=use_fractional_gates,
-                    calibration_id=calibration_id,
-                ):
-                    backends.append(backend)
+                try:
+                    if backend := self._create_backend_obj(
+                        backend_name,
+                        instance=inst,
+                        use_fractional_gates=use_fractional_gates,
+                        calibration_id=calibration_id,
+                    ):
+                        backends.append(backend)
+                except QiskitBackendNotFoundError as e:
+                    logger.warning("Backend %s creation failed: %s", backend_name, str(e))
         if name:
             kwargs["backend_name"] = name
         if min_num_qubits:
@@ -738,6 +741,9 @@ class QiskitRuntimeService:
 
         Returns:
             A backend object.
+
+        Raises:
+            ``QiskitBackendNotFoundError`` if the backend cannot be created.
         """
         try:
             if calibration_id is not None:
@@ -784,7 +790,10 @@ class QiskitRuntimeService:
                 self._backend_configs[backend_name] = config
         except Exception as ex:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
-            return None
+            raise QiskitBackendNotFoundError(
+                f"Unable to create configuration for {backend_name}. "
+                "This might happen for example when a backend is retired."
+            ) from ex
 
         # Retrieve `physical_qubits` from the stored `/backends` responses.
         backend_infos_for_instance: list[dict[str, Any]] = self._backends_info_per_instance.get(
@@ -805,7 +814,11 @@ class QiskitRuntimeService:
                 calibration_id=calibration_id,
                 physical_qubits=physical_qubits,
             )
-        return None
+
+        raise QiskitBackendNotFoundError(
+            f"Unable to create configuration for {backend_name}. "
+            "This might happen for example when a backend is retired."
+        )
 
     def active_account(self) -> dict[str, str] | None:
         """Return the IBM Quantum account currently in use for the session.
@@ -1159,7 +1172,8 @@ class QiskitRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: Filter by IBM Cloud instance crn.
+            instance: Filter by IBM Cloud instance crn. If not specified, the jobs returned will be
+                the ones of the active instance.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Filter by session id. All jobs in the session will be
                 returned in desceding order of the job creation date.

@@ -26,15 +26,17 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from ..ibm_backend import IBMBackend
+from .executor.run_quantum_program import run_quantum_program
 from .fake_provider import FakeProviderForBackendV2
 from .local_runtime_job import LocalRuntimeJob
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from qiskit.primitives.primitive_job import PrimitiveJob
     from qiskit.providers.backend import BackendV2
 
+    from ..options_models.simulator import ExperimentalSimulatorOptions
+    from ..quantum_program import QuantumProgram
     from ..runtime_options import RuntimeOptions
     from .fake_backend import FakeBackendV2
 
@@ -151,7 +153,7 @@ class QiskitRuntimeLocalService:
         inputs: dict,
         options: RuntimeOptions | dict,
         calibration_id: str | None,
-    ) -> PrimitiveJob:
+    ) -> LocalRuntimeJob:
         """Execute the runtime program.
 
         Args:
@@ -207,7 +209,7 @@ class QiskitRuntimeLocalService:
         primitive: Literal["sampler", "estimator"],
         options: dict,
         inputs: dict,
-    ) -> PrimitiveJob:
+    ) -> LocalRuntimeJob:
         """Run V2 backend primitive.
 
         Args:
@@ -284,3 +286,31 @@ class QiskitRuntimeLocalService:
         )
 
         return local_runtime_job
+
+    def _run_executor(
+        self,
+        backend: BackendV2,
+        options: ExperimentalSimulatorOptions,
+        inputs: QuantumProgram,
+    ) -> LocalRuntimeJob:
+        """Run an executor program.
+
+        Args:
+            backend: The backend to run the executor program on.
+            options: Simulator options to use.
+            inputs: The executor program to run.
+
+        Returns:
+            The job object that runs the program.
+        """
+        job = LocalRuntimeJob(
+            function=run_quantum_program,
+            backend=backend,
+            primitive="executor",
+            inputs=inputs,
+            options=options,
+        )
+
+        job._submit()
+
+        return job

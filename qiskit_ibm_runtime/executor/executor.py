@@ -18,7 +18,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
-from ..executor_local_mode import SimRuntimeJob
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
@@ -30,6 +29,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
@@ -118,7 +118,7 @@ class Executor:
 
         super().__setattr__(name, value)
 
-    def run(self, program: QuantumProgram) -> RuntimeJobV2:
+    def run(self, program: QuantumProgram) -> RuntimeJobV2 | LocalRuntimeJob:
         """Run a quantum program.
 
         Args:
@@ -128,10 +128,8 @@ class Executor:
             A job.
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
-            return SimRuntimeJob(
-                backend=self._backend,
-                program=program,
-                options=self.options.experimental["simulator_options"],
+            return self._service._run_executor(
+                self._backend, self.options.experimental["simulator_options"], program
             )
 
         try:
