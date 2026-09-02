@@ -39,4 +39,6 @@ Classes
     SamplexItem
 """
 
-from .quantum_program import CircuitItem, QuantumProgram, QuantumProgramItem, SamplexItem
+from samplomatic.quantum_program import CircuitItem, QuantumProgramItem, SamplexItem
+
+from .quantum_program import QuantumProgram

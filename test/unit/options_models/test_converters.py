@@ -21,7 +21,6 @@ from qiskit_ibm_runtime.options_models.converters import (
 )
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ...ibm_test_case import IBMTestCase
 
@@ -124,30 +123,25 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
     def test_to_executor_options_resilience_fallback(self):
         """Test the simulator ``layer_noise_model`` fallback to resilience ``layer_noise_model``."""
         options = EstimatorOptions()
-        simulator_options = ExperimentalSimulatorOptions()
-        options.experimental = {"simulator_options": simulator_options}
-
         options.resilience.layer_noise_model = []
 
         executor_options = estimator_options_to_executor_options(options)
 
-        self.assertIsNotNone(executor_options.experimental.get("simulator_options"))
         self.assertEqual(
-            executor_options.experimental["simulator_options"].layer_noise_model,
+            executor_options.simulator.layer_noise_model,
             options.resilience.layer_noise_model,
         )
 
         circuit = QuantumCircuit(2)
         with circuit.box():
             circuit.cx(0, 1)
-        options.experimental["simulator_options"].layer_noise_model = [
+        options.simulator.layer_noise_model = [
             (layer, PauliLindbladMap.identity(2)) for layer in circuit.data
         ]
 
         executor_options = estimator_options_to_executor_options(options)
 
-        self.assertIsNotNone(executor_options.experimental.get("simulator_options"))
         self.assertEqual(
-            executor_options.experimental["simulator_options"].layer_noise_model,
-            options.experimental["simulator_options"].layer_noise_model,
+            executor_options.simulator.layer_noise_model,
+            options.simulator.layer_noise_model,
         )

@@ -21,7 +21,6 @@ from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
-from ..options_models.simulator import ExperimentalSimulatorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from ..utils.default_session import get_cm_session
 
@@ -75,7 +74,6 @@ class Executor:
 
     Raises:
         TypeError: If ``options`` is not a valid type.
-        ValueError: If local mode is used.
     """
 
     _PROGRAM_ID = "executor"
@@ -93,15 +91,6 @@ class Executor:
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
-
-        local_mode = self.options.experimental.get("local_mode", False)
-        if isinstance(self._service, QiskitRuntimeLocalService) and not local_mode:
-            raise ValueError("The executor is currently not supported in local mode.")
-
-        if local_mode:
-            self.options.experimental["simulator_options"] = self.options.experimental.get(
-                "simulator_options", ExperimentalSimulatorOptions()
-            )
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -128,9 +117,7 @@ class Executor:
             A job.
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
-            return self._service._run_executor(
-                self._backend, self.options.experimental["simulator_options"], program
-            )
+            return self._service._run_executor(self._backend, self.options.simulator, program)
 
         try:
             converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]

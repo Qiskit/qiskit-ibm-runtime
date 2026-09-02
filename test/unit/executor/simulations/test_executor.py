@@ -24,7 +24,6 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime import Executor, QuantumProgram
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -73,7 +72,7 @@ class TestExecutor(IBMTestCase):
             isa_template, samplex=samplex, samplex_arguments={"parameter_values": parameter_values}
         )
 
-        executor = Executor(mode=AerSimulator(), options={"experimental": {"local_mode": True}})
+        executor = Executor(mode=AerSimulator())
 
         job = executor.run(program)
         result = job.result()
@@ -137,12 +136,6 @@ class TestExecutor(IBMTestCase):
 
         executor = Executor(
             mode=AerSimulator(),
-            options={
-                "experimental": {
-                    "local_mode": True,
-                    "simulator_options": ExperimentalSimulatorOptions(),
-                }
-            },
         )
 
         pauli_maps = [
@@ -152,7 +145,7 @@ class TestExecutor(IBMTestCase):
         ]
         fidelities = []
         for pauli_map in pauli_maps:
-            executor.options.experimental["simulator_options"].layer_noise_model = zip(
+            executor.options.simulator.layer_noise_model = zip(
                 unique_instructions, (pauli_map,) * len(unique_instructions)
             )
             job = executor.run(program)

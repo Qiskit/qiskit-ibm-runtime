@@ -38,7 +38,7 @@ class SamplerOptions(BaseOptionsModel):
     """Pauli twirling options."""
 
     simulator: SimulatorOptions = SimulatorOptions()
-    """Simulator options."""
+    """Options related to local mode simulations."""
 
     experimental: dict = {}
     """Experimental options."""

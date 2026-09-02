@@ -15,9 +15,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, cast, get_args
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
-import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
@@ -27,7 +26,7 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
 from .prepare import prepare
-from .utils import BoxType, find_box_type, find_unique_layers, resolve_precision
+from .utils import BoxType, find_box_type, find_unique_layers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -193,38 +192,6 @@ class EstimatorV2(BaseEstimatorV2):
         """
         return finalize_estimator_options(self.options)
 
-    def _run_legacy_simulation(
-        self, pubs: Iterable[EstimatorPubLike], precision: float | None
-    ) -> LocalRuntimeJob:
-        """Run on the legacy local simulator (no Executor).
-
-        Args:
-            pubs: The raw PUB-like objects passed to :meth:`run`.
-            precision: The per-pub precision override, forwarded from :meth:`run`.
-
-        Returns:
-            The submitted job.
-        """
-        logger.info("Running in local simulator mode")
-        coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-        options = self.finalize_options()
-        options_dict = options.model_dump()
-        resolved_precision = resolve_precision(coerced_pubs, precision)
-        if resolved_precision is not None:
-            options_dict["default_shots"] = int(np.ceil(1.0 / (resolved_precision**2)))
-        elif options.default_shots is not None:
-            options_dict["default_shots"] = int(options.default_shots)
-        else:
-            options_dict["default_shots"] = int(np.ceil(1.0 / (options.default_precision**2)))
-
-        service = cast("QiskitRuntimeLocalService", self._service)
-        return service._run(
-            program_id="estimator",
-            inputs={"pubs": coerced_pubs, "options": options_dict},
-            options={"backend": self._backend},
-            calibration_id=None,
-        )
-
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
     ) -> RuntimeJobV2 | LocalRuntimeJob:
@@ -253,16 +220,14 @@ class EstimatorV2(BaseEstimatorV2):
             IBMInputValueError: If no pubs are provided, if precision is not properly
                 specified, or if unsupported options are detected.
         """
-        # Legacy simulator path (no executor)
-        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
-            self._service, QiskitRuntimeLocalService
-        ):
-            return self._run_legacy_simulation(pubs, precision)
-
         # Pre-process: Convert Estimator input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            pubs, self.options, precision, add_tags=local_mode, backend=self._backend
+            pubs,
+            self.options,
+            precision,
+            add_tags=isinstance(self._service, QiskitRuntimeLocalService),
+            backend=self._backend,
         )
 
         # Set semantic role for post-processing dispatch

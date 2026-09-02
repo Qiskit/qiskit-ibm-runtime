@@ -23,9 +23,9 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
 from samplomatic import Tag
+from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.utils import get_annotation
 
-from ...quantum_program import CircuitItem, SamplexItem
 from ...results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
@@ -33,7 +33,7 @@ from .insert_noise_pass import InsertNoisePass
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from ...options_models.simulator import ExperimentalSimulatorOptions
+    from ...options_models.simulator import SimulatorOptions
     from ...quantum_program import QuantumProgram
 
 if HAS_AER:
@@ -54,7 +54,7 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
 def run_quantum_program(
     backend: BackendV2,
     program: QuantumProgram,
-    options: ExperimentalSimulatorOptions,
+    options: SimulatorOptions,
 ) -> QuantumProgramResult:
     """Run a quantum program on a simulator.
 

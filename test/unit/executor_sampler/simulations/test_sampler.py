@@ -95,7 +95,6 @@ class TestSampler(IBMTestCase):
         pubs = [SamplerPub.coerce([circuit, parameters])]
 
         sampler = SamplerV2(self.backend)
-        sampler.options.experimental = {"local_mode": True}
 
         sampler.options.twirling.enable_gates = enable_gates
         sampler.options.twirling.enable_measure = enable_measure

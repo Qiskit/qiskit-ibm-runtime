@@ -159,11 +159,6 @@ def create_local_mode_estimator(
     options = EstimatorOptions(
         # Select resilience level 0 by default, disabling all mitigation:
         resilience_level=0,
-        # Local mode means that the underlying Executor is running Aer simulation
-        # instead of connecting to a real backend.
-        experimental={
-            "local_mode": True,
-        },
     )
     options.update(**options_overrides)
 

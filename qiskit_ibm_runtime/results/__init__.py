@@ -38,13 +38,12 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
    StretchValues
 """  # noqa: D205, D212, D415
 
+from samplomatic.quantum_program import ChunkPart, ChunkSpan, ChunkTiming
+
 from .estimator_pub import EstimatorPubResult
 from .noise_learner import LayerError, NoiseLearnerResult, PauliLindbladError
 from .noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 from .quantum_program import (
-    ChunkPart,
-    ChunkSpan,
-    ChunkTiming,
     ItemMetadata,
     Metadata,
     QuantumProgramItemResult,
