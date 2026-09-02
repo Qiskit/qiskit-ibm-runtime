@@ -114,7 +114,7 @@ class TestQuantumProgramItemResult(IBMTestCase):
 
 @ddt
 class TestChunkTiming(IBMTestCase):
-    """Tests for ``draw_chunk_timings`` and ``ChunkTiming``."""
+    """Tests for ``ChunkTiming``."""
 
     def setUp(self):
         """Set up the test class."""
