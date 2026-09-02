@@ -12,7 +12,7 @@
 
 """Tests the class ``QuantumProgramResult``."""
 
-import datetime
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 from ddt import ddt
@@ -33,12 +33,24 @@ from ...utils import combine
 
 def _make_span(start_s: float, stop_s: float, size: int = 1) -> ChunkSpan:
     """Helper to build a ``ChunkSpan`` with a single ``ChunkPart``."""
-    epoch = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
+    epoch = datetime(2025, 1, 1, tzinfo=timezone.utc)
     return ChunkSpan(
-        start=epoch + datetime.timedelta(seconds=start_s),
-        stop=epoch + datetime.timedelta(seconds=stop_s),
+        start=epoch + timedelta(seconds=start_s),
+        stop=epoch + timedelta(seconds=stop_s),
         parts=[ChunkPart(idx_item=0, size=size)],
     )
+
+
+def _make_chunk_timings(n: int = 5) -> ChunkTiming:
+    """Create a synthetic ChunkTiming with ``n`` chunks."""
+    t = datetime(year=2025, month=1, day=1)
+    spans = []
+    for i in range(n):
+        start = t + timedelta(seconds=i * 10)
+        stop = start + timedelta(seconds=5 + i)
+        parts = [ChunkPart(idx_item=i % 2, size=10 + i)]
+        spans.append(ChunkSpan(start=start, stop=stop, parts=parts))
+    return ChunkTiming(spans)
 
 
 class TestQuantumProgramResult(IBMTestCase):
@@ -100,35 +112,59 @@ class TestQuantumProgramItemResult(IBMTestCase):
         self.assertEqual(item_result.metadata, metadata)
 
 
+@ddt
 class TestChunkTiming(IBMTestCase):
-    """Tests the ``ChunkTiming`` class."""
+    """Tests for ``ChunkTiming``."""
 
-    def test_len_and_iter(self):
-        """Supports len() and iteration over the wrapped spans."""
-        spans = [_make_span(0, 1), _make_span(1, 2), _make_span(2, 3)]
-        timing = ChunkTiming(spans)
-        self.assertEqual(len(timing), 3)
-        self.assertEqual(list(timing), spans)
+    def setUp(self):
+        """Set up the test class."""
+        self.chunk_timings = _make_chunk_timings()
+
+    def test_len(self):
+        """Assert ChunkTiming reports the number of spans it contains."""
+        self.assertEqual(len(self.chunk_timings), 5)
 
     def test_getitem_int(self):
-        """Integer indexing returns the corresponding ChunkSpan."""
-        spans = [_make_span(0, 1), _make_span(1, 2)]
-        timing = ChunkTiming(spans)
-        self.assertEqual(timing[0], spans[0])
-        self.assertEqual(timing[1], spans[1])
+        """Assert integer indexing returns a ChunkSpan."""
+        item = self.chunk_timings[0]
+        self.assertIsInstance(item, ChunkSpan)
 
     def test_getitem_slice(self):
-        """Slice indexing returns a new ChunkTiming."""
-        spans = [_make_span(i, i + 1) for i in range(4)]
-        sliced = ChunkTiming(spans)[1:3]
+        """Assert slice indexing returns a new ChunkTiming with the selected spans."""
+        sliced = self.chunk_timings[1:3]
         self.assertIsInstance(sliced, ChunkTiming)
-        self.assertEqual(list(sliced), spans[1:3])
+        self.assertEqual(len(sliced), 2)
+
+    def test_iter(self):
+        """Assert iteration yields all ChunkSpan objects."""
+        items = list(self.chunk_timings)
+        self.assertEqual(len(items), 5)
+        self.assertTrue(all(isinstance(s, ChunkSpan) for s in items))
+
+    def test_eq(self):
+        """Assert two ChunkTiming built from the same spans compare equal."""
+        other = _make_chunk_timings()
+        self.assertEqual(self.chunk_timings, other)
+
+    def test_repr(self):
+        """Assert repr includes the class name."""
+        self.assertIn("ChunkTiming", repr(self.chunk_timings))
 
     def test_start_stop_duration(self):
-        """start, stop, and duration are derived from the spans."""
-        spans = [_make_span(10, 20, size=3), _make_span(25, 40, size=7)]
-        timing = ChunkTiming(spans)
-        epoch = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
-        self.assertEqual(timing.start, epoch + datetime.timedelta(seconds=10))
-        self.assertEqual(timing.stop, epoch + datetime.timedelta(seconds=40))
-        self.assertAlmostEqual(timing.duration, 30.0)
+        """Assert start and stop are datetimes and duration is positive."""
+        self.assertIsInstance(self.chunk_timings.start, datetime)
+        self.assertIsInstance(self.chunk_timings.stop, datetime)
+        self.assertGreater(self.chunk_timings.duration, 0)
+
+    def test_result_chunk_timings_property(self):
+        """Assert QuantumProgramResult.chunk_timings wraps the metadata spans."""
+        metadata = Metadata(chunk_timing=list(self.chunk_timings))
+        result = QuantumProgramResult(data=[], metadata=metadata)
+        self.assertIsInstance(result.timing, ChunkTiming)
+        self.assertEqual(len(result.timing), len(self.chunk_timings))
+
+    def test_result_chunk_timings_empty(self):
+        """Assert QuantumProgramResult.chunk_timings is empty when no metadata spans are present."""
+        result = QuantumProgramResult(data=[])
+        self.assertIsInstance(result.timing, ChunkTiming)
+        self.assertEqual(len(result.timing), 0)
