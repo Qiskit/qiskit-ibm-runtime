@@ -76,7 +76,7 @@ def _build_program_result_metadata(post_processor_data: dict) -> dict:
     if options is None:
         return {}
 
-    metadata = {"options": dict(options)}
+    metadata: dict[str, Any] = {"options": dict(options)}
     if "resilience" in metadata["options"]:
         resilience = dict(metadata["options"]["resilience"])
         for flag_key, options_key in [
@@ -111,12 +111,13 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     if len(result) == 0:
         return PrimitiveResult([])
 
-    if not isinstance(passthrough := result.passthrough_data, dict):
+    if not isinstance(result.passthrough_data, dict):
         raise ValueError(
             "Wrong type for passthrough data: Expected a 'dict', found "
             f"'{type(result.passthrough_data)}'."
         )
 
+    passthrough: dict[str, Any] = result.passthrough_data or {}
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
 
