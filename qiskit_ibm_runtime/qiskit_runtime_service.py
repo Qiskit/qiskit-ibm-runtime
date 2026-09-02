@@ -746,27 +746,30 @@ class QiskitRuntimeService:
             ``QiskitBackendNotFoundError`` if the backend cannot be created.
         """
         try:
-            if backend_name in self._backend_configs:
+            if calibration_id is not None:
+                config = configuration_from_server_data(
+                    raw_config=self._active_api_client.backend_configuration(
+                        backend_name=backend_name, calibration_id=calibration_id
+                    ),
+                    instance=instance,
+                    use_fractional_gates=use_fractional_gates,
+                )
+            elif backend_name in self._backend_configs:
                 config = self._backend_configs[backend_name]
 
                 fractional_gates = {"rzz", "rx"}
 
                 # if cached config does not match use_fractional_gates
-                # or calibration_id is passed in
                 if (
-                    (
-                        use_fractional_gates
-                        and not any(fg in config.basis_gates for fg in fractional_gates)
-                    )
-                    or (
-                        not use_fractional_gates
-                        and any(fg in config.basis_gates for fg in fractional_gates)
-                    )
-                    or calibration_id
+                    use_fractional_gates
+                    and not any(fg in config.basis_gates for fg in fractional_gates)
+                ) or (
+                    not use_fractional_gates
+                    and any(fg in config.basis_gates for fg in fractional_gates)
                 ):
                     config = configuration_from_server_data(
                         raw_config=self._active_api_client.backend_configuration(
-                            backend_name=backend_name, calibration_id=calibration_id
+                            backend_name=backend_name
                         ),
                         instance=instance,
                         use_fractional_gates=use_fractional_gates,
@@ -776,7 +779,7 @@ class QiskitRuntimeService:
             else:
                 config = configuration_from_server_data(
                     raw_config=self._active_api_client.backend_configuration(
-                        backend_name=backend_name, calibration_id=calibration_id
+                        backend_name=backend_name
                     ),
                     instance=instance,
                     use_fractional_gates=use_fractional_gates,
