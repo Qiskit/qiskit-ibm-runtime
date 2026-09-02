@@ -17,6 +17,7 @@ from __future__ import annotations
 from .base import BaseOptionsModel
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
+from .simulator import SimulatorOptions
 
 
 class ExecutorOptions(BaseOptionsModel):
@@ -30,3 +31,6 @@ class ExecutorOptions(BaseOptionsModel):
 
     experimental: dict = {}
     """Experimental options that are passed to the executor."""
+
+    simulator: SimulatorOptions = SimulatorOptions()
+    """Options related to local mode simulations."""

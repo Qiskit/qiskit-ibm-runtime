@@ -20,7 +20,6 @@ from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.fake_provider.local_runtime_job import LocalRuntimeJob
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
 
@@ -48,15 +47,7 @@ class TestLocalRuntimeJob(IBMTestCase):
     @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
     def test_executor(self):
         """Test executor on a local backend."""
-        executor = Executor(
-            AerSimulator(method="stabilizer"),
-            options={
-                "experimental": {
-                    "local_mode": True,
-                    "simulator_options": ExperimentalSimulatorOptions(),
-                }
-            },
-        )
+        executor = Executor(AerSimulator(method="stabilizer"))
         job = executor.run(QuantumProgram(1))
         self.assertIsInstance(job, LocalRuntimeJob)
         self.assertTrue(job.metrics())

@@ -23,7 +23,6 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from .utils import (
@@ -141,12 +140,7 @@ class TestEstimatorWithNoise(IBMTestCase):
             (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
             for layer in layers
         ]
-
-        base_level_estimator.options.experimental["simulator_options"] = (
-            ExperimentalSimulatorOptions(
-                layer_noise_model=simulated_noise_model,
-            )
-        )
+        base_level_estimator.options.simulator.layer_noise_model = simulated_noise_model
 
         # Run a noisy simulation using baselevel estimator:
         result = base_level_estimator.run([pub]).result()
@@ -160,9 +154,7 @@ class TestEstimatorWithNoise(IBMTestCase):
             shots_per_randomization=200,
             options_overrides=option_overrides,
         )
-        estimator.options.experimental["simulator_options"] = ExperimentalSimulatorOptions(
-            layer_noise_model=simulated_noise_model,
-        )
+        estimator.options.simulator.layer_noise_model = simulated_noise_model
         # Run a noisy simulation, injecting the same noise as in the simulation
         estimator.options.resilience.layer_noise_model = [
             (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))

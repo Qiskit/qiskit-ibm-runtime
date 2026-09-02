@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
     from qiskit.providers.backend import BackendV2
 
-    from ..options_models.simulator import ExperimentalSimulatorOptions
+    from ..options_models.simulator import SimulatorOptions
     from ..quantum_program import QuantumProgram
     from ..runtime_options import RuntimeOptions
     from .fake_backend import FakeBackendV2
@@ -290,7 +290,7 @@ class QiskitRuntimeLocalService:
     def _run_executor(
         self,
         backend: BackendV2,
-        options: ExperimentalSimulatorOptions,
+        options: SimulatorOptions,
         inputs: QuantumProgram,
     ) -> LocalRuntimeJob:
         """Run an executor program.
