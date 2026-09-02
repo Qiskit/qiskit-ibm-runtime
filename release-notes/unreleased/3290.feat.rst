@@ -1,0 +1,7 @@
+The following ``QuantumProgram`` related entities have been moved to the ``samplomatic`` package,
+and ``qiskit_ibm_runtime`` uses them as base classes, providing custom classes for the three of
+them:
+
+* ``qiskit_ibm_runtime.quantum_program.QuantumProgram``
+* ``qiskit_ibm_runtime.results.QuantumProgramResult``
+* ``qiskit_ibm_runtime.results.QuantumProgramItemResult``

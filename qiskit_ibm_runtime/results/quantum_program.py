@@ -21,8 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
     import numpy as np
-
-    from ..quantum_program.datatree import DataTree
+    from samplomatic.quantum_program.datatree import DataTree
 
 from samplomatic.quantum_program import ChunkPart, ChunkSpan, ChunkTiming  # noqa: F401,TC002
 from samplomatic.quantum_program import QuantumProgramItemResult as BaseQuantumProgramItemResult
@@ -184,7 +183,7 @@ class QuantumProgramResult(BaseQuantumProgramResult):
 
         .. code-block:: python
 
-            from qiskit_ibm_runtime.visualization import draw_chunk_timings
+            from samplomatic.visualization.draw_chunk_timings import draw_chunk_timings
 
             draw_chunk_timings(
                 job1.result().timing,

@@ -13,3 +13,12 @@
 """DataTree."""
 
 from samplomatic.quantum_program.datatree import DataTree  # noqa: F401
+
+from ..utils.deprecation import issue_deprecation_msg
+
+issue_deprecation_msg(
+    msg="Importing 'DataTree' from 'qiskit_ibm_runtime.quantum_program.datatree' is deprecated",
+    version="0.50.0",
+    remedy="Import 'DataTree' from 'samplomatic.quantum_program' instead.",
+    stacklevel=2,
+)
