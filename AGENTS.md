@@ -1,5 +1,9 @@
 # Agent Instructions
 
+## Project description
+The package provides the interface to access the IBM Quantum Compute service on IBM Quantum Platform,
+to run quantum computations.
+
 ## Project goals
 
 Maintain correctness, backward compatibility, and consistency with
