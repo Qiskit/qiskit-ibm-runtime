@@ -537,9 +537,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     )
                     return
 
-            def _constrained_length(
-                values: npt.NDArray[np.floating],
-            ) -> npt.NDArray[np.floating]:
+            def _constrained_length(values: npt.NDArray[np.floating]) -> npt.NDArray[np.floating]:
                 return self._alignment * np.floor(values / self._alignment)
 
             if self._coupling_map:
