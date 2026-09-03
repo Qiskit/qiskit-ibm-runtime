@@ -320,7 +320,7 @@ def find_box_type(instruction: BoxOp) -> BoxType:
 
 def compute_samplex_arguments(
     pub: EstimatorPub,
-) -> tuple[npt.NDArray[float], npt.NDArray[int], list[tuple[tuple[int, ...], str]]]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.integer], list[tuple[tuple[int, ...], str]]]:
     """Compute parameter values and basis changes to be used as inputs by the samplex.
 
     To minimize the total number of circuits executions, this function takes the following
@@ -422,8 +422,8 @@ def compute_samplex_arguments(
 def make_samplex_arguments(
     samplex: Samplex,
     boxed_circuit: QuantumCircuit,
-    flat_parameter_values: npt.NDArray[float],
-    change_basis: npt.NDArray[int],
+    flat_parameter_values: npt.NDArray[np.floating],
+    change_basis: npt.NDArray[np.integer],
 ) -> dict[str, Any]:
     """Build a samplex args dictionary consisting of ``change_basis`` and parameters data.
 

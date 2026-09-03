@@ -46,7 +46,7 @@ def process_extrapolated_expectation_values(
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | int | npt.ArrayLike = 0,
-) -> tuple[float, float, str, npt.NDArray[float], npt.NDArray[float]]:
+) -> tuple[float, float, str, npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
     The requested model(s) are fit to the expectation values measured at the noise factors for
@@ -148,7 +148,7 @@ def fit_extrapolation_models(
     zne_noise_factors: Sequence[float],
     models: Sequence[str],
     extrapolated_noise_factor: float | npt.ArrayLike = 0,
-) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Fit each model to the noise-scaled data and evaluate at the extrapolation points.
 
     Args:
@@ -218,8 +218,8 @@ def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
 
 
 def select_zne_extrapolated_result(
-    zne_values: npt.NDArray[float],
-    zne_std_errors: npt.NDArray[float],
+    zne_values: npt.NDArray[np.floating],
+    zne_std_errors: npt.NDArray[np.floating],
     observable_term: str,
     zne_extrapolator: Sequence[str],
 ) -> tuple[float, float, str]:

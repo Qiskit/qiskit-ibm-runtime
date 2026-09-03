@@ -260,7 +260,7 @@ def _process_expectation_values(
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Process expectation values for a single item result.
 
     Args:
@@ -390,7 +390,7 @@ def _process_expectation_values_pec(
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
     pec_gamma: float,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Process expectation values for a single item pec mitigated result.
 
     Args:
@@ -706,13 +706,13 @@ def _process_expectation_values_pea(
     extrapolator: list[ExtrapolatorType],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
 ) -> tuple[
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
     list[list[str]],
 ]:
     """Process expectation values for a single item result.
@@ -881,13 +881,13 @@ def _process_expectation_values_zne(
     extrapolator: list[ExtrapolatorType],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
 ) -> tuple[
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
     list[list[str]],
 ]:
     """Process expectation values for a single pub.
@@ -1006,13 +1006,13 @@ def calculate_extrapolated_expectation_values(
     extrapolator: list[ExtrapolatorType],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
 ) -> tuple[
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
+    npt.NDArray[np.floating],
     list[list[str]],
 ]:
     """Calculate expectation values for given data, observables and params.
