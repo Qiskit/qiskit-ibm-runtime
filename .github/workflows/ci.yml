@@ -83,7 +83,8 @@ jobs:
             python-version: '3.10'
     env:
       QISKIT_IN_PARALLEL: True
-      PYTEST_ADDOPTS: "--durations=10 --log-level=DEBUG"
+      QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
+      PYTEST_ADDOPTS: "--durations=10"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -119,7 +120,8 @@ jobs:
         os: [ "ubuntu-latest" ]
     env:
       QISKIT_IN_PARALLEL: True
-      PYTEST_ADDOPTS: "--durations=10 --log-level=DEBUG"
+      QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
+      PYTEST_ADDOPTS: "--durations=10"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -159,7 +161,8 @@ jobs:
       QISKIT_IBM_INSTANCE: ${{ secrets.QISKIT_IBM_INSTANCE }}
       QISKIT_IBM_QPU: ${{ secrets.QISKIT_IBM_QPU }}
       QISKIT_IN_PARALLEL: True
-      PYTEST_ADDOPTS: "-v -s --durations=0 --log-level=DEBUG"
+      QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
+      PYTEST_ADDOPTS: "-v -s --durations=0"
     steps:
       - uses: actions/checkout@v6
         with:
