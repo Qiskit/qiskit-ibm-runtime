@@ -15,13 +15,9 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.quantum_info import Pauli
-
-if TYPE_CHECKING:
-    import numpy.typing as npt
 
 # Mapping for projecting observable terms to Z computational basis
 CHAR_TO_Z_CHARS = (
@@ -62,7 +58,7 @@ def identify_measure_basis(pauli: Pauli, measure_bases: list[tuple[Pauli, int]])
     raise ValueError(f"Cannot compute eval of {pauli} from the given bases elements.")
 
 
-def project_to_z(term: str) -> npt.NDArray[np.str_]:
+def project_to_z(term: str) -> np.ndarray[int]:
     """Project observable term to Z computational basis.
 
     Maps X,Y,Z → "Z", projectors 0,1,+,-,r,l → "0"/"1", I → "I"

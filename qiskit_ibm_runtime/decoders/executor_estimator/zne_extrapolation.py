@@ -40,13 +40,13 @@ _NON_POLYNOMIAL_MODELS = frozenset({"fallback", "exponential", "double_exponenti
 
 
 def process_extrapolated_expectation_values(
-    noise_scaled_exp_vals: Sequence[float],
-    noise_scaled_standard_errors: Sequence[float],
+    noise_scaled_exp_vals: npt.ArrayLike,
+    noise_scaled_standard_errors: npt.ArrayLike,
     observable_term: str,
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | int | npt.ArrayLike = 0,
-) -> tuple[float, float, str, npt.NDArray[np.floating], npt.NDArray[np.floating]]:
+) -> tuple[float, float, str, npt.NDArray[float], npt.NDArray[float]]:
     r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
     The requested model(s) are fit to the expectation values measured at the noise factors for
@@ -148,7 +148,7 @@ def fit_extrapolation_models(
     zne_noise_factors: Sequence[float],
     models: Sequence[str],
     extrapolated_noise_factor: float | npt.ArrayLike = 0,
-) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
     """Fit each model to the noise-scaled data and evaluate at the extrapolation points.
 
     Args:
@@ -218,8 +218,8 @@ def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
 
 
 def select_zne_extrapolated_result(
-    zne_values: npt.NDArray[np.floating],
-    zne_std_errors: npt.NDArray[np.floating],
+    zne_values: npt.NDArray[float],
+    zne_std_errors: npt.NDArray[float],
     observable_term: str,
     zne_extrapolator: Sequence[str],
 ) -> tuple[float, float, str]:
@@ -249,8 +249,6 @@ def select_zne_extrapolated_result(
     # Determine ideal value limits for standard basis projectors. If there is any
     # Pauli in the basis term we assume ideal <B> in [-1, 1], for only projectors [0, 1].
     # For missing or non-standard basis don't constrain values
-    val_min: float
-    val_max: float
     if re.search(_pattern_ylim_01, observable_term):
         val_min, val_max = (0, 1)
     elif re.search(_pattern_ylim_pm1, observable_term):
@@ -284,7 +282,7 @@ def select_zne_extrapolated_result(
     accepted_idx = accepted[0] if accepted.size else fallback_indices
     accept_value = np.nan_to_num(zne_values[accepted_idx], nan=np.inf)
     accept_stderr = np.nan_to_num(zne_std_errors[accepted_idx], nan=np.inf)
-    accept_extrap = zne_extrapolator[int(accepted_idx)]
+    accept_extrap = zne_extrapolator[accepted_idx]
 
     return accept_value, accept_stderr, accept_extrap
 
