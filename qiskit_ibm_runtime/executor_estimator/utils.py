@@ -63,7 +63,7 @@ BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
 def validate_noise_factors(
-    noise_factors: Sequence[float], extrapolator: str | Sequence[str]
+    noise_factors: Sequence[float] | npt.NDArray[np.floating], extrapolator: str | Sequence[str]
 ) -> None:
     """Check that ``noise_factors`` has enough points for every requested extrapolator.
 
@@ -437,7 +437,7 @@ def make_samplex_arguments(
         A samplex args dictionary.
     """
     # Prepare samplex_arguments
-    samplex_arguments = {}
+    samplex_arguments: dict[str, npt.NDArray[Any]] = {}
     if samplex.inputs().get_specs("parameter_values"):
         samplex_arguments["parameter_values"] = flat_parameter_values
 

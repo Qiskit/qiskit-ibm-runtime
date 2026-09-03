@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 from .block_base_padder import BlockBasePadder
 
 if TYPE_CHECKING:
+    import numpy.typing as npt
     from qiskit.circuit import Gate, Qubit
     from qiskit.dagcircuit import DAGCircuit, DAGNode
     from qiskit.transpiler import CouplingMap, Target
@@ -495,9 +496,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 if alt_spacings is not None:
                     alt_spacings = alt_spacings * num_sequences
 
-            spacings = np.asarray(spacings) / num_sequences
-            if alt_spacings is not None:
-                alt_spacings = np.asarray(alt_spacings) / num_sequences
+            spacings_arr = np.asarray(spacings) / num_sequences
+            alt_spacings_arr = (
+                np.asarray(alt_spacings) / num_sequences if alt_spacings is not None else None
+            )
             slack = time_interval - seq_length
             sequence_gphase = self._sequence_phase
 
@@ -535,16 +537,18 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     )
                     return
 
-            def _constrained_length(values: np.array) -> np.array:
+            def _constrained_length(
+                values: npt.NDArray[np.floating],
+            ) -> npt.NDArray[np.floating]:
                 return self._alignment * np.floor(values / self._alignment)
 
             if self._coupling_map:
                 if self._coupling_coloring[self._dag.qubits.index(qubit)] == 0:
-                    sub_spacings = spacings
+                    sub_spacings = spacings_arr
                 else:
-                    sub_spacings = alt_spacings
+                    sub_spacings = alt_spacings_arr
             else:
-                sub_spacings = spacings
+                sub_spacings = spacings_arr
 
             # (1) Compute DD intervals satisfying the constraint
             taus = _constrained_length(slack * sub_spacings)

@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    import numpy.typing as npt
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.quantum_info import PauliLindbladMap
 
@@ -103,9 +104,12 @@ def prepare_pea(
         noise_factors = np.array(zne_options.noise_factors, dtype=float)
     validate_noise_factors(noise_factors, zne_options.extrapolator)
 
-    extrapolated_noise_factors = zne_options.extrapolated_noise_factors
-    if extrapolated_noise_factors == "auto":
-        extrapolated_noise_factors = np.insert(noise_factors, 0, 0.0)
+    if zne_options.extrapolated_noise_factors == "auto":
+        extrapolated_noise_factors: Sequence[float] | npt.NDArray[np.floating] = np.insert(
+            noise_factors, 0, 0.0
+        )
+    else:
+        extrapolated_noise_factors = zne_options.extrapolated_noise_factors
 
     num_randomizations, shots_per_randomization = calculate_twirling_shots(
         shots,

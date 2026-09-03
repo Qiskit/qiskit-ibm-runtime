@@ -40,8 +40,8 @@ _NON_POLYNOMIAL_MODELS = frozenset({"fallback", "exponential", "double_exponenti
 
 
 def process_extrapolated_expectation_values(
-    noise_scaled_exp_vals: npt.ArrayLike,
-    noise_scaled_standard_errors: npt.ArrayLike,
+    noise_scaled_exp_vals: Sequence[float],
+    noise_scaled_standard_errors: Sequence[float],
     observable_term: str,
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
@@ -249,6 +249,8 @@ def select_zne_extrapolated_result(
     # Determine ideal value limits for standard basis projectors. If there is any
     # Pauli in the basis term we assume ideal <B> in [-1, 1], for only projectors [0, 1].
     # For missing or non-standard basis don't constrain values
+    val_min: float
+    val_max: float
     if re.search(_pattern_ylim_01, observable_term):
         val_min, val_max = (0, 1)
     elif re.search(_pattern_ylim_pm1, observable_term):
@@ -282,7 +284,7 @@ def select_zne_extrapolated_result(
     accepted_idx = accepted[0] if accepted.size else fallback_indices
     accept_value = np.nan_to_num(zne_values[accepted_idx], nan=np.inf)
     accept_stderr = np.nan_to_num(zne_std_errors[accepted_idx], nan=np.inf)
-    accept_extrap = zne_extrapolator[accepted_idx]
+    accept_extrap = zne_extrapolator[int(accepted_idx)]
 
     return accept_value, accept_stderr, accept_extrap
 

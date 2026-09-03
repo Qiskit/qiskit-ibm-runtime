@@ -1155,8 +1155,8 @@ def calculate_extrapolated_expectation_values(
             else:
                 term_scale_factor = 1
 
-            noise_scaled_exp_vals = []
-            noise_scaled_ensemble_std = []
+            noise_scaled_exp_vals: list[float] = []
+            noise_scaled_ensemble_std: list[float] = []
             for noise_factor_index in range(len(noise_factors)):
                 noise_factor_data = noise_amplified_data[noise_factor_index]
                 # Get measurement data for this configuration
@@ -1165,8 +1165,8 @@ def calculate_extrapolated_expectation_values(
                 term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
                     observable_term, datum
                 )
-                noise_scaled_exp_vals.append(term_exp_val)
-                noise_scaled_ensemble_std.append(np.sqrt(term_ensemble_variance))
+                noise_scaled_exp_vals.append(float(term_exp_val))
+                noise_scaled_ensemble_std.append(float(np.sqrt(term_ensemble_variance)))
 
                 noise_factors_exp_vals[(*bcast_index, noise_factor_index)] += (
                     coeff * term_exp_val * term_scale_factor
