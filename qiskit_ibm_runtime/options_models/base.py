@@ -54,7 +54,7 @@ class BaseOptionsModel(BaseModel):
                 setattr(self, key, value)
 
     @property
-    def __dataclass_fields__(self) -> dict[str, Field]:
+    def __dataclass_fields__(self) -> dict[str, Field]:  # type: ignore[override]
         """Generate dataclass fields for faux compatibility with `dataclasses.asdict()`.
 
         This provides support for applying `dataclasses.asdict()` by simulating that the model has
