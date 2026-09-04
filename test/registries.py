@@ -141,8 +141,15 @@ class Job:
     raw_results: str | None = None
     """Response for the job results."""
 
-    raw_metrics: str | None = None
-    """Response for the job metrics."""
+    usage: dict | None = None
+    """Job usage dictionary that overrides the default `usage` field in responses."""
+
+    def __post_init__(self) -> None:
+        if self.usage is None:
+            self.usage = {
+                "qpu_charge_time_seconds": 0 if self.status != "completed" else 20,
+                "status": "pending" if self.status in ("queued", "running") else "completed",
+            }
 
 
 class BaseRegistry(FirstMatchRegistry):
@@ -468,6 +475,7 @@ class BaseRegistry(FirstMatchRegistry):
                 "backend": job.backend_name,
                 "status": job.status.capitalize(),
                 "program": {"id": job.program},
+                "usage": job.usage,
             }
             for job in self.jobs[instance.name].values()
         ]
@@ -506,6 +514,7 @@ class BaseRegistry(FirstMatchRegistry):
                     "backend": job.backend_name,
                     "status": job.status.capitalize(),
                     "program": {"id": job.program},
+                    "usage": job.usage,
                 }
             )
         return (200, {"Content-Type": "application/json"}, response_body)
@@ -526,21 +535,18 @@ class BaseRegistry(FirstMatchRegistry):
 
         job = self.jobs[instance.name][job_id]
 
-        if job.raw_metrics:
-            response_body = job.raw_metrics
-        else:
-            response_body = json.dumps(
-                {
-                    "timestamps": {
-                        "created": "2026-03-06T14:02:11Z",
-                        "running": "2026-03-06T14:02:18Z",
-                        "finished": "2026-03-06T14:05:47Z",
-                    },
-                    "usage": {"qpu_charge_time_seconds": 20, "status": "complete"},
-                    "circuits_execution_time_ns": 20000000,
-                    "qiskit_version": "2.3.0",
-                }
-            )
+        response_body = json.dumps(
+            {
+                "timestamps": {
+                    "created": "2026-03-06T14:02:11Z",
+                    "running": "2026-03-06T14:02:18Z",
+                    "finished": "2026-03-06T14:05:47Z",
+                },
+                "usage": job.usage,
+                "circuits_execution_time_ns": 20000000,
+                "qiskit_version": "2.3.0",
+            }
+        )
         return (200, {"Content-Type": "application/json"}, response_body)
 
     def callback_jobs_results(self, request: PreparedRequest) -> CallbackResult:

@@ -12,7 +12,6 @@
 
 """Tests for job related runtime functions."""
 
-import json
 import warnings
 from unittest.mock import patch
 
@@ -251,8 +250,8 @@ class TestRuntimeJob(IBMTestCase):
     @data("pending", "complete")
     def test_usage_no_partial(self, status, registry):
         """usage() should return 0 if the status is not `completed`."""
-        raw_metrics = json.dumps({"usage": {"qpu_charge_time_seconds": 123, "status": status}})
-        registry.add_job(Job("my_job", "common_backend", raw_metrics=raw_metrics), "a")
+        usage = {"qpu_charge_time_seconds": 123, "status": status}
+        registry.add_job(Job("my_job", "common_backend", usage=usage), "a")
         service = QiskitRuntimeService(token="my_token")
 
         job = service.job("my_job")
@@ -263,8 +262,8 @@ class TestRuntimeJob(IBMTestCase):
     @data("pending", "complete")
     def test_usage_partial(self, status, registry):
         """usage() should always return `qpu_charge_time_seconds` regardless of status."""
-        raw_metrics = json.dumps({"usage": {"qpu_charge_time_seconds": 123, "status": status}})
-        registry.add_job(Job("my_job", "common_backend", raw_metrics=raw_metrics), "a")
+        usage = {"qpu_charge_time_seconds": 123, "status": status}
+        registry.add_job(Job("my_job", "common_backend", usage=usage), "a")
         service = QiskitRuntimeService(token="my_token")
 
         job = service.job("my_job")
