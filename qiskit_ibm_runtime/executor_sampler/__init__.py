@@ -10,21 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-=====================================================================
-Executor-based SamplerV2 (:mod:`qiskit_ibm_runtime.executor_sampler`)
-=====================================================================
-
-.. currentmodule:: qiskit_ibm_runtime.executor_sampler
-
-Classes
-=======
-
-.. autosummary::
-   :toctree: ../stubs/
-
-   SamplerV2
-
-"""
+"""Executor-based SamplerV2"""
 
 from .sampler import SamplerV2
