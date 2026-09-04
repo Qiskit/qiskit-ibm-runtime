@@ -23,15 +23,15 @@ Options that can be passed to the :class:`~qiskit_ibm_runtime.Executor` and
 Classes
 =======
 
-Primitive options
-------------------
+Base primitive options
+----------------------
 
 .. autosummary::
    :toctree: ../stubs/
    :nosignatures:
 
-   EstimatorOptions
-   SamplerOptions
+   ExecutorOptions
+   NoiseLearnerV3Options
 
 
 Suboptions
@@ -41,46 +41,23 @@ Suboptions
    :toctree: ../stubs/
    :nosignatures:
 
-   BaseOptionsModel
    BitFlipChecksOptions
-   CalibratorOptions
-   DynamicalDecouplingOptions
    EnvironmentOptions
    ExecutionOptions
-   ExecutorOptions
-   MeasureNoiseLearningOptions
-   NoiseLearnerV3Options
-   PecOptions
    PostCircuitBitFlipChecksOptions
    PostSelectionOptions
    PreCircuitBitFlipChecksOptions
-   ResilienceOptions
-   SamplerEnvironmentOptions
-   SamplerExecutionOptions
-   SimulatorOptions
-   TwirlingOptions
-   ZneOptions
 
 """
 
-from .base import BaseOptionsModel
 from .bit_flip_checks import (
     BitFlipChecksOptions,
     PostCircuitBitFlipChecksOptions,
     PreCircuitBitFlipChecksOptions,
 )
-from .calibrator import CalibratorOptions
-from .dynamical_decoupling import DynamicalDecouplingOptions
-from .environment import EnvironmentOptions, SamplerEnvironmentOptions
-from .estimator import EstimatorOptions
-from .execution import ExecutionOptions, SamplerExecutionOptions
+from .environment import EnvironmentOptions
+from .execution import ExecutionOptions
 from .executor import ExecutorOptions
-from .measure_noise_learning import MeasureNoiseLearningOptions
 from .noise_learner_v3 import NoiseLearnerV3Options
-from .pec import PecOptions
 from .post_selection import PostSelectionOptions
-from .resilience import ResilienceOptions
 from .sampler import SamplerOptions
-from .simulator import SimulatorOptions
-from .twirling import TwirlingOptions
-from .zne import ZneOptions
