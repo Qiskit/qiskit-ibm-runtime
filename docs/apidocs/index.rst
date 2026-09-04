@@ -21,4 +21,6 @@
    debug_tools
    visualization
    models
+   executor_sampler
+   executor_estimator
    ibm_quantum_schemas
