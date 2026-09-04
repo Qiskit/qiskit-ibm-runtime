@@ -172,14 +172,15 @@ class EstimatorV2(BaseEstimatorV2):
     def finalize_options(self) -> EstimatorOptions:
         """Construct and finalize the Estimator options.
 
-        This method combines the configured resilience level with the user-provided option
-        to produce the final :class:`~.EstimatorOptions` instance used inside a call to
-        :meth:`~.Estimator.run`.
+        This method combines the configured resilience level with the user-provided option to
+        produce the final :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions` instance
+        used inside a call to :meth:`~.Estimator.run`.
 
         The process used to produce the finalized options is as follows:
 
-        1. Initialize a new :class:`~.EstimatorOptions` object with defaults determined by
-            :attr:`~.EstimatorOptions.resilience_level`.
+        1. Initialize a new :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions` object with
+           defaults determined by
+           :attr:`~qiskit_ibm_runtime.options_models.EstimatorOptions.resilience_level`.
         2. Apply user-specified options, skipping the fields left as ``None`` that are intended to
            inherit the resilience-level defaults.
         3. Enforce required option dependencies. Specifically:
@@ -189,7 +190,7 @@ class EstimatorV2(BaseEstimatorV2):
              enables both gate and measurement twirling.
 
         Returns:
-            The finalized :class:`~.EstimatorOptions` object.
+            The finalized :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions` object.
         """
         return finalize_estimator_options(self.options)
 

@@ -159,12 +159,13 @@ class SamplerV2(BaseSamplerV2):
     def finalize_options(self) -> SamplerOptions:
         """Construct and finalize the Sampler options.
 
-        This method produces the final :class:`~.SamplerOptions` instance used inside a call to
-        :meth:`~.Sampler.run` by resolving the ``None`` in the twirling options as documented in
-        :class:`~.TwirlingOptions`.
+        This method produces the final :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
+        instance used inside a call to :meth:`~.Sampler.run` by resolving the ``None`` in the
+        twirling options as documented in
+        :class:`~qiskit_ibm_runtime.options_models.TwirlingOptions`.
 
         Returns:
-            The finalized :class:`~.SamplerOptions` object.
+            The finalized :class:`~qiskit_ibm_runtime.options_models.SamplerOptions` object.
         """
         return finalize_sampler_options(self.options)
 

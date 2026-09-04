@@ -45,8 +45,8 @@ class EstimatorPubResult(PubResult):
 
         Args:
             indices: The indices of the expectation values to include in the plot. If ``None``,
-                includes all values. See :class:`~.ZneOptions` for information on the indexing
-                scheme.
+                includes all values. See :class:`~qiskit_ibm_runtime.options.ZneOptions` for
+                information on the indexing scheme.
             names: The names to assign to the expectation values. If ``None``, the names correspond
                 to the indices.
             num_stds: The number of standard deviations to include around each fit.
@@ -96,8 +96,8 @@ class EstimatorPubResult(PubResult):
 
         Args:
             indices: The indices of the expectation values to include in the plot. If ``None``,
-                includes all values. See :class:`~.ZneOptions` for information on the indexing
-                scheme.
+                includes all values. See :class:`~qiskit_ibm_runtime.options.ZneOptions` for
+                information on the indexing scheme.
             names: The names to assign to the expectation values. If ``None``, the names correspond
                 to the indices.
             num_stds: The number of standard deviations to include around each fit.
