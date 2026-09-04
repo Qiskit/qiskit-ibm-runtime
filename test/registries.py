@@ -253,7 +253,7 @@ class BaseRegistry(FirstMatchRegistry):
             )
         )
 
-        # Add responses for the IBM Quantum Compute `/instances` endpoints.
+        # Add callbacks for the IBM Quantum Compute `/instances` endpoints.
         self.add(
             CallbackResponse(
                 method=GET,
@@ -296,6 +296,15 @@ class BaseRegistry(FirstMatchRegistry):
                 method=GET,
                 url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+/results"),
                 callback=self.callback_jobs_results,
+            ),
+        )
+
+        # Add callbacks for the IBM Quantum Compute `/workloads` endpoints.
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url="https://my-region.quantum.cloud.ibm.com/api/v1/workloads",
+                callback=self.callback_workloads_get,
             ),
         )
 
@@ -597,6 +606,36 @@ class BaseRegistry(FirstMatchRegistry):
         instance = self.get_crn_from_request(request)
 
         return (200, {"Content-Type": "application/json"}, json.dumps(instance.usage))
+
+    def callback_workloads_get(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/workloads`` endpoint.
+
+        Dynamically return a list of workloads, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/workloads
+        """
+        workloads = [
+            {
+                "id": job.id,
+                "backend": job.backend_name,
+                "status": job.status.capitalize(),
+                "state": {"status": job.status.capitalize()},
+                "program": {"id": job.program},
+                "usage": job.usage,
+                "mode": "job",
+                "instance": instance.crn,
+            }
+            for instance in self.instances.values()
+            for job in self.jobs[instance.name].values()
+        ]
+
+        response_body = {
+            "workloads": workloads,
+            "total_count": len(workloads),
+            "limit": 20,
+        }
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def get_crn_from_request(self, request: PreparedRequest) -> Instance:
         """Retrieve the `Instance` from the request headers."""

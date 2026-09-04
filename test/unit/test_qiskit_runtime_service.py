@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from ddt import data, ddt
 from qiskit import QuantumCircuit
@@ -27,11 +27,11 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from ..account import custom_envs
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..registries import Backend, DefaultRegistry, Instance, OneInstanceNoBackendsRegistry
+from ..registries import Backend, Instance, Job, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
 
 if TYPE_CHECKING:
-    from ..registries import DefaultRegistry
+    from ..registries import BaseRegistry
 
 
 @ddt
@@ -39,7 +39,7 @@ class TestQiskitRuntimeService(IBMTestCase):
     """Class for testing the `QiskitRuntimeService` class."""
 
     @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_run_active_client(self, registry):
+    def test_run_active_client(self, registry: BaseRegistry) -> None:
         """`_run()` should use the backend/instance api client rather than the active client."""
         # Create several instances, with one instance per backend, so they use different clients.
         registry.add_instance(Instance("b"))
@@ -55,42 +55,49 @@ class TestQiskitRuntimeService(IBMTestCase):
         backend_c._instance = "invalid"
 
         # Add mocks in order to ensure which clients are used.
-        backend_a._api_client.program_run = MagicMock(wraps=backend_a._api_client.program_run)
-        backend_b._api_client.program_run = MagicMock(wraps=backend_b._api_client.program_run)
-        backend_c._api_client.program_run = MagicMock(wraps=backend_c._api_client.program_run)
-
-        # Run a job with the client and instance active in the service.
-        pubs = transpile_pubs([(QuantumCircuit(1),)], backend_a, "sampler")
-        sampler = SamplerV2(mode=backend_a)
-        _ = sampler.run(pubs)
-        backend_a._api_client.program_run.assert_called()
-        backend_b._api_client.program_run.assert_not_called()
-        backend_c._api_client.program_run.assert_not_called()
-        self.assertEqual(service._active_api_client, backend_a._api_client)
-        backend_a._api_client.program_run.reset_mock()
-
-        # Run a job with the client and instance not active in the service.
-        sampler = SamplerV2(mode=backend_b)
-        _ = sampler.run(pubs)
-        backend_a._api_client.program_run.assert_not_called()
-        backend_b._api_client.program_run.assert_called()
-        backend_c._api_client.program_run.assert_not_called()
-        self.assertEqual(service._active_api_client, backend_b._api_client)
-        backend_b._api_client.program_run.reset_mock()
-
-        # Run a job with the client and instance not active in the service.
-        sampler = SamplerV2(mode=backend_c)
-        with self.assertRaises(IBMRuntimeError) as ex:
+        with (
+            patch.object(
+                backend_a._api_client, "program_run", wraps=backend_a._api_client.program_run
+            ) as api_client_a_run,
+            patch.object(
+                backend_b._api_client, "program_run", wraps=backend_b._api_client.program_run
+            ) as api_client_b_run,
+            patch.object(
+                backend_c._api_client, "program_run", wraps=backend_c._api_client.program_run
+            ) as api_client_c_run,
+        ):
+            # Run a job with the client and instance active in the service.
+            pubs = transpile_pubs([(QuantumCircuit(1),)], backend_a, "sampler")
+            sampler = SamplerV2(mode=backend_a)
             _ = sampler.run(pubs)
-            self.assertIn("not among", str(ex.msg))
+            api_client_a_run.assert_called()
+            api_client_b_run.assert_not_called()
+            api_client_c_run.assert_not_called()
+            self.assertEqual(service._active_api_client, backend_a._api_client)
+            api_client_a_run.reset_mock()
 
-        backend_a._api_client.program_run.assert_not_called()
-        backend_b._api_client.program_run.assert_not_called()
-        backend_c._api_client.program_run.assert_not_called()
-        self.assertEqual(service._active_api_client, backend_b._api_client)
+            # Run a job with the client and instance not active in the service.
+            sampler = SamplerV2(mode=backend_b)
+            _ = sampler.run(pubs)
+            api_client_a_run.assert_not_called()
+            api_client_b_run.assert_called()
+            api_client_c_run.assert_not_called()
+            self.assertEqual(service._active_api_client, backend_b._api_client)
+            api_client_b_run.reset_mock()
+
+            # Run a job with the client and instance not active in the service.
+            sampler = SamplerV2(mode=backend_c)
+            with self.assertRaises(IBMRuntimeError) as ex:
+                _ = sampler.run(pubs)
+                self.assertIn("not among", str(ex.msg))
+
+            api_client_a_run.assert_not_called()
+            api_client_b_run.assert_not_called()
+            api_client_c_run.assert_not_called()
+            self.assertEqual(service._active_api_client, backend_b._api_client)
 
     @mock_responses
-    def test_initialization_state(self, registry: DefaultRegistry) -> None:
+    def test_initialization_state(self, registry: BaseRegistry) -> None:
         """Test `__init__` state variables, with default arguments."""
         crns_in_registry = {instance.crn for instance in registry.instances.values()}
         backends_in_registry = {
@@ -124,7 +131,7 @@ class TestQiskitRuntimeService(IBMTestCase):
     @mock_responses(OneInstanceNoBackendsRegistry)
     @data(True, False)
     def test_initialization_state_passing_instance(
-        self, with_env_var: bool, registry: OneInstanceNoBackendsRegistry
+        self, with_env_var: bool, registry: BaseRegistry
     ) -> None:
         """Test `__init__` state variables, passing the `instance` argument."""
         chosen_crn = registry.instances["a"].crn
@@ -149,3 +156,23 @@ class TestQiskitRuntimeService(IBMTestCase):
         self.assertEqual(service._backends_info_per_instance, {})
         # `_backend_instance_groups` is empty.
         self.assertEqual(service._backend_instance_groups, [])
+
+    @mock_responses
+    def test_experimental_workload_endpoint(self, registry: BaseRegistry) -> None:
+        """Test the experimental usage of the `/workloads` endpoint.
+
+        The endpoint is only supported at the `api/rest` level. This tests provide some assurances
+        about the endpoint while it is still not used by `QiskitRuntimeService`.
+        """
+        registry.add_job(Job("my_job_instance_a", "unique_backend_a"), "a")
+        registry.add_job(Job("my_job_instance_b", "unique_backend_b"), "b")
+
+        service = QiskitRuntimeService(token="my_token")
+        workloads_response = service._active_api_client._api.workloads_get()
+
+        # Jobs from all instances should be included.
+        self.assertEqual(len(workloads_response["workloads"]), 2)
+        # All workloads should be jobs currently.
+        self.assertTrue(
+            all(workload["mode"] == "job" for workload in workloads_response["workloads"])
+        )
