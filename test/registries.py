@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypeAlias
 from urllib.parse import parse_qs, urlparse
 
-from responses import GET, POST, CallbackResponse, Response
+from responses import GET, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
 
 from qiskit_ibm_runtime.fake_provider import FakeLimaV2
@@ -59,9 +59,21 @@ class Instance:
     pricing_type: PricingType = "free"
     """Pricing type of the instance."""
 
+    usage: dict | None = None
+    """Instance usage dictionary that overrides the default `usage` in responses."""
+
     def __post_init__(self) -> None:
         if not self.crn:
             self.crn = f"crn:v1:bluemix:public:quantum-computing:my-region:{self.name}/...:...::"
+
+        if self.usage is None:
+            self.usage = {
+                "instance_id": self.crn,
+                "usage_consumed_seconds": 12,
+                "usage_limit_seconds": 60,
+                "usage_allocation_seconds": 120,
+                "usage_limit_reached": False,
+            }
 
 
 @dataclass
@@ -243,10 +255,10 @@ class BaseRegistry(FirstMatchRegistry):
 
         # Add responses for the IBM Quantum Compute `/instances` endpoints.
         self.add(
-            Response(
+            CallbackResponse(
                 method=GET,
                 url="https://my-region.quantum.cloud.ibm.com/api/v1/instances/usage",
-                json={},
+                callback=self.callback_instances_usage,
             )
         )
 
@@ -572,6 +584,19 @@ class BaseRegistry(FirstMatchRegistry):
         else:
             response_body = json.dumps({})
         return (200, {"Content-Type": "application/json"}, response_body)
+
+    def callback_instances_usage(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/instances/usage`` endpoint.
+
+        Dynamically return a job results, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/instances
+        """
+        # Validate the instance CRN and job id.
+        instance = self.get_crn_from_request(request)
+
+        return (200, {"Content-Type": "application/json"}, json.dumps(instance.usage))
 
     def get_crn_from_request(self, request: PreparedRequest) -> Instance:
         """Retrieve the `Instance` from the request headers."""
