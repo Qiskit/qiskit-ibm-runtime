@@ -84,7 +84,7 @@ class EstimatorV2(BaseEstimatorV2):
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
             Refer to the `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about execution modes.
 
         options: Estimator options.
@@ -181,11 +181,12 @@ class EstimatorV2(BaseEstimatorV2):
         1. Initialize a new :class:`~.EstimatorOptions` object with defaults determined by
             :attr:`~.EstimatorOptions.resilience_level`.
         2. Apply user-specified options, skipping the fields left as ``None`` that are intended to
-            inherit the resilience-level defaults.
+           inherit the resilience-level defaults.
         3. Enforce required option dependencies. Specifically:
-            * Enabling measurement mitigation automatically enables measurement twirling.
-            * Enabling gate-based mitigation techniques (such as PEA-based ZNE or PEC) automatically
-              enables both gate and measurement twirling.
+
+           * Enabling measurement mitigation automatically enables measurement twirling.
+           * Enabling gate-based mitigation techniques (such as PEA-based ZNE or PEC) automatically
+             enables both gate and measurement twirling.
 
         Returns:
             The finalized :class:`~.EstimatorOptions` object.
@@ -202,7 +203,7 @@ class EstimatorV2(BaseEstimatorV2):
         and the ``job`` being submitted. In order to check the progress of the call, it is
         recommended to setup logging (with an ``INFO`` level) - see
         `IBM Quantum Compute documentation
-        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`__
         for more information.
 
         Args:

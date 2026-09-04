@@ -84,10 +84,11 @@ class EstimatorOptions(BaseOptionsModel):
 
     Higher levels generate more accurate results, at the expense of longer processing times. The
     supported values are:
+
     * 0: No mitigation.
     * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
     * 2: Medium mitigation costs. Typically reduces bias in estimators but is not guaranteed to be
-        zero bias.
+      zero bias.
 
     Refer to the
     `Configure error mitigation for IBM Quantum Compute (formerly Qiskit Runtime)
