@@ -12,6 +12,7 @@
 
 """Tests for job related runtime functions."""
 
+import json
 import warnings
 from unittest.mock import patch
 
@@ -27,10 +28,12 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobMaxTimeoutError,
     RuntimeJobNotFound,
 )
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import run_cloud_fake
+from ..decorators import mock_responses, run_cloud_fake
 from ..ibm_test_case import IBMTestCase
 from ..program import run_program
+from ..registries import Job
 from ..utils import mock_wait_for_final_state
 from .mock.fake_runtime_client import (
     BaseFakeRuntimeClient,
@@ -244,27 +247,29 @@ class TestRuntimeJob(IBMTestCase):
 
                     patched_sleep.assert_called_with(expected_interval)
 
-    @run_cloud_fake
-    @data("pending", "completed")
-    def test_usage_no_partial(self, status, service):
+    @mock_responses
+    @data("pending", "complete")
+    def test_usage_no_partial(self, status, registry):
         """usage() should return 0 if the status is not `completed`."""
-        job = run_program(service)
-        api_response = {"usage": {"qpu_charge_time_seconds": 123, "status": status}}
+        raw_metrics = json.dumps({"usage": {"qpu_charge_time_seconds": 123, "status": status}})
+        registry.add_job(Job("my_job", "common_backend", raw_metrics=raw_metrics), "a")
+        service = QiskitRuntimeService(token="my_token")
 
-        with patch.object(BaseFakeRuntimeClient, "job_metadata", return_value=api_response):
-            usage = job.usage()
-            self.assertEqual(usage, 0 if status != "completed" else 123)
+        job = service.job("my_job")
+        usage = job.usage()
+        self.assertEqual(usage, 0 if status == "pending" else 123)
 
-    @run_cloud_fake
-    @data("pending", "completed")
-    def test_usage_partial(self, status, service):
+    @mock_responses
+    @data("pending", "complete")
+    def test_usage_partial(self, status, registry):
         """usage() should always return `qpu_charge_time_seconds` regardless of status."""
-        job = run_program(service)
-        api_response = {"usage": {"qpu_charge_time_seconds": 123, "status": status}}
+        raw_metrics = json.dumps({"usage": {"qpu_charge_time_seconds": 123, "status": status}})
+        registry.add_job(Job("my_job", "common_backend", raw_metrics=raw_metrics), "a")
+        service = QiskitRuntimeService(token="my_token")
 
-        with patch.object(BaseFakeRuntimeClient, "job_metadata", return_value=api_response):
-            usage = job.usage(partial=True)
-            self.assertEqual(usage, 123)
+        job = service.job("my_job")
+        usage = job.usage(partial=True)
+        self.assertEqual(usage, 123)
 
     @run_cloud_fake
     @data(None, ToIntDecoder, [ToIntDecoder, MultiplierDecoder])
