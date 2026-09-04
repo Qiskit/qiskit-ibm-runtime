@@ -226,6 +226,7 @@ class BaseRuntimeJob(ABC):
         """Fetch and set status and error message."""
         if self._status not in self.JOB_FINAL_STATES:
             response = self._api_client.job_get(job_id=self.job_id())
+            print(response)
             self._set_status(response)
             self._set_error_message(response)
 

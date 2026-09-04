@@ -12,6 +12,7 @@
 
 """Tests for job related runtime functions."""
 
+import json
 import warnings
 from unittest.mock import patch
 
@@ -285,12 +286,14 @@ class TestRuntimeJob(IBMTestCase):
 
         self.assertIsInstance(job._result_decoders, list)
 
-    @run_cloud_fake
-    def test_result_chains_decoders(self, service):
+    @mock_responses
+    def test_result_chains_decoders(self, registry):
         """When passing a list of decoders to `result()`, they are chained."""
-        job = run_program(service)
-        job._status = "DONE"
+        results = json.dumps({"some": "response"})
+        registry.add_job(Job("my_job", "common_backend", raw_results=results), "a")
+        service = QiskitRuntimeService(token="my_token")
 
-        with patch.object(BaseFakeRuntimeClient, "job_results", return_value={"some": "response"}):
-            self.assertEqual(job.result(decoder=ToIntDecoder), 2)
-            self.assertEqual(job.result(decoder=[ToIntDecoder, MultiplierDecoder]), 2 * 3)
+        job = service.job("my_job")
+
+        self.assertEqual(job.result(decoder=ToIntDecoder), 2)
+        self.assertEqual(job.result(decoder=[ToIntDecoder, MultiplierDecoder]), 2 * 3)

@@ -474,6 +474,7 @@ class BaseRegistry(FirstMatchRegistry):
                 "id": job.id,
                 "backend": job.backend_name,
                 "status": job.status.capitalize(),
+                "state": {"status": job.status.capitalize()},
                 "program": {"id": job.program},
                 "usage": job.usage,
             }
@@ -513,6 +514,7 @@ class BaseRegistry(FirstMatchRegistry):
                     "id": job.id,
                     "backend": job.backend_name,
                     "status": job.status.capitalize(),
+                    "state": {"status": job.status.capitalize()},
                     "program": {"id": job.program},
                     "usage": job.usage,
                 }
