@@ -24,6 +24,7 @@ from .utils import plotly_module
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    import numpy.typing as npt
     from plotly.graph_objects import Figure as PlotlyFigure
     from plotly.graph_objects import Scatter as PlotlyScatter
 
@@ -279,9 +280,9 @@ def draw_zne_extrapolators(
 
 
 def _line_fill_trace(
-    x_values: np.array,
-    y_values: np.array,
-    stds: np.array,
+    x_values: npt.NDArray[np.floating],
+    y_values: npt.NDArray[np.floating],
+    stds: npt.NDArray[np.floating],
     num_stds: int = 1,
     name: str | None = None,
     legend_group: int | None = None,
@@ -336,9 +337,9 @@ def _line_fill_trace(
 
 
 def _scatter_trace(
-    x_values: np.array,
-    y_values: np.array,
-    stds: np.array,
+    x_values: npt.NDArray[np.floating],
+    y_values: npt.NDArray[np.floating],
+    stds: npt.NDArray[np.floating],
     name: str | None = None,
     legend_group: int | None = None,
     color: str | None = None,
