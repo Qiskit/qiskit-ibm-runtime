@@ -49,7 +49,8 @@ def draw_zne_evs(
     Args:
         result: An :class:`~.EstimatorPubResult`.
         indices: The indices of the expectation values to include in the plot. If ``None``, includes
-            all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+            all values. See :class:`~qiskit_ibm_runtime.options.ZneOptions` for information on the
+            indexing scheme.
         names: The names to assign to the expectation values. If ``None``, the names correspond to
             the indices.
         num_stds: The number of standard deviations to include around each fit.
@@ -175,7 +176,8 @@ def draw_zne_extrapolators(
     Args:
         result: An :class:`~.EstimatorPubResult`.
         indices: The indices of the expectation values to include in the plot. If ``None``, includes
-            all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+            all values. See :class:`~qiskit_ibm_runtime.options.ZneOptions` for information on the
+            indexing scheme.
         names: The names to assign to the expectation values. If ``None``, the names correspond to
             the indices.
         num_stds: The number of standard deviations to include around each fit.
