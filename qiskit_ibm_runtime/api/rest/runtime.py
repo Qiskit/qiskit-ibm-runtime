@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from ...json import RuntimeEncoder
 from ...utils import local_to_utc
@@ -38,6 +38,7 @@ class Runtime(RestAdapterBase):
         "jobs": "/jobs",
         "backends": "/backends",
         "cloud_usage": "/instances/usage",
+        "workloads": "/workloads",
     }
 
     def program_job(self, job_id: str) -> ProgramJob:
@@ -228,3 +229,67 @@ class Runtime(RestAdapterBase):
         """
         url = self.get_url("cloud_usage")
         return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
+
+    def workloads_get(
+        self,
+        user: str | None = None,
+        sort: Literal["createdAt", "-createdAt"] | None = None,
+        limit: int | None = None,
+        previous: str | None = None,
+        next: str | None = None,
+        backend: str | None = None,
+        search: str | None = None,
+        status: list[str] | None = [],
+        mode: Literal["job", "session", "batch"] | None = None,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
+        tags: list[str] | None = None,
+    ) -> dict:
+        """Get a list of user instance workloads.
+
+        Args:
+            user: User identifier.
+            sort: Field to sort the workloads.
+            limit: Number of workloads to return at a time.
+            previous: Cursor to previous workloads results page.
+            next: Cursor to next workloads results page.
+            backend: Backend name.
+            search: Search string, used to filter workloads by id or tags.
+            status: status type to filter workloads by.
+            mode: Workload mode.
+            created_after: Initial date of workloads to be included.
+            created_before: Last date of workloads to be included.
+            tags: List of tags for the worload.
+
+        Returns:
+            JSON response.
+        """
+        url = self.get_url("workloads")
+        payload: dict[str, int | str | list[str]] = {}
+
+        if user:
+            payload["user"] = user
+        if sort:
+            payload["sort"] = sort
+        if limit:
+            payload["limit"] = limit
+        if previous:
+            payload["previous"] = previous
+        if next:
+            payload["next"] = next
+        if backend:
+            payload["backend"] = backend
+        if search:
+            payload["search"] = search
+        if status:
+            payload["status"] = status
+        if mode:
+            payload["mode"] = mode
+        if created_before:
+            payload["created_before"] = local_to_utc(created_before).isoformat()
+        if created_after:
+            payload["created_after"] = local_to_utc(created_after).isoformat()
+        if tags:
+            payload["tags"] = tags
+
+        return self.session.get(url, params=payload, headers=self._HEADER_JSON_ACCEPT).json()
