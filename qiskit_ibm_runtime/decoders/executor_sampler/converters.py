@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
-from qiskit_ibm_runtime.results.quantum_program import ItemMetadata
+from ...results.quantum_program import ItemMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -90,5 +90,7 @@ def quantum_program_item_result_to_sampler_pub_result(
                 asdict(stretch_value, dict_factory=expanded_values_to_lists)
                 for stretch_value in item.metadata.stretch_values
             ]
+    else:  # simulator
+        pub_metadata["executor"] = item.metadata
 
     return SamplerPubResult(data=data_bin, metadata=pub_metadata)

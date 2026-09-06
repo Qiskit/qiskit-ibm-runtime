@@ -155,6 +155,18 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
         )
         self.assertEqual(result.metadata["compilation"]["stretch_values"], expected_stretch_values)
 
+    def test_simulation_info_in_metadata(self):
+        """For simulator results (plain dict metadata), metadata is stored under ``executor``."""
+        meas = np.array([[False], [True]])
+        sim_metadata = {"backend": "fake_sherbrooke", "shots": 512}
+        item = QuantumProgramItemResult({"meas": meas}, sim_metadata)
+
+        result = quantum_program_item_result_to_sampler_pub_result(item, (), 0)
+
+        self.assertIn("executor", result.metadata)
+        self.assertEqual(result.metadata["executor"], sim_metadata)
+        self.assertNotIn("compilation", result.metadata)
+
 
 @ddt
 class TestSamplerV2PostProcessor(IBMTestCase):

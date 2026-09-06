@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from ...results.quantum_program import ChunkSpan, QuantumProgramItemResult
+    from ...results.quantum_program import QuantumProgramItemResult
 
 TWIRLING_PREFIX = "measurement_flips."
 """The prefix used to store the twirling bitflips."""
@@ -46,11 +46,6 @@ def undo_twirling(item: QuantumProgramItemResult) -> None:
         # Apply XOR and remove flip key
         flip_data = item.pop(flip_key)
         item[target_key] ^= flip_data
-
-
-def _validate_chunk_span(span: ChunkSpan, pubs_shapes: list[tuple[int, ...]]) -> None:
-    if max({part.idx_item for part in span.parts}) >= len(pubs_shapes):
-        raise ValueError("Not enough pub shapes.")
 
 
 def flatten_twirling_axes(item: QuantumProgramItemResult, pub_shape: tuple[int, ...]) -> None:

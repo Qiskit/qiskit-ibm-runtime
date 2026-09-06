@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -88,7 +89,7 @@ class SamplerV2(BaseSamplerV2):
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
             Refer to the `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about execution modes.
 
         options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
@@ -158,40 +159,19 @@ class SamplerV2(BaseSamplerV2):
     def finalize_options(self) -> SamplerOptions:
         """Construct and finalize the Sampler options.
 
-        This method produces the final :class:`~.SamplerOptions` instance used inside a call to
-        :meth:`~.Sampler.run` by resolving the ``None`` in the twirling options as documented in
-        :class:`~.TwirlingOptions`.
+        This method produces the final :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
+        instance used inside a call to :meth:`~.Sampler.run` by resolving the ``None`` in the
+        twirling options as documented in
+        :class:`~qiskit_ibm_runtime.options_models.TwirlingOptions`.
 
         Returns:
-            The finalized :class:`~.SamplerOptions` object.
+            The finalized :class:`~qiskit_ibm_runtime.options_models.SamplerOptions` object.
         """
         return finalize_sampler_options(self.options)
 
-    def _run_legacy_simulation(
-        self, pubs: Iterable[SamplerPubLike], shots: int | None
-    ) -> RuntimeJobV2:
-        """Run on the legacy local simulator (no Executor).
-
-        Args:
-            pubs: The raw PUB-like objects passed to :meth:`run`.
-            shots: The per-run shots override, forwarded from :meth:`run`.
-
-        Returns:
-            The submitted job.
-        """
-        logger.info("Running in local simulator mode")
-        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
-        options = self.finalize_options()
-        options_dict = options.model_dump()
-        options_dict["default_shots"] = shots
-        return self._service._run(
-            program_id="sampler",
-            inputs={"pubs": coerced_pubs, "options": options_dict},
-            options={"backend": self._backend},
-            calibration_id=None,
-        )
-
-    def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
+    def run(
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
+    ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the sampler primitive.
 
         For moderate and complex workloads, the client-side processing done to map sampler inputs
@@ -199,7 +179,7 @@ class SamplerV2(BaseSamplerV2):
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
         `IBM Quantum Compute documentation
-        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`__
         for more information.
 
         Args:
@@ -212,16 +192,14 @@ class SamplerV2(BaseSamplerV2):
         Returns:
             The submitted job.
         """
-        # Legacy simulator path (no executor)
-        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
-            self._service, QiskitRuntimeLocalService
-        ):
-            return self._run_legacy_simulation(pubs, shots)
-
         # Pre-process: Convert Sampler input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            pubs, self.options, shots, add_tags=local_mode, backend=self._backend
+            pubs,
+            self.options,
+            shots,
+            add_tags=isinstance(self._service, QiskitRuntimeLocalService),
+            backend=self._backend,
         )
 
         # Set semantic role for post-processing dispatch

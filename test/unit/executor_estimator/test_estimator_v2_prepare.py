@@ -12,10 +12,12 @@
 
 """Unit tests for EstimatorV2 prepare method."""
 
+import numpy as np
 from ddt import data, ddt
-from qiskit import QuantumCircuit
+from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import Tag
+from samplomatic.exceptions import BuildError
 from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -41,6 +43,12 @@ class TestPrepare(IBMTestCase):
 
         pubs = [(circuit, observable)]
 
+        layers = find_unique_box_instructions(
+            circuit,
+            normalize_annotations=None,
+            undress_boxes=True,
+        )
+
         options = EstimatorOptions()
         options.twirling.enable_gates = True
         match path:
@@ -48,9 +56,9 @@ class TestPrepare(IBMTestCase):
                 options.twirling.enable_measure = True
             case "pec":
                 options.resilience.pec_mitigation = True
-                options.resilience.noise_model = {
-                    "layer_0": PauliLindbladMap.identity(num_qubits=2)
-                }
+                options.resilience.layer_noise_model = [
+                    (layer, PauliLindbladMap.identity(num_qubits=2)) for layer in layers
+                ]
             case "zne":
                 options.resilience.zne_mitigation = True
             case "pea":
@@ -84,16 +92,24 @@ class TestPrepare(IBMTestCase):
 
     def test_pec_path(self):
         """Test the ``prepare`` function when PEC is requested."""
-        options = EstimatorOptions()
-        options.twirling.enable_gates = True
-        options.resilience.pec_mitigation = True
-        options.resilience.noise_model = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
-
         circuit = QuantumCircuit(2)
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
         pubs = [(circuit, observable)]
+
+        layers = find_unique_box_instructions(
+            circuit,
+            normalize_annotations=None,
+            undress_boxes=True,
+        )
+
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        options.resilience.pec_mitigation = True
+        options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.identity(num_qubits=2)) for layer in layers
+        ]
 
         program, executor_options = prepare(pubs, options, precision=0.1)
 
@@ -225,3 +241,26 @@ class TestPrepare(IBMTestCase):
             "Measurement mitigation is currently not supported when observables contain projection",
         ):
             prepare(pubs, options, precision=0.1)
+
+    @data("pauli", "balanced_pauli", "local_c1", "local_pauli")
+    def test_circuit_with_parametric_rzz_and_twirling(self, group):
+        """Test the ``prepare`` function for PUBs that contain parametric RZZ gates.
+
+        ``prepare`` should not raise when ``group`` is ``"local_pauli``.
+        """
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        options.twirling.group = group
+
+        circuit = QuantumCircuit(2)
+        circuit.rzz(Parameter("theta"), 0, 1)
+        params = np.random.random((1,))
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        pubs = [(circuit, observable, params)]
+
+        if group in {"pauli", "balanced_pauli", "local_c1"}:
+            with self.assertRaisesRegex(BuildError, "GroupMode LOCAL_PAULI"):
+                prepare(pubs, options)
+        else:
+            prepare(pubs, options)

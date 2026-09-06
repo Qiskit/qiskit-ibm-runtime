@@ -19,6 +19,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypeAlias
+from urllib.parse import parse_qs, urlparse
 
 from responses import GET, POST, CallbackResponse, Response
 from responses.registries import FirstMatchRegistry
@@ -82,6 +83,9 @@ class Backend:
     queue_length: int = 0
     """Lenght of the queue for this backend."""
 
+    calibrations: dict[str, dict] = field(default_factory=dict)
+    """Configuration overrides keyed by calibration id."""
+
     def __post_init__(self) -> None:
         if not self.configuration:
             self.configuration = DEFAULT_BACKED_CONFIGURATION.copy()
@@ -116,6 +120,28 @@ class Backend:
         )
 
 
+@dataclass
+class Job:
+    """Registry representation of a job."""
+
+    id: str
+    """Job id."""
+
+    backend_name: str
+    """Backend name."""
+
+    program: Literal["sampler", "estimator", "executor"] = "sampler"
+
+    status: Literal["queued", "running", "completed", "cancelled", "failed"] = "completed"
+    """Job status."""
+
+    raw_details: str | None = None
+    """Response for the job details."""
+
+    raw_results: str | None = None
+    """Response for the job results."""
+
+
 class BaseRegistry(FirstMatchRegistry):
     """Registry that dynamically serves IBM Quantum Compute responses.
 
@@ -141,13 +167,17 @@ class BaseRegistry(FirstMatchRegistry):
     """Instances in this registry, keyed by instance name."""
 
     backends: dict[str, dict[str, Backend]]
-    """Backends in this registry, keyed by instance name."""
+    """Backends in this registry, keyed by instance name and backend name."""
+
+    jobs: dict[str, dict[str, Job]]
+    """Jobs in this registry, keyed by instance name and job id."""
 
     def __init__(self) -> None:
         super().__init__()
 
         self.instances = {}
         self.backends = defaultdict(dict)
+        self.jobs = defaultdict(dict)
 
         # Add callbacks for IBM Global Search and Global Catalog.
         self.add(
@@ -201,7 +231,7 @@ class BaseRegistry(FirstMatchRegistry):
             )
         )
 
-        # Add responses for the IBM Quantum Compute `/instances` endpoint.
+        # Add responses for the IBM Quantum Compute `/instances` endpoints.
         self.add(
             Response(
                 method=GET,
@@ -215,7 +245,28 @@ class BaseRegistry(FirstMatchRegistry):
             CallbackResponse(
                 method=POST,
                 url="https://my-region.quantum.cloud.ibm.com/api/v1/jobs",
-                callback=self.callback_jobs,
+                callback=self.callback_jobs_post,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url="https://my-region.quantum.cloud.ibm.com/api/v1/jobs",
+                callback=self.callback_jobs_get,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+"),
+                callback=self.callback_jobs_id,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+/results"),
+                callback=self.callback_jobs_results,
             ),
         )
 
@@ -231,6 +282,10 @@ class BaseRegistry(FirstMatchRegistry):
         instances = [instance] if instance is not None else list(self.instances)
         for name in instances:
             self.backends[name][backend.name] = backend
+
+    def add_job(self, job: Job, instance: str) -> None:
+        """Add a new job to the registry."""
+        self.jobs[instance][job.id] = job
 
     def callback_global_search(self, _: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Cloud Global Search API.
@@ -281,11 +336,8 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
-        if instance.name not in self.backends:
+        instance = self.get_crn_from_request(request)
+        if instance.name not in self.instances:
             return (404, {"Content-Type": "application/json"}, "{}")
 
         response_body = {
@@ -309,16 +361,22 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = request.path_url.split("/")[4]
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
 
         backend = self.backends[instance.name][backend_name]
-        return (200, {"Content-Type": "application/json"}, json.dumps(backend.configuration))
+        query_params = parse_qs(urlparse(request.url).query)
+        calibration_id = query_params.get("calibration_id", [None])[0]
+
+        calibration = backend.calibrations.get(calibration_id)
+        if calibration_id is not None and calibration is None:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        configuration = backend.configuration | (calibration or {})
+
+        return (200, {"Content-Type": "application/json"}, json.dumps(configuration))
 
     def callback_backends_properties(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/backends/{id}/properties`` endpoint.
@@ -329,10 +387,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = request.path_url.split("/")[4]
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
@@ -349,10 +404,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = request.path_url.split("/")[4]
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
@@ -366,7 +418,7 @@ class BaseRegistry(FirstMatchRegistry):
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
-    def callback_jobs(self, request: PreparedRequest) -> CallbackResult:
+    def callback_jobs_post(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
 
         Dynamically return a job, based on the contents of `self.backends`.
@@ -375,10 +427,7 @@ class BaseRegistry(FirstMatchRegistry):
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
         """
         # Validate the instance CRN and backend name.
-        instance_crn = request.headers.get("Service-CRN")
-        instance = next(
-            instance for instance in self.instances.values() if instance.crn == instance_crn
-        )
+        instance = self.get_crn_from_request(request)
         backend_name = json.loads(str(request.body))["backend"]
 
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
@@ -389,6 +438,97 @@ class BaseRegistry(FirstMatchRegistry):
             "backend": backend_name,
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+
+    def callback_jobs_get(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
+
+        Dynamically return a list of job, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN.
+        instance = self.get_crn_from_request(request)
+        if instance.name not in self.backends:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        jobs = [
+            {
+                "id": job.id,
+                "backend": job.backend_name,
+                "status": job.status.capitalize(),
+                "program": {"id": job.program},
+            }
+            for job in self.jobs[instance.name].values()
+        ]
+
+        response_body = {
+            "jobs": jobs,
+            "count": len(jobs),
+            "limit": 20,
+            "offset": 0,
+        }
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+
+    def callback_jobs_id(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}`` endpoint.
+
+        Dynamically return a job, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and backend name.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-1].split("?")[0]
+
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        job = self.jobs[instance.name][job_id]
+
+        if job.raw_details:
+            response_body = job.raw_details
+        else:
+            response_body = json.dumps(
+                {
+                    "id": job.id,
+                    "backend": job.backend_name,
+                    "status": job.status.capitalize(),
+                    "program": {"id": job.program},
+                }
+            )
+        return (200, {"Content-Type": "application/json"}, response_body)
+
+    def callback_jobs_results(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}/results`` endpoint.
+
+        Dynamically return a job results, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and backend name.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-2].split("?")[0]
+
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        job = self.jobs[instance.name][job_id]
+
+        if job.raw_results:
+            response_body = job.raw_results
+        else:
+            response_body = json.dumps({})
+        return (200, {"Content-Type": "application/json"}, response_body)
+
+    def get_crn_from_request(self, request: PreparedRequest) -> Instance:
+        """Retrieve the `Instance` from the request headers."""
+        instance_crn = request.headers.get("Service-CRN")
+        return next(
+            instance for instance in self.instances.values() if instance.crn == instance_crn
+        )
 
 
 class DefaultRegistry(BaseRegistry):

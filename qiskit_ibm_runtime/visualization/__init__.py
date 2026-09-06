@@ -35,7 +35,8 @@ Functions
     draw_circuit_schedule_timing
 """
 
-from .draw_chunk_timings import draw_chunk_timings
+from samplomatic.visualization.draw_chunk_timings import draw_chunk_timings
+
 from .draw_circuit_schedule_timings import draw_circuit_schedule_timing
 from .draw_execution_spans import draw_execution_spans
 from .draw_layer_error import draw_layer_error_map, draw_layer_errors_swarm

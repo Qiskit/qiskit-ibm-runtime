@@ -18,8 +18,6 @@ import numpy as np
 from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.executor_estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
@@ -100,11 +98,10 @@ class TestEstimator(IBMIntegrationTestCase):
         estimator.options.resilience.pec_mitigation = True
 
         layers = estimator.find_unique_layers(self.pubs, types="gates")
-        estimator.options.resilience.noise_model = {
-            annotation.ref: PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)])
+        estimator.options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)]))
             for layer in layers
-            if (annotation := get_annotation(layer.operation, InjectNoise))
-        }
+        ]
 
         results = estimator.run(self.pubs).result()
 
@@ -129,6 +126,9 @@ class TestEstimator(IBMIntegrationTestCase):
               ``ensemble_stds_noise_factors``: ``(*pub_shape, num_noise_factors)``
             * ``evs_extrapolated``, ``stds_extrapolated``:
               ``(*pub_shape, num_extrapolators, num_extrapolated_noise_factors)``
+
+        - Correct shape and make-up for all ZNE-specific pub metadata fields:
+            * ``extrapolators``: pub shape, only requested extrapolators or `multiple`.
         """
         estimator = EstimatorV2(self.backend)
         estimator.options.resilience.zne_mitigation = True
@@ -136,13 +136,11 @@ class TestEstimator(IBMIntegrationTestCase):
 
         if amplifier == "pea":
             layers = estimator.find_unique_layers(self.pubs, types="gates")
-            estimator.options.resilience.noise_model = {
-                annotation.ref: PauliLindbladMap.from_list(
-                    [("X" * layer.operation.num_qubits, 0.001)]
-                )
+            estimator.options.resilience.layer_noise_model = [
+                (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)]))
                 for layer in layers
-                if (annotation := get_annotation(layer.operation, InjectNoise))
-            }
+            ]
+
         expected_num_noise_factors = len(DEFAULT_NOISE_FACTORS)
         # ``extrapolated_noise_factors`` defaults to ``[0, *noise_factors]``
         expected_num_extrapolated = expected_num_noise_factors + 1
@@ -155,10 +153,14 @@ class TestEstimator(IBMIntegrationTestCase):
 
         for pub_idx, expected_pub_shape in enumerate([(2, 2), (2,)]):
             data_bin = results[pub_idx].data
+            metadata = results[pub_idx].metadata
 
-            # evs and stds: pub shape only
+            # evs, stds and selected extrapolators metadata: pub shape only
             self.assertEqual(data_bin.evs.shape, expected_pub_shape)
             self.assertEqual(data_bin.stds.shape, expected_pub_shape)
+            self.assertEqual(
+                metadata["resilience"]["zne"]["extrapolators"].shape, expected_pub_shape
+            )
 
             # noise-factor arrays: (*pub_shape, num_noise_factors)
             expected_nf_shape = expected_pub_shape + (expected_num_noise_factors,)
@@ -173,3 +175,9 @@ class TestEstimator(IBMIntegrationTestCase):
             )
             self.assertEqual(data_bin.evs_extrapolated.shape, expected_extrap_shape)
             self.assertEqual(data_bin.stds_extrapolated.shape, expected_extrap_shape)
+
+            # Selected extrapolators must be one the requested extrapolators or `multiple`
+            allowed = {*estimator.options.resilience.zne.extrapolator, "multiple"}
+            self.assertTrue(
+                set(metadata["resilience"]["zne"]["extrapolators"].flatten()).issubset(allowed)
+            )

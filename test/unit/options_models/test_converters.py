@@ -12,6 +12,9 @@
 
 """Tests the converters for options models."""
 
+from qiskit.circuit import QuantumCircuit
+from qiskit.quantum_info import PauliLindbladMap
+
 from qiskit_ibm_runtime.options_models.converters import (
     estimator_options_to_executor_options,
     sampler_option_to_executor_options,
@@ -116,3 +119,29 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
 
         self.assertEqual(executor_options.environment.image, "custom:image")
         self.assertEqual(executor_options.experimental, options.experimental)
+
+    def test_to_executor_options_resilience_fallback(self):
+        """Test the simulator ``layer_noise_model`` fallback to resilience ``layer_noise_model``."""
+        options = EstimatorOptions()
+        options.resilience.layer_noise_model = []
+
+        executor_options = estimator_options_to_executor_options(options)
+
+        self.assertEqual(
+            executor_options.simulator.layer_noise_model,
+            options.resilience.layer_noise_model,
+        )
+
+        circuit = QuantumCircuit(2)
+        with circuit.box():
+            circuit.cx(0, 1)
+        options.simulator.layer_noise_model = [
+            (layer, PauliLindbladMap.identity(2)) for layer in circuit.data
+        ]
+
+        executor_options = estimator_options_to_executor_options(options)
+
+        self.assertEqual(
+            executor_options.simulator.layer_noise_model,
+            options.simulator.layer_noise_model,
+        )

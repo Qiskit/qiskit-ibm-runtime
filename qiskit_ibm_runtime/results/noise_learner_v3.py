@@ -14,12 +14,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 from qiskit.circuit import BoxOp
 from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
-from samplomatic import InjectNoise, Tag
+from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 if TYPE_CHECKING:
@@ -142,25 +142,20 @@ class NoiseLearnerV3Results:
         self,
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
-        mode: Literal["injection", "simulation"] = "injection",
     ) -> dict[str, PauliLindbladMap]:
-        """Convert to a dictionary from references to :class:`PauliLindbladMap` objects.
-
-        References can be one of :attr:`InjectNoise.ref` or :attr:`Tag.ref` depending on
-        ``mode`` selection.
+        """Convert to dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
 
         This function iterates over a sequence of instructions, extracts the ``ref`` value
-        from the annotation of each instruction, and returns a dictionary mapping
+        from the inject noise annotation of each instruction, and returns a dictionary mapping
         those refs to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in
         this :class:`NoiseLearnerV3Results` object.
 
         Args:
             instructions: The instructions to get the refs from.
             require_refs: Whether to raise if some of the instructions do not own an
-                annotation. If ``False``, all the instructions that do not contain an
-                annotation are simply skipped when constructing the returned dictionary.
-            mode: If ``"simulation"``, it groups by :class:`~.Tag` annotations. Otherwise, by
-                :class:`~.InjectNoise` annotations.
+                inject noise annotation. If ``False``, all the instructions that do not contain an
+                inject noise annotation are simply skipped when constructing the returned
+                dictionary.
 
         Raise:
             ValueError: If ``instructions`` contains a number of elements that is not equal to the
@@ -177,12 +172,11 @@ class NoiseLearnerV3Results:
 
         noise_source = {}
         num_instr = 0
-        annotation_type = Tag if mode == "simulation" else InjectNoise
         pauli_maps = self.to_pauli_lindblad_maps()
         for instr, pauli_map in zip(instructions, pauli_maps):
             if not isinstance(instr.operation, BoxOp):
                 raise ValueError("Found an instruction that does not contain a box.")
-            if annotation := get_annotation(instr.operation, annotation_type):
+            if annotation := get_annotation(instr.operation, InjectNoise):
                 num_instr += 1
                 noise_source[annotation.ref] = pauli_map
             elif require_refs:

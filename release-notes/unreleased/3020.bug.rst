@@ -1,0 +1,2 @@
+Jobs from retired backends can now be retrieved successfully via
+:meth:`.QiskitRuntimeService.job` and :meth:`.QiskitRuntimeService.jobs`.

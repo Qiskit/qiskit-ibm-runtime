@@ -1,0 +1,4 @@
+Fixed :meth:`.QiskitRuntimeService.backend` so that retrieving a backend without a
+``calibration_id`` after retrieving it with a custom calibration returns the default backend
+configuration. Calibration-specific backend configurations are no longer cached, so custom
+calibration data does not replace the cached default backend configuration.

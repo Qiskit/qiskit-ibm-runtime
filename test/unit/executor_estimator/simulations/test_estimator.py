@@ -21,11 +21,8 @@ from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.options_models.simulator import ExperimentalSimulatorOptions
 
 from ....ibm_test_case import IBMTestCase
 from .utils import (
@@ -81,10 +78,6 @@ TWIRLING_TREX = {
 class TestEstimatorWithNoise(IBMTestCase):
     """Tests Executor based EstimatorV2 using simulator with noise through local mode."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
     def test_result_quality_for_different_resilience_levels(self):
         """Tests the effect of resilience on EstimatorV2 results.
 
@@ -93,7 +86,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         backend = FakeManilaV2()
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
-        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
 
         # maps resilience level to error (compared to statevector simulation) for each observable
         errors: dict[int, npt.NDArray[np.float64]] = {}
@@ -130,7 +123,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
-        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager)
+        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
 
         # -- Run using base level Estimator with minor mitigation only:
 
@@ -147,12 +140,7 @@ class TestEstimatorWithNoise(IBMTestCase):
             (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
             for layer in layers
         ]
-
-        base_level_estimator.options.experimental["simulator_options"] = (
-            ExperimentalSimulatorOptions(
-                layer_noise_model=simulated_noise_model,
-            )
-        )
+        base_level_estimator.options.simulator.layer_noise_model = simulated_noise_model
 
         # Run a noisy simulation using baselevel estimator:
         result = base_level_estimator.run([pub]).result()
@@ -166,18 +154,12 @@ class TestEstimatorWithNoise(IBMTestCase):
             shots_per_randomization=200,
             options_overrides=option_overrides,
         )
-        estimator.options.experimental["simulator_options"] = ExperimentalSimulatorOptions(
-            layer_noise_model=simulated_noise_model,
-        )
+        estimator.options.simulator.layer_noise_model = simulated_noise_model
         # Run a noisy simulation, injecting the same noise as in the simulation
-        injected_noise_model = {
-            inject_noise_annotation.ref: PauliLindbladMap.from_list(
-                [("X" * layer.operation.num_qubits, 0.005)]
-            )
+        estimator.options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
-            if (inject_noise_annotation := get_annotation(layer.operation, InjectNoise))
-        }
-        estimator.options.resilience.noise_model = injected_noise_model
+        ]
         result = estimator.run([pub]).result()
         errors = np.abs(result[0].data.evs - ideal_evs)
 
@@ -207,15 +189,18 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         TWIRLING_TREX_PEC,
         TWIRLING_TREX_PEA,
     )
-    def test_correct_estimates_with_noise_injection(self, option_overrides):
+    def test_correct_estimates(self, option_overrides):
         """Tests Estimator configurations to produce correct results in a noise-less environment."""
-        pub, ideal_evs = create_estimator_test_data_extended(self.backend, self.preset_pass_manager)
-
         estimator = create_local_mode_estimator(
             self.backend,
             num_randomizations=100,
             shots_per_randomization=200,
             options_overrides=option_overrides,
+        )
+
+        include_projections = not estimator.finalize_options().resilience.measure_mitigation
+        pub, ideal_evs = create_estimator_test_data_extended(
+            self.backend, self.preset_pass_manager, include_projections
         )
 
         # TODO: no DD possible on AER without gate durations.
@@ -225,7 +210,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         if "resilience_level" not in option_overrides:
             # resilience_level defaults do not need a noise-model.
             # Only adding this for PEC / PEA:
-            estimator.options.resilience.noise_model = create_noise_model_without_noise(
+            estimator.options.resilience.layer_noise_model = create_noise_model_without_noise(
                 estimator, pub
             )
 

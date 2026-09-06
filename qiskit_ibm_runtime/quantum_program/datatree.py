@@ -12,13 +12,13 @@
 
 """DataTree."""
 
-from __future__ import annotations
+from samplomatic.quantum_program.datatree import DataTree  # noqa: F401
 
-from typing import TypeAlias
+from ..utils.deprecation import issue_deprecation_msg
 
-from numpy.typing import NDArray
-
-DataTree: TypeAlias = (
-    list["DataTree"] | dict[str, "DataTree"] | NDArray[float] | str | float | int | bool | None
+issue_deprecation_msg(
+    msg="Importing 'DataTree' from 'qiskit_ibm_runtime.quantum_program.datatree' is deprecated",
+    version="0.50.0",
+    remedy="Import 'DataTree' from 'samplomatic.quantum_program' instead.",
+    stacklevel=2,
 )
-"""Arbitrary nesting of lists and dicts with typed leaves."""

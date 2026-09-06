@@ -85,6 +85,7 @@ module = [
     "rustworkx",
     "samplomatic.*",
     "urllib3.*",
+    "pytest",
 ]
 ignore_missing_imports = true
 
@@ -185,11 +186,11 @@ dependencies = [
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas>=0.10.20260723,<1",
+    "ibm-quantum-schemas>=0.11.20260824,<1",
     "pydantic>=2.13.0",
     "qiskit>=2.3.0",
     "pybase64>=1.4.0",
-    "samplomatic>=0.18.0"
+    "samplomatic>=0.21.0"
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
@@ -204,43 +205,6 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 
 
 [project.optional-dependencies]
-
-# Legacy developer extras.
-
-common = [
-    "mypy==2.3.0",
-    "pproxy==2.7.8",
-    "nbqa==1.5.3",
-    "matplotlib>=2.1",
-    "jupyter",
-    "nbformat>=4.4.0",
-    "nbconvert>=5.3.1",
-    "qiskit-aer>=0.17.0",
-    "ruff~=0.14.10",
-    "coverage>=6.3",
-    "pylatexenc",
-    "scikit-learn",
-    "setuptools",
-]
-
-documentation = [
-    "nbsphinx",
-    "Sphinx>=8,<9",
-    "sphinx-automodapi",
-    "sphinx-autodoc-typehints<=1.19.2",
-    "jupyter-sphinx",
-    "sphinxcontrib-katex==0.9.9",
-    "autodoc_pydantic==2.2.0",
-    "packaging",
-]
-
-dev_legacy = [
-    "qiskit-ibm-runtime[test]",
-    "qiskit-ibm-runtime[common]",
-    "qiskit-ibm-runtime[style]",
-    "qiskit-ibm-runtime[documentation]",
-    "qiskit-ibm-runtime[visualization]",
-]
 
 # User-facing extras.
 

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
 from .executor import ExecutorOptions
+from .simulator import SimulatorOptions
 
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
@@ -53,8 +54,10 @@ def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptio
 
     environment_options = options.environment.model_dump()
     execution_options = options.execution.model_dump(exclude={"meas_type"})
+    simulator_options = options.simulator.model_dump()
     executor_options.environment = EnvironmentOptions(**environment_options)
     executor_options.execution = ExecutionOptions(**execution_options)
+    executor_options.simulator = SimulatorOptions(**simulator_options)
 
     executor_options.environment.max_execution_time = options.max_execution_time
     if options.experimental:
@@ -83,12 +86,17 @@ def estimator_options_to_executor_options(options: EstimatorOptions) -> Executor
 
     environment_options = options.environment.model_dump()
     execution_options = options.execution.model_dump()
+    simulator_options = options.simulator.model_dump()
     executor_options.environment = EnvironmentOptions(**environment_options)
     executor_options.execution = ExecutionOptions(**execution_options)
+    executor_options.simulator = SimulatorOptions(**simulator_options)
 
     executor_options.environment.max_execution_time = options.max_execution_time
     if options.experimental:
         executor_options.environment.image = options.experimental.get("image", None)
         executor_options.experimental.update(options.experimental)
+
+    if executor_options.simulator.layer_noise_model is None:
+        executor_options.simulator.layer_noise_model = options.resilience.layer_noise_model
 
     return executor_options

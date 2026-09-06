@@ -12,6 +12,8 @@
 
 """Backends Filtering Test."""
 
+from __future__ import annotations
+
 from unittest import mock
 
 from ddt import ddt, named_data
@@ -299,13 +301,35 @@ class TestGetBackend(IBMTestCase):
 
         self.assertIsNot(backend_with_fg, backend_without_fg)
 
-    @mock_responses(OneInstanceNoBackendsRegistry, expose_responses_mock=True)
-    def test_backend_with_custom_calibration(self, registry, requests_mock):
-        """Test getting a backend with a custom calibration."""
-        registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_backend_with_custom_calibration(self, registry):
+        """Test listing a backend with a custom calibration and reverting to default."""
+        registry.add_backend(
+            Backend(
+                "ibm_torino",
+                calibrations={"abc1234": {"supported_instructions": ["while_loop"]}},
+            )
+        )
         service = QiskitRuntimeService(token="my_token")
 
-        backend_with_calibration = service.backend("ibm_torino", calibration_id="abc1234")
+        backend_with_calibration = service.backends("ibm_torino", calibration_id="abc1234")[0]
         self.assertEqual(backend_with_calibration.calibration_id, "abc1234")
-        # Assert mock has api client calls with cal id set
-        self.assertIn("calibration_id=abc1234", requests_mock.calls[-1].request.url)
+        self.assertIn("while_loop", backend_with_calibration.supported_instructions)
+
+        default_backend = service.backends("ibm_torino")[0]
+        self.assertIsNone(default_backend.calibration_id)
+        self.assertNotIn("while_loop", default_backend.supported_instructions)
+
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_backend_with_invalid_calibration(self, registry):
+        """Test that retrieving a backend with an invalid calibration fails."""
+        registry.add_backend(
+            Backend(
+                "ibm_torino",
+                calibrations={"abc1234": {"supported_instructions": ["while_loop"]}},
+            )
+        )
+        service = QiskitRuntimeService(token="my_token")
+
+        with self.assertRaises(QiskitBackendNotFoundError):
+            service.backend("ibm_torino", calibration_id="invalid")

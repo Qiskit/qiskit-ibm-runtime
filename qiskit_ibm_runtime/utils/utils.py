@@ -24,7 +24,7 @@ from qiskit.circuit.library.standard_gates import PhaseGate, RZGate, U1Gate
 from qiskit.qpy import QPY_VERSION
 from samplomatic.ssv import SSV
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from ..exceptions import IBMInputValueError
 
 if TYPE_CHECKING:
     from qiskit.circuit import Parameter, QuantumCircuit

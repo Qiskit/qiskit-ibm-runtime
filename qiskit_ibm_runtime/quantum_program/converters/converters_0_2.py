@@ -30,16 +30,16 @@ from ibm_quantum_schemas.executor.version_0_2 import (
     QuantumProgramModel,
     SamplexItemModel,
 )
+from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
 
 from ...options_models.executor import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
-from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
+from ..quantum_program import QuantumProgram
 
 if TYPE_CHECKING:
     from ibm_quantum_schemas.executor.version_0_2.models import DataTree as DataTreeModel
-
-    from ..datatree import DataTree
+    from samplomatic.quantum_program.datatree import DataTree
 
 
 def passthrough_data_to_0_2(passthrough_data: DataTree) -> DataTreeModel:
@@ -161,7 +161,7 @@ def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) ->
         model_items.append(model_item)
 
     # Build options dict starting with execution options
-    options_dict = options.execution.model_dump()  # type: ignore[call-overload]
+    options_dict = options.execution.model_dump()
 
     # Add experimental options if provided
     if options.experimental:

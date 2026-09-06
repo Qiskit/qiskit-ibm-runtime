@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Literal, get_args
 
-import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
@@ -27,7 +26,7 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
 from .prepare import prepare
-from .utils import BoxType, find_box_type, find_unique_layers, resolve_precision
+from .utils import BoxType, find_box_type, find_unique_layers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -37,6 +36,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -84,7 +84,7 @@ class EstimatorV2(BaseEstimatorV2):
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
             Refer to the `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about execution modes.
 
         options: Estimator options.
@@ -144,10 +144,10 @@ class EstimatorV2(BaseEstimatorV2):
             layers = est.find_unique_layers(pubs, types="gates")
 
             results = NoiseLearnerV3(mode).run(layers).result()
-            noise_model = results.to_dict(layers)
+            pauli_linblad_maps = results.to_pauli_lindblad_maps()
 
             # Assign the learned model so PEC uses it on the next run.
-            est.options.resilience.noise_model = noise_model
+            est.options.resilience.layer_noise_model = zip(layers, pauli_linblad_maps)
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
@@ -172,59 +172,31 @@ class EstimatorV2(BaseEstimatorV2):
     def finalize_options(self) -> EstimatorOptions:
         """Construct and finalize the Estimator options.
 
-        This method combines the configured resilience level with the user-provided option
-        to produce the final :class:`~.EstimatorOptions` instance used inside a call to
-        :meth:`~.Estimator.run`.
+        This method combines the configured resilience level with the user-provided option to
+        produce the final :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions` instance
+        used inside a call to :meth:`~.Estimator.run`.
 
         The process used to produce the finalized options is as follows:
 
-        1. Initialize a new :class:`~.EstimatorOptions` object with defaults determined by
-            :attr:`~.EstimatorOptions.resilience_level`.
+        1. Initialize a new :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions` object with
+           defaults determined by
+           :attr:`~qiskit_ibm_runtime.options_models.EstimatorOptions.resilience_level`.
         2. Apply user-specified options, skipping the fields left as ``None`` that are intended to
-            inherit the resilience-level defaults.
+           inherit the resilience-level defaults.
         3. Enforce required option dependencies. Specifically:
-            * Enabling measurement mitigation automatically enables measurement twirling.
-            * Enabling gate-based mitigation techniques (such as PEA-based ZNE or PEC) automatically
-              enables both gate and measurement twirling.
+
+           * Enabling measurement mitigation automatically enables measurement twirling.
+           * Enabling gate-based mitigation techniques (such as PEA-based ZNE or PEC) automatically
+             enables both gate and measurement twirling.
 
         Returns:
-            The finalized :class:`~.EstimatorOptions` object.
+            The finalized :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions` object.
         """
         return finalize_estimator_options(self.options)
 
-    def _run_legacy_simulation(
-        self, pubs: Iterable[EstimatorPubLike], precision: float | None
-    ) -> RuntimeJobV2:
-        """Run on the legacy local simulator (no Executor).
-
-        Args:
-            pubs: The raw PUB-like objects passed to :meth:`run`.
-            precision: The per-pub precision override, forwarded from :meth:`run`.
-
-        Returns:
-            The submitted job.
-        """
-        logger.info("Running in local simulator mode")
-        coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-        options = self.finalize_options()
-        options_dict = options.model_dump()
-        resolved_precision = resolve_precision(coerced_pubs, precision)
-        if resolved_precision is not None:
-            options_dict["default_shots"] = int(np.ceil(1.0 / (resolved_precision**2)))
-        elif options.default_shots is not None:
-            options_dict["default_shots"] = int(options.default_shots)
-        else:
-            options_dict["default_shots"] = int(np.ceil(1.0 / (options.default_precision**2)))
-        return self._service._run(
-            program_id="estimator",
-            inputs={"pubs": coerced_pubs, "options": options_dict},
-            options={"backend": self._backend},
-            calibration_id=None,
-        )
-
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
-    ) -> RuntimeJobV2:
+    ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the estimator primitive.
 
         For moderate and complex workloads, the client-side processing done to map estimator inputs
@@ -232,7 +204,7 @@ class EstimatorV2(BaseEstimatorV2):
         and the ``job`` being submitted. In order to check the progress of the call, it is
         recommended to setup logging (with an ``INFO`` level) - see
         `IBM Quantum Compute documentation
-        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`__
         for more information.
 
         Args:
@@ -250,16 +222,14 @@ class EstimatorV2(BaseEstimatorV2):
             IBMInputValueError: If no pubs are provided, if precision is not properly
                 specified, or if unsupported options are detected.
         """
-        # Legacy simulator path (no executor)
-        if not (local_mode := self.options.experimental.get("local_mode", False)) and isinstance(
-            self._service, QiskitRuntimeLocalService
-        ):
-            return self._run_legacy_simulation(pubs, precision)
-
         # Pre-process: Convert Estimator input into a QuantumProgram
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            pubs, self.options, precision, add_tags=local_mode, backend=self._backend
+            pubs,
+            self.options,
+            precision,
+            add_tags=isinstance(self._service, QiskitRuntimeLocalService),
+            backend=self._backend,
         )
 
         # Set semantic role for post-processing dispatch

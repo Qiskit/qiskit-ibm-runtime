@@ -20,8 +20,8 @@ Deprecation Notes
 
   Importing from the previous locations is deprecated, and the references will be removed in a future
   release. (`2835 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2835>`__)
-- Running a :class:`.SamplerV2` job with different ``pub.shots`` values across PUBs is deprecated. Similarly, running an
-  :class:`.EstimatorV2` job with different ``pub.precision`` values across PUBs is deprecated. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
+- Running a :class:`~qiskit_ibm_runtime.SamplerV2` job with different ``pub.shots`` values across PUBs is deprecated. Similarly, running an
+  :class:`~qiskit_ibm_runtime.EstimatorV2` job with different ``pub.precision`` values across PUBs is deprecated. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
 - Setting :attr:`.MeasureNoiseLearningOptions.shots_per_randomization` to an ``int`` value is deprecated and will be removed
   in future releases. Please use ``"auto"`` instead. (`3004 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3004>`__)
 
@@ -62,8 +62,8 @@ Bug Fixes
   folded into a circuit that differed from the original by a global phase of ``pi``. The
   pass now derives the dropped ``2*pi`` winding parity directly from the wrapped angle, so
   the folded circuit preserves the full unitary (including global phase) for all angles. (`2856 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2856>`__)
-- When using backends from different instances, the service used by :meth:`.SamplerV2.run`,
-  :meth:`.EstimatorV2.run`, and other primitives' ``.run()`` methods now ensures that the API client
+- When using backends from different instances, the service used by :meth:`~qiskit_ibm_runtime.SamplerV2.run`,
+  :meth:`~qiskit_ibm_runtime.EstimatorV2.run`, and other primitives' ``.run()`` methods now ensures that the API client
   used for submitting the job is the one belonging to the backend, instead of always using the
   active API client. (`2931 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2931>`__)
 - Fixed the folding of out-of-bounds ``rzz`` angles during transpilation.
