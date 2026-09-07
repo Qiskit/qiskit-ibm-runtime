@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 import numpy as np
 from qiskit.primitives import PrimitiveResult as _PrimitiveResult
 from qiskit.primitives.containers.data_bin import DataBin
-from qiskit_mitigation import PEA, PEC, ZNE, MitigationTask
+from qiskit_mitigation import PEA, ZNE
 from qiskit_mitigation.utils.utils import load_tasks_from_result
 
 from ...results.estimator_pub import EstimatorPubResult
@@ -92,6 +92,11 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     for i, task in enumerate(tasks):
         logger.info("Post-processing pub %d/%d (%s).", i + 1, num_pubs, type(task).__name__)
 
+        # Tuple shapes become lists when passthrough data is JSON serialized, but
+        # qiskit-mitigation uses param_shape as an lru_cache key during broadcasting.
+        if isinstance(task.param_shape, list):
+            task.param_shape = tuple(task.param_shape)
+
         # Workaround for upstream ZNE/PEA bug: both ZNE.prepare() and PEA.prepare()
         # store extrapolated_noise_factors as a numpy array; postprocess() then does
         # ``== []`` which raises "truth value of array is ambiguous".  Convert
@@ -126,6 +131,17 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             pub_meta = {key: [m[key] for m in items_meta] for key in items_meta[0]}
         else:
             pub_meta = _create_pub_result_metadata(result[task._program_item_index].metadata)
+
+        if isinstance(task, (ZNE, PEA)):
+            selected_extrapolators = pub_result_raw.metadata["selected_extrapolators"]
+            extrapolators = [
+                values[0] if all(value == values[0] for value in values) else "multiple"
+                for values in selected_extrapolators
+            ]
+            pub_shape = np.broadcast_shapes(task.param_shape, task.observables.shape)
+            pub_meta["resilience"] = {
+                "zne": {"extrapolators": np.asarray(extrapolators).reshape(pub_shape)}
+            }
 
         if i < len(circuits_metadata) and (cm := circuits_metadata[i]) is not None:
             pub_meta["circuit_metadata"] = cm
@@ -192,8 +208,9 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
     When twirling is **not** enabled (1 randomization), ``stds`` and
     ``ensemble_standard_error`` are identical.
 
-    ``ZNE`` and ``PEA`` produce different fields (extrapolation results) that
-    already use the names our API expects, so they are returned unchanged.
+    ``ZNE`` and ``PEA`` additionally produce noise-factor and extrapolation
+    fields. Their twirl-level noise-factor error is renamed to ``stds_noise_factors``,
+    while their pooled error is exposed as ``ensemble_stds_noise_factors``.
 
     Args:
         pub_result: The raw :class:`~qiskit.primitives.PubResult` returned by
@@ -208,10 +225,18 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
 
     db = pub_result.data
 
-    # Only MitigationTask (vanilla) and PEC use the stds/twirl_stds naming.
-    # ZNE and PEA already have the right names.
-    if not isinstance(task, (MitigationTask, PEC)):
-        return pub_result
+    if isinstance(task, (ZNE, PEA)):
+        renamed = DataBin(
+            evs=db.evs,
+            stds=db.stds,
+            evs_noise_factors=db.evs_noise_factors,
+            stds_noise_factors=db.stds_twirl_noise_factors,
+            ensemble_stds_noise_factors=db.stds_noise_factors,
+            evs_extrapolated=db.evs_extrapolated,
+            stds_extrapolated=db.stds_extrapolated,
+            shape=db.evs.shape,
+        )
+        return PubResult(data=renamed, metadata=pub_result.metadata)
 
     # Pull out current fields; twirl_stds may be absent on very old builds.
     evs = db.evs
