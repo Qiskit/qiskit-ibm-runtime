@@ -17,19 +17,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from samplomatic.quantum_program import SamplexItem
 
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
-from qiskit_ibm_runtime.fake_provider.executor.broadcast_sample import broadcast_sample
 from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
-from qiskit_ibm_runtime.results.quantum_program import (
-    QuantumProgramItemResult,
-    QuantumProgramResult,
-)
 
 from ..utils import make_mirror_circuit_with_phases
+from .utils import create_dummy_executor_result
 
 PREPARE_VARIANTS = {
     "vanilla": {},
@@ -114,7 +109,7 @@ def test_executor_sampler_post_processor(benchmark, variant_id, variant_options)
     # for each benchmarking round:
     def setup():
         # return args, kwargs to test function
-        return (create_dummy_result(quantum_program),), {}
+        return (create_dummy_executor_result(quantum_program),), {}
 
     benchmark.pedantic(
         QuantumProgramResultDecoder._apply_post_processing,
@@ -144,37 +139,3 @@ def create_test_pubs(backend, num_qubits, num_layers):
     )
 
     return [(isa_circuit, parameter_values)]
-
-
-def create_dummy_result(quantum_program) -> QuantumProgramResult:
-    """Simulate what the executor produces for a quantum program."""
-    rng = np.random.default_rng(0)
-    result_data = []
-
-    for item in quantum_program.items:
-        shots = quantum_program.shots
-
-        if isinstance(item, SamplexItem):
-            samplex_data = broadcast_sample(item.samplex, item.samplex_arguments, item.shape, rng)
-            samplex_data.pop("parameter_values", None)
-
-            for creg in item.circuit.cregs:
-                shape = item.shape + (shots, creg.size)
-                samplex_data[creg.name] = np.random.randint(0, 2, size=shape).astype(bool)
-        else:
-            # CircuitItem (no-twirling path): shape is the parameter sweep shape
-            shape = item.circuit_arguments.shape[:-1] if item.circuit_arguments is not None else ()
-
-            samplex_data = {}
-            for creg in item.circuit.cregs:
-                data_shape = shape + (shots, creg.size)
-                samplex_data[creg.name] = np.random.randint(0, 2, size=data_shape).astype(bool)
-
-        result_data.append(QuantumProgramItemResult(samplex_data))
-
-    quantum_program_result = QuantumProgramResult(
-        data=result_data,
-        passthrough_data=quantum_program.passthrough_data,
-    )
-    quantum_program_result._semantic_role = quantum_program._semantic_role
-    return quantum_program_result
