@@ -28,6 +28,7 @@ class TwirlingOptions(BaseOptionsModel):
     """Whether to apply 2-qubit Clifford gate twirling.
 
     If ``None``:
+
     * For the Sampler, it defaults to ``False``.
     * For the Estimator, it is determined by the server according to the resilience level: it is
       ``False`` for resilience levels ``0`` and ``1``, and ``True`` for resilience level ``2``.
@@ -40,6 +41,7 @@ class TwirlingOptions(BaseOptionsModel):
         Twirling is only applied to measurements that are not involved in a conditional block.
 
     If ``None``:
+
     * For the Sampler, it defaults to ``False``.
     * For the Estimator, it is determined by the server according to the resilience level: it is
       ``False`` for resilience level ``0``, and ``True`` for resilience levels ``1`` and ``2``.

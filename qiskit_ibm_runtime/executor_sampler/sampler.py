@@ -89,7 +89,7 @@ class SamplerV2(BaseSamplerV2):
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
             Refer to the `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about execution modes.
 
         options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
@@ -159,12 +159,13 @@ class SamplerV2(BaseSamplerV2):
     def finalize_options(self) -> SamplerOptions:
         """Construct and finalize the Sampler options.
 
-        This method produces the final :class:`~.SamplerOptions` instance used inside a call to
-        :meth:`~.Sampler.run` by resolving the ``None`` in the twirling options as documented in
-        :class:`~.TwirlingOptions`.
+        This method produces the final :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
+        instance used inside a call to :meth:`~.Sampler.run` by resolving the ``None`` in the
+        twirling options as documented in
+        :class:`~qiskit_ibm_runtime.options_models.TwirlingOptions`.
 
         Returns:
-            The finalized :class:`~.SamplerOptions` object.
+            The finalized :class:`~qiskit_ibm_runtime.options_models.SamplerOptions` object.
         """
         return finalize_sampler_options(self.options)
 
@@ -178,7 +179,7 @@ class SamplerV2(BaseSamplerV2):
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
         `IBM Quantum Compute documentation
-        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`__
         for more information.
 
         Args:

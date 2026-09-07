@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from requests.structures import CaseInsensitiveDict
+
 if TYPE_CHECKING:
     from ..session import RetrySession
 
@@ -39,7 +41,7 @@ class RestAdapterBase:
 
     def __init__(self, session: RetrySession, prefix_url: str = "") -> None:
         self.session = session
-        self.session.headers = self._HEADER_API_VERSION
+        self.session.headers = CaseInsensitiveDict(self._HEADER_API_VERSION)
         self.prefix_url = prefix_url
 
     def get_url(self, identifier: str) -> str:

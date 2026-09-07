@@ -22,6 +22,7 @@ import numpy as np
 from .utils import plotly_module
 
 if TYPE_CHECKING:
+    import numpy.typing as npt
     from plotly.graph_objects import Figure as PlotlyFigure
     from plotly.graph_objects import Scatter
 
@@ -70,12 +71,12 @@ class CircuitSchedule:
     ):
         self.channels: list = None
         self.type_to_idx: dict[str, int] = None
-        self.circuit_scheduling: np.array = None
+        self.circuit_scheduling: npt.NDArray[np.str_] = None
 
         raw_data = self._load(circuit_schedule)
         self._parse(raw_data)
 
-        self.instruction_set: set[str] = set()
+        self.instruction_set: set[str] | npt.NDArray[np.str_] = set()
         self.max_time: int = None
         self.color_map: dict[str, str] = {}
         self.annotations: list[dict] = []
@@ -180,9 +181,9 @@ class CircuitSchedule:
         self.circuit_scheduling = self.circuit_scheduling[
             np.argsort(self.circuit_scheduling[:, self.type_to_idx["Channel"]])
         ]
-        self.channels = np.unique(self.circuit_scheduling[:, self.type_to_idx["Channel"]])
-        self.channels.sort()
-        self.channels = list(self.channels)
+        channels = np.unique(self.circuit_scheduling[:, self.type_to_idx["Channel"]])
+        channels.sort()
+        self.channels = list(channels)
 
         # reorder channels according to the ``included_channels`` input argument
         if included_channels is not None and isinstance(included_channels, list):
@@ -287,7 +288,7 @@ class CircuitSchedule:
         else:
             raise ValueError(f"Unexpected branch provided: {branch}")
 
-    def trace_finite_duration_instruction(self, instruction_schedule: np.array) -> None:
+    def trace_finite_duration_instruction(self, instruction_schedule: npt.NDArray[np.str_]) -> None:
         """Create a trace and annotation for a single finite duration instruction schedule.
 
         Args:
@@ -364,7 +365,7 @@ class CircuitSchedule:
         }
         self.annotations.append(annotation)
 
-    def trace_zero_duration_instruction(self, instruction_schedule: np.array) -> None:
+    def trace_zero_duration_instruction(self, instruction_schedule: npt.NDArray[np.str_]) -> None:
         """Create a trace and annotation for a single zero duration instruction schedule.
 
         Args:
