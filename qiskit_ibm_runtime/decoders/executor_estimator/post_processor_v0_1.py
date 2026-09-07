@@ -10,70 +10,229 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Post-processing functions for converting QuantumProgramResult to primitive-specific formats."""
+"""Post-processing for the executor-based EstimatorV2: delegates to qiskit-mitigation."""
 
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    import numpy.typing as npt
-    from qiskit.quantum_info import PauliLindbladMap
+    from qiskit.primitives.containers import PrimitiveResult
 
-    from ...options_models.zne import ExtrapolatorType
-    from ...results.quantum_program import QuantumProgramItemResult
+    from ...results.quantum_program import QuantumProgramResult
 
 import numpy as np
-from qiskit.primitives import DataBin, PrimitiveResult
-from qiskit.primitives.containers.estimator_pub import ObservablesArray
-from qiskit.quantum_info import Pauli
-from qiskit_mitigation.pec import PEC
+from qiskit.primitives import PrimitiveResult as _PrimitiveResult
+from qiskit.primitives.containers.data_bin import DataBin
+from qiskit_mitigation import PEA, PEC, ZNE, MitigationTask
+from qiskit_mitigation.utils.utils import load_tasks_from_result
 
 from ...results.estimator_pub import EstimatorPubResult
-from ...results.quantum_program import ItemMetadata, QuantumProgramResult
-from .trex_utils import calculate_trex_factor, get_processed_calibration_data
-from .utils import compute_exp_val, get_pauli_basis, identify_measure_basis, unbroadcast_index
-from .zne_extrapolation import process_extrapolated_expectation_values
+from ...results.quantum_program import ItemMetadata
 
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Public entry point (name kept for compatibility with the decoder registry)
+# ---------------------------------------------------------------------------
+
+
+def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
+    """Convert a quantum program result to a primitives result for EstimatorV2.
+
+    Reads ``passthrough_data["qiskit_mitigation"]`` to reconstruct the per-pub
+    mitigation task objects via ``load_tasks_from_result()``, then calls
+    ``task.postprocess(result)`` for each pub.  TREX noise-model computation is
+    handled automatically inside ``task.postprocess()`` when TREX is present.
+
+    Runtime metadata (options, shots, precision, circuit metadata) is read from
+    the separate ``passthrough_data["post_processor"]`` block, which is entirely
+    owned by us and never written to by qiskit-mitigation.
+
+    Args:
+        result: The raw quantum program result containing measurement data.
+
+    Returns:
+        A :class:`~qiskit.primitives.PrimitiveResult` whose pub results are
+        :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` instances.
+    """
+    if len(result) == 0:
+        return _PrimitiveResult([])
+
+    if not isinstance(result.passthrough_data, dict):
+        raise ValueError(
+            "Wrong type for passthrough data: Expected a 'dict', found "
+            f"'{type(result.passthrough_data)}'."
+        )
+
+    passthrough: dict[str, Any] = result.passthrough_data
+    if (post_processor_data := passthrough.get("post_processor")) is None:
+        raise ValueError("Missing 'post_processor' in passthrough data.")
+
+    num_pubs: int = post_processor_data["num_pubs"]
+    circuits_metadata: list[Any] = post_processor_data.get("circuits_metadata") or []
+
+    # Reconstruct all task objects from the qiskit-mitigation passthrough block.
+    # load_tasks_from_result returns exactly num_pubs entries (one per pub); the
+    # TREX entry is consumed internally to wire up trex references on each task.
+    tasks = load_tasks_from_result(result)
+
+    if len(tasks) != num_pubs:
+        raise ValueError(
+            f"Expected {num_pubs} task(s) from passthrough data, "
+            f"but load_tasks_from_result returned {len(tasks)}."
+        )
+
+    pub_results = []
+    for i, task in enumerate(tasks):
+        logger.info("Post-processing pub %d/%d (%s).", i + 1, num_pubs, type(task).__name__)
+
+        # Workaround for upstream ZNE/PEA bug: both ZNE.prepare() and PEA.prepare()
+        # store extrapolated_noise_factors as a numpy array; postprocess() then does
+        # ``== []`` which raises "truth value of array is ambiguous".  Convert
+        # back to a plain list so the comparison is well-defined.
+        if isinstance(task, (ZNE, PEA)) and isinstance(
+            getattr(task, "extrapolated_noise_factors", None), np.ndarray
+        ):
+            task.extrapolated_noise_factors = task.extrapolated_noise_factors.tolist()
+
+        # Delegates all expectation-value math (PEC/PEA/ZNE/vanilla + TREX) to
+        # qiskit-mitigation. task.postprocess() uses task._program_item_index to
+        # slice the correct item(s) from result, and calls
+        # trex.compute_noise_model(result) automatically when TREX is attached.
+        pub_result_raw = task.postprocess(result)
+
+        # Rename DataBin fields to our public API names.
+        # qiskit-mitigation broadcast path (MitigationTask / PEC) produces:
+        #   evs, stds (= ensemble stderr), twirl_stds (= twirl-level stderr)
+        # Our API exposes:
+        #   evs, ensemble_standard_error, stds
+        pub_result_raw = _rename_databin_fields(pub_result_raw, task)
+
+        # Build per-item compilation metadata.
+        pub_meta: dict[str, Any]
+        if isinstance(task, ZNE) and task.noise_factors is not None:
+            # ZNE has one result item per noise factor; aggregate their metadata.
+            num_nf = len(task.noise_factors)
+            items_meta = [
+                _create_pub_result_metadata(result[task._program_item_index + j].metadata)
+                for j in range(num_nf)
+            ]
+            pub_meta = {key: [m[key] for m in items_meta] for key in items_meta[0]}
+        else:
+            pub_meta = _create_pub_result_metadata(result[task._program_item_index].metadata)
+
+        if i < len(circuits_metadata) and (cm := circuits_metadata[i]) is not None:
+            pub_meta["circuit_metadata"] = cm
+
+        pub_results.append(EstimatorPubResult(data=pub_result_raw.data, metadata=pub_meta))
+
+    metadata = _build_program_result_metadata(post_processor_data)
+    metadata["executor"] = result.metadata
+    return _PrimitiveResult(pub_results, metadata=metadata)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
 def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict[str, Any]:
-    """Dict factory that converts `expanded_values` tuples to lists.
+    """Dict factory that converts ``expanded_values`` tuples to lists.
+
+    Used as the ``dict_factory`` argument when calling ``dataclasses.asdict``
+    on stretch-value objects that contain ``expanded_values`` fields.
+    """
+    d = dict(key_value_pairs)
+    d["expanded_values"] = [list(i) for i in d["expanded_values"]]
+    return d
+
+
+def _create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
+    """Build the compilation metadata dict for a single result item."""
+    result_item_metadata: dict[str, Any] = {}
+    if isinstance(item_metadata, ItemMetadata):
+        result_item_metadata["compilation"] = {}
+        if item_metadata.scheduler_timing:
+            result_item_metadata["compilation"]["scheduler_timing"] = {
+                "timing": item_metadata.scheduler_timing.timing,
+                "circuit_duration": item_metadata.scheduler_timing.circuit_duration,
+            }
+        if item_metadata.stretch_values:
+            result_item_metadata["compilation"]["stretch_values"] = [
+                asdict(sv, dict_factory=expanded_values_to_lists)
+                for sv in item_metadata.stretch_values
+            ]
+    else:  # simulator result — metadata is a plain dict
+        result_item_metadata["executor"] = item_metadata
+    return result_item_metadata
+
+
+def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
+    """Rename qiskit-mitigation DataBin fields to our public API field names.
+
+    qiskit-mitigation's broadcast path for ``MitigationTask`` and ``PEC``
+    produces a ``DataBin`` with::
+
+        evs            – expectation values
+        stds           – ensemble standard error (over all shots as one pool)
+        twirl_stds     – twirl-level standard error (std of per-twirl estimates)
+
+    Our public API names are::
+
+        evs                    – same
+        ensemble_standard_error – what qiskit-mitigation calls ``stds``
+        stds                   – what qiskit-mitigation calls ``twirl_stds``
+
+    When twirling is **not** enabled (1 randomization), ``stds`` and
+    ``ensemble_standard_error`` are identical.
+
+    ``ZNE`` and ``PEA`` produce different fields (extrapolation results) that
+    already use the names our API expects, so they are returned unchanged.
 
     Args:
-        key_value_pairs: pairs of (key, value) items
+        pub_result: The raw :class:`~qiskit.primitives.PubResult` returned by
+            ``task.postprocess()``.
+        task: The qiskit-mitigation task object.
 
     Returns:
-        A dictionary built from `key_value_pairs`, with the key `expanded_values` containing lists.
+        The ``pub_result`` with a re-keyed ``DataBin`` when renaming is needed,
+        or the original ``pub_result`` unchanged for ZNE/PEA.
     """
-    stretch_value = dict(key_value_pairs)
-    stretch_value["expanded_values"] = [list(i) for i in stretch_value["expanded_values"]]
-    return stretch_value
+    from qiskit.primitives import PubResult
+
+    db = pub_result.data
+
+    # Only MitigationTask (vanilla) and PEC use the stds/twirl_stds naming.
+    # ZNE and PEA already have the right names.
+    if not isinstance(task, (MitigationTask, PEC)):
+        return pub_result
+
+    # Pull out current fields; twirl_stds may be absent on very old builds.
+    evs = db.evs
+    ensemble_standard_error = db.stds  # rename: stds → ensemble_standard_error
+    twirl_stds = getattr(db, "twirl_stds", None)
+    stds = (
+        twirl_stds if twirl_stds is not None else ensemble_standard_error
+    )  # rename: twirl_stds → stds
+
+    renamed = DataBin(
+        evs=evs,
+        stds=stds,
+        ensemble_standard_error=ensemble_standard_error,
+        shape=evs.shape,
+    )
+    return PubResult(data=renamed, metadata=pub_result.metadata)
 
 
-def _build_program_result_metadata(post_processor_data: dict) -> dict:
-    """Compute the program result metadata dict from the raw inputs stored in the passthrough data.
-
-    The estimator stores the finalized ``options`` dict, ``shots``, and ``precision`` in
-    the passthrough data.  This function reconstructs the metadata that is exposed on
-    ``PrimitiveResult.metadata`` by pruning inactive resilience sub-options and appending
-    ``target_precision`` and ``shots``.
-
-    Args:
-        post_processor_data: The ``passthrough_data["post_processor"]`` dict.
-
-    Returns:
-        The computed program-metadata dict, or ``{}`` when no options are present (e.g.
-        results produced by an older passthrough schema that stored ``program_metadata``
-        directly).
-    """
-    options = post_processor_data.get("options", None)
+def _build_program_result_metadata(post_processor_data: dict) -> dict[str, Any]:
+    """Reconstruct program-level metadata from the ``post_processor`` passthrough block."""
+    options = post_processor_data.get("options")
     if options is None:
         return {}
 
@@ -89,1153 +248,6 @@ def _build_program_result_metadata(post_processor_data: dict) -> dict:
                 resilience.pop(options_key, None)
         metadata["options"]["resilience"] = resilience
 
-    metadata["target_precision"] = post_processor_data.get("precision", None)
-    metadata["shots"] = post_processor_data.get("shots", None)
+    metadata["target_precision"] = post_processor_data.get("precision")
+    metadata["shots"] = post_processor_data.get("shots")
     return metadata
-
-
-def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
-    """Convert a quantum program result to a primitives result, for a V2 estimator.
-
-    This function transforms the raw quantum program execution results into the
-    format expected by :class:`~qiskit_ibm_runtime.executor_estimator.estimator.EstimatorV2`,
-    computing expectation values from measurement data and creating
-    :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` containers
-    for each pub.
-
-    Args:
-        result: The raw quantum program result containing measurement data.
-
-    Returns:
-        Primitive result.
-    """
-    if len(result) == 0:
-        return PrimitiveResult([])
-
-    if not isinstance(result.passthrough_data, dict):
-        raise ValueError(
-            "Wrong type for passthrough data: Expected a 'dict', found "
-            f"'{type(result.passthrough_data)}'."
-        )
-
-    passthrough: dict[str, Any] = result.passthrough_data or {}
-    if (post_processor_data := passthrough.get("post_processor", None)) is None:
-        raise ValueError("Missing 'post_processor' in passthrough data.")
-
-    # Extract data from post_processor
-    if (observables_lists := post_processor_data.get("observables", None)) is None:
-        raise ValueError("Missing 'observables' in post_processor data.")
-
-    if (param_basis_pairs_lists := post_processor_data.get("param_basis_pairs", None)) is None:
-        raise ValueError("Missing 'param_basis_pairs' in post_processor data.")
-
-    if (param_shapes_list := post_processor_data.get("param_shapes", None)) is None:
-        raise ValueError("Missing 'param_shapes' in post_processor data.")
-
-    # Extract circuit metadata if present
-    circuits_metadata = post_processor_data.get("circuits_metadata", None)
-
-    # Extract mitigation data
-    mitigation = post_processor_data.get("mitigation", None)
-    pec_gammas = post_processor_data.get("pec_gammas", None)
-
-    # Extract pea and zne mitigation data if present
-    pea_noise_factors = post_processor_data.get("pea_noise_factors", None)
-    zne_noise_factors = post_processor_data.get("zne_noise_factors", None)
-    extrapolated_noise_factors = post_processor_data.get("extrapolated_noise_factors", None)
-    extrapolator = post_processor_data.get("extrapolator", None)
-
-    # Check if measure_mitigation was used
-    measure_mitigation = post_processor_data.get("measure_mitigation", None)
-    readout_noise_data = None
-    if measure_mitigation:
-        logger.info("TREX (measure mitigation) enabled.")
-        # assume a calibration circuit was added to the quantum program as the last item
-        calibration_result = result[-1]
-        try:
-            readout_noise_data = get_processed_calibration_data(calibration_result)
-        except ValueError as e:
-            raise ValueError(f"Failed calculating TREX noise model. Internal failure: {e}")
-
-        # create a result object without the calibration item
-        result = QuantumProgramResult(
-            data=list(result[:-1]),
-            metadata=result.metadata,
-            passthrough_data=result.passthrough_data,
-        )
-
-    # In case each pub is associated with several items - create a list in which each element
-    # is a list containing all relevant items for that pub
-    res_step = 1
-    if mitigation == "zne" and zne_noise_factors is not None:
-        # in case of ZNE mitigation with gate folding - each pub is associated with
-        # len(zne_noise_factors) result items
-        res_step = len(zne_noise_factors)
-
-    # Validate circuits_metadata length if provided
-    circuits_metadata = circuits_metadata or [None] * len(result[::res_step])
-    if {
-        len(circuits_metadata),
-        len(observables_lists),
-        len(param_basis_pairs_lists),
-        len(param_shapes_list),
-    } != {len(result[::res_step])}:
-        raise ValueError(
-            f"Number of circuit metadata items ({len(circuits_metadata)}), "
-            f"observables ({len(observables_lists)}), "
-            f"param_basis_pairs ({len(param_basis_pairs_lists)}), "
-            f"param_shapes ({len(param_shapes_list)}), and results "
-            f"({len(result[::res_step])}) are not equal."
-        )
-
-    # Build EstimatorPubResult for each pub
-    pub_results = []
-    for pub_idx, (item_result, observables_label, param_basis_pairs, param_shape) in enumerate(
-        zip(result[::res_step], observables_lists, param_basis_pairs_lists, param_shapes_list)
-    ):
-        # Reconstruct observables and measure_bases
-        observables = ObservablesArray(observables_label)
-        param_shape = tuple(param_shape)
-
-        # Calculate exp vals and build an EstimatorPubResult
-        if mitigation == "pec":
-            logger.info("Applying PEC mitigation for pub %d.", pub_idx)
-            pub_result = create_pub_result_pec(
-                item_result,
-                observables,
-                param_shape,
-                param_basis_pairs,
-                readout_noise_data,
-                pec_gamma=pec_gammas[pub_idx],
-            )
-        elif mitigation == "zne":
-            logger.info("Applying ZNE mitigation for pub %d.", pub_idx)
-            # In case each pub is associated with several items - create a list in which each
-            # element is a list containing all relevant items for that pub
-            combined_results = result[pub_idx * res_step : (pub_idx + 1) * res_step]
-
-            pub_result = create_pub_result_zne(
-                combined_results,
-                observables,
-                param_shape,
-                param_basis_pairs,
-                readout_noise_data,
-                noise_factors=zne_noise_factors,
-                extrapolated_noise_factors=extrapolated_noise_factors,
-                extrapolator=extrapolator,
-            )
-        elif mitigation == "pea":
-            logger.info("Applying PEA mitigation for pub %d.", pub_idx)
-            pub_result = create_pub_result_pea(
-                item_result,
-                observables,
-                param_shape,
-                param_basis_pairs,
-                readout_noise_data,
-                noise_factors=pea_noise_factors,
-                extrapolated_noise_factors=extrapolated_noise_factors,
-                extrapolator=extrapolator,
-            )
-        elif mitigation is not None:
-            raise ValueError(f"Unknown mitigation technique {mitigation}")
-        else:
-            logger.info("Post processing pub %d.", pub_idx)
-            pub_result = create_pub_result(
-                item_result, observables, param_shape, param_basis_pairs, readout_noise_data
-            )
-
-        if (circuit_meta := circuits_metadata[pub_idx]) is not None:
-            pub_result.metadata["circuit_metadata"] = circuit_meta
-        pub_results.append(pub_result)
-
-    # Build program_metadata from the raw inputs stored by the estimator
-    metadata = _build_program_result_metadata(post_processor_data)
-    metadata["executor"] = result.metadata
-
-    return PrimitiveResult(pub_results, metadata=metadata)
-
-
-def _process_expectation_values(
-    item_result: QuantumProgramItemResult,
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
-    """Process expectation values for a single item result.
-
-    Args:
-        item_result: The item result.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
-            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
-
-    Returns:
-        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
-        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
-
-    Raises:
-        ValueError: If ``item_result`` has no ``'_meas'`` key.
-        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
-        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
-            each other.
-    """
-    try:
-        data = item_result["_meas"]
-    except KeyError:
-        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
-
-    if data.ndim != 4:
-        # Shape: (num_randomizations, num_configs, shots, num_bits)
-        # where num_configs is the total number of (param_index, basis) pairs
-        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
-
-    # Get number of randomizations and shots per randomization
-    num_randomizations = data.shape[0]
-    shots_per_randomization = data.shape[-2]
-    total_shots = num_randomizations * shots_per_randomization
-
-    # Apply measurement flips if present
-    if "measurement_flips._meas" in item_result:
-        data ^= item_result.pop("measurement_flips._meas")
-
-    # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
-    # This allows us to find all available measurement bases for a given parameter
-    config_lookup = defaultdict(list)
-    for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
-        config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
-
-    try:
-        output_shape = np.broadcast_shapes(param_shape, observables.shape)
-    except ValueError:
-        raise ValueError(
-            f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
-            f"{observables.shape}"
-        )
-
-    # Compute expectation values for all observables
-    exp_vals = np.empty(output_shape, dtype=float)
-    stds = np.empty(output_shape, dtype=float)
-    ensemble_stds = np.empty(output_shape, dtype=float)
-
-    # Cache TREX factors: computed once per unique observable_term string, reused across the
-    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
-    trex_factor_cache: dict[str, float] = {}
-
-    # Loop over the broadcast output shape
-    for bcast_index in np.ndindex(output_shape):
-        # Unbroadcast to get the actual parameter and observable indices
-        param_index = unbroadcast_index(bcast_index, param_shape)
-        obs_index = unbroadcast_index(bcast_index, observables.shape)
-
-        # Get the observable for this index
-        observable = observables[obs_index]
-
-        # Get the available (measurement_basis, config_idx) pairs for this parameter index
-        try:
-            param_basis_list = config_lookup[param_index]  # type: ignore[index]
-        except KeyError:
-            raise ValueError(
-                f"No measurement basis configurations found for parameter index {param_index}"
-            )
-
-        exp_val = 0.0
-        ensemble_variance = 0.0
-        twirl_variance = 0.0
-        for observable_term, coeff in observable.items():
-            # Find which basis can measure this term
-            pauli_basis = Pauli(get_pauli_basis(observable_term))
-
-            # Use identify_measure_basis to find the configuration index directly
-            config_idx = identify_measure_basis(pauli_basis, param_basis_list)
-
-            # Get measurement data for this configuration
-            # datum shape: (num_randomizations, shots_per_randomization, num_qubits)
-            datum = data[:, config_idx, :, :]
-            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
-                observable_term, datum
-            )
-
-            # Calculate scale factor in case TREX mitigation is used (cached per term)
-            if measure_noise_data is not None:
-                if observable_term not in trex_factor_cache:
-                    trex_factor_cache[observable_term] = calculate_trex_factor(
-                        measure_noise_data, observable_term
-                    )
-                term_scale_factor = trex_factor_cache[observable_term]
-            else:
-                term_scale_factor = 1
-
-            # Accumulate with coefficient
-            exp_val += coeff * term_exp_val * term_scale_factor
-            ensemble_variance += (coeff**2) * term_ensemble_variance * (term_scale_factor**2)
-            twirl_variance += (coeff**2) * term_twirl_variance * (term_scale_factor**2)
-
-        exp_vals[bcast_index] = exp_val
-        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
-        # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
-        if num_randomizations == 1:
-            stds[bcast_index] = ensemble_stds[bcast_index]
-        else:
-            stds[bcast_index] = np.sqrt(twirl_variance / num_randomizations)
-
-    return exp_vals, stds, ensemble_stds
-
-
-def _process_expectation_values_pec(
-    item_result: QuantumProgramItemResult,
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-    pec_gamma: float,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
-    """Process expectation values for a single item pec mitigated result.
-
-    Args:
-        item_result: The item result.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
-            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
-        pec_gamma: gamma factor for PEC mitigation.
-
-    Returns:
-        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
-        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
-
-    Raises:
-        ValueError: If ``item_result`` has no ``'_meas'`` key.
-        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
-        ValueError: If ``item_result`` has no ``'pauli_signs'`` key.
-        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
-            each other.
-    """
-    try:
-        data = item_result["_meas"]
-    except KeyError:
-        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
-
-    if data.ndim != 4:
-        # Shape: (num_randomizations, num_configs, shots, num_bits)
-        # where num_configs is the total number of (param_index, basis) pairs
-        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
-
-    # Get number of randomizations and shots per randomization
-    num_randomizations = data.shape[0]
-    shots_per_randomization = data.shape[-2]
-    total_shots = num_randomizations * shots_per_randomization
-
-    # Apply measurement flips if present
-    if "measurement_flips._meas" in item_result:
-        data ^= item_result.pop("measurement_flips._meas")
-
-    # extract pec signs if present
-    pec_signs = item_result.get("pauli_signs", None)
-    if pec_signs is None:
-        raise ValueError("Results must contain ``'pauli_signs'`` in the data if PEC is used.")
-
-    # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
-    # This allows us to find all available measurement bases for a given parameter
-    config_lookup = defaultdict(list)
-    for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
-        config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
-
-    try:
-        output_shape = np.broadcast_shapes(param_shape, observables.shape)
-    except ValueError:
-        raise ValueError(
-            f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
-            f"{observables.shape}"
-        )
-
-    # Compute expectation values for all observables
-    exp_vals = np.empty(output_shape, dtype=float)
-    stds = np.empty(output_shape, dtype=float)
-    ensemble_stds = np.empty(output_shape, dtype=float)
-
-    # Cache TREX factors: computed once per unique observable_term string, reused across the
-    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
-    trex_factor_cache: dict[str, float] = {}
-
-    # Loop over the broadcast output shape
-    for bcast_index in np.ndindex(output_shape):
-        # Unbroadcast to get the actual parameter and observable indices
-        param_index = unbroadcast_index(bcast_index, param_shape)
-        obs_index = unbroadcast_index(bcast_index, observables.shape)
-
-        # Get the observable for this index
-        observable = observables[obs_index]
-
-        # Get the available (measurement_basis, config_idx) pairs for this parameter index
-        try:
-            param_basis_list = config_lookup[param_index]  # type: ignore[index]
-        except KeyError:
-            raise ValueError(
-                f"No measurement basis configurations found for parameter index {param_index}"
-            )
-
-        exp_val = 0.0
-        ensemble_variance = 0.0
-        twirl_variance = 0.0
-        for observable_term, coeff in observable.items():
-            # Find which basis can measure this term
-            pauli_basis = Pauli(get_pauli_basis(observable_term))
-
-            # Use identify_measure_basis to find the configuration index directly
-            config_idx = identify_measure_basis(pauli_basis, param_basis_list)
-
-            # get the signs for this configuration
-            pec_signs_datum = pec_signs[:, config_idx, :]
-
-            # Get measurement data for this configuration
-            # Shape: (num_randomizations, shots, num_qubits)
-            datum = data[:, config_idx, :, :]
-            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
-                observable_term, datum, pec_signs_datum
-            )
-
-            # Calculate scale factor in case TREX mitigation is used (cached per term)
-            if measure_noise_data is not None:
-                if observable_term not in trex_factor_cache:
-                    trex_factor_cache[observable_term] = calculate_trex_factor(
-                        measure_noise_data, observable_term
-                    )
-                term_scale_factor = trex_factor_cache[observable_term]
-            else:
-                term_scale_factor = 1
-
-            # Accumulate with coefficient
-            exp_val += coeff * term_exp_val * term_scale_factor
-            ensemble_variance += (coeff**2) * term_ensemble_variance * term_scale_factor**2
-            twirl_variance += (coeff**2) * term_twirl_variance * term_scale_factor**2
-
-        exp_vals[bcast_index] = exp_val * pec_gamma
-        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance * pec_gamma**2 / total_shots)
-        if num_randomizations == 1:
-            stds[bcast_index] = ensemble_stds[bcast_index]
-        else:
-            stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
-
-    return exp_vals, stds, ensemble_stds
-
-
-def create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
-    """Build the metadata dict for a single result item.
-
-    For IBM backend results (``ItemMetadata``), extracts compilation-related fields
-    such as ``scheduler_timing`` and ``stretch_values`` under a ``"compilation"`` key.
-    For simulator results (plain ``dict``), stores the raw metadata under ``"executor"``.
-
-    Args:
-        item_metadata: Metadata from a single quantum program item result.
-
-    Returns:
-        A dict containing the relevant metadata fields for the pub result.
-    """
-    result_item_metadata: dict[str, Any] = {}
-    if isinstance(item_metadata, ItemMetadata):
-        result_item_metadata["compilation"] = {}
-        if item_metadata.scheduler_timing:
-            result_item_metadata["compilation"]["scheduler_timing"] = {
-                "timing": item_metadata.scheduler_timing.timing,
-                "circuit_duration": item_metadata.scheduler_timing.circuit_duration,
-            }
-        if item_metadata.stretch_values:
-            result_item_metadata["compilation"]["stretch_values"] = [
-                asdict(stretch_value, dict_factory=expanded_values_to_lists)
-                for stretch_value in item_metadata.stretch_values
-            ]
-    else:  # simulator
-        result_item_metadata["executor"] = item_metadata
-
-    return result_item_metadata
-
-
-def create_pub_result(
-    item_result: QuantumProgramItemResult,
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> EstimatorPubResult:
-    """Calculate expectation values and errors, and return pub result.
-
-    Args:
-        item_result: The item result.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_data: Measurement noise calibration data for TREX mitigation.
-
-    Returns:
-        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
-    """
-    exp_vals, stds, ensemble_stds = _process_expectation_values(
-        item_result, observables, param_shape, param_basis_pairs, measure_noise_data
-    )
-    data_bin = DataBin(
-        evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
-    )
-
-    result_item_metadata = create_pub_result_metadata(item_result.metadata)
-
-    return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
-
-
-def create_pub_result_pec(
-    item_result: QuantumProgramItemResult,
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-    pec_gamma: float,
-) -> EstimatorPubResult:
-    """Calculate expectation values and errors with PEC, and return pub result.
-
-    Args:
-        item_result: The item result.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_data: Measurement noise calibration data for TREX mitigation.
-        pec_gamma: Gamma factor for PEC mitigation.
-
-    Returns:
-        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
-    """
-    res = PEC.compute_expectation_value_pec(
-        item_result=item_result,
-        observables=observables,
-        gamma=pec_gamma,
-        param_shape=param_shape,
-        param_basis_pairs=param_basis_pairs,
-    )
-    # TODO: Verify field names
-
-    result_item_metadata = create_pub_result_metadata(item_result.metadata)
-
-    return EstimatorPubResult(data=res.data, metadata=result_item_metadata)
-
-
-def create_pub_result_pea(
-    item_result: QuantumProgramItemResult,
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-    noise_factors: list[float],
-    extrapolated_noise_factors: list[float],
-    extrapolator: list[ExtrapolatorType],
-) -> EstimatorPubResult:
-    """Calculate expectation values and errors with PEA, and return pub result.
-
-    Args:
-        item_result: The item result.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_data: Measurement noise calibration data for TREX mitigation.
-        noise_factors: The noise factors used to amplify the noise.
-        extrapolated_noise_factors: Noise factors to evaluate the fits at.
-        extrapolator: The extrapolator model or models to use.
-            Models will be tried in priority order.
-            Supported models (each fits the named function of the noise factor ``x``):
-            - ``"linear"``: ``a + b*x``
-            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
-            - ``"exponential"``: ``a*exp(b*x)``
-            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
-            - ``"fallback"``: no fit; the measured value at the lowest noise factor
-
-    Returns:
-        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
-    """
-    if noise_factors is None or extrapolated_noise_factors is None or extrapolator is None:
-        raise ValueError(
-            "Mitigation method is PEA, while at least one of the required "
-            "parameters ``(pea_noise_factors, extrapolated_noise_factors, "
-            "extrapolator)`` in the ``passthrough_data`` is ``None``."
-        )
-    (
-        zero_noise_exp_vals,
-        zero_noise_stds,
-        noise_factors_exp_vals,
-        noise_factors_ensemble_stds,
-        noise_factors_stds,
-        extrapolated_exp_vals,
-        extrapolated_stds,
-        selected_extrapolators,
-    ) = _process_expectation_values_pea(
-        item_result,
-        observables,
-        param_shape,
-        param_basis_pairs,
-        noise_factors,
-        extrapolated_noise_factors,
-        extrapolator,
-        measure_noise_data,
-    )
-    selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
-        selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
-    )
-
-    data_bin = DataBin(
-        evs=zero_noise_exp_vals,
-        stds=zero_noise_stds,
-        evs_noise_factors=noise_factors_exp_vals,
-        stds_noise_factors=noise_factors_stds,
-        ensemble_stds_noise_factors=noise_factors_ensemble_stds,
-        evs_extrapolated=extrapolated_exp_vals,
-        stds_extrapolated=extrapolated_stds,
-        shape=zero_noise_exp_vals.shape,
-    )
-
-    result_item_metadata = create_pub_result_metadata(item_result.metadata)
-    result_item_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
-
-    return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
-
-
-def _process_expectation_values_pea(
-    item_result: QuantumProgramItemResult,
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    noise_factors: list[float],
-    extrapolated_noise_factors: float | int | list[float],
-    extrapolator: list[ExtrapolatorType],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    list[list[str]],
-]:
-    """Process expectation values for a single item result.
-
-    Args:
-        item_result: The item result.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        noise_factors: The noise factors used to amplify the noise.
-        extrapolated_noise_factors: Noise factors to evaluate the fits at.
-        extrapolator: The extrapolator model or models to use.
-            Models will be tried in priority order.
-            Supported models (each fits the named function of the noise factor ``x``):
-            - ``"linear"``: ``a + b*x``
-            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
-            - ``"exponential"``: ``a*exp(b*x)``
-            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
-            - ``"fallback"``: no fit; the measured value at the lowest noise factor
-        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
-            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
-
-    Returns:
-        A tuple (
-        ``zero_extrapolated_exp_vals``,  expectation values evaluated at zero noise point.
-        ``zero_extrapolated_stds``, the standard deviations of the extrapolated expectation
-        values evaluated at zero noise point.
-        ``noise_factors_exp_vals``, expectation values calculated at the noise_factors points,
-        ``noise_factors_ensemble_stds``, ensemble standard errors calculated at the noise_factors
-        points.
-        ``noise_factors_stds``, standard errors calculated at the noise_factors points.
-        ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
-        points.
-        ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
-        observable term for the zero noise extrapolation point.
-         ).
-
-    Raises:
-        ValueError: If ``item_result`` has no ``'_meas'`` key.
-        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``5``.
-        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
-            each other.
-    """
-    try:
-        data = item_result["_meas"]
-    except KeyError:
-        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
-
-    if data.ndim != 5:
-        # Shape: (num_noise_scales, num_randomizations, num_configs, shots, num_bits)
-        # where num_configs is the total number of (param_index, basis) pairs
-        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``5``.")
-
-    if data.shape[0] != len(noise_factors):
-        raise ValueError(
-            "Number of noise factors in the data does not match the length of ``noise_factors``."
-        )
-
-    # Apply measurement flips if present
-    if "measurement_flips._meas" in item_result:
-        data ^= item_result.pop("measurement_flips._meas")
-
-    if isinstance(extrapolated_noise_factors, (float, int)):
-        extrapolated_noise_factors = [extrapolated_noise_factors]
-
-    return calculate_extrapolated_expectation_values(
-        data,
-        observables,
-        param_shape,
-        param_basis_pairs,
-        noise_factors,
-        extrapolated_noise_factors,
-        extrapolator,
-        measure_noise_data,
-    )
-
-
-def create_pub_result_zne(
-    item_results: list[QuantumProgramItemResult],
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-    noise_factors: list[float],
-    extrapolated_noise_factors: float | int | list[float],
-    extrapolator: list[ExtrapolatorType],
-) -> EstimatorPubResult:
-    """Calculate expectation values and errors with ZNE, and return pub result.
-
-    Args:
-        item_results: The item results.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_data: Measurement noise calibration data for TREX mitigation.
-        noise_factors: The noise factors used to amplify the noise.
-        extrapolated_noise_factors: Noise factors to evaluate the fits at.
-        extrapolator: The extrapolator model or models to use. Models will be tried in priority
-            order. Supported models (each fits the named function of the noise factor ``x``):
-            - ``"linear"``: ``a + b*x``
-            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
-            - ``"exponential"``: ``a*exp(b*x)``
-            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
-            - ``"fallback"``: no fit; the measured value at the lowest noise factor
-
-    Returns:
-        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
-    """
-    if noise_factors is None or extrapolated_noise_factors is None or extrapolator is None:
-        raise ValueError(
-            "Mitigation method is ZNE, while at least one of the required "
-            "parameters ``(zne_noise_factors, extrapolated_noise_factors, "
-            "extrapolator)`` in the ``passthrough_data`` is ``None``."
-        )
-    (
-        zero_noise_exp_vals,
-        zero_noise_stds,
-        noise_factors_exp_vals,
-        noise_factors_ensemble_stds,
-        noise_factors_stds,
-        extrapolated_exp_vals,
-        extrapolated_stds,
-        selected_extrapolators,
-    ) = _process_expectation_values_zne(
-        item_results,
-        observables,
-        param_shape,
-        param_basis_pairs,
-        noise_factors,
-        extrapolated_noise_factors,
-        extrapolator,
-        measure_noise_data,
-    )
-    selected_extrapolators_per_obs = combine_selected_extrapolators_per_observable(
-        selected_extrapolators, np.broadcast_shapes(param_shape, observables.shape)
-    )
-
-    data_bin = DataBin(
-        evs=zero_noise_exp_vals,
-        stds=zero_noise_stds,
-        evs_noise_factors=noise_factors_exp_vals,
-        stds_noise_factors=noise_factors_stds,
-        ensemble_stds_noise_factors=noise_factors_ensemble_stds,
-        evs_extrapolated=extrapolated_exp_vals,
-        stds_extrapolated=extrapolated_stds,
-        shape=zero_noise_exp_vals.shape,
-    )
-
-    per_item = [create_pub_result_metadata(item_result.metadata) for item_result in item_results]
-    result_item_metadata: dict[str, Any] = {
-        key: [item[key] for item in per_item] for key in per_item[0]
-    }
-    result_item_metadata["resilience"] = {"zne": {"extrapolators": selected_extrapolators_per_obs}}
-
-    return EstimatorPubResult(data=data_bin, metadata=result_item_metadata)
-
-
-def _process_expectation_values_zne(
-    item_results: list[QuantumProgramItemResult],
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    noise_factors: list[float],
-    extrapolated_noise_factors: float | int | list[float],
-    extrapolator: list[ExtrapolatorType],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    list[list[str]],
-]:
-    """Process expectation values for a single pub.
-
-    Args:
-        item_results: List of all the results related to the same pub.
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        noise_factors: The noise factors used to amplify the noise.
-        extrapolated_noise_factors: Noise factors to evaluate the fits at.
-        extrapolator: The extrapolator model or models to use. Models will be tried in priority
-            order. Supported models (each fits the named function of the noise factor ``x``):
-            - ``"linear"``: ``a + b*x``
-            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
-            - ``"exponential"``: ``a*exp(b*x)``
-            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
-            - ``"fallback"``: no fit; the measured value at the lowest noise factor
-        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
-            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
-
-    Returns:
-        A tuple (
-        ``zero_extrapolated_exp_vals``,  expectation values evaluated at zero noise point.
-        ``zero_extrapolated_stds``, the standard deviations of the extrapolated expectation
-        values evaluated at zero noise point.
-        ``noise_factors_exp_vals``, expectation values calculated at the noise_factors points,
-        ``noise_factors_ensemble_stds``, ensemble standard errors calculated at the noise_factors
-        points.
-        ``noise_factors_stds``, standard errors calculated at the noise_factors points.
-        ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
-        points.
-        ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
-        observable term for the zero noise extrapolation point.
-         ).
-
-    Raises:
-        ValueError: If ``item_result`` has no ``'_meas'`` key.
-        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
-        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
-            each other.
-    """
-    if isinstance(extrapolated_noise_factors, (float, int)):
-        extrapolated_noise_factors = [extrapolated_noise_factors]
-
-    # Combine the data from each noise factor
-    noise_amplified_data = []
-    for item_result in item_results:
-        try:
-            data = item_result["_meas"]
-        except KeyError:
-            raise ValueError("Dedicated creg ``'_meas'`` is missing from one of the results.")
-
-        if data.ndim != 4:
-            # Shape: (num_randomizations, num_configs, shots, num_bits)
-            # where num_configs is the total number of (param_index, basis) pairs
-            raise ValueError(
-                f"one of the ``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``."
-            )
-
-        # Apply measurement flips if present
-        meas_flips = item_result.pop("measurement_flips._meas", None)
-        if meas_flips is not None:
-            data ^= meas_flips
-
-        noise_amplified_data.append(data)
-
-    return calculate_extrapolated_expectation_values(
-        np.array(noise_amplified_data),
-        observables,
-        param_shape,
-        param_basis_pairs,
-        noise_factors,
-        extrapolated_noise_factors,
-        extrapolator,
-        measure_noise_data,
-    )
-
-
-def combine_selected_extrapolators_per_observable(
-    selected_extrapolators: list[list[str]], output_shape: tuple[int, ...]
-) -> np.ndarray:
-    """Combines multiple extrapolator records into a single record for each observable.
-
-    Args:
-        selected_extrapolators: list of lists selected extrapolator names. Each element in the
-            list is a list of all the selected extrapolator records of the different observable
-            terms associated with a single observable.
-        output_shape: Shape of the output of the estimator.
-
-    Returns:
-        An array of the same shape as ``output_shape`` containing the selected extrapolator for
-        each observable (for each parameters set). If different extrapolators were selected for
-        different terms of an observable, ``"multiple"`` will be returned for this observable.
-    """
-    extrapolator_per_observable = []
-    for observable_terms_extrapolators in selected_extrapolators:
-        common_extrapolator = observable_terms_extrapolators[0]
-        if all(
-            extrapolator == common_extrapolator for extrapolator in observable_terms_extrapolators
-        ):
-            extrapolator_per_observable.append(common_extrapolator)
-        else:
-            extrapolator_per_observable.append("multiple")
-    return np.array(extrapolator_per_observable).reshape(output_shape)
-
-
-def calculate_extrapolated_expectation_values(
-    noise_amplified_data: np.ndarray,
-    observables: ObservablesArray,
-    param_shape: tuple[int, ...],
-    param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    noise_factors: list[float],
-    extrapolated_noise_factors: list[float],
-    extrapolator: list[ExtrapolatorType],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    npt.NDArray[float],
-    list[list[str]],
-]:
-    """Calculate expectation values for given data, observables and params.
-
-    Args:
-        noise_amplified_data: The measured data result. Its shape should be:
-            ``(noise_factors, num_randomizations, num_configs, shots, num_bits)``
-        observables: The observables to calculate expectation values for.
-        param_shape: The shape of the parameter values in the original PUB.
-        param_basis_pairs: The map between params ndindexes to basis.
-        noise_factors: The noise factors used to amplify the noise.
-        extrapolated_noise_factors: Noise factors to evaluate the fits at.
-        extrapolator: The extrapolator model or models to use. Models will be tried in priority
-            order. Supported models (each fits the named function of the noise factor ``x``):
-            - ```"linear"``: ``a + b*x``
-            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
-            - ``"exponential"``: ``a*exp(b*x)``
-            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
-            - ``"fallback"``: no fit; the measured value at the lowest noise factor
-        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
-            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
-
-    Returns:
-        A tuple (
-        ``zero_extrapolated_exp_vals``,  expectation values evaluated at zero noise point.
-        ``zero_extrapolated_stds``, the standard deviations of the extrapolated expectation
-        values evaluated at zero noise point.
-        ``noise_factors_exp_vals``, expectation values calculated at the noise_factors points,
-        ``noise_factors_ensemble_stds``, ensemble standard errors calculated at the noise_factors
-        points.
-        ``noise_factors_stds``, standard errors calculated at the noise_factors points.
-        ``extrapolated_exp_vals``, expectation values evaluated at the extrapolated_noise_factors
-        points.
-        ``extrapolated_stds``, standard errors evaluated at the extrapolated_noise_factors points.
-        ``selected_extrapolators``, the valid extrapolators used to extrapolate the data for each
-        observable term for the zero noise extrapolation point.
-         ).
-
-    Raises:
-        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
-            each other.
-    """
-    # Get number of randomizations and shots per randomization
-    # Shape: (noise_factors, num_randomizations, num_configs, shots_per_rand, num_bits)
-    num_randomizations = noise_amplified_data.shape[1]
-    shots_per_randomization = noise_amplified_data.shape[-2]
-    total_shots = num_randomizations * shots_per_randomization
-
-    # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
-    # This allows us to find all available measurement bases for a given parameter
-    config_lookup = defaultdict(list)
-    for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
-        config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
-
-    try:
-        output_shape = np.broadcast_shapes(param_shape, observables.shape)
-    except ValueError:
-        raise ValueError(
-            f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
-            f"{observables.shape}"
-        )
-
-    # Compute expectation values for all observables
-    zero_extrapolated_exp_vals = np.zeros(shape=output_shape, dtype=float)
-    zero_extrapolated_vars = np.zeros(shape=output_shape, dtype=float)
-    # Save the data for the extrapolated points (only exp_vals and ensamble_stds)
-    extrapolated_exp_vals = np.empty(
-        shape=output_shape
-        + (
-            len(extrapolator),
-            len(extrapolated_noise_factors),
-        ),
-        dtype=float,
-    )
-    extrapolated_stds = np.empty(
-        shape=output_shape
-        + (
-            len(extrapolator),
-            len(extrapolated_noise_factors),
-        ),
-        dtype=float,
-    )
-    # Save also the data for all of the noise amplified points
-    noise_factors_exp_vals = np.zeros(shape=output_shape + (len(noise_factors),), dtype=float)
-    noise_factors_ensemble_variance = np.zeros(
-        shape=output_shape + (len(noise_factors),), dtype=float
-    )
-    noise_factors_twirl_variance = np.zeros(shape=output_shape + (len(noise_factors),), dtype=float)
-    noise_factors_ensemble_stds = np.empty(shape=output_shape + (len(noise_factors),), dtype=float)
-    noise_factors_twirl_stds = np.empty(shape=output_shape + (len(noise_factors),), dtype=float)
-    # save for each extrapolated observable term (in each observable, for each parameter
-    # configuration), the selected extrapolator
-    selected_extrapolators = []
-
-    # Cache TREX factors: computed once per unique observable_term string, reused across the
-    # broadcast loop. When measure_noise_data is None every lookup returns 1 immediately.
-    trex_factor_cache: dict[str, float] = {}
-
-    # Loop over the broadcast output shape
-    for bcast_index in np.ndindex(output_shape):
-        # Unbroadcast to get the actual parameter and observable indices
-        param_index = unbroadcast_index(bcast_index, param_shape)
-        obs_index = unbroadcast_index(bcast_index, observables.shape)
-
-        # Get the observable for this index
-        observable = observables[obs_index]
-
-        # Get the available (measurement_basis, config_idx) pairs for this parameter index
-        try:
-            param_basis_list = config_lookup[param_index]  # type: ignore[index]
-        except KeyError:
-            raise ValueError(
-                f"No measurement basis configurations found for parameter index {param_index}"
-            )
-
-        # each item should contain results for each point in extrapolated_noise_factors
-        exp_vals_extrapolated = np.zeros(
-            shape=(len(extrapolator), len(extrapolated_noise_factors)), dtype=float
-        )
-        ensemble_var_extrapolated = np.zeros(
-            shape=(len(extrapolator), len(extrapolated_noise_factors)), dtype=float
-        )
-
-        selected_extrapolators_per_term = []
-
-        for observable_term, coeff in observable.items():
-            # Find which basis can measure this term
-            pauli_basis = Pauli(get_pauli_basis(observable_term))
-
-            # Use identify_measure_basis to find the configuration index directly
-            config_idx = identify_measure_basis(pauli_basis, param_basis_list)
-
-            # Calculate scale factor in case TREX mitigation is used (cached per term)
-            if measure_noise_data is not None:
-                if observable_term not in trex_factor_cache:
-                    trex_factor_cache[observable_term] = calculate_trex_factor(
-                        measure_noise_data, observable_term
-                    )
-                term_scale_factor = trex_factor_cache[observable_term]
-            else:
-                term_scale_factor = 1
-
-            noise_scaled_exp_vals = []
-            noise_scaled_ensemble_std = []
-            for noise_factor_index in range(len(noise_factors)):
-                noise_factor_data = noise_amplified_data[noise_factor_index]
-                # Get measurement data for this configuration
-                # datum shape: (num_randomizations, shots_per_randomization, num_qubits)
-                datum = noise_factor_data[:, config_idx, :, :]
-                term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
-                    observable_term, datum
-                )
-                noise_scaled_exp_vals.append(term_exp_val)
-                noise_scaled_ensemble_std.append(np.sqrt(term_ensemble_variance))
-
-                noise_factors_exp_vals[(*bcast_index, noise_factor_index)] += (
-                    coeff * term_exp_val * term_scale_factor
-                )
-                noise_factors_ensemble_variance[(*bcast_index, noise_factor_index)] += (
-                    (coeff**2) * term_ensemble_variance * term_scale_factor**2
-                )
-                noise_factors_twirl_variance[(*bcast_index, noise_factor_index)] += (
-                    (coeff**2) * term_twirl_variance * term_scale_factor**2
-                )
-
-            zero_noise_exp_val, zero_noise_std, sel_extrapolator, extrap_exp_vals, extrap_stds = (
-                process_extrapolated_expectation_values(
-                    noise_scaled_exp_vals,
-                    noise_scaled_ensemble_std,
-                    observable_term,
-                    noise_factors,
-                    extrapolator,
-                    extrapolated_noise_factors,
-                )
-            )
-
-            # Only the selected extrapolator of the zero point is returned
-            selected_extrapolators_per_term.append(sel_extrapolator)
-            zero_extrapolated_exp_vals[bcast_index] += (
-                coeff * zero_noise_exp_val * term_scale_factor
-            )
-            zero_extrapolated_vars[bcast_index] += (
-                (coeff**2) * (zero_noise_std**2) * (term_scale_factor**2)
-            )
-
-            for model_index, (extrap_model_exp_val, extrap_model_std) in enumerate(
-                zip(extrap_exp_vals, extrap_stds)
-            ):
-                for extrap_index, (extrap_exp_val, extrap_std) in enumerate(
-                    zip(extrap_model_exp_val, extrap_model_std)
-                ):
-                    # Accumulate with coefficient
-                    exp_vals_extrapolated[(model_index, extrap_index)] += (
-                        coeff * extrap_exp_val * term_scale_factor
-                    )
-                    ensemble_var_extrapolated[(model_index, extrap_index)] += (
-                        (coeff**2) * (extrap_std**2) * (term_scale_factor**2)
-                    )
-
-        extrapolated_exp_vals[(*bcast_index, slice(None), slice(None))] = exp_vals_extrapolated
-        extrapolated_stds[(*bcast_index, slice(None), slice(None))] = np.sqrt(
-            ensemble_var_extrapolated
-        )
-        for noise_factor_index in range(len(noise_factors)):
-            noise_factors_ensemble_stds[(*bcast_index, noise_factor_index)] = np.sqrt(
-                noise_factors_ensemble_variance[(*bcast_index, noise_factor_index)] / total_shots
-            )
-            noise_factors_twirl_stds[(*bcast_index, noise_factor_index)] = np.sqrt(
-                noise_factors_twirl_variance[(*bcast_index, noise_factor_index)]
-                / num_randomizations
-            )
-        selected_extrapolators.append(selected_extrapolators_per_term)
-
-    return (
-        zero_extrapolated_exp_vals,
-        np.sqrt(zero_extrapolated_vars),
-        noise_factors_exp_vals,
-        noise_factors_ensemble_stds,
-        noise_factors_twirl_stds,
-        extrapolated_exp_vals,
-        extrapolated_stds,
-        selected_extrapolators,
-    )

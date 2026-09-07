@@ -134,6 +134,7 @@ def prepare_pec(
             custom_options,
             shots_per_randomization=shots_per_randomization,
             num_randomizations=baseline_num_randomizations,
+            broadcast_obs_and_params=True,
             quantum_program=qp,
             noise_maps=noise_model,
             noise_gain=pec_options.noise_gain,

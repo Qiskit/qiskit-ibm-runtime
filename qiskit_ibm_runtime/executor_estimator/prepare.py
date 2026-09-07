@@ -19,19 +19,22 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
+from qiskit_mitigation import PEA, PEC, TREX, ZNE, MitigationTask
+from samplomatic.quantum_program import QuantumProgram
 
 from ..exceptions import IBMInputValueError
+from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
 from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_estimator_options
-from .pec.prepare_pec import prepare_pec
-from .prepare_pea import prepare_pea
-from .prepare_vanilla import prepare_vanilla
+from .options_to_mitigation import (
+    estimator_options_to_boxing_options,
+    resolve_pec_max_overhead,
+    resolve_zne_noise_factors,
+)
+from .trex_setup import apply_trex
 from .utils import has_projection_operators, resolve_precision
-from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -41,8 +44,7 @@ if TYPE_CHECKING:
 
     from ..options_models.estimator import EstimatorOptions
     from ..options_models.executor import ExecutorOptions
-    from ..quantum_program import QuantumProgram
-
+    from ..options_models.resilience import ResilienceOptions
 
 logger = logging.getLogger(__name__)
 
@@ -56,45 +58,30 @@ def prepare(
 ) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a sequence of estimator PUBs to a quantum program and map options.
 
-    This method processes estimator PUBs (Primitive Unified Blocs) and converts them into
-    a :class:`~.QuantumProgram` suitable for execution, along with the corresponding
-    :class:`~.ExecutorOptions`.
-
     Args:
         pubs: Iterable of PUB-like objects to convert.
         options: The estimator options.
         precision: The target precision for expectation value estimates of each estimator pub
             that does not specify its own precision. If ``None``, the value from
             ``options.default_precision`` or ``options.default_shots`` will be used.
-        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
-            (will pass the ``"none"`` value to the relevant attribute), while ``True`` will cause
-            tags with the twirled boxes hash to be added (using the ``"unique_box"`` value of the
-            relevant attribute). These tags are used to inject noise when running in local mode.
+        add_tags: Whether to include tags for the boxes.
         backend: The backend for which the program is prepared. Only required when dynamical
             decoupling is enabled.
 
     Returns:
-        A tuple containing:
-
-        - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
-            objects for each pub, with ``passthrough_data`` fully populated for post-processing.
-        - :class:`~.ExecutorOptions` mapped from the finalized estimator options.
+        A tuple of a :class:`~.QuantumProgram` and :class:`~.ExecutorOptions`.
 
     Raises:
         IBMInputValueError: If no pubs are provided, if precision is not properly specified,
             or if unsupported option combinations are detected.
     """
-    # Coerce PUBs
     coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-
-    # Finalize options (resilience-level defaults + dependency enforcement)
     finalized_options = finalize_estimator_options(options)
 
     _validate(coerced_pubs, finalized_options, backend)
 
     executor_options = estimator_options_to_executor_options(finalized_options)
 
-    # Resolve shots
     resolved_precision = resolve_precision(coerced_pubs, precision)
     if resolved_precision is not None:
         shots = int(np.ceil(1.0 / (resolved_precision**2)))
@@ -107,14 +94,22 @@ def prepare(
         coerced_pubs, finalized_options, shots, add_tags, backend
     )
 
-    # Annotate passthrough_data for post-processing
-    quantum_program.passthrough_data["post_processor"]["options"] = finalized_options.model_dump(  # type: ignore[index, call-overload]
-        exclude={"resilience": {"layer_noise_model"}}
-    )
-    quantum_program.passthrough_data["post_processor"]["shots"] = shots  # type: ignore[index, call-overload]
-    quantum_program.passthrough_data["post_processor"]["precision"] = resolved_precision  # type: ignore[index, call-overload]
+    # Annotate our own metadata block (separate namespace from qiskit_mitigation)
+    quantum_program.passthrough_data["post_processor"] = {  # type: ignore[index]
+        "version": "v0.1",
+        "options": finalized_options.model_dump(exclude={"resilience": {"layer_noise_model"}}),
+        "shots": shots,
+        "precision": resolved_precision,
+        "circuits_metadata": [pub.circuit.metadata for pub in coerced_pubs],
+        "num_pubs": len(coerced_pubs),
+    }
 
     return quantum_program, executor_options
+
+
+# ---------------------------------------------------------------------------
+# Validation
+# ---------------------------------------------------------------------------
 
 
 def _validate(
@@ -122,34 +117,20 @@ def _validate(
     finalized_options: EstimatorOptions,
     backend: BackendV2 | None,
 ) -> None:
-    """Validate the coerced pubs and finalized options.
-
-    Args:
-        coerced_pubs: The coerced estimator pubs.
-        finalized_options: The finalized estimator options.
-        backend: The backend for which the program is prepared.
-
-    Raises:
-        IBMInputValueError: If no pubs are provided, if unsupported option combinations
-            are detected, or if a required backend is missing.
-    """
     if not coerced_pubs:
         raise IBMInputValueError("No pubs provided. At least one pub is required.")
     if finalized_options.resilience.pec_mitigation and finalized_options.resilience.zne_mitigation:
         raise IBMInputValueError(
             "PEC mitigation and ZNE mitigation are incompatible with one another."
         )
-
     for pub in coerced_pubs:
         validate_no_boxes(pub.circuit)
-
         if finalized_options.resilience.measure_mitigation and has_projection_operators(pub):
             raise IBMInputValueError(
                 "Measurement mitigation is currently not supported when observables contain "
                 "projection operators. You can decompose into pauli operators if the "
                 "exponential cost is acceptable."
             )
-
         if finalized_options.dynamical_decoupling.enable:
             if pub.circuit.has_control_flow_op():
                 raise IBMInputValueError(
@@ -162,6 +143,11 @@ def _validate(
                 )
 
 
+# ---------------------------------------------------------------------------
+# Program building
+# ---------------------------------------------------------------------------
+
+
 def _build_quantum_program(
     coerced_pubs: Sequence[EstimatorPub],
     finalized_options: EstimatorOptions,
@@ -169,79 +155,153 @@ def _build_quantum_program(
     add_tags: bool,
     backend: BackendV2 | None,
 ) -> QuantumProgram:
-    """Dispatch to the appropriate prepare function and apply dynamical decoupling.
+    """Dispatch to the appropriate mitigation pathway and apply dynamical decoupling."""
+    resilience = finalized_options.resilience
+    twirling = finalized_options.twirling
 
-    Args:
-        coerced_pubs: The coerced estimator pubs.
-        finalized_options: The finalized estimator options.
-        shots: The number of shots to use.
-        add_tags: Whether to include tags for the boxes.
-        backend: The backend for which the program is prepared.
+    # ── Shot split ────────────────────────────────────────────────────────────
+    # PEC uses its own shot-split logic (with a smaller default shots_per_rand).
+    # All other pathways use the standard twirling shot split.
+    if resilience.pec_mitigation:
+        from .pec.utils import calculate_pec_twirling_shots
 
-    Returns:
-        The prepared quantum program.
-    """
-    measure_noise_learning = (
-        finalized_options.resilience.measure_noise_learning
-        if finalized_options.resilience.measure_mitigation
-        else None
+        num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
+            shots,
+            twirling.num_randomizations,
+            twirling.shots_per_randomization,
+        )
+    elif twirling.enable_gates or twirling.enable_measure:
+        num_randomizations, shots_per_randomization = calculate_twirling_shots(
+            shots,
+            twirling.num_randomizations,
+            twirling.shots_per_randomization,
+        )
+    else:
+        num_randomizations, shots_per_randomization = 1, shots
+
+    # ── Boxing options (shared across all pubs) ───────────────────────────────
+    inject_noise = resilience.pec_mitigation or (
+        resilience.zne_mitigation and resilience.zne.amplifier == "pea"
     )
+    boxing_opts = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
 
-    noise_model = {}
-    if layer_noise_model := finalized_options.resilience.layer_noise_model:
+    # ── Noise model (PEC / PEA only) ──────────────────────────────────────────
+    noise_model: dict = {}
+    if layer_noise_model := resilience.layer_noise_model:
+        from samplomatic import InjectNoise
+        from samplomatic.utils import get_annotation
+
         for instr, pauli_map in layer_noise_model:
             if annotation := get_annotation(instr.operation, InjectNoise):
                 noise_model[annotation.ref] = pauli_map
 
-    if finalized_options.resilience.pec_mitigation:
-        logger.info("Running ``prepare_pec``.")
-        quantum_program = prepare_pec(
-            pubs=coerced_pubs,
-            twirling_options=finalized_options.twirling,
-            shots=shots,
-            pec_options=finalized_options.resilience.pec,
-            noise_model=noise_model,
-            measure_noise_learning=measure_noise_learning,
-            add_tags=add_tags,
-        )
-    elif finalized_options.resilience.zne_mitigation:
-        if finalized_options.resilience.zne.amplifier == "pea":
-            logger.info("Running ``prepare_pea``.")
-            quantum_program = prepare_pea(
-                pubs=coerced_pubs,
-                twirling_options=finalized_options.twirling,
-                shots=shots,
-                zne_options=finalized_options.resilience.zne,
-                noise_model=noise_model,
-                measure_noise_learning=measure_noise_learning,
-                add_tags=add_tags,
-            )
-        else:
-            logger.info("Running ``prepare_zne``.")
-            quantum_program = prepare_zne(
-                pubs=coerced_pubs,
-                twirling_options=finalized_options.twirling,
-                shots=shots,
-                zne_options=finalized_options.resilience.zne,
-                measure_noise_learning=measure_noise_learning,
-                add_tags=add_tags,
-            )
+    # ── Task class selection ──────────────────────────────────────────────────
+    if resilience.pec_mitigation:
+        task_class = PEC
+    elif resilience.zne_mitigation and resilience.zne.amplifier == "pea":
+        task_class = PEA
+    elif resilience.zne_mitigation:
+        task_class = ZNE
     else:
-        logger.info("Running ``prepare_vanilla``.")
-        quantum_program = prepare_vanilla(
-            pubs=coerced_pubs,
-            twirling_options=finalized_options.twirling,
-            shots=shots,
-            measure_noise_learning=measure_noise_learning,
-            add_tags=add_tags,
+        task_class = MitigationTask
+
+    # ── TREX instance (one shared across all pubs) ────────────────────────────
+    measure_noise_learning = (
+        resilience.measure_noise_learning if resilience.measure_mitigation else None
+    )
+    trex: TREX | None = TREX() if measure_noise_learning is not None else None
+
+    # ── Quantum program (shots locked here) ───────────────────────────────────
+    qp = QuantumProgram(shots=shots_per_randomization)
+
+    # ── Per-pub loop ──────────────────────────────────────────────────────────
+    for i, pub in enumerate(coerced_pubs):
+        logger.info("Processing pub %d/%d with %s.", i + 1, len(coerced_pubs), task_class.__name__)
+        task = task_class()
+        task.prepare(
+            circuit=pub.circuit,
+            observables=pub.observables,
+            parameters=pub.parameter_values,
+            custom_boxing_options=dict(boxing_opts),  # fresh copy per pub
+            shots_per_randomization=shots_per_randomization,
+            num_randomizations=num_randomizations,
+            broadcast_obs_and_params=True,
+            trex=trex,
+            quantum_program=qp,
+            **_method_kwargs(
+                task_class, resilience, noise_model, num_randomizations, shots_per_randomization
+            ),
         )
 
+    # ── TREX finalisation (must be after all task.prepare() calls) ────────────
+    if trex is not None:
+        apply_trex(trex, qp, measure_noise_learning, num_randomizations)
+
+    # ── Dynamical decoupling ──────────────────────────────────────────────────
     if finalized_options.dynamical_decoupling.enable:
-        logger.info("Apply dynamical decoupling")
-        quantum_program = apply_dynamical_decoupling(
+        logger.info("Applying dynamical decoupling.")
+        qp = apply_dynamical_decoupling(
             backend=backend,
             dd_options=finalized_options.dynamical_decoupling,
-            quantum_program=quantum_program,
+            quantum_program=qp,
         )
 
-    return quantum_program
+    return qp
+
+
+def _method_kwargs(
+    task_class: type,
+    resilience: ResilienceOptions,
+    noise_model: dict,
+    num_randomizations: int,
+    shots_per_randomization: int,
+) -> dict:
+    """Return the pathway-specific keyword arguments for ``task.prepare()``.
+
+    These are the arguments that differ between PEC, PEA, ZNE, and vanilla.
+    Everything common (circuit, observables, parameters, boxing_opts, shots,
+    trex, quantum_program) is passed by the caller.
+    """
+    if task_class is PEC:
+        max_overhead = resolve_pec_max_overhead(
+            resilience.pec.max_overhead, num_randomizations, shots_per_randomization
+        )
+        return {
+            "noise_maps": noise_model,
+            "noise_gain": resilience.pec.noise_gain,
+            "max_sampling_overhead": max_overhead,
+        }
+
+    if task_class is PEA:
+        zne = resilience.zne
+        noise_factors, extrapolated_noise_factors = resolve_zne_noise_factors(zne)
+        extrapolator = (
+            list(zne.extrapolator) if not isinstance(zne.extrapolator, str) else [zne.extrapolator]
+        )
+        return {
+            "noise_maps": noise_model,
+            "noise_factors": noise_factors.tolist(),
+            "extrapolator": extrapolator,
+            "extrapolated_noise_factors": extrapolated_noise_factors.tolist(),
+        }
+
+    if task_class is ZNE:
+        zne = resilience.zne
+        noise_factors, extrapolated_noise_factors = resolve_zne_noise_factors(zne)
+        extrapolator = (
+            list(zne.extrapolator) if not isinstance(zne.extrapolator, str) else [zne.extrapolator]
+        )
+        folding_method_map = {
+            "gate_folding": "random",
+            "gate_folding_front": "front",
+            "gate_folding_back": "back",
+        }
+        return {
+            "folding_method": folding_method_map[zne.amplifier],
+            "noise_factors": noise_factors.tolist(),
+            "extrapolator": extrapolator,
+            "extrapolated_noise_factors": extrapolated_noise_factors.tolist(),
+        }
+
+    # MitigationTask (vanilla) — no extra kwargs
+    return {}

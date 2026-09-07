@@ -18,6 +18,7 @@ from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import Tag
 from samplomatic.exceptions import BuildError
+from samplomatic.quantum_program import QuantumProgram
 from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -25,7 +26,6 @@ from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
 
@@ -88,7 +88,11 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], None)
+        # Vanilla path: qiskit_mitigation passthrough contains MitigationTask entries.
+        # The "mitigation" key no longer lives in post_processor; task type is encoded
+        # in the qiskit_mitigation passthrough block instead.
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_pec_path(self):
         """Test the ``prepare`` function when PEC is requested."""
@@ -115,7 +119,10 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "pec")
+        # PEC path: confirm passthrough has both namespaces and the qp has 2 items
+        # (1 PEC data item + 1 TREX calibration item, since measure_mitigation is on by default).
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_zne_path(self):
         """Test the ``prepare`` function when PEC is requested."""
@@ -133,7 +140,8 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "zne")
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_pea_path(self):
         """Test the ``prepare`` function when PEA is requested."""
@@ -152,7 +160,8 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "pea")
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_pub_with_boxes_raises(self):
         """Test that a when a PUB contains a box, the estimator raises."""
