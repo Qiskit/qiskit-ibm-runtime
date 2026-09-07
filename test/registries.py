@@ -45,7 +45,12 @@ DEFAULT_BACKED_PROPERTIES = FakeLimaV2()._load_json(FakeLimaV2.props_filename)
 
 @dataclass
 class Instance:
-    """Registry representation of an instance."""
+    """Registry representation of an instance.
+
+    The following fields will be initialized if set to their default value:
+    * `crn`
+    * `usage`
+    """
 
     name: str
     """Name of the instance."""
@@ -60,7 +65,7 @@ class Instance:
     """Pricing type of the instance."""
 
     usage: dict | None = None
-    """Instance usage dictionary that overrides the default `usage` in responses."""
+    """Instance usage dictionary."""
 
     def __post_init__(self) -> None:
         if not self.crn:
@@ -78,16 +83,21 @@ class Instance:
 
 @dataclass
 class Backend:
-    """Registry representation of a backend."""
+    """Registry representation of a backend.
+
+    The following fields will be initialized if set to their default value:
+    * `configuration`: set based on `FakeLimaV2`.
+    * `properties`: set based on `FakeLimaV2`.
+    """
 
     name: str
     """Name of the backend."""
 
     configuration: dict = field(default_factory=dict)
-    """Configuration of the backend. If not set, it will be set based on ``FakeLimaV2``."""
+    """Configuration of the backend."""
 
     properties: dict = field(default_factory=dict)
-    """Properties of the backend. If not set, it will be set based on ``FakeLimaV2``."""
+    """Properties of the backend."""
 
     status: Literal["online", "paused", "offline"] = "online"
     """Status of the backend."""
@@ -134,7 +144,11 @@ class Backend:
 
 @dataclass
 class Job:
-    """Registry representation of a job."""
+    """Registry representation of a job.
+
+    The following fields will be initialized if set to their default value:
+    * `usage`
+    """
 
     id: str
     """Job id."""
@@ -154,7 +168,7 @@ class Job:
     """Response for the job results."""
 
     usage: dict | None = None
-    """Job usage dictionary that overrides the default `usage` field in responses."""
+    """Job usage dictionary."""
 
     def __post_init__(self) -> None:
         if self.usage is None:
