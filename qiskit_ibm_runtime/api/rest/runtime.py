@@ -265,31 +265,22 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("workloads")
-        payload: dict[str, int | str | list[str]] = {}
-
-        if user:
-            payload["user"] = user
-        if sort:
-            payload["sort"] = sort
-        if limit:
-            payload["limit"] = limit
-        if previous:
-            payload["previous"] = previous
-        if next:
-            payload["next"] = next
-        if backend:
-            payload["backend"] = backend
-        if search:
-            payload["search"] = search
-        if status:
-            payload["status"] = status
-        if mode:
-            payload["mode"] = mode
-        if created_before:
-            payload["created_before"] = local_to_utc(created_before).isoformat()
-        if created_after:
-            payload["created_after"] = local_to_utc(created_after).isoformat()
-        if tags:
-            payload["tags"] = tags
+        payload = {
+            "user": user,
+            "sort": sort,
+            "limit": limit,
+            "previous": previous,
+            "next": next,
+            "backend": backend,
+            "search": search,
+            "status": status,
+            "mode": mode,
+            "created_before": (
+                local_to_utc(created_before).isoformat() if created_before else None
+            ),
+            "created_after": (local_to_utc(created_after).isoformat() if created_after else None),
+            "tags": tags,
+        }
+        payload = {k: v for k, v in payload.items() if v is not None}
 
         return self.session.get(url, params=payload, headers=self._HEADER_JSON_ACCEPT).json()
