@@ -67,6 +67,9 @@ class Instance:
     usage: dict | None = None
     """Instance usage dictionary."""
 
+    tags: list = field(default_factory=list)
+    """Instance tags."""
+
     def __post_init__(self) -> None:
         if not self.crn:
             self.crn = f"crn:v1:bluemix:public:quantum-computing:my-region:{self.name}/...:...::"
@@ -219,14 +222,18 @@ class BaseRegistry(FirstMatchRegistry):
         self.add(
             CallbackResponse(
                 method=POST,
-                url="https://api.global-search-tagging.cloud.ibm.com/v3/resources/search",
+                url=re.compile(
+                    r"https://api.global-search-tagging.(?:([a-zA-Z0-9-]+)\.)?cloud.ibm.com/v3/resources/search"
+                ),
                 callback=self.callback_global_search,
             )
         )
         self.add(
             CallbackResponse(
                 method=GET,
-                url=re.compile(r"https://globalcatalog.cloud.ibm.com/api/v1/\w+"),
+                url=re.compile(
+                    r"https://globalcatalog.(?:([a-zA-Z0-9-]+)\.)?cloud.ibm.com/api/v1/\w+"
+                ),
                 callback=self.callback_catalog,
             )
         )
@@ -356,6 +363,7 @@ class BaseRegistry(FirstMatchRegistry):
                     "name": instance.name,
                     "doc": {"extensions": instance.allocations},
                     "service_plan_unique_id": instance.name,
+                    "tags": instance.tags,
                 }
                 for _, instance in self.instances.items()
             ]
