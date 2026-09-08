@@ -22,7 +22,6 @@ from ..ibm_test_case import IBMTestCase
 from ..program import run_program
 from ..registries import Backend, Job, OneInstanceNoBackendsRegistry
 from ..utils import mock_wait_for_final_state
-from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestRetrieveJobs(IBMTestCase):
@@ -257,22 +256,18 @@ class TestRetrieveJobs(IBMTestCase):
         with self.assertRaises(Exception):
             _ = service.jobs(instance="foo")
 
-    def test_different_instance(self):
+    @mock_responses
+    def test_different_instance(self, registry):
         """Test retrieving job submitted with different instance."""
-        # Initialize with first instance
-        service = FakeRuntimeService(
-            channel="ibm_quantum_platform",
-            token="some_token",
-            instance=FakeRuntimeService.DEFAULT_CRNS[0],
-        )
-        program_id = "sampler"
+        registry.add_job(Job("my_job", "unique_backend_a"), "a")
+        service = QiskitRuntimeService(token="my_token")
 
-        # Run with different instance
-        backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
-        job = run_program(service, program_id=program_id, backend_name=backend_name)
+        # Ensure the active api client is the one for the instance that does _not_ contain the job.
+        self.assertEqual(service._active_api_client._instance, registry.instances["b"].crn)
 
-        rjob = service.job(job.job_id())
-        self.assertIsNotNone(rjob.backend())
+        # Retrieve a job from instance "a" when active instance is "b".
+        job = service.job("my_job")
+        self.assertIsNotNone(job.backend())
 
     def _populate_jobs_with_all_statuses(self, service, program_id):
         """Populate the database with jobs of all statuses."""
