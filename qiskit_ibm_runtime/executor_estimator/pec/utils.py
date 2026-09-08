@@ -14,53 +14,7 @@
 
 from __future__ import annotations
 
-import logging
 import math
-from typing import TYPE_CHECKING
-
-from ...exceptions import IBMInputValueError
-
-if TYPE_CHECKING:
-    from qiskit import QuantumCircuit
-    from qiskit.quantum_info import PauliLindbladMap
-
-
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
-
-logger = logging.getLogger(__name__)
-
-
-def calculate_gamma(
-    boxed_circuit: QuantumCircuit,
-    noise_model: dict[str, PauliLindbladMap],
-    noise_factor: float,
-) -> float:
-    """Calculate the PEC gamma factor of a circuit based on a noise model.
-
-    The returned gamma is that associated with the inverse noise maps needed
-    to cancel the noise in the circuit.
-
-    Args:
-        boxed_circuit: The annotated circuit to calculate the PEC gamma for.
-        noise_model: Mapping between layer ref to a noise model
-        noise_factor: The noise factor of the noise amplification.
-
-    Returns:
-        The PEC gamma factor.
-    """
-    gamma = 1.0
-    for instr in boxed_circuit:
-        if annot := get_annotation(instr.operation, InjectNoise):
-            ref = annot.ref
-            try:
-                model = noise_model[ref]
-            except KeyError:
-                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
-            # scale the noise by noise_factor
-            model = model.scale_rates(noise_factor)
-            gamma *= model.inverse().gamma()
-    return gamma
 
 
 def calculate_pec_twirling_shots(

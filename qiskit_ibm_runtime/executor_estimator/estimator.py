@@ -15,18 +15,19 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, get_args
+from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit_mitigation import find_combined_unique_layers
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
-from .prepare import prepare
-from .utils import BoxType, find_box_type, find_unique_layers
+from .options_to_mitigation import estimator_options_to_boxing_options
+from .prepare import _NOISE_INJECTION_TASKS, _task_class_for, prepare
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -158,16 +159,19 @@ class EstimatorV2(BaseEstimatorV2):
         """
         coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
         options = self.finalize_options()
-        layers = find_unique_layers(
-            pubs=coerced_pubs,
-            twirling_options=options.twirling,
-            measure_noise_learning=options.resilience.measure_noise_learning,
-            inject_noise=options.resilience.pec_mitigation
-            or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
+        task_class = _task_class_for(options.resilience)
+        boxing_opts = estimator_options_to_boxing_options(
+            options.twirling,
+            inject_noise=task_class in _NOISE_INJECTION_TASKS,
             add_tags=True,
         )
-        box_types = get_args(BoxType) if types == "all" else ("gates",)
-        return [layer for layer in layers if find_box_type(layer) in box_types]
+        box_types_arg = "all" if types == "all" else "gates"
+        return find_combined_unique_layers(
+            circuits=[pub.circuit for pub in coerced_pubs],
+            mitigation_types=[task_class() for _ in coerced_pubs],
+            custom_boxing_options=boxing_opts,
+            box_types=box_types_arg,
+        )
 
     def finalize_options(self) -> EstimatorOptions:
         """Construct and finalize the Estimator options.

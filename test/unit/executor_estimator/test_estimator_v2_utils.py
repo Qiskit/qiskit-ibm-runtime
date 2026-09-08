@@ -15,7 +15,7 @@
 from ddt import data, ddt
 from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit.quantum_info import Pauli, SparsePauliOp
+from qiskit.quantum_info import SparsePauliOp
 from samplomatic import Tag
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import get_annotation
@@ -24,32 +24,10 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.utils import (
     box_circuit,
     find_box_type,
-    pauli_to_ints,
     resolve_precision,
 )
 
 from ...ibm_test_case import IBMBoxedCircuitTestCase, IBMTestCase
-
-
-class TestPauliToInts(IBMTestCase):
-    """Tests for pauli_to_ints function."""
-
-    def test_single_qubit_paulis(self):
-        """Test single-qubit Pauli to integer conversions."""
-        for pauli, expected in [
-            (Pauli("I"), [0]),
-            (Pauli("Z"), [1]),
-            (Pauli("X"), [2]),
-            (Pauli("Y"), [3]),
-        ]:
-            with self.subTest(pauli=str(pauli)):
-                result = pauli_to_ints(pauli)
-                self.assertEqual(result, expected)
-
-    def test_multi_qubit(self):
-        """Test multi-qubit Pauli conversion."""
-        result = pauli_to_ints(Pauli("IZXY"))
-        self.assertEqual(result, [3, 2, 1, 0])
 
 
 class TestResolvePrecision(IBMTestCase):

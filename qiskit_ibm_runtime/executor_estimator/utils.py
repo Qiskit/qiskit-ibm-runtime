@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from qiskit.circuit import BoxOp, CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.primitives.containers.sampler_pub import SamplerPub
-    from qiskit.quantum_info import Pauli
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
     from ..options_models.twirling import TwirlingOptions
@@ -38,9 +37,6 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions, undress_box
 
 from ..exceptions import IBMInputValueError
-
-# Lookup table for converting Pauli characters to samplomatic integers
-LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
 
 _REQUIRED_NOISE_FACTORS = {
     "linear": 2,
@@ -81,25 +77,6 @@ def has_projection_operators(pub: EstimatorPub) -> bool:
             if bool(set(observable_term) & projection_set):
                 return True
     return False
-
-
-def pauli_to_ints(pauli: Pauli) -> list[int]:
-    """Convert Pauli to list of ints following samplomatic convention.
-
-    I→0, Z→1, X→2, Y→3
-
-    Args:
-        pauli: Pauli operator to convert.
-
-    Returns:
-        List of integers representing the Pauli.
-
-    Note:
-        pauli.to_label() returns big-endian (leftmost = highest qubit),
-        but samplomatic expects little-endian (leftmost = qubit 0),
-        so we reverse the list.
-    """
-    return [LOOKUP_TABLE[p] for p in pauli.to_label()][::-1]
 
 
 def resolve_precision(

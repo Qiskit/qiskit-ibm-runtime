@@ -20,12 +20,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_mitigation import PEA, PEC, TREX, ZNE, MitigationTask
-from samplomatic.quantum_program import QuantumProgram
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.converters import estimator_options_to_executor_options
+from ..quantum_program import QuantumProgram
 from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_estimator_options
 from .options_to_mitigation import (
@@ -46,6 +46,10 @@ _ZNE_FOLDING_METHOD: dict[str, str] = {
 
 # All valid ZNE amplifier names (gate-folding variants + PEA).
 _VALID_AMPLIFIERS: frozenset[str] = frozenset(_ZNE_FOLDING_METHOD) | {"pea"}
+
+# Task classes that inject noise (PEC and PEA).  Used to derive ``inject_noise``
+# from the already-selected task class, avoiding repetition of the condition.
+_NOISE_INJECTION_TASKS: frozenset[type] = frozenset({PEC, PEA})
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -182,6 +186,17 @@ def _validate(
 # ---------------------------------------------------------------------------
 
 
+def _task_class_for(resilience: ResilienceOptions) -> type:
+    """Return the qiskit-mitigation task class for the given resilience options."""
+    if resilience.pec_mitigation:
+        return PEC
+    if resilience.zne_mitigation and resilience.zne.amplifier == "pea":
+        return PEA
+    if resilience.zne_mitigation:
+        return ZNE
+    return MitigationTask
+
+
 def _build_quantum_program(
     coerced_pubs: Sequence[EstimatorPub],
     finalized_options: EstimatorOptions,
@@ -193,16 +208,15 @@ def _build_quantum_program(
     resilience = finalized_options.resilience
     twirling = finalized_options.twirling
 
-    # Computed once; used for boxing options and task class selection.
-    inject_noise = resilience.pec_mitigation or (
-        resilience.zne_mitigation and resilience.zne.amplifier == "pea"
-    )
+    # ── Task class selection (single source of truth) ─────────────────────────
+    task_class = _task_class_for(resilience)
+    inject_noise = task_class in _NOISE_INJECTION_TASKS
 
     # ── Shot split ────────────────────────────────────────────────────────────
     # PEC uses its own shot-split logic (default shots_per_rand=64, smaller than
     # the standard twirling default) to keep per-randomisation overhead low.
     # All other pathways use the standard twirling shot split.
-    if resilience.pec_mitigation:
+    if task_class is PEC:
         from .pec.utils import calculate_pec_twirling_shots
 
         num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
@@ -224,16 +238,6 @@ def _build_quantum_program(
 
     # ── Noise model (PEC / PEA only) ──────────────────────────────────────────
     noise_model = layer_noise_model_to_dict(resilience.layer_noise_model or [])
-
-    # ── Task class selection ──────────────────────────────────────────────────
-    if resilience.pec_mitigation:
-        task_class = PEC
-    elif resilience.zne_mitigation and resilience.zne.amplifier == "pea":
-        task_class = PEA
-    elif resilience.zne_mitigation:
-        task_class = ZNE
-    else:
-        task_class = MitigationTask
 
     # ── TREX instance (one shared across all pubs) ────────────────────────────
     measure_noise_learning = (
