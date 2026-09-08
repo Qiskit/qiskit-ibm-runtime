@@ -40,6 +40,13 @@ PREPARE_VARIANTS = {
     },
 }
 
+POST_PROCESS_VARIANTS = {
+    "vanilla": {},
+    "twirling": {
+        "twirling": {"enable_gates": True, "enable_measure": True},
+    },
+}
+
 
 @pytest.mark.parametrize(
     "variant_id,variant_options",
@@ -77,7 +84,7 @@ def test_executor_sampler_prepare(benchmark, variant_id, variant_options):
 
 @pytest.mark.parametrize(
     "variant_id,variant_options",
-    PREPARE_VARIANTS.items(),
+    POST_PROCESS_VARIANTS.items(),
 )
 def test_executor_sampler_post_processor(benchmark, variant_id, variant_options):
     """Benchmark the sampler post-processor for different twirling/DD configurations."""
@@ -90,7 +97,7 @@ def test_executor_sampler_post_processor(benchmark, variant_id, variant_options)
 
     backend = FakeMarrakesh()
 
-    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=10)
+    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=100)
 
     options = SamplerOptions()
     options.update(**variant_options)
@@ -126,8 +133,6 @@ def create_test_pubs(backend, num_qubits, num_layers):
         backend,
         num_qubits=num_qubits,
         layers=num_layers,
-        add_measurement=True,
-        add_rx=True,
     )
     isa_circuit = pm.run(circuit)
 

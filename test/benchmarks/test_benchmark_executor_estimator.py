@@ -39,7 +39,7 @@ from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from ..utils import make_mirror_circuit_with_phases
 from .utils import create_dummy_executor_result
 
-PREPARE_VARIANTS = {
+VARIANTS = {
     "vanilla": {
         "resilience_level": 0,
     },
@@ -78,7 +78,7 @@ NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
 
 @pytest.mark.parametrize(
     "variant_id,variant_options",
-    PREPARE_VARIANTS.items(),
+    VARIANTS.items(),
 )
 def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
     """Benchmark prepare() for different mitigation strategies."""
@@ -114,7 +114,7 @@ def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
 
 @pytest.mark.parametrize(
     "variant_id,variant_options",
-    PREPARE_VARIANTS.items(),
+    VARIANTS.items(),
 )
 def test_executor_estimator_post_processor(benchmark, variant_id, variant_options):
     """Benchmark the estimator post-processor for different mitigation strategies."""

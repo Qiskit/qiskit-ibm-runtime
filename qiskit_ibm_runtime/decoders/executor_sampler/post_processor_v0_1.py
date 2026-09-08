@@ -38,6 +38,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
 
     Args:
         result: The raw quantum program result containing measurement data.
+            **Consumed by this call** — do not use this object afterwards.
 
     Returns:
         Primitive result for :class:`~qiskit_ibm_runtime.executor_sampler.SamplerV2`.
