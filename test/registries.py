@@ -455,7 +455,6 @@ class BaseRegistry(FirstMatchRegistry):
                 for backend in self.backends[instance.name].values()
             ]
         }
-        print(response_body)
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def callback_backends_configuration(self, request: PreparedRequest) -> CallbackResult:
@@ -504,7 +503,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_backends_status(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/backends/{id}/status`` endpoint.
 
-        Dynamically return the configuration of a backend, based on the contents of `self.backends`.
+        Dynamically return the status of a backend, based on the contents of `self.backends`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
@@ -527,7 +526,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_post(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
 
-        Dynamically return a job, based on the contents of `self.backends`.
+        Dynamically return the result of creating a job.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -548,7 +547,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_get(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
 
-        Dynamically return a list of job, based on the contents of `self.jobs`.
+        Dynamically return a list of jobs, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -613,7 +612,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_metrics(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}/metrics`` endpoint.
 
-        Dynamically return the metric of a job, based on the contents of `self.jobs`.
+        Dynamically return the metrics of a job, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -643,7 +642,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_results(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}/results`` endpoint.
 
-        Dynamically return a job results, based on the contents of `self.jobs`.
+        Dynamically return a job's results, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -665,7 +664,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_instances_usage(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/instances/usage`` endpoint.
 
-        Dynamically return a job results, based on the contents of `self.jobs`.
+        Dynamically return the usage of an instance, based on the contents of `self.instances`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/instances
@@ -678,7 +677,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_sessions_post(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
 
-        Dynamically return session information.
+        Dynamically return result of creating a session.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
@@ -696,7 +695,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_sessions_id(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
 
-        Dynamically return a session's information, based on the contents of `self.session`.
+        Dynamically return a session's information, based on the contents of `self.sessions`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
@@ -714,7 +713,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_sessions_patch(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
 
-        Dynamically update a session.
+        Dynamically update a session (no-op).
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
