@@ -48,8 +48,9 @@ def mock_responses(
 
     When decorating a test, this decorator:
     * intercepts HTTP requests and returns mocked HTTP responses, based on a ``Registry``, which
-      is added as an argument to the test.
+      is added as an ``registry`` argument to the test.
     * patches low-level method related to IAM authentication, to simplify the authentication flow.
+    * optionally exposes the responses mock as ``responses`` argument to the test.
 
     This decorator is meant to be used with the items in the ``registries`` module:
     * ``DefaultRegistry`` and its subclasses.
@@ -71,7 +72,7 @@ def mock_responses(
     Args:
         func_or_registry: the ``Registry`` to use. If the decorator is used without parenthesis
             (``@mock_responses``), contains the test to decorate.
-        expose_responses_mock: if ``True``, the ``response`` will be added to the list of arguments
+        expose_responses_mock: if ``True``, the ``responses`` will be added to the list of arguments
             of the decorated tests.
 
     Can be used bare (``@mock_authentication``, using the default registry) or
@@ -100,10 +101,15 @@ def mock_responses(
             ):
                 if expose_responses_mock:
                     return test_method(
-                        *args, responses_mock.get_registry(), responses_mock, **kwargs
+                        *args,
+                        # Pass the registry (and optionally the responses mock) as keyword arguments
+                        # to prevent colliding with other decorators (specially ``@combine``).
+                        registry=responses_mock.get_registry(),
+                        responses=responses_mock,
+                        **kwargs,
                     )
                 else:
-                    return test_method(*args, responses_mock.get_registry(), **kwargs)
+                    return test_method(*args, registry=responses_mock.get_registry(), **kwargs)
 
         return wrapper
 
