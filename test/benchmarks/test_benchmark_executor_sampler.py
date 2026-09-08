@@ -93,11 +93,11 @@ def test_executor_sampler_post_processor(benchmark, variant_id, variant_options)
         num_shots = 100
     else:
         num_qubits = 100
-        num_shots = 200000
+        num_shots = 500000
 
     backend = FakeMarrakesh()
 
-    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=100)
+    pubs = create_test_pubs(backend, num_qubits=num_qubits, num_layers=10)
 
     options = SamplerOptions()
     options.update(**variant_options)
