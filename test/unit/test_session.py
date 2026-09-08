@@ -18,14 +18,16 @@ from ddt import data, ddt
 
 from qiskit_ibm_runtime import SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
+from ..registries import Backend
+from ..registries import Session as RegistrySession
 from ..utils import get_mocked_backend
-from .mock.fake_api_backend import FakeApiBackendSpecs
-from .mock.fake_runtime_service import FakeRuntimeService
 
 
 @ddt
@@ -108,33 +110,38 @@ class TestSession(IBMTestCase):
             session.cancel()
         self.assertFalse(session._active)
 
-    @data([None, "my_id"])
-    def test_session_from_id(self, calibration_id):
+    @data(None, "my_id")
+    @mock_responses
+    def test_session_from_id(self, calibration_id, registry):
         """Create session with given session_id."""
-        service = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
         session_id = "123"
+        registry.add_session(RegistrySession(session_id, "common_backend"), "a")
+        if calibration_id:
+            registry.backends["a"]["common_backend"].calibrations[calibration_id] = {}
+        service = QiskitRuntimeService(token="my_token")
+
         session = Session.from_id(
             session_id=session_id, service=service, calibration_id=calibration_id
         )
         session._run(program_id="foo", inputs={})
-        session._create_session = MagicMock()
-        self.assertTrue(session._create_session.assert_not_called)
         self.assertEqual(session.session_id, session_id)
 
-    def test_correct_execution_mode(self):
+    @mock_responses
+    def test_correct_execution_mode(self, registry):
         """Test that the execution mode is correctly set."""
-        _ = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
-        backend = get_mocked_backend("ibm_gotham")
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         session = Session(backend=backend)
+
+        registry.add_session(RegistrySession(session.session_id, "common_backend"), "a")
         self.assertEqual(session.details()["mode"], "dedicated")
 
-    def test_cm_session_fractional(self):
-        """Test instantiating primitive inside session context manager with the fractional optin."""
-        service = FakeRuntimeService(
-            channel="ibm_quantum_platform",
-            token="abc",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
-        )
+    @mock_responses
+    def test_cm_session_fractional(self, registry):
+        """Test instantiating primitive inside session context manager with fractional option."""
+        registry.add_backend(Backend.from_(FakeFractionalBackend), "a")
+        service = QiskitRuntimeService(token="my_token")
+
         backend = service.backend("fake_fractional", use_fractional_gates=True)
         with Session(backend=backend) as _:
             primitive = SamplerV2()
