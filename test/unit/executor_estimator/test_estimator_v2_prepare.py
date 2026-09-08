@@ -64,6 +64,9 @@ class TestPrepare(IBMTestCase):
             case "pea":
                 options.resilience.zne_mitigation = True
                 options.resilience.zne.amplifier = "pea"
+                options.resilience.layer_noise_model = [
+                    (layer, PauliLindbladMap.identity(num_qubits=2)) for layer in layers
+                ]
 
         program, _ = prepare(pubs, options, precision=0.1, add_tags=True)
 
@@ -149,6 +152,7 @@ class TestPrepare(IBMTestCase):
         options.twirling.enable_gates = True
         options.resilience.zne_mitigation = True
         options.resilience.zne.amplifier = "pea"
+        options.resilience.layer_noise_model = []
 
         circuit = QuantumCircuit(2)
         circuit.h(0)

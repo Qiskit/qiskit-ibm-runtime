@@ -97,10 +97,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         if isinstance(task.param_shape, list):
             task.param_shape = tuple(task.param_shape)
 
-        # Workaround for upstream ZNE/PEA bug: both ZNE.prepare() and PEA.prepare()
-        # store extrapolated_noise_factors as a numpy array; postprocess() then does
-        # ``== []`` which raises "truth value of array is ambiguous".  Convert
-        # back to a plain list so the comparison is well-defined.
+        # Workaround for qiskit-mitigation issue #10.
         if isinstance(task, (ZNE, PEA)) and isinstance(
             getattr(task, "extrapolated_noise_factors", None), np.ndarray
         ):

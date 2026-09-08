@@ -78,8 +78,8 @@ def _prepare_pec(
         opts.resilience.measure_noise_learning = measure_noise_learning
     opts.default_shots = shots
 
+    all_pubs = [EstimatorPub.coerce(p) if not isinstance(p, EstimatorPub) else p for p in pubs]
     if noise_model:
-        all_pubs = [EstimatorPub.coerce(p) if not isinstance(p, EstimatorPub) else p for p in pubs]
         layers = find_unique_layers(all_pubs, twirling_options, inject_noise=True)
         opts.resilience.layer_noise_model = [
             (layer, noise_model[get_annotation(layer.operation, InjectNoise).ref])
@@ -87,6 +87,8 @@ def _prepare_pec(
             if get_annotation(layer.operation, InjectNoise) is not None
             and get_annotation(layer.operation, InjectNoise).ref in noise_model
         ]
+    else:
+        opts.resilience.layer_noise_model = []
 
     qp, _ = prepare(pubs, opts, precision=None, add_tags=add_tags)
     return qp

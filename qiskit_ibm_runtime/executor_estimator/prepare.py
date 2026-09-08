@@ -38,12 +38,14 @@ from .trex_setup import apply_trex
 from .utils import has_projection_operators, resolve_precision, validate_noise_factors
 
 # Maps the user-facing ZNE amplifier name to qiskit-mitigation's folding_method string.
-# _VALID_AMPLIFIERS in _validate() is derived from these keys plus "pea".
 _ZNE_FOLDING_METHOD: dict[str, str] = {
     "gate_folding": "random",
     "gate_folding_front": "front",
     "gate_folding_back": "back",
 }
+
+# All valid ZNE amplifier names (gate-folding variants + PEA).
+_VALID_AMPLIFIERS: frozenset[str] = frozenset(_ZNE_FOLDING_METHOD) | {"pea"}
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -134,21 +136,26 @@ def _validate(
         )
 
     resilience = finalized_options.resilience
+
+    needs_noise_injection = resilience.pec_mitigation or (
+        resilience.zne_mitigation and resilience.zne.amplifier == "pea"
+    )
+    if needs_noise_injection and resilience.layer_noise_model is None:
+        raise IBMInputValueError(
+            "PEA/PEC mitigation requires a noise model. "
+            "Set 'resilience.layer_noise_model' before running."
+        )
+
     if resilience.zne_mitigation:
         zne = resilience.zne
-        # Gaps B+C: enforce valid amplifier values up front.
-        _VALID_AMPLIFIERS = {"pea"} | set(_ZNE_FOLDING_METHOD)
         if zne.amplifier not in _VALID_AMPLIFIERS:
             raise IBMInputValueError(
                 "ZNE mitigation must use a gate folding or 'pea' noise amplification method. "
                 f"Got: '{zne.amplifier}'."
             )
-        # Gap A: validate noise_factors has enough points for every requested extrapolator.
+        # Validate noise_factors has enough points for every requested extrapolator.
         noise_factors, _ = resolve_zne_noise_factors(zne)
-        extrapolator = (
-            list(zne.extrapolator) if not isinstance(zne.extrapolator, str) else [zne.extrapolator]
-        )
-        validate_noise_factors(noise_factors, extrapolator)
+        validate_noise_factors(noise_factors, _normalise_extrapolator(zne.extrapolator))
 
     for pub in coerced_pubs:
         validate_no_boxes(pub.circuit)
@@ -186,8 +193,14 @@ def _build_quantum_program(
     resilience = finalized_options.resilience
     twirling = finalized_options.twirling
 
+    # Computed once; used for boxing options and task class selection.
+    inject_noise = resilience.pec_mitigation or (
+        resilience.zne_mitigation and resilience.zne.amplifier == "pea"
+    )
+
     # ── Shot split ────────────────────────────────────────────────────────────
-    # PEC uses its own shot-split logic (with a smaller default shots_per_rand).
+    # PEC uses its own shot-split logic (default shots_per_rand=64, smaller than
+    # the standard twirling default) to keep per-randomisation overhead low.
     # All other pathways use the standard twirling shot split.
     if resilience.pec_mitigation:
         from .pec.utils import calculate_pec_twirling_shots
@@ -207,9 +220,6 @@ def _build_quantum_program(
         num_randomizations, shots_per_randomization = 1, shots
 
     # ── Boxing options (shared across all pubs) ───────────────────────────────
-    inject_noise = resilience.pec_mitigation or (
-        resilience.zne_mitigation and resilience.zne.amplifier == "pea"
-    )
     boxing_opts = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
 
     # ── Noise model (PEC / PEA only) ──────────────────────────────────────────
@@ -269,6 +279,11 @@ def _build_quantum_program(
     return qp
 
 
+def _normalise_extrapolator(extrapolator: str | Sequence[str]) -> list[str]:
+    """Return ``extrapolator`` as a plain list of strings."""
+    return [extrapolator] if isinstance(extrapolator, str) else list(extrapolator)
+
+
 def _method_kwargs(
     task_class: type,
     resilience: ResilienceOptions,
@@ -292,31 +307,19 @@ def _method_kwargs(
             "max_sampling_overhead": max_overhead,
         }
 
-    if task_class is PEA:
+    if task_class in (PEA, ZNE):
         zne = resilience.zne
         noise_factors, extrapolated_noise_factors = resolve_zne_noise_factors(zne)
-        extrapolator = (
-            list(zne.extrapolator) if not isinstance(zne.extrapolator, str) else [zne.extrapolator]
-        )
-        return {
-            "noise_maps": noise_model,
+        kwargs: dict = {
             "noise_factors": noise_factors.tolist(),
-            "extrapolator": extrapolator,
+            "extrapolator": _normalise_extrapolator(zne.extrapolator),
             "extrapolated_noise_factors": extrapolated_noise_factors.tolist(),
         }
-
-    if task_class is ZNE:
-        zne = resilience.zne
-        noise_factors, extrapolated_noise_factors = resolve_zne_noise_factors(zne)
-        extrapolator = (
-            list(zne.extrapolator) if not isinstance(zne.extrapolator, str) else [zne.extrapolator]
-        )
-        return {
-            "folding_method": _ZNE_FOLDING_METHOD[zne.amplifier],
-            "noise_factors": noise_factors.tolist(),
-            "extrapolator": extrapolator,
-            "extrapolated_noise_factors": extrapolated_noise_factors.tolist(),
-        }
+        if task_class is PEA:
+            kwargs["noise_maps"] = noise_model
+        else:  # ZNE
+            kwargs["folding_method"] = _ZNE_FOLDING_METHOD[zne.amplifier]
+        return kwargs
 
     # MitigationTask (vanilla) — no extra kwargs
     return {}
