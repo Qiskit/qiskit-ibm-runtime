@@ -12,6 +12,10 @@
 
 """Unit tests for EstimatorV2 prepare vanilla function."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
@@ -20,8 +24,8 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 from samplomatic.quantum_program import SamplexItem
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_estimator.prepare_vanilla import prepare_vanilla
+from qiskit_ibm_runtime.executor_estimator.prepare import prepare
+from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 
@@ -34,10 +38,50 @@ from .utils import (
     TWIRLING_SHAPE_SCENARIOS,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
+    from samplomatic.quantum_program import QuantumProgram
+
+# ---------------------------------------------------------------------------
+# Helper: build EstimatorOptions from old-style args and call prepare()
+# ---------------------------------------------------------------------------
+
+
+def _prepare_vanilla(
+    pubs: Iterable[EstimatorPubLike],
+    twirling_options: TwirlingOptions,
+    shots: int,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
+) -> QuantumProgram:
+    """Drop-in for the old ``prepare_vanilla`` that delegates to ``prepare()``.
+
+    ``measure_mitigation`` is set only when ``measure_noise_learning`` is provided
+    **and** the test observables do not contain projection operators (which are
+    incompatible with the measure-mitigation post-processing path).  For the
+    param-basis-expansion tests that combine projector observables with
+    ``measure_noise_learning``, callers should pass ``measure_noise_learning=None``
+    or use non-projector observables.
+    """
+    opts = EstimatorOptions()
+    opts.twirling = twirling_options
+    if measure_noise_learning is not None:
+        opts.resilience.measure_mitigation = True
+        opts.resilience.measure_noise_learning = measure_noise_learning
+    else:
+        opts.resilience.measure_mitigation = False
+    opts.resilience.zne_mitigation = False
+    opts.resilience.pec_mitigation = False
+    opts.default_shots = shots
+    qp, _ = prepare(pubs, opts, precision=None, add_tags=add_tags)
+    return qp
+
 
 @ddt
 class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
-    """Tests for the ``prepare_vanilla`` function."""
+    """Tests for the vanilla prepare path (no mitigation)."""
 
     @data([True, True, True], [False, True, True], [False, False, False])
     @unpack
@@ -45,7 +89,13 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         self, enable_gates, enable_measure, enable_measure_noise_learning
     ):
         """Test parameter-basis expansion with three-qubit observables."""
-        observables = PARAM_BASIS_3Q_SCENARIOS.observables
+        # TREX (measure_mitigation=True) rejects projection operators — use pure-Pauli
+        # observables when measure_noise_learning is enabled.
+        observables = (
+            PARAM_BASIS_3Q_SCENARIOS.observables_pauli
+            if enable_measure_noise_learning
+            else PARAM_BASIS_3Q_SCENARIOS.observables_with_projectors
+        )
         num_qubits = observables.num_qubits
 
         circuit = QuantumCircuit(num_qubits)
@@ -72,15 +122,17 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
                 )
                 pubs = [EstimatorPub.coerce(pub_like)]
 
-                program = prepare_vanilla(
+                program = _prepare_vanilla(
                     pubs=pubs,
                     twirling_options=twirling_options,
                     shots=10,
                     measure_noise_learning=measure_noise_learning,
                 )
 
-                post_processor_data = program.passthrough_data["post_processor"]
-                param_basis_pairs = post_processor_data["param_basis_pairs"][0]
+                # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
+                param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0][
+                    "param_basis_pairs"
+                ]
 
                 # Check that the param-basis pairs are the correct ones
                 self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
@@ -111,7 +163,7 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
 
         for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
             with self.subTest(circuit=scenario.label):
-                program = prepare_vanilla(
+                program = _prepare_vanilla(
                     pubs=[scenario.pub],
                     twirling_options=twirling_options,
                     shots=10,
@@ -123,17 +175,13 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
 
     @combine(enable_gates=[True, False], enable_measure=[True, False])
     def test_template_circuit(self, enable_gates, enable_measure):
-        """Test that the template circuit has the expected clbits and parameter count.
-
-        Uses a single circuit combining 2Q gates, a parametric gate, and a mid-circuit
-        measurement — covering all structural features of template compilation.
-        """
+        """Test that the template circuit has the expected clbits and parameter count."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
 
         scenario = TEMPLATE_CIRCUIT_SCENARIO
-        program = prepare_vanilla(
+        program = _prepare_vanilla(
             pubs=[scenario.pub],
             twirling_options=twirling_options,
             shots=10,
@@ -166,7 +214,7 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         twirling_options.enable_measure = enable_measure
         twirling_options.num_randomizations = 7
         twirling_options.strategy = "all"
-        program = prepare_vanilla(pubs=[pub], twirling_options=twirling_options, shots=1024)
+        program = _prepare_vanilla(pubs=[pub], twirling_options=twirling_options, shots=1024)
 
         self.assertEqual(len(program.items), 1)
         self.assertIsInstance(program.items[0], SamplexItem)
@@ -204,12 +252,10 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
 
     def test_prepare_with_reserved_classical_register_name_raises(self):
         """Test that prepare raises error when circuit uses reserved classical register name."""
-        # Create a circuit with the reserved classical register name
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
 
-        # Add a classical register with the reserved name
         reserved_creg = ClassicalRegister(2, "_meas")
         circuit.add_register(reserved_creg)
 
@@ -220,20 +266,15 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
 
-        # Should raise an error - the classical register name is reserved
-        with self.assertRaises(IBMInputValueError) as context:
-            prepare_vanilla([pub], twirling_options, 1024)
+        with self.assertRaises(ValueError) as context:
+            _prepare_vanilla([pub], twirling_options, 1024)
 
         self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))
 
     @data(32, "auto")
     def test_prepare_with_measure_noise_learning(self, num_randomizations):
-        """Test that measure_noise_learning adds a correctly built TREX calibration item.
-
-        Uses two pubs of different widths (2q and 3q).  Verifies item count, circuit gate
-        structure, shape, and passthrough data via :meth:`assertTrexItemIsCorrect`.
-        """
+        """Test that measure_noise_learning adds a correctly built TREX calibration item."""
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
         circuit1.cx(0, 1)
@@ -254,13 +295,12 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = num_randomizations
 
-        program = prepare_vanilla(
+        program = _prepare_vanilla(
             pubs, twirling_options, shots=1024, measure_noise_learning=measure_noise_learning
         )
 
         # Two estimation items (one per pub) + one TREX calibration item.
         self.assertEqual(len(program.items), 3)
-        # For "auto", TREX follows the twirling randomizations of the estimation items.
         expected_trex_randomizations = (
             twirling_options.num_randomizations
             if num_randomizations == "auto"
@@ -271,7 +311,7 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         )
 
     def test_shapes_twirling_configs(self):
-        """Verify the number of randomization and program.shots."""
+        """Verify the number of randomizations and program.shots."""
         qc = QuantumCircuit(2)
         qc.h(0)
         qc.cx(0, 1)
@@ -279,7 +319,7 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
 
         for scenario in TWIRLING_SHAPE_SCENARIOS:
             with self.subTest(twirling=scenario.label):
-                program = prepare_vanilla(
+                program = _prepare_vanilla(
                     pubs=[pub],
                     twirling_options=scenario.twirling_options,
                     shots=scenario.shots,

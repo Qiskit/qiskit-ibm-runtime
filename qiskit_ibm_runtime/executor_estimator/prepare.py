@@ -30,11 +30,20 @@ from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_estimator_options
 from .options_to_mitigation import (
     estimator_options_to_boxing_options,
+    layer_noise_model_to_dict,
     resolve_pec_max_overhead,
     resolve_zne_noise_factors,
 )
 from .trex_setup import apply_trex
-from .utils import has_projection_operators, resolve_precision
+from .utils import has_projection_operators, resolve_precision, validate_noise_factors
+
+# Maps the user-facing ZNE amplifier name to qiskit-mitigation's folding_method string.
+# _VALID_AMPLIFIERS in _validate() is derived from these keys plus "pea".
+_ZNE_FOLDING_METHOD: dict[str, str] = {
+    "gate_folding": "random",
+    "gate_folding_front": "front",
+    "gate_folding_back": "back",
+}
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -123,6 +132,24 @@ def _validate(
         raise IBMInputValueError(
             "PEC mitigation and ZNE mitigation are incompatible with one another."
         )
+
+    resilience = finalized_options.resilience
+    if resilience.zne_mitigation:
+        zne = resilience.zne
+        # Gaps B+C: enforce valid amplifier values up front.
+        _VALID_AMPLIFIERS = {"pea"} | set(_ZNE_FOLDING_METHOD)
+        if zne.amplifier not in _VALID_AMPLIFIERS:
+            raise IBMInputValueError(
+                "ZNE mitigation must use a gate folding or 'pea' noise amplification method. "
+                f"Got: '{zne.amplifier}'."
+            )
+        # Gap A: validate noise_factors has enough points for every requested extrapolator.
+        noise_factors, _ = resolve_zne_noise_factors(zne)
+        extrapolator = (
+            list(zne.extrapolator) if not isinstance(zne.extrapolator, str) else [zne.extrapolator]
+        )
+        validate_noise_factors(noise_factors, extrapolator)
+
     for pub in coerced_pubs:
         validate_no_boxes(pub.circuit)
         if finalized_options.resilience.measure_mitigation and has_projection_operators(pub):
@@ -186,14 +213,7 @@ def _build_quantum_program(
     boxing_opts = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
 
     # ── Noise model (PEC / PEA only) ──────────────────────────────────────────
-    noise_model: dict = {}
-    if layer_noise_model := resilience.layer_noise_model:
-        from samplomatic import InjectNoise
-        from samplomatic.utils import get_annotation
-
-        for instr, pauli_map in layer_noise_model:
-            if annotation := get_annotation(instr.operation, InjectNoise):
-                noise_model[annotation.ref] = pauli_map
+    noise_model = layer_noise_model_to_dict(resilience.layer_noise_model or [])
 
     # ── Task class selection ──────────────────────────────────────────────────
     if resilience.pec_mitigation:
@@ -291,13 +311,8 @@ def _method_kwargs(
         extrapolator = (
             list(zne.extrapolator) if not isinstance(zne.extrapolator, str) else [zne.extrapolator]
         )
-        folding_method_map = {
-            "gate_folding": "random",
-            "gate_folding_front": "front",
-            "gate_folding_back": "back",
-        }
         return {
-            "folding_method": folding_method_map[zne.amplifier],
+            "folding_method": _ZNE_FOLDING_METHOD[zne.amplifier],
             "noise_factors": noise_factors.tolist(),
             "extrapolator": extrapolator,
             "extrapolated_noise_factors": extrapolated_noise_factors.tolist(),

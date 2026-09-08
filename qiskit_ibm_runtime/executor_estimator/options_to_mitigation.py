@@ -20,6 +20,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.circuit import CircuitInstruction
+    from qiskit.quantum_info import PauliLindbladMap
+
     from ..options_models.twirling import TwirlingOptions
     from ..options_models.zne import ZneOptions
 
@@ -34,9 +39,8 @@ def estimator_options_to_boxing_options(
     This dict is passed directly to ``MitigationTask.prepare()`` (and its subclasses)
     as the ``custom_boxing_options`` argument.
 
-    Noise-injection options (``inject_noise_*``) are intentionally **not** set here for
-    PEC and PEA pathways: ``PEC._box_circuit()`` and ``PEA._box_circuit()`` enforce those
-    themselves and will raise if we duplicate them with conflicting values.
+    Noise-injection options (``inject_noise_*``) are **not** set here — ``PEC._box_circuit()``
+    and ``PEA._box_circuit()`` enforce their own required values for those fields.
 
     ``enable_measures`` and ``measure_annotations`` are also **not** set here. When TREX
     is passed to a task, ``trex._edit_boxing_options()`` forces ``enable_measures=True``
@@ -48,29 +52,21 @@ def estimator_options_to_boxing_options(
 
     Args:
         twirling_options: The finalized twirling options.
-        inject_noise: Whether to request noise-injection annotations in the boxing pass.
-            ``True`` only for PEC and PEA; ``False`` for vanilla and ZNE.
+        inject_noise: Whether noise-injection boxing is requested (PEC/PEA paths).
+            When ``True``, ``enable_gates`` is forced on regardless of the twirling setting.
         add_tags: Whether to tag boxes with a hash (``True``) or suppress tags (``False``).
             Used in local/simulator mode for noise injection.
 
     Returns:
         A dict suitable as ``custom_boxing_options`` for qiskit-mitigation task ``prepare()``.
     """
-    boxing_opts: dict = {
+    return {
         # Gate twirling is on when requested OR when noise injection is needed.
         "enable_gates": bool(twirling_options.enable_gates) or inject_noise,
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
         "twirling_group": twirling_options.group,
         "add_tags": "unique_box" if add_tags else "none",
     }
-    # inject_noise_* are only added for PEC/PEA.  PEC/PEA _box_circuit() will
-    # also set these, so we must be consistent; for ZNE/vanilla we omit them
-    # entirely so the base class defaults apply cleanly.
-    if inject_noise:
-        boxing_opts["inject_noise_site"] = "after"
-        boxing_opts["inject_noise_targets"] = "gates"
-        boxing_opts["inject_noise_strategy"] = "uniform_modification"
-    return boxing_opts
 
 
 def resolve_pec_max_overhead(
@@ -122,3 +118,32 @@ def resolve_zne_noise_factors(
         else list(np.array(zne_options.extrapolated_noise_factors, dtype=float))
     )
     return noise_factors, np.array(extrapolated_noise_factors, dtype=float)
+
+
+def layer_noise_model_to_dict(
+    layer_noise_model: Iterable[tuple[CircuitInstruction, PauliLindbladMap]],
+) -> dict[str, PauliLindbladMap]:
+    """Convert a ``layer_noise_model`` iterable to a ``{ref: PauliLindbladMap}`` dict.
+
+    ``EstimatorOptions.resilience.layer_noise_model`` stores pairs of
+    ``(CircuitInstruction, PauliLindbladMap)`` where the instruction carries a
+    samplomatic ``InjectNoise`` annotation that holds the layer reference string.
+    This helper unpacks those annotations into the plain ``ref → map`` dict that
+    qiskit-mitigation's ``PEC`` and ``PEA`` task classes expect as ``noise_maps``.
+
+    Args:
+        layer_noise_model: Iterable of ``(CircuitInstruction, PauliLindbladMap)`` pairs
+            as stored in ``EstimatorOptions.resilience.layer_noise_model``.
+
+    Returns:
+        A ``dict`` mapping each layer reference string to its ``PauliLindbladMap``.
+        Instructions without an ``InjectNoise`` annotation are silently skipped.
+    """
+    from samplomatic import InjectNoise
+    from samplomatic.utils import get_annotation
+
+    result: dict[str, PauliLindbladMap] = {}
+    for instr, pauli_map in layer_noise_model:
+        if annotation := get_annotation(instr.operation, InjectNoise):
+            result[annotation.ref] = pauli_map
+    return result
