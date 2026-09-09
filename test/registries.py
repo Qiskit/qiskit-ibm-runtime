@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypeAlias
 from urllib.parse import parse_qs, urlparse
 
-from responses import GET, PATCH, POST, CallbackResponse
+from responses import DELETE, GET, PATCH, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
 
 from qiskit_ibm_runtime.fake_provider import FakeLimaV2
@@ -31,10 +31,15 @@ if TYPE_CHECKING:
 
     from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 
-# ``responses`` callback return value: (status code, headers, body).
+
 CallbackResult: TypeAlias = tuple[int, dict[str, str], str]
+"""``responses`` callback return value: (statis code, headers, body)."""
 
 PricingType: TypeAlias = Literal["free", "trial", "paygo", "paid", "subscription", "unknown"]
+"""Princing types for an instance."""
+
+JobStatus: TypeAlias = Literal["queued", "running", "completed", "cancelled", "failed"]
+"""Possible job statuses."""
 
 DEFAULT_BACKED_CONFIGURATION = FakeLimaV2()._load_json(FakeLimaV2.conf_filename)
 """Default configuration for registry backends, cached and based on FakeLima."""
@@ -161,7 +166,7 @@ class Job:
 
     program: Literal["sampler", "estimator", "executor"] = "sampler"
 
-    status: Literal["queued", "running", "completed", "cancelled", "failed"] = "completed"
+    status: Literal[JobStatus] = "completed"
     """Job status."""
 
     raw_details: str | None = None
@@ -173,12 +178,24 @@ class Job:
     usage: dict | None = None
     """Job usage dictionary."""
 
+    statuses: list[JobStatus] = field(default_factory=lambda: ["completed"])
+    """States that a job goes through."""
+
+    statuses_reason: dict[JobStatus, tuple[int, str]] = field(default_factory=dict)
+    """Reason code and reason message for each job status."""
+
     def __post_init__(self) -> None:
         if self.usage is None:
             self.usage = {
                 "qpu_charge_time_seconds": 0 if self.status != "completed" else 20,
                 "status": "pending" if self.status in ("queued", "running") else "completed",
             }
+
+    def advance_status(self) -> None:
+        """Set `self.status` to the next one."""
+        current_index = self.statuses.index(self.status)
+        next_index = min(len(self.statuses) - 1, current_index + 1)
+        self.status = self.statuses[next_index]
 
 
 @dataclass
@@ -321,6 +338,20 @@ class BaseRegistry(FirstMatchRegistry):
                 method=GET,
                 url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+"),
                 callback=self.callback_jobs_id,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=POST,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+/cancel"),
+                callback=self.callback_jobs_cancel,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=DELETE,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+"),
+                callback=self.callback_jobs_delete,
             ),
         )
         self.add(
@@ -580,7 +611,8 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_id(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}`` endpoint.
 
-        Dynamically return a job, based on the contents of `self.jobs`.
+        Dynamically return a job, based on the contents of `self.jobs`. Calling this callback
+        will make the job advance to its next status (mimicking how the job progresses).
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -597,17 +629,58 @@ class BaseRegistry(FirstMatchRegistry):
         if job.raw_details:
             response_body = job.raw_details
         else:
+            state: dict[str, int | str] = {"status": job.status.capitalize()}
+            if job.status in job.statuses_reason:
+                state["reason_code"] = job.statuses_reason[job.status][0]
+                state["reason"] = job.statuses_reason[job.status][1]
+
             response_body = json.dumps(
                 {
                     "id": job.id,
                     "backend": job.backend_name,
                     "status": job.status.capitalize(),
-                    "state": {"status": job.status.capitalize()},
+                    "state": state,
                     "program": {"id": job.program},
                     "usage": job.usage,
                 }
             )
+
+        # Advance job status.
+        job.advance_status()
+
         return (200, {"Content-Type": "application/json"}, response_body)
+
+    def callback_jobs_cancel(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}/cancel`` endpoint.
+
+        Cancel a job (no-op).
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and job id.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-2].split("?")[0]
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        return (200, {"Content-Type": "application/json"}, json.dumps({}))
+
+    def callback_jobs_delete(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}/cancel`` endpoint.
+
+        Delete a job (no-op).
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and job id.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-1].split("?")[0]
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        return (200, {"Content-Type": "application/json"}, json.dumps({}))
 
     def callback_jobs_metrics(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}/metrics`` endpoint.
@@ -658,7 +731,7 @@ class BaseRegistry(FirstMatchRegistry):
         if job.raw_results:
             response_body = job.raw_results
         else:
-            response_body = json.dumps({})
+            response_body = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         return (200, {"Content-Type": "application/json"}, response_body)
 
     def callback_instances_usage(self, request: PreparedRequest) -> CallbackResult:
