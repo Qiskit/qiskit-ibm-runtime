@@ -265,7 +265,7 @@ class TestGetBackend(IBMTestCase):
 
         This test is originally written in 2024.05.31
         """
-        registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
+        registry.add_backend(Backend.from_(FakeFractionalBackend))
         service = QiskitRuntimeService(token="my_token")
 
         test_backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
@@ -289,7 +289,7 @@ class TestGetBackend(IBMTestCase):
 
         Backend with and without opt-in must be different object.
         """
-        registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
+        registry.add_backend(Backend.from_(FakeFractionalBackend))
         service = QiskitRuntimeService(token="my_token")
 
         backend_with_fg = service.backend("fake_fractional", use_fractional_gates=True)
