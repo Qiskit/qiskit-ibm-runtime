@@ -588,6 +588,22 @@ class BaseRegistry(FirstMatchRegistry):
         if instance.name not in self.backends:
             return (404, {"Content-Type": "application/json"}, "{}")
 
+        # Get filtering parameters.
+        query_params = parse_qs(urlparse(request.url).query)
+        limit_param = query_params.get("limit", [None])[0]
+        limit = int(limit_param) if limit_param else 20
+        offset_param = query_params.get("offset", [None])[0]
+        offset = int(offset_param) if offset_param else 0
+        pending = query_params.get("pending", [None])[0]
+
+        statuses = ["queued", "running", "completed", "cancelled", "failed"]
+        if pending is not None:
+            if pending:
+                statuses = ["queued", "running"]
+            else:
+                statuses = ["completed", "cancelled", "failed"]
+
+        # Get the candidate jobs, applying the filters.
         jobs = [
             {
                 "id": job.id,
@@ -598,13 +614,18 @@ class BaseRegistry(FirstMatchRegistry):
                 "usage": job.usage,
             }
             for job in self.jobs[instance.name].values()
+            if job.status in statuses
         ]
+        count = len(jobs)
+
+        # Trim according to offset and limit.
+        jobs = jobs[offset : limit + offset]
 
         response_body = {
             "jobs": jobs,
-            "count": len(jobs),
-            "limit": 20,
-            "offset": 0,
+            "count": count,
+            "limit": limit,
+            "offset": offset,
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
