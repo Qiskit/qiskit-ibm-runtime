@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 import numpy as np
 from qiskit.primitives import PrimitiveResult as _PrimitiveResult
 from qiskit.primitives.containers.data_bin import DataBin
-from qiskit_mitigation import PEA, ZNE
+from qiskit_mitigation import PEA, GateFolding
 from qiskit_mitigation.utils.utils import load_tasks_from_result
 
 from ...results.estimator_pub import EstimatorPubResult
@@ -98,7 +98,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             task.param_shape = tuple(task.param_shape)
 
         # Workaround for qiskit-mitigation issue #10.
-        if isinstance(task, (ZNE, PEA)) and isinstance(
+        if isinstance(task, (GateFolding, PEA)) and isinstance(
             getattr(task, "extrapolated_noise_factors", None), np.ndarray
         ):
             task.extrapolated_noise_factors = task.extrapolated_noise_factors.tolist()
@@ -118,7 +118,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Build per-item compilation metadata.
         pub_meta: dict[str, Any]
-        if isinstance(task, ZNE) and task.noise_factors is not None:
+        if isinstance(task, GateFolding) and task.noise_factors is not None:
             # ZNE has one result item per noise factor; aggregate their metadata.
             num_nf = len(task.noise_factors)
             items_meta = [
@@ -129,7 +129,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         else:
             pub_meta = _create_pub_result_metadata(result[task._program_item_index].metadata)
 
-        if isinstance(task, (ZNE, PEA)):
+        if isinstance(task, (GateFolding, PEA)):
             selected_extrapolators = pub_result_raw.metadata["selected_extrapolators"]
             extrapolators = [
                 values[0] if all(value == values[0] for value in values) else "multiple"
@@ -222,7 +222,7 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
 
     db = pub_result.data
 
-    if isinstance(task, (ZNE, PEA)):
+    if isinstance(task, (GateFolding, PEA)):
         renamed = DataBin(
             evs=db.evs,
             stds=db.stds,

@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit_mitigation import PEA, PEC, TREX, ZNE, MitigationTask
+from qiskit_mitigation import PEA, PEC, TREX, GateFolding, MitigationTask
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
@@ -193,7 +193,7 @@ def _task_class_for(resilience: ResilienceOptions) -> type:
     if resilience.zne_mitigation and resilience.zne.amplifier == "pea":
         return PEA
     if resilience.zne_mitigation:
-        return ZNE
+        return GateFolding
     return MitigationTask
 
 
@@ -311,7 +311,7 @@ def _method_kwargs(
             "max_sampling_overhead": max_overhead,
         }
 
-    if task_class in (PEA, ZNE):
+    if task_class in (PEA, GateFolding):
         zne = resilience.zne
         noise_factors, extrapolated_noise_factors = resolve_zne_noise_factors(zne)
         kwargs: dict = {
