@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypeAlias
 from urllib.parse import parse_qs, urlparse
 
-from responses import GET, POST, CallbackResponse
+from responses import GET, PATCH, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
 
 from qiskit_ibm_runtime.fake_provider import FakeLimaV2
@@ -66,6 +66,9 @@ class Instance:
 
     usage: dict | None = None
     """Instance usage dictionary."""
+
+    tags: list = field(default_factory=list)
+    """Instance tags."""
 
     def __post_init__(self) -> None:
         if not self.crn:
@@ -178,6 +181,20 @@ class Job:
             }
 
 
+@dataclass
+class Session:
+    """Registry representation of a session."""
+
+    id: str
+    """Session id."""
+
+    backend_name: str
+    """Backend name."""
+
+    mode: Literal["batch", "dedicated"] = "dedicated"
+    """Session mode."""
+
+
 class BaseRegistry(FirstMatchRegistry):
     """Registry that dynamically serves IBM Quantum Compute responses.
 
@@ -208,25 +225,33 @@ class BaseRegistry(FirstMatchRegistry):
     jobs: dict[str, dict[str, Job]]
     """Jobs in this registry, keyed by instance name and job id."""
 
+    sessions: dict[str, dict[str, Session]]
+    """Sessions in this registry, keyed by instance id and session id."""
+
     def __init__(self) -> None:
         super().__init__()
 
         self.instances = {}
         self.backends = defaultdict(dict)
         self.jobs = defaultdict(dict)
+        self.sessions = defaultdict(dict)
 
         # Add callbacks for IBM Global Search and Global Catalog.
         self.add(
             CallbackResponse(
                 method=POST,
-                url="https://api.global-search-tagging.cloud.ibm.com/v3/resources/search",
+                url=re.compile(
+                    r"https://api.global-search-tagging.(?:([a-zA-Z0-9-]+)\.)?cloud.ibm.com/v3/resources/search"
+                ),
                 callback=self.callback_global_search,
             )
         )
         self.add(
             CallbackResponse(
                 method=GET,
-                url=re.compile(r"https://globalcatalog.cloud.ibm.com/api/v1/\w+"),
+                url=re.compile(
+                    r"https://globalcatalog.(?:([a-zA-Z0-9-]+)\.)?cloud.ibm.com/api/v1/\w+"
+                ),
                 callback=self.callback_catalog,
             )
         )
@@ -313,6 +338,29 @@ class BaseRegistry(FirstMatchRegistry):
             ),
         )
 
+        # Add callbacks for the IBM Quantum Compute `/sessions` endpoints.
+        self.add(
+            CallbackResponse(
+                method=POST,
+                url="https://my-region.quantum.cloud.ibm.com/api/v1/sessions",
+                callback=self.callback_sessions_post,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/sessions/\w+"),
+                callback=self.callback_sessions_id,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=PATCH,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/sessions/\w+"),
+                callback=self.callback_sessions_patch,
+            ),
+        )
+
         # Add callbacks for the IBM Quantum Compute `/workloads` endpoints.
         self.add(
             CallbackResponse(
@@ -339,6 +387,10 @@ class BaseRegistry(FirstMatchRegistry):
         """Add a new job to the registry."""
         self.jobs[instance][job.id] = job
 
+    def add_session(self, session: Session, instance: str) -> None:
+        """Add a new session to the registry."""
+        self.sessions[instance][session.id] = session
+
     def callback_global_search(self, _: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Cloud Global Search API.
 
@@ -356,6 +408,7 @@ class BaseRegistry(FirstMatchRegistry):
                     "name": instance.name,
                     "doc": {"extensions": instance.allocations},
                     "service_plan_unique_id": instance.name,
+                    "tags": instance.tags,
                 }
                 for _, instance in self.instances.items()
             ]
@@ -450,7 +503,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_backends_status(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/backends/{id}/status`` endpoint.
 
-        Dynamically return the configuration of a backend, based on the contents of `self.backends`.
+        Dynamically return the status of a backend, based on the contents of `self.backends`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
@@ -473,7 +526,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_post(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
 
-        Dynamically return a job, based on the contents of `self.backends`.
+        Dynamically return the result of creating a job.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -494,7 +547,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_get(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
 
-        Dynamically return a list of job, based on the contents of `self.jobs`.
+        Dynamically return a list of jobs, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -559,7 +612,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_metrics(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}/metrics`` endpoint.
 
-        Dynamically return the metric of a job, based on the contents of `self.jobs`.
+        Dynamically return the metrics of a job, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -589,7 +642,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_results(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}/results`` endpoint.
 
-        Dynamically return a job results, based on the contents of `self.jobs`.
+        Dynamically return a job's results, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -611,7 +664,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_instances_usage(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/instances/usage`` endpoint.
 
-        Dynamically return a job results, based on the contents of `self.jobs`.
+        Dynamically return the usage of an instance, based on the contents of `self.instances`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/instances
@@ -620,6 +673,58 @@ class BaseRegistry(FirstMatchRegistry):
         instance = self.get_crn_from_request(request)
 
         return (200, {"Content-Type": "application/json"}, json.dumps(instance.usage))
+
+    def callback_sessions_post(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
+
+        Dynamically return result of creating a session.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and backend name.
+        instance = self.get_crn_from_request(request)
+        request_body = json.loads(request.body)
+        backend_name = request_body["backend"]
+        if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        response_body = {"id": "12345", "backend_name": backend_name, "mode": request_body["mode"]}
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+
+    def callback_sessions_id(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
+
+        Dynamically return a session's information, based on the contents of `self.sessions`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and session id.
+        instance = self.get_crn_from_request(request)
+        session_id = request.path_url.split("/")[-1].split("?")[0]
+        if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+        session = self.sessions[instance.name][session_id]
+
+        response_body = {"id": "12345", "backend_name": session.backend_name, "mode": session.mode}
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+
+    def callback_sessions_patch(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
+
+        Dynamically update a session (no-op).
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and session id.
+        instance = self.get_crn_from_request(request)
+        session_id = request.path_url.split("/")[-1].split("?")[0]
+        if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        return (204, {"Content-Type": "application/json"}, json.dumps({}))
 
     def callback_workloads_get(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/workloads`` endpoint.

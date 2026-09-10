@@ -428,7 +428,7 @@ class QiskitRuntimeService:
             account = AccountManager.get(filename=filename, name=name)
         elif channel:
             if channel and channel not in ["ibm_cloud", "ibm_quantum_platform"]:
-                raise ValueError("'channel' can only be 'ibm_cloud', or 'ibm_quantum_platform")
+                raise ValueError("'channel' can only be 'ibm_cloud', or 'ibm_quantum_platform'")
             if token:
                 account = Account.create_account(
                     channel=channel,

@@ -59,6 +59,7 @@ from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
 from qiskit_ibm_runtime.json import RuntimeDecoder, RuntimeEncoder
 from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from qiskit_ibm_runtime.options_models import ExecutorOptions, NoiseLearnerV3Options
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
@@ -68,12 +69,11 @@ from qiskit_ibm_runtime.results.noise_learner import (
     PauliLindbladError,
 )
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..program import run_program
+from ..registries import Job
 from ..serialization import SerializableClass, SerializableClassDecoder, get_complex_types
-from ..utils import bell, mock_wait_for_final_state
-from .mock.fake_runtime_client import CustomResultRuntimeJob
-from .mock.fake_runtime_service import FakeRuntimeService
+from ..utils import bell
 
 if HAS_AER:
     from qiskit_aer.noise import NoiseModel
@@ -258,24 +258,22 @@ if __name__ == '__main__':
                 )
                 self.assertIn(operator.__class__.__name__, proc.stdout)
 
-    def test_result_decoder(self):
+    @mock_responses
+    def test_result_decoder(self, registry):
         """Test result decoder."""
-        custom_result = get_complex_types()
-        job_cls = CustomResultRuntimeJob
-        job_cls.custom_result = custom_result
-        ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum_platform", token="some_token")
+        registry.add_job(
+            Job(
+                "my_job",
+                "common_backend",
+                raw_results=json.dumps(get_complex_types(), cls=RuntimeEncoder),
+            ),
+            instance="a",
+        )
+        service = QiskitRuntimeService(token="my_token")
 
-        sub_tests = [(SerializableClassDecoder, None), (None, SerializableClassDecoder)]
-        for result_decoder, decoder in sub_tests:
-            with self.subTest(decoder=decoder):
-                job = run_program(
-                    service=ibm_quantum_service,
-                    job_classes=job_cls,
-                    decoder=result_decoder,
-                )
-                with mock_wait_for_final_state(ibm_quantum_service, job):
-                    result = job.result(decoder=decoder)
-                self.assertIsInstance(result["serializable_class"], SerializableClass)
+        job = service.job("my_job")
+        result = job.result(decoder=SerializableClassDecoder)
+        self.assertIsInstance(result["serializable_class"], SerializableClass)
 
     def test_circuit_metadata(self):
         """Test serializing circuit metadata."""
