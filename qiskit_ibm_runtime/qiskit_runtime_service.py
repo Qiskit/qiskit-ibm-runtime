@@ -726,6 +726,7 @@ class QiskitRuntimeService:
         instance: str,
         use_fractional_gates: bool | None,
         calibration_id: str | None = None,
+        cache: bool = True,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
@@ -738,6 +739,7 @@ class QiskitRuntimeService:
                 operations.  See :meth:`~.QiskitRuntimeService.backends` for
                 further details.
             calibration_id: The calibration id to use for the IBM backend.
+            cache: If ``False``, do not cache the backend in `self._backend_configs`.
 
         Returns:
             A backend object.
@@ -774,7 +776,8 @@ class QiskitRuntimeService:
                         instance=instance,
                         use_fractional_gates=use_fractional_gates,
                     )
-                    self._backend_configs[backend_name] = config
+                    if cache:
+                        self._backend_configs[backend_name] = config
 
             else:
                 config = configuration_from_server_data(
@@ -787,7 +790,8 @@ class QiskitRuntimeService:
                 # I know we have a configuration_registry in the api client
                 # but that doesn't work with new IQP since we different api clients are being used
 
-                self._backend_configs[backend_name] = config
+                if cache:
+                    self._backend_configs[backend_name] = config
         except Exception as ex:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             raise QiskitBackendNotFoundError(
