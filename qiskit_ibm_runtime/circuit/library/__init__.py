@@ -10,7 +10,26 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Module for vendor-specific instructions."""
+"""
+================================================================================
+Vendor-specific circuit instructions (:mod:`qiskit_ibm_runtime.circuit.library`)
+================================================================================
+
+.. currentmodule:: qiskit_ibm_runtime.circuit.library
+
+Vendor-specific circuit instructions.
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   MeasureReset
+   MidCircuitMeasure
+   MidCircuitReset
+   XSlowGate
+"""
 
 from .mid_circuit_measure import MeasureReset, MidCircuitMeasure, MidCircuitReset
 from .xslow import XSlowGate
