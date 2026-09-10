@@ -968,7 +968,7 @@ class QiskitRuntimeService:
             from qiskit_ibm_runtime import QiskitRuntimeService
 
             service = QiskitRuntimeService()
-            backend = service.backend()
+            backend = service.backend("ibm_kingston")
 
             status = backend.status()
             assert status.operational and status.status_msg == "active"
@@ -996,6 +996,34 @@ class QiskitRuntimeService:
             use_fractional_gates=use_fractional_gates,
             calibration_id=calibration_id,
         )
+
+        # `self.backends()` might not include all the backends by default. If no backend was
+        # returned, make a one-time uncached attempt to retrieve the backend based on its name.
+        if not backends:
+            # Use the specified instance crns, or traverse instances in sensible order.
+            instances = [data[0] for data in self._resolve_cloud_instances(instance)]
+
+            for instance_ in instances:
+                try:
+                    self._get_or_create_cloud_client(instance_)
+                    backends = [
+                        self._create_backend_obj(
+                            name, instance_, use_fractional_gates, calibration_id, cache=False
+                        )
+                    ]
+                    # Show a warning only if the instance is guessed.
+                    if not instance and not self._instance_auto:
+                        for inst_details in self._backend_instance_groups:
+                            if instance_ == inst_details["crn"]:
+                                logger.warning(
+                                    "Loading instance: %s, plan: %s",
+                                    inst_details["name"],
+                                    inst_details["plan"],
+                                )
+                    break
+                except QiskitBackendNotFoundError:
+                    pass
+
         if not backends:
             cloud_msg_url = ""
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
