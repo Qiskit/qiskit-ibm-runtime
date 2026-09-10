@@ -97,12 +97,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         if isinstance(task.param_shape, list):
             task.param_shape = tuple(task.param_shape)
 
-        # Workaround for qiskit-mitigation issue #10.
-        if isinstance(task, (GateFolding, PEA)) and isinstance(
-            getattr(task, "extrapolated_noise_factors", None), np.ndarray
-        ):
-            task.extrapolated_noise_factors = task.extrapolated_noise_factors.tolist()
-
         # Delegates all expectation-value math (PEC/PEA/ZNE/vanilla + TREX) to
         # qiskit-mitigation. task.postprocess() uses task._program_item_index to
         # slice the correct item(s) from result, and calls
