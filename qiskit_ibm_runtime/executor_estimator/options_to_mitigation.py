@@ -88,5 +88,4 @@ def layer_noise_model_to_dict(
     for instr, pauli_map in layer_noise_model:
         if annotation := get_annotation(instr.operation, InjectNoise):
             result[annotation.ref] = pauli_map
-        # TODO: Refs of tags for simulator?
     return result
