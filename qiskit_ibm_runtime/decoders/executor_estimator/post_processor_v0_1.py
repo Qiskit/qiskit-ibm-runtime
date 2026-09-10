@@ -21,12 +21,10 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from qiskit.primitives.containers import PrimitiveResult
-
     from ...results.quantum_program import QuantumProgramResult
 
 import numpy as np
-from qiskit.primitives import PrimitiveResult as _PrimitiveResult
+from qiskit.primitives.containers import PrimitiveResult, PubResult
 from qiskit.primitives.containers.data_bin import DataBin
 from qiskit_mitigation import PEA, GateFolding
 from qiskit_mitigation.utils.utils import load_tasks_from_result
@@ -37,22 +35,16 @@ from ...results.quantum_program import ItemMetadata
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Public entry point (name kept for compatibility with the decoder registry)
-# ---------------------------------------------------------------------------
-
-
 def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
     """Convert a quantum program result to a primitives result for EstimatorV2.
 
     Reads ``passthrough_data["qiskit_mitigation"]`` to reconstruct the per-pub
     mitigation task objects via ``load_tasks_from_result()``, then calls
-    ``task.postprocess(result)`` for each pub.  TREX noise-model computation is
+    ``task.postprocess(result)`` for each pub. TREX noise-model computation is
     handled automatically inside ``task.postprocess()`` when TREX is present.
 
     Runtime metadata (options, shots, precision, circuit metadata) is read from
-    the separate ``passthrough_data["post_processor"]`` block, which is entirely
-    owned by us and never written to by qiskit-mitigation.
+    the separate ``passthrough_data["post_processor"]`` block.
 
     Args:
         result: The raw quantum program result containing measurement data.
@@ -62,7 +54,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` instances.
     """
     if len(result) == 0:
-        return _PrimitiveResult([])
+        return PrimitiveResult([])
 
     if not isinstance(result.passthrough_data, dict):
         raise ValueError(
@@ -77,9 +69,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     num_pubs: int = post_processor_data["num_pubs"]
     circuits_metadata: list[Any] = post_processor_data.get("circuits_metadata") or []
 
-    # Reconstruct all task objects from the qiskit-mitigation passthrough block.
-    # load_tasks_from_result returns exactly num_pubs entries (one per pub); the
-    # TREX entry is consumed internally to wire up trex references on each task.
     tasks = load_tasks_from_result(result)
 
     if len(tasks) != num_pubs:
@@ -97,10 +86,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         if isinstance(task.param_shape, list):
             task.param_shape = tuple(task.param_shape)
 
-        # Delegates all expectation-value math (PEC/PEA/ZNE/vanilla + TREX) to
-        # qiskit-mitigation. task.postprocess() uses task._program_item_index to
-        # slice the correct item(s) from result, and calls
-        # trex.compute_noise_model(result) automatically when TREX is attached.
         pub_result_raw = task.postprocess(result)
 
         # Rename DataBin fields to our public API names.
@@ -119,6 +104,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 _create_pub_result_metadata(result[task._program_item_index + j].metadata)
                 for j in range(num_nf)
             ]
+            # TODO: Is there a way to avoid the private attribute?
             pub_meta = {key: [m[key] for m in items_meta] for key in items_meta[0]}
         else:
             pub_meta = _create_pub_result_metadata(result[task._program_item_index].metadata)
@@ -141,12 +127,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     metadata = _build_program_result_metadata(post_processor_data)
     metadata["executor"] = result.metadata
-    return _PrimitiveResult(pub_results, metadata=metadata)
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+    return PrimitiveResult(pub_results, metadata=metadata)
 
 
 def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict[str, Any]:
@@ -186,15 +167,15 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
     qiskit-mitigation's broadcast path for ``MitigationTask`` and ``PEC``
     produces a ``DataBin`` with::
 
-        evs            – expectation values
-        stds           – ensemble standard error (over all shots as one pool)
-        twirl_stds     – twirl-level standard error (std of per-twirl estimates)
+        evs            - expectation values
+        stds           - ensemble standard error (over all shots as one pool)
+        twirl_stds     - twirl-level standard error (std of per-twirl estimates)
 
     Our public API names are::
 
-        evs                    – same
-        ensemble_standard_error – what qiskit-mitigation calls ``stds``
-        stds                   – what qiskit-mitigation calls ``twirl_stds``
+        evs                    - same
+        ensemble_standard_error - what qiskit-mitigation calls ``stds``
+        stds                   - what qiskit-mitigation calls ``twirl_stds``
 
     When twirling is **not** enabled (1 randomization), ``stds`` and
     ``ensemble_standard_error`` are identical.
@@ -212,8 +193,6 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
         The ``pub_result`` with a re-keyed ``DataBin`` when renaming is needed,
         or the original ``pub_result`` unchanged for ZNE/PEA.
     """
-    from qiskit.primitives import PubResult
-
     db = pub_result.data
 
     if isinstance(task, (GateFolding, PEA)):
@@ -229,19 +208,11 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
         )
         return PubResult(data=renamed, metadata=pub_result.metadata)
 
-    # Pull out current fields; twirl_stds may be absent on very old builds.
-    evs = db.evs
-    ensemble_standard_error = db.stds  # rename: stds → ensemble_standard_error
-    twirl_stds = getattr(db, "twirl_stds", None)
-    stds = (
-        twirl_stds if twirl_stds is not None else ensemble_standard_error
-    )  # rename: twirl_stds → stds
-
     renamed = DataBin(
-        evs=evs,
-        stds=stds,
-        ensemble_standard_error=ensemble_standard_error,
-        shape=evs.shape,
+        evs=db.evs,
+        stds=db.twirl_stds,
+        ensemble_standard_error=db.stds,
+        shape=db.evs.shape,
     )
     return PubResult(data=renamed, metadata=pub_result.metadata)
 

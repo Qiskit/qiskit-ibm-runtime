@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit_mitigation import find_combined_unique_layers
+from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
@@ -27,7 +27,7 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
 from .options_to_mitigation import estimator_options_to_boxing_options
-from .prepare import _NOISE_INJECTION_TASKS, _task_class_for, prepare
+from .prepare import _choose_task_class, prepare
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -159,10 +159,10 @@ class EstimatorV2(BaseEstimatorV2):
         """
         coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
         options = self.finalize_options()
-        task_class = _task_class_for(options.resilience)
+        task_class = _choose_task_class(options.resilience)
         boxing_opts = estimator_options_to_boxing_options(
             options.twirling,
-            inject_noise=task_class in _NOISE_INJECTION_TASKS,
+            inject_noise=task_class in (PEC, PEA),
             add_tags=True,
         )
         box_types_arg = "all" if types == "all" else "gates"

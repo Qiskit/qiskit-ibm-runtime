@@ -28,28 +28,10 @@ from ..options_models.converters import estimator_options_to_executor_options
 from ..quantum_program import QuantumProgram
 from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_estimator_options
-from .options_to_mitigation import (
-    estimator_options_to_boxing_options,
-    layer_noise_model_to_dict,
-    resolve_pec_max_overhead,
-    resolve_zne_noise_factors,
-)
+from .options_to_mitigation import estimator_options_to_boxing_options, layer_noise_model_to_dict
+from .pec.utils import calculate_pec_twirling_shots, resolve_pec_max_overhead
 from .trex_setup import apply_trex
 from .utils import has_projection_operators, resolve_precision, validate_noise_factors
-
-# Maps the user-facing ZNE amplifier name to qiskit-mitigation's folding_method string.
-_ZNE_FOLDING_METHOD: dict[str, str] = {
-    "gate_folding": "random",
-    "gate_folding_front": "front",
-    "gate_folding_back": "back",
-}
-
-# All valid ZNE amplifier names (gate-folding variants + PEA).
-_VALID_AMPLIFIERS: frozenset[str] = frozenset(_ZNE_FOLDING_METHOD) | {"pea"}
-
-# Task classes that inject noise (PEC and PEA).  Used to derive ``inject_noise``
-# from the already-selected task class, avoiding repetition of the condition.
-_NOISE_INJECTION_TASKS: frozenset[type] = frozenset({PEC, PEA})
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -62,6 +44,13 @@ if TYPE_CHECKING:
     from ..options_models.resilience import ResilienceOptions
 
 logger = logging.getLogger(__name__)
+
+# Maps the user-facing ZNE amplifier name to qiskit-mitigation's folding_method string.
+_ZNE_FOLDING_METHOD: dict[str, str] = {
+    "gate_folding": "random",
+    "gate_folding_front": "front",
+    "gate_folding_back": "back",
+}
 
 
 def prepare(
@@ -122,11 +111,6 @@ def prepare(
     return quantum_program, executor_options
 
 
-# ---------------------------------------------------------------------------
-# Validation
-# ---------------------------------------------------------------------------
-
-
 def _validate(
     coerced_pubs: Sequence[EstimatorPub],
     finalized_options: EstimatorOptions,
@@ -151,15 +135,10 @@ def _validate(
         )
 
     if resilience.zne_mitigation:
-        zne = resilience.zne
-        if zne.amplifier not in _VALID_AMPLIFIERS:
-            raise IBMInputValueError(
-                "ZNE mitigation must use a gate folding or 'pea' noise amplification method. "
-                f"Got: '{zne.amplifier}'."
-            )
+        zne_options = resilience.zne
         # Validate noise_factors has enough points for every requested extrapolator.
-        noise_factors, _ = resolve_zne_noise_factors(zne)
-        validate_noise_factors(noise_factors, _normalise_extrapolator(zne.extrapolator))
+        noise_factors, _ = zne_options.resolve_noise_factors()
+        validate_noise_factors(noise_factors, _normalise_extrapolator(zne_options.extrapolator))
 
     for pub in coerced_pubs:
         validate_no_boxes(pub.circuit)
@@ -181,12 +160,7 @@ def _validate(
                 )
 
 
-# ---------------------------------------------------------------------------
-# Program building
-# ---------------------------------------------------------------------------
-
-
-def _task_class_for(resilience: ResilienceOptions) -> type:
+def _choose_task_class(resilience: ResilienceOptions) -> type:
     """Return the qiskit-mitigation task class for the given resilience options."""
     if resilience.pec_mitigation:
         return PEC
@@ -208,17 +182,11 @@ def _build_quantum_program(
     resilience = finalized_options.resilience
     twirling = finalized_options.twirling
 
-    # ── Task class selection (single source of truth) ─────────────────────────
-    task_class = _task_class_for(resilience)
-    inject_noise = task_class in _NOISE_INJECTION_TASKS
+    task_class = _choose_task_class(resilience)
+    inject_noise = task_class in (PEC, PEA)
 
-    # ── Shot split ────────────────────────────────────────────────────────────
-    # PEC uses its own shot-split logic (default shots_per_rand=64, smaller than
-    # the standard twirling default) to keep per-randomisation overhead low.
-    # All other pathways use the standard twirling shot split.
+    # PEC uses its own shot-split logic, all other pathways use the standard twirling shot split.
     if task_class is PEC:
-        from .pec.utils import calculate_pec_twirling_shots
-
         num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
             shots,
             twirling.num_randomizations,
@@ -233,22 +201,21 @@ def _build_quantum_program(
     else:
         num_randomizations, shots_per_randomization = 1, shots
 
-    # ── Boxing options (shared across all pubs) ───────────────────────────────
+    # Setup
     boxing_opts = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
-
-    # ── Noise model (PEC / PEA only) ──────────────────────────────────────────
-    noise_model = layer_noise_model_to_dict(resilience.layer_noise_model or [])
-
-    # ── TREX instance (one shared across all pubs) ────────────────────────────
+    noise_model = (
+        layer_noise_model_to_dict(resilience.layer_noise_model)
+        if resilience.layer_noise_model is not None
+        else {}
+    )
     measure_noise_learning = (
         resilience.measure_noise_learning if resilience.measure_mitigation else None
     )
     trex: TREX | None = TREX() if measure_noise_learning is not None else None
 
-    # ── Quantum program (shots locked here) ───────────────────────────────────
+    # Build the QP
     qp = QuantumProgram(shots=shots_per_randomization)
 
-    # ── Per-pub loop ──────────────────────────────────────────────────────────
     for i, pub in enumerate(coerced_pubs):
         logger.info("Processing pub %d/%d with %s.", i + 1, len(coerced_pubs), task_class.__name__)
         task = task_class()
@@ -256,7 +223,7 @@ def _build_quantum_program(
             circuit=pub.circuit,
             observables=pub.observables,
             parameters=pub.parameter_values,
-            custom_boxing_options=dict(boxing_opts),  # fresh copy per pub
+            custom_boxing_options=boxing_opts,
             shots_per_randomization=shots_per_randomization,
             num_randomizations=num_randomizations,
             broadcast_obs_and_params=True,
@@ -267,11 +234,11 @@ def _build_quantum_program(
             ),
         )
 
-    # ── TREX finalisation (must be after all task.prepare() calls) ────────────
+    # TREX finalisation (must be after all task.prepare() calls)
     if trex is not None:
         apply_trex(trex, qp, measure_noise_learning, num_randomizations)
 
-    # ── Dynamical decoupling ──────────────────────────────────────────────────
+    # Dynamical decoupling
     if finalized_options.dynamical_decoupling.enable:
         logger.info("Applying dynamical decoupling.")
         qp = apply_dynamical_decoupling(
@@ -313,7 +280,7 @@ def _method_kwargs(
 
     if task_class in (PEA, GateFolding):
         zne = resilience.zne
-        noise_factors, extrapolated_noise_factors = resolve_zne_noise_factors(zne)
+        noise_factors, extrapolated_noise_factors = zne.resolve_noise_factors()
         kwargs: dict = {
             "noise_factors": noise_factors.tolist(),
             "extrapolator": _normalise_extrapolator(zne.extrapolator),
