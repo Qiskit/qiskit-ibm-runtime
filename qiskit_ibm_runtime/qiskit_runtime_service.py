@@ -331,7 +331,8 @@ class QiskitRuntimeService:
             self._backends_info_per_instance[instance] = self._active_api_client.list_backends()
             return [backend["name"] for backend in self._backends_info_per_instance[instance]]
         # On staging there some invalid instances returned that 403 when retrieving backends
-        except Exception:
+        except Exception as ex:
+            print(ex)
             logger.warning("Invalid instance %s", instance)
             return []
 
@@ -1016,7 +1017,7 @@ class QiskitRuntimeService:
                         for inst_details in self._backend_instance_groups:
                             if instance_ == inst_details["crn"]:
                                 logger.warning(
-                                    "Loading instance: %s, plan: %s",
+                                    "Using instance: %s, plan: %s",
                                     inst_details["name"],
                                     inst_details["plan"],
                                 )
