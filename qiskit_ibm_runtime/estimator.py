@@ -126,16 +126,22 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
     def run(
-        self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
+        self,
+        pubs: Iterable[EstimatorPubLike],
+        *,
+        precision: float | None = None,
+        dry_run: bool = False,
     ) -> RuntimeJobV2:
         """Submit a request to the estimator primitive.
 
         Args:
-            pubs: An iterable of pub-like (primitive unified bloc) objects, such as
-                tuples ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
-            precision: The target precision for expectation value estimates of each
-                run Estimator Pub that does not specify its own precision. If None
-                the estimator's default precision value will be used.
+            pubs: An iterable of pub-like (primitive unified bloc) objects, such as tuples
+                ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
+            precision: The target precision for expectation value estimates of each run Estimator
+                Pub that does not specify its own precision. If ``None``, the estimator's default
+                precision value will be used.
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution.
 
         Returns:
             Submitted job.
@@ -158,7 +164,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             )
 
         validate_estimator_pubs(coerced_pubs)
-        return self._run(coerced_pubs)
+        return self._run(coerced_pubs, dry_run=dry_run)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that primitive inputs (options) are valid.

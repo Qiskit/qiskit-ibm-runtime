@@ -107,17 +107,21 @@ class Executor:
 
         super().__setattr__(name, value)
 
-    def run(self, program: QuantumProgram) -> RuntimeJobV2 | LocalRuntimeJob:
+    def run(self, program: QuantumProgram, dry_run: bool = False) -> RuntimeJobV2 | LocalRuntimeJob:
         """Run a quantum program.
 
         Args:
             program: The program to run.
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution.
 
         Returns:
             A job.
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
-            return self._service._run_executor(self._backend, self.options.simulator, program)
+            return self._service._run_executor(
+                self._backend, self.options.simulator, program, dry_run=dry_run
+            )
 
         try:
             converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
@@ -148,6 +152,7 @@ class Executor:
             options=to_runtime_options(self.options.environment, self._backend),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
+            dry_run=dry_run,
         )
 
     def backend(self) -> BackendV2:

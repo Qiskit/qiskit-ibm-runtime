@@ -101,7 +101,9 @@ class NoiseLearnerV3:
                 raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
         super().__setattr__(name, value)
 
-    def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
+    def run(
+        self, instructions: Iterable[CircuitInstruction], dry_run: bool = False
+    ) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         Two protocols are supported:
@@ -120,6 +122,8 @@ class NoiseLearnerV3:
 
         Args:
             instructions: The instructions to learn the noise of.
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution.
 
         Returns:
             The submitted job.
@@ -170,6 +174,7 @@ class NoiseLearnerV3:
             options=to_runtime_options(self.options.environment, self._backend),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
+            dry_run=dry_run,
         )
 
     def backend(self) -> BackendV2:

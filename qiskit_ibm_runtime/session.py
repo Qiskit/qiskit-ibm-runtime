@@ -150,6 +150,7 @@ class Session:
         options: dict | None = None,
         result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         calibration_id: str | None = None,
+        dry_run: bool = False,
     ) -> RuntimeJobV2:
         """Run a program in the session.
 
@@ -164,6 +165,8 @@ class Session:
                 decoder. If not specified, a program-specific decoder or the default
                 ``ResultDecoder`` is used.
             calibration_id: The calibration id to use with the program execution
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution.
 
         Returns:
             Submitted job.
@@ -194,6 +197,7 @@ class Session:
                 options=options,
                 inputs=inputs,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
         return job

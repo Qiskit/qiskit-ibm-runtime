@@ -170,7 +170,7 @@ class SamplerV2(BaseSamplerV2):
         return finalize_sampler_options(self.options)
 
     def run(
-        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None, dry_run: bool = False
     ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the sampler primitive.
 
@@ -188,6 +188,8 @@ class SamplerV2(BaseSamplerV2):
             shots: The total number of shots to sample for each sampler pub that does
                    not specify its own shots. If ``None``, the value from
                    ``options.default_shots`` will be used.
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution.
 
         Returns:
             The submitted job.
@@ -214,4 +216,4 @@ class SamplerV2(BaseSamplerV2):
             quantum_program.shots,
         )
 
-        return executor.run(quantum_program)
+        return executor.run(quantum_program, dry_run=dry_run)

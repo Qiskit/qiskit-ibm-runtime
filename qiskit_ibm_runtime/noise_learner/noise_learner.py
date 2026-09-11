@@ -137,7 +137,9 @@ class NoiseLearner:
         """The options in this noise learner."""
         return self._options
 
-    def run(self, circuits: Iterable[QuantumCircuit | EstimatorPubLike]) -> RuntimeJobV2:
+    def run(
+        self, circuits: Iterable[QuantumCircuit | EstimatorPubLike], dry_run: bool = False
+    ) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         This function breaks the given list of circuits into a list of unique layers, following
@@ -153,6 +155,8 @@ class NoiseLearner:
                 tuples ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
                 In this case, the pub-like objects are converted to a list of circuits, and all
                 the other fields (such as ``observables`` and ``parameter_values``) are ignored.
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution.
 
         Returns:
             The submitted job.
@@ -208,6 +212,7 @@ class NoiseLearner:
                 options=runtime_options,
                 inputs=inputs,
                 calibration_id=calibration_id,
+                dry_run=True,
             )
 
         return self._service._run(  # type: ignore[attr-defined]
@@ -215,6 +220,7 @@ class NoiseLearner:
             options=runtime_options,
             inputs=inputs,
             calibration_id=calibration_id,
+            dry_run=True,
         )
 
     @classmethod

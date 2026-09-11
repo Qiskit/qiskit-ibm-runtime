@@ -28,10 +28,13 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
+from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
+from ...registries import OneInstanceDryRunRegistry
 from ...utils import get_mocked_backend
 
 
@@ -393,6 +396,25 @@ class TestEstimatorV2Run(IBMTestCase):
             "PEC mitigation and ZNE mitigation are incompatible with one another",
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
+
+
+class TestEstimatorV2RunNoPatching(IBMTestCase):
+    """Tests for the EstimatorV2.run() method (with no Python methods patching)."""
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Estimator can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        estimator = EstimatorV2(mode=backend)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        job = estimator.run([(circuit, observable)], precision=0.03125, dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")
 
 
 class TestEstimatorV2SimulatorMode(IBMTestCase):

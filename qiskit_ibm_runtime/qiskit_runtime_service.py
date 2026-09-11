@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import warnings
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
@@ -1053,6 +1054,7 @@ class QiskitRuntimeService:
         session_id: str | None = None,
         start_session: bool | None = False,
         calibration_id: str | None = None,
+        dry_run: bool = False,
     ) -> RuntimeJobV2:
         """Execute the runtime program.
 
@@ -1069,6 +1071,8 @@ class QiskitRuntimeService:
             session_id: Job ID of the first job in a IBM Quantum Compute session.
             start_session: Set to True to explicitly start a IBM Quantum Compute session.
             calibration_id: The calibration id to use for the IBM backend.
+            dry_run: if ``True``, execute the job against the equivalent ``mock`` device instead
+                of the specified device.
 
         Returns:
             A ``RuntimeJobV2`` instance representing the execution.
@@ -1077,6 +1081,8 @@ class QiskitRuntimeService:
             IBMInputValueError: If input is invalid.
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
+            QiskitBackendNotFoundError: If the backend specified for running the program cannot be
+                found.
         """
         qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:
@@ -1089,6 +1095,18 @@ class QiskitRuntimeService:
         backend = qrt_options.backend
         if isinstance(backend, str):
             backend = self.backend(name=qrt_options.get_backend_name())
+
+        # Take into account `dry_run`, replacing the backend with its mock counterpart.
+        if dry_run:
+            backend_name = re.sub(r"^[^_]+", "mock", backend.name)
+
+            try:
+                # TODO: fractional gates and calibration id?
+                backend = self.backend(name=backend_name)
+            except QiskitBackendNotFoundError as ex:
+                raise QiskitBackendNotFoundError(
+                    f"Unable to use `dry_run` mode: backend '{backend_name}' was not found"
+                ) from ex
 
         # Set the active client to match the backend.
         try:
@@ -1112,7 +1130,7 @@ class QiskitRuntimeService:
         try:
             response = self._active_api_client.program_run(
                 program_id=program_id,
-                backend_name=qrt_options.get_backend_name(),
+                backend_name=backend.name,
                 params=inputs,
                 image=qrt_options.image,
                 log_level=qrt_options.log_level,

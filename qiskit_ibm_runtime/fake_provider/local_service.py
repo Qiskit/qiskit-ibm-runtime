@@ -153,6 +153,7 @@ class QiskitRuntimeLocalService:
         inputs: dict,
         options: RuntimeOptions | dict,
         calibration_id: str | None,
+        dry_run: bool = False,
     ) -> LocalRuntimeJob:
         """Execute the runtime program.
 
@@ -162,6 +163,8 @@ class QiskitRuntimeLocalService:
                 to the IBM Quantum Compute program.
             options: Runtime options that control the execution environment.
             calibration_id: The calibration id to use with the program execution
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution. This is not supported in a local service.
 
         Returns:
             A job representing the execution.
@@ -170,6 +173,9 @@ class QiskitRuntimeLocalService:
             ValueError: If input is invalid.
             NotImplementedError: If using V2 primitives.
         """
+        if dry_run:
+            warnings.warn("`dry-run` has no effect in local testing mode.")
+
         if isinstance(options, dict):
             qrt_options = copy.deepcopy(options)
         else:
@@ -292,6 +298,7 @@ class QiskitRuntimeLocalService:
         backend: BackendV2,
         options: SimulatorOptions,
         inputs: QuantumProgram,
+        dry_run: bool = False,
     ) -> LocalRuntimeJob:
         """Run an executor program.
 
@@ -299,10 +306,15 @@ class QiskitRuntimeLocalService:
             backend: The backend to run the executor program on.
             options: Simulator options to use.
             inputs: The executor program to run.
+            dry_run: If ``True``, submit the job for estimation and validation, not for job
+                execution. This is not supported in a local service.
 
         Returns:
             The job object that runs the program.
         """
+        if dry_run:
+            warnings.warn("`dry-run` has no effect in local testing mode.")
+
         job = LocalRuntimeJob(
             function=run_quantum_program,
             backend=backend,

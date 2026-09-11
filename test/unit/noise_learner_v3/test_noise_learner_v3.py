@@ -23,8 +23,11 @@ from qiskit_ibm_runtime.options_models import (
     NoiseLearnerV3Options,
     PostSelectionOptions,
 )
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
+from ...registries import OneInstanceDryRunRegistry
 from ...utils import get_mocked_backend, get_mocked_session
 
 
@@ -192,3 +195,12 @@ class TestNoiseLearnerV3(IBMTestCase):
             noise_learner = NoiseLearnerV3(mode=backend)
             selected_run = noise_learner.run([])
             self.assertEqual(selected_run, "service")
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """NoiseLearnerV3 can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        noise_learner = NoiseLearnerV3(mode=backend)
+        job = noise_learner.run([], dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")
