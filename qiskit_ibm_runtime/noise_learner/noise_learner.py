@@ -212,6 +212,7 @@ class NoiseLearner:
                 options=runtime_options,
                 inputs=inputs,
                 calibration_id=calibration_id,
+                dry_run=True,
             )
 
         return self._service._run(  # type: ignore[attr-defined]
@@ -219,6 +220,7 @@ class NoiseLearner:
             options=runtime_options,
             inputs=inputs,
             calibration_id=calibration_id,
+            dry_run=True,
         )
 
     @classmethod

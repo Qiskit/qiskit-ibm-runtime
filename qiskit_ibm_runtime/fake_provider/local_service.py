@@ -174,7 +174,7 @@ class QiskitRuntimeLocalService:
             NotImplementedError: If using V2 primitives.
         """
         if dry_run:
-            raise ValueError("`dry-run` is not supported in local testing mode.")
+            warnings.warn("`dry-run` has no effect in local testing mode.")
 
         if isinstance(options, dict):
             qrt_options = copy.deepcopy(options)
@@ -312,6 +312,9 @@ class QiskitRuntimeLocalService:
         Returns:
             The job object that runs the program.
         """
+        if dry_run:
+            warnings.warn("`dry-run` has no effect in local testing mode.")
+
         job = LocalRuntimeJob(
             function=run_quantum_program,
             backend=backend,
