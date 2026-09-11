@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+import json
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from ddt import ddt, named_data
@@ -25,7 +27,12 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..registries import Backend, OneInstanceNoBackendsRegistry
+from ..registries import Backend, DefaultRegistry, OneInstanceNoBackendsRegistry
+
+if TYPE_CHECKING:
+    from requests import PreparedRequest
+
+    from test.registries import CallbackResult
 
 
 class TestBackendFilters(IBMTestCase):
@@ -222,6 +229,14 @@ class TestBackendFilters(IBMTestCase):
             self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
 
 
+class EmptyBackendListRegistry(DefaultRegistry):
+    """Registry that returns an empty list for the `/backends` endpoint."""
+
+    def callback_backends(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/backends`` endpoint."""
+        return (200, {"Content-Type": "application/json"}, json.dumps({"devices": []}))
+
+
 @ddt
 class TestGetBackend(IBMTestCase):
     """Test getting a backend."""
@@ -333,3 +348,62 @@ class TestGetBackend(IBMTestCase):
 
         with self.assertRaises(QiskitBackendNotFoundError):
             service.backend("ibm_torino", calibration_id="invalid")
+
+    @mock_responses(EmptyBackendListRegistry)
+    def test_backend_not_in_backends_list(self, registry):
+        """Test retrieving a backend that is not in the list of backends.
+
+        This test exercises the case where a backend is retrieved via `backend()`, and that backend
+        is not returned in the `backends()` method.
+        """
+        instance_a = registry.instances["a"]
+        instance_b = registry.instances["b"]
+
+        service = QiskitRuntimeService(token="my_token")
+        # Ensure that no backend appears in the backends list.
+        self.assertEqual(service.backends(), [])
+
+        # Retrieve an existing backend (available in several instances).
+        backend = service.backend("common_backend")
+        self.assertEqual(backend.name, "common_backend")
+        self.assertEqual(backend._instance, instance_a.crn)
+
+        # Retrieve an existing backend (available in several instances), passing instance.
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            backend = service.backend("common_backend", instance="b")
+        self.assertEqual(backend.name, "common_backend")
+        self.assertEqual(backend._instance, instance_b.crn)
+
+        # Retrieve an existing backend (available in one instance).
+        backend = service.backend("unique_backend_a")
+        self.assertEqual(backend.name, "unique_backend_a")
+        self.assertEqual(backend._instance, instance_a.crn)
+
+        # Retrieve an existing backend (available in one instance), with wrong instance.
+        with (
+            self.assertRaises(QiskitBackendNotFoundError),
+            self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"),
+        ):
+            backend = service.backend("unique_backend_a", instance="b")
+
+    @mock_responses(EmptyBackendListRegistry)
+    def test_backend_not_in_backends_list_instance_auto(self, registry):
+        """Test retrieving a backend not in the list of backends, with service instance `auto`.
+
+        This test exercises the case where a backend is retrieved via `backend()`, and that backend
+        is not returned in the `backends()` method.
+
+        When passing `instance=auto` to `QiskitRuntimeService()`, warnings should not be emitted
+        when guessing instances.
+        """
+        instance_a = registry.instances["a"]
+
+        service = QiskitRuntimeService(token="my_token", instance="auto")
+        # Ensure that no backend appears in the backends list.
+        self.assertEqual(service.backends(), [])
+
+        # Retrieve an existing backend (available in one instance).
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            backend = service.backend("unique_backend_a")
+        self.assertEqual(backend.name, "unique_backend_a")
+        self.assertEqual(backend._instance, instance_a.crn)

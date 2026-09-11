@@ -726,6 +726,7 @@ class QiskitRuntimeService:
         instance: str,
         use_fractional_gates: bool | None,
         calibration_id: str | None = None,
+        cache: bool = True,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
@@ -738,6 +739,7 @@ class QiskitRuntimeService:
                 operations.  See :meth:`~.QiskitRuntimeService.backends` for
                 further details.
             calibration_id: The calibration id to use for the IBM backend.
+            cache: If ``False``, do not cache the backend in `self._backend_configs`.
 
         Returns:
             A backend object.
@@ -774,7 +776,8 @@ class QiskitRuntimeService:
                         instance=instance,
                         use_fractional_gates=use_fractional_gates,
                     )
-                    self._backend_configs[backend_name] = config
+                    if cache:
+                        self._backend_configs[backend_name] = config
 
             else:
                 config = configuration_from_server_data(
@@ -787,7 +790,8 @@ class QiskitRuntimeService:
                 # I know we have a configuration_registry in the api client
                 # but that doesn't work with new IQP since we different api clients are being used
 
-                self._backend_configs[backend_name] = config
+                if cache:
+                    self._backend_configs[backend_name] = config
         except Exception as ex:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             raise QiskitBackendNotFoundError(
@@ -964,7 +968,7 @@ class QiskitRuntimeService:
             from qiskit_ibm_runtime import QiskitRuntimeService
 
             service = QiskitRuntimeService()
-            backend = service.backend()
+            backend = service.backend("ibm_kingston")
 
             status = backend.status()
             assert status.operational and status.status_msg == "active"
@@ -992,6 +996,34 @@ class QiskitRuntimeService:
             use_fractional_gates=use_fractional_gates,
             calibration_id=calibration_id,
         )
+
+        # `self.backends()` might not include all the backends by default. If no backend was
+        # returned, make a one-time uncached attempt to retrieve the backend based on its name.
+        if not backends:
+            # Use the specified instance crns, or traverse instances in sensible order.
+            instances = [data[0] for data in self._resolve_cloud_instances(instance)]
+
+            for instance_ in instances:
+                try:
+                    self._get_or_create_cloud_client(instance_)
+                    backends = [
+                        self._create_backend_obj(
+                            name, instance_, use_fractional_gates, calibration_id, cache=False
+                        )
+                    ]
+                    # Show a warning only if the instance is guessed.
+                    if not instance and not self._instance_auto:
+                        for inst_details in self._backend_instance_groups:
+                            if instance_ == inst_details["crn"]:
+                                logger.warning(
+                                    "Using instance: %s, plan: %s",
+                                    inst_details["name"],
+                                    inst_details["plan"],
+                                )
+                    break
+                except QiskitBackendNotFoundError:
+                    pass
+
         if not backends:
             cloud_msg_url = ""
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
