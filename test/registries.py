@@ -33,10 +33,10 @@ if TYPE_CHECKING:
 
 
 CallbackResult: TypeAlias = tuple[int, dict[str, str], str]
-"""``responses`` callback return value: (statis code, headers, body)."""
+"""``responses`` callback return value: (status code, headers, body)."""
 
 PricingType: TypeAlias = Literal["free", "trial", "paygo", "paid", "subscription", "unknown"]
-"""Princing types for an instance."""
+"""Pricing types for an instance."""
 
 JobStatus: TypeAlias = Literal["queued", "running", "completed", "cancelled", "failed"]
 """Possible job statuses."""
