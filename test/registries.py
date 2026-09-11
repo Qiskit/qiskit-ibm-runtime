@@ -793,3 +793,18 @@ class OneInstanceNoBackendsRegistry(BaseRegistry):
         super().__init__()
 
         self.add_instance(Instance("a"))
+
+
+class OneInstanceDryRunRegistry(BaseRegistry):
+    """Registry pre-loaded with a single instance ``a`` with one backend that supports dry-run.
+
+    This registry contains:
+    * instance ``a`` (free plan): with ``ibm_foo``, and ``mock_foo`.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.add_instance(Instance("a"))
+        self.add_backend(Backend.from_(FakeLimaV2, name="ibm_foo"), "a")
+        self.add_backend(Backend.from_(FakeLimaV2, name="mock_foo"), "a")
