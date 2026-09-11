@@ -18,7 +18,7 @@ import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal, TypeAlias, get_args
 from urllib.parse import parse_qs, urlparse
 
 from responses import DELETE, GET, PATCH, POST, CallbackResponse
@@ -166,7 +166,7 @@ class Job:
 
     program: Literal["sampler", "estimator", "executor"] = "sampler"
 
-    status: Literal[JobStatus] = "completed"
+    status: JobStatus = "completed"
     """Job status."""
 
     raw_details: str | None = None
@@ -596,12 +596,12 @@ class BaseRegistry(FirstMatchRegistry):
         offset = int(offset_param) if offset_param else 0
         pending = query_params.get("pending", [None])[0]
 
-        statuses = ["queued", "running", "completed", "cancelled", "failed"]
+        statuses = get_args(JobStatus)
         if pending is not None:
             if pending:
-                statuses = ["queued", "running"]
+                statuses = ("queued", "running")
             else:
-                statuses = ["completed", "cancelled", "failed"]
+                statuses = ("completed", "cancelled", "failed")
 
         # Get the candidate jobs, applying the filters.
         jobs = [
