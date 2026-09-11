@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Annotated, Literal
 
+import numpy as np
 from pydantic import AfterValidator, Field
 
 from .base import BaseOptionsModel
@@ -165,3 +166,21 @@ class ZneOptions(BaseOptionsModel):
     points at which the ``extrapolator``\s are evaluated to be returned in the data
     fields called ``evs_extrapolated`` and ``stds_extrapolated``.
     """
+
+    def resolve_noise_factors(self) -> tuple[np.ndarray, np.ndarray]:
+        """Resolve ``noise_factors`` and ``extrapolated_noise_factors`` into float arrays.
+
+        Returns:
+            A tuple ``(noise_factors, extrapolated_noise_factors)`` as float arrays.
+        """
+        noise_factors = (
+            np.array(DEFAULT_NOISE_FACTORS, dtype=float)
+            if self.noise_factors == "auto"
+            else np.array(self.noise_factors, dtype=float)
+        )
+        extrapolated_noise_factors = (
+            np.insert(noise_factors, 0, 0.0).tolist()
+            if self.extrapolated_noise_factors == "auto"
+            else list(np.array(self.extrapolated_noise_factors, dtype=float))
+        )
+        return noise_factors, np.array(extrapolated_noise_factors, dtype=float)
