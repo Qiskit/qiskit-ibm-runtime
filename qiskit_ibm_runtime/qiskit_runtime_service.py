@@ -1081,6 +1081,8 @@ class QiskitRuntimeService:
             IBMInputValueError: If input is invalid.
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
+            QiskitBackendNotFoundError: If the backend specified for running the program cannot be
+                found.
         """
         qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:
@@ -1096,15 +1098,15 @@ class QiskitRuntimeService:
 
         # Take into account `dry_run`, replacing the backend with its mock counterpart.
         if dry_run:
-            if not backend.name.startswith("ibm_"):
-                raise IBMRuntimeError("`dry_run` cannot be used with the specified backend")
-            backend_name = re.sub(r"ibm_", "mock_", backend.name)
+            backend_name = re.sub(r"^[^_]+", "mock", backend.name)
 
             try:
                 # TODO: fractional gates and calibration id?
                 backend = self.backend(name=backend_name)
-            except QiskitBackendNotFoundError:
-                raise IBMRuntimeError("`dry_run` cannot be used with the specified backend")
+            except QiskitBackendNotFoundError as ex:
+                raise QiskitBackendNotFoundError(
+                    f"Unable to use `dry_run` mode: backend '{backend_name}' was not found"
+                ) from ex
 
         # Set the active client to match the backend.
         try:
@@ -1128,7 +1130,7 @@ class QiskitRuntimeService:
         try:
             response = self._active_api_client.program_run(
                 program_id=program_id,
-                backend_name=qrt_options.get_backend_name(),
+                backend_name=backend.name,
                 params=inputs,
                 image=qrt_options.image,
                 log_level=qrt_options.log_level,
