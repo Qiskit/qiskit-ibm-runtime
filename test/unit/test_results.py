@@ -13,15 +13,15 @@
 """Tests for the results module."""
 
 import json
-from unittest.mock import patch
 
 from ddt import data, ddt
 
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.results.runner import RunnerResult
-from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from .mock.fake_runtime_client import BaseFakeRuntimeClient
+from ..registries import Job
 
 
 @ddt
@@ -29,14 +29,9 @@ class TestRunner(IBMTestCase):
     """Test Runner results."""
 
     @data("circuit-runner", "qasm3-runner")
-    def test_job_results(self, program):
+    @mock_responses
+    def test_job_results(self, program, registry):
         """Results for a Runner job should be a RunnerResult."""
-        client = BaseFakeRuntimeClient()
-        job = RuntimeJobV2(
-            backend=None, api_client=client, job_id="123", program_id=program, service=None
-        )
-        job._status = "DONE"
-
         # Excerpt from running a job in aer, and extracting the `results` key (without `metadata`)
         # of `job.results().to_dict()`
         results = json.dumps(
@@ -63,6 +58,9 @@ class TestRunner(IBMTestCase):
             }
         )
 
-        with patch.object(BaseFakeRuntimeClient, "job_results", return_value=results):
-            result = job.result()
-            self.assertIsInstance(result, RunnerResult)
+        registry.add_job(Job("my_job", "common_backend", program=program, raw_results=results), "a")
+
+        service = QiskitRuntimeService(token="my_token")
+        job = service.job("my_job")
+        result = job.result()
+        self.assertIsInstance(result, RunnerResult)
