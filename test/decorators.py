@@ -30,7 +30,6 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.account import CloudAccount
 
 from .registries import DefaultRegistry
-from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -122,21 +121,6 @@ def production_only(func):
     def _wrapper(self, *args, **kwargs):
         if "dev" in self.dependencies.url or "test" in self.dependencies.url:
             raise SkipTest(f"Skipping integration test. {self} is not supported on staging.")
-        func(self, *args, **kwargs)
-
-    return _wrapper
-
-
-def run_cloud_fake(func):
-    """Decorator that runs a test using fake cloud services."""
-
-    @wraps(func)
-    def _wrapper(self, *args, **kwargs):
-        kwargs["service"] = FakeRuntimeService(
-            channel="ibm_cloud",
-            token="my_token",
-            instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-        )
         func(self, *args, **kwargs)
 
     return _wrapper
