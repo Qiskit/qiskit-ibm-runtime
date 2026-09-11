@@ -123,11 +123,15 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         self._set_options(options)
 
-    def _run(self, pubs: list[EstimatorPub] | list[SamplerPub]) -> RuntimeJobV2:
+    def _run(
+        self, pubs: list[EstimatorPub] | list[SamplerPub], dry_run: bool = False
+    ) -> RuntimeJobV2:
         """Run the primitive.
 
         Args:
             pubs: Inputs PUBs to pass to the primitive.
+            dry_run: If ``True``, submit the job for job estimation and validation, not for job
+                execution.
 
         Returns:
             Submitted job.
@@ -187,6 +191,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 options=runtime_options,
                 inputs=primitive_inputs,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
         return self._service._run(
