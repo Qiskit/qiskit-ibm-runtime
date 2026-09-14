@@ -89,18 +89,15 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_delete_job(self, service):
         """Test deleting a job."""
-        sub_tests = ["DONE"]
-        for status in sub_tests:
-            with self.subTest(status=status):
-                job = self._run_program(service)
-                wait_for_status(job, status)
-                try:
-                    service.delete_job(job.job_id())
-                except IBMRuntimeError as ex:
-                    if "403 Client Error" in ex.message or "401 Client Error" in ex.message:
-                        self.skipTest("Credentials do not have delete job privileges")
-                with self.assertRaises(RuntimeJobNotFound):
-                    service.job(job.job_id())
+        job = self._run_program(service)
+        wait_for_status(job, "DONE")
+        try:
+            service.delete_job(job.job_id())
+        except IBMRuntimeError as ex:
+            if "403 Client Error" in ex.message or "401 Client Error" in ex.message:
+                self.skipTest("Credentials do not have delete job privileges")
+        with self.assertRaises(RuntimeJobNotFound):
+            service.job(job.job_id())
 
     @run_integration_test
     @production_only
