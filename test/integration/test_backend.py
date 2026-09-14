@@ -13,6 +13,7 @@
 """Tests for backend functions using real runtime service."""
 
 import copy
+import re
 from datetime import datetime, timedelta
 from unittest import mock
 
@@ -25,7 +26,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from ..decorators import production_only, run_integration_test
+from ..decorators import production_only, run_integration_test, staging_only
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import bell
 
@@ -333,3 +334,29 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 self.service.backend(name, calibration_id=calibration_id)
 
         self.assertTrue(any(calibration_id in record for record in log.output))
+
+    @staging_only
+    def test_dry_run(self):
+        """Test using dry_run flag.
+
+        This test does not use ``dependencies.qpu``, but instead attempts to find a backend that
+        can be used for ``dry_run`` mode, skipping if not.
+        """
+        backends = self.service.backends()
+
+        try:
+            # Find a suitable backend: has a mock
+            dry_run_backend = next(
+                backend
+                for backend in backends
+                if backend.name.startswith("mock_") and backend.status().status_msg == "active"
+            )
+            backend_name = re.sub(r"^[^_]+", "ibm", dry_run_backend.name)
+            backend = self.service.backend(backend_name)
+        except (StopIteration, QiskitBackendNotFoundError):
+            self.skipTest("No dry_run backends available.")
+
+        isa_circuit = transpile(bell(), backend)
+        sampler = Sampler(mode=backend)
+        job = sampler.run([isa_circuit], dry_run=True)
+        self.assertEqual(job.backend().name, dry_run_backend.name)
