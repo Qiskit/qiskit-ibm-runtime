@@ -34,10 +34,6 @@ from qiskit_ibm_runtime.results.quantum_program import (
 
 from ....ibm_test_case import IBMTestCase
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 
 def _make_circuit(num_qubits: int = 2) -> QuantumCircuit:
     """Return a simple non-parameterised circuit (H + CX)."""
@@ -96,11 +92,6 @@ def _options(resilience_level=0, **kwargs):
             obj = getattr(obj, p)
         setattr(obj, parts[-1], v)
     return opts
-
-
-# ---------------------------------------------------------------------------
-# Tests for the dispatcher
-# ---------------------------------------------------------------------------
 
 
 class TestEstimatorV2PostProcessor(IBMTestCase):
@@ -280,11 +271,6 @@ class TestEstimatorV2PostProcessor(IBMTestCase):
         self.assertEqual(primitive_result[0].metadata["executor"], sim_meta)
 
 
-# ---------------------------------------------------------------------------
-# Tests for PEC dispatch
-# ---------------------------------------------------------------------------
-
-
 class TestEstimatorV2PostProcessorPEC(IBMTestCase):
     """Integration tests for PEC dispatch in ``estimator_v2_post_processor_v0_1``."""
 
@@ -310,8 +296,8 @@ class TestEstimatorV2PostProcessorPEC(IBMTestCase):
         """
         from qiskit.quantum_info import PauliLindbladMap
         from qiskit_mitigation import PEC
-        from samplomatic.quantum_program import QuantumProgram
 
+        from qiskit_ibm_runtime.quantum_program import QuantumProgram
         from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
 
         # Empty circuit: no gates → no layer refs → noise_maps={"": ...} works.
@@ -371,8 +357,8 @@ class TestEstimatorV2PostProcessorPEC(IBMTestCase):
         from qiskit.primitives.containers.estimator_pub import ObservablesArray
         from qiskit.quantum_info import PauliLindbladMap
         from qiskit_mitigation import PEC
-        from samplomatic.quantum_program import QuantumProgram
 
+        from qiskit_ibm_runtime.quantum_program import QuantumProgram
         from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
 
         obs_shape = (2, 2)
@@ -429,11 +415,6 @@ class TestEstimatorV2PostProcessorPEC(IBMTestCase):
         self.assertTupleEqual(data_bin.evs.shape, expected_shape)
         self.assertTupleEqual(data_bin.stds.shape, expected_shape)
         self.assertTupleEqual(data_bin.ensemble_standard_error.shape, expected_shape)
-
-
-# ---------------------------------------------------------------------------
-# Tests for the program metadata helper
-# ---------------------------------------------------------------------------
 
 
 @ddt

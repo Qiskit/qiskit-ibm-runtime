@@ -30,7 +30,9 @@ if TYPE_CHECKING:
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
     from ..options_models.twirling import TwirlingOptions
+    from ..options_models.zne import ZneOptions
 
+import numpy as np
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
 from samplomatic.transpiler import generate_boxing_pass_manager
@@ -50,8 +52,32 @@ _REQUIRED_NOISE_FACTORS = {
 BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
+def resolve_noise_factors(zne_options: ZneOptions) -> tuple[np.ndarray, np.ndarray]:
+    """Resolve ``noise_factors`` and ``extrapolated_noise_factors`` into float arrays.
+
+    Args:
+        zne_options: The ZNE options to resolve.
+
+    Returns:
+        A tuple ``(noise_factors, extrapolated_noise_factors)`` as float arrays.
+    """
+    from ..options_models.zne import DEFAULT_NOISE_FACTORS
+
+    noise_factors = (
+        np.array(DEFAULT_NOISE_FACTORS, dtype=float)
+        if zne_options.noise_factors == "auto"
+        else np.array(zne_options.noise_factors, dtype=float)
+    )
+    extrapolated_noise_factors = (
+        np.insert(noise_factors, 0, 0.0).tolist()
+        if zne_options.extrapolated_noise_factors == "auto"
+        else list(np.array(zne_options.extrapolated_noise_factors, dtype=float))
+    )
+    return noise_factors, np.array(extrapolated_noise_factors, dtype=float)
+
+
 def validate_noise_factors(
-    noise_factors: Sequence[float], extrapolator: str | Sequence[str]
+    noise_factors: Sequence[float] | np.ndarray, extrapolator: str | Sequence[str]
 ) -> None:
     """Check that ``noise_factors`` has enough points for every requested extrapolator.
 

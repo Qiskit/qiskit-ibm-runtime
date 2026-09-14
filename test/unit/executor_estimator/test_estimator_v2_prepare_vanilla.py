@@ -42,11 +42,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
-    from samplomatic.quantum_program import QuantumProgram
 
-# ---------------------------------------------------------------------------
-# Helper: build EstimatorOptions from old-style args and call prepare()
-# ---------------------------------------------------------------------------
+    from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 
 def _prepare_vanilla(

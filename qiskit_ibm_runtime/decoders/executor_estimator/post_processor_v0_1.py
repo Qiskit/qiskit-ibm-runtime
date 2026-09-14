@@ -69,6 +69,12 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     num_pubs: int = post_processor_data["num_pubs"]
     circuits_metadata: list[Any] = post_processor_data.get("circuits_metadata") or []
 
+    if len(circuits_metadata) != num_pubs:
+        raise ValueError(
+            f"Expected {num_pubs} circuit metadata items from passthrough data, "
+            f"but got {len(circuits_metadata)}."
+        )
+
     tasks = load_tasks_from_result(result)
 
     if len(tasks) != num_pubs:
@@ -93,7 +99,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         #   evs, stds (= ensemble stderr), twirl_stds (= twirl-level stderr)
         # Our API exposes:
         #   evs, ensemble_standard_error, stds
-        pub_result_raw = _rename_databin_fields(pub_result_raw, task)
+        pub_result_raw = rename_databin_fields(pub_result_raw, task)
 
         # Build per-item compilation metadata.
         pub_meta: dict[str, Any]
@@ -101,7 +107,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             # ZNE has one result item per noise factor; aggregate their metadata.
             num_noise_factors = len(task.noise_factors)
             items_meta = [
-                _create_pub_result_metadata(
+                create_pub_result_metadata(
                     result[task._program_item_index + noise_factor_offset].metadata
                 )
                 for noise_factor_offset in range(num_noise_factors)
@@ -109,7 +115,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             # TODO: Is there a way to avoid the private attribute?
             pub_meta = {key: [m[key] for m in items_meta] for key in items_meta[0]}
         else:
-            pub_meta = _create_pub_result_metadata(result[task._program_item_index].metadata)
+            pub_meta = create_pub_result_metadata(result[task._program_item_index].metadata)
 
         if isinstance(task, (GateFolding, PEA)):
             selected_extrapolators = pub_result_raw.metadata["selected_extrapolators"]
@@ -124,10 +130,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 "zne": {"extrapolators": np.asarray(extrapolators).reshape(pub_shape)}
             }
 
-        if (
-            pub_index < len(circuits_metadata)
-            and (circuit_meta := circuits_metadata[pub_index]) is not None
-        ):
+        if circuit_meta := circuits_metadata[pub_index] is not None:
             pub_meta["circuit_metadata"] = circuit_meta
 
         pub_results.append(EstimatorPubResult(data=pub_result_raw.data, metadata=pub_meta))
@@ -144,7 +147,7 @@ def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict
     return result_dict
 
 
-def _create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
+def create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
     """Build the compilation metadata dict for a single result item."""
     result_item_metadata: dict[str, Any] = {}
     if isinstance(item_metadata, ItemMetadata):
@@ -164,7 +167,7 @@ def _create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str,
     return result_item_metadata
 
 
-def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
+def rename_databin_fields(pub_result: Any, task: Any) -> Any:
     """Rename qiskit-mitigation DataBin fields to our public API field names.
 
     qiskit-mitigation's broadcast path for ``MitigationTask`` and ``PEC``

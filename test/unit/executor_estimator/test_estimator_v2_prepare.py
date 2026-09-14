@@ -18,7 +18,6 @@ from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import Tag
 from samplomatic.exceptions import BuildError
-from samplomatic.quantum_program import QuantumProgram
 from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -26,6 +25,7 @@ from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
 

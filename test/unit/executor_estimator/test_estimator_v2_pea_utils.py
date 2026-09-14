@@ -23,7 +23,7 @@ from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import InjectNoise
-from samplomatic.quantum_program import QuantumProgram, SamplexItem
+from samplomatic.quantum_program import SamplexItem
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -33,6 +33,7 @@ from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.options_models.zne import ZneOptions
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMEstimatorPrepareTestCase
 from .utils import (
@@ -46,10 +47,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
-
-# ---------------------------------------------------------------------------
-# Helper: build EstimatorOptions from old-style args and call prepare()
-# ---------------------------------------------------------------------------
 
 
 def _prepare_pea(

@@ -191,7 +191,7 @@ dependencies = [
     "qiskit>=2.3.0",
     "pybase64>=1.4.0",
     "samplomatic>=0.21.0",
-    "qiskit-mitigation @ git+https://github.com/Qiskit/qiskit-mitigation.git",
+    "qiskit-mitigation>=0.1.0",
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]

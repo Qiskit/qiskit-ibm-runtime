@@ -19,9 +19,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qiskit_mitigation import TREX
-    from samplomatic.quantum_program import QuantumProgram
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ..quantum_program import QuantumProgram
 
 logger = logging.getLogger(__name__)
 
@@ -56,14 +56,14 @@ def apply_trex(
             circuit items, used when ``measure_noise_learning.num_randomizations``
             is ``"auto"``.
     """
-    trex_num_randomizations = _resolve_trex_num_randomizations(
+    trex_num_randomizations = resolve_trex_num_randomizations(
         measure_noise_learning, num_randomizations
     )
     trex.prepare(trex_num_randomizations, quantum_program)
     logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
 
 
-def _resolve_trex_num_randomizations(
+def resolve_trex_num_randomizations(
     measure_noise_learning: MeasureNoiseLearningOptions,
     twirling_num_randomizations: int,
 ) -> int:

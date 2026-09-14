@@ -27,7 +27,7 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
 from .options_to_mitigation import estimator_options_to_boxing_options
-from .prepare import _choose_task_class, prepare
+from .prepare import choose_task_class, prepare
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -159,7 +159,7 @@ class EstimatorV2(BaseEstimatorV2):
         """
         coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
         options = self.finalize_options()
-        task_class = _choose_task_class(options.resilience)
+        task_class = choose_task_class(options.resilience)
         boxing_opts = estimator_options_to_boxing_options(
             options.twirling,
             inject_noise=task_class in (PEC, PEA),

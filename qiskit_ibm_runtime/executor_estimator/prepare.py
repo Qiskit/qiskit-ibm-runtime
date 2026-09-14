@@ -33,7 +33,12 @@ from .finalize_options import finalize_estimator_options
 from .options_to_mitigation import estimator_options_to_boxing_options
 from .pec_utils import calculate_pec_twirling_shots, resolve_pec_max_overhead
 from .trex_setup import apply_trex
-from .utils import has_projection_operators, resolve_precision, validate_noise_factors
+from .utils import (
+    has_projection_operators,
+    resolve_noise_factors,
+    resolve_precision,
+    validate_noise_factors,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -118,6 +123,24 @@ def _validate(
     finalized_options: EstimatorOptions,
     backend: BackendV2 | None,
 ) -> None:
+    """Validate the coerced pubs and finalized options.
+
+    Args:
+        coerced_pubs: The coerced estimator pubs.
+        finalized_options: The finalized estimator options.
+        backend: The backend for which the program is prepared.
+
+    Raises:
+        IBMInputValueError: If no pubs are provided.
+        IBMInputValueError: If both PEC and ZNE mitigation are enabled simultaneously.
+        IBMInputValueError: If PEA or PEC mitigation is requested without a noise model.
+        IBMInputValueError: If the ZNE noise factors are insufficient for the requested
+            extrapolator(s).
+        IBMInputValueError: If measurement mitigation is used with observables that contain
+            projection operators.
+        IBMInputValueError: If dynamical decoupling is enabled on a circuit with control
+            flow operations, or if no backend is provided when it is enabled.
+    """
     if not coerced_pubs:
         raise IBMInputValueError("No pubs provided. At least one pub is required.")
     if finalized_options.resilience.pec_mitigation and finalized_options.resilience.zne_mitigation:
@@ -139,8 +162,8 @@ def _validate(
     if resilience.zne_mitigation:
         zne_options = resilience.zne
         # Validate noise_factors has enough points for every requested extrapolator.
-        noise_factors, _ = zne_options.resolve_noise_factors()
-        validate_noise_factors(noise_factors, _normalise_extrapolator(zne_options.extrapolator))
+        noise_factors, _ = resolve_noise_factors(zne_options)
+        validate_noise_factors(noise_factors, normalise_extrapolator(zne_options.extrapolator))
 
     for pub in coerced_pubs:
         validate_no_boxes(pub.circuit)
@@ -162,7 +185,7 @@ def _validate(
                 )
 
 
-def _choose_task_class(resilience: ResilienceOptions) -> type[MitigationTask]:
+def choose_task_class(resilience: ResilienceOptions) -> type[MitigationTask]:
     """Return the qiskit-mitigation task class for the given resilience options."""
     if resilience.pec_mitigation:
         return PEC
@@ -180,11 +203,23 @@ def _build_quantum_program(
     add_tags: bool,
     backend: BackendV2 | None,
 ) -> QuantumProgram:
-    """Dispatch to the appropriate mitigation pathway and apply dynamical decoupling."""
+    """Build the :class:`~.QuantumProgram` for all pubs using the resolved mitigation pathway.
+
+    Args:
+        coerced_pubs: The coerced estimator pubs to process.
+        finalized_options: The fully resolved estimator options.
+        shots: The resolved shots.
+        add_tags: Whether to include box tags.
+        backend: Backend required when dynamical decoupling is enabled; ``None`` otherwise.
+
+    Returns:
+        A :class:`~.QuantumProgram` whose items cover all pubs (plus a TREX calibration
+        item appended last when measurement mitigation is active).
+    """
     resilience = finalized_options.resilience
     twirling = finalized_options.twirling
 
-    task_class = _choose_task_class(resilience)
+    task_class = choose_task_class(resilience)
     inject_noise = task_class in (PEC, PEA)
 
     # PEC uses its own shot-split logic, all other pathways use the standard twirling shot split.
@@ -236,7 +271,7 @@ def _build_quantum_program(
             broadcast_obs_and_params=True,
             trex=trex,
             quantum_program=quantum_program,
-            **_method_kwargs(
+            **build_task_prepare_kwargs(
                 task_class, resilience, noise_model, num_randomizations, shots_per_randomization
             ),
         )
@@ -257,12 +292,12 @@ def _build_quantum_program(
     return quantum_program
 
 
-def _normalise_extrapolator(extrapolator: str | Sequence[str]) -> list[str]:
+def normalise_extrapolator(extrapolator: str | Sequence[str]) -> list[str]:
     """Return ``extrapolator`` as a plain list of strings."""
     return [extrapolator] if isinstance(extrapolator, str) else list(extrapolator)
 
 
-def _method_kwargs(
+def build_task_prepare_kwargs(
     task_class: type,
     resilience: ResilienceOptions,
     noise_model: dict,
@@ -287,10 +322,10 @@ def _method_kwargs(
 
     if task_class in (PEA, GateFolding):
         zne_options = resilience.zne
-        noise_factors, extrapolated_noise_factors = zne_options.resolve_noise_factors()
+        noise_factors, extrapolated_noise_factors = resolve_noise_factors(zne_options)
         kwargs: dict = {
             "noise_factors": noise_factors.tolist(),
-            "extrapolator": _normalise_extrapolator(zne_options.extrapolator),
+            "extrapolator": normalise_extrapolator(zne_options.extrapolator),
             "extrapolated_noise_factors": extrapolated_noise_factors.tolist(),
         }
         if task_class is PEA:
