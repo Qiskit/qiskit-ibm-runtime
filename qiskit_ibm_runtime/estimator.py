@@ -140,8 +140,12 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             precision: The target precision for expectation value estimates of each run Estimator
                 Pub that does not specify its own precision. If ``None``, the estimator's default
                 precision value will be used.
-            dry_run: If ``True``, submit the job for estimation and validation, not for job
-                execution.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata before submission. Returned results preserve the expected schema
+                but contain randomized mock data rather than actual or simulated measurement
+                results. Access to this feature may be restricted.
+
 
         Returns:
             Submitted job.

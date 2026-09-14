@@ -163,8 +163,13 @@ class QiskitRuntimeLocalService:
                 to the IBM Quantum Compute program.
             options: Runtime options that control the execution environment.
             calibration_id: The calibration id to use with the program execution
-            dry_run: If ``True``, submit the job for estimation and validation, not for job
-                execution. This is not supported in a local service.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata before submission. Returned results preserve the expected schema
+                but contain randomized mock data rather than actual or simulated measurement
+                results. Access to this feature may be restricted. This parameter is ignored in a
+                local service.
+
 
         Returns:
             A job representing the execution.
@@ -306,8 +311,12 @@ class QiskitRuntimeLocalService:
             backend: The backend to run the executor program on.
             options: Simulator options to use.
             inputs: The executor program to run.
-            dry_run: If ``True``, submit the job for estimation and validation, not for job
-                execution. This is not supported in a local service.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata before submission. Returned results preserve the expected schema
+                but contain randomized mock data rather than actual or simulated measurement
+                results. Access to this feature may be restricted. This parameter is ignored in a
+                local service.
 
         Returns:
             The job object that runs the program.

@@ -98,8 +98,12 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             shots: The total number of shots to sample for each sampler pub that does not specify
                 its own shots. If ``None``, the primitive's default shots value will be used, which
                 can vary by implementation.
-            dry_run: If ``True``, submit the job for estimation and validation, not for job
-                execution.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata before submission. Returned results preserve the expected schema
+                but contain randomized mock data rather than actual or simulated measurement
+                results. Access to this feature may be restricted.
+
 
         Returns:
             Submitted job.
