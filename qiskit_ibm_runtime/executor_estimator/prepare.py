@@ -204,7 +204,7 @@ def _build_quantum_program(
         num_randomizations, shots_per_randomization = 1, shots
 
     # Setup
-    boxing_opts = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
+    boxing_options = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
     noise_model = {}
     if resilience.layer_noise_model is not None:
         noise_model = {
@@ -218,22 +218,24 @@ def _build_quantum_program(
     )
     trex: TREX | None = TREX() if measure_noise_learning is not None else None
 
-    # Build the QP
-    qp = QuantumProgram(shots=shots_per_randomization)
+    # Build the quantum program
+    quantum_program = QuantumProgram(shots=shots_per_randomization)
 
-    for i, pub in enumerate(coerced_pubs):
-        logger.info("Processing pub %d/%d with %s.", i + 1, len(coerced_pubs), task_class.__name__)
+    for pub_index, pub in enumerate(coerced_pubs):
+        logger.info(
+            "Processing pub %d/%d with %s.", pub_index + 1, len(coerced_pubs), task_class.__name__
+        )
         task = task_class()
         task.prepare(
             circuit=pub.circuit,
             observables=pub.observables,
             parameters=pub.parameter_values,
-            custom_boxing_options=boxing_opts,
+            custom_boxing_options=boxing_options,
             shots_per_randomization=shots_per_randomization,
             num_randomizations=num_randomizations,
             broadcast_obs_and_params=True,
             trex=trex,
-            quantum_program=qp,
+            quantum_program=quantum_program,
             **_method_kwargs(
                 task_class, resilience, noise_model, num_randomizations, shots_per_randomization
             ),
@@ -241,18 +243,18 @@ def _build_quantum_program(
 
     # TREX finalisation (must be after all task.prepare() calls)
     if trex is not None:
-        apply_trex(trex, qp, measure_noise_learning, num_randomizations)
+        apply_trex(trex, quantum_program, measure_noise_learning, num_randomizations)
 
     # Dynamical decoupling
     if finalized_options.dynamical_decoupling.enable:
         logger.info("Applying dynamical decoupling.")
-        qp = apply_dynamical_decoupling(
+        quantum_program = apply_dynamical_decoupling(
             backend=backend,
             dd_options=finalized_options.dynamical_decoupling,
-            quantum_program=qp,
+            quantum_program=quantum_program,
         )
 
-    return qp
+    return quantum_program
 
 
 def _normalise_extrapolator(extrapolator: str | Sequence[str]) -> list[str]:
@@ -284,17 +286,17 @@ def _method_kwargs(
         }
 
     if task_class in (PEA, GateFolding):
-        zne = resilience.zne
-        noise_factors, extrapolated_noise_factors = zne.resolve_noise_factors()
+        zne_options = resilience.zne
+        noise_factors, extrapolated_noise_factors = zne_options.resolve_noise_factors()
         kwargs: dict = {
             "noise_factors": noise_factors.tolist(),
-            "extrapolator": _normalise_extrapolator(zne.extrapolator),
+            "extrapolator": _normalise_extrapolator(zne_options.extrapolator),
             "extrapolated_noise_factors": extrapolated_noise_factors.tolist(),
         }
         if task_class is PEA:
             kwargs["noise_maps"] = noise_model
         else:  # ZNE
-            kwargs["folding_method"] = _ZNE_FOLDING_METHOD[zne.amplifier]
+            kwargs["folding_method"] = _ZNE_FOLDING_METHOD[zne_options.amplifier]
         return kwargs
 
     # MitigationTask (vanilla) — no extra kwargs

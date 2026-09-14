@@ -78,8 +78,8 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         )
 
     pub_results = []
-    for i, task in enumerate(tasks):
-        logger.info("Post-processing pub %d/%d (%s).", i + 1, num_pubs, type(task).__name__)
+    for pub_index, task in enumerate(tasks):
+        logger.info("Post-processing pub %d/%d (%s).", pub_index + 1, num_pubs, type(task).__name__)
 
         # Tuple shapes become lists when passthrough data is JSON serialized, but
         # qiskit-mitigation uses param_shape as an lru_cache key during broadcasting.
@@ -99,10 +99,12 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         pub_meta: dict[str, Any]
         if isinstance(task, GateFolding) and task.noise_factors is not None:
             # ZNE has one result item per noise factor; aggregate their metadata.
-            num_nf = len(task.noise_factors)
+            num_noise_factors = len(task.noise_factors)
             items_meta = [
-                _create_pub_result_metadata(result[task._program_item_index + j].metadata)
-                for j in range(num_nf)
+                _create_pub_result_metadata(
+                    result[task._program_item_index + noise_factor_offset].metadata
+                )
+                for noise_factor_offset in range(num_noise_factors)
             ]
             # TODO: Is there a way to avoid the private attribute?
             pub_meta = {key: [m[key] for m in items_meta] for key in items_meta[0]}
@@ -112,16 +114,21 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         if isinstance(task, (GateFolding, PEA)):
             selected_extrapolators = pub_result_raw.metadata["selected_extrapolators"]
             extrapolators = [
-                values[0] if all(value == values[0] for value in values) else "multiple"
-                for values in selected_extrapolators
+                term_extrapolators[0]
+                if all(extrap == term_extrapolators[0] for extrap in term_extrapolators)
+                else "multiple"
+                for term_extrapolators in selected_extrapolators
             ]
             pub_shape = np.broadcast_shapes(task.param_shape, task.observables.shape)
             pub_meta["resilience"] = {
                 "zne": {"extrapolators": np.asarray(extrapolators).reshape(pub_shape)}
             }
 
-        if i < len(circuits_metadata) and (cm := circuits_metadata[i]) is not None:
-            pub_meta["circuit_metadata"] = cm
+        if (
+            pub_index < len(circuits_metadata)
+            and (circuit_meta := circuits_metadata[pub_index]) is not None
+        ):
+            pub_meta["circuit_metadata"] = circuit_meta
 
         pub_results.append(EstimatorPubResult(data=pub_result_raw.data, metadata=pub_meta))
 
@@ -131,12 +138,10 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
 
 def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict[str, Any]:
-    """Dict factory that converts ``expanded_values`` tuples to lists.
-
-    """
-    d = dict(key_value_pairs)
-    d["expanded_values"] = [list(i) for i in d["expanded_values"]]
-    return d
+    """Dict factory that converts ``expanded_values`` tuples to lists."""
+    result_dict = dict(key_value_pairs)
+    result_dict["expanded_values"] = [list(row) for row in result_dict["expanded_values"]]
+    return result_dict
 
 
 def _create_pub_result_metadata(item_metadata: ItemMetadata | dict) -> dict[str, Any]:
@@ -191,26 +196,26 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
         The ``pub_result`` with a re-keyed ``DataBin`` when renaming is needed,
         or the original ``pub_result`` unchanged for ZNE/PEA.
     """
-    db = pub_result.data
+    data_bin = pub_result.data
 
     if isinstance(task, (GateFolding, PEA)):
         renamed = DataBin(
-            evs=db.evs,
-            stds=db.stds,
-            evs_noise_factors=db.evs_noise_factors,
-            stds_noise_factors=db.stds_twirl_noise_factors,
-            ensemble_stds_noise_factors=db.stds_noise_factors,
-            evs_extrapolated=db.evs_extrapolated,
-            stds_extrapolated=db.stds_extrapolated,
-            shape=db.evs.shape,
+            evs=data_bin.evs,
+            stds=data_bin.stds,
+            evs_noise_factors=data_bin.evs_noise_factors,
+            stds_noise_factors=data_bin.stds_twirl_noise_factors,
+            ensemble_stds_noise_factors=data_bin.stds_noise_factors,
+            evs_extrapolated=data_bin.evs_extrapolated,
+            stds_extrapolated=data_bin.stds_extrapolated,
+            shape=data_bin.evs.shape,
         )
         return PubResult(data=renamed, metadata=pub_result.metadata)
 
     renamed = DataBin(
-        evs=db.evs,
-        stds=db.twirl_stds,
-        ensemble_standard_error=db.stds,
-        shape=db.evs.shape,
+        evs=data_bin.evs,
+        stds=data_bin.twirl_stds,
+        ensemble_standard_error=data_bin.stds,
+        shape=data_bin.evs.shape,
     )
     return PubResult(data=renamed, metadata=pub_result.metadata)
 
