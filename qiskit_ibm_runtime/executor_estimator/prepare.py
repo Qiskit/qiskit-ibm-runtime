@@ -203,11 +203,13 @@ def _build_quantum_program(
 
     # Setup
     boxing_opts = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
-    noise_model = (
-        layer_noise_model_to_dict(resilience.layer_noise_model)
-        if resilience.layer_noise_model is not None
-        else {}
-    )
+    noise_model = {}
+    if resilience.layer_noise_model is not None:
+        noise_model = {
+            annotation.ref: pauli_map
+            for instr, pauli_map in layer_noise_model
+            if annotation := get_annotation(instr.operation, InjectNoise)
+        }
     measure_noise_learning = (
         resilience.measure_noise_learning if resilience.measure_mitigation else None
     )

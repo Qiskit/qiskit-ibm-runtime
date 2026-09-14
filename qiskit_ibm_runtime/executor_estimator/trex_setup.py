@@ -35,8 +35,8 @@ def apply_trex(
     """Append the TREX calibration circuit to ``quantum_program``.
 
     Must be called **after** all per-pub ``task.prepare(trex=trex, ...)`` calls.
-    By that point every task has registered itself on ``trex`` (via
-    ``trex._edit_boxing_options``), so ``trex.tasks`` is fully populated.
+    By that point every task has registered itself on ``trex``,
+    so ``trex.tasks`` is fully populated.
 
     This calls ``trex.prepare()``, which:
 

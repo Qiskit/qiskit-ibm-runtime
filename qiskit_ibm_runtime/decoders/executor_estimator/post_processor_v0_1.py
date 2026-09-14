@@ -133,8 +133,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     """Dict factory that converts ``expanded_values`` tuples to lists.
 
-    Used as the ``dict_factory`` argument when calling ``dataclasses.asdict``
-    on stretch-value objects that contain ``expanded_values`` fields.
     """
     d = dict(key_value_pairs)
     d["expanded_values"] = [list(i) for i in d["expanded_values"]]
@@ -165,7 +163,7 @@ def _rename_databin_fields(pub_result: Any, task: Any) -> Any:
     """Rename qiskit-mitigation DataBin fields to our public API field names.
 
     qiskit-mitigation's broadcast path for ``MitigationTask`` and ``PEC``
-    produces a ``DataBin`` with::
+    produces a ``DataBin`` with:
 
         evs            - expectation values
         stds           - ensemble standard error (over all shots as one pool)

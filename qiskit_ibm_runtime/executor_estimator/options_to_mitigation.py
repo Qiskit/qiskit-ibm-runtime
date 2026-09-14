@@ -38,12 +38,12 @@ def estimator_options_to_boxing_options(
     This dict is passed directly to ``MitigationTask.prepare()`` (and its subclasses)
     as the ``custom_boxing_options`` argument.
 
-    Noise-injection options (``inject_noise_*``) are **not** set here — ``PEC._box_circuit()``
-    and ``PEA._box_circuit()`` enforce their own required values for those fields.
+    Noise-injection options (``inject_noise_*``) are **not** set here — ``PEC``
+    and ``PEA`` enforce their own required values for those fields.
 
     ``enable_measures`` and ``measure_annotations`` are also **not** set here. When TREX
-    is passed to a task, ``trex._edit_boxing_options()`` forces ``enable_measures=True``
-    and ``measure_annotations="all"``. When TREX is absent, ``MitigationTask._box_circuit()``
+    is passed to a task, ``trex`` forces ``enable_measures=True``
+    and ``measure_annotations="all"``. When TREX is absent, ``MitigationTask``
     defaults to ``measure_annotations="change_basis"``, which is correct.
 
     Args:
