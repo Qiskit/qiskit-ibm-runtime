@@ -16,15 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
-
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from qiskit.circuit import CircuitInstruction
-    from qiskit.quantum_info import PauliLindbladMap
-
     from ..options_models.twirling import TwirlingOptions
 
 
@@ -63,29 +55,3 @@ def estimator_options_to_boxing_options(
         "twirling_group": twirling_options.group,
         "add_tags": "unique_box" if add_tags else "none",
     }
-
-
-def layer_noise_model_to_dict(
-    layer_noise_model: Iterable[tuple[CircuitInstruction, PauliLindbladMap]],
-) -> dict[str, PauliLindbladMap]:
-    """Convert a ``layer_noise_model`` iterable to a ``{ref: PauliLindbladMap}`` dict.
-
-    ``EstimatorOptions.resilience.layer_noise_model`` stores pairs of
-    ``(CircuitInstruction, PauliLindbladMap)`` where the instruction carries a
-    samplomatic ``InjectNoise`` annotation that holds the layer reference string.
-    This helper unpacks those annotations into the plain ``ref → map`` dict that
-    qiskit-mitigation's ``PEC`` and ``PEA`` task classes expect as ``noise_maps``.
-
-    Args:
-        layer_noise_model: Iterable of ``(CircuitInstruction, PauliLindbladMap)`` pairs
-            as stored in ``EstimatorOptions.resilience.layer_noise_model``.
-
-    Returns:
-        A ``dict`` mapping each layer reference string to its ``PauliLindbladMap``.
-        Instructions without an ``InjectNoise`` annotation are silently skipped.
-    """
-    result: dict[str, PauliLindbladMap] = {}
-    for instr, pauli_map in layer_noise_model:
-        if annotation := get_annotation(instr.operation, InjectNoise):
-            result[annotation.ref] = pauli_map
-    return result

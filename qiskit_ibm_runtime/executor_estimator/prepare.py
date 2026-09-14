@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_mitigation import PEA, PEC, TREX, GateFolding, MitigationTask
+from samplomatic.annotations import InjectNoise
+from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
@@ -28,8 +30,8 @@ from ..options_models.converters import estimator_options_to_executor_options
 from ..quantum_program import QuantumProgram
 from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_estimator_options
-from .options_to_mitigation import estimator_options_to_boxing_options, layer_noise_model_to_dict
-from .pec.utils import calculate_pec_twirling_shots, resolve_pec_max_overhead
+from .options_to_mitigation import estimator_options_to_boxing_options
+from .pec_utils import calculate_pec_twirling_shots, resolve_pec_max_overhead
 from .trex_setup import apply_trex
 from .utils import has_projection_operators, resolve_precision, validate_noise_factors
 
@@ -160,7 +162,7 @@ def _validate(
                 )
 
 
-def _choose_task_class(resilience: ResilienceOptions) -> type:
+def _choose_task_class(resilience: ResilienceOptions) -> type[MitigationTask]:
     """Return the qiskit-mitigation task class for the given resilience options."""
     if resilience.pec_mitigation:
         return PEC
@@ -207,8 +209,9 @@ def _build_quantum_program(
     if resilience.layer_noise_model is not None:
         noise_model = {
             annotation.ref: pauli_map
-            for instr, pauli_map in layer_noise_model
-            if annotation := get_annotation(instr.operation, InjectNoise)
+            for instr, pauli_map in resilience.layer_noise_model
+            for annotation in (get_annotation(instr.operation, InjectNoise),)
+            if annotation is not None
         }
     measure_noise_learning = (
         resilience.measure_noise_learning if resilience.measure_mitigation else None
