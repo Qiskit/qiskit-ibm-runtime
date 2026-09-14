@@ -97,110 +97,98 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_service(self):
         """Check if the service property is set."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsInstance(backend.service, QiskitRuntimeService)
+        self.assertIsInstance(backend.service, QiskitRuntimeService)
 
     @production_only
     def test_backend_target(self):
         """Check if the target property is set."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsNotNone(backend.target)
-            self.assertIsInstance(backend.target, Target)
+        self.assertIsNotNone(backend.target)
+        self.assertIsInstance(backend.target, Target)
 
     @production_only
     def test_backend_target_history(self):
         """Check retrieving backend target_history."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsNotNone(backend.target_history())
-            self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
+        self.assertIsNotNone(backend.target_history())
+        self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
 
     @production_only
     def test_properties_not_cached_target_history(self):
         """Check backend properties is not cached in target_history()."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            properties = backend.properties()
-            backend.target_history(datetime=datetime.now() - timedelta(60))
-            self.assertEqual(properties, backend.properties())
+        properties = backend.properties()
+        backend.target_history(datetime=datetime.now() - timedelta(60))
+        self.assertEqual(properties, backend.properties())
 
     def test_backend_target_refresh(self):
         """Test refreshing the backend target."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            old_target = backend.target
-            old_configuration = backend.configuration()
-            old_properties = backend.properties()
-            backend.refresh()
-            new_target = backend.target
-            self.assertNotEqual(old_target, new_target)
-            self.assertIsNot(old_configuration, backend.configuration())
-            self.assertIsNot(old_properties, backend.properties())
+        old_target = backend.target
+        old_configuration = backend.configuration()
+        old_properties = backend.properties()
+        backend.refresh()
+        new_target = backend.target
+        self.assertNotEqual(old_target, new_target)
+        self.assertIsNot(old_configuration, backend.configuration())
+        self.assertIsNot(old_properties, backend.properties())
 
     def test_backend_qubit_properties(self):
         """Check if the qubit properties are set."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsNotNone(backend.qubit_properties(0))
+        self.assertIsNotNone(backend.qubit_properties(0))
 
     def test_backend_simulator(self):
         """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsNotNone(backend.simulator)
-            self.assertEqual(backend.simulator, backend.configuration().simulator)
+        self.assertIsNotNone(backend.simulator)
+        self.assertEqual(backend.simulator, backend.configuration().simulator)
 
     def test_backend_status(self):
         """Check the status of a real chip."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertTrue(backend.status().operational)
+        self.assertTrue(backend.status().operational)
 
     def test_backend_properties(self):
         """Check the properties of calibration of a real chip."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            properties = backend.properties()
-            properties_today = backend.properties(datetime=datetime.today())
-            self.assertIsNotNone(properties)
-            self.assertIsNotNone(properties_today)
-            self.assertEqual(properties.backend_version, properties_today.backend_version)
+        properties = backend.properties()
+        properties_today = backend.properties(datetime=datetime.today())
+        self.assertIsNotNone(properties)
+        self.assertIsNotNone(properties_today)
+        self.assertEqual(properties.backend_version, properties_today.backend_version)
 
     def test_backend_configuration(self):
         """Check the backend configuration of each backend."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsNotNone(backend.configuration())
+        self.assertIsNotNone(backend.configuration())
 
     @production_only
     def test_backend_invalid_attribute(self):
         """Check if AttributeError is raised when an invalid backend attribute is accessed."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            with self.assertRaises(AttributeError):
-                backend.foobar
+        with self.assertRaises(AttributeError):
+            backend.foobar
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            backend_copy = copy.deepcopy(backend)
-            self.assertEqual(backend_copy.name, backend.name)
+        backend_copy = copy.deepcopy(backend)
+        self.assertEqual(backend_copy.name, backend.name)
+        self.assertEqual(
+            backend_copy.configuration().basis_gates,
+            backend.configuration().basis_gates,
+        )
+        if backend.properties():
             self.assertEqual(
-                backend_copy.configuration().basis_gates,
-                backend.configuration().basis_gates,
+                backend_copy.properties().last_update_date,
+                backend.properties().last_update_date,
             )
-            if backend.properties():
-                self.assertEqual(
-                    backend_copy.properties().last_update_date,
-                    backend.properties().last_update_date,
-                )
-            self.assertEqual(backend_copy._instance, backend._instance)
-            self.assertEqual(
-                backend_copy._api_client._session.base_url,
-                backend._api_client._session.base_url,
-            )
+        self.assertEqual(backend_copy._instance, backend._instance)
+        self.assertEqual(
+            backend_copy._api_client._session.base_url,
+            backend._api_client._session.base_url,
+        )
 
     def test_backend_pending_jobs(self):
         """Test pending jobs are returned."""
@@ -271,17 +259,16 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_fractional_gates_error(self):
         """Test that use_fractional_gates = True raises error for unsupported backends."""
         backend = self.backend
-        with self.subTest(backend=backend.name):
-            if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
-                self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
-            with self.assertRaises(
-                IBMInputValueError,
-                msg=(
-                    f"Backend '{backend.name}' does not support fractional gates, "
-                    "but use_fractional_gates was set to True."
-                ),
-            ):
-                self.service.backend(backend.name, use_fractional_gates=True)
+        if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
+            self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
+        with self.assertRaises(
+            IBMInputValueError,
+            msg=(
+                f"Backend '{backend.name}' does not support fractional gates, "
+                "but use_fractional_gates was set to True."
+            ),
+        ):
+            self.service.backend(backend.name, use_fractional_gates=True)
 
     def test_backend_fractional_gates_cache_behavior(self):
         """Test backend config cache/refresh logic for use_fractional_gates."""
