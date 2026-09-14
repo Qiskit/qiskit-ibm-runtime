@@ -130,7 +130,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 "zne": {"extrapolators": np.asarray(extrapolators).reshape(pub_shape)}
             }
 
-        if circuit_meta := circuits_metadata[pub_index] is not None:
+        if (circuit_meta := circuits_metadata[pub_index]) is not None:
             pub_meta["circuit_metadata"] = circuit_meta
 
         pub_results.append(EstimatorPubResult(data=pub_result_raw.data, metadata=pub_meta))
