@@ -194,7 +194,6 @@ class SamplerV2(BaseSamplerV2):
                 but contain randomized mock data rather than actual or simulated measurement
                 results. Access to this feature may be restricted.
 
-
         Returns:
             The submitted job.
         """

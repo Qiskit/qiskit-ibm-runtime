@@ -170,7 +170,6 @@ class QiskitRuntimeLocalService:
                 results. Access to this feature may be restricted. This parameter is ignored in a
                 local service.
 
-
         Returns:
             A job representing the execution.
 

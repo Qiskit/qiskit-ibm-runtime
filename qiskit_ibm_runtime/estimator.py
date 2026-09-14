@@ -146,7 +146,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 but contain randomized mock data rather than actual or simulated measurement
                 results. Access to this feature may be restricted.
 
-
         Returns:
             Submitted job.
 
