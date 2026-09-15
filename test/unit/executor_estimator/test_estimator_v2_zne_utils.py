@@ -55,16 +55,16 @@ def _prepare_zne(
     add_tags: bool = False,
 ) -> QuantumProgram:
     """Drop-in for the old ``prepare_zne`` that delegates to ``prepare()``."""
-    opts = EstimatorOptions()
-    opts.twirling = twirling_options
-    opts.resilience.zne_mitigation = True
-    opts.resilience.zne = zne_options
-    opts.resilience.measure_mitigation = measure_noise_learning is not None
+    options = EstimatorOptions()
+    options.twirling = twirling_options
+    options.resilience.zne_mitigation = True
+    options.resilience.zne = zne_options
+    options.resilience.measure_mitigation = measure_noise_learning is not None
     if measure_noise_learning is not None:
-        opts.resilience.measure_noise_learning = measure_noise_learning
-    opts.default_shots = shots
-    qp, _ = prepare(pubs, opts, precision=None, add_tags=add_tags)
-    return qp
+        options.resilience.measure_noise_learning = measure_noise_learning
+    options.default_shots = shots
+    quantum_program, _ = prepare(pubs, options, precision=None, add_tags=add_tags)
+    return quantum_program
 
 
 @ddt

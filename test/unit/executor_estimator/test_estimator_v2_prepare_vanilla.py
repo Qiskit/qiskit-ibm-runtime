@@ -62,18 +62,18 @@ def _prepare_vanilla(
     ``measure_noise_learning``, callers should pass ``measure_noise_learning=None``
     or use non-projector observables.
     """
-    opts = EstimatorOptions()
-    opts.twirling = twirling_options
+    options = EstimatorOptions()
+    options.twirling = twirling_options
     if measure_noise_learning is not None:
-        opts.resilience.measure_mitigation = True
-        opts.resilience.measure_noise_learning = measure_noise_learning
+        options.resilience.measure_mitigation = True
+        options.resilience.measure_noise_learning = measure_noise_learning
     else:
-        opts.resilience.measure_mitigation = False
-    opts.resilience.zne_mitigation = False
-    opts.resilience.pec_mitigation = False
-    opts.default_shots = shots
-    qp, _ = prepare(pubs, opts, precision=None, add_tags=add_tags)
-    return qp
+        options.resilience.measure_mitigation = False
+    options.resilience.zne_mitigation = False
+    options.resilience.pec_mitigation = False
+    options.default_shots = shots
+    quantum_program, _ = prepare(pubs, options, precision=None, add_tags=add_tags)
+    return quantum_program
 
 
 @ddt

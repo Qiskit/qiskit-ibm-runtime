@@ -64,29 +64,29 @@ def _prepare_pea(
     ``(CircuitInstruction, PauliLindbladMap)`` pairs that ``layer_noise_model``
     expects by calling ``find_unique_layers`` with the same twirling options.
     """
-    opts = EstimatorOptions()
-    opts.twirling = twirling_options
-    opts.resilience.zne_mitigation = True
-    opts.resilience.zne = zne_options
-    opts.resilience.measure_mitigation = measure_noise_learning is not None
+    options = EstimatorOptions()
+    options.twirling = twirling_options
+    options.resilience.zne_mitigation = True
+    options.resilience.zne = zne_options
+    options.resilience.measure_mitigation = measure_noise_learning is not None
     if measure_noise_learning is not None:
-        opts.resilience.measure_noise_learning = measure_noise_learning
-    opts.default_shots = shots
+        options.resilience.measure_noise_learning = measure_noise_learning
+    options.default_shots = shots
 
     all_pubs = [EstimatorPub.coerce(p) if not isinstance(p, EstimatorPub) else p for p in pubs]
     if noise_model:
         layers = find_unique_layers(all_pubs, twirling_options, inject_noise=True)
-        opts.resilience.layer_noise_model = [
+        options.resilience.layer_noise_model = [
             (layer, noise_model[get_annotation(layer.operation, InjectNoise).ref])
             for layer in layers
             if get_annotation(layer.operation, InjectNoise) is not None
             and get_annotation(layer.operation, InjectNoise).ref in noise_model
         ]
     else:
-        opts.resilience.layer_noise_model = []
+        options.resilience.layer_noise_model = []
 
-    qp, _ = prepare(pubs, opts, precision=None, add_tags=add_tags)
-    return qp
+    quantum_program, _ = prepare(pubs, options, precision=None, add_tags=add_tags)
+    return quantum_program
 
 
 @ddt
