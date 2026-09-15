@@ -1748,8 +1748,8 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
         with self.assertRaisesRegex(ValueError, "Noise model is missing"):
             self._prepare_pea([pub1, pub2], twirling_options, 1024, zne_options, noise_model)
 
-    def test_prepare_pec_warns_when_measurement_twirling_is_false(self):
-        """Test that prepare_pec raises warns when measurement twirling is set to ``False``."""
+    def test_prepare_pea_warns_when_measurement_twirling_is_false(self):
+        """Test that prepare_pea raises warns when measurement twirling is set to ``False``."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
