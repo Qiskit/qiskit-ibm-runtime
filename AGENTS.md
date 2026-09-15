@@ -28,6 +28,8 @@ existing Qiskit patterns.
   `QISKIT_IBM_URL`, `QISKIT_IBM_QPU`).
 - Do not use `unittest.TestCase` directly; use the project base classes in `test/ibm_test_case.py`.
 - Unit tests must not contact any external service; use `FakeBackendV2` for backend interactions.
+- Avoid mocking; if mocking feels necessary, first try refactoring the code under test into
+  smaller, more testable units.
 
 ## Constraints
 
