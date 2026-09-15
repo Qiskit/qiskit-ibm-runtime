@@ -1,0 +1,15 @@
+The Primitives ``run()`` methods:
+
+* meth:`~qiskit_ibm_runtime.EstimatorV2.run`
+* meth:`~qiskit_ibm_runtime.Executor.run`
+* meth:`~qiskit_ibm_runtime.NoiseLearner.run`
+* meth:`~qiskit_ibm_runtime.NoiseLearnerV3.run`
+* meth:`~qiskit_ibm_runtime.SamplerV2.run`
+
+now accept a new ``dry_run`` argument. It performs a dry run without executing the job on a QPU.
+This mode can be used to validate the job, estimate usage consumption, and retrieve circuit timing
+metadata. Returned results preserve the expected schema but contain randomized mock data rather
+than actual or simulated measurement results. Unlike the fake backends, the processing of this dry
+run happens on the server-side, so the job may not finish immediately.
+
+Please note that access to this feature may be restricted, and it is not widely available yet.

@@ -21,8 +21,11 @@ from qiskit.quantum_info import Pauli, SparsePauliOp
 
 from qiskit_ibm_runtime import EstimatorOptions, EstimatorV2, IBMInputValueError, Session
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
+from ..registries import OneInstanceDryRunRegistry
 from ..utils import (
     get_mocked_backend,
     get_primitive_inputs,
@@ -324,3 +327,12 @@ class TestEstimatorV2(IBMTestCase):
 
         with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, precision=run_precision)
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Estimator can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        estimator = EstimatorV2(mode=backend)
+        job = estimator.run(**get_primitive_inputs(estimator, backend=backend), dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")
