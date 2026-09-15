@@ -94,7 +94,7 @@ def _options(resilience_level=0, **kwargs):
     return opts
 
 
-class TestEstimatorV2PostProcessor(IBMTestCase):
+class TestEstimatorV2PostProcessorV0_1(IBMTestCase):
     """Tests for ``estimator_v2_post_processor_v0_1``."""
 
     def test_post_processor_empty_result(self):
