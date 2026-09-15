@@ -67,7 +67,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         raise ValueError("Missing 'post_processor' in passthrough data.")
 
     num_pubs: int = post_processor_data["num_pubs"]
-    circuits_metadata: list[Any] = post_processor_data.get("circuits_metadata") or []
+    circuits_metadata: list[Any] = post_processor_data.get("circuits_metadata") or [None] * num_pubs
 
     if len(circuits_metadata) != num_pubs:
         raise ValueError(
