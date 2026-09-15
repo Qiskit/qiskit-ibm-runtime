@@ -178,19 +178,18 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         today_tz_aware = date_today.replace(tzinfo=tz.tzlocal())
         past_one_month_tz_aware = past_one_month.replace(tzinfo=tz.tzlocal())
 
-        with self.subTest():
-            job_list = self.service.jobs(
-                backend_name=self.sim_backend.name,
-                limit=2,
-                created_after=past_one_month,
-                created_before=date_today,
+        job_list = self.service.jobs(
+            backend_name=self.sim_backend.name,
+            limit=2,
+            created_after=past_one_month,
+            created_before=date_today,
+        )
+        self.assertTrue(job_list)
+        for job in job_list:
+            self.assertTrue(
+                (past_one_month_tz_aware <= job.creation_date <= today_tz_aware),
+                f"job {job.job_id()} creation date {job.creation_date} not within range",
             )
-            self.assertTrue(job_list)
-            for job in job_list:
-                self.assertTrue(
-                    (past_one_month_tz_aware <= job.creation_date <= today_tz_aware),
-                    f"job {job.job_id()} creation date {job.creation_date} not within range",
-                )
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""

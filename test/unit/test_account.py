@@ -19,7 +19,6 @@ import os
 import uuid
 from typing import Any
 from unittest import skipIf
-from unittest.mock import patch
 
 from ddt import data, ddt
 
@@ -37,6 +36,7 @@ from qiskit_ibm_runtime.accounts.management import (
     _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
 )
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..account import (
     custom_envs,
@@ -44,8 +44,9 @@ from ..account import (
     no_envs,
     temporary_account_config_file,
 )
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from .mock.fake_runtime_service import FakeRuntimeService
+from ..utils import combine
 
 _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",
@@ -407,13 +408,14 @@ class TestAccountManager(IBMTestCase):
         )
         self.assertEqual(account.token, dummy_token)
 
+    @mock_responses
     @temporary_account_config_file()
-    def test_default_env_channel(self):
+    def test_default_env_channel(self, registry):
         """Test that if QISKIT_IBM_CHANNEL is set in the environment, this channel will be used."""
         token = uuid.uuid4().hex
         # unset default_channel in the environment
         with temporary_account_config_file(token=token), no_envs("QISKIT_IBM_CHANNEL"):
-            service = FakeRuntimeService()
+            service = QiskitRuntimeService()
             self.assertEqual(service.channel, "ibm_quantum_platform")
 
         # set channel to default channel in the environment
@@ -424,7 +426,7 @@ class TestAccountManager(IBMTestCase):
                 temporary_account_config_file(channel=channel, token=token),
                 custom_envs(channel_env),
             ):
-                service = FakeRuntimeService()
+                service = QiskitRuntimeService()
                 self.assertEqual(service.channel, channel)
 
     def test_save_private_endpoint(self):
@@ -461,8 +463,9 @@ class TestAccountManager(IBMTestCase):
         self.assertEqual(account.channel, "ibm_quantum_platform")
         self.assertEqual(account.token, _TEST_IBM_CLOUD_ACCOUNT.token)
 
+    @mock_responses
     @temporary_account_config_file()
-    def test_set_channel_precedence(self):
+    def test_set_channel_precedence(self, registry):
         """Test the precedence of the various methods to set the account.
 
         account name > env_variables > channel parameter default account
@@ -500,7 +503,7 @@ class TestAccountManager(IBMTestCase):
             custom_envs(channel_env),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService(name="any-quantum")
+            service = QiskitRuntimeService(name="any-quantum")
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, any_token)
 
@@ -510,7 +513,7 @@ class TestAccountManager(IBMTestCase):
             no_envs("QISKIT_IBM_CHANNEL"),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService()
+            service = QiskitRuntimeService()
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, preferred_token)
 
@@ -521,7 +524,7 @@ class TestAccountManager(IBMTestCase):
             custom_envs(channel_env),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService(channel="ibm_quantum_platform")
+            service = QiskitRuntimeService(channel="ibm_quantum_platform")
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, preferred_token)
 
@@ -532,7 +535,7 @@ class TestAccountManager(IBMTestCase):
             custom_envs(channel_env),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService(channel="ibm_quantum_platform")
+            service = QiskitRuntimeService(channel="ibm_quantum_platform")
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, cloud_token)
 
@@ -542,7 +545,7 @@ class TestAccountManager(IBMTestCase):
             custom_envs(channel_env),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService(channel="ibm_quantum_platform")
+            service = QiskitRuntimeService(channel="ibm_quantum_platform")
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, cloud_token)
 
@@ -554,7 +557,7 @@ class TestAccountManager(IBMTestCase):
             custom_envs(channel_env),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService()
+            service = QiskitRuntimeService()
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, preferred_token)
 
@@ -570,7 +573,7 @@ class TestAccountManager(IBMTestCase):
             custom_envs(channel_env),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService()
+            service = QiskitRuntimeService()
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, cloud_token)
 
@@ -581,12 +584,12 @@ class TestAccountManager(IBMTestCase):
             custom_envs(channel_env),
             no_envs("QISKIT_IBM_TOKEN"),
         ):
-            service = FakeRuntimeService()
+            service = QiskitRuntimeService()
             self.assertEqual(service.channel, "ibm_quantum_platform")
             self.assertEqual(service._account.token, cloud_token)
         # default channel
         with temporary_account_config_file(contents=contents), no_envs("QISKIT_IBM_CHANNEL"):
-            service = FakeRuntimeService()
+            service = QiskitRuntimeService()
             self.assertEqual(service.channel, "ibm_quantum_platform")
 
     def tearDown(self) -> None:
@@ -601,119 +604,113 @@ MOCK_PROXY_CONFIG_DICT = {"urls": {"https": "127.0.0.1", "username_ntlm": "", "p
 
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
+@ddt
 class TestEnableAccount(IBMTestCase):
     """Tests for QiskitRuntimeService enable account."""
 
-    def test_enable_account_by_name(self):
+    @mock_responses
+    def test_enable_account_by_name(self, registry):
         """Test initializing account by name."""
         name = "foo"
         token = uuid.uuid4().hex
         with temporary_account_config_file(name=name, token=token):
-            service = FakeRuntimeService(name=name)
+            service = QiskitRuntimeService(name=name)
 
         self.assertTrue(service._account)
         self.assertEqual(service._account.token, token)
 
-    def test_enable_account_by_channel(self):
+    @mock_responses
+    @data("ibm_quantum_platform", "ibm_cloud")
+    def test_enable_account_by_channel(self, channel, registry):
         """Test initializing account by channel."""
-        for channel in ["ibm_quantum_platform"]:
-            with self.subTest(channel=channel), no_envs(["QISKIT_IBM_TOKEN"]):
-                token = uuid.uuid4().hex
-                with temporary_account_config_file(channel=channel, token=token):
-                    service = FakeRuntimeService(channel=channel)
-                self.assertTrue(service._account)
-                self.assertEqual(service._account.token, token)
+        with no_envs(["QISKIT_IBM_TOKEN"]):
+            token = uuid.uuid4().hex
+            with temporary_account_config_file(channel=channel, token=token):
+                service = QiskitRuntimeService(channel=channel)
+            self.assertTrue(service._account)
+            self.assertEqual(service._account.token, token)
 
-    def test_enable_account_by_token_url(self):
+    @mock_responses
+    @data(
+        {"token": uuid.uuid4().hex}, {"token": uuid.uuid4().hex, "url": "https://foo.cloud.ibm.com"}
+    )
+    def test_enable_account_by_token_url(self, params, registry):
         """Test initializing account by token."""
-        token = uuid.uuid4().hex
-        subtests = [
-            {"token": token},
-            {"token": token, "url": "some_url"},
-        ]
-        for param in subtests:
-            with self.subTest(param=param):
-                with temporary_account_config_file(channel="ibm_quantum_platform", token=token):
-                    service = FakeRuntimeService(**param)
-                    self.assertTrue(service._account)
+        with temporary_account_config_file(channel="ibm_quantum_platform", token=params["token"]):
+            service = QiskitRuntimeService(**params)
+            self.assertTrue(service._account)
 
     def test_enable_account_by_url_error(self):
         """Test initializing account by url gives an error."""
         token = uuid.uuid4().hex
         with temporary_account_config_file(channel="ibm_quantum_platform", token=token):
-            with self.assertRaises(ValueError):
-                _ = FakeRuntimeService(url="some_url")
+            with self.assertRaisesRegex(ValueError, "not valid as a standalone parameter"):
+                QiskitRuntimeService(url="some_url")
 
-    def test_enable_account_by_name_and_other(self):
+    @mock_responses
+    @data(
+        {"channel": "ibm_cloud"},
+        {"token": "some_token"},
+        {"url": "some_url"},
+        {"channel": "ibm_cloud", "token": "some_token", "url": "some_url"},
+    )
+    def test_enable_account_by_name_and_other(self, params, registry):
         """Test initializing account by name and other."""
-        subtests = [
-            {"channel": "ibm_cloud"},
-            {"token": "some_token"},
-            {"url": "some_url"},
-            {"channel": "ibm_cloud", "token": "some_token", "url": "some_url"},
-        ]
-
         name = "foo"
         token = uuid.uuid4().hex
-        for param in subtests:
-            with self.subTest(param=param), temporary_account_config_file(name=name, token=token):
-                with self.assertLogs("qiskit_ibm_runtime", logging.WARNING) as logged:
-                    service = FakeRuntimeService(name=name, **param)
+        with temporary_account_config_file(name=name, token=token):
+            with self.assertLogs("qiskit_ibm_runtime", logging.WARNING) as logged:
+                service = QiskitRuntimeService(name=name, **params)
 
-                self.assertTrue(service._account)
-                self.assertEqual(service._account.token, token)
-                self.assertIn("are ignored", logged.output[0])
+            self.assertTrue(service._account)
+            self.assertEqual(service._account.token, token)
+            self.assertIn("are ignored", logged.output[0])
 
-    def test_enable_cloud_account_by_channel_token_url(self):
+    @mock_responses
+    @data(None, "https://foo.cloud.ibm.com")
+    def test_enable_cloud_account_by_channel_token_url(self, url, registry):
         """Test initializing cloud account by channel, token, url."""
-        # Enable account will fail due to missing CRN.
-        urls = [None, "some_url"]
-        for url in urls:
-            with self.subTest(url=url), no_envs(["QISKIT_IBM_TOKEN"]):
-                token = uuid.uuid4().hex
-                with patch.object(FakeRuntimeService, "_resolve_cloud_instances", return_value=[]):
-                    service = FakeRuntimeService(
-                        channel="ibm_quantum_platform", token=token, url=url
-                    )
-                self.assertTrue(service)
+        with no_envs(["QISKIT_IBM_TOKEN"]):
+            token = uuid.uuid4().hex
+            service = QiskitRuntimeService(channel="ibm_quantum_platform", token=token, url=url)
+            self.assertTrue(service)
 
-    def test_enable_account_by_channel_url(self):
+    @mock_responses
+    @data("ibm_quantum_platform", "ibm_cloud")
+    def test_enable_account_by_channel_url(self, channel, registry):
         """Test initializing account by channel, token, url."""
-        subtests = ["ibm_quantum_platform"]
-        for channel in subtests:
-            with self.subTest(channel=channel):
-                token = uuid.uuid4().hex
-                with (
-                    temporary_account_config_file(channel=channel, token=token),
-                    no_envs(["QISKIT_IBM_TOKEN"]),
-                ):
-                    with self.assertLogs("qiskit_ibm_runtime", logging.WARNING) as logged:
-                        service = FakeRuntimeService(channel=channel, url="some_url")
+        token = uuid.uuid4().hex
+        with (
+            temporary_account_config_file(channel=channel, token=token),
+            no_envs(["QISKIT_IBM_TOKEN"]),
+        ):
+            with self.assertLogs("qiskit_ibm_runtime", logging.WARNING) as logged:
+                service = QiskitRuntimeService(channel=channel, url="some_url")
 
-                self.assertTrue(service._account)
-                self.assertEqual(service._account.token, token)
-                expected = IBM_QUANTUM_PLATFORM_API_URL
-                self.assertEqual(service._account.url, expected)
-                self.assertIn("url", logged.output[0])
+        self.assertTrue(service._account)
+        self.assertEqual(service._account.token, token)
+        expected = IBM_QUANTUM_PLATFORM_API_URL
+        self.assertEqual(service._account.url, expected)
+        self.assertIn("url", logged.output[0])
 
-    def test_enable_account_by_only_channel(self):
+    @mock_responses
+    @data("ibm_quantum_platform", "ibm_cloud")
+    def test_enable_account_by_only_channel(self, channel, registry):
         """Test initializing account with single saved account."""
-        subtests = ["ibm_quantum_platform"]
-        for channel in subtests:
-            with self.subTest(channel=channel):
-                token = uuid.uuid4().hex
-                with (
-                    temporary_account_config_file(channel=channel, token=token),
-                    no_envs(["QISKIT_IBM_TOKEN"]),
-                ):
-                    service = FakeRuntimeService()
-                self.assertTrue(service._account)
-                self.assertEqual(service._account.token, token)
-                expected = IBM_QUANTUM_PLATFORM_API_URL
-                self.assertEqual(service._account.url, expected)
-                self.assertEqual(service._account.channel, channel)
+        token = uuid.uuid4().hex
+        with (
+            temporary_account_config_file(channel=channel, token=token),
+            no_envs(["QISKIT_IBM_TOKEN"]),
+        ):
+            service = QiskitRuntimeService()
+        self.assertTrue(service._account)
+        self.assertEqual(service._account.token, token)
+        expected = IBM_QUANTUM_PLATFORM_API_URL
+        self.assertEqual(service._account.url, expected)
+        self.assertEqual(service._account.channel, channel)
 
-    def test_enable_account_both_channel(self):
+    @mock_responses
+    def test_enable_account_both_channel(self, registry):
         """Test initializing account with both saved types."""
         token = uuid.uuid4().hex
         contents = get_account_config_contents(channel="ibm_quantum_platform", token=token)
@@ -722,214 +719,224 @@ class TestEnableAccount(IBMTestCase):
             temporary_account_config_file(contents=contents),
             no_envs(["QISKIT_IBM_TOKEN", "QISKIT_IBM_CHANNEL"]),
         ):
-            service = FakeRuntimeService()
+            service = QiskitRuntimeService()
         self.assertTrue(service._account)
         self.assertEqual(service._account.token, token)
         self.assertEqual(service._account.url, IBM_QUANTUM_PLATFORM_API_URL)
         self.assertEqual(service._account.channel, "ibm_quantum_platform")
 
-    def test_enable_account_by_env_channel(self):
+    @mock_responses
+    @data("ibm_quantum_platform", "ibm_cloud", None)
+    def test_enable_account_by_env_channel(self, channel, registry):
         """Test initializing account by environment variable and channel."""
-        subtests = ["ibm_quantum_platform", "ibm_cloud", None]
-        for channel in subtests:
-            with self.subTest(channel=channel):
-                token = uuid.uuid4().hex
-                url = uuid.uuid4().hex
-                envs = {
-                    "QISKIT_IBM_TOKEN": token,
-                    "QISKIT_IBM_URL": url,
-                    "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
-                }
-                with custom_envs(envs), no_envs("QISKIT_IBM_CHANNEL"):
-                    service = FakeRuntimeService(channel=channel)
-
-                self.assertTrue(service._account)
-                self.assertEqual(service._account.token, token)
-                self.assertEqual(service._account.url, url)
-                channel = channel or "ibm_quantum_platform"
-                self.assertEqual(service._account.channel, channel)
-
-    def test_enable_account_only_env_variables(self):
-        """Test initializing account with only environment variables."""
-        subtests = ["ibm_quantum_platform"]
         token = uuid.uuid4().hex
-        url = uuid.uuid4().hex
-        for channel in subtests:
-            envs = {
-                "QISKIT_IBM_TOKEN": token,
-                "QISKIT_IBM_URL": url,
-                "QISKIT_IBM_CHANNEL": channel,
-                "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
-            }
-            with custom_envs(envs):
-                service = FakeRuntimeService()
-            self.assertEqual(service._account.channel, channel)
-            self.assertEqual(service._account.url, url)
-
-    def test_enable_account_by_env_token_url(self):
-        """Test initializing account by environment variable and extra."""
-        token = uuid.uuid4().hex
-        url = uuid.uuid4().hex
+        url = "https://foo.cloud.ibm.com"
         envs = {
             "QISKIT_IBM_TOKEN": token,
             "QISKIT_IBM_URL": url,
             "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
         }
-        subtests = [{"token": token}, {"token": token, "url": url}]
-        for extra in subtests:
-            with self.subTest(extra=extra):
-                with custom_envs(envs) as _:
-                    service = FakeRuntimeService(**extra)
-                    self.assertTrue(service._account)
+        with custom_envs(envs), no_envs("QISKIT_IBM_CHANNEL"):
+            service = QiskitRuntimeService(channel=channel)
+
+        self.assertTrue(service._account)
+        self.assertEqual(service._account.token, token)
+        self.assertEqual(service._account.url, url)
+        channel = channel or "ibm_quantum_platform"
+        self.assertEqual(service._account.channel, channel)
+
+    @mock_responses
+    @data("ibm_quantum_platform", "ibm_cloud", None)
+    def test_enable_account_only_env_variables(self, channel, registry):
+        """Test initializing account with only environment variables."""
+        token = uuid.uuid4().hex
+        url = "https://foo.cloud.ibm.com"
+        envs = {
+            "QISKIT_IBM_TOKEN": token,
+            "QISKIT_IBM_URL": url,
+            "QISKIT_IBM_CHANNEL": channel,
+            "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
+        }
+        with custom_envs(envs):
+            service = QiskitRuntimeService()
+        self.assertEqual(service._account.channel, channel or "ibm_quantum_platform")
+        self.assertEqual(service._account.url, url)
+
+    @mock_responses
+    @data(
+        {"token": uuid.uuid4().hex}, {"token": uuid.uuid4().hex, "url": "https://foo.cloud.ibm.com"}
+    )
+    def test_enable_account_by_env_token_url(self, params, registry):
+        """Test initializing account by environment variable and extra."""
+        token = params["token"]
+        url = "https://foo.cloud.ibm.com"
+        envs = {
+            "QISKIT_IBM_TOKEN": token,
+            "QISKIT_IBM_URL": url,
+            "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
+        }
+        with custom_envs(envs) as _:
+            service = QiskitRuntimeService(**params)
+            self.assertTrue(service._account)
 
     def test_enable_account_bad_name(self):
         """Test initializing account by bad name."""
         name = "phantom"
-        with temporary_account_config_file() as _, self.assertRaises(AccountNotFoundError) as err:
-            _ = FakeRuntimeService(name=name)
-        self.assertIn(name, str(err.exception))
+        with temporary_account_config_file():
+            with self.assertRaisesRegex(AccountNotFoundError, f"Account with the name {name}"):
+                _ = QiskitRuntimeService(name=name)
 
     def test_enable_account_bad_channel(self):
         """Test initializing account by bad name."""
         channel = "phantom"
-        with temporary_account_config_file() as _, self.assertRaises(ValueError) as err:
-            _ = FakeRuntimeService(channel=channel)
-        self.assertIn("channel", str(err.exception))
+        with temporary_account_config_file():
+            with self.assertRaisesRegex(ValueError, "'channel' can only be"):
+                QiskitRuntimeService(channel=channel)
 
-    def test_enable_account_by_name_pref(self):
+    @mock_responses
+    @data(
+        {"proxies": MOCK_PROXY_CONFIG_DICT},
+        {"verify": False},
+        {"instance": _DEFAULT_CRN},
+        {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
+    )
+    def test_enable_account_by_name_pref(self, params, registry):
         """Test initializing account by name and preferences."""
         name = "foo"
-        subtests = [
+        with temporary_account_config_file(name=name, verify=True, proxies={}):
+            service = QiskitRuntimeService(name=name, **params)
+        self.assertTrue(service._account)
+        self._verify_prefs(params, service._account)
+
+    @mock_responses
+    @combine(
+        channel=["ibm_quantum_platform", "ibm_cloud"],
+        params=[
             {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
             {"instance": _DEFAULT_CRN},
             {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
-        ]
-        for extra in subtests:
-            with self.subTest(extra=extra):
-                with temporary_account_config_file(name=name, verify=True, proxies={}):
-                    service = FakeRuntimeService(name=name, **extra)
-                self.assertTrue(service._account)
-                self._verify_prefs(extra, service._account)
-
-    def test_enable_account_by_channel_pref(self):
+        ],
+    )
+    def test_enable_account_by_channel_pref(self, channel, params, registry):
         """Test initializing account by channel and preferences."""
-        subtests = [
-            {"proxies": MOCK_PROXY_CONFIG_DICT},
-            {"verify": False},
-            {"instance": _DEFAULT_CRN},
-            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
-        ]
-        for channel in ["ibm_quantum_platform"]:
-            for extra in subtests:
-                with (
-                    self.subTest(channel=channel, extra=extra),
-                    temporary_account_config_file(channel=channel, verify=True, proxies={}),
-                    no_envs(["QISKIT_IBM_TOKEN"]),
-                ):
-                    service = FakeRuntimeService(channel=channel, **extra)
-                    self.assertTrue(service._account)
-                    self._verify_prefs(extra, service._account)
+        with (
+            temporary_account_config_file(channel=channel, verify=True, proxies={}),
+            no_envs(["QISKIT_IBM_TOKEN"]),
+        ):
+            service = QiskitRuntimeService(channel=channel, **params)
+            self.assertTrue(service._account)
+            self._verify_prefs(params, service._account)
 
-    def test_enable_account_by_env_pref(self):
+    @mock_responses
+    @data(
+        {"proxies": MOCK_PROXY_CONFIG_DICT},
+        {"verify": False},
+        {"instance": _DEFAULT_CRN},
+        {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
+    )
+    def test_enable_account_by_env_pref(self, params, registry):
         """Test initializing account by environment variable and preferences."""
-        subtests = [
-            {"proxies": MOCK_PROXY_CONFIG_DICT},
-            {"verify": False},
-            {"instance": _DEFAULT_CRN},
-            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
-        ]
-        for extra in subtests:
-            with self.subTest(extra=extra):
-                token = uuid.uuid4().hex
-                url = uuid.uuid4().hex
-                envs = {
-                    "QISKIT_IBM_TOKEN": token,
-                    "QISKIT_IBM_URL": url,
-                    "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
-                }
-                with custom_envs(envs), no_envs("QISKIT_IBM_CHANNEL"):
-                    service = FakeRuntimeService(**extra)
+        token = uuid.uuid4().hex
+        url = "https://foo.cloud.ibm.com"
+        envs = {
+            "QISKIT_IBM_TOKEN": token,
+            "QISKIT_IBM_URL": url,
+            "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
+        }
+        with custom_envs(envs), no_envs("QISKIT_IBM_CHANNEL"):
+            service = QiskitRuntimeService(**params)
 
-                self.assertTrue(service._account)
-                self._verify_prefs(extra, service._account)
+        self.assertTrue(service._account)
+        self._verify_prefs(params, service._account)
 
-    def test_enable_account_by_name_input_instance(self):
+    @mock_responses
+    def test_enable_account_by_name_input_instance(self, registry):
         """Test initializing account by name and input instance."""
         name = "foo"
         instance = _DEFAULT_CRN
         with temporary_account_config_file(name=name, instance="stored-instance"):
-            service = FakeRuntimeService(name=name, instance=instance)
+            service = QiskitRuntimeService(name=name, instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
 
-    def test_enable_account_by_channel_input_instance(self):
+    @mock_responses
+    def test_enable_account_by_channel_input_instance(self, registry):
         """Test initializing account by channel and input instance."""
         instance = _DEFAULT_CRN
         with temporary_account_config_file(channel="ibm_quantum_platform", instance="bla"):
-            service = FakeRuntimeService(channel="ibm_quantum_platform", instance=instance)
+            service = QiskitRuntimeService(channel="ibm_quantum_platform", instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
 
-    def test_enable_account_by_env_input_instance(self):
+    @mock_responses
+    def test_enable_account_by_env_input_instance(self, registry):
         """Test initializing account by env and input instance."""
         instance = _DEFAULT_CRN
         envs = {
             "QISKIT_IBM_TOKEN": "some_token",
-            "QISKIT_IBM_URL": "some_url",
+            "QISKIT_IBM_URL": "https://foo.cloud.ibm.com",
             "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
         }
         with custom_envs(envs):
-            service = FakeRuntimeService(channel="ibm_cloud", instance=instance)
+            service = QiskitRuntimeService(channel="ibm_cloud", instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
 
-    def test_instance_filter_tags(self):
+    @mock_responses
+    def test_instance_filter_tags(self, registry):
         """Test initializing account by channel and input instance."""
+        registry.instances["a"].tags = ["services"]
+
         tags = ["services"]
         with temporary_account_config_file(channel="ibm_quantum_platform"):
-            service = FakeRuntimeService(channel="ibm_quantum_platform", tags=tags)
+            service = QiskitRuntimeService(channel="ibm_quantum_platform", tags=tags)
             self.assertTrue(service._account)
             for inst in service._backend_instance_groups:
                 self.assertEqual(inst["tags"], tags)
 
-            with self.assertRaises(IBMInputValueError):
-                service = FakeRuntimeService(channel="ibm_quantum_platform", tags=["invalid_tags"])
+            with self.assertRaisesRegex(IBMInputValueError, "No matching instances"):
+                service = QiskitRuntimeService(
+                    channel="ibm_quantum_platform", tags=["invalid_tags"]
+                )
 
-    def test_wrong_instance(self):
+    @mock_responses
+    def test_wrong_instance(self, registry):
         """Test an instance from a different account."""
         instance = "wrong_instance"
         with temporary_account_config_file(channel="ibm_quantum_platform"):
-            with self.assertRaises(IBMInputValueError):
-                _ = FakeRuntimeService(channel="ibm_quantum_platform", instance=instance)
+            with self.assertRaisesRegex(IBMInputValueError, "not a valid instance name"):
+                QiskitRuntimeService(channel="ibm_quantum_platform", instance=instance)
 
-    def test_instance_auto_flag_set(self):
+    @mock_responses
+    def test_instance_auto_flag_set(self, registry):
         """instance='auto' sets _instance_auto and leaves account.instance as None."""
-        service = FakeRuntimeService(
+        service = QiskitRuntimeService(
             channel="ibm_quantum_platform", token="my_token", instance="auto"
         )
         self.assertTrue(service._instance_auto)
         self.assertIsNone(service._account.instance)
 
-    def test_instance_auto_suppresses_init_warning(self):
+    @mock_responses
+    def test_instance_auto_suppresses_init_warning(self, registry):
         """instance='auto' must not trigger the 'instance was not set' warning during init."""
         # "Loading account with the given token" warning fires regardless; check only for
         # the absence of the specific instance warning. Contrast with no-instance service.
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
-            FakeRuntimeService(channel="ibm_quantum_platform", token="my_token")
+            QiskitRuntimeService(channel="ibm_quantum_platform", token="my_token")
         self.assertTrue(any("Instance was not set" in msg for msg in logs.output))
 
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
-            FakeRuntimeService(channel="ibm_quantum_platform", token="my_token", instance="auto")
+            QiskitRuntimeService(channel="ibm_quantum_platform", token="my_token", instance="auto")
         self.assertFalse(any("Instance was not set" in msg for msg in logs.output))
 
-    def test_saved_account_instance_auto_sets_flag(self):
+    @mock_responses
+    def test_saved_account_instance_auto_sets_flag(self, registry):
         """A saved account with instance='auto' sets _instance_auto and clears the instance."""
-        saved_account = Account.create_account(
+        with temporary_account_config_file(
             channel="ibm_quantum_platform", token="my_token", instance="auto"
-        )
-        with patch.object(FakeRuntimeService, "_discover_account", return_value=saved_account):
-            service = FakeRuntimeService(channel="ibm_quantum_platform", token="my_token")
+        ):
+            service = QiskitRuntimeService()
         self.assertTrue(service._instance_auto)
         self.assertIsNone(service._account.instance)
 

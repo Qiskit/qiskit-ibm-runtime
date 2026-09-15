@@ -48,8 +48,8 @@ class TestSerialization(IBMIntegrationTestCase):
         )
         good_keys_prefixes = ("channels",)
 
-        for backend in backends:
-            with self.subTest(backend=backend):
+        for i, backend in enumerate(backends):
+            with self.subTest(msg=f"backend_{i}"):
                 self._verify_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
     @run_integration_test
@@ -61,8 +61,8 @@ class TestSerialization(IBMIntegrationTestCase):
         # Known keys that look like a serialized object.
         good_keys = ("gates.qubits", "qubits.name", "backend_version", "general_qlists.qubits")
 
-        for backend in backends:
-            with self.subTest(backend=backend):
+        for i, backend in enumerate(backends):
+            with self.subTest(msg=f"backend_{i}"):
                 try:
                     properties = backend.properties()
                 except RequestsApiError as ex:
