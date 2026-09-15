@@ -219,9 +219,10 @@ class EstimatorV2(BaseEstimatorV2):
                 the value from ``options.default_precision`` will be used.
             dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
                 can be used to validate the job, estimate usage consumption, and retrieve circuit
-                timing metadata before submission. Returned results preserve the expected schema
-                but contain randomized mock data rather than actual or simulated measurement
-                results. Access to this feature may be restricted.
+                timing metadata. Returned results preserve the expected schema but contain
+                **randomized mock data** rather than actual or simulated measurement results.
+                Unlike the fake backends, the processing of this dry run happens on the server-side,
+                so the job may not finish immediately and access to this feature may be restricted.
 
         Returns:
             The submitted job.
