@@ -108,14 +108,15 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             num_noise_factors = len(task.noise_factors)
             items_meta = [
                 create_pub_result_metadata(
-                    result[task._program_item_index + noise_factor_offset].metadata
+                    result[pub_index * num_noise_factors + noise_factor_offset].metadata
                 )
                 for noise_factor_offset in range(num_noise_factors)
             ]
-            # TODO: Is there a way to avoid the private attribute?
+            # TODO: This assumes the internal ordering of qiskit-mitigation. Would be nice to avoid
+            # the coupling to an internal implementation detail.
             pub_meta = {key: [m[key] for m in items_meta] for key in items_meta[0]}
         else:
-            pub_meta = create_pub_result_metadata(result[task._program_item_index].metadata)
+            pub_meta = create_pub_result_metadata(result[pub_index].metadata)
 
         if isinstance(task, (GateFolding, PEA)):
             selected_extrapolators = pub_result_raw.metadata["selected_extrapolators"]
