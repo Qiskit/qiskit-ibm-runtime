@@ -343,24 +343,19 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
-        service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
-        with self.subTest(instance=service_instance_name):
-            service = QiskitRuntimeService(
-                channel="ibm_cloud",
-                url=self.dependencies.url,
-                token=self.dependencies.token,
-                instance=self.dependencies.instance,
-            )
-            self.assertEqual(self.dependencies.instance, service._account.instance)
-            self.assertEqual(self.dependencies.instance, service.active_account().get("instance"))
+        service = QiskitRuntimeService(
+            channel="ibm_cloud",
+            url=self.dependencies.url,
+            token=self.dependencies.token,
+            instance=self.dependencies.instance,
+        )
+        self.assertEqual(self.dependencies.instance, service._account.instance)
+        self.assertEqual(self.dependencies.instance, service.active_account().get("instance"))
 
     def test_resolve_crn_for_invalid_service_instance_name(self):
         """Verify if CRN resolution fails for non-existing service instance name."""
         service_instance_name = "-non-existing-service-name-"
-        with (
-            self.subTest(instance="-non-existing-service-name-"),
-            self.assertRaises(IBMInputValueError),
-        ):
+        with self.assertRaises(IBMInputValueError):
             QiskitRuntimeService(
                 channel="ibm_cloud",
                 url=self.dependencies.url,
