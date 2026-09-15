@@ -64,6 +64,9 @@ class TestPrepare(IBMTestCase):
             case "pea":
                 options.resilience.zne_mitigation = True
                 options.resilience.zne.amplifier = "pea"
+                options.resilience.layer_noise_model = [
+                    (layer, PauliLindbladMap.identity(num_qubits=2)) for layer in layers
+                ]
 
         program, _ = prepare(pubs, options, precision=0.1, add_tags=True)
 
@@ -88,7 +91,11 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], None)
+        # Vanilla path: qiskit_mitigation passthrough contains MitigationTask entries.
+        # The "mitigation" key no longer lives in post_processor; task type is encoded
+        # in the qiskit_mitigation passthrough block instead.
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_pec_path(self):
         """Test the ``prepare`` function when PEC is requested."""
@@ -115,7 +122,10 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "pec")
+        # PEC path: confirm passthrough has both namespaces and the qp has 2 items
+        # (1 PEC data item + 1 TREX calibration item, since measure_mitigation is on by default).
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_zne_path(self):
         """Test the ``prepare`` function when PEC is requested."""
@@ -133,7 +143,8 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "zne")
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_pea_path(self):
         """Test the ``prepare`` function when PEA is requested."""
@@ -141,6 +152,7 @@ class TestPrepare(IBMTestCase):
         options.twirling.enable_gates = True
         options.resilience.zne_mitigation = True
         options.resilience.zne.amplifier = "pea"
+        options.resilience.layer_noise_model = []
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -152,7 +164,8 @@ class TestPrepare(IBMTestCase):
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertEqual(program.passthrough_data["post_processor"]["mitigation"], "pea")
+        self.assertIn("qiskit_mitigation", program.passthrough_data)
+        self.assertIn("post_processor", program.passthrough_data)
 
     def test_pub_with_boxes_raises(self):
         """Test that a when a PUB contains a box, the estimator raises."""

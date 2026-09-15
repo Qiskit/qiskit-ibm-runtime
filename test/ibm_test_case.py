@@ -425,7 +425,8 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
         * Every qubit has exactly one ``measure`` instruction — the circuit measures all qubits.
         * The gate counts are exactly ``3 * n`` ``rz`` and ``2 * n`` ``sx`` for ``n`` qubits,
           with no other non-barrier, non-measure gates.
-        * ``program.passthrough_data["post_processor"]["measure_mitigation"]`` is ``True``.
+        * ``passthrough_data["qiskit_mitigation"]`` contains an entry with
+          ``mitigation == "trex"``, confirming the library registered the calibration circuit.
 
         Args:
             program: The :class:`~.QuantumProgram` returned by the prepare function.
@@ -473,9 +474,11 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
             f"got {dict(op_counts)}",
         )
 
+        qm_entries = program.passthrough_data.get("qiskit_mitigation", [])  # type: ignore[union-attr]
+        has_trex_entry = any(e.get("mitigation") == "trex" for e in qm_entries)
         self.assertTrue(
-            program.passthrough_data["post_processor"]["measure_mitigation"],  # type: ignore[index, call-overload]
-            "passthrough_data['post_processor']['measure_mitigation'] must be True",
+            has_trex_entry,
+            "passthrough_data['qiskit_mitigation'] must contain a 'trex' entry",
         )
 
 

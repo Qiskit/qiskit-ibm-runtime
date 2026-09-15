@@ -14,53 +14,8 @@
 
 from __future__ import annotations
 
-import logging
 import math
-from typing import TYPE_CHECKING
-
-from ...exceptions import IBMInputValueError
-
-if TYPE_CHECKING:
-    from qiskit import QuantumCircuit
-    from qiskit.quantum_info import PauliLindbladMap
-
-
-from samplomatic import InjectNoise
-from samplomatic.utils import get_annotation
-
-logger = logging.getLogger(__name__)
-
-
-def calculate_gamma(
-    boxed_circuit: QuantumCircuit,
-    noise_model: dict[str, PauliLindbladMap],
-    noise_factor: float,
-) -> float:
-    """Calculate the PEC gamma factor of a circuit based on a noise model.
-
-    The returned gamma is that associated with the inverse noise maps needed
-    to cancel the noise in the circuit.
-
-    Args:
-        boxed_circuit: The annotated circuit to calculate the PEC gamma for.
-        noise_model: Mapping between layer ref to a noise model
-        noise_factor: The noise factor of the noise amplification.
-
-    Returns:
-        The PEC gamma factor.
-    """
-    gamma = 1.0
-    for instr in boxed_circuit:
-        if annot := get_annotation(instr.operation, InjectNoise):
-            ref = annot.ref
-            try:
-                model = noise_model[ref]
-            except KeyError:
-                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
-            # scale the noise by noise_factor
-            model = model.scale_rates(noise_factor)
-            gamma *= model.inverse().gamma()
-    return gamma
+import sys
 
 
 def calculate_pec_twirling_shots(
@@ -104,3 +59,28 @@ def calculate_pec_twirling_shots(
         shots_per_rand = int(shots_per_randomization)
 
     return num_rand, shots_per_rand
+
+
+def resolve_pec_max_overhead(
+    pec_max_overhead: float | None,
+    baseline_num_randomizations: int,
+    shots_per_randomization: int,
+) -> float:
+    """Resolve PEC max_sampling_overhead, applying a safety cap when ``None``.
+
+    When ``max_overhead`` is ``None`` the user requests no limit.  We still need
+    to guard against Python integer overflow when gamma is very large, so we cap
+    at the largest value that, when multiplied by the total baseline shots, stays
+    within ``sys.float_info.max``.
+
+    Args:
+        pec_max_overhead: The user-specified maximum overhead, or ``None``.
+        baseline_num_randomizations: Baseline number of randomizations (before gamma scaling).
+        shots_per_randomization: Shots per randomization.
+
+    Returns:
+        A finite ``float`` safe to pass as ``max_sampling_overhead`` to ``PEC.prepare()``.
+    """
+    if pec_max_overhead is not None:
+        return float(pec_max_overhead)
+    return sys.float_info.max / (baseline_num_randomizations * shots_per_randomization)
