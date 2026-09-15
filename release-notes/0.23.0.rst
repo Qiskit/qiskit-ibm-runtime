@@ -22,7 +22,7 @@ New Features
   the channel_strategy property is set as "q-ctrl."
   This customized validation logic effectively rectifies incorrect input options and safeguards users against
   inadvertently disabling Q-CTRL's performance enhancements. (`1550 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1550>`__)
-- :class:`.SamplerV2` now supports twirling.
+- :class:`~qiskit_ibm_runtime.SamplerV2` now supports twirling.
   Twirling will only be applied to those measurement registers not involved within a conditional logic. (`1557 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1557>`__)
 - Session `details() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#details>`__
   now includes a new field, ``usage_time``. Usage is defined as the time a quantum system

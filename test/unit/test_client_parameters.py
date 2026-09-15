@@ -13,6 +13,7 @@
 """Tests for ClientParameters."""
 
 import uuid
+from typing import Any
 
 from requests_ntlm import HttpNtlmAuth
 
@@ -113,7 +114,7 @@ class TestClientParameters(IBMTestCase):
             "username_ntlm": "domain\\username",
             "password_ntlm": "password",
         }
-        ntlm_expected_result = {
+        ntlm_expected_result: dict[str, Any] = {
             "verify": True,
             "proxies": self.mock_proxies_urls,
             "auth": HttpNtlmAuth("domain\\username", "password"),

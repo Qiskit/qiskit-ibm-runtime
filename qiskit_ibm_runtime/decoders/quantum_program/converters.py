@@ -29,7 +29,22 @@ from ...results.quantum_program import (
 )
 
 if TYPE_CHECKING:
-    from ibm_quantum_schemas.executor.version_0_1 import QuantumProgramResultModel
+    from ibm_quantum_schemas.executor.version_0_1 import (
+        QuantumProgramResultModel as QuantumProgramResultModel_0_1,
+    )
+    from ibm_quantum_schemas.executor.version_0_2 import (
+        QuantumProgramResultModel as QuantumProgramResultModel_0_2,
+    )
+    from ibm_quantum_schemas.executor.version_1_0 import (
+        QuantumProgramResultModel as QuantumProgramResultModel_1_0,
+    )
+    from ibm_quantum_schemas.executor.version_1_1 import (
+        QuantumProgramResultModel as QuantumProgramResultModel_1_1,
+    )
+    from ibm_quantum_schemas.executor.version_2_0 import (
+        QuantumProgramResultModel as QuantumProgramResultModel_2_0,
+    )
+
 
 from ...quantum_program.converters.converters_0_2 import passthrough_data_from_0_2
 from ...quantum_program.converters.converters_1_0 import passthrough_data_from_1_0
@@ -37,7 +52,7 @@ from ...quantum_program.converters.converters_1_1 import passthrough_data_from_1
 from ...quantum_program.converters.converters_2_0 import passthrough_data_from_2_0
 
 
-def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
+def quantum_program_result_from_0_1(model: QuantumProgramResultModel_0_1) -> QuantumProgramResult:
     """Convert a V0.1 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[
@@ -58,7 +73,7 @@ def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> Quantum
     )
 
 
-def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> QuantumProgramResult:
+def quantum_program_result_from_0_2(model: QuantumProgramResultModel_0_2) -> QuantumProgramResult:
     """Convert a V0.2 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[
@@ -95,7 +110,7 @@ def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> Quantum
     )
 
 
-def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> QuantumProgramResult:
+def quantum_program_result_from_1_0(model: QuantumProgramResultModel_1_0) -> QuantumProgramResult:
     """Convert a V1.0 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[
@@ -134,7 +149,7 @@ def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> Quantum
     return result
 
 
-def quantum_program_result_from_1_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
+def quantum_program_result_from_1_1(model: QuantumProgramResultModel_1_1) -> QuantumProgramResult:
     """Convert a V1.1 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[
@@ -173,7 +188,7 @@ def quantum_program_result_from_1_1(model: QuantumProgramResultModel) -> Quantum
     return result
 
 
-def quantum_program_result_from_2_0(model: QuantumProgramResultModel) -> QuantumProgramResult:
+def quantum_program_result_from_2_0(model: QuantumProgramResultModel_2_0) -> QuantumProgramResult:
     """Convert a V2.0 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[

@@ -18,10 +18,10 @@ import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal, TypeAlias, get_args
 from urllib.parse import parse_qs, urlparse
 
-from responses import GET, POST, CallbackResponse, Response
+from responses import DELETE, GET, PATCH, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
 
 from qiskit_ibm_runtime.fake_provider import FakeLimaV2
@@ -31,10 +31,15 @@ if TYPE_CHECKING:
 
     from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 
-# ``responses`` callback return value: (status code, headers, body).
+
 CallbackResult: TypeAlias = tuple[int, dict[str, str], str]
+"""``responses`` callback return value: (status code, headers, body)."""
 
 PricingType: TypeAlias = Literal["free", "trial", "paygo", "paid", "subscription", "unknown"]
+"""Pricing types for an instance."""
+
+JobStatus: TypeAlias = Literal["queued", "running", "completed", "cancelled", "failed"]
+"""Possible job statuses."""
 
 DEFAULT_BACKED_CONFIGURATION = FakeLimaV2()._load_json(FakeLimaV2.conf_filename)
 """Default configuration for registry backends, cached and based on FakeLima."""
@@ -45,7 +50,12 @@ DEFAULT_BACKED_PROPERTIES = FakeLimaV2()._load_json(FakeLimaV2.props_filename)
 
 @dataclass
 class Instance:
-    """Registry representation of an instance."""
+    """Registry representation of an instance.
+
+    The following fields will be initialized if set to their default value:
+    * `crn`
+    * `usage`
+    """
 
     name: str
     """Name of the instance."""
@@ -59,23 +69,43 @@ class Instance:
     pricing_type: PricingType = "free"
     """Pricing type of the instance."""
 
+    usage: dict | None = None
+    """Instance usage dictionary."""
+
+    tags: list = field(default_factory=list)
+    """Instance tags."""
+
     def __post_init__(self) -> None:
         if not self.crn:
             self.crn = f"crn:v1:bluemix:public:quantum-computing:my-region:{self.name}/...:...::"
 
+        if self.usage is None:
+            self.usage = {
+                "instance_id": self.crn,
+                "usage_consumed_seconds": 12,
+                "usage_limit_seconds": 60,
+                "usage_allocation_seconds": 120,
+                "usage_limit_reached": False,
+            }
+
 
 @dataclass
 class Backend:
-    """Registry representation of a backend."""
+    """Registry representation of a backend.
+
+    The following fields will be initialized if set to their default value:
+    * `configuration`: set based on `FakeLimaV2`.
+    * `properties`: set based on `FakeLimaV2`.
+    """
 
     name: str
     """Name of the backend."""
 
     configuration: dict = field(default_factory=dict)
-    """Configuration of the backend. If not set, it will be set based on ``FakeLimaV2``."""
+    """Configuration of the backend."""
 
     properties: dict = field(default_factory=dict)
-    """Properties of the backend. If not set, it will be set based on ``FakeLimaV2``."""
+    """Properties of the backend."""
 
     status: Literal["online", "paused", "offline"] = "online"
     """Status of the backend."""
@@ -122,7 +152,11 @@ class Backend:
 
 @dataclass
 class Job:
-    """Registry representation of a job."""
+    """Registry representation of a job.
+
+    The following fields will be initialized if set to their default value:
+    * `usage`
+    """
 
     id: str
     """Job id."""
@@ -132,7 +166,7 @@ class Job:
 
     program: Literal["sampler", "estimator", "executor"] = "sampler"
 
-    status: Literal["queued", "running", "completed", "cancelled", "failed"] = "completed"
+    status: JobStatus = "completed"
     """Job status."""
 
     raw_details: str | None = None
@@ -140,6 +174,42 @@ class Job:
 
     raw_results: str | None = None
     """Response for the job results."""
+
+    usage: dict | None = None
+    """Job usage dictionary."""
+
+    statuses: list[JobStatus] = field(default_factory=lambda: ["completed"])
+    """States that a job goes through."""
+
+    statuses_reason: dict[JobStatus, tuple[int, str]] = field(default_factory=dict)
+    """Reason code and reason message for each job status."""
+
+    def __post_init__(self) -> None:
+        if self.usage is None:
+            self.usage = {
+                "qpu_charge_time_seconds": 0 if self.status != "completed" else 20,
+                "status": "pending" if self.status in ("queued", "running") else "completed",
+            }
+
+    def advance_status(self) -> None:
+        """Set `self.status` to the next one."""
+        current_index = self.statuses.index(self.status)
+        next_index = min(len(self.statuses) - 1, current_index + 1)
+        self.status = self.statuses[next_index]
+
+
+@dataclass
+class Session:
+    """Registry representation of a session."""
+
+    id: str
+    """Session id."""
+
+    backend_name: str
+    """Backend name."""
+
+    mode: Literal["batch", "dedicated"] = "dedicated"
+    """Session mode."""
 
 
 class BaseRegistry(FirstMatchRegistry):
@@ -172,25 +242,33 @@ class BaseRegistry(FirstMatchRegistry):
     jobs: dict[str, dict[str, Job]]
     """Jobs in this registry, keyed by instance name and job id."""
 
+    sessions: dict[str, dict[str, Session]]
+    """Sessions in this registry, keyed by instance id and session id."""
+
     def __init__(self) -> None:
         super().__init__()
 
         self.instances = {}
         self.backends = defaultdict(dict)
         self.jobs = defaultdict(dict)
+        self.sessions = defaultdict(dict)
 
         # Add callbacks for IBM Global Search and Global Catalog.
         self.add(
             CallbackResponse(
                 method=POST,
-                url="https://api.global-search-tagging.cloud.ibm.com/v3/resources/search",
+                url=re.compile(
+                    r"https://api.global-search-tagging.(?:([a-zA-Z0-9-]+)\.)?cloud.ibm.com/v3/resources/search"
+                ),
                 callback=self.callback_global_search,
             )
         )
         self.add(
             CallbackResponse(
                 method=GET,
-                url=re.compile(r"https://globalcatalog.cloud.ibm.com/api/v1/\w+"),
+                url=re.compile(
+                    r"https://globalcatalog.(?:([a-zA-Z0-9-]+)\.)?cloud.ibm.com/api/v1/\w+"
+                ),
                 callback=self.callback_catalog,
             )
         )
@@ -231,12 +309,12 @@ class BaseRegistry(FirstMatchRegistry):
             )
         )
 
-        # Add responses for the IBM Quantum Compute `/instances` endpoints.
+        # Add callbacks for the IBM Quantum Compute `/instances` endpoints.
         self.add(
-            Response(
+            CallbackResponse(
                 method=GET,
                 url="https://my-region.quantum.cloud.ibm.com/api/v1/instances/usage",
-                json={},
+                callback=self.callback_instances_usage,
             )
         )
 
@@ -264,9 +342,62 @@ class BaseRegistry(FirstMatchRegistry):
         )
         self.add(
             CallbackResponse(
+                method=POST,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+/cancel"),
+                callback=self.callback_jobs_cancel,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=DELETE,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+"),
+                callback=self.callback_jobs_delete,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+/metrics"),
+                callback=self.callback_jobs_metrics,
+            ),
+        )
+        self.add(
+            CallbackResponse(
                 method=GET,
                 url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/jobs/\w+/results"),
                 callback=self.callback_jobs_results,
+            ),
+        )
+
+        # Add callbacks for the IBM Quantum Compute `/sessions` endpoints.
+        self.add(
+            CallbackResponse(
+                method=POST,
+                url="https://my-region.quantum.cloud.ibm.com/api/v1/sessions",
+                callback=self.callback_sessions_post,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/sessions/\w+"),
+                callback=self.callback_sessions_id,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=PATCH,
+                url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/sessions/\w+"),
+                callback=self.callback_sessions_patch,
+            ),
+        )
+
+        # Add callbacks for the IBM Quantum Compute `/workloads` endpoints.
+        self.add(
+            CallbackResponse(
+                method=GET,
+                url="https://my-region.quantum.cloud.ibm.com/api/v1/workloads",
+                callback=self.callback_workloads_get,
             ),
         )
 
@@ -287,6 +418,10 @@ class BaseRegistry(FirstMatchRegistry):
         """Add a new job to the registry."""
         self.jobs[instance][job.id] = job
 
+    def add_session(self, session: Session, instance: str) -> None:
+        """Add a new session to the registry."""
+        self.sessions[instance][session.id] = session
+
     def callback_global_search(self, _: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Cloud Global Search API.
 
@@ -304,6 +439,7 @@ class BaseRegistry(FirstMatchRegistry):
                     "name": instance.name,
                     "doc": {"extensions": instance.allocations},
                     "service_plan_unique_id": instance.name,
+                    "tags": instance.tags,
                 }
                 for _, instance in self.instances.items()
             ]
@@ -398,7 +534,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_backends_status(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/backends/{id}/status`` endpoint.
 
-        Dynamically return the configuration of a backend, based on the contents of `self.backends`.
+        Dynamically return the status of a backend, based on the contents of `self.backends`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/backends
@@ -421,7 +557,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_post(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
 
-        Dynamically return a job, based on the contents of `self.backends`.
+        Dynamically return the result of creating a job.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -442,7 +578,7 @@ class BaseRegistry(FirstMatchRegistry):
     def callback_jobs_get(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs`` endpoint.
 
-        Dynamically return a list of job, based on the contents of `self.jobs`.
+        Dynamically return a list of jobs, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
@@ -452,33 +588,57 @@ class BaseRegistry(FirstMatchRegistry):
         if instance.name not in self.backends:
             return (404, {"Content-Type": "application/json"}, "{}")
 
+        # Get filtering parameters.
+        query_params = parse_qs(urlparse(request.url).query)
+        limit_param = query_params.get("limit", [None])[0]
+        limit = int(limit_param) if limit_param else 20
+        offset_param = query_params.get("offset", [None])[0]
+        offset = int(offset_param) if offset_param else 0
+        pending = query_params.get("pending", [None])[0]
+
+        statuses = get_args(JobStatus)
+        if pending is not None:
+            if pending:
+                statuses = ("queued", "running")
+            else:
+                statuses = ("completed", "cancelled", "failed")
+
+        # Get the candidate jobs, applying the filters.
         jobs = [
             {
                 "id": job.id,
                 "backend": job.backend_name,
                 "status": job.status.capitalize(),
+                "state": {"status": job.status.capitalize()},
                 "program": {"id": job.program},
+                "usage": job.usage,
             }
             for job in self.jobs[instance.name].values()
+            if job.status in statuses
         ]
+        count = len(jobs)
+
+        # Trim according to offset and limit.
+        jobs = jobs[offset : limit + offset]
 
         response_body = {
             "jobs": jobs,
-            "count": len(jobs),
-            "limit": 20,
-            "offset": 0,
+            "count": count,
+            "limit": limit,
+            "offset": offset,
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def callback_jobs_id(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}`` endpoint.
 
-        Dynamically return a job, based on the contents of `self.jobs`.
+        Dynamically return a job, based on the contents of `self.jobs`. Calling this callback
+        will make the job advance to its next status (mimicking how the job progresses).
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
         """
-        # Validate the instance CRN and backend name.
+        # Validate the instance CRN and job id.
         instance = self.get_crn_from_request(request)
         job_id = request.path_url.split("/")[-1].split("?")[0]
 
@@ -490,28 +650,100 @@ class BaseRegistry(FirstMatchRegistry):
         if job.raw_details:
             response_body = job.raw_details
         else:
+            state: dict[str, int | str] = {"status": job.status.capitalize()}
+            if job.status in job.statuses_reason:
+                state["reason_code"] = job.statuses_reason[job.status][0]
+                state["reason"] = job.statuses_reason[job.status][1]
+
             response_body = json.dumps(
                 {
                     "id": job.id,
                     "backend": job.backend_name,
                     "status": job.status.capitalize(),
+                    "state": state,
                     "program": {"id": job.program},
+                    "usage": job.usage,
                 }
             )
+
+        # Advance job status.
+        job.advance_status()
+
+        return (200, {"Content-Type": "application/json"}, response_body)
+
+    def callback_jobs_cancel(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}/cancel`` endpoint.
+
+        Cancel a job (no-op).
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and job id.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-2].split("?")[0]
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        return (200, {"Content-Type": "application/json"}, json.dumps({}))
+
+    def callback_jobs_delete(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}/cancel`` endpoint.
+
+        Delete a job (no-op).
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and job id.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-1].split("?")[0]
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        return (200, {"Content-Type": "application/json"}, json.dumps({}))
+
+    def callback_jobs_metrics(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/jobs/{}/metrics`` endpoint.
+
+        Dynamically return the metrics of a job, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
+        """
+        # Validate the instance CRN and job id.
+        instance = self.get_crn_from_request(request)
+        job_id = request.path_url.split("/")[-2].split("?")[0]
+        if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        job = self.jobs[instance.name][job_id]
+
+        response_body = json.dumps(
+            {
+                "timestamps": {
+                    "created": "2026-03-06T14:02:11Z",
+                    "running": "2026-03-06T14:02:18Z",
+                    "finished": "2026-03-06T14:05:47Z",
+                },
+                "usage": job.usage,
+                "circuits_execution_time_ns": 20000000,
+                "qiskit_version": "2.3.0",
+            }
+        )
         return (200, {"Content-Type": "application/json"}, response_body)
 
     def callback_jobs_results(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/jobs/{}/results`` endpoint.
 
-        Dynamically return a job results, based on the contents of `self.jobs`.
+        Dynamically return a job's results, based on the contents of `self.jobs`.
 
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/jobs
         """
-        # Validate the instance CRN and backend name.
+        # Validate the instance CRN and job id.
         instance = self.get_crn_from_request(request)
         job_id = request.path_url.split("/")[-2].split("?")[0]
-
         if instance.name not in self.backends or job_id not in self.jobs[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
 
@@ -520,8 +752,103 @@ class BaseRegistry(FirstMatchRegistry):
         if job.raw_results:
             response_body = job.raw_results
         else:
-            response_body = json.dumps({})
+            response_body = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         return (200, {"Content-Type": "application/json"}, response_body)
+
+    def callback_instances_usage(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/instances/usage`` endpoint.
+
+        Dynamically return the usage of an instance, based on the contents of `self.instances`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/instances
+        """
+        # Validate the instance CRN and job id.
+        instance = self.get_crn_from_request(request)
+
+        return (200, {"Content-Type": "application/json"}, json.dumps(instance.usage))
+
+    def callback_sessions_post(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
+
+        Dynamically return result of creating a session.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and backend name.
+        instance = self.get_crn_from_request(request)
+        request_body = json.loads(request.body)
+        backend_name = request_body["backend"]
+        if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        response_body = {"id": "12345", "backend_name": backend_name, "mode": request_body["mode"]}
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+
+    def callback_sessions_id(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
+
+        Dynamically return a session's information, based on the contents of `self.sessions`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and session id.
+        instance = self.get_crn_from_request(request)
+        session_id = request.path_url.split("/")[-1].split("?")[0]
+        if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+        session = self.sessions[instance.name][session_id]
+
+        response_body = {"id": "12345", "backend_name": session.backend_name, "mode": session.mode}
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
+
+    def callback_sessions_patch(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions`` endpoint.
+
+        Dynamically update a session (no-op).
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and session id.
+        instance = self.get_crn_from_request(request)
+        session_id = request.path_url.split("/")[-1].split("?")[0]
+        if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        return (204, {"Content-Type": "application/json"}, json.dumps({}))
+
+    def callback_workloads_get(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/workloads`` endpoint.
+
+        Dynamically return a list of workloads, based on the contents of `self.jobs`.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/workloads
+        """
+        workloads = [
+            {
+                "id": job.id,
+                "backend": job.backend_name,
+                "status": job.status.capitalize(),
+                "state": {"status": job.status.capitalize()},
+                "program": {"id": job.program},
+                "usage": job.usage,
+                "mode": "job",
+                "instance": instance.crn,
+            }
+            for instance in self.instances.values()
+            for job in self.jobs[instance.name].values()
+        ]
+
+        response_body = {
+            "workloads": workloads,
+            "total_count": len(workloads),
+            "limit": 20,
+        }
+        return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def get_crn_from_request(self, request: PreparedRequest) -> Instance:
         """Retrieve the `Instance` from the request headers."""

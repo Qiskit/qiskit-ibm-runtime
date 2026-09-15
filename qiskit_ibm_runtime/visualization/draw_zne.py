@@ -24,6 +24,7 @@ from .utils import plotly_module
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    import numpy.typing as npt
     from plotly.graph_objects import Figure as PlotlyFigure
     from plotly.graph_objects import Scatter as PlotlyScatter
 
@@ -49,7 +50,8 @@ def draw_zne_evs(
     Args:
         result: An :class:`~.EstimatorPubResult`.
         indices: The indices of the expectation values to include in the plot. If ``None``, includes
-            all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+            all values. See :class:`~qiskit_ibm_runtime.options.ZneOptions` for information on the
+            indexing scheme.
         names: The names to assign to the expectation values. If ``None``, the names correspond to
             the indices.
         num_stds: The number of standard deviations to include around each fit.
@@ -175,7 +177,8 @@ def draw_zne_extrapolators(
     Args:
         result: An :class:`~.EstimatorPubResult`.
         indices: The indices of the expectation values to include in the plot. If ``None``, includes
-            all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+            all values. See :class:`~qiskit_ibm_runtime.options.ZneOptions` for information on the
+            indexing scheme.
         names: The names to assign to the expectation values. If ``None``, the names correspond to
             the indices.
         num_stds: The number of standard deviations to include around each fit.
@@ -277,9 +280,9 @@ def draw_zne_extrapolators(
 
 
 def _line_fill_trace(
-    x_values: np.array,
-    y_values: np.array,
-    stds: np.array,
+    x_values: npt.NDArray[np.floating],
+    y_values: npt.NDArray[np.floating],
+    stds: npt.NDArray[np.floating],
     num_stds: int = 1,
     name: str | None = None,
     legend_group: int | None = None,
@@ -334,9 +337,9 @@ def _line_fill_trace(
 
 
 def _scatter_trace(
-    x_values: np.array,
-    y_values: np.array,
-    stds: np.array,
+    x_values: npt.NDArray[np.floating],
+    y_values: npt.NDArray[np.floating],
+    stds: npt.NDArray[np.floating],
     name: str | None = None,
     legend_group: int | None = None,
     color: str | None = None,

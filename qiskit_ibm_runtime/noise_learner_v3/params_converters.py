@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from ibm_quantum_schemas.noise_learner_v3.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.noise_learner_v3.version_0_2 import ParamsModel as ParamsModel_0_2
@@ -38,16 +39,20 @@ if TYPE_CHECKING:
     from ..options_models import NoiseLearnerV3Options
 
 
-class ParamsConverter(NamedTuple):
+ModelT = TypeVar("ModelT", bound="BaseParamsModel")
+
+
+@dataclass(frozen=True)
+class ParamsConverter(Generic[ModelT]):
     """A helper to store params models and converters."""
 
-    model: type[BaseParamsModel]
+    model: type[ModelT]
     """The model describing the NLV3 inputs, or 'params'."""
 
-    decoder: Callable[[BaseParamsModel], tuple[list[CircuitInstruction], NoiseLearnerV3Options]]
+    decoder: Callable[[ModelT], tuple[list[CircuitInstruction], NoiseLearnerV3Options]]
     """A function to decode the inputs of NLV3."""
 
-    encoder: Callable[[Iterable[CircuitInstruction], NoiseLearnerV3Options], BaseParamsModel]
+    encoder: Callable[[Iterable[CircuitInstruction], NoiseLearnerV3Options], ModelT]
     """A function to encode the inputs of NLV3."""
 
 

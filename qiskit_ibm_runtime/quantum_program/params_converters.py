@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.executor.version_0_2 import ParamsModel as ParamsModel_0_2
@@ -44,16 +45,20 @@ if TYPE_CHECKING:
     from .quantum_program import QuantumProgram
 
 
-class ParamsConverter(NamedTuple):
+ModelT = TypeVar("ModelT", bound="BaseParamsModel")
+
+
+@dataclass(frozen=True)
+class ParamsConverter(Generic[ModelT]):
     """A helper to store params models and converters."""
 
-    model: type[BaseParamsModel]
+    model: type[ModelT]
     """The model describing the executor inputs, or 'params'."""
 
-    decoder: Callable[[BaseParamsModel], tuple[QuantumProgram, ExecutorOptions]]
+    decoder: Callable[[ModelT], tuple[QuantumProgram, ExecutorOptions]]
     """A function to decode the inputs of executor."""
 
-    encoder: Callable[[QuantumProgram, ExecutorOptions], BaseParamsModel]
+    encoder: Callable[[QuantumProgram, ExecutorOptions], ModelT]
     """A function to encode the inputs of executor."""
 
 

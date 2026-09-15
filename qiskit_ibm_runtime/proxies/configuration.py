@@ -13,6 +13,7 @@
 """Proxy related classes and functions."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from requests_ntlm import HttpNtlmAuth
 
@@ -68,7 +69,7 @@ class ProxyConfiguration:
             expected by ``requests``. The following keys can be present:
             ``proxies``and ``auth``.
         """
-        request_kwargs = {}
+        request_kwargs: dict[str, Any] = {}
         if self.urls:
             request_kwargs["proxies"] = self.urls
 

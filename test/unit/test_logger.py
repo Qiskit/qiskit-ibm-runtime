@@ -59,7 +59,7 @@ class TestLogger(IBMTestCase):
         logger = logging.getLogger(self.id())
         default_level_not_set = logging.NOTSET
 
-        with custom_envs({}):
+        with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: ""}):
             setup_logger(logger)
             self.assertEqual(
                 logger.level,

@@ -10,12 +10,12 @@ New Features
   ``draw_zne_extrapolators``, invoking the corresponding visualization functions. (`1820 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1820>`__)
 - Added support for noise model and level 1 data to local sampler
 
-  The ``simulator.noise_model`` option of :class:`~.SamplerV2` is now passed
+  The ``simulator.noise_model`` option of :class:`~qiskit_ibm_runtime.SamplerV2` is now passed
   through to the :class:`~qiskit.primitives.BackendSamplerV2` as a `noise_model`
   option under `run_options` if the primitive supports the `run_options` option
   (support was added in Qiskit v1.3).
 
-  Similarly, the ``execution.meas_type`` option of :class:`~.SamplerV2` is now
+  Similarly, the ``execution.meas_type`` option of :class:`~qiskit_ibm_runtime.SamplerV2` is now
   translated into ``meas_level`` and ``meas_return`` options under
   ``run_options`` of the :class:`~qiskit.primitives.BackendSamplerV2` if it
   supports ``run_options``. This change allows support for level 1 data in local

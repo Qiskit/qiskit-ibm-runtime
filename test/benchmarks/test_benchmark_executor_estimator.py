@@ -22,14 +22,11 @@ if TYPE_CHECKING:
     from qiskit.circuit import CircuitInstruction
     from qiskit.primitives import EstimatorPubLike
 
-    from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
-
 import numpy as np
 import pytest
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic import InjectNoise
-from samplomatic.quantum_program import SamplexItem
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
@@ -37,16 +34,12 @@ from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_esti
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
-from qiskit_ibm_runtime.fake_provider.executor.broadcast_sample import broadcast_sample
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
-from qiskit_ibm_runtime.results.quantum_program import (
-    QuantumProgramItemResult,
-    QuantumProgramResult,
-)
 
 from ..utils import make_mirror_circuit_with_phases
+from .utils import create_dummy_executor_result
 
-PREPARE_VARIANTS = {
+VARIANTS = {
     "vanilla": {
         "resilience_level": 0,
     },
@@ -85,7 +78,7 @@ NEEDS_NOISE_MODEL = {"pec", "zne_pea"}
 
 @pytest.mark.parametrize(
     "variant_id,variant_options",
-    PREPARE_VARIANTS.items(),
+    VARIANTS.items(),
 )
 def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
     """Benchmark prepare() for different mitigation strategies."""
@@ -121,7 +114,7 @@ def test_executor_estimator_prepare(benchmark, variant_id, variant_options):
 
 @pytest.mark.parametrize(
     "variant_id,variant_options",
-    PREPARE_VARIANTS.items(),
+    VARIANTS.items(),
 )
 def test_executor_estimator_post_processor(benchmark, variant_id, variant_options):
     """Benchmark the estimator post-processor for different mitigation strategies."""
@@ -152,7 +145,7 @@ def test_executor_estimator_post_processor(benchmark, variant_id, variant_option
     quantum_program._semantic_role = "estimator_v2"
 
     # Generate dummy results matching the prepared program structure
-    quantum_program_result = create_dummy_result(quantum_program)
+    quantum_program_result = create_dummy_executor_result(quantum_program)
 
     def run_post_processor():
         QuantumProgramResultDecoder._apply_post_processing(quantum_program_result)
@@ -210,33 +203,3 @@ def create_noise_model(
             n = layer.operation.num_qubits
             noise_model.append((layer, PauliLindbladMap.from_list([("X" * n, 0.005)])))
     return noise_model
-
-
-def create_dummy_result(quantum_program: QuantumProgram) -> QuantumProgramResult:
-    """Simulate what the executor produces for a quantum program."""
-    rng = np.random.default_rng(0)
-    result_data = []
-
-    for item in quantum_program.items:
-        if not isinstance(item, SamplexItem):
-            raise ValueError("Only samplex items supported in this benchmark")
-
-        shots = quantum_program.shots
-
-        # Get all samplex outputs (flips, pauli_signs, …) with correct shapes
-        samplex_data = broadcast_sample(item.samplex, item.samplex_arguments, item.shape, rng)
-        samplex_data.pop("parameter_values", None)
-
-        # Replace circuit measurement registers with random data
-        for creg in item.circuit.cregs:
-            shape = item.shape + (shots, creg.size)
-            samplex_data[creg.name] = np.random.randint(0, 2, size=shape).astype(bool)
-
-        result_data.append(QuantumProgramItemResult(samplex_data))
-
-    quantum_program_result = QuantumProgramResult(
-        data=result_data,
-        passthrough_data=quantum_program.passthrough_data,
-    )
-    quantum_program_result._semantic_role = quantum_program._semantic_role
-    return quantum_program_result

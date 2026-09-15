@@ -33,12 +33,13 @@ from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
-from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 if TYPE_CHECKING:
     import logging
 
     from qiskit.providers.backend import Backend, BackendV2
+
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 
 def most_busy_backend(
@@ -102,15 +103,6 @@ def get_real_device(service):
         return service.least_busy(simulator=False).name
     except QiskitBackendNotFoundError:
         raise unittest.SkipTest("No real device")  # cloud has no real device
-
-
-def mock_wait_for_final_state(service, job):
-    """Replace `wait_for_final_state` with a mock function."""
-    return mock.patch.object(
-        RuntimeJobV2,
-        "wait_for_final_state",
-        side_effect=service._get_api_client().wait_for_final_state(job.job_id()),
-    )
 
 
 def create_faulty_backend(
