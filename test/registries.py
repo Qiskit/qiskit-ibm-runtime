@@ -778,7 +778,7 @@ class BaseRegistry(FirstMatchRegistry):
         """
         # Validate the instance CRN and backend name.
         instance = self.get_crn_from_request(request)
-        request_body = json.loads(str(request.body))
+        request_body = json.loads(request.body)  # type: ignore[arg-type]
         backend_name = request_body["backend"]
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
