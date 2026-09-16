@@ -196,7 +196,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         ]
         estimator.options.simulator.layer_noise_model = simulated_noise_model
 
-        # Run a noisy simulation, injecting the same noise as in the simulation
+        # Run a noisy simulation, where the simulated noise and the mitigated noise are the same.
         estimator.options.resilience.layer_noise_model = [
             (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
@@ -204,7 +204,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         result = estimator.run([pub]).result()
         base_level_errors = np.abs(result[0].data.evs - ideal_evs)
 
-        # Run a noisy simulation, injecting different noise as in the simulation
+        # Run a noisy simulation, where the simulated noise and the mitigated noise are different.
         estimator.options.resilience.layer_noise_model = [
             (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.009)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
