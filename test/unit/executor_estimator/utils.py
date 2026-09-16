@@ -48,15 +48,23 @@ class ParamBasisScenario:
 class ParamBasisScenarios:
     """A collection of scenarios to test parameter-basis expansion."""
 
-    observables: ObservablesArray
-    """The observables array used in these scenarios."""
+    observables_with_projectors: ObservablesArray
+    """Observables that contain projection operators (``0``, ``+``, ``l``, ``r`` etc.).
+    These resolve to the same Pauli measurement bases as ``observables_pauli`` but are
+    **incompatible** with ``measure_mitigation=True`` (the TREX path rejects them).
+    Use for testing projector-resolution logic without measure mitigation."""
+
+    observables_pauli: ObservablesArray
+    """Pure-Pauli equivalent of ``observables_with_projectors`` — same measurement bases,
+    no projection operators.  Safe to use with ``measure_mitigation=True`` (TREX)."""
 
     scenarios: Sequence[ParamBasisScenario]
     """A collection of scenarios."""
 
 
 PARAM_BASIS_3Q_SCENARIOS = ParamBasisScenarios(
-    observables=ObservablesArray(["Z0Z", "X+-", "lrY", "IrI"]),
+    observables_with_projectors=ObservablesArray(["Z0Z", "X+-", "lrY", "IrI"]),
+    observables_pauli=ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]),
     scenarios=[
         ParamBasisScenario(
             parameter_shape=(2, 2),
@@ -96,7 +104,13 @@ PARAM_BASIS_3Q_SCENARIOS = ParamBasisScenarios(
         ),
     ],
 )
-"""Scenarios to test parameter-basis expansion with three-qubit observables."""
+"""Scenarios to test parameter-basis expansion with three-qubit observables.
+
+``observables_with_projectors`` contains projection operators (``0``, ``+``, ``l``, ``r``),
+which are resolved into Pauli measurement bases during param-basis computation but are
+**incompatible with** ``measure_mitigation=True``.
+Use ``PARAM_BASIS_3Q_SCENARIOS.observables_pauli`` when testing alongside TREX.
+"""
 
 
 @dataclass(frozen=True)
