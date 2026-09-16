@@ -174,7 +174,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         # -- Compare Estimator EVs when the resilience noise model diverges from simulation
 
         estimator.options.resilience.layer_noise_model = [
-            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.009)]))
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.01)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
         ]
         result = estimator.run([pub]).result()
