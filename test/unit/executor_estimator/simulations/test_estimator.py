@@ -119,6 +119,8 @@ class TestEstimatorWithNoise(IBMTestCase):
         """Tests the effect of resilience on EstimatorV2 results.
 
         Estimator result quality is expected to increase with PEC.
+        Estimator result quality is expected to degrade with a divergent
+        resilience noise model.
         """
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
@@ -166,55 +168,20 @@ class TestEstimatorWithNoise(IBMTestCase):
         # -- Compare tested Estimator EVs to base level Estimator:
 
         # Increased resilience level should translate into increased expectation value quality:
-        debug_message = f"Error per resilience level: {errors}"
+        debug_message = f"Base level errors: {base_level_errors}\nErrors after mitigation: {errors}"
         np.testing.assert_array_less(errors, base_level_errors, err_msg=debug_message)
 
-    @data(
-        TWIRLING_TREX_PEC,
-        TWIRLING_TREX_PEA,
-    )
-    def test_result_quality_when_noise_models_differ(self, option_overrides):
-        """Tests the effect of resilience on EstimatorV2 results when the noise models differ.
+        # -- Compare Estimator EVs when the resilience noise model diverges from simulation
 
-        Estimator result quality is expected to degrade from the baseline.
-        """
-        backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
-        preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
-
-        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
-
-        estimator = create_local_mode_estimator(
-            backend,
-            num_randomizations=1000,
-            shots_per_randomization=200,
-            options_overrides=option_overrides,
-        )
-
-        simulated_noise_model = [
-            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
-            for layer in estimator.find_unique_layers([pub], types="all")
-        ]
-        estimator.options.simulator.layer_noise_model = simulated_noise_model
-
-        # Run a noisy simulation, where the simulated noise and the mitigated noise are the same.
-        estimator.options.resilience.layer_noise_model = [
-            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
-            for layer in estimator.find_unique_layers([pub], types="gates")
-        ]
-        result = estimator.run([pub]).result()
-        base_level_errors = np.abs(result[0].data.evs - ideal_evs)
-
-        # Run a noisy simulation, where the simulated noise and the mitigated noise are different.
         estimator.options.resilience.layer_noise_model = [
             (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.009)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
         ]
         result = estimator.run([pub]).result()
-        errors = np.abs(result[0].data.evs - ideal_evs)
+        divergent_errors = np.abs(result[0].data.evs - ideal_evs)
 
-        # Divergent models translate into decreased expectation value quality:
-        debug_message = f"Error per resilience level: {errors}"
-        np.testing.assert_array_less(base_level_errors, errors, err_msg=debug_message)
+        debug_message = f"Ideal errors: {errors}\nDivergent errors: {divergent_errors}"
+        np.testing.assert_array_less(errors, divergent_errors, err_msg=debug_message)
 
 
 @ddt
