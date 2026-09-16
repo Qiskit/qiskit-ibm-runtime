@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 def estimator_options_to_boxing_options(
     twirling_options: TwirlingOptions,
+    measure_mitigation: bool,
     inject_noise: bool,
     add_tags: bool = False,
 ) -> dict:
@@ -33,13 +34,11 @@ def estimator_options_to_boxing_options(
     Noise-injection options (``inject_noise_*``) are **not** set here — ``PEC``
     and ``PEA`` enforce their own required values for those fields.
 
-    ``enable_measures`` and ``measure_annotations`` are also **not** set here. When TREX
-    is passed to a task, ``trex`` forces ``enable_measures=True``
-    and ``measure_annotations="all"``. When TREX is absent, ``MitigationTask``
-    defaults to ``measure_annotations="change_basis"``, which is correct.
-
     Args:
         twirling_options: The finalized twirling options.
+        measure_mitigation: Whether measurement mitigation (TREX) is enabled.
+            When ``True``, ``measure_annotations`` is set to ``"all"``; otherwise
+            ``"change_basis"``.
         inject_noise: Whether noise-injection boxing is requested (PEC/PEA paths).
             When ``True``, ``enable_gates`` is forced on regardless of the twirling setting.
         add_tags: Whether to tag boxes with a hash (``True``) or suppress tags (``False``).
@@ -51,7 +50,9 @@ def estimator_options_to_boxing_options(
     return {
         # Gate twirling is on when requested OR when noise injection is needed.
         "enable_gates": twirling_options.enable_gates or inject_noise,
+        "enable_measures": True,
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
         "twirling_group": twirling_options.group,
         "add_tags": "unique_box" if add_tags else "none",
+        "measure_annotations": "all" if measure_mitigation else "change_basis",
     }
