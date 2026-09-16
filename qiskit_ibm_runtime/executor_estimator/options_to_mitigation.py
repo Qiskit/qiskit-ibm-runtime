@@ -28,6 +28,9 @@ def estimator_options_to_boxing_options(
 ) -> dict:
     """Translate twirling options into a ``custom_boxing_options`` dict for qiskit-mitigation.
 
+    The function assumes that options were finalized and ``twirling_options`` doesn't contain
+    ``None``.
+
     This dict is passed directly to ``MitigationTask.prepare()`` (and its subclasses)
     as the ``custom_boxing_options`` argument.
 
@@ -54,5 +57,7 @@ def estimator_options_to_boxing_options(
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
         "twirling_group": twirling_options.group,
         "add_tags": "unique_box" if add_tags else "none",
-        "measure_annotations": "all" if measure_mitigation else "change_basis",
+        "measure_annotations": "all"
+        if (measure_mitigation or twirling_options.enable_measure)
+        else "change_basis",
     }
