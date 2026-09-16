@@ -119,8 +119,8 @@ class TestEstimatorWithNoise(IBMTestCase):
         """Tests the effect of resilience on EstimatorV2 results.
 
         Estimator result quality is expected to increase with PEC.
-        Estimator result quality is expected to degrade with a divergent
-        resilience noise model.
+        Estimator result quality is expected to degrade when the
+        resilience noise model differs from the simulated.
         """
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
