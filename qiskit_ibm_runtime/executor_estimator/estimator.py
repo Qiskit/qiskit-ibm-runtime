@@ -162,6 +162,7 @@ class EstimatorV2(BaseEstimatorV2):
         task_class = choose_task_class(options.resilience)
         boxing_opts = estimator_options_to_boxing_options(
             options.twirling,
+            measure_mitigation=bool(options.resilience.measure_mitigation),
             inject_noise=task_class in (PEC, PEA),
             add_tags=True,
         )
