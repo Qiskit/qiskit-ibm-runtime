@@ -12,7 +12,10 @@
 
 """Tests for InsertNoisePass."""
 
+from __future__ import annotations
+
 import warnings
+from itertools import product
 from unittest import skipUnless
 
 import numpy as np
@@ -22,23 +25,54 @@ from qiskit.quantum_info import DensityMatrix, PauliLindbladMap
 from qiskit.transpiler import PassManager
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime.fake_provider.executor.insert_noise_pass import InsertNoisePass
+from qiskit_ibm_runtime.fake_provider.executor.insert_noise_pass import POSITIONS, InsertNoisePass
 
 from ....ibm_test_case import IBMTestCase
 
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
+MAP = PauliLindbladMap.from_list([("XI", 0.1)])
 
-def _circuit_with_barrier(n_qubits: int, label: str) -> QuantumCircuit:
+
+def _circuit_with_barrier(
+    n_qubits: int, label: str, qubits: list[int] | None = None
+) -> QuantumCircuit:
+    """A circuit holding one labeled barrier, optionally on a qubit subset in a given order."""
     circuit = QuantumCircuit(n_qubits)
-    circuit.append(Barrier(n_qubits, label=label), list(range(n_qubits)))
+    qubits = list(range(n_qubits)) if qubits is None else qubits
+    circuit.append(Barrier(len(qubits), label=label), qubits)
     return circuit
 
 
-def _noise_error_ops(circuit: QuantumCircuit) -> list:
-    # PauliLindbladError is wrapped in QuantumChannelInstruction when going through the DAG.
-    return [instr.operation for instr in circuit.data if instr.operation.name == "quantum_channel"]
+def _circuit_with_sandwich(n_qubits: int, tag: str) -> QuantumCircuit:
+    """The three-barrier sandwich samplomatic emits around one dressed box."""
+    circuit = QuantumCircuit(n_qubits)
+    for position in POSITIONS:
+        circuit.append(Barrier(n_qubits, label=f"{position}0@tag={tag}"), range(n_qubits))
+    return circuit
+
+
+def _structure(circuit: QuantumCircuit) -> list[tuple[str, tuple[int, ...]]]:
+    """Every instruction as ``(name, qubit indices)``.
+
+    Comparing against an expected list pins *what* was inserted, *where* in the sequence, and *which
+    qubits* it acts on — none of which an instruction count would catch.
+    """
+    return [
+        (instr.operation.name, tuple(circuit.find_bit(qubit).index for qubit in instr.qubits))
+        for instr in circuit.data
+    ]
+
+
+def _rates(circuit: QuantumCircuit) -> list[np.ndarray]:
+    """The rates of each inserted channel, in circuit order."""
+    # PauliLindbladError is wrapped in QuantumChannelInstruction, which stores it as _quantum_error.
+    return [
+        instr.operation._quantum_error.rates  # noqa: SLF001
+        for instr in circuit.data
+        if instr.operation.name == "quantum_channel"
+    ]
 
 
 @ddt
@@ -46,105 +80,146 @@ def _noise_error_ops(circuit: QuantumCircuit) -> list:
 class TestInsertNoisePass(IBMTestCase):
     """Tests for InsertNoisePass."""
 
-    @data((True, "R", 1), (True, "M", 0), (False, "R", 0), (False, "M", 1))
+    @data(*product(POSITIONS, POSITIONS))
     @unpack
-    def test_noise_after_true_injects_at_r_barriers(
-        self, noise_after, barrier_type, num_noise_error_ops
-    ):
-        """Test `noise_after` for different types of barriers."""
-        inject_noise = InsertNoisePass(
-            noise_dict={"r0": PauliLindbladMap.from_list([("XI", 0.1), ("IX", 0.2)])},
-            noise_after=noise_after,
+    def test_noise_lands_only_at_the_requested_position(self, requested, barrier_position):
+        """A channel follows the requested barrier position and no other."""
+        circuit = _circuit_with_barrier(2, f"{barrier_position}0@tag=r0")
+        result = PassManager([InsertNoisePass({"r0": {requested: MAP}})]).run(circuit)
+
+        expected = [("barrier", (0, 1))]
+        if requested == barrier_position:
+            expected.append(("quantum_channel", (0, 1)))
+        self.assertEqual(_structure(result), expected)
+
+    def test_each_position_of_one_tag_gets_its_own_channel(self):
+        """A box that both measures and resets needs a different channel at two of its barriers."""
+        noise_dict = {
+            "spam": {
+                "M": PauliLindbladMap.from_list([("XI", 0.1)]),
+                "R": PauliLindbladMap.from_list([("IX", 0.2)]),
+            }
+        }
+        result = PassManager([InsertNoisePass(noise_dict)]).run(_circuit_with_sandwich(2, "spam"))
+
+        # L is left bare; M and R are each followed by exactly one channel.
+        self.assertEqual(
+            _structure(result),
+            [
+                ("barrier", (0, 1)),
+                ("barrier", (0, 1)),
+                ("quantum_channel", (0, 1)),
+                ("barrier", (0, 1)),
+                ("quantum_channel", (0, 1)),
+            ],
         )
-        pm = PassManager([inject_noise])
-        result = pm.run(_circuit_with_barrier(2, label=f"{barrier_type}0@tag=r0"))
-        self.assertEqual(len(_noise_error_ops(result)), num_noise_error_ops)
+        # The two maps are not interchangeable, so check each landed at its own position.
+        rates = _rates(result)
+        np.testing.assert_allclose(rates[0], [0.1])
+        np.testing.assert_allclose(rates[1], [0.2])
 
-    def test_noise_scale_multiplies_rates(self):
-        """Test the `noise_scale` argument."""
+    @data(
+        ("R0@tag=r0", True),
+        ("R0@foo=bar&tag=r0&baz=qux", True),
+        ("R0@tag=r0&inject_noise=n0", True),
+        ("R0@inject_noise=n0&tag=r0", True),
+        ("R0_0@tag=r0", True),
+        ("R1_2_3@tag=r0", True),
+        ("R0@tag=other", False),
+        ("R0@inject_noise=n0", False),
+        ("R0", False),
+        ("my_custom_barrier", False),
+    )
+    @unpack
+    def test_tag_is_matched_across_label_shapes(self, label, expect_noise):
+        """The tag is recovered from every label shape, and only a matching tag inserts noise.
+
+        The ``&``-delimited cases are regressions: a greedy pattern captures everything after
+        ``tag=`` and then silently fails to match.
+        """
+        result = PassManager([InsertNoisePass({"r0": {"R": MAP}})]).run(
+            _circuit_with_barrier(2, label)
+        )
+
+        expected = [("barrier", (0, 1))]
+        if expect_noise:
+            expected.append(("quantum_channel", (0, 1)))
+        self.assertEqual(_structure(result), expected)
+
+    @data("Q", "l")
+    def test_unknown_position_is_rejected(self, position):
+        """An unknown position letter is a programming error, not a silent no-op."""
+        with self.assertRaisesRegex(ValueError, "unknown barrier position"):
+            InsertNoisePass({"r0": {position: MAP}})
+
+    @data((1.0, 0.1), (3.0, 0.3), (0.0, 0.0))
+    @unpack
+    def test_noise_scale_multiplies_rates(self, noise_scale, expected_rate):
+        """``noise_scale`` scales the rates and leaves the structure alone."""
         circuit = _circuit_with_barrier(2, "R0@tag=r0")
-        noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
-
-        pm_1x = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_scale=1.0)])
-        result_1x = pm_1x.run(circuit)
-
-        pm_3x = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_scale=3.0)])
-        result_3x = pm_3x.run(circuit)
-
-        # PauliLindbladError is stored as ._quantum_error inside QuantumChannelInstruction.
-        np.testing.assert_allclose(_noise_error_ops(result_1x)[0]._quantum_error.rates, [0.1])  # noqa: SLF001
-        np.testing.assert_allclose(_noise_error_ops(result_3x)[0]._quantum_error.rates, [0.3])  # noqa: SLF001
-
-    def test_warn_absent(self):
-        """Test the ``warn_absent`` field."""
-        circuit = _circuit_with_barrier(2, "R0@tag=unknown")
-        noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
-
-        with self.assertWarnsRegex(UserWarning, "No noise found for tag 'unknown'"):
-            PassManager([InsertNoisePass(noise_dict=noise_dict, warn_absent=True)]).run(circuit)
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            PassManager([InsertNoisePass(noise_dict=noise_dict, warn_absent=False)]).run(circuit)
-
-    def test_none_noise_dict_is_noop(self):
-        """Test that ``noise_dict=None`` is a noop."""
-        circuit = _circuit_with_barrier(2, "R0@tag=r0")
-        result = PassManager([InsertNoisePass(noise_dict=None)]).run(circuit)
-        self.assertEqual(len(_noise_error_ops(result)), 0)
-
-    def test_missing_tag_leaves_barrier_intact(self):
-        """Test that missing tags leave barriers intect."""
-        circuit = _circuit_with_barrier(2, "R0@tag=unknown")
-        noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
-
-        pm = PassManager([InsertNoisePass(noise_dict=noise_dict, warn_absent=False)])
-        result = pm.run(circuit)
-
-        self.assertEqual(len(_noise_error_ops(result)), 0)
-        self.assertEqual(result.count_ops().get("barrier", 0), 1)
-
-    def test_noise_qubits_ordered_by_physical_index(self):
-        """Test qubit order."""
-        # Barrier on a non-canonical qubit subset/order: qargs = [2, 0].  After substitution the
-        # PauliLindbladError must land on physical qubits [0, 2] (ascending), not [2, 0].
-        circuit = QuantumCircuit(3)
-        circuit.append(Barrier(2, label="R0@tag=r0"), [2, 0])
-
-        noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
-        result = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_after=True)]).run(
+        result = PassManager([InsertNoisePass({"r0": {"R": MAP}}, noise_scale=noise_scale)]).run(
             circuit
         )
 
-        noise_instrs = [instr for instr in result.data if instr.operation.name == "quantum_channel"]
-        self.assertEqual(len(noise_instrs), 1)
-        self.assertEqual([result.find_bit(q).index for q in noise_instrs[0].qubits], [0, 2])
-        # The original barrier should appear exactly once--regression: an earlier fix duplicated it.
-        self.assertEqual(result.count_ops().get("barrier", 0), 1)
+        self.assertEqual(_structure(result), [("barrier", (0, 1)), ("quantum_channel", (0, 1))])
+        np.testing.assert_allclose(_rates(result)[0], [expected_rate])
 
-    @data("order", [[0, 1, 3], [3, 0, 1], [0, 3, 1]])
-    def test_noise_simulation_applies_rates_to_correct_physical_qubits(self, order):
-        """Test correct physical qubits are selected."""
-        # We want to inject this noise on qubits {0, 1, 3}. We set the barrier qubits to [3, 0, 1]
-        # just to prove that we ignore the barrier qubit order, and instead use the order of the
-        # physical qubits. In this case we should get
-        #   "IIX" rate 0.20 -> X on physical qubit 0
-        #   "IXI" rate 0.10 -> X on physical qubit 1
-        #   "XII" rate 0.05 -> X on physical qubit 3
-        noise_dict = {
-            "r0": PauliLindbladMap.from_list([("IIX", 0.20), ("IXI", 0.10), ("XII", 0.05)])
-        }
+    def test_an_absent_tag_is_silent_and_changes_nothing(self):
+        """The pass reports nothing about coverage; that is the caller's job, not the pass's.
 
-        circuit = QuantumCircuit(4)
-        circuit.append(Barrier(3, label="R0@tag=r0"), [3, 0, 1])
+        A gates-only noise model legitimately leaves measurement and preparation boxes bare, so a
+        tag with no entry is ordinary rather than something to report.
+        """
+        circuit = _circuit_with_sandwich(2, "unknown")
 
-        noisy = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_after=True)]).run(circuit)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            result = PassManager([InsertNoisePass({"r0": {"R": MAP}})]).run(circuit)
+
+        self.assertEqual(_structure(result), _structure(circuit))
+
+    @data(None, {})
+    def test_empty_noise_model_changes_nothing(self, noise_dict):
+        """``None`` and an empty dict both leave the circuit untouched."""
+        circuit = _circuit_with_barrier(2, "R0@tag=r0")
+        result = PassManager([InsertNoisePass(noise_dict)]).run(circuit)
+        self.assertEqual(_structure(result), _structure(circuit))
+
+    def test_channel_qubits_are_sorted_into_ascending_circuit_order(self):
+        """A barrier's qargs are treated as a set: the channel lands on them in ascending order.
+
+        The barrier here is on ``(2, 0)`` — descending — and the channel must still come out on
+        ``(0, 2)``.  The barrier itself must survive exactly once; an earlier fix duplicated it.
+        """
+        circuit = _circuit_with_barrier(3, "R0@tag=r0", qubits=[2, 0])
+        result = PassManager([InsertNoisePass({"r0": {"R": MAP}})]).run(circuit)
+
+        self.assertEqual(_structure(result), [("barrier", (2, 0)), ("quantum_channel", (0, 2))])
+
+    @data(
+        # Two-qubit map on a descending barrier — the example in the ``noise_dict`` docstring.
+        (3, [2, 0], [("IX", 0.3)], [0.3, 0.0, 0.0]),
+        (3, [2, 0], [("XI", 0.3)], [0.0, 0.0, 0.3]),
+        # Three-qubit map on a scattered, unsorted barrier.
+        (4, [3, 0, 1], [("IIX", 0.20), ("IXI", 0.10), ("XII", 0.05)], [0.20, 0.10, 0.0, 0.05]),
+    )
+    @unpack
+    def test_simulated_rates_land_on_the_intended_physical_qubits(
+        self, num_qubits, qubits, generators, rate_per_qubit
+    ):
+        """Simulate to confirm the qubit mapping end to end, not just the instruction's qargs.
+
+        Rates are indexed by the barrier's qubits sorted ascending, so for a barrier on
+        ``[3, 0, 1]`` map index 0 is qubit 0, index 1 is qubit 1 and index 2 is qubit 3.
+        """
+        circuit = _circuit_with_barrier(num_qubits, "R0@tag=r0", qubits=qubits)
+        noise_dict = {"r0": {"R": PauliLindbladMap.from_list(generators)}}
+        noisy = PassManager([InsertNoisePass(noise_dict)]).run(circuit)
         noisy.save_density_matrix()
 
         result = AerSimulator(method="density_matrix").run(noisy).result()
-        dm = DensityMatrix(result.data(0)["density_matrix"])
+        density_matrix = DensityMatrix(result.data(0)["density_matrix"])
 
-        rates_per_physical_qubit = np.array([0.20, 0.10, 0.0, 0.05])
-        expected_p1 = (1 - np.exp(-2 * rates_per_physical_qubit)) / 2
-        actual_p1 = np.array([dm.probabilities([q])[1] for q in range(circuit.num_qubits)])
+        expected_p1 = (1 - np.exp(-2 * np.array(rate_per_qubit))) / 2
+        actual_p1 = [density_matrix.probabilities([q])[1] for q in range(num_qubits)]
         np.testing.assert_allclose(actual_p1, expected_p1, atol=1e-10)

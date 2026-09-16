@@ -32,6 +32,7 @@ from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
+    from qiskit.quantum_info import PauliLindbladMap
 
     from ...options_models.simulator import SimulatorOptions
     from ...quantum_program import QuantumProgram
@@ -78,18 +79,16 @@ def run_quantum_program(
 
     rng = np.random.default_rng(seed)
 
-    noise_dict = {}
+    noise_dict: dict[str, dict[str, PauliLindbladMap]] = {}
     if layer_noise_model := options.layer_noise_model:
         for instr, pauli_map in layer_noise_model:
             if annotation := get_annotation(instr.operation, Tag):
-                noise_dict[annotation.ref] = pauli_map
+                noise_dict[annotation.ref] = {"R": pauli_map}
 
     result_list = []
     for prog_item in program.items:
         if noise_dict:
-            circuit = PassManager(
-                [InsertNoisePass(noise_dict=noise_dict, warn_absent=options.warn_absent)]
-            ).run(prog_item.circuit)
+            circuit = PassManager([InsertNoisePass(noise_dict=noise_dict)]).run(prog_item.circuit)
         else:
             circuit = prog_item.circuit
 
