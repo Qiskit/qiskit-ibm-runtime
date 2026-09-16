@@ -49,6 +49,7 @@ STATUS_FORCELIST = (
 CUSTOM_HEADER_ENV_VAR = "QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"
 QE_PROVIDER_HEADER_ENV_VAR = "QE_CUSTOM_CLIENT_APP_HEADER"
 USAGE_DATA_OPT_OUT_ENV_VAR = "USAGE_DATA_OPT_OUT"
+QISKIT_FUNCTIONS_IDENTIFIER = "QISKIT_FUNCTIONS_IDENTIFIER"
 
 logger = logging.getLogger(__name__)
 # Regex used to match the `/backends` endpoint, capturing the device name as group(2).
@@ -284,6 +285,7 @@ class RetrySession(Session):
         # Set default caller
         headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
 
+        # Append details to `X-Qx-Client-Application` header if user did not opt out.
         if not os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
             # Use PurePath in order to support arbitrary path formats
             callers = {
@@ -328,6 +330,11 @@ class RetrySession(Session):
                         break  # break out of the inner loop
                 if found_caller:
                     break  # break out of the outer loop
+
+        # Append specific Qiskit Functions header.
+        if function_id := os.getenv(QISKIT_FUNCTIONS_IDENTIFIER):
+            headers.update({"IBM-API-Function-Id": function_id})
+
         self.headers = headers
         self._set_custom_header()
 
