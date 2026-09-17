@@ -82,7 +82,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         mode: BackendV2 | Session | Batch | None = None,
         options: dict | options.SamplerOptions | None = None,
     ):
-        self.options: SamplerOptions
         BaseSamplerV2.__init__(self)
         Sampler.__init__(self)
 

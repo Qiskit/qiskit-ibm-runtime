@@ -20,7 +20,8 @@ Executor-based EstimatorV2 (:mod:`qiskit_ibm_runtime.executor_estimator`)
 Overview
 ========
 
-:class:`qiskit_ibm_runtime.executor_estimator.EstimatorV2` is an implementation of the Qiskit ``EstimatorV2`` interface built on
+:class:`qiskit_ibm_runtime.executor_estimator.EstimatorV2` is an implementation of the
+Qiskit ``EstimatorV2`` interface built on
 top of the :class:`~qiskit_ibm_runtime.executor.Executor` primitive. It estimates expectation
 values of quantum observables by executing ISA circuits on an IBM Quantum backend.
 
