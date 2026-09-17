@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests Executor based Estimator implementation using simulator through local mode."""
+"""Tests client-side Estimator implementation using simulator through local mode."""
 
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ TWIRLING_TREX = {
 
 @ddt
 class TestEstimatorWithNoise(IBMTestCase):
-    """Tests Executor based Estimator using simulator with noise through local mode."""
+    """Tests client-side Estimator using simulator with noise through local mode."""
 
     def test_result_quality_for_different_resilience_levels(self):
         """Tests the effect of resilience on Estimator results.
@@ -186,7 +186,7 @@ class TestEstimatorWithNoise(IBMTestCase):
 
 @ddt
 class TestEstimatorWithoutNoise(IBMTestCase):
-    """Tests Executor based Estimator using noise-less simulator through local mode."""
+    """Tests client-side Estimator using noise-less simulator through local mode."""
 
     def setUp(self):
         """Test level setup."""
