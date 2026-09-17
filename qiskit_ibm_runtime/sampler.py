@@ -88,15 +88,23 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
-    def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
+    def run(
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None, dry_run: bool = False
+    ) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
         Args:
-            pubs: An iterable of pub-like objects. For example, a list of circuits
-                  or tuples ``(circuit, parameter_values)``.
-            shots: The total number of shots to sample for each sampler pub that does
-                   not specify its own shots. If ``None``, the primitive's default
-                   shots value will be used, which can vary by implementation.
+            pubs: An iterable of pub-like objects. For example, a list of circuits or tuples
+                ``(circuit, parameter_values)``.
+            shots: The total number of shots to sample for each sampler pub that does not specify
+                its own shots. If ``None``, the primitive's default shots value will be used, which
+                can vary by implementation.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata. Returned results preserve the expected schema but contain
+                **randomized mock data** rather than actual or simulated measurement results.
+                Unlike the fake backends, the processing of this dry run happens on the server-side,
+                so the job may not finish immediately and access to this feature may be restricted.
 
         Returns:
             Submitted job.
@@ -119,7 +127,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
         validate_classical_registers(coerced_pubs)
 
-        return self._run(coerced_pubs)
+        return self._run(coerced_pubs, dry_run=dry_run)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that primitive inputs (options) are valid.

@@ -35,7 +35,7 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..registries import Job
+from ..registries import Backend, Job, OneInstanceDryRunRegistry
 
 if TYPE_CHECKING:
     from ..registries import BaseRegistry
@@ -65,6 +65,8 @@ def run_program(
     inputs: dict,
     options: dict,
     backend_name: str = "common_backend",
+    dry_run: bool = False,
+    instance: str = "a",
 ) -> tuple[RuntimeJobV2, Job]:
     """Run a program using the `service`, and add a corresponding job to the registry.
 
@@ -78,13 +80,15 @@ def run_program(
         inputs: input parameters.
         options: runtime options.
         backend_name: name of the backend to run against.
+        dry_run: whether to execute in dry_run mode.
+        instance: the instance where the job will be appended to.
 
     Returns:
         The real job which results of the execution of the program, and the registry job that is
         added to the registry.
     """
-    options.update({"backend": backend_name, "instance": registry.instances["a"].crn})
-    job = service._run("sampler", inputs, options)
+    options.update({"backend": backend_name, "instance": registry.instances[instance].crn})
+    job = service._run("sampler", inputs, options, dry_run=dry_run)
     registry_job = Job(
         job.job_id(),
         backend_name,
@@ -92,7 +96,7 @@ def run_program(
         status="running",
         statuses=["running", "completed"],
     )
-    registry.add_job(registry_job, "a")
+    registry.add_job(registry_job, instance)
 
     return job, registry_job
 
@@ -217,6 +221,35 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIn("Content from results", job.error_message())
         with self.assertRaisesRegex(RuntimeJobMaxTimeoutError, "RAN TOO LONG"):
             job.result()
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_program_dry_run(self, registry):
+        """Running a program with `dry_run` should execute against the mock backend."""
+        service = QiskitRuntimeService(token="my_token")
+        job, _ = run_program(service, registry, {}, {}, backend_name="ibm_foo", dry_run=True)
+        job.wait_for_final_state(poll_interval=0.1)
+        self.assertEqual(job.backend().name, "mock_foo")
+
+    @mock_responses
+    def test_run_program_dry_run_no_mocked_backend(self, registry):
+        """Running a program with `dry_run` should fail if the mock backend cannot be found."""
+        service = QiskitRuntimeService(token="my_token")
+        # Registry has `common_backend`, but no `common_backend`.
+        with self.assertRaisesRegex(QiskitBackendNotFoundError, "'mock_backend' was not found"):
+            run_program(service, registry, {}, {}, dry_run=True)
+
+    @mock_responses
+    def test_run_program_dry_run_mock_in_other_instance(self, registry):
+        """Running a program with `dry_run` should pick up mock backends in other instances."""
+        # Add "mock_backend_a" to instance "b", while "unique_backend_a" is in instance "a".
+        registry.add_backend(Backend("mock_backend_a"), "b")
+
+        service = QiskitRuntimeService(token="my_token")
+        job, _ = run_program(
+            service, registry, {}, {}, backend_name="unique_backend_a", dry_run=True, instance="b"
+        )
+        job.wait_for_final_state(poll_interval=0.1)
+        self.assertEqual(job.backend().name, "mock_backend_a")
 
     @mock_responses
     def test_cancel_job(self, registry):
