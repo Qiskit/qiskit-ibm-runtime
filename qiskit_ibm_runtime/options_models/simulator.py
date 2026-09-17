@@ -14,13 +14,16 @@
 
 from __future__ import annotations
 
-from typing import Annotated, TypeAlias
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 from pydantic import AfterValidator, InstanceOf
 from qiskit.circuit import BoxOp, CircuitInstruction
 from qiskit.quantum_info import PauliLindbladMap
 
 from .base import BaseOptionsModel
+
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
 
 
 def validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseModel | None:
@@ -42,8 +45,30 @@ LayerNoiseModel: TypeAlias = Annotated[
     AfterValidator(validate_layer_noise_model),
 ]
 
-NOISE_POSITIONS = ("L", "M", "R")
+BARRIER_POSITIONS = ("L", "M", "R")
+"""Noise positions naming one of the three barriers samplomatic emits around a layer."""
+
+BODY_POSITIONS = ("before", "after")
+"""Noise positions naming a side of a layer's body, resolved against the layer's dressing."""
+
+NOISE_POSITIONS = (*BARRIER_POSITIONS, *BODY_POSITIONS)
 """The positions at which a layer's noise may be placed."""
+
+
+def body_is_absorbed_into_dressing(body: QuantumCircuit) -> bool:
+    """Return whether every operation in a layer's body is absorbed into its dressing.
+
+    Samplomatic pushes single-qubit gates out of a box body and into the dressing, so a body holding
+    nothing else is equivalent to an empty one: the barriers on either side of it end up adjacent.
+
+    Args:
+        body: The body of a boxed layer.
+    """
+    # `measure` and `reset` are single-qubit but are not standard gates, so they are not absorbed.
+    return all(
+        instruction.is_standard_gate() and instruction.operation.num_qubits == 1
+        for instruction in body.data
+    )
 
 
 def validate_positioned_layer_noise_model(
@@ -52,10 +77,20 @@ def validate_positioned_layer_noise_model(
     """Validate a ``LayerNoiseModel`` entry that may carry a noise position."""
     validate_layer_noise_model(value[:2])  # type: ignore[arg-type]
 
-    if len(value) == 3 and (position := value[2]) not in NOISE_POSITIONS:
-        raise ValueError(
-            f"Found the noise position {position!r}, but expected one of {list(NOISE_POSITIONS)}."
-        )
+    if len(value) == 3:
+        position = value[2]
+        if position not in NOISE_POSITIONS:
+            raise ValueError(
+                f"Found the noise position {position!r}, but expected one of "
+                f"{list(NOISE_POSITIONS)}."
+            )
+        if position in BODY_POSITIONS and body_is_absorbed_into_dressing(value[0].operation.body):
+            raise ValueError(
+                f"The noise position {position!r} is ambiguous for a layer whose body holds "
+                f"nothing but single-qubit gates: those gates are absorbed into the layer's "
+                f"dressing, leaving 'before' and 'after' naming the same point. Name a barrier "
+                f"explicitly, one of {list(BARRIER_POSITIONS)}, instead."
+            )
 
     return value
 
@@ -86,8 +121,21 @@ class SimulatorOptions(BaseOptionsModel):
     """Noise model specified by a collection of instructions and the noise that affects them.
 
     Each entry is a ``(instruction, noise)`` pair, or a ``(instruction, noise, position)`` triple
-    where ``position`` is one of :data:`NOISE_POSITIONS` and says where in the layer the noise
-    acts.  An entry that omits the position defaults to ``"R"``, after the layer's body.
+    where ``position`` is one of :data:`NOISE_POSITIONS` and says where in the layer the noise acts.
+    An entry that omits the position defaults to ``"R"``, after the layer's body.
+
+    A position is either body-relative, ``"before"`` or ``"after"`` the layer's body, or one of the
+    barriers ``"L"``, ``"M"`` and ``"R"`` that samplomatic emits around the layer.
+
+    .. note::
+        A body-relative position is relative to the layer's body *after dressing*, which is not
+        always the body as written.  Single-qubit gates are moved out of a body and into the
+        dressing — those leading it under left dressing, those trailing it under right dressing — so
+        for a left-dressed layer holding ``x(0); cz(0, 1)`` the ``x`` becomes dressing, and
+        ``"before"`` places the noise *after* the ``x`` rather than before it.
+
+        An error is raised if ``"before"`` or ``"after"`` is used for a layer whose body holds
+        nothing but single-qubit gates.
 
     When simulating an estimator job, if this value is set to ``None``,
     it defaults to the value of

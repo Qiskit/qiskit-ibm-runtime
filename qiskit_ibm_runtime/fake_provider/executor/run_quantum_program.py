@@ -22,10 +22,12 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
-from samplomatic import Tag
+from samplomatic import Tag, Twirl
+from samplomatic.annotations import ChangeBasis, DressingMode, InjectLocalClifford
 from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.utils import get_annotation
 
+from ...options_models.simulator import BARRIER_POSITIONS
 from ...results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
@@ -33,6 +35,7 @@ from .insert_noise_pass import InsertNoisePass
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.providers import BackendV2
     from qiskit.quantum_info import PauliLindbladMap
 
@@ -47,6 +50,44 @@ if HAS_AER:
 #: The position used for an entry that does not name one, chosen to match the historical behaviour
 #: of inserting every channel after the layer body.
 DEFAULT_NOISE_POSITION = "R"
+
+#: Which barrier a body-relative position resolves to, per dressing.  A left-dressed layer flattens
+#: to ``L | dressing | M | body | R`` and a right-dressed one to ``L | body | M | dressing | R``, so
+#: the barrier that sits against the body depends on which side the dressing is anchored to.
+_BODY_POSITION_TO_BARRIER = {
+    ("before", DressingMode.LEFT): "M",
+    ("after", DressingMode.LEFT): "R",
+    ("before", DressingMode.RIGHT): "L",
+    ("after", DressingMode.RIGHT): "M",
+}
+
+#: Annotations that can anchor a layer's dressing to one side.  Any one of them fixes the dressing,
+#: and ``get_annotation`` returns whichever appears on the box first.
+_DRESSING_ANNOTATIONS = (Twirl, ChangeBasis, InjectLocalClifford)
+
+
+def _resolve_position(instruction: CircuitInstruction, position: str) -> str:
+    """Resolve a noise position to the barrier the noise is inserted after.
+
+    Args:
+        instruction: The boxed layer the noise belongs to.
+        position: A barrier name, which is returned as-is, or a body-relative name.
+
+    Returns:
+        One of ``"L"``, ``"M"`` or ``"R"``.
+    """
+    if position in BARRIER_POSITIONS:
+        return position
+
+    # A dressing annotation does not always survive to here: `find_unique_box_instructions` keeps
+    # only Tag, Twirl and InjectNoise, so a layer dressed by ChangeBasis or InjectLocalClifford
+    # alone arrives with no dressing at all. Left is both samplomatic's default and the only
+    # dressing that builds without a preceding collector.
+    dressing = DressingMode.LEFT
+    if (annotation := get_annotation(instruction.operation, _DRESSING_ANNOTATIONS)) is not None:
+        dressing = annotation.dressing
+
+    return _BODY_POSITION_TO_BARRIER[(position, dressing)]
 
 
 def _build_noise_dict(
@@ -73,7 +114,9 @@ def _build_noise_dict(
         if (tag := get_annotation(instruction.operation, Tag)) is None:
             continue
 
-        position = entry[2] if len(entry) == 3 else DEFAULT_NOISE_POSITION
+        position = _resolve_position(
+            instruction, entry[2] if len(entry) == 3 else DEFAULT_NOISE_POSITION
+        )
         by_position = noise_dict.setdefault(tag.ref, {})
         if position in by_position:
             raise ValueError(

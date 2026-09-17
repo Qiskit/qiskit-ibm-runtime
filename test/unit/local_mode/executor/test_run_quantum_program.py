@@ -29,7 +29,7 @@ from qiskit.utils import optionals
 from samplomatic import Tag, Twirl
 from samplomatic.builders.build import build
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions
+from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.fake_provider.executor.run_quantum_program import run_quantum_program
@@ -92,44 +92,42 @@ EXPECTED_READOUT_P1 = (1 - np.exp(-2 * READOUT_RATE)) / 2
 """Bit-flip probability under ``READOUT_NOISE``."""
 
 
-def readout_error_probability(shots: int, positions: Sequence[str | None]) -> np.ndarray:
+def readout_error_probability(
+    shots: int, positions: Sequence[str | None], dressing: str = "left"
+) -> np.ndarray:
     """Return the fraction of shots reading 1 on each qubit, given noise at ``positions``.
 
-    The circuit is two qubits measured immediately, which the real boxing pass wraps in a single
-    box.  Nothing acts on the qubits beforehand, so a noiseless run reads 0 on every shot and any
-    nonzero result is readout error that took effect.
+    Two qubits are measured inside a box, preceded by a ``cz`` layer.  The ``cz`` leaves the ground
+    state untouched, so a noiseless run still reads 0 on every shot and any nonzero result is
+    readout error that took effect — and it gives a right-dressed measurement box the preceding
+    collector it needs in order to build at all.
 
     Args:
         shots: Shots per run.
         positions: One ``layer_noise_model`` entry per element, each placing ``READOUT_NOISE`` on
             the measurement box at that position.  ``None`` omits the position from its entry.
+        dressing: Which side to anchor the measurement box's dressing to.  A body-relative position
+            resolves to a different barrier for each, while meaning the same thing physically.
 
     Returns:
         The fraction of shots reading 1, per qubit.
-
-    Raises:
-        AssertionError: If the boxing pass did not produce exactly one box to attach noise to.
     """
     circuit = QuantumCircuit(2, 2)
-    circuit.measure([0, 1], [0, 1])
+    with circuit.box(annotations=[Twirl(dressing="left"), Tag("layer")]):
+        circuit.cz(0, 1)
+    with circuit.box(annotations=[Twirl(dressing=dressing), Tag("measure")]):
+        circuit.measure([0, 1], [0, 1])
 
-    pass_manager = generate_preset_pass_manager(
-        backend=FakeFez(), initial_layout=[17, 27], optimization_level=0
+    template_circuit, samplex = build(circuit)
+    boxes = find_unique_box_instructions(circuit, undress_boxes=True, normalize_annotations=None)
+    measurement_box = next(
+        box for box in boxes if get_annotation(box.operation, Tag).ref == "measure"
     )
-    pass_manager.post_scheduling = generate_boxing_pass_manager(add_tags="unique_box")
-    boxed = pass_manager.run(circuit)
-    template_circuit, samplex = build(boxed)
-
-    boxes = find_unique_box_instructions(boxed, undress_boxes=True, normalize_annotations=None)
-    if len(boxes) != 1:
-        raise AssertionError(
-            f"Expected one box for a measure-only circuit, found {len(boxes)}; the tests would "
-            f"otherwise target the wrong box."
-        )
-    box = boxes[0]
 
     layer_noise_model = [
-        (box, READOUT_NOISE) if position is None else (box, READOUT_NOISE, position)
+        (measurement_box, READOUT_NOISE)
+        if position is None
+        else (measurement_box, READOUT_NOISE, position)
         for position in positions
     ]
 
@@ -141,7 +139,7 @@ def readout_error_probability(shots: int, positions: Sequence[str | None]) -> np
         SimulatorOptions(layer_noise_model=layer_noise_model, seed_simulator=11),
     )[0]
 
-    # The boxing pass twirls the measurement; measurement_flips.c undoes that flip pattern.
+    # The box twirls the measurement; measurement_flips.c undoes that flip pattern.
     outcome = np.logical_xor(result["c"], result["measurement_flips.c"])
     return outcome.reshape(-1, outcome.shape[-1]).mean(axis=0)
 
@@ -574,21 +572,34 @@ class TestRunQuantumProgram(IBMTestCase):
 class TestNoisePosition(IBMTestCase):
     """Tests for the noise position on ``SimulatorOptions.layer_noise_model`` entries."""
 
-    @data(("M", True), ("L", True), ("R", False), (None, False))
+    @data(
+        ("left", "M", True),
+        ("left", "L", True),
+        ("left", "R", False),
+        ("left", None, False),
+        ("left", "before", True),
+        ("left", "after", False),
+        ("right", "before", True),
+        ("right", "after", False),
+    )
     @unpack
-    def test_only_a_position_upstream_of_the_measure_causes_readout_error(self, position, applies):
-        """A channel at ``R`` acts after the ``measure`` and cannot affect the outcome.
+    def test_readout_error_applies_only_from_upstream_of_the_measure(
+        self, dressing, position, applies
+    ):
+        """``R`` sits after the body, so its channel acts after the ``measure`` and does nothing.
 
-        ``R`` reads exactly zero, matching a run with no noise model at all, which is what makes it
-        a silent no-op rather than a small effect.  ``position=None`` is an entry that names no
-        position and so defaults to ``R``, preserving the behaviour from before positions existed.
+        It reads exactly zero, matching a run with no noise model at all, which is what makes it a
+        silent no-op rather than a small effect.  ``position=None`` is an entry naming no position,
+        which defaults to ``R``.
+
+        A body-relative name is resolved against the dressing, so ``before`` is the ``M`` barrier
+        for a left-dressed layer and ``L`` for a right-dressed one.  Resolving to a fixed barrier
+        would put the noise after the ``measure`` for one of the two; the ``right`` cases catch it.
         """
-        actual = readout_error_probability(shots=4000, positions=[position])
+        actual = readout_error_probability(shots=4000, positions=[position], dressing=dressing)
 
-        if applies:
-            np.testing.assert_allclose(actual, [EXPECTED_READOUT_P1] * 2, atol=0.02)
-        else:
-            np.testing.assert_allclose(actual, [0.0, 0.0], atol=1e-12)
+        expected = EXPECTED_READOUT_P1 if applies else 0.0
+        np.testing.assert_allclose(actual, [expected] * 2, atol=0.02 if applies else 1e-12)
 
     def test_one_layer_takes_noise_at_distinct_positions_but_not_at_a_repeated_one(self):
         """Positions of a layer are independent entries; repeating one is a mistake."""
