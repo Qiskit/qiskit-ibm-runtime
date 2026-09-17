@@ -21,7 +21,7 @@ from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
-from qiskit_ibm_runtime.executor_estimator import EstimatorV2
+from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 
 from ....utils import make_mirror_circuit_with_phases
@@ -151,7 +151,7 @@ def create_local_mode_estimator(
     num_randomizations: int,
     shots_per_randomization: int,
     options_overrides: dict[str, Any] = {},
-) -> EstimatorV2:
+) -> Estimator:
     """Creates an estimator instance running local mode simulation.
 
     The returned instance has all mitigation disabled (resilience_level 0)
@@ -167,4 +167,4 @@ def create_local_mode_estimator(
     options.twirling.shots_per_randomization = shots_per_randomization
     options.default_shots = num_randomizations * shots_per_randomization
 
-    return EstimatorV2(mode=backend, options=options)
+    return Estimator(mode=backend, options=options)

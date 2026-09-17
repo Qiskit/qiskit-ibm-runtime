@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class EstimatorV2(BaseEstimatorV2):
+class Estimator(BaseEstimatorV2):
     """Client-side EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of EstimatorV2 built on top of the Executor primitive,

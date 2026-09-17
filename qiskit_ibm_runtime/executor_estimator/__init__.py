@@ -27,4 +27,4 @@ Classes
 
 """
 
-from .estimator import EstimatorV2
+from .estimator import Estimator

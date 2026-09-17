@@ -27,7 +27,7 @@ from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
-from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
+from qiskit_ibm_runtime.executor_estimator.estimator import Estimator
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
@@ -44,14 +44,14 @@ class TestEstimatorUsingOptions(IBMTestCase):
 
     def test_default_options(self):
         """Test that default options are set when none are provided."""
-        estimator = EstimatorV2(mode=FakeBrisbane())
+        estimator = Estimator(mode=FakeBrisbane())
         self.assertIsInstance(estimator.options, EstimatorOptions)
         self.assertEqual(estimator.options, EstimatorOptions())
 
     def test_options_from_instance(self):
         """Test constructing with an EstimatorOptions instance."""
         opts = EstimatorOptions(execution=ExecutionOptions(init_qubits=False))
-        estimator = EstimatorV2(mode=FakeBrisbane(), options=opts)
+        estimator = Estimator(mode=FakeBrisbane(), options=opts)
         self.assertIs(estimator.options, opts)
         self.assertFalse(estimator.options.execution.init_qubits)
 
@@ -61,7 +61,7 @@ class TestEstimatorUsingOptions(IBMTestCase):
             "execution": {"init_qubits": False, "rep_delay": 0.5},
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
         }
-        estimator = EstimatorV2(mode=FakeBrisbane(), options=opts_dict)
+        estimator = Estimator(mode=FakeBrisbane(), options=opts_dict)
         self.assertFalse(estimator.options.execution.init_qubits)
         self.assertEqual(estimator.options.execution.rep_delay, 0.5)
         self.assertEqual(estimator.options.environment.log_level, "DEBUG")
@@ -69,7 +69,7 @@ class TestEstimatorUsingOptions(IBMTestCase):
 
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
-        estimator = EstimatorV2(mode=FakeBrisbane(), options={"execution": {"init_qubits": False}})
+        estimator = Estimator(mode=FakeBrisbane(), options={"execution": {"init_qubits": False}})
         self.assertFalse(estimator.options.execution.init_qubits)
         self.assertIsNone(estimator.options.execution.rep_delay)
         self.assertEqual(estimator.options.environment, EnvironmentOptions())
@@ -77,33 +77,31 @@ class TestEstimatorUsingOptions(IBMTestCase):
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
         with self.assertRaisesRegex(TypeError, "Expected EstimatorOptions or dict"):
-            EstimatorV2(mode=FakeBrisbane(), options="invalid")
+            Estimator(mode=FakeBrisbane(), options="invalid")
 
     def test_setter_with_instance(self):
         """Test setting options via the setter with an EstimatorOptions instance."""
-        estimator = EstimatorV2(mode=FakeBrisbane())
+        estimator = Estimator(mode=FakeBrisbane())
         new_opts = EstimatorOptions(execution=ExecutionOptions(init_qubits=False))
         estimator.options = new_opts
         self.assertIs(estimator.options, new_opts)
 
     def test_setter_with_dict(self):
         """Test setting options via the setter with a dict."""
-        estimator = EstimatorV2(mode=FakeBrisbane())
+        estimator = Estimator(mode=FakeBrisbane())
         estimator.options = {"execution": {"init_qubits": False}}
         self.assertIsInstance(estimator.options, EstimatorOptions)
         self.assertFalse(estimator.options.execution.init_qubits)
 
     def test_setter_invalid_type(self):
         """Test that setting options with an invalid type raises TypeError."""
-        estimator = EstimatorV2(mode=FakeBrisbane())
+        estimator = Estimator(mode=FakeBrisbane())
         with self.assertRaisesRegex(TypeError, "Expected EstimatorOptions or dict"):
             estimator.options = 42
 
     def test_setter_replaces_options(self):
         """Test that the setter replaces (not updates) the options."""
-        estimator = EstimatorV2(
-            mode=FakeBrisbane(), options={"environment": {"log_level": "DEBUG"}}
-        )
+        estimator = Estimator(mode=FakeBrisbane(), options={"environment": {"log_level": "DEBUG"}})
         estimator.options = {"execution": {"init_qubits": False}}
         # environment should be back to defaults since we replaced, not updated
         self.assertEqual(estimator.options.environment.log_level, "WARNING")
@@ -111,24 +109,24 @@ class TestEstimatorUsingOptions(IBMTestCase):
 
     def test_experimental_options_default_empty(self):
         """Test that experimental options default to empty dict."""
-        estimator = EstimatorV2(mode=FakeBrisbane())
+        estimator = Estimator(mode=FakeBrisbane())
         self.assertEqual(estimator.options.experimental, {})
 
     def test_experimental_options_from_dict(self):
         """Test constructing with experimental options in dict."""
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
-        estimator = EstimatorV2(mode=FakeBrisbane(), options=opts_dict)
+        estimator = Estimator(mode=FakeBrisbane(), options=opts_dict)
         self.assertEqual(estimator.options.experimental, {"foo": "bar", "baz": 123})
 
     def test_experimental_options_from_instance(self):
         """Test constructing with an EstimatorOptions instance with experimental options."""
         opts = EstimatorOptions(experimental={"custom_key": "custom_value"})
-        estimator = EstimatorV2(mode=FakeBrisbane(), options=opts)
+        estimator = Estimator(mode=FakeBrisbane(), options=opts)
         self.assertEqual(estimator.options.experimental, {"custom_key": "custom_value"})
 
     def test_experimental_options_setter(self):
         """Test setting experimental options via the setter."""
-        estimator = EstimatorV2(mode=FakeBrisbane())
+        estimator = Estimator(mode=FakeBrisbane())
         estimator.options = {"experimental": {"test": "value"}}
         self.assertEqual(estimator.options.experimental, {"test": "value"})
 
@@ -173,7 +171,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_single_pub_no_parameters(self):
         """Test run with single pub without parameters."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
         estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
@@ -202,7 +200,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_with_pub_level_precision(self):
         """Test that EstimatorPub.coerce is called with precision parameter."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
         estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
@@ -221,7 +219,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_uses_default_precision_from_options(self):
         """Test that run uses default_precision from options when precision not specified."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
         estimator.options.default_precision = 0.01
         estimator.options.resilience_level = 0
 
@@ -244,7 +242,7 @@ class TestEstimatorV2Run(IBMTestCase):
         options = EstimatorOptions()
         options.default_precision = 0.022097  # sqrt(1/2048)
 
-        estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator = Estimator(mode=self.backend, options=options)
         estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
@@ -261,7 +259,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_with_parametric_circuit(self):
         """Test run with parametric circuit."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
 
         circuit = QuantumCircuit(2)
         theta = Parameter("theta")
@@ -279,7 +277,7 @@ class TestEstimatorV2Run(IBMTestCase):
     @data(True, False)
     def test_run_multiple_pubs(self, measure_mitigation):
         """Test run with multiple pubs."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
         estimator.options.resilience.measure_mitigation = measure_mitigation
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
@@ -303,7 +301,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_with_default_precision(self):
         """Test that run uses the default precision value from options."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
         estimator.options.resilience_level = 0
         # default_precision is 0.015625 by default
 
@@ -329,7 +327,7 @@ class TestEstimatorV2Run(IBMTestCase):
         options.execution.rep_delay = 0.001
         options.max_execution_time = 300
 
-        estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator = Estimator(mode=self.backend, options=options)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -351,7 +349,7 @@ class TestEstimatorV2Run(IBMTestCase):
         options.dynamical_decoupling.enable = False
         options.resilience.measure_mitigation = True
 
-        estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator = Estimator(mode=self.backend, options=options)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -387,7 +385,7 @@ class TestEstimatorV2Run(IBMTestCase):
         options = EstimatorOptions()
         options.resilience.measure_mitigation = True
 
-        estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator = Estimator(mode=self.backend, options=options)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -407,7 +405,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_with_multiple_observables(self):
         """Test run with multiple observables in a single pub."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -426,7 +424,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_preserves_circuit_metadata(self):
         """Test that run preserves circuit metadata through the pipeline."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -441,7 +439,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_incompatible_broadcast_shapes(self):
         """Test that incompatible parameter and observable shapes raise an error."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
 
         circuit = QuantumCircuit(2)
         theta = Parameter("theta")
@@ -464,7 +462,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_mismatched_precision_raises_error(self):
         """Test that pubs with different precision values raise an error."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -480,7 +478,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_raises_error_when_no_pubs_provided(self):
         """Test that run raises IBMInputValueError when called with an empty pub list."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
 
         with self.assertRaisesRegex(IBMInputValueError, "No pubs provided"):
             estimator.run([])
@@ -490,7 +488,7 @@ class TestEstimatorV2Run(IBMTestCase):
 
     def test_run_raises_error_when_pec_and_zne_both_enabled(self):
         """Test that run raises error when both pec_mitigation and zne_mitigation are enabled."""
-        estimator = EstimatorV2(mode=self.backend)
+        estimator = Estimator(mode=self.backend)
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.zne_mitigation = True
 
@@ -525,7 +523,7 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator = EstimatorV2(mode=backend)
+        estimator = Estimator(mode=backend)
         estimator.options.default_shots = 10_000
         estimator.options.simulator.seed_simulator = 42
         result = estimator.run([(transpiled, observable)]).result()
@@ -546,12 +544,12 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator1 = EstimatorV2(mode=backend)
+        estimator1 = Estimator(mode=backend)
         estimator1.options.default_shots = 100
         estimator1.options.simulator.seed_simulator = 42
         result1 = estimator1.run([(transpiled, observable)]).result()
 
-        estimator2 = EstimatorV2(mode=backend)
+        estimator2 = Estimator(mode=backend)
         estimator2.options.default_shots = 100
         estimator2.options.simulator.seed_simulator = 42
         result2 = estimator2.run([(transpiled, observable)]).result()
@@ -574,12 +572,12 @@ class TestEstimatorV2SimulatorMode(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator1 = EstimatorV2(mode=backend)
+        estimator1 = Estimator(mode=backend)
         estimator1.options.default_shots = 100
         estimator1.options.simulator.seed_simulator = 42
         result1 = estimator1.run([(transpiled, observable)]).result()
 
-        estimator2 = EstimatorV2(mode=backend)
+        estimator2 = Estimator(mode=backend)
         estimator2.options.simulator.seed_simulator = 99
         estimator2.options.default_shots = 100
         result2 = estimator2.run([(transpiled, observable)]).result()
@@ -597,7 +595,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_resilience_level_0(self):
         """Tests for resilience level 0."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience_level = 0
 
         finalized_options = estimator.finalize_options()
@@ -608,7 +606,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_resilience_level_1(self):
         """Tests for resilience level 1."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience_level = 1
 
         finalized_options = estimator.finalize_options()
@@ -619,7 +617,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_resilience_level_2(self):
         """Tests for resilience level 2."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience_level = 2
 
         finalized_options = estimator.finalize_options()
@@ -631,7 +629,7 @@ class TestFinalizeOptions(IBMTestCase):
     @data(0, 1, 2)
     def test_set_values_are_preserved(self, resilience_level):
         """Test that when the user sets values, resilience level does not override them."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.twirling.enable_gates = False
         estimator.options.twirling.enable_measure = True
         estimator.options.resilience.measure_mitigation = False
@@ -647,13 +645,13 @@ class TestFinalizeOptions(IBMTestCase):
     @data(0, 1, 2)
     def test_forced_values(self, resilience_level):
         """Test that finalize force-set certain values."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.measure_mitigation = True
         finalized_options = estimator.finalize_options()
         self.assertTrue(finalized_options.twirling.enable_measure)
 
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.amplifier = "pea"
@@ -661,7 +659,7 @@ class TestFinalizeOptions(IBMTestCase):
         self.assertTrue(finalized_options.twirling.enable_gates)
         self.assertTrue(finalized_options.twirling.enable_measure)
 
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.pec_mitigation = True
         finalized_options = estimator.finalize_options()
@@ -670,7 +668,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_no_warning_when_twirling_field_not_set_by_user(self):
         """No warning when the user never set the twirling field that is being overridden."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         # Use resilience_level=0 so enable_measure defaults to False, ensuring the only
         # thing suppressing the warning is the field being absent from model_fields_set.
         estimator.options.resilience_level = 0
@@ -684,7 +682,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_no_warning_when_user_set_field_to_true(self):
         """No warning when the user already set the field to True (no conflict)."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.twirling.enable_measure = True
         estimator.options.resilience.measure_mitigation = True
         with warnings.catch_warnings(record=True) as caught:
@@ -695,7 +693,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_warning_measure_mitigation_overrides_enable_measure_false(self):
         """Warning when measure_mitigation=True overrides user-set enable_measure=False."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.twirling.enable_measure = False
         estimator.options.resilience.measure_mitigation = True
         with self.assertWarns(UserWarning) as ctx:
@@ -707,7 +705,7 @@ class TestFinalizeOptions(IBMTestCase):
     @data("enable_gates", "enable_measure")
     def test_warning_pea_overrides_twirling_field_false(self, field):
         """Warning when PEA overrides user-set enable_gates=False or enable_measure=False."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         setattr(estimator.options.twirling, field, False)
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.measure_mitigation = False
@@ -721,7 +719,7 @@ class TestFinalizeOptions(IBMTestCase):
     @data("enable_gates", "enable_measure")
     def test_warning_pec_overrides_twirling_field_false(self, field):
         """Warning when PEC overrides user-set enable_gates=False or enable_measure=False."""
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         setattr(estimator.options.twirling, field, False)
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.measure_mitigation = False

@@ -19,7 +19,7 @@ from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.executor_estimator import EstimatorV2
+from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -75,7 +75,7 @@ class TestEstimator(IBMIntegrationTestCase):
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         results = estimator.run(self.pubs).result()
 
         # Expect one result per pub:
@@ -94,7 +94,7 @@ class TestEstimator(IBMIntegrationTestCase):
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience.pec_mitigation = True
 
         layers = estimator.find_unique_layers(self.pubs, types="gates")
@@ -130,7 +130,7 @@ class TestEstimator(IBMIntegrationTestCase):
         - Correct shape and make-up for all ZNE-specific pub metadata fields:
             * ``extrapolators``: pub shape, only requested extrapolators or `multiple`.
         """
-        estimator = EstimatorV2(self.backend)
+        estimator = Estimator(self.backend)
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.amplifier = amplifier
 
