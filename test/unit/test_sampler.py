@@ -31,7 +31,7 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..registries import Backend
+from ..registries import Backend, OneInstanceDryRunRegistry
 from ..utils import get_mocked_backend, transpile_pubs
 
 
@@ -58,7 +58,7 @@ def _real_amplitudes_measured(num_qubits, reps):
 
 @ddt
 class TestSamplerV2(IBMTestCase):
-    """Class for testing the Estimator class."""
+    """Class for testing the Sampler class."""
 
     def setUp(self) -> None:
         """Test level setup."""
@@ -541,3 +541,12 @@ class TestSamplerV2(IBMTestCase):
 
         with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, shots=run_shots)
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Sampler can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        sampler = SamplerV2(mode=backend)
+        job = sampler.run((self.circuit,), dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")
