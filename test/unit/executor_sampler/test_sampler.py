@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for client-side SamplerV2."""
+"""Tests for client-side Sampler."""
 
 from unittest import skipUnless
 from unittest.mock import MagicMock, patch
@@ -29,8 +29,8 @@ from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
 
 
-class TestSamplerV2SimpleCircuits(IBMTestCase):
-    """Tests for SamplerV2 with simple (non-parametric) circuits."""
+class TestSamplerSimpleCircuits(IBMTestCase):
+    """Tests for Sampler with simple (non-parametric) circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -88,8 +88,8 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
         self.assertEqual(quantum_program.shots, 4096)
 
 
-class TestSamplerV2ParametricCircuits(IBMTestCase):
-    """Tests for SamplerV2 with parametric circuits."""
+class TestSamplerParametricCircuits(IBMTestCase):
+    """Tests for Sampler with parametric circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -177,8 +177,8 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         np.testing.assert_array_almost_equal(item2.circuit_arguments, [[0.5], [1.0]])
 
 
-class TestSamplerV2CircuitValidation(IBMTestCase):
-    """Tests for circuit validation in SamplerV2."""
+class TestSamplerCircuitValidation(IBMTestCase):
+    """Tests for circuit validation in Sampler."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -207,8 +207,8 @@ class TestSamplerV2CircuitValidation(IBMTestCase):
         mock_run.assert_not_called()
 
 
-class TestSamplerV2ShotsHandling(IBMTestCase):
-    """Tests for shots handling in SamplerV2."""
+class TestSamplerShotsHandling(IBMTestCase):
+    """Tests for shots handling in Sampler."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -251,8 +251,8 @@ class TestSamplerV2ShotsHandling(IBMTestCase):
         self.assertEqual(quantum_program.shots, 2048)
 
 
-class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
-    """Tests verifying the integrity of QuantumProgram objects created by SamplerV2."""
+class TestSamplerQuantumProgramIntegrity(IBMTestCase):
+    """Tests verifying the integrity of QuantumProgram objects created by Sampler."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -361,11 +361,11 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         self.assertEqual(item.size(), 3)
 
 
-class TestSamplerV2SimulatorMode(IBMTestCase):
-    """Tests for SamplerV2 with simulator backends (local mode)."""
+class TestSamplerSimulatorMode(IBMTestCase):
+    """Tests for Sampler with simulator backends (local mode)."""
 
     def test_simulator_mode_uses_backend_sampler(self):
-        """Test that simulator mode uses BackendSamplerV2 instead of Executor."""
+        """Test that simulator mode uses BackendSampler instead of Executor."""
         backend = GenericBackendV2(num_qubits=5)
 
         circuit = QuantumCircuit(2, 2)

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for client-side SamplerV2 utility functions."""
+"""Tests for client-side Sampler utility functions."""
 
 from qiskit import QuantumCircuit
 from qiskit.primitives.containers.sampler_pub import SamplerPub

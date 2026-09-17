@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""SamplerV2 tests centered around qiskit-aer simulations."""
+"""Client-side Sampler tests centered around qiskit-aer simulations."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 @ddt
 class TestSampler(IBMTestCase):
-    """SamplerV2 tests centered around qiskit-aer simulations.
+    """Client-side Sampler tests centered around qiskit-aer simulations.
 
     All the tests in this class perform noiseless simulations.
     """

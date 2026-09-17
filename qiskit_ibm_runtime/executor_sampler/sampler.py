@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Client-side SamplerV2 primitive."""
+"""Client-side Sampler primitive."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 class Sampler(BaseSamplerV2):
     """Client-side Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
-    This is an implementation of SamplerV2 built on top of the Executor primitive,
+    This is an implementation of Sampler built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
     user control.
 
@@ -63,7 +63,7 @@ class Sampler(BaseSamplerV2):
 
             from qiskit import QuantumCircuit
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor_sampler import SamplerV2
+            from qiskit_ibm_runtime.executor_sampler import Sampler
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)
@@ -75,7 +75,7 @@ class Sampler(BaseSamplerV2):
             circuit.measure_all()
 
             # Run the sampler with options
-            sampler = SamplerV2(mode=backend)
+            sampler = Sampler(mode=backend)
             sampler.options.default_shots = 2048
             sampler.options.execution.init_qubits = True
             job = sampler.run([circuit])

@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-=====================================================================
-Client-side SamplerV2 (:mod:`qiskit_ibm_runtime.executor_sampler`)
-=====================================================================
+================================================================
+Client-side Sampler (:mod:`qiskit_ibm_runtime.executor_sampler`)
+================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.executor_sampler
 
@@ -23,7 +23,7 @@ Classes
 .. autosummary::
    :toctree: ../stubs/
 
-   SamplerV2
+   Sampler
 
 """
 

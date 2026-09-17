@@ -10,4 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""SamplerV2 tests centered around qiskit-aer simulations."""
+"""Client-side sampler tests centered around qiskit-aer simulations."""

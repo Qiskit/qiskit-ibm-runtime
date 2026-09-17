@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for SamplerV2 post-processor and static conversion method."""
+"""Unit tests for client-side Sampler post-processor and static conversion method."""
 
 from dataclasses import asdict
 
@@ -169,8 +169,8 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
 
 
 @ddt
-class TestSamplerV2PostProcessor(IBMTestCase):
-    """Test SamplerV2 post-processor function.
+class TestSamplerPostProcessor(IBMTestCase):
+    """Test client-side Sampler post-processor function.
 
     This class contains basic smoke tests to verify the post-processor function
     works correctly and delegates to the static method appropriately.
@@ -468,7 +468,7 @@ class TestSamplerV2PostProcessor(IBMTestCase):
         self.assertEqual(result.metadata, {})
 
 
-class TestSamplerV2PostProcessorFlattening(IBMTestCase):
+class TestSamplerPostProcessorFlattening(IBMTestCase):
     """Test that sampler_v2_post_processor_v0_1 flattens twirling axes correctly.
 
     When twirling is enabled, the executor returns data with shape

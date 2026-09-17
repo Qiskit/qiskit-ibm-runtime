@@ -164,13 +164,13 @@ def run_configured_sampler_implementations(
 
     The decorated tests receive a new argument that contains the sampler class.
     """
-    from qiskit_ibm_runtime import SamplerV2 as LegacySamplerV2
-    from qiskit_ibm_runtime.executor_sampler import Sampler as ExecutorSamplerV2
+    from qiskit_ibm_runtime import SamplerV2 as LegacySampler
+    from qiskit_ibm_runtime.executor_sampler import Sampler as ExecutorSampler
 
     implementations = (
-        [("legacy", LegacySamplerV2), ("executor", ExecutorSamplerV2)]
+        [("legacy", LegacySampler), ("executor", ExecutorSampler)]
         if os.getenv("QISKIT_IBM_TEST_SAMPLER_V2_IMPLEMENTATIONS") == "1"
-        else [("legacy", LegacySamplerV2)]
+        else [("legacy", LegacySampler)]
     )
     return named_data(*implementations)(test_func)
 
