@@ -150,6 +150,7 @@ class Session:
         options: dict | None = None,
         result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         calibration_id: str | None = None,
+        dry_run: bool = False,
     ) -> RuntimeJobV2:
         """Run a program in the session.
 
@@ -164,6 +165,12 @@ class Session:
                 decoder. If not specified, a program-specific decoder or the default
                 ``ResultDecoder`` is used.
             calibration_id: The calibration id to use with the program execution
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata. Returned results preserve the expected schema but contain
+                **randomized mock data** rather than actual or simulated measurement results.
+                Unlike the fake backends, the processing of this dry run happens on the server-side,
+                so the job may not finish immediately and access to this feature may be restricted.
 
         Returns:
             Submitted job.
@@ -194,6 +201,7 @@ class Session:
                 options=options,
                 inputs=inputs,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
         return job
