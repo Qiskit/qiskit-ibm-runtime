@@ -18,8 +18,11 @@ from qiskit import QuantumCircuit, transpile
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
+from ..registries import OneInstanceDryRunRegistry
 from ..utils import combine, get_mocked_backend
 
 
@@ -145,3 +148,12 @@ class TestNoiseLearner(IBMTestCase):
         backend = get_mocked_backend()
         inst = NoiseLearner(backend)
         self.assertEqual(inst.backend().name, backend.name)
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Noise Learner can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        noise_learner = NoiseLearner(mode=backend)
+        job = noise_learner.run([transpile(c) for c in self.circuits], dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")

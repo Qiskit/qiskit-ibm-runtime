@@ -162,6 +162,7 @@ class EstimatorV2(BaseEstimatorV2):
         task_class = choose_task_class(options.resilience)
         boxing_opts = estimator_options_to_boxing_options(
             options.twirling,
+            measure_mitigation=bool(options.resilience.measure_mitigation),
             inject_noise=task_class in (PEC, PEA),
             add_tags=True,
         )
@@ -199,7 +200,11 @@ class EstimatorV2(BaseEstimatorV2):
         return finalize_estimator_options(self.options)
 
     def run(
-        self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
+        self,
+        pubs: Iterable[EstimatorPubLike],
+        *,
+        precision: float | None = None,
+        dry_run: bool = False,
     ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the estimator primitive.
 
@@ -217,6 +222,12 @@ class EstimatorV2(BaseEstimatorV2):
             precision: The target precision for expectation value estimates of each
                 estimator pub that does not specify its own precision. If ``None``,
                 the value from ``options.default_precision`` will be used.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata. Returned results preserve the expected schema but contain
+                **randomized mock data** rather than actual or simulated measurement results.
+                Unlike the fake backends, the processing of this dry run happens on the server-side,
+                so the job may not finish immediately and access to this feature may be restricted.
 
         Returns:
             The submitted job.
@@ -248,4 +259,4 @@ class EstimatorV2(BaseEstimatorV2):
             quantum_program.shots * sum(item.size() for item in quantum_program.items),
         )
 
-        return executor.run(quantum_program)
+        return executor.run(quantum_program, dry_run=dry_run)

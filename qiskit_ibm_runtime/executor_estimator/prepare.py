@@ -239,7 +239,9 @@ def _build_quantum_program(
         num_randomizations, shots_per_randomization = 1, shots
 
     # Setup
-    boxing_options = estimator_options_to_boxing_options(twirling, inject_noise, add_tags)
+    boxing_options = estimator_options_to_boxing_options(
+        twirling, bool(resilience.measure_mitigation), inject_noise, add_tags
+    )
     noise_model = {}
     if resilience.layer_noise_model is not None:
         noise_model = {

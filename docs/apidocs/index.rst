@@ -20,5 +20,6 @@
    execution_span
    debug_tools
    visualization
+   circuit_library
    models
    ibm_quantum_schemas

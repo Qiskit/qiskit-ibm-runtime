@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,4 +12,4 @@
 
 """Module for vendor-specific circuit objects."""
 
-from .library import *
+from .library import MeasureReset, MidCircuitMeasure, MidCircuitReset, XSlowGate
