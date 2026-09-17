@@ -8,6 +8,8 @@
    :maxdepth: 1
 
    runtime_service
+   executor_sampler
+   executor_estimator
    quantum_program
    noise_learner
    noise_learner_v3
@@ -22,6 +24,4 @@
    visualization
    circuit_library
    models
-   executor_sampler
-   executor_estimator
    ibm_quantum_schemas
