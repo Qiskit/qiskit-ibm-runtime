@@ -119,6 +119,8 @@ class TestEstimatorWithNoise(IBMTestCase):
         """Tests the effect of resilience on EstimatorV2 results.
 
         Estimator result quality is expected to increase with PEC.
+        Estimator result quality is expected to degrade when the
+        resilience noise model differs from the simulated.
         """
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
@@ -166,8 +168,20 @@ class TestEstimatorWithNoise(IBMTestCase):
         # -- Compare tested Estimator EVs to base level Estimator:
 
         # Increased resilience level should translate into increased expectation value quality:
-        debug_message = f"Error per resilience level: {errors}"
+        debug_message = f"Base level errors: {base_level_errors}\nErrors after mitigation: {errors}"
         np.testing.assert_array_less(errors, base_level_errors, err_msg=debug_message)
+
+        # -- Compare Estimator EVs when the resilience noise model diverges from simulation
+
+        estimator.options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.01)]))
+            for layer in estimator.find_unique_layers([pub], types="gates")
+        ]
+        result = estimator.run([pub]).result()
+        divergent_errors = np.abs(result[0].data.evs - ideal_evs)
+
+        debug_message = f"Ideal errors: {errors}\nDivergent errors: {divergent_errors}"
+        np.testing.assert_array_less(errors, divergent_errors, err_msg=debug_message)
 
 
 @ddt
