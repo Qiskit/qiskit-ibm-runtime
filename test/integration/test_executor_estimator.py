@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Integration tests for the EstimatorV2 implementation running through Executor."""
+"""Integration tests for the Estimator implementation running through Executor."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from ..utils import make_mirror_circuit_with_phases
 
 @ddt
 class TestEstimator(IBMIntegrationTestCase):
-    """An integration test, testing EstimatorV2 implemented through Executor."""
+    """An integration test, testing Estimator implemented through Executor."""
 
     def setUp(self):
         """Test level setup."""

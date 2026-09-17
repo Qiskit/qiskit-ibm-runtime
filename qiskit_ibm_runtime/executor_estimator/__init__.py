@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-======================================================================
-Client-side EstimatorV2 (:mod:`qiskit_ibm_runtime.executor_estimator`)
-======================================================================
+====================================================================
+Client-side Estimator (:mod:`qiskit_ibm_runtime.executor_estimator`)
+====================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.executor_estimator
 
@@ -23,7 +23,7 @@ Classes
 .. autosummary::
    :toctree: ../stubs/
 
-   EstimatorV2
+   Estimator
 
 """
 

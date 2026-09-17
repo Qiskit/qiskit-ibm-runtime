@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests Executor based EstimatorV2 implementation using simulator through local mode."""
+"""Tests Executor based Estimator implementation using simulator through local mode."""
 
 from __future__ import annotations
 
@@ -76,10 +76,10 @@ TWIRLING_TREX = {
 
 @ddt
 class TestEstimatorWithNoise(IBMTestCase):
-    """Tests Executor based EstimatorV2 using simulator with noise through local mode."""
+    """Tests Executor based Estimator using simulator with noise through local mode."""
 
     def test_result_quality_for_different_resilience_levels(self):
-        """Tests the effect of resilience on EstimatorV2 results.
+        """Tests the effect of resilience on Estimator results.
 
         Estimator result quality is expected to increase with increasing resilience level.
         """
@@ -116,7 +116,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         TWIRLING_TREX_PEA,
     )
     def test_result_quality_with_noise_injection(self, option_overrides):
-        """Tests the effect of resilience on EstimatorV2 results.
+        """Tests the effect of resilience on Estimator results.
 
         Estimator result quality is expected to increase with PEC.
         Estimator result quality is expected to degrade when the
@@ -186,7 +186,7 @@ class TestEstimatorWithNoise(IBMTestCase):
 
 @ddt
 class TestEstimatorWithoutNoise(IBMTestCase):
-    """Tests Executor based EstimatorV2 using noise-less simulator through local mode."""
+    """Tests Executor based Estimator using noise-less simulator through local mode."""
 
     def setUp(self):
         """Test level setup."""

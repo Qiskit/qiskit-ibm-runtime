@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Post-processing for the client-side EstimatorV2: delegates to qiskit-mitigation."""
+"""Post-processing for the client-side Estimator: delegates to qiskit-mitigation."""
 
 from __future__ import annotations
 
@@ -35,8 +35,8 @@ from ...results.quantum_program import ItemMetadata
 logger = logging.getLogger(__name__)
 
 
-def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
-    """Convert a quantum program result to a primitives result for EstimatorV2.
+def estimator_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
+    """Convert a quantum program result to a primitives result for Estimator.
 
     Reads ``passthrough_data["qiskit_mitigation"]`` to reconstruct the per-pub
     mitigation task objects via ``load_tasks_from_result()``, then calls

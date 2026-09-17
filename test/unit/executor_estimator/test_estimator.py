@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for EstimatorV2 run method."""
+"""Unit tests for Estimator run method."""
 
 import warnings
 from unittest.mock import MagicMock, patch
@@ -144,8 +144,8 @@ class TestEstimatorUsingOptions(IBMTestCase):
 
 
 @ddt
-class TestEstimatorV2Run(IBMTestCase):
-    """Tests for the EstimatorV2.run() method."""
+class TestEstimatorRun(IBMTestCase):
+    """Tests for the Estimator.run() method."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -503,8 +503,8 @@ class TestEstimatorV2Run(IBMTestCase):
             estimator.run([(circuit, observable)], precision=0.03125)
 
 
-class TestEstimatorV2SimulatorMode(IBMTestCase):
-    """Tests for EstimatorV2 with local simulator backends."""
+class TestEstimatorSimulatorMode(IBMTestCase):
+    """Tests for Estimator with local simulator backends."""
 
     def test_simulator_mode_returns_result(self):
         """Test that local mode returns expectation values close to the ideal.
