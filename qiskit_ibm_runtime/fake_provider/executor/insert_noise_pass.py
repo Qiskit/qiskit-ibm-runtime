@@ -73,7 +73,7 @@ class InsertNoisePass(TransformationPass):
         noise_dict: Map from gate-name tags to Pauli-Lindblad noise maps.  Pass ``None`` to
             perform a no-op (no noise is inserted).
         noise_after: Map from tags to bools indicated whether to inject the noise before (False)
-            or after (True) the ideal gate operation.
+            or after (True) the ideal gate operation. Pass ``None`` to apply after to all layers.
         noise_scale: Multiplicative scale factor applied to all noise rates.
         warn_absent: If ``True`` (default), emit a warning when a tagged barrier's tag is not
             found in ``noise_dict``.  Set to ``False`` to suppress these warnings.
@@ -82,14 +82,14 @@ class InsertNoisePass(TransformationPass):
     def __init__(
         self,
         noise_dict: dict[str, PauliLindbladMap] | None,
-        noise_after: dict[str, bool],
+        noise_after: dict[str, bool] | None = None,
         noise_scale: float = 1.0,
         warn_absent: bool = True,
     ):
         self._noise_dict = noise_dict or {}
         self._noise_scale = noise_scale
         self._warn_absent = warn_absent
-        self._noise_after = noise_after
+        self._noise_after = noise_after or {}
 
         self._pattern = re.compile(r"^(?P<pos>[A-Za-z])(?P<idx>\d+)(.*?)tag=(?P<tag>.+)(.*?)")
 

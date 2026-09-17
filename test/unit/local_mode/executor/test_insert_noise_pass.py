@@ -54,7 +54,7 @@ class TestInsertNoisePass(IBMTestCase):
         """Test `noise_after` for different types of barriers."""
         inject_noise = InsertNoisePass(
             noise_dict={"r0": PauliLindbladMap.from_list([("XI", 0.1), ("IX", 0.2)])},
-            noise_after=noise_after,
+            noise_after={"r0": noise_after},
         )
         pm = PassManager([inject_noise])
         result = pm.run(_circuit_with_barrier(2, label=f"{barrier_type}0@tag=r0"))
@@ -112,9 +112,7 @@ class TestInsertNoisePass(IBMTestCase):
         circuit.append(Barrier(2, label="R0@tag=r0"), [2, 0])
 
         noise_dict = {"r0": PauliLindbladMap.from_list([("XI", 0.1)])}
-        result = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_after=True)]).run(
-            circuit
-        )
+        result = PassManager([InsertNoisePass(noise_dict=noise_dict)]).run(circuit)
 
         noise_instrs = [instr for instr in result.data if instr.operation.name == "quantum_channel"]
         self.assertEqual(len(noise_instrs), 1)
@@ -138,7 +136,7 @@ class TestInsertNoisePass(IBMTestCase):
         circuit = QuantumCircuit(4)
         circuit.append(Barrier(3, label="R0@tag=r0"), [3, 0, 1])
 
-        noisy = PassManager([InsertNoisePass(noise_dict=noise_dict, noise_after=True)]).run(circuit)
+        noisy = PassManager([InsertNoisePass(noise_dict=noise_dict)]).run(circuit)
         noisy.save_density_matrix()
 
         result = AerSimulator(method="density_matrix").run(noisy).result()
