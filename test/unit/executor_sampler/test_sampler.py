@@ -24,8 +24,11 @@ from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
+from ...registries import OneInstanceDryRunRegistry
 from ...utils import get_mocked_backend
 
 
@@ -86,6 +89,20 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
 
         quantum_program = mock_run.call_args[0][0]
         self.assertEqual(quantum_program.shots, 4096)
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Sampler can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        sampler = SamplerV2(mode=backend)
+
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        job = sampler.run([circuit], dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")
 
 
 class TestSamplerV2ParametricCircuits(IBMTestCase):
