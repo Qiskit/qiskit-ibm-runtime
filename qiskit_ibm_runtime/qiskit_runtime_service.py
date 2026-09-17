@@ -1101,7 +1101,6 @@ class QiskitRuntimeService:
             backend_name = re.sub(r"^[^_]+", "mock", backend.name)
 
             try:
-                # TODO: fractional gates and calibration id?
                 backend = self.backend(name=backend_name)
             except QiskitBackendNotFoundError as ex:
                 raise QiskitBackendNotFoundError(
