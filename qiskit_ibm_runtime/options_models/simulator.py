@@ -178,4 +178,9 @@ class SimulatorOptions(BaseOptionsModel):
     """Random seed to control sampling."""
 
     warn_absent: bool = True
-    """Whether to emit a warning when an entry is missing in :attr:`layer_noise_dict`."""
+    """Whether to warn when a :attr:`layer_noise_model` entry names a layer no circuit contains.
+
+    Such an entry's noise is never applied, which usually means the noise model was built from
+    different circuits than the ones being run.  Nothing is reported for the reverse case, a layer
+    that carries no noise, because a noise model covering only some layers is normal.
+    """

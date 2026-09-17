@@ -72,6 +72,22 @@ def _parse_barrier_label(label: str) -> _BarrierLabel | None:
     return _BarrierLabel(match["pos"], params)
 
 
+def barrier_tags(circuit: QuantumCircuit) -> set[str]:
+    """Return the layer tags carried by a circuit's box barriers.
+
+    Args:
+        circuit: A flattened template circuit.
+    """
+    tags = set()
+    for instruction in circuit.data:
+        # Qiskit has no public API for reading barrier labels; _label is the only option.
+        if instruction.operation.name != "barrier" or not (label := instruction.operation._label):  # noqa: SLF001
+            continue
+        if (parsed := _parse_barrier_label(label)) and (tag := parsed.params.get("tag")):
+            tags.add(tag)
+    return tags
+
+
 def pauli_lindblad_error(
     pauli_lindblad_map: PauliLindbladMap, noise_scale: float = 1.0
 ) -> PauliLindbladError:

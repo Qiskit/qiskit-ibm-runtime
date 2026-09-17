@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import warnings
 from itertools import islice, product
 from typing import TYPE_CHECKING, Any
 from unittest import skipUnless
@@ -702,3 +703,44 @@ class TestNoisePosition(IBMTestCase):
 
         expected = EXPECTED_P1 if applies else 0.0
         np.testing.assert_allclose(actual, [expected] * 2, atol=0.02 if applies else 1e-12)
+
+    @data(
+        # The program's circuit holds no layers, so the entry's layer is absent from it.
+        ("unboxed", True, True),
+        ("unboxed", False, False),
+        # The program is built from the very circuit the entry names, so nothing goes unapplied.
+        ("boxed", True, False),
+    )
+    @unpack
+    def test_warn_absent_reports_only_noise_that_was_not_applied(
+        self, program_of, warn_absent, warns
+    ):
+        """An entry whose layer is absent is noise the caller asked for and did not get.
+
+        The ``boxed`` case pins the reverse non-behaviour: the noise covers the layer, but nothing
+        covers that layer's ``L`` and ``M`` positions, and an uncovered position is not reported.
+        """
+        circuit = QuantumCircuit(2, 2)
+        with circuit.box(annotations=[Twirl(dressing="left"), Tag("measure")]):
+            circuit.measure([0, 1], [0, 1])
+
+        program = QuantumProgram(shots=8)
+        if program_of == "boxed":
+            template_circuit, samplex = build(circuit)
+            program.append_samplex_item(template_circuit, samplex=samplex, shape=(1,))
+        else:
+            unboxed = QuantumCircuit(2, 2)
+            unboxed.measure([0, 1], [0, 1])
+            program.append_circuit_item(unboxed)
+
+        options = SimulatorOptions(
+            layer_noise_model=[(circuit.data[0], NOISE)], warn_absent=warn_absent
+        )
+
+        if warns:
+            with self.assertWarnsRegex(UserWarning, r"\['measure'\]"):
+                run_quantum_program(AerSimulator(method="stabilizer"), program, options)
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                run_quantum_program(AerSimulator(method="stabilizer"), program, options)

@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import warnings
 from copy import deepcopy
 from typing import TYPE_CHECKING
 
@@ -31,7 +32,7 @@ from samplomatic.utils import get_annotation
 from ...options_models.simulator import BARRIER_POSITIONS
 from ...results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
-from .insert_noise_pass import InsertNoisePass, pauli_lindblad_error
+from .insert_noise_pass import InsertNoisePass, barrier_tags, pauli_lindblad_error
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -145,6 +146,25 @@ def _build_noise_dict(
     return noise_dict
 
 
+def _warn_unapplied_noise(
+    noise_dict: dict[str, dict[str, PauliLindbladMap]], program: QuantumProgram
+) -> None:
+    """Warn about noise that no circuit in the program can receive.
+
+    Args:
+        noise_dict: The resolved noise, keyed by layer tag.
+        program: The program the noise is about to be applied to.
+    """
+    present = set().union(*(barrier_tags(item.circuit) for item in program.items))
+    if unapplied := sorted(set(noise_dict) - present):
+        warnings.warn(
+            f"Noise was supplied for the layer tag(s) {unapplied}, which match no layer in this "
+            f"program, so that noise has not been applied. This usually means the noise model was "
+            f"built from different circuits than the ones being run.",
+            stacklevel=2,
+        )
+
+
 def _prepend_preparation_noise(
     circuit: QuantumCircuit, preparation_noise: PreparationNoise
 ) -> QuantumCircuit:
@@ -203,6 +223,8 @@ def run_quantum_program(
     noise_dict: dict[str, dict[str, PauliLindbladMap]] = {}
     if layer_noise_model := options.layer_noise_model:
         noise_dict = _build_noise_dict(layer_noise_model)
+        if options.warn_absent:
+            _warn_unapplied_noise(noise_dict, program)
 
     result_list = []
     for prog_item in program.items:
