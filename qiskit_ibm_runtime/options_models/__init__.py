@@ -47,6 +47,9 @@ Suboptions
    PostCircuitBitFlipChecksOptions
    PostSelectionOptions
    PreCircuitBitFlipChecksOptions
+   SamplerOptions
+   EstimatorOptions
+   ResilienceOptions
 
 """
 
@@ -56,8 +59,10 @@ from .bit_flip_checks import (
     PreCircuitBitFlipChecksOptions,
 )
 from .environment import EnvironmentOptions
+from .estimator import EstimatorOptions
 from .execution import ExecutionOptions
 from .executor import ExecutorOptions
 from .noise_learner_v3 import NoiseLearnerV3Options
 from .post_selection import PostSelectionOptions
+from .resilience import ResilienceOptions
 from .sampler import SamplerOptions

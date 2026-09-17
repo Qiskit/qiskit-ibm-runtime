@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers import EstimatorPubLike
     from qiskit.providers import BackendV2
 
+    from .. import options  # Needed as sphinx is unable to solve conflicts.
     from ..batch import Batch
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
@@ -109,7 +110,8 @@ class NoiseLearner:
             `Qiskit Runtime documentation <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about the execution modes.
 
-        options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
+        options: :class:`NoiseLearnerOptions`. Alternatively,
+            :class:`~qiskit_ibm_runtime.options.EstimatorOptions` can be
             provided for convenience, in which case the estimator options get reformatted into
             noise learner options and all the irrelevant fields are ignored.
 
@@ -124,7 +126,7 @@ class NoiseLearner:
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
-        options: dict | NoiseLearnerOptions | EstimatorOptions | None = None,
+        options: dict | NoiseLearnerOptions | options.EstimatorOptions | None = None,
     ):
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):

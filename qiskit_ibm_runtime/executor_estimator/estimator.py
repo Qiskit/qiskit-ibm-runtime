@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor-based EstimatorV2 primitive."""
+"""Client-side EstimatorV2 primitive."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 class EstimatorV2(BaseEstimatorV2):
-    """Executor-based EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
+    """Client-side EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of EstimatorV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
@@ -89,8 +89,7 @@ class EstimatorV2(BaseEstimatorV2):
             for more information about execution modes.
 
         options: Estimator options.
-            See
-            :class:`~qiskit_ibm_runtime.options_models.estimator.EstimatorOptions`
+            See :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`
             for all available options.
     """
 

@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
+    from . import options  # Needed as sphinx is unable to solve conflicts.
     from .batch import Batch
     from .runtime_job_v2 import RuntimeJobV2
     from .session import Session
@@ -79,7 +80,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
-        options: dict | SamplerOptions | None = None,
+        options: dict | options.SamplerOptions | None = None,
     ):
         self.options: SamplerOptions
         BaseSamplerV2.__init__(self)
