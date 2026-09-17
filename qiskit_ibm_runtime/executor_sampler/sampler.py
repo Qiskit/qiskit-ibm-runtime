@@ -215,3 +215,7 @@ class SamplerV2(BaseSamplerV2):
         )
 
         return executor.run(quantum_program)
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
