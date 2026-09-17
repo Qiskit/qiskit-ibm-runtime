@@ -31,6 +31,7 @@ from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
+    from qiskit.circuit import CircuitInstruction
     from qiskit.providers import BackendV2
 
     from ...options_models.simulator import SimulatorOptions
@@ -48,6 +49,25 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
     from the stabilizer simulation method.
     """
     return np.round(values / (np.pi / 2), decimals=decimals) * (np.pi / 2)
+
+
+def _before_or_after(layer: CircuitInstruction) -> bool:
+    """Determines if noise needs to be injected before or after the ideal gate operation.
+
+    Args:
+        layer: The layer to evaluate.
+
+    Returns:
+        Whether to inject noise before or after the ideal gate operation.
+    """
+    from qiskit_ibm_runtime.executor_estimator.utils import find_box_type
+
+    btype = find_box_type(layer)
+    # TODO: also look at the dressing to make a decision
+    if btype == "measurement":
+        return False
+
+    return True
 
 
 @HAS_AER.require_in_call
@@ -79,16 +99,24 @@ def run_quantum_program(
     rng = np.random.default_rng(seed)
 
     noise_dict = {}
+    noise_after = {}
     if layer_noise_model := options.layer_noise_model:
         for instr, pauli_map in layer_noise_model:
             if annotation := get_annotation(instr.operation, Tag):
                 noise_dict[annotation.ref] = pauli_map
+                noise_after[annotation.ref] = _before_or_after(instr)
 
     result_list = []
     for prog_item in program.items:
         if noise_dict:
             circuit = PassManager(
-                [InsertNoisePass(noise_dict=noise_dict, warn_absent=options.warn_absent)]
+                [
+                    InsertNoisePass(
+                        noise_dict=noise_dict,
+                        noise_after=noise_after,
+                        warn_absent=options.warn_absent,
+                    )
+                ]
             ).run(prog_item.circuit)
         else:
             circuit = prog_item.circuit
