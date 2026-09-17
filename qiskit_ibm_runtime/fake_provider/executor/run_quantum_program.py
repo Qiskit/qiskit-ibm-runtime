@@ -22,7 +22,7 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
-from samplomatic import Tag
+from samplomatic import Tag, Twirl
 from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.utils import get_annotation
 
@@ -62,9 +62,10 @@ def _before_or_after(layer: CircuitInstruction) -> bool:
     """
     from qiskit_ibm_runtime.executor_estimator.utils import find_box_type
 
-    btype = find_box_type(layer)
-    # TODO: also look at the dressing to make a decision
-    if btype == "measurement":
+    box_type = find_box_type(layer)
+    dressing = get_annotation(layer.operation, Twirl).dressing.value
+
+    if box_type == "measurement" and dressing == "left":
         return False
 
     return True
