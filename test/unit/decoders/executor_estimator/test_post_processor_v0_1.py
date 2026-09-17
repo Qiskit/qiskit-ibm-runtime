@@ -20,7 +20,7 @@ from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     _build_program_result_metadata,
-    estimator_post_processor_v0_1,
+    estimator_v2_post_processor_v0_1,
 )
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
@@ -100,7 +100,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
     def test_post_processor_empty_result(self):
         """Empty result list returns an empty PrimitiveResult."""
         result = QuantumProgramResult(data=[], metadata=None, passthrough_data={})
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
         self.assertEqual(len(primitive_result), 0)
 
     def test_post_processor_missing_passthrough_data(self):
@@ -111,7 +111,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
             passthrough_data={"qiskit_mitigation": []},
         )
         with self.assertRaises(ValueError):
-            estimator_post_processor_v0_1(result)
+            estimator_v2_post_processor_v0_1(result)
 
     def test_post_processor_single_pub_vanilla(self):
         """Single vanilla pub returns correct expectation value."""
@@ -122,7 +122,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         pub = _make_pub(observable="ZZ")
         result = _prepare_result([pub], opts, [meas_data])
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         self.assertEqual(len(primitive_result), 1)
         self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), 1.0)
@@ -139,7 +139,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         pub1 = _make_pub(observable="ZZ")
         result = _prepare_result([pub0, pub1], opts, [meas_0, meas_1])
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         self.assertEqual(len(primitive_result), 2)
         self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), 1.0)
@@ -155,7 +155,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         pub = EstimatorPub.coerce((circuit, SparsePauliOp.from_list([("ZZ", 1.0)])), None)
         result = _prepare_result([pub], opts, [meas_data])
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         self.assertEqual(
             primitive_result[0].metadata["circuit_metadata"],
@@ -171,7 +171,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         pub = _make_pub(observable="ZZ")
         result = _prepare_result([pub], opts, [meas_data])
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
         data_bin = primitive_result[0].data
 
         self.assertAlmostEqual(
@@ -200,7 +200,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         pub = _make_pub(observable="ZZ")
         result = _prepare_result([pub], opts, [meas_data])
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
         data_bin = primitive_result[0].data
 
         self.assertAlmostEqual(float(data_bin.evs.ravel()[0]), 1 / 3, places=5)
@@ -227,7 +227,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         pub = _make_pub(observable="ZZ")
         result = _prepare_result([pub], opts, [meas_data], precision=0.03125)
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         metadata = primitive_result.metadata
         self.assertIn("shots", metadata)
@@ -248,7 +248,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         # Inject real ItemMetadata into the result item
         result._data[0] = QuantumProgramItemResult({"_meas": meas_data}, metadata=item_meta)
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         compilation = primitive_result[0].metadata.get("compilation", {})
         self.assertIn("scheduler_timing", compilation)
@@ -265,7 +265,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
 
         result._data[0] = QuantumProgramItemResult({"_meas": meas_data}, metadata=sim_meta)
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         self.assertIn("executor", primitive_result[0].metadata)
         self.assertEqual(primitive_result[0].metadata["executor"], sim_meta)
@@ -340,7 +340,7 @@ class TestEstimatorPostProcessorPEC(IBMTestCase):
         )
         result._semantic_role = "estimator_v2"
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), gamma, places=5)
 
@@ -407,7 +407,7 @@ class TestEstimatorPostProcessorPEC(IBMTestCase):
         )
         result._semantic_role = "estimator_v2"
 
-        primitive_result = estimator_post_processor_v0_1(result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         # broadcast_shapes(obs_shape=(2,2), param_shape=()) == (2,2)
         expected_shape = np.broadcast_shapes(obs_shape, pub.parameter_values.shape)

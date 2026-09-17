@@ -33,7 +33,7 @@ from ibm_quantum_schemas.executor.version_2_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_2_0,
 )
 
-from ..executor_estimator.post_processor_v0_1 import estimator_post_processor_v0_1
+from ..executor_estimator.post_processor_v0_1 import estimator_v2_post_processor_v0_1
 from ..executor_sampler.post_processor_v0_1 import sampler_v2_post_processor_v0_1
 from ..result_decoder import ResultDecoder
 from .converters import (
@@ -49,7 +49,7 @@ SUPPORTED_POST_PROCESSORS = {
         "v0.1": sampler_v2_post_processor_v0_1,
     },
     "estimator_v2": {
-        "v0.1": estimator_post_processor_v0_1,
+        "v0.1": estimator_v2_post_processor_v0_1,
     },
 }
 """The available post processors.

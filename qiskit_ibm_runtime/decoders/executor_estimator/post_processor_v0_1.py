@@ -35,7 +35,7 @@ from ...results.quantum_program import ItemMetadata
 logger = logging.getLogger(__name__)
 
 
-def estimator_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
+def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
     """Convert a quantum program result to a primitives result for Estimator.
 
     Reads ``passthrough_data["qiskit_mitigation"]`` to reconstruct the per-pub
