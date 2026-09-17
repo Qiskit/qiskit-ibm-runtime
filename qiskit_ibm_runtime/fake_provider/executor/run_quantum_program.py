@@ -24,8 +24,9 @@ from qiskit.transpiler import PassManager
 from qiskit.utils.optionals import HAS_AER
 from samplomatic import Tag, Twirl
 from samplomatic.quantum_program import CircuitItem, SamplexItem
-from samplomatic.utils import get_annotation
+from samplomatic.utils import get_annotation, undress_box
 
+from ...exceptions import IBMInputValueError
 from ...results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
     from qiskit.circuit import CircuitInstruction
     from qiskit.providers import BackendV2
 
+    from ...executor_estimator.utils import BoxType
     from ...options_models.simulator import SimulatorOptions
     from ...quantum_program import QuantumProgram
 
@@ -51,6 +53,38 @@ def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
     return np.round(values / (np.pi / 2), decimals=decimals) * (np.pi / 2)
 
 
+def find_box_type(instruction: CircuitInstruction) -> BoxType:
+    """Find the type of :class:`~qiskit.circuit.BoxOp` that ``instruction`` contains.
+
+    Args:
+        instruction: The instruction to get the type of.
+
+    Returns:
+        The box type. Can be one of ``"gates"``, ``"measurement"``, or ``"unknown"``.
+
+    Raises:
+        IBMInputValueError: If ``instruction`` does not contain a box.
+    """
+    box = instruction.operation
+    if (name := box.name) != "box":
+        raise IBMInputValueError(f"Expected a 'box' but found '{name}'.")
+
+    undressed_box = undress_box(box)
+
+    if len(undressed_box.body) == 0:
+        return "gates"
+
+    all_gates = all(op.is_standard_gate() or op.name == "barrier" for op in undressed_box.body)
+    all_measurement = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
+
+    if all_gates and not all_measurement:
+        return "gates"
+    elif not all_gates and all_measurement:
+        return "measurement"
+
+    return "unknown"
+
+
 def _before_or_after(layer: CircuitInstruction) -> bool:
     """Determines if noise needs to be injected before or after the ideal gate operation.
 
@@ -60,8 +94,6 @@ def _before_or_after(layer: CircuitInstruction) -> bool:
     Returns:
         Whether to inject noise before or after the ideal gate operation.
     """
-    from qiskit_ibm_runtime.executor_estimator.utils import find_box_type
-
     box_type = find_box_type(layer)
     dressing = get_annotation(layer.operation, Twirl).dressing.value
 
