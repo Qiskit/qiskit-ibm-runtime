@@ -50,7 +50,7 @@ under `qiskit_ibm_runtime/` and executor-based primitives under
 `qiskit_ibm_runtime/executor_*/`. Legacy primitives have their options defined in
 `qiskit_ibm_runtime/options`, while the executor-based have them in
 `qiskit_ibm_runtime/options_models`. Verify you are working on the right set. Executor-based
-primitives are sometimes referred to as wrappers.
+primitives were sometimes referred to internally as "wrappers".
 
 ## References
 
