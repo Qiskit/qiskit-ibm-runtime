@@ -21,9 +21,12 @@ from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
+from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
+from ...registries import OneInstanceDryRunRegistry
 from ...utils import get_mocked_backend, get_mocked_session
 
 
@@ -163,3 +166,12 @@ class TestExecutor(IBMTestCase):
             executor = Executor(mode=backend)
             selected_run = executor.run(self.program)
             self.assertEqual(selected_run, "service")
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Executor can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        executor = Executor(mode=backend)
+        job = executor.run(self.program, dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")

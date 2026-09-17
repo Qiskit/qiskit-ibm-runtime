@@ -126,6 +126,18 @@ def production_only(func):
     return _wrapper
 
 
+def staging_only(func):
+    """Decorator that runs a test only on staging services."""
+
+    @wraps(func)
+    def _wrapper(self, *args, **kwargs):
+        if "dev" not in self.dependencies.url and "test" not in self.dependencies.url:
+            raise SkipTest(f"Skipping integration test. {self} is not supported on production.")
+        func(self, *args, **kwargs)
+
+    return _wrapper
+
+
 def get_integration_test_config():
     """Return a tuple with the specified configuration from env vars."""
     token, url, instance, qpu = (
