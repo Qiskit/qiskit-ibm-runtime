@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers import EstimatorPubLike
     from qiskit.providers import BackendV2
 
-    from .. import options as legacy_options  # Needed as sphinx is unable to solve conflicts.
+    from .. import options  # Needed as sphinx is unable to solve conflicts.
     from ..batch import Batch
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
@@ -125,7 +125,7 @@ class NoiseLearner:
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
-        options: dict | NoiseLearnerOptions | legacy_options.EstimatorOptions | None = None,
+        options: dict | NoiseLearnerOptions | options.EstimatorOptions | None = None,
     ):
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
