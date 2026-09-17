@@ -18,6 +18,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import numpy as np
+from qiskit.circuit import QuantumCircuit
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
@@ -30,7 +31,7 @@ from samplomatic.utils import get_annotation
 from ...options_models.simulator import BARRIER_POSITIONS
 from ...results import QuantumProgramItemResult, QuantumProgramResult
 from .broadcast_sample import broadcast_sample
-from .insert_noise_pass import InsertNoisePass
+from .insert_noise_pass import InsertNoisePass, pauli_lindblad_error
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -39,7 +40,11 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ...options_models.simulator import PositionedLayerNoiseModel, SimulatorOptions
+    from ...options_models.simulator import (
+        PositionedLayerNoiseModel,
+        PreparationNoise,
+        SimulatorOptions,
+    )
     from ...quantum_program import QuantumProgram
 
 if HAS_AER:
@@ -140,6 +145,24 @@ def _build_noise_dict(
     return noise_dict
 
 
+def _prepend_preparation_noise(
+    circuit: QuantumCircuit, preparation_noise: PreparationNoise
+) -> QuantumCircuit:
+    """Return ``circuit`` with a channel for each entry placed ahead of everything it contains.
+
+    This sits outside :class:`InsertNoisePass` because it has nothing to do with barriers: it
+    applies whether or not the circuit has a preparation layer to hang noise off.
+
+    Args:
+        circuit: The circuit to prepend to.
+        preparation_noise: Noise to apply, keyed by the qubits it acts on.
+    """
+    prefix = QuantumCircuit(*circuit.qregs, *circuit.cregs)
+    for qubits, noise in preparation_noise.items():
+        prefix.append(pauli_lindblad_error(noise), list(qubits))
+    return prefix.compose(circuit)
+
+
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
     """Round angles to the nearest multiple of π/2 at ``decimals`` decimal places.
 
@@ -183,10 +206,11 @@ def run_quantum_program(
 
     result_list = []
     for prog_item in program.items:
+        circuit = prog_item.circuit
         if noise_dict:
-            circuit = PassManager([InsertNoisePass(noise_dict=noise_dict)]).run(prog_item.circuit)
-        else:
-            circuit = prog_item.circuit
+            circuit = PassManager([InsertNoisePass(noise_dict=noise_dict)]).run(circuit)
+        if options.preparation_noise:
+            circuit = _prepend_preparation_noise(circuit, options.preparation_noise)
 
         if isinstance(prog_item, CircuitItem):
             if prog_item.circuit_arguments is not None:

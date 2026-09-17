@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Sequence
 
     from qiskit.transpiler import CouplingMap
+    from samplomatic.samplex import Samplex
 
 
 if optionals.HAS_AER:
@@ -83,13 +84,38 @@ def generate_circuit(
     return qc_boxed, active_qubits
 
 
-READOUT_RATE = 0.4
-"""Rate for the readout-error tests, large enough to separate outcomes in a few thousand shots."""
+NOISE_RATE = 0.4
+"""Rate for the noise-position tests, large enough to separate outcomes in a few thousand shots."""
 
-READOUT_NOISE = PauliLindbladMap.from_list([("XI", READOUT_RATE), ("IX", READOUT_RATE)])
+NOISE = PauliLindbladMap.from_list([("XI", NOISE_RATE), ("IX", NOISE_RATE)])
 
-EXPECTED_READOUT_P1 = (1 - np.exp(-2 * READOUT_RATE)) / 2
-"""Bit-flip probability under ``READOUT_NOISE``."""
+ONE_QUBIT_NOISE = PauliLindbladMap.from_list([("X", NOISE_RATE)])
+
+EXPECTED_P1 = (1 - np.exp(-2 * NOISE_RATE)) / 2
+"""Bit-flip probability under ``NOISE``, for a channel placed where it can affect the outcome."""
+
+
+def _corrected_probability_of_one(
+    template_circuit: QuantumCircuit, samplex: Samplex, shots: int, **options: Any
+) -> np.ndarray:
+    """Run one samplex item and return the fraction of shots reading 1 on each qubit.
+
+    Args:
+        template_circuit: The built template.
+        samplex: Its samplex.
+        shots: Shots per run.
+        options: Passed to :class:`SimulatorOptions`, so a caller chooses how to place the noise.
+    """
+    program = QuantumProgram(shots=shots)
+    program.append_samplex_item(template_circuit, samplex=samplex, shape=(1,))
+    result = run_quantum_program(
+        AerSimulator(method="stabilizer"),
+        program,
+        SimulatorOptions(seed_simulator=11, **options),
+    )[0]
+    # The boxes twirl the measurement; measurement_flips.c undoes that flip pattern.
+    outcome = np.logical_xor(result["c"], result["measurement_flips.c"])
+    return outcome.reshape(-1, outcome.shape[-1]).mean(axis=0)
 
 
 def readout_error_probability(
@@ -108,7 +134,7 @@ def readout_error_probability(
 
     Args:
         shots: Shots per run.
-        positions: One ``layer_noise_model`` entry per element, each placing ``READOUT_NOISE`` on
+        positions: One ``layer_noise_model`` entry per element, each placing ``NOISE`` on
             the measurement box at that position.  ``None`` omits the position from its entry.
         dressing: Which side to anchor the measurement box's dressing to.  A body-relative position
             resolves to a different barrier for each, while meaning the same thing physically.
@@ -140,22 +166,47 @@ def readout_error_probability(
     boxes = find_unique_box_instructions(circuit, undress_boxes=True, normalize_annotations=None)
     target_box = next(box for box in boxes if get_annotation(box.operation, Tag).ref == noisy_layer)
 
-    layer_noise_model = [
-        (target_box, READOUT_NOISE) if position is None else (target_box, READOUT_NOISE, position)
-        for position in positions
-    ]
+    return _corrected_probability_of_one(
+        template_circuit,
+        samplex,
+        shots,
+        layer_noise_model=[
+            (target_box, NOISE) if position is None else (target_box, NOISE, position)
+            for position in positions
+        ],
+    )
 
-    program = QuantumProgram(shots=shots)
-    program.append_samplex_item(template_circuit, samplex=samplex, shape=(1,))
-    result = run_quantum_program(
-        AerSimulator(method="stabilizer"),
-        program,
-        SimulatorOptions(layer_noise_model=layer_noise_model, seed_simulator=11),
-    )[0]
 
-    # The box twirls the measurement; measurement_flips.c undoes that flip pattern.
-    outcome = np.logical_xor(result["c"], result["measurement_flips.c"])
-    return outcome.reshape(-1, outcome.shape[-1]).mean(axis=0)
+def preparation_error_probability(shots: int, placement: str) -> np.ndarray:
+    """Return the fraction of shots reading 1 on each qubit, for prep noise at ``placement``.
+
+    Both layers prepare and measure in the X basis with an ``h``, a single-qubit gate, so it is
+    absorbed into the layer's dressing and ends up upstream of every position except ``"L"``.  An
+    X-type error after an X-basis preparation is invisible, which is what separates the placements
+    that reach the preparation from those that do not.  A noiseless run reads 0 on every shot.
+
+    Args:
+        shots: Shots per run.
+        placement: ``"front"`` places the noise with ``preparation_noise``, as two single-qubit
+            regions so that both entries have to be applied for the result to come out right; a
+            barrier name places it on the preparation layer with ``layer_noise_model`` instead.
+    """
+    circuit = QuantumCircuit(2, 2)
+    with circuit.box(annotations=[Twirl(dressing="left"), Tag("prep")]):
+        circuit.h(0)
+        circuit.h(1)
+    with circuit.box(annotations=[Twirl(dressing="left"), Tag("measure")]):
+        circuit.h(0)
+        circuit.h(1)
+        circuit.measure([0, 1], [0, 1])
+
+    options: dict[str, Any] = (
+        {"preparation_noise": {(0,): ONE_QUBIT_NOISE, (1,): ONE_QUBIT_NOISE}}
+        if placement == "front"
+        else {"layer_noise_model": [(circuit.data[0], NOISE, placement)]}
+    )
+    template_circuit, samplex = build(circuit)
+    return _corrected_probability_of_one(template_circuit, samplex, shots, **options)
 
 
 @ddt
@@ -610,14 +661,14 @@ class TestNoisePosition(IBMTestCase):
         """
         actual = readout_error_probability(shots=4000, positions=[position], dressing=dressing)
 
-        expected = EXPECTED_READOUT_P1 if applies else 0.0
+        expected = EXPECTED_P1 if applies else 0.0
         np.testing.assert_allclose(actual, [expected] * 2, atol=0.02 if applies else 1e-12)
 
     def test_one_layer_takes_noise_at_distinct_positions_but_not_at_a_repeated_one(self):
         """Positions of a layer are independent entries; repeating one is a mistake."""
         # Both are accepted, and only the M entry can reach the measure.
         actual = readout_error_probability(shots=4000, positions=["M", "R"])
-        np.testing.assert_allclose(actual, [EXPECTED_READOUT_P1] * 2, atol=0.02)
+        np.testing.assert_allclose(actual, [EXPECTED_P1] * 2, atol=0.02)
 
         # Resolving the noise model happens before any item is simulated, so this raises up front.
         with self.assertRaisesRegex(ValueError, "two entries in 'layer_noise_model'"):
@@ -641,4 +692,13 @@ class TestNoisePosition(IBMTestCase):
         """
         actual = readout_error_probability(shots=4000, positions=[None], **kwargs)
 
-        np.testing.assert_allclose(actual, [EXPECTED_READOUT_P1] * 2, atol=0.02)
+        np.testing.assert_allclose(actual, [EXPECTED_P1] * 2, atol=0.02)
+
+    @data(("front", True), ("L", True), ("M", False), ("R", False))
+    @unpack
+    def test_preparation_noise(self, placement, applies):
+        """Test preparation error inserted at the beginning of circuit."""
+        actual = preparation_error_probability(shots=4000, placement=placement)
+
+        expected = EXPECTED_P1 if applies else 0.0
+        np.testing.assert_allclose(actual, [expected] * 2, atol=0.02 if applies else 1e-12)

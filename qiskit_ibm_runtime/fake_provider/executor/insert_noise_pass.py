@@ -72,6 +72,21 @@ def _parse_barrier_label(label: str) -> _BarrierLabel | None:
     return _BarrierLabel(match["pos"], params)
 
 
+def pauli_lindblad_error(
+    pauli_lindblad_map: PauliLindbladMap, noise_scale: float = 1.0
+) -> PauliLindbladError:
+    """Build the Aer error implementing a Pauli-Lindblad map, with its rates scaled.
+
+    Args:
+        pauli_lindblad_map: The map to realise.
+        noise_scale: Multiplicative scale factor applied to the rates.
+    """
+    return PauliLindbladError(
+        generators=pauli_lindblad_map.get_qubit_sparse_pauli_list_copy().to_pauli_list(),
+        rates=noise_scale * pauli_lindblad_map.rates,
+    )
+
+
 def _find_qubit(dag: DAGCircuit, qubit: Qubit) -> int:
     return dag.find_bit(qubit).index
 
@@ -161,11 +176,6 @@ class InsertNoisePass(TransformationPass):
         if len(pauli_lindblad_map) == 0:
             return None
 
-        pauli_lindblad_error = PauliLindbladError(
-            generators=pauli_lindblad_map.get_qubit_sparse_pauli_list_copy().to_pauli_list(),
-            rates=self._noise_scale * pauli_lindblad_map.rates,
-        )
-
         # The PauliLindbladMap's indices are interpreted in ascending physical-qubit order
         # of the parent DAG, so we apply the resulting error to the local qc.qubits in the
         # permutation that orders op_node.qargs by their physical index.
@@ -174,5 +184,8 @@ class InsertNoisePass(TransformationPass):
 
         qc = QuantumCircuit(op_node.num_qubits)
         qc.append(op_node.op, qc.qubits)
-        qc.append(pauli_lindblad_error, [qc.qubits[i] for i in plm_indices])
+        qc.append(
+            pauli_lindblad_error(pauli_lindblad_map, self._noise_scale),
+            [qc.qubits[i] for i in plm_indices],
+        )
         return circuit_to_dag(qc)

@@ -117,3 +117,17 @@ class TestSimulatorOptions(IBMTestCase):
         """
         with self.assertRaisesRegex(ValidationError, "is ambiguous for a layer"):
             SimulatorOptions(layer_noise_model=[(box, NOISE, position)])
+
+    @data(
+        # A key must name exactly the qubits its map is defined on ...
+        ({(0,): NOISE}, "but a noise model with 2"),
+        # ... wherever in the mapping the offending entry sits ...
+        ({(0, 1): NOISE, (2,): NOISE}, "but a noise model with 2"),
+        # ... and cannot name one qubit twice.
+        ({(0, 0): NOISE}, "repeated qubit"),
+    )
+    @unpack
+    def test_invalid_preparation_noise_is_rejected(self, preparation_noise, message):
+        """A key that does not match its map is a mistake, not a silently truncated channel."""
+        with self.assertRaisesRegex(ValidationError, message):
+            SimulatorOptions(preparation_noise=preparation_noise)

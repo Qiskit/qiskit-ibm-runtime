@@ -89,10 +89,30 @@ def validate_positioned_layer_noise_model(
                 f"The noise position {position!r} is ambiguous for a layer whose body holds "
                 f"nothing but single-qubit gates: those gates are absorbed into the layer's "
                 f"dressing, leaving 'before' and 'after' naming the same point. Name a barrier "
-                f"explicitly, one of {list(BARRIER_POSITIONS)}, instead."
+                f"explicitly, one of {list(BARRIER_POSITIONS)}, or use 'preparation_noise' if this "
+                f"is a preparation layer and the noise belongs before it."
             )
 
     return value
+
+
+def validate_preparation_noise(value: PreparationNoise) -> PreparationNoise:
+    """Validate the ``PreparationNoise``."""
+    for qubits, noise in value.items():
+        if len(set(qubits)) != len(qubits):
+            raise ValueError(f"Found the repeated qubit(s) {qubits} in a preparation noise key.")
+        if len(qubits) != noise.num_qubits:
+            raise ValueError(
+                f"Found the {len(qubits)} qubits {qubits} but a noise model with "
+                f"{noise.num_qubits}."
+            )
+    return value
+
+
+PreparationNoise: TypeAlias = Annotated[
+    dict[tuple[int, ...], Annotated[PauliLindbladMap, InstanceOf]],
+    AfterValidator(validate_preparation_noise),
+]
 
 
 PositionedLayerNoiseModel: TypeAlias = Annotated[
@@ -141,6 +161,17 @@ class SimulatorOptions(BaseOptionsModel):
     When simulating an estimator job, if this value is set to ``None``,
     it defaults to the value of
     :attr:`qiskit_ibm_runtime.options_models.ResilienceOptions.layer_noise_model`.
+    """
+
+    preparation_noise: PreparationNoise | None = None
+    """Noise applied at the very front of every circuit, keyed by the qubits it acts on.
+
+    Qubits are indexed as the circuit indexes them, and each map must be defined on exactly the
+    qubits of its key.
+
+    .. code-block:: python
+
+        options.simulator.preparation_noise = {(0, 1): prep_map, (5,): other_prep_map}
     """
 
     seed_simulator: int | None = None
