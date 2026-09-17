@@ -16,10 +16,12 @@
 
 When ``layer_noise_model`` is provided in :class:`~.SimulatorOptions`, Pauli-Lindblad noise
 is injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts
-three barriers around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
-labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default, noise is injected at
-the ``R`` (right) barriers, i.e. *after* the gate.  Use ``noise_after=False`` on
-:class:`~.InsertNoisePass` to target ``M`` barriers instead (noise *before* the gate).
+three barriers around each boxed layer — left (``L``), middle (``M``), and right (``R``) — with
+labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``). By default, noise is injected
+*after* the gate which selects the ``R`` or ``M`` barrier depending on the whether the gate has been
+dressed "left" or "right", respectively. A ``noise_after`` argument is provided to modify this
+selection on a per layer basis. For example, one can inject noise *after* for layers containing
+gates and *before* for layers containing measurement.
 
 The ``noise_dict`` format is:
 
