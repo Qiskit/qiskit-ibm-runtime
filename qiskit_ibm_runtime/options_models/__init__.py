@@ -23,15 +23,17 @@ Options that can be passed to the :class:`~qiskit_ibm_runtime.Executor` and
 Classes
 =======
 
-Base primitive options
-----------------------
+Primitive options
+------------------
 
 .. autosummary::
    :toctree: ../stubs/
    :nosignatures:
 
    ExecutorOptions
+   EstimatorOptions
    NoiseLearnerV3Options
+   SamplerOptions
 
 
 Suboptions
@@ -42,11 +44,20 @@ Suboptions
    :nosignatures:
 
    BitFlipChecksOptions
+   DynamicalDecouplingOptions
    EnvironmentOptions
    ExecutionOptions
+   MeasureNoiseLearningOptions
+   PecOptions
    PostCircuitBitFlipChecksOptions
    PostSelectionOptions
    PreCircuitBitFlipChecksOptions
+   ResilienceOptions
+   SamplerEnvironmentOptions
+   SamplerExecutionOptions
+   SimulatorOptions
+   TwirlingOptions
+   ZneOptions
 
 """
 
@@ -55,9 +66,17 @@ from .bit_flip_checks import (
     PostCircuitBitFlipChecksOptions,
     PreCircuitBitFlipChecksOptions,
 )
-from .environment import EnvironmentOptions
-from .execution import ExecutionOptions
+from .dynamical_decoupling import DynamicalDecouplingOptions
+from .environment import EnvironmentOptions, SamplerEnvironmentOptions
+from .estimator import EstimatorOptions
+from .execution import ExecutionOptions, SamplerExecutionOptions
 from .executor import ExecutorOptions
+from .measure_noise_learning import MeasureNoiseLearningOptions
 from .noise_learner_v3 import NoiseLearnerV3Options
+from .pec import PecOptions
 from .post_selection import PostSelectionOptions
+from .resilience import ResilienceOptions
 from .sampler import SamplerOptions
+from .simulator import SimulatorOptions
+from .twirling import TwirlingOptions
+from .zne import ZneOptions

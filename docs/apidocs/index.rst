@@ -22,4 +22,6 @@
    visualization
    circuit_library
    models
+   executor_sampler
+   executor_estimator
    ibm_quantum_schemas

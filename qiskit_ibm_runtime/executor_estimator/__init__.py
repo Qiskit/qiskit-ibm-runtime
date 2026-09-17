@@ -10,6 +10,21 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor-based EstimatorV2"""
+"""
+=========================================================================
+Executor-based EstimatorV2 (:mod:`qiskit_ibm_runtime.executor_estimator`)
+=========================================================================
+
+.. currentmodule:: qiskit_ibm_runtime.executor_estimator
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   EstimatorV2
+
+"""
 
 from .estimator import EstimatorV2
