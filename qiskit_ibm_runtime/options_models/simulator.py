@@ -122,7 +122,8 @@ class SimulatorOptions(BaseOptionsModel):
 
     Each entry is a ``(instruction, noise)`` pair, or a ``(instruction, noise, position)`` triple
     where ``position`` is one of :data:`NOISE_POSITIONS` and says where in the layer the noise acts.
-    An entry that omits the position defaults to ``"R"``, after the layer's body.
+    An entry that omits the position has one derived from what its layer's body does: a layer that
+    measures gets ``"before"``, and every other layer gets ``"after"``.
 
     A position is either body-relative, ``"before"`` or ``"after"`` the layer's body, or one of the
     barriers ``"L"``, ``"M"`` and ``"R"`` that samplomatic emits around the layer.

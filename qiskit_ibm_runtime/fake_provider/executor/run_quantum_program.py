@@ -47,9 +47,21 @@ if HAS_AER:
     from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
 
 
-#: The position used for an entry that does not name one, chosen to match the historical behaviour
-#: of inserting every channel after the layer body.
-DEFAULT_NOISE_POSITION = "R"
+def _derive_position(instruction: CircuitInstruction) -> str:
+    """Derive a noise position from an instruction.
+
+    If any measure instructions occur, set to ``"before"``, otherwise ``"after"``.
+
+    Args:
+        instruction: The boxed layer the noise belongs to.
+
+    Returns:
+        A body-relative position, still to be resolved against the layer's dressing.
+    """
+    if any(operation.name == "measure" for operation in instruction.operation.body.data):
+        return "before"
+    return "after"
+
 
 #: Which barrier a body-relative position resolves to, per dressing.  A left-dressed layer flattens
 #: to ``L | dressing | M | body | R`` and a right-dressed one to ``L | body | M | dressing | R``, so
@@ -115,7 +127,7 @@ def _build_noise_dict(
             continue
 
         position = _resolve_position(
-            instruction, entry[2] if len(entry) == 3 else DEFAULT_NOISE_POSITION
+            instruction, entry[2] if len(entry) == 3 else _derive_position(instruction)
         )
         by_position = noise_dict.setdefault(tag.ref, {})
         if position in by_position:

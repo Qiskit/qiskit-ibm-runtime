@@ -93,7 +93,11 @@ EXPECTED_READOUT_P1 = (1 - np.exp(-2 * READOUT_RATE)) / 2
 
 
 def readout_error_probability(
-    shots: int, positions: Sequence[str | None], dressing: str = "left"
+    shots: int,
+    positions: Sequence[str | None],
+    dressing: str = "left",
+    also_reset: bool = False,
+    noisy_layer: str = "measure",
 ) -> np.ndarray:
     """Return the fraction of shots reading 1 on each qubit, given noise at ``positions``.
 
@@ -108,6 +112,12 @@ def readout_error_probability(
             the measurement box at that position.  ``None`` omits the position from its entry.
         dressing: Which side to anchor the measurement box's dressing to.  A body-relative position
             resolves to a different barrier for each, while meaning the same thing physically.
+        also_reset: Whether the measured layer resets after measuring.  The recorded bit is already
+            written by then, so this changes what the layer *is* without changing what it reads.
+        noisy_layer: Which layer carries the noise.  ``"reset"`` adds a resetting layer and targets
+            that instead, so that noise placed before its body is wiped and noise placed after it
+            survives — the only way to tell those two apart by simulation.  Not combinable with
+            ``dressing="right"``, which cannot build with a reset upstream of it.
 
     Returns:
         The fraction of shots reading 1, per qubit.
@@ -115,19 +125,23 @@ def readout_error_probability(
     circuit = QuantumCircuit(2, 2)
     with circuit.box(annotations=[Twirl(dressing="left"), Tag("layer")]):
         circuit.cz(0, 1)
+    if noisy_layer == "reset":
+        with circuit.box(annotations=[Twirl(dressing="left"), Tag("reset")]):
+            circuit.reset(0)
+            circuit.reset(1)
+
     with circuit.box(annotations=[Twirl(dressing=dressing), Tag("measure")]):
         circuit.measure([0, 1], [0, 1])
+        if also_reset:
+            circuit.reset(0)
+            circuit.reset(1)
 
     template_circuit, samplex = build(circuit)
     boxes = find_unique_box_instructions(circuit, undress_boxes=True, normalize_annotations=None)
-    measurement_box = next(
-        box for box in boxes if get_annotation(box.operation, Tag).ref == "measure"
-    )
+    target_box = next(box for box in boxes if get_annotation(box.operation, Tag).ref == noisy_layer)
 
     layer_noise_model = [
-        (measurement_box, READOUT_NOISE)
-        if position is None
-        else (measurement_box, READOUT_NOISE, position)
+        (target_box, READOUT_NOISE) if position is None else (target_box, READOUT_NOISE, position)
         for position in positions
     ]
 
@@ -576,7 +590,6 @@ class TestNoisePosition(IBMTestCase):
         ("left", "M", True),
         ("left", "L", True),
         ("left", "R", False),
-        ("left", None, False),
         ("left", "before", True),
         ("left", "after", False),
         ("right", "before", True),
@@ -589,8 +602,7 @@ class TestNoisePosition(IBMTestCase):
         """``R`` sits after the body, so its channel acts after the ``measure`` and does nothing.
 
         It reads exactly zero, matching a run with no noise model at all, which is what makes it a
-        silent no-op rather than a small effect.  ``position=None`` is an entry naming no position,
-        which defaults to ``R``.
+        silent no-op rather than a small effect.
 
         A body-relative name is resolved against the dressing, so ``before`` is the ``M`` barrier
         for a left-dressed layer and ``L`` for a right-dressed one.  Resolving to a fixed barrier
@@ -610,3 +622,23 @@ class TestNoisePosition(IBMTestCase):
         # Resolving the noise model happens before any item is simulated, so this raises up front.
         with self.assertRaisesRegex(ValueError, "two entries in 'layer_noise_model'"):
             readout_error_probability(shots=8, positions=["M", "M"])
+
+    @data(
+        {},
+        # A layer that measures and resets still derives `before`: one entry cannot carry the two
+        # different maps that measuring and resetting want, and the measurement is the half that is
+        # otherwise silently lost.
+        {"also_reset": True},
+        # A layer that only resets derives `after`, so its noise survives the reset instead of being
+        # wiped by it.
+        {"noisy_layer": "reset"},
+    )
+    def test_an_entry_with_no_position_derives_one_from_what_the_layer_does(self, kwargs):
+        """The derived position follows the body: ``before`` if it measures, ``after`` otherwise.
+
+        Every case here reads nonzero, but for opposite reasons — which is what makes the pair a
+        real check rather than one that a constant derivation would also satisfy.
+        """
+        actual = readout_error_probability(shots=4000, positions=[None], **kwargs)
+
+        np.testing.assert_allclose(actual, [EXPECTED_READOUT_P1] * 2, atol=0.02)
