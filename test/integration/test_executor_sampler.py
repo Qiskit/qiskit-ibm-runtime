@@ -17,7 +17,7 @@ from ddt import data, ddt, unpack
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.executor_sampler import Sampler
 from qiskit_ibm_runtime.options_models import SamplerOptions
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -54,7 +54,7 @@ class TestSampler(IBMIntegrationTestCase):
         options.twirling.enable_gates = twirling
         options.default_shots = 1000
 
-        sampler = SamplerV2(self.backend, options)
+        sampler = Sampler(self.backend, options)
         job = sampler.run(pubs)
 
         results = job.result()
@@ -85,7 +85,7 @@ class TestSampler(IBMIntegrationTestCase):
         options.twirling.num_randomizations = num_randomizations
         options.twirling.shots_per_randomization = shots_per_randomization
 
-        sampler = SamplerV2(self.backend, options)
+        sampler = Sampler(self.backend, options)
         job = sampler.run([(isa_circuit, parameter_values)])
 
         results = job.result()

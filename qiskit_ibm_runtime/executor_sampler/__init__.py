@@ -27,4 +27,4 @@ Classes
 
 """
 
-from .sampler import SamplerV2
+from .sampler import Sampler

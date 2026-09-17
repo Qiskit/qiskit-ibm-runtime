@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SamplerV2(BaseSamplerV2):
+class Sampler(BaseSamplerV2):
     """Client-side Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of SamplerV2 built on top of the Executor primitive,

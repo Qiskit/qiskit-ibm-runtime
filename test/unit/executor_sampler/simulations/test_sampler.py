@@ -22,7 +22,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.quantum_info import Statevector, hellinger_fidelity
 from qiskit_aer import AerSimulator
 
-from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.executor_sampler import Sampler
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -94,7 +94,7 @@ class TestSampler(IBMTestCase):
 
         pubs = [SamplerPub.coerce([circuit, parameters])]
 
-        sampler = SamplerV2(self.backend)
+        sampler = Sampler(self.backend)
 
         sampler.options.twirling.enable_gates = enable_gates
         sampler.options.twirling.enable_measure = enable_measure

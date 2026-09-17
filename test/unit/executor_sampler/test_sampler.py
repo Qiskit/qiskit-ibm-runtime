@@ -23,7 +23,7 @@ from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.executor_sampler import Sampler
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend
@@ -53,7 +53,7 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
         circuit3.x(0)
         circuit3.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit1, circuit2, circuit3], shots=2048)
 
         quantum_program = mock_run.call_args[0][0]
@@ -81,7 +81,7 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit])  # No shots specified
 
         quantum_program = mock_run.call_args[0][0]
@@ -106,7 +106,7 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         circuit.measure_all()
 
         param_values = [0.1, 0.2, 0.3, 0.4]
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, param_values)], shots=2048)
 
         quantum_program = mock_run.call_args[0][0]
@@ -130,7 +130,7 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         circuit.measure_all()
 
         param_values = [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, param_values)], shots=512)
 
         quantum_program = mock_run.call_args[0][0]
@@ -157,7 +157,7 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         circuit2.rx(theta, 0)
         circuit2.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit1, (circuit2, [0.5, 1.0])], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -198,7 +198,7 @@ class TestSamplerV2CircuitValidation(IBMTestCase):
         circuit2.append(BoxOp(inner_circuit), [0, 1])
         circuit2.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
 
         with self.assertRaises(IBMInputValueError) as context:
             sampler.run([circuit1, circuit2], shots=1024)
@@ -223,7 +223,7 @@ class TestSamplerV2ShotsHandling(IBMTestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit])
 
         quantum_program = mock_run.call_args[0][0]
@@ -242,7 +242,7 @@ class TestSamplerV2ShotsHandling(IBMTestCase):
         circuit2.h([0, 1])
         circuit2.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit1, circuit2], shots=2048)
 
         quantum_program = mock_run.call_args[0][0]
@@ -275,7 +275,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         metadata = {"foo": True, "bar": np.int64(1)}
         circuit.metadata = metadata
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -305,7 +305,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         circuit.measure_all()
 
         # Test with list input
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, [0.1, 0.2, 0.3])], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -327,7 +327,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
             circuit.measure_all()
             circuits.append(circuit)
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run(circuits, shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -350,7 +350,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
 
         # Test with 3 sets of 2 parameters
         param_values = [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, param_values)], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -376,7 +376,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         transpiled = pm.run(circuit)
 
-        sampler = SamplerV2(mode=backend)
+        sampler = Sampler(mode=backend)
 
         # Run should work and return results
         job = sampler.run([transpiled], shots=100)
@@ -407,7 +407,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         transpiled = pm.run(circuit)
 
         # First sampler with seed
-        sampler1 = SamplerV2(mode=backend)
+        sampler1 = Sampler(mode=backend)
         sampler1.options.default_shots = 200
         sampler1.options.simulator.seed_simulator = 42
 
@@ -416,7 +416,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         counts1 = result1[0].data.meas.get_counts()
 
         # Second sampler with same seed
-        sampler2 = SamplerV2(mode=backend)
+        sampler2 = Sampler(mode=backend)
         sampler2.options.default_shots = 200
         sampler2.options.simulator.seed_simulator = 42
 
@@ -428,7 +428,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         self.assertEqual(counts1, counts2)
 
         # Third sampler with different seed should give different results
-        sampler3 = SamplerV2(mode=backend)
+        sampler3 = Sampler(mode=backend)
         sampler3.options.default_shots = 200
         sampler3.options.simulator.seed_simulator = 123
 
@@ -474,7 +474,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         ]
 
         # Create sampler with all simulator options
-        sampler = SamplerV2(mode=backend)
+        sampler = Sampler(mode=backend)
         sampler.options.simulator.seed_simulator = 42
 
         # Run with parameter sweep
