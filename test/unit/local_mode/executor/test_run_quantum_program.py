@@ -40,7 +40,7 @@ from qiskit_ibm_runtime.results import QuantumProgramItemResult
 from ....ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Iterable
+    from collections.abc import Generator, Iterable, Sequence
 
     from qiskit.transpiler import CouplingMap
 
@@ -81,6 +81,69 @@ def generate_circuit(
         qc_boxed.noop(active_qubits)
 
     return qc_boxed, active_qubits
+
+
+READOUT_RATE = 0.4
+"""Rate for the readout-error tests, large enough to separate outcomes in a few thousand shots."""
+
+READOUT_NOISE = PauliLindbladMap.from_list([("XI", READOUT_RATE), ("IX", READOUT_RATE)])
+
+EXPECTED_READOUT_P1 = (1 - np.exp(-2 * READOUT_RATE)) / 2
+"""Bit-flip probability under ``READOUT_NOISE``."""
+
+
+def readout_error_probability(shots: int, positions: Sequence[str | None]) -> np.ndarray:
+    """Return the fraction of shots reading 1 on each qubit, given noise at ``positions``.
+
+    The circuit is two qubits measured immediately, which the real boxing pass wraps in a single
+    box.  Nothing acts on the qubits beforehand, so a noiseless run reads 0 on every shot and any
+    nonzero result is readout error that took effect.
+
+    Args:
+        shots: Shots per run.
+        positions: One ``layer_noise_model`` entry per element, each placing ``READOUT_NOISE`` on
+            the measurement box at that position.  ``None`` omits the position from its entry.
+
+    Returns:
+        The fraction of shots reading 1, per qubit.
+
+    Raises:
+        AssertionError: If the boxing pass did not produce exactly one box to attach noise to.
+    """
+    circuit = QuantumCircuit(2, 2)
+    circuit.measure([0, 1], [0, 1])
+
+    pass_manager = generate_preset_pass_manager(
+        backend=FakeFez(), initial_layout=[17, 27], optimization_level=0
+    )
+    pass_manager.post_scheduling = generate_boxing_pass_manager(add_tags="unique_box")
+    boxed = pass_manager.run(circuit)
+    template_circuit, samplex = build(boxed)
+
+    boxes = find_unique_box_instructions(boxed, undress_boxes=True, normalize_annotations=None)
+    if len(boxes) != 1:
+        raise AssertionError(
+            f"Expected one box for a measure-only circuit, found {len(boxes)}; the tests would "
+            f"otherwise target the wrong box."
+        )
+    box = boxes[0]
+
+    layer_noise_model = [
+        (box, READOUT_NOISE) if position is None else (box, READOUT_NOISE, position)
+        for position in positions
+    ]
+
+    program = QuantumProgram(shots=shots)
+    program.append_samplex_item(template_circuit, samplex=samplex, shape=(1,))
+    result = run_quantum_program(
+        AerSimulator(method="stabilizer"),
+        program,
+        SimulatorOptions(layer_noise_model=layer_noise_model, seed_simulator=11),
+    )[0]
+
+    # The boxing pass twirls the measurement; measurement_flips.c undoes that flip pattern.
+    outcome = np.logical_xor(result["c"], result["measurement_flips.c"])
+    return outcome.reshape(-1, outcome.shape[-1]).mean(axis=0)
 
 
 @ddt
@@ -504,3 +567,35 @@ class TestRunQuantumProgram(IBMTestCase):
 
         with self.assertRaisesRegex(TypeError, "Unsupported QuantumProgramItem type"):
             run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
+
+
+@ddt
+@skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+class TestNoisePosition(IBMTestCase):
+    """Tests for the noise position on ``SimulatorOptions.layer_noise_model`` entries."""
+
+    @data(("M", True), ("L", True), ("R", False), (None, False))
+    @unpack
+    def test_only_a_position_upstream_of_the_measure_causes_readout_error(self, position, applies):
+        """A channel at ``R`` acts after the ``measure`` and cannot affect the outcome.
+
+        ``R`` reads exactly zero, matching a run with no noise model at all, which is what makes it
+        a silent no-op rather than a small effect.  ``position=None`` is an entry that names no
+        position and so defaults to ``R``, preserving the behaviour from before positions existed.
+        """
+        actual = readout_error_probability(shots=4000, positions=[position])
+
+        if applies:
+            np.testing.assert_allclose(actual, [EXPECTED_READOUT_P1] * 2, atol=0.02)
+        else:
+            np.testing.assert_allclose(actual, [0.0, 0.0], atol=1e-12)
+
+    def test_one_layer_takes_noise_at_distinct_positions_but_not_at_a_repeated_one(self):
+        """Positions of a layer are independent entries; repeating one is a mistake."""
+        # Both are accepted, and only the M entry can reach the measure.
+        actual = readout_error_probability(shots=4000, positions=["M", "R"])
+        np.testing.assert_allclose(actual, [EXPECTED_READOUT_P1] * 2, atol=0.02)
+
+        # Resolving the noise model happens before any item is simulated, so this raises up front.
+        with self.assertRaisesRegex(ValueError, "two entries in 'layer_noise_model'"):
+            readout_error_probability(shots=8, positions=["M", "M"])

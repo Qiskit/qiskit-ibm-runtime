@@ -42,6 +42,34 @@ LayerNoiseModel: TypeAlias = Annotated[
     AfterValidator(validate_layer_noise_model),
 ]
 
+NOISE_POSITIONS = ("L", "M", "R")
+"""The positions at which a layer's noise may be placed."""
+
+
+def validate_positioned_layer_noise_model(
+    value: PositionedLayerNoiseModel,
+) -> PositionedLayerNoiseModel:
+    """Validate a ``LayerNoiseModel`` entry that may carry a noise position."""
+    validate_layer_noise_model(value[:2])  # type: ignore[arg-type]
+
+    if len(value) == 3 and (position := value[2]) not in NOISE_POSITIONS:
+        raise ValueError(
+            f"Found the noise position {position!r}, but expected one of {list(NOISE_POSITIONS)}."
+        )
+
+    return value
+
+
+PositionedLayerNoiseModel: TypeAlias = Annotated[
+    tuple[Annotated[CircuitInstruction, InstanceOf], Annotated[PauliLindbladMap, InstanceOf]]
+    | tuple[
+        Annotated[CircuitInstruction, InstanceOf],
+        Annotated[PauliLindbladMap, InstanceOf],
+        str,
+    ],
+    AfterValidator(validate_positioned_layer_noise_model),
+]
+
 
 class SimulatorOptions(BaseOptionsModel):
     """Simulator options."""
@@ -54,8 +82,12 @@ class SimulatorOptions(BaseOptionsModel):
     angles are nominally Clifford.
     """
 
-    layer_noise_model: list[LayerNoiseModel] | None = None
+    layer_noise_model: list[PositionedLayerNoiseModel] | None = None
     """Noise model specified by a collection of instructions and the noise that affects them.
+
+    Each entry is a ``(instruction, noise)`` pair, or a ``(instruction, noise, position)`` triple
+    where ``position`` is one of :data:`NOISE_POSITIONS` and says where in the layer the noise
+    acts.  An entry that omits the position defaults to ``"R"``, after the layer's body.
 
     When simulating an estimator job, if this value is set to ``None``,
     it defaults to the value of

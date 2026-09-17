@@ -31,15 +31,58 @@ from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from qiskit.providers import BackendV2
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ...options_models.simulator import SimulatorOptions
+    from ...options_models.simulator import PositionedLayerNoiseModel, SimulatorOptions
     from ...quantum_program import QuantumProgram
 
 if HAS_AER:
     from qiskit_aer import AerSimulator
     from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
+
+
+#: The position used for an entry that does not name one, chosen to match the historical behaviour
+#: of inserting every channel after the layer body.
+DEFAULT_NOISE_POSITION = "R"
+
+
+def _build_noise_dict(
+    layer_noise_model: Sequence[PositionedLayerNoiseModel],
+) -> dict[str, dict[str, PauliLindbladMap]]:
+    """Resolve a layer noise model into the per-tag, per-position form the noise pass takes.
+
+    Entries whose box carries no :class:`~samplomatic.Tag` are skipped: the tag is what ties the
+    box to a barrier in the flattened template circuit, so without one there is nothing to match.
+
+    Args:
+        layer_noise_model: The entries to resolve.
+
+    Returns:
+        A map from tag to a map from noise position to noise.
+
+    Raises:
+        ValueError: If two entries place noise at the same position of the same layer.
+    """
+    noise_dict: dict[str, dict[str, PauliLindbladMap]] = {}
+
+    for entry in layer_noise_model:
+        instruction, pauli_map = entry[0], entry[1]
+        if (tag := get_annotation(instruction.operation, Tag)) is None:
+            continue
+
+        position = entry[2] if len(entry) == 3 else DEFAULT_NOISE_POSITION
+        by_position = noise_dict.setdefault(tag.ref, {})
+        if position in by_position:
+            raise ValueError(
+                f"Found two entries in 'layer_noise_model' placing noise at position "
+                f"{position!r} of the same layer. Each position of a layer takes one noise map."
+            )
+        by_position[position] = pauli_map
+
+    return noise_dict
 
 
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
@@ -81,9 +124,7 @@ def run_quantum_program(
 
     noise_dict: dict[str, dict[str, PauliLindbladMap]] = {}
     if layer_noise_model := options.layer_noise_model:
-        for instr, pauli_map in layer_noise_model:
-            if annotation := get_annotation(instr.operation, Tag):
-                noise_dict[annotation.ref] = {"R": pauli_map}
+        noise_dict = _build_noise_dict(layer_noise_model)
 
     result_list = []
     for prog_item in program.items:
