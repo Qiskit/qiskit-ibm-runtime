@@ -24,7 +24,8 @@ Classes
    :toctree: ../stubs/
 
    Estimator
-
+   EstimatorV2
 """
 
 from .estimator import Estimator
+from .estimator import Estimator as EstimatorV2

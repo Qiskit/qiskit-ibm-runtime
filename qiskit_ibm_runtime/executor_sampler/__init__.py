@@ -24,7 +24,8 @@ Classes
    :toctree: ../stubs/
 
    Sampler
-
+   SamplerV2
 """
 
 from .sampler import Sampler
+from .sampler import Sampler as SamplerV2
