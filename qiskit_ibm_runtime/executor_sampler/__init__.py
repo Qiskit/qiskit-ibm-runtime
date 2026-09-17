@@ -12,7 +12,7 @@
 
 """
 =====================================================================
-Executor-based SamplerV2 (:mod:`qiskit_ibm_runtime.executor_sampler`)
+Client-side SamplerV2 (:mod:`qiskit_ibm_runtime.executor_sampler`)
 =====================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.executor_sampler

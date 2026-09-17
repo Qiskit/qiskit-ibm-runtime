@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utility functions for executor-based SamplerV2."""
+"""Utility functions for client-side SamplerV2."""
 
 from __future__ import annotations
 

@@ -159,7 +159,7 @@ def run_configured_sampler_implementations(
     """Parameterize sampler tests based on the configured implementations.
 
     Set ``QISKIT_IBM_TEST_BOTH_SAMPLER_IMPLEMENTATIONS=1`` to expand the wrapped
-    test over both the legacy sampler and the executor-based sampler.
+    test over both the legacy sampler and the client-side sampler.
     Otherwise by default, the wrapped test is expanded only for the legacy sampler.
 
     The decorated tests receive a new argument that contains the sampler class.

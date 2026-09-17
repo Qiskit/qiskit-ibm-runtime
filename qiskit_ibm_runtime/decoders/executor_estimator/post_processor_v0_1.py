@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Post-processing for the executor-based EstimatorV2: delegates to qiskit-mitigation."""
+"""Post-processing for the client-side EstimatorV2: delegates to qiskit-mitigation."""
 
 from __future__ import annotations
 

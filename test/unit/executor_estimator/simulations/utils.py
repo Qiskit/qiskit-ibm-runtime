@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utilities for running tests against local-mode executor-based Estimator."""
+"""Utilities for running tests against local-mode client-side Estimator."""
 
 from __future__ import annotations
 

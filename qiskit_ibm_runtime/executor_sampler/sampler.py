@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor-based SamplerV2 primitive."""
+"""Client-side SamplerV2 primitive."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamplerV2(BaseSamplerV2):
-    """Executor-based Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
+    """Client-side Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of SamplerV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater

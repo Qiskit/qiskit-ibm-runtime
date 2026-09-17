@@ -18,7 +18,7 @@ Primitive options models (:mod:`qiskit_ibm_runtime.options_models`)
 .. currentmodule:: qiskit_ibm_runtime.options_models
 
 Options that can be passed to :class:`~qiskit_ibm_runtime.Executor`,
-:class:`~qiskit_ibm_runtime.NoiseLearnerV3` and executor-based primitives
+:class:`~qiskit_ibm_runtime.NoiseLearnerV3` and client-side primitives
 (:class:`~qiskit_ibm_runtime.executor_sampler.SamplerV2` and
 (:class:`~qiskit_ibm_runtime.executor_estimator.EstimatorV2`).
 

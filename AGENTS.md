@@ -46,11 +46,11 @@ existing Qiskit patterns.
 ### Legacy vs. executor based primitives
 
 The package offers two sets of `SamplerV2`, `EstimatorV2` primitives. Legacy primitives, directly
-under `qiskit_ibm_runtime/` and executor-based primitives under
+under `qiskit_ibm_runtime/` and client-side primitives under
 `qiskit_ibm_runtime/executor_*/`. Legacy primitives have their options defined in
-`qiskit_ibm_runtime/options`, while the executor-based have them in
-`qiskit_ibm_runtime/options_models`. Verify you are working on the right set. Executor-based
-primitives were sometimes referred to internally as "wrappers".
+`qiskit_ibm_runtime/options`, while the client-side have them in
+`qiskit_ibm_runtime/options_models`. Verify you are working on the right set. Client-side
+primitives were sometimes referred to internally as "wrappers" or "executor-based".
 
 ## References
 

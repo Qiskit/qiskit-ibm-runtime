@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-=========================================================================
-Executor-based EstimatorV2 (:mod:`qiskit_ibm_runtime.executor_estimator`)
-=========================================================================
+======================================================================
+Client-side EstimatorV2 (:mod:`qiskit_ibm_runtime.executor_estimator`)
+======================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.executor_estimator
 

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Options for the executor-based SamplerV2."""
+"""Options for the client-side SamplerV2."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from .twirling import TwirlingOptions
 
 
 class SamplerOptions(BaseOptionsModel):
-    """Options for the executor-based SamplerV2."""
+    """Options for the client-side SamplerV2."""
 
     default_shots: int | None = 4096
     """The default number of shots to use if none are specified in the PUBs or in the run method."""

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Executor-based SamplerV2."""
+"""Tests for client-side SamplerV2."""
 
 import numpy as np
 from ddt import data, ddt, unpack

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Shared TREX finalization helper for the executor-based EstimatorV2."""
+"""Shared TREX finalization helper for the client-side EstimatorV2."""
 
 from __future__ import annotations
 

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Options for the executor-based EstimatorV2."""
+"""Options for the client-side EstimatorV2."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from .twirling import TwirlingOptions
 
 
 class EstimatorOptions(BaseOptionsModel):
-    """Options for the executor-based EstimatorV2."""
+    """Options for the client-side EstimatorV2."""
 
     default_precision: Annotated[float, Field(gt=0)] = 0.015625
     """The default precision to use for any PUB or ``run()`` call that does not specify one.
