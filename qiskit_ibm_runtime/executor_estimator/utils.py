@@ -18,13 +18,13 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from qiskit import QuantumCircuit
-    from qiskit.circuit import BoxOp, CircuitInstruction
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
@@ -36,7 +36,7 @@ import numpy as np
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions, undress_box
+from samplomatic.utils import find_unique_box_instructions
 
 from ..exceptions import IBMInputValueError
 
@@ -47,9 +47,6 @@ _REQUIRED_NOISE_FACTORS = {
     "fallback": 1,
     **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
 }
-
-# TypeAlias for a BoxOp type
-BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
 def resolve_noise_factors(zne_options: ZneOptions) -> tuple[np.ndarray, np.ndarray]:
@@ -279,35 +276,3 @@ def find_unique_layers(
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True
     )
-
-
-def find_box_type(instruction: BoxOp) -> BoxType:
-    """Find the type of :class:`~qiskit.circuit.BoxOp` that ``instruction`` contains.
-
-    Args:
-        instruction: The instruction to get the type of.
-
-    Returns:
-        The box type. Can be one of ``"gates"``, ``"measurement"``, or ``"unknown"``.
-
-    Raises:
-        IBMInputValueError: If ``instruction`` does not contain a box.
-    """
-    box = instruction.operation
-    if (name := box.name) != "box":
-        raise IBMInputValueError(f"Expected a 'box' but found '{name}'.")
-
-    undressed_box = undress_box(box)
-
-    if len(undressed_box.body) == 0:
-        return "gates"
-
-    all_gates = all(op.is_standard_gate() or op.name == "barrier" for op in undressed_box.body)
-    all_measurement = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
-
-    if all_gates and not all_measurement:
-        return "gates"
-    elif not all_gates and all_measurement:
-        return "measurement"
-
-    return "unknown"
