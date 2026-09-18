@@ -43,8 +43,5 @@ class SamplerOptions(BaseOptionsModel):
     experimental: dict = {}
     """Experimental options."""
 
-    max_execution_time: int | None = None
-    """Maximum execution time in seconds, based on system execution time (not wall clock time)."""
-
     environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
