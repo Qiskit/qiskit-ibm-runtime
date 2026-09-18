@@ -46,7 +46,7 @@ def get_mode_service_backend(
 ) -> tuple[
     Session | Batch | None,
     QiskitRuntimeService | QiskitRuntimeLocalService | None,
-    BackendV2 | None,
+    BackendV2,
 ]:
     """A utility function that returns mode, service, and backend for a given execution mode.
 
