@@ -22,9 +22,11 @@ from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
 
+from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import Sampler
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.session import Session
 
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
@@ -103,6 +105,35 @@ class TestSamplerSimpleCircuits(IBMTestCase):
 
         job = sampler.run([circuit], dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
+
+    @mock_responses
+    def test_mode(self, registry):
+        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+        service = QiskitRuntimeService(token="my_token")
+
+        # Job mode, online backend.
+        backend = service.backend("common_backend")
+        sampler = Sampler(mode=backend)
+        self.assertEqual(sampler.backend(), backend)
+        self.assertEqual(sampler.mode, None)
+
+        # Session mode.
+        session = Session(backend)
+        sampler = Sampler(mode=session)
+        self.assertEqual(sampler.backend(), backend)
+        self.assertEqual(sampler.mode, session)
+
+        # Batch mode.
+        batch = Batch(backend)
+        sampler = Sampler(mode=batch)
+        self.assertEqual(sampler.backend(), backend)
+        self.assertEqual(sampler.mode, batch)
+
+        # `None` mode (inside session).
+        with Session(backend) as session:
+            sampler = Sampler()
+            self.assertEqual(sampler.backend(), backend)
+            self.assertEqual(sampler.mode, session)
 
 
 class TestSamplerParametricCircuits(IBMTestCase):
