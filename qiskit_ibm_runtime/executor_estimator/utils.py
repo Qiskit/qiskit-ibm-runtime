@@ -18,7 +18,7 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -47,9 +47,6 @@ _REQUIRED_NOISE_FACTORS = {
     "fallback": 1,
     **{f"polynomial_degree_{degree}": degree + 1 for degree in range(1, 8)},
 }
-
-# TypeAlias for a BoxOp type
-BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
 def resolve_noise_factors(zne_options: ZneOptions) -> tuple[np.ndarray, np.ndarray]:

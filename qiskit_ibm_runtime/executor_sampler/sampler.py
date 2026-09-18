@@ -22,8 +22,8 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..executor_estimator.utils import BoxType, find_unique_layers
-from ..fake_provider.executor.run_quantum_program import find_box_type
+from ..executor_estimator.utils import find_unique_layers
+from ..fake_provider.executor.run_quantum_program import BoxType, find_box_type
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options

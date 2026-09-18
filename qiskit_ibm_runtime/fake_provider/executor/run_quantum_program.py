@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 import numpy as np
 from qiskit.primitives.containers.bindings_array import BindingsArray
@@ -35,13 +35,15 @@ if TYPE_CHECKING:
     from qiskit.circuit import CircuitInstruction
     from qiskit.providers import BackendV2
 
-    from ...executor_estimator.utils import BoxType
     from ...options_models.simulator import SimulatorOptions
     from ...quantum_program import QuantumProgram
 
 if HAS_AER:
     from qiskit_aer import AerSimulator
     from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
+
+# TypeAlias for a BoxOp type
+BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
