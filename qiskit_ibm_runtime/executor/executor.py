@@ -107,7 +107,7 @@ class Executor:
 
         super().__setattr__(name, value)
 
-    def backend(self) -> BackendV2 | None:
+    def backend(self) -> BackendV2:
         """Return the backend the primitive query will be run on."""
         return self._backend
 

@@ -86,7 +86,7 @@ class Calibrator:
 
         super().__setattr__(name, value)
 
-    def backend(self) -> BackendV2 | None:
+    def backend(self) -> BackendV2:
         """Return the backend to calibrate."""
         return self._backend
 
