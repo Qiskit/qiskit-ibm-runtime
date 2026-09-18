@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""SamplerV2 tests centered around qiskit-aer simulations."""
+"""Client-side Sampler tests centered around qiskit-aer simulations."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.quantum_info import Statevector, hellinger_fidelity
 from qiskit_aer import AerSimulator
 
-from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.executor_sampler import Sampler
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 @ddt
 class TestSampler(IBMTestCase):
-    """SamplerV2 tests centered around qiskit-aer simulations.
+    """Client-side Sampler tests centered around qiskit-aer simulations.
 
     All the tests in this class perform noiseless simulations.
     """
@@ -94,7 +94,7 @@ class TestSampler(IBMTestCase):
 
         pubs = [SamplerPub.coerce([circuit, parameters])]
 
-        sampler = SamplerV2(self.backend)
+        sampler = Sampler(self.backend)
 
         sampler.options.twirling.enable_gates = enable_gates
         sampler.options.twirling.enable_measure = enable_measure

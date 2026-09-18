@@ -171,18 +171,18 @@ def run_configured_sampler_implementations(
     """Parameterize sampler tests based on the configured implementations.
 
     Set ``QISKIT_IBM_TEST_BOTH_SAMPLER_IMPLEMENTATIONS=1`` to expand the wrapped
-    test over both the legacy sampler and the executor-based sampler.
+    test over both the legacy sampler and the client-side sampler.
     Otherwise by default, the wrapped test is expanded only for the legacy sampler.
 
     The decorated tests receive a new argument that contains the sampler class.
     """
-    from qiskit_ibm_runtime import SamplerV2 as LegacySamplerV2
-    from qiskit_ibm_runtime.executor_sampler import SamplerV2 as ExecutorSamplerV2
+    from qiskit_ibm_runtime import SamplerV2 as LegacySampler
+    from qiskit_ibm_runtime.executor_sampler import Sampler as ExecutorSampler
 
     implementations = (
-        [("legacy", LegacySamplerV2), ("executor", ExecutorSamplerV2)]
+        [("legacy", LegacySampler), ("executor", ExecutorSampler)]
         if os.getenv("QISKIT_IBM_TEST_SAMPLER_V2_IMPLEMENTATIONS") == "1"
-        else [("legacy", LegacySamplerV2)]
+        else [("legacy", LegacySampler)]
     )
     return named_data(*implementations)(test_func)
 

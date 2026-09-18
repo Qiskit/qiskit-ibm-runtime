@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Helper functions for wrapper EstimatorV2.
+"""Helper functions for client-side Estimator.
 
 NOTE: At least some of these functions are temporary and will be moved to a
 permanent location (qiskit-addons or qiskit core) in the future.
