@@ -28,6 +28,14 @@ if TYPE_CHECKING:
 class BaseOptionsModel(BaseModel):
     """Base class for options models."""
 
+    max_execution_time: int | None = None
+    """Maximum execution time in seconds.
+
+    This value bounds system execution time (not wall clock time). System execution time is the
+    amount of time that the system is dedicated to processing your job. If a job exceeds this time
+    limit, it is forcibly cancelled.
+    """
+
     model_config = ConfigDict(validate_assignment=True, extra="forbid")
     """Custom ``ConfigDict`` for pydantic dataclasses.
 
