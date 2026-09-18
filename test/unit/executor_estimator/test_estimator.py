@@ -330,7 +330,7 @@ class TestEstimatorRun(IBMTestCase):
         options = EstimatorOptions()
         options.execution.init_qubits = True
         options.execution.rep_delay = 0.001
-        options.max_execution_time = 300
+        options.environment.max_execution_time = 300
 
         estimator = Estimator(mode=self.backend, options=options)
 

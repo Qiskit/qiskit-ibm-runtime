@@ -44,24 +44,18 @@ def to_runtime_options(options: EnvironmentOptions, backend: IBMBackend) -> dict
 def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptions:
     """Map sampler options to executor options, ignoring all irrelevant fields.
 
-    .. note::
-        Simulator options are ignored as executor does not support local mode.
-
     Returns:
         Mapped executor options.
     """
     executor_options = ExecutorOptions()
 
-    environment_options = options.environment.model_dump()
-    execution_options = options.execution.model_dump(exclude={"meas_type"})
-    simulator_options = options.simulator.model_dump()
-    executor_options.environment = EnvironmentOptions(**environment_options)
-    executor_options.execution = ExecutionOptions(**execution_options)
-    executor_options.simulator = SimulatorOptions(**simulator_options)
+    executor_options.environment = EnvironmentOptions(**options.environment.model_dump())
+    executor_options.execution = ExecutionOptions(
+        **options.execution.model_dump(exclude={"meas_type"})
+    )
+    executor_options.simulator = SimulatorOptions(**options.simulator.model_dump())
 
-    executor_options.environment.max_execution_time = options.max_execution_time
     if options.experimental:
-        executor_options.environment.image = options.experimental.get("image", None)
         executor_options.experimental.update(options.experimental)
 
         if execution_key := options.experimental.get("execution", {}):
@@ -76,24 +70,16 @@ def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptio
 def estimator_options_to_executor_options(options: EstimatorOptions) -> ExecutorOptions:
     """Map EstimatorOptions to ExecutorOptions, ignoring all irrelevant fields.
 
-    .. note::
-        Simulator options are ignored as executor does not support local mode.
-
     Returns:
         Mapped executor options.
     """
     executor_options = ExecutorOptions()
 
-    environment_options = options.environment.model_dump()
-    execution_options = options.execution.model_dump()
-    simulator_options = options.simulator.model_dump()
-    executor_options.environment = EnvironmentOptions(**environment_options)
-    executor_options.execution = ExecutionOptions(**execution_options)
-    executor_options.simulator = SimulatorOptions(**simulator_options)
+    executor_options.environment = EnvironmentOptions(**options.environment.model_dump())
+    executor_options.execution = ExecutionOptions(**options.execution.model_dump())
+    executor_options.simulator = SimulatorOptions(**options.simulator.model_dump())
 
-    executor_options.environment.max_execution_time = options.max_execution_time
     if options.experimental:
-        executor_options.environment.image = options.experimental.get("image", None)
         executor_options.experimental.update(options.experimental)
 
     if executor_options.simulator.layer_noise_model is None:
