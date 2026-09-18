@@ -29,10 +29,10 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     """Convert a quantum program result to a primitives result, for a V2 sampler.
 
     Convert :class:`~.QuantumProgramResult` to a :class:`~qiskit.primitives.PrimitiveResult`,
-    for :class:`~qiskit_ibm_runtime.executor_sampler.SamplerV2`.
+    for :class:`~qiskit_ibm_runtime.executor_sampler.Sampler`.
 
     This function transforms the raw quantum program execution results into the
-    format expected by :class:`~qiskit_ibm_runtime.executor_sampler.SamplerV2`,
+    format expected by :class:`~qiskit_ibm_runtime.executor_sampler.Sampler`,
     creating :class:`~qiskit.primitives.containers.BitArray` objects and
     :class:`~qiskit.primitives.containers.SamplerPubResult` containers for each pub.
 
@@ -41,7 +41,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
             **Consumed by this call** — do not use this object afterwards.
 
     Returns:
-        Primitive result for :class:`~qiskit_ibm_runtime.executor_sampler.SamplerV2`.
+        Primitive result for :class:`~qiskit_ibm_runtime.executor_sampler.Sampler`.
     """
     if len(result) == 0:
         return PrimitiveResult([])

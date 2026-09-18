@@ -107,17 +107,25 @@ class Executor:
 
         super().__setattr__(name, value)
 
-    def run(self, program: QuantumProgram) -> RuntimeJobV2 | LocalRuntimeJob:
+    def run(self, program: QuantumProgram, dry_run: bool = False) -> RuntimeJobV2 | LocalRuntimeJob:
         """Run a quantum program.
 
         Args:
             program: The program to run.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata. Returned results preserve the expected schema but contain
+                **randomized mock data** rather than actual or simulated measurement results.
+                Unlike the fake backends, the processing of this dry run happens on the server-side,
+                so the job may not finish immediately and access to this feature may be restricted.
 
         Returns:
             A job.
         """
         if isinstance(self._service, QiskitRuntimeLocalService):
-            return self._service._run_executor(self._backend, self.options.simulator, program)
+            return self._service._run_executor(
+                self._backend, self.options.simulator, program, dry_run=dry_run
+            )
 
         try:
             converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
@@ -148,6 +156,7 @@ class Executor:
             options=to_runtime_options(self.options.environment, self._backend),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
+            dry_run=dry_run,
         )
 
     def backend(self) -> BackendV2:

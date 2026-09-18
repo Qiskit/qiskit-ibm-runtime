@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for executor-based SamplerV2."""
+"""Tests for client-side Sampler."""
 
 from unittest import skipUnless
 from unittest.mock import MagicMock, patch
@@ -23,14 +23,17 @@ from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.executor_sampler import Sampler
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
+from ...registries import OneInstanceDryRunRegistry
 from ...utils import get_mocked_backend
 
 
-class TestSamplerV2SimpleCircuits(IBMTestCase):
-    """Tests for SamplerV2 with simple (non-parametric) circuits."""
+class TestSamplerSimpleCircuits(IBMTestCase):
+    """Tests for Sampler with simple (non-parametric) circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -53,7 +56,7 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
         circuit3.x(0)
         circuit3.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit1, circuit2, circuit3], shots=2048)
 
         quantum_program = mock_run.call_args[0][0]
@@ -81,15 +84,29 @@ class TestSamplerV2SimpleCircuits(IBMTestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit])  # No shots specified
 
         quantum_program = mock_run.call_args[0][0]
         self.assertEqual(quantum_program.shots, 4096)
 
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Sampler can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        sampler = Sampler(mode=backend)
 
-class TestSamplerV2ParametricCircuits(IBMTestCase):
-    """Tests for SamplerV2 with parametric circuits."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        job = sampler.run([circuit], dry_run=True)
+        self.assertEqual(job.backend().name, "mock_foo")
+
+
+class TestSamplerParametricCircuits(IBMTestCase):
+    """Tests for Sampler with parametric circuits."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -106,7 +123,7 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         circuit.measure_all()
 
         param_values = [0.1, 0.2, 0.3, 0.4]
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, param_values)], shots=2048)
 
         quantum_program = mock_run.call_args[0][0]
@@ -130,7 +147,7 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         circuit.measure_all()
 
         param_values = [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, param_values)], shots=512)
 
         quantum_program = mock_run.call_args[0][0]
@@ -157,7 +174,7 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         circuit2.rx(theta, 0)
         circuit2.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit1, (circuit2, [0.5, 1.0])], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -177,8 +194,8 @@ class TestSamplerV2ParametricCircuits(IBMTestCase):
         np.testing.assert_array_almost_equal(item2.circuit_arguments, [[0.5], [1.0]])
 
 
-class TestSamplerV2CircuitValidation(IBMTestCase):
-    """Tests for circuit validation in SamplerV2."""
+class TestSamplerCircuitValidation(IBMTestCase):
+    """Tests for circuit validation in Sampler."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -198,7 +215,7 @@ class TestSamplerV2CircuitValidation(IBMTestCase):
         circuit2.append(BoxOp(inner_circuit), [0, 1])
         circuit2.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
 
         with self.assertRaises(IBMInputValueError) as context:
             sampler.run([circuit1, circuit2], shots=1024)
@@ -207,8 +224,8 @@ class TestSamplerV2CircuitValidation(IBMTestCase):
         mock_run.assert_not_called()
 
 
-class TestSamplerV2ShotsHandling(IBMTestCase):
-    """Tests for shots handling in SamplerV2."""
+class TestSamplerShotsHandling(IBMTestCase):
+    """Tests for shots handling in Sampler."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -223,7 +240,7 @@ class TestSamplerV2ShotsHandling(IBMTestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit])
 
         quantum_program = mock_run.call_args[0][0]
@@ -242,7 +259,7 @@ class TestSamplerV2ShotsHandling(IBMTestCase):
         circuit2.h([0, 1])
         circuit2.measure_all()
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit1, circuit2], shots=2048)
 
         quantum_program = mock_run.call_args[0][0]
@@ -251,8 +268,8 @@ class TestSamplerV2ShotsHandling(IBMTestCase):
         self.assertEqual(quantum_program.shots, 2048)
 
 
-class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
-    """Tests verifying the integrity of QuantumProgram objects created by SamplerV2."""
+class TestSamplerQuantumProgramIntegrity(IBMTestCase):
+    """Tests verifying the integrity of QuantumProgram objects created by Sampler."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -275,7 +292,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         metadata = {"foo": True, "bar": np.int64(1)}
         circuit.metadata = metadata
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([circuit], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -305,7 +322,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         circuit.measure_all()
 
         # Test with list input
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, [0.1, 0.2, 0.3])], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -327,7 +344,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
             circuit.measure_all()
             circuits.append(circuit)
 
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run(circuits, shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -350,7 +367,7 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
 
         # Test with 3 sets of 2 parameters
         param_values = [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]
-        sampler = SamplerV2(mode=self.backend)
+        sampler = Sampler(mode=self.backend)
         sampler.run([(circuit, param_values)], shots=1024)
 
         quantum_program = mock_run.call_args[0][0]
@@ -361,11 +378,11 @@ class TestSamplerV2QuantumProgramIntegrity(IBMTestCase):
         self.assertEqual(item.size(), 3)
 
 
-class TestSamplerV2SimulatorMode(IBMTestCase):
-    """Tests for SamplerV2 with simulator backends (local mode)."""
+class TestSamplerSimulatorMode(IBMTestCase):
+    """Tests for Sampler with simulator backends (local mode)."""
 
     def test_simulator_mode_uses_backend_sampler(self):
-        """Test that simulator mode uses BackendSamplerV2 instead of Executor."""
+        """Test that simulator mode uses BackendSampler instead of Executor."""
         backend = GenericBackendV2(num_qubits=5)
 
         circuit = QuantumCircuit(2, 2)
@@ -376,7 +393,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         transpiled = pm.run(circuit)
 
-        sampler = SamplerV2(mode=backend)
+        sampler = Sampler(mode=backend)
 
         # Run should work and return results
         job = sampler.run([transpiled], shots=100)
@@ -407,7 +424,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         transpiled = pm.run(circuit)
 
         # First sampler with seed
-        sampler1 = SamplerV2(mode=backend)
+        sampler1 = Sampler(mode=backend)
         sampler1.options.default_shots = 200
         sampler1.options.simulator.seed_simulator = 42
 
@@ -416,7 +433,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         counts1 = result1[0].data.meas.get_counts()
 
         # Second sampler with same seed
-        sampler2 = SamplerV2(mode=backend)
+        sampler2 = Sampler(mode=backend)
         sampler2.options.default_shots = 200
         sampler2.options.simulator.seed_simulator = 42
 
@@ -428,7 +445,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         self.assertEqual(counts1, counts2)
 
         # Third sampler with different seed should give different results
-        sampler3 = SamplerV2(mode=backend)
+        sampler3 = Sampler(mode=backend)
         sampler3.options.default_shots = 200
         sampler3.options.simulator.seed_simulator = 123
 
@@ -474,7 +491,7 @@ class TestSamplerV2SimulatorMode(IBMTestCase):
         ]
 
         # Create sampler with all simulator options
-        sampler = SamplerV2(mode=backend)
+        sampler = Sampler(mode=backend)
         sampler.options.simulator.seed_simulator = 42
 
         # Run with parameter sweep

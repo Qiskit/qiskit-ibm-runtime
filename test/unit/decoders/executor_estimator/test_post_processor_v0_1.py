@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for EstimatorV2 post-processor."""
+"""Unit tests for Estimator post-processor."""
 
 import numpy as np
 from ddt import data, ddt, unpack
@@ -94,7 +94,7 @@ def _options(resilience_level=0, **kwargs):
     return opts
 
 
-class TestEstimatorV2PostProcessorV0_1(IBMTestCase):
+class TestEstimatorPostProcessorV0_1(IBMTestCase):
     """Tests for ``estimator_v2_post_processor_v0_1``."""
 
     def test_post_processor_empty_result(self):
@@ -271,7 +271,7 @@ class TestEstimatorV2PostProcessorV0_1(IBMTestCase):
         self.assertEqual(primitive_result[0].metadata["executor"], sim_meta)
 
 
-class TestEstimatorV2PostProcessorPEC(IBMTestCase):
+class TestEstimatorPostProcessorPEC(IBMTestCase):
     """Integration tests for PEC dispatch in ``estimator_v2_post_processor_v0_1``."""
 
     def _make_pec_options(self, noise_gain="auto", max_overhead=100):

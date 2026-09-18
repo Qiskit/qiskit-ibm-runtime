@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor-based SamplerV2 primitive."""
+"""Client-side Sampler primitive."""
 
 from __future__ import annotations
 
@@ -45,10 +45,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SamplerV2(BaseSamplerV2):
-    """Executor-based Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
+class Sampler(BaseSamplerV2):
+    """Client-side Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
-    This is an implementation of SamplerV2 built on top of the Executor primitive,
+    This is an implementation of Sampler built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
     user control.
 
@@ -63,7 +63,7 @@ class SamplerV2(BaseSamplerV2):
 
             from qiskit import QuantumCircuit
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor_sampler import SamplerV2
+            from qiskit_ibm_runtime.executor_sampler import Sampler
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)
@@ -75,7 +75,7 @@ class SamplerV2(BaseSamplerV2):
             circuit.measure_all()
 
             # Run the sampler with options
-            sampler = SamplerV2(mode=backend)
+            sampler = Sampler(mode=backend)
             sampler.options.default_shots = 2048
             sampler.options.execution.init_qubits = True
             job = sampler.run([circuit])
@@ -170,7 +170,7 @@ class SamplerV2(BaseSamplerV2):
         return finalize_sampler_options(self.options)
 
     def run(
-        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None, dry_run: bool = False
     ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the sampler primitive.
 
@@ -188,6 +188,12 @@ class SamplerV2(BaseSamplerV2):
             shots: The total number of shots to sample for each sampler pub that does
                    not specify its own shots. If ``None``, the value from
                    ``options.default_shots`` will be used.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata. Returned results preserve the expected schema but contain
+                **randomized mock data** rather than actual or simulated measurement results.
+                Unlike the fake backends, the processing of this dry run happens on the server-side,
+                so the job may not finish immediately and access to this feature may be restricted.
 
         Returns:
             The submitted job.
@@ -214,4 +220,4 @@ class SamplerV2(BaseSamplerV2):
             quantum_program.shots,
         )
 
-        return executor.run(quantum_program)
+        return executor.run(quantum_program, dry_run=dry_run)
