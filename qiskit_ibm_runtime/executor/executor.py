@@ -166,7 +166,9 @@ class Executor:
 
         return _run(
             program_id=self._PROGRAM_ID,
-            options=to_runtime_options(self.options.environment, self._backend),
+            options=to_runtime_options(
+                self.options.environment, self._backend, self.options.max_execution_time
+            ),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
             dry_run=dry_run,
