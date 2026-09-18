@@ -191,6 +191,7 @@ class Session:
                 start_session=False,
                 result_decoder=result_decoder,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
             if self._backend is None:
