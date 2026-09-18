@@ -93,8 +93,14 @@ def determine_barrier_position(layer: CircuitInstruction) -> Literal["L", "M", "
 
     Returns:
         The barrier position to inject the noise into.
+
+    Raises:
+        TypeError: If ``layer`` is an "unknown" box type.
     """
     box_type = find_box_type(layer)
+
+    if box_type == "unknown":
+        raise TypeError(f"Unsupported box type: {box_type}")
 
     if box_type == "measurement":
         return "M"
