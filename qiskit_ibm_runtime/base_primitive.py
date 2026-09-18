@@ -173,6 +173,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 inputs=primitive_inputs,
                 options=runtime_options,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
         if self._backend:
@@ -203,6 +204,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             options=runtime_options,
             inputs=primitive_inputs,
             calibration_id=calibration_id,
+            dry_run=dry_run,
         )
 
     @property

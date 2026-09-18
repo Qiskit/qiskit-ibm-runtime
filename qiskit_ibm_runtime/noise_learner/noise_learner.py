@@ -205,6 +205,7 @@ class NoiseLearner:
                 inputs=inputs,
                 options=runtime_options,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
         if self._backend:
@@ -218,7 +219,7 @@ class NoiseLearner:
                 options=runtime_options,
                 inputs=inputs,
                 calibration_id=calibration_id,
-                dry_run=True,
+                dry_run=dry_run,
             )
 
         return self._service._run(  # type: ignore[attr-defined]
@@ -226,7 +227,7 @@ class NoiseLearner:
             options=runtime_options,
             inputs=inputs,
             calibration_id=calibration_id,
-            dry_run=True,
+            dry_run=dry_run,
         )
 
     @classmethod
