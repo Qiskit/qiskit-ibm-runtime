@@ -14,8 +14,9 @@
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
+from ..utils.deprecation import issue_deprecation_msg
 from .base import BaseOptionsModel
 
 LogLevelType = Literal[
@@ -56,6 +57,18 @@ class EnvironmentOptions(BaseOptionsModel):
     amount of time that the system is dedicated to processing your job. If a job exceeds this time
     limit, it is forcibly cancelled.
     """
+
+    @field_validator("max_execution_time")
+    @classmethod
+    def _warn_max_execution_time_deprecated(cls, value: int | None) -> int | None:
+        """Warn when ``max_execution_time`` is explicitly set on ``EnvironmentOptions``."""
+        issue_deprecation_msg(
+            msg="Setting `max_execution_time` via `EnvironmentOptions` is deprecated",
+            version="0.50.0",
+            remedy="Set it from top-level options.",
+            stacklevel=3,
+        )
+        return value
 
     image: (
         Annotated[
