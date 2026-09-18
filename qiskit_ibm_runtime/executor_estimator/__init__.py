@@ -34,7 +34,8 @@ greater user control.
 
 When a user submits a job through :meth:`~.Estimator.run`, the underlying processing consists of:
 
-1. Coercing the Primitive Unified Blocs (PUBs), resolving the resilience-level defaults, and determining the shot count.
+1. Coercing the Primitive Unified Blocs (PUBs), resolving the resilience-level defaults,
+   and determining the shot count.
 2. Converting the PUBs into a
    :class:`~qiskit_ibm_runtime.quantum_program.QuantumProgram`, applying circuit transformations
    (twirling, gate folding, DD, noise injection) according to the specified options.
