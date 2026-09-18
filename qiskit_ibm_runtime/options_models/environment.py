@@ -67,37 +67,3 @@ class EnvironmentOptions(BaseOptionsModel):
         | None
     ) = None
     """IBM Quantum Compute (formerly Qiskit Runtime) image used for this job."""
-
-
-class SamplerEnvironmentOptions(BaseOptionsModel):
-    """Options related to the execution environment."""
-
-    log_level: LogLevelType = "WARNING"
-    """Logging level to set in the execution environment."""
-
-    job_tags: list[str] = []
-    """Tags to be assigned to the job.
-
-    The tags can subsequently be used as a filter in the
-    :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()` function call.
-    """
-
-    private: bool = False
-    """Boolean that indicates whether the job is marked as private.
-
-    When set to ``True``, input parameters are not returned, and the results can only be read once.
-    After the job is completed, input parameters are deleted from the service. After the results are
-    read, these are also deleted from the service. When set to ``False``, the input parameters and
-    results follow the standard retention behavior of the API.
-    """
-
-    image: (
-        Annotated[
-            str,
-            Field(
-                pattern="[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-            ),
-        ]
-        | None
-    ) = None
-    """IBM Quantum Compute (formerly Qiskit Runtime) image used for this job."""

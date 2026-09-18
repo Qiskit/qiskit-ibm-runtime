@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
-from .environment import SamplerEnvironmentOptions
+from .environment import EnvironmentOptions
 from .execution import SamplerExecutionOptions
 from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
@@ -46,5 +46,5 @@ class SamplerOptions(BaseOptionsModel):
     max_execution_time: int | None = None
     """Maximum execution time in seconds, based on system execution time (not wall clock time)."""
 
-    environment: SamplerEnvironmentOptions = SamplerEnvironmentOptions()
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
