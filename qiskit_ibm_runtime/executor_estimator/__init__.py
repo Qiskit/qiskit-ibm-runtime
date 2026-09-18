@@ -192,7 +192,8 @@ All of the following fields have the shape ``pub_shape``, which is
 * ``data.stds`` — Standard deviations.
   Reflects the spread across twirling randomizations when twirling is enabled; equals
   ``ensemble_standard_error`` when twirling is disabled.
-* ``data.ensemble_standard_error`` — Standard error under the i.i.d. shot-noise assumption
+* ``data.ensemble_standard_error`` — Standard error under the independently and
+  identically-distributed shot-noise assumption
   (no drift contribution).
 
 When measurement mitigation (TREX) is active, the ``evs`` values are corrected for readout
@@ -227,7 +228,8 @@ the extrapolated estimate and the raw data at each noise level.
   Reflects the spread over twirling randomizations when twirling is on; equals
   ``ensemble_stds_noise_factors`` when twirling is off.
 * ``data.ensemble_stds_noise_factors`` — Ensemble standard errors at each noise factor under
-  the i.i.d. shot-noise assumption. Shape: ``(*pub_shape, num_noise_factors)``.
+  the independently and identically-distributed shot-noise assumption.
+  Shape: ``(*pub_shape, num_noise_factors)``.
 * ``data.evs_extrapolated`` — Expectation values from each requested extrapolator, evaluated
   at each point in ``resilience.zne.extrapolated_noise_factors``. These are forced homogeneous
   fits — the same extrapolator is applied to all terms of a multi-term observable — one fit per
