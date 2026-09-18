@@ -395,5 +395,5 @@ Classes
    EstimatorV2
 """
 
-from .estimator import EstimatorV2
-from .estimator import EstimatorV2 as Estimator
+from .estimator import Estimator
+from .estimator import Estimator as EstimatorV2

@@ -8,6 +8,8 @@
    :maxdepth: 1
 
    runtime_service
+   executor_sampler
+   executor_estimator
    quantum_program
    executor_estimator
    noise_learner

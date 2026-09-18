@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Client-side EstimatorV2 primitive."""
+"""Client-side Estimator primitive."""
 
 from __future__ import annotations
 
@@ -44,10 +44,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class EstimatorV2(BaseEstimatorV2):
-    """Client-side EstimatorV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
+class Estimator(BaseEstimatorV2):
+    """Client-side Estimator primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
-    This is an implementation of EstimatorV2 built on top of the Executor primitive,
+    This is an implementation of Estimator built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
     user control.
 
@@ -57,7 +57,7 @@ class EstimatorV2(BaseEstimatorV2):
             from qiskit import QuantumCircuit
             from qiskit.quantum_info import SparsePauliOp
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor_estimator import EstimatorV2
+            from qiskit_ibm_runtime.executor_estimator import Estimator
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)
@@ -71,7 +71,7 @@ class EstimatorV2(BaseEstimatorV2):
             observable = SparsePauliOp.from_list([("ZZ", 1), ("XX", 1)])
 
             # Run the estimator with options
-            estimator = EstimatorV2(mode=backend)
+            estimator = Estimator(mode=backend)
             estimator.options.default_precision = 0.01
             estimator.options.execution.init_qubits = True
             job = estimator.run([(circuit, observable)])
@@ -138,7 +138,7 @@ class EstimatorV2(BaseEstimatorV2):
 
         .. code-block:: python
 
-            est = EstimatorV2(mode, options)
+            est = Estimator(mode, options)
             est.options.resilience.pec_mitigation = True
 
             layers = est.find_unique_layers(pubs, types="gates")
