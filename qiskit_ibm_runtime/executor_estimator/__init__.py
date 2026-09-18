@@ -34,7 +34,7 @@ greater user control.
 
 When a user submits a job through :meth:`~.Estimator.run`, the underlying processing consists of:
 
-1. Coercing the PUBs, resolving the resilience-level defaults, and determining the shot count.
+1. Coercing the Primitive Unified Blocs (PUBs), resolving the resilience-level defaults, and determining the shot count.
 2. Converting the PUBs into a
    :class:`~qiskit_ibm_runtime.quantum_program.QuantumProgram`, applying circuit transformations
    (twirling, gate folding, DD, noise injection) according to the specified options.
@@ -116,13 +116,13 @@ their noise in a separate job, then assign the learned noise maps to
     estimator = Estimator(mode=backend)
     estimator.options.resilience.pec_mitigation = True
 
-    # Step 1 — extract the unique boxed gate layers from your PUBs.
+    # Step 1. Extract the unique boxed gate layers from your PUBs.
     layers = estimator.find_unique_layers(pubs)
 
-    # Step 2 — learn the noise model for those layers.
+    # Step 2. Learn the noise model for those layers.
     nl_result = NoiseLearnerV3(mode=backend).run(layers).result()
 
-    # Step 3 — convert the NoiseLearnerV3 result to Pauli-Lindblad maps and pass them
+    # Step 3. Convert the NoiseLearnerV3 result to Pauli-Lindblad maps and pass them
     # to the Estimator. The maps follow the same order as the input layers, so they can
     # be zipped positionally.
     pauli_lindblad_maps = nl_result.to_pauli_lindblad_maps()
@@ -135,13 +135,13 @@ their noise in a separate job, then assign the learned noise maps to
 Inputs
 ======
 
-Each call to :meth:`~.Estimator.run` takes a list of PUBs (Primitive Unified Blocs). Each PUB
+Each call to :meth:`~.Estimator.run` takes a list of PUBs. Each PUB
 is in this format::
 
     (<single circuit>, <one or more observables>, <optional parameter values>, <optional precision>)
 
 See `Estimator inputs and outputs
-<https://quantum.cloud.ibm.com/docs/en/guides/estimator-input-output>`_
+<https://quantum.cloud.ibm.com/docs/guides/estimator-input-output>`_
 for more information on Estimator inputs and outputs.
 
 Elements from observables and parameter values are combined by following NumPy broadcasting rules
@@ -160,11 +160,11 @@ grouped into categories, such as ``execution``. Specify the options in this form
 ``options.dynamical_decoupling.enable = True``.
 
 See `Introduction to options
-<https://quantum.cloud.ibm.com/docs/en/guides/runtime-options-overview>`_
+<https://quantum.cloud.ibm.com/docs/guides/runtime-options-overview>`_
 for an overview on specifying primitive options.
 See `Specify Estimator options <https://quantum.cloud.ibm.com/docs/en/guides/estimator-options>`_
 and `Configure noise management with Estimator
-<https://quantum.cloud.ibm.com/docs/en/guides/estimator-noise-management>`_
+<https://quantum.cloud.ibm.com/docs/guides/estimator-noise-management>`_
 for more information about Estimator options.
 
 Outputs
@@ -259,7 +259,7 @@ Job-level metadata
   Inactive resilience sub-options are pruned (for example, the ``zne`` sub-dictionary is omitted
   when ``zne_mitigation=False``).
 * ``"target_precision"`` — the precision resolved from the PUBs and the ``precision`` argument of
-  :meth:`~.Estimator.run`, or ``None`` if neither specified one. In that case the shot count
+  :meth:`~.Estimator.run`, or ``None`` if neither specified one. In that case, the shot count
   comes from ``default_shots``, falling back to ``default_precision``.
 * ``"shots"`` — the total shot count used for execution.
 * ``"executor"`` — the metadata of the underlying Executor result.
@@ -304,7 +304,7 @@ behavioral changes:
 **Step 2 — Perform noise learning explicitly (if using PEC or PEA).**
 
 If your code uses PEC (``pec_mitigation=True``) or ZNE with PEA (``zne.amplifier="pea"``),
-you need to perform noise learning explicitly using ``NoiseLearnerV3``.
+you need to perform noise learning explicitly by using ``NoiseLearnerV3``.
 
 **Before:**
 
