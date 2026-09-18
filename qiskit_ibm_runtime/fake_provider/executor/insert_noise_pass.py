@@ -10,36 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Transpiler pass that inserts Pauli-Lindblad noise after labeled barriers.
-
-**Noise injection**
-
-When ``layer_noise_model`` is provided in :class:`~.SimulatorOptions`, Pauli-Lindblad noise
-is injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts
-three barriers around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
-labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default, noise is injected at
-the ``R`` (right) barriers, i.e. *after* the gate.  Use ``noise_after=False`` on
-:class:`~.InsertNoisePass` to target ``M`` barriers instead (noise *before* the gate).
-
-The ``noise_dict`` format is:
-
-- **Keys** — layer name tags (strings, e.g. ``"r0"``, ``"my_tag"``).  Each key must match the
-    ``ref`` of a ``Tag`` annotation used when building the ``QuantumProgram``. A warning is emitted
-    (if ``warn_absent=True``) when a tagged barrier's tag is absent from the dict; the barrier is
-    left as-is (no noise inserted for that layer).
-- **Values** — :class:`~qiskit.quantum_info.PauliLindbladMap` instances describing the
-    Pauli-Lindblad noise channel for that gate.  The map's ``num_qubits`` must equal the number of
-    qubits on the corresponding barrier in the circuit.
-- **Qubit indexing** — indices inside the map are *local* to the barrier's qubit set, independent
-    of global circuit qubit numbering.
-"""
+"""Transpiler pass that inserts Pauli-Lindblad noise at labeled barriers."""
 
 from __future__ import annotations
 
 import re
-import warnings
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.converters import circuit_to_dag
@@ -56,6 +33,75 @@ if TYPE_CHECKING:
 if HAS_AER:
     from qiskit_aer.noise import PauliLindbladError
 
+POSITIONS = ("L", "M", "R")
+"""The barrier position letters samplomatic emits around each dressed box."""
+
+# ``<pos><idx>[@<key>=<value>&...]``.  The index is a scope index, which contains an underscore for
+# each level of box nesting (``0``, ``0_0``, ``1_2_3``); it is matched but not used.
+_LABEL_PATTERN = re.compile(r"^(?P<pos>[A-Za-z])\d+(?:_\d+)*(?:@(?P<params>.*))?$")
+
+
+class _BarrierLabel(NamedTuple):
+    """The parsed contents of a samplomatic box barrier label."""
+
+    position: str
+    """The position letter, one of :data:`POSITIONS`."""
+
+    params: dict[str, str]
+    """The ``key=value`` pairs carried by the label."""
+
+
+def _parse_barrier_label(label: str) -> _BarrierLabel | None:
+    """Parse a samplomatic box barrier label.
+
+    Args:
+        label: The barrier label to parse.
+
+    Returns:
+        The parsed label, or ``None`` if ``label`` is not a samplomatic box barrier label.
+    """
+    if not (match := _LABEL_PATTERN.match(label)):
+        return None
+
+    params = {}
+    for field in (match["params"] or "").split("&"):
+        key, separator, value = field.partition("=")
+        if separator:
+            params[key] = value
+
+    return _BarrierLabel(match["pos"], params)
+
+
+def barrier_tags(circuit: QuantumCircuit) -> set[str]:
+    """Return the layer tags carried by a circuit's box barriers.
+
+    Args:
+        circuit: A flattened template circuit.
+    """
+    tags = set()
+    for instruction in circuit.data:
+        # Qiskit has no public API for reading barrier labels; _label is the only option.
+        if instruction.operation.name != "barrier" or not (label := instruction.operation._label):  # noqa: SLF001
+            continue
+        if (parsed := _parse_barrier_label(label)) and (tag := parsed.params.get("tag")):
+            tags.add(tag)
+    return tags
+
+
+def pauli_lindblad_error(
+    pauli_lindblad_map: PauliLindbladMap, noise_scale: float = 1.0
+) -> PauliLindbladError:
+    """Build the Aer error implementing a Pauli-Lindblad map, with its rates scaled.
+
+    Args:
+        pauli_lindblad_map: The map to realise.
+        noise_scale: Multiplicative scale factor applied to the rates.
+    """
+    return PauliLindbladError(
+        generators=pauli_lindblad_map.get_qubit_sparse_pauli_list_copy().to_pauli_list(),
+        rates=noise_scale * pauli_lindblad_map.rates,
+    )
+
 
 def _find_qubit(dag: DAGCircuit, qubit: Qubit) -> int:
     return dag.find_bit(qubit).index
@@ -63,34 +109,43 @@ def _find_qubit(dag: DAGCircuit, qubit: Qubit) -> int:
 
 @HAS_AER.require_in_instance
 class InsertNoisePass(TransformationPass):
-    """Transpiler pass that inserts Pauli-Lindblad noise channels after (or before) tagged barriers.
+    """Insert Pauli-Lindblad noise channels immediately after tagged barriers.
 
-    Barriers whose labels match the pattern ``<pos><idx>@tag=<tag>`` are replaced with a
-    sub-circuit consisting of the original barrier followed (or preceded) by a
-    :class:`~qiskit_aer.noise.PauliLindbladError` looked up from ``noise_dict`` by ``<tag>``.
+    Barriers are labeled ``<pos><idx>[@<key>=<value>&...]`` (e.g. ``R0@tag=r0``). A
+    :class:`~qiskit_aer.noise.PauliLindbladError` is inserted immediately after a barrier whose
+    ``tag`` and position letter both appear in ``noise_dict``.
+
+    .. code-block:: python
+
+        noise_dict = {"layer": {"R": layer_map}, "spam": {"M": readout_map, "R": reset_map}}
 
     Args:
-        noise_dict: Map from gate-name tags to Pauli-Lindblad noise maps.  Pass ``None`` to
-            perform a no-op (no noise is inserted).
-        noise_after: If ``True`` (default), insert noise after the barrier; otherwise before.
+        noise_dict: Map from barrier tag to a map from position (one of :data:`POSITIONS`) to the
+            noise inserted there, or ``None`` (or empty) to leave the circuit unchanged.  Each
+            noise map must be defined on the qubits its barrier applies to, indexed in ascending
+            circuit order: for a barrier on qubits ``(2, 0)`` of a three-qubit circuit, index 0 of
+            a two-qubit map is qubit 0 and index 1 is qubit 2, so ``("IX", 0.1)`` places noise on
+            qubit 0 and ``("XI", 0.1)`` places it on qubit 2.
         noise_scale: Multiplicative scale factor applied to all noise rates.
-        warn_absent: If ``True`` (default), emit a warning when a tagged barrier's tag is not
-            found in ``noise_dict``.  Set to ``False`` to suppress these warnings.
+
+    Raises:
+        ValueError: If ``noise_dict`` contains a position that is not one of :data:`POSITIONS`.
     """
 
     def __init__(
         self,
-        noise_dict: dict[str, PauliLindbladMap] | None,
-        noise_after: bool = True,
+        noise_dict: dict[str, dict[str, PauliLindbladMap]] | None,
         noise_scale: float = 1.0,
-        warn_absent: bool = True,
     ):
         self._noise_dict = noise_dict or {}
-        self._noise_after = noise_after
         self._noise_scale = noise_scale
-        self._warn_absent = warn_absent
 
-        self._pattern = re.compile(r"^(?P<pos>[A-Za-z])(?P<idx>\d+)(.*?)tag=(?P<tag>.+)(.*?)")
+        for tag, by_position in self._noise_dict.items():
+            if invalid := sorted(set(by_position) - set(POSITIONS)):
+                raise ValueError(
+                    f"Noise for tag '{tag}' uses unknown barrier position(s) {invalid}; "
+                    f"expected one of {list(POSITIONS)}."
+                )
 
         super().__init__()
 
@@ -111,20 +166,16 @@ class InsertNoisePass(TransformationPass):
 
         return dag
 
-    def _match_key(self, name: str) -> str | None:
-        if not (match_group := self._pattern.match(name)):
+    def _lookup(self, label: str) -> PauliLindbladMap | None:
+        """Return the noise to insert at the barrier with this label, if any."""
+        if (parsed := _parse_barrier_label(label)) is None:
             return None
-        pos = match_group.group("pos")
-        tag = match_group.group("tag")
+        if parsed.position not in POSITIONS:
+            return None
+        if (tag := parsed.params.get("tag")) is None:
+            return None
 
-        if self._noise_after:
-            if pos != "R":
-                return None
-        else:
-            if pos != "M":
-                return None
-
-        return tag
+        return self._noise_dict.get(tag, {}).get(parsed.position)
 
     def _new_subdag(
         self, op_node: DAGOpNode, find_qubit: Callable[[Qubit], int]
@@ -133,26 +184,13 @@ class InsertNoisePass(TransformationPass):
         label = op_node.op._label
         if label is None:
             return None
-        if (noise_key := self._match_key(label)) is None:
-            return None
 
-        pauli_lindblad_map = self._noise_dict.get(noise_key)
+        pauli_lindblad_map = self._lookup(label)
         if pauli_lindblad_map is None:
-            if self._noise_dict and self._warn_absent:
-                warnings.warn(
-                    f"No noise found for tag '{noise_key}'; "
-                    f"available tags: {list(self._noise_dict.keys())}",
-                    stacklevel=2,
-                )
             return None
 
         if len(pauli_lindblad_map) == 0:
             return None
-
-        pauli_lindblad_error = PauliLindbladError(
-            generators=pauli_lindblad_map.get_qubit_sparse_pauli_list_copy().to_pauli_list(),
-            rates=self._noise_scale * pauli_lindblad_map.rates,
-        )
 
         # The PauliLindbladMap's indices are interpreted in ascending physical-qubit order
         # of the parent DAG, so we apply the resulting error to the local qc.qubits in the
@@ -162,5 +200,8 @@ class InsertNoisePass(TransformationPass):
 
         qc = QuantumCircuit(op_node.num_qubits)
         qc.append(op_node.op, qc.qubits)
-        qc.append(pauli_lindblad_error, [qc.qubits[i] for i in plm_indices])
+        qc.append(
+            pauli_lindblad_error(pauli_lindblad_map, self._noise_scale),
+            [qc.qubits[i] for i in plm_indices],
+        )
         return circuit_to_dag(qc)

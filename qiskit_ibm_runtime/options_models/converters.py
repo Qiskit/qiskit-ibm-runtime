@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
     from .estimator import EstimatorOptions
     from .sampler import SamplerOptions
+    from .simulator import PositionedLayerNoiseModel
 
 
 def to_runtime_options(options: EnvironmentOptions, backend: IBMBackend) -> dict:
@@ -96,7 +97,11 @@ def estimator_options_to_executor_options(options: EstimatorOptions) -> Executor
         executor_options.environment.image = options.experimental.get("image", None)
         executor_options.experimental.update(options.experimental)
 
-    if executor_options.simulator.layer_noise_model is None:
-        executor_options.simulator.layer_noise_model = options.resilience.layer_noise_model
+    if (
+        executor_options.simulator.layer_noise_model is None
+        and (resilience_noise_model := options.resilience.layer_noise_model) is not None
+    ):
+        widened: list[PositionedLayerNoiseModel] = list(resilience_noise_model)
+        executor_options.simulator.layer_noise_model = widened
 
     return executor_options
