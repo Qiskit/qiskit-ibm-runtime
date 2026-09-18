@@ -638,7 +638,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
         quantum_program, _ = prepare(pubs, options, precision=None, add_tags=add_tags)
         return quantum_program
 
-    @data([True, True], [False, False])
+    @data([True, True], [True, False])
     @unpack
     def test_param_basis_expansion_3q(self, enable_measure, enable_measure_noise_learning):
         """Test parameter-basis expansion with three-qubit observables."""
@@ -695,7 +695,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
                 # Check that the quantum program has one element per param-basis pair
                 self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
 
-    @data([True, False], [False, False], [True, True])
+    @data([True, False], [True, True])
     @unpack
     def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
         """Test that samplex arguments have the expected structure for each circuit type."""
@@ -732,12 +732,11 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
                 # PEC always requires enable_gates=True
                 self.assertSamplexArgumentsAreCorrect(program.items[0], scenario, inject_noise=True)
 
-    @data(True, False)
-    def test_template_circuit(self, enable_measure):
+    def test_template_circuit(self):
         """Test that the template circuit has the expected clbits and parameter count."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
-        twirling_options.enable_measure = enable_measure
+        twirling_options.enable_measure = True
 
         scenario = TEMPLATE_CIRCUIT_SCENARIO
         pubs = [scenario.pub]
@@ -914,6 +913,36 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
 
         with self.assertRaisesRegex(ValueError, "Noise model is missing"):
             self._prepare_pec([pub1, pub2], twirling_options, 1024, pec_options, noise_model)
+
+    def test_prepare_pec_warns_when_measurement_twirling_is_false(self):
+        """Test that prepare_pec raises warns when measurement twirling is set to ``False``."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        noise_model = PauliLindbladMap.from_sparse_list(
+            [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
+        )
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = ""
+        for layer in layers:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref = annot.ref
+
+        noise_model = {noise_layer_ref: noise_model}
+
+        pec_options = PecOptions()
+        pec_options.noise_gain = 0.5
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = False
+
+        with self.assertWarnsRegex(UserWarning, "twirling.enable_measure"):
+            self._prepare_pec([pub], twirling_options, 10, pec_options, noise_model)
 
     @data(32, "auto")
     def test_prepare_pec_with_measure_noise_learning(self, num_randomizations):
@@ -1463,7 +1492,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
         quantum_program, _ = prepare(pubs, options, precision=None, add_tags=add_tags)
         return quantum_program
 
-    @data([True, True], [False, False])
+    @data([True, True], [True, False])
     @unpack
     def test_param_basis_expansion_3q(self, enable_measure, enable_measure_noise_learning):
         """Test parameter-basis expansion with three-qubit observables."""
@@ -1527,7 +1556,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
                     (len(zne_options.noise_factors), 1, len(expected_pairs)),
                 )
 
-    @data([True, False], [False, False], [True, True])
+    @data([True, False], [True, True])
     @unpack
     def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
         """Test that samplex arguments have the expected structure for each circuit type."""
@@ -1568,12 +1597,11 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
                 # PEA always requires enable_gates=True
                 self.assertSamplexArgumentsAreCorrect(program.items[0], scenario, inject_noise=True)
 
-    @data(True, False)
-    def test_template_circuit(self, enable_measure):
+    def test_template_circuit(self):
         """Test that the template circuit has the expected clbits and parameter count."""
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
-        twirling_options.enable_measure = enable_measure
+        twirling_options.enable_measure = True
 
         zne_options = ZneOptions()
         zne_options.amplifier = "pea"
@@ -1719,6 +1747,36 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
 
         with self.assertRaisesRegex(ValueError, "Noise model is missing"):
             self._prepare_pea([pub1, pub2], twirling_options, 1024, zne_options, noise_model)
+
+    def test_prepare_pea_warns_when_measurement_twirling_is_false(self):
+        """Test that prepare_pea raises warns when measurement twirling is set to ``False``."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        noise_model = PauliLindbladMap.from_sparse_list(
+            [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
+        )
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = ""
+        for layer in layers:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref = annot.ref
+
+        noise_model = {noise_layer_ref: noise_model}
+
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = False
+
+        zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
+
+        with self.assertWarnsRegex(UserWarning, "twirling.enable_measure"):
+            self._prepare_pea([pub], twirling_options, 10, zne_options, noise_model)
 
     @data(32, "auto")
     def test_prepare_pea_with_measure_noise_learning(self, num_randomizations):
