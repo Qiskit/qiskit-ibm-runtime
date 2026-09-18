@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers import EstimatorPubLike
     from qiskit.providers import BackendV2
 
+    from . import options  # Needed as sphinx is unable to solve conflicts.
     from .batch import Batch
     from .runtime_job_v2 import RuntimeJobV2
     from .session import Session
@@ -118,7 +119,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | str | None = None,
-        options: dict | EstimatorOptions | None = None,
+        options: dict | options.EstimatorOptions | None = None,
     ):
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)

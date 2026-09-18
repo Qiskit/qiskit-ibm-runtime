@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for EstimatorV2 TREX helper functions."""
+"""Unit tests for Estimator TREX helper functions."""
 
 from qiskit_ibm_runtime.executor_estimator.trex_setup import resolve_trex_num_randomizations
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
