@@ -90,3 +90,14 @@ class SamplerEnvironmentOptions(BaseOptionsModel):
     read, these are also deleted from the service. When set to ``False``, the input parameters and
     results follow the standard retention behavior of the API.
     """
+
+    image: (
+        Annotated[
+            str,
+            Field(
+                pattern="[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
+            ),
+        ]
+        | None
+    ) = None
+    """IBM Quantum Compute (formerly Qiskit Runtime) image used for this job."""
