@@ -125,6 +125,19 @@ class Estimator(BaseEstimatorV2):
 
         super().__setattr__(name, value)
 
+    def backend(self) -> BackendV2 | None:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
+    @property
+    def mode(self) -> Session | Batch | None:
+        """Return the execution mode used by this primitive.
+
+        Returns:
+            Mode used by this primitive, or ``None`` if an execution mode is not used.
+        """
+        return self._mode
+
     def find_unique_layers(
         self, pubs: Iterable[EstimatorPubLike], types: Literal["gates", "all"] = "gates"
     ) -> list[CircuitInstruction]:
@@ -260,7 +273,3 @@ class Estimator(BaseEstimatorV2):
         )
 
         return executor.run(quantum_program, dry_run=dry_run)
-
-    def backend(self) -> BackendV2:
-        """Return the backend the primitive query will be run on."""
-        return self._backend
