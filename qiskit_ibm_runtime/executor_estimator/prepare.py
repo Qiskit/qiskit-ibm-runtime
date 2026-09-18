@@ -280,7 +280,12 @@ def _build_quantum_program(
 
     # TREX finalisation (must be after all task.prepare() calls)
     if trex is not None:
-        apply_trex(trex, quantum_program, measure_noise_learning, num_randomizations)
+        trex_boxing_options = {}
+        if add_tags := boxing_options.get("add_tags", None):
+            trex_boxing_options["add_tags"] = add_tags
+        apply_trex(
+            trex, quantum_program, measure_noise_learning, num_randomizations, trex_boxing_options
+        )
 
     # Dynamical decoupling
     if finalized_options.dynamical_decoupling.enable:
