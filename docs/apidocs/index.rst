@@ -11,7 +11,6 @@
    executor_sampler
    executor_estimator
    quantum_program
-   executor_estimator
    noise_learner
    noise_learner_v3
    options
