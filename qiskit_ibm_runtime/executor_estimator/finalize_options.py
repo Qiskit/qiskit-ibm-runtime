@@ -68,10 +68,12 @@ def finalize_estimator_options(options: EstimatorOptions) -> EstimatorOptions:
     required option dependencies (e.g. measurement mitigation forces measurement twirling).
 
     Args:
-        options: The un-finalized :class:`~.EstimatorOptions` to process.
+        options: The un-finalized :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`
+            to process.
 
     Returns:
-        A finalized copy of the given :class:`~.EstimatorOptions`.
+        A finalized copy of the given
+        :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`.
     """
     finalized_options = deepcopy(options)
     defaults = _RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]

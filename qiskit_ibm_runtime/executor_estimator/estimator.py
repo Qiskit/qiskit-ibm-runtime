@@ -89,8 +89,7 @@ class Estimator(BaseEstimatorV2):
             for more information about execution modes.
 
         options: Estimator options.
-            See
-            :class:`~qiskit_ibm_runtime.options_models.estimator.EstimatorOptions`
+            See :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`
             for all available options.
     """
 
