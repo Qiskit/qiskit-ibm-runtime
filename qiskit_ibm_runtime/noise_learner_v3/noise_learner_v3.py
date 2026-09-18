@@ -32,7 +32,6 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
-    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -117,7 +116,7 @@ class NoiseLearnerV3:
 
     def run(
         self, instructions: Iterable[CircuitInstruction], dry_run: bool = False
-    ) -> RuntimeJobV2 | LocalRuntimeJob:
+    ) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         Two protocols are supported:
