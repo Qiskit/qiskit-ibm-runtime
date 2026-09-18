@@ -286,11 +286,11 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         pub = (circuit, None, 1024)
         options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
-        options.environment.max_execution_time = 500
+        options.max_execution_time = 500
 
         _, executor_options = prepare([pub], options)
 
-        self.assertEqual(executor_options.environment.max_execution_time, 500)
+        self.assertEqual(executor_options.max_execution_time, 500)
 
     def test_prepare_extracts_meas_level_from_options(self):
         """Test that prepare extracts meas_level from options."""
@@ -332,7 +332,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
         options.environment.log_level = "INFO"
         options.environment.job_tags = ["comprehensive", "test"]
         options.environment.private = True
-        options.environment.max_execution_time = 800
+        options.max_execution_time = 800
 
         quantum_program, executor_options = prepare([pub], options)
 
@@ -346,7 +346,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
         self.assertEqual(executor_options.environment.log_level, "INFO")
         self.assertEqual(executor_options.environment.job_tags, ["comprehensive", "test"])
         self.assertEqual(executor_options.environment.private, True)
-        self.assertEqual(executor_options.environment.max_execution_time, 800)
+        self.assertEqual(executor_options.max_execution_time, 800)
 
 
 class TestPrepareTwirling(IBMTestCase):
