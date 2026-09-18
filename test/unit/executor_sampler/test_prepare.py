@@ -286,25 +286,11 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         pub = (circuit, None, 1024)
         options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
-        options.max_execution_time = 500
+        options.environment.max_execution_time = 500
 
         _, executor_options = prepare([pub], options)
 
         self.assertEqual(executor_options.environment.max_execution_time, 500)
-
-    def test_prepare_maps_experimental_image(self):
-        """Test that prepare correctly maps experimental.image."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = (circuit, None, 1024)
-        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
-        options.experimental = {"image": "custom-runtime:v2"}
-
-        _, executor_options = prepare([pub], options)
-
-        self.assertEqual(executor_options.environment.image, "custom-runtime:v2")
 
     def test_prepare_extracts_meas_level_from_options(self):
         """Test that prepare extracts meas_level from options."""
@@ -332,20 +318,6 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         self.assertEqual(quantum_program.meas_level, "classified")
 
-    def test_prepare_allows_experimental_image(self):
-        """Test that prepare allows experimental.image."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = (circuit, None, 1024)
-        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
-        options.experimental = {"image": "allowed:v1"}
-
-        # Should not raise
-        _, executor_options = prepare([pub], options)
-        self.assertEqual(executor_options.environment.image, "allowed:v1")
-
     def test_prepare_all_options_together(self):
         """Test that prepare correctly handles all supported options together."""
         circuit = QuantumCircuit(1, 1)
@@ -360,8 +332,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
         options.environment.log_level = "INFO"
         options.environment.job_tags = ["comprehensive", "test"]
         options.environment.private = True
-        options.max_execution_time = 800
-        options.experimental = {"image": "full-test:v1"}
+        options.environment.max_execution_time = 800
 
         quantum_program, executor_options = prepare([pub], options)
 
@@ -376,7 +347,6 @@ class TestPrepareOptionsHandling(IBMTestCase):
         self.assertEqual(executor_options.environment.job_tags, ["comprehensive", "test"])
         self.assertEqual(executor_options.environment.private, True)
         self.assertEqual(executor_options.environment.max_execution_time, 800)
-        self.assertEqual(executor_options.environment.image, "full-test:v1")
 
 
 class TestPrepareTwirling(IBMTestCase):

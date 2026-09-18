@@ -14,10 +14,15 @@
 
 from unittest.mock import patch
 
+from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.calibrator import Calibrator
+from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.session import Session
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend, get_mocked_session
 
@@ -78,3 +83,32 @@ class TestCalibrator(IBMTestCase):
             calibrator = Calibrator(mode=backend)
             selected_run = calibrator.run()
             self.assertEqual(selected_run, "service")
+
+    @mock_responses
+    def test_mode(self, registry):
+        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+        service = QiskitRuntimeService(token="my_token")
+
+        # Job mode, online backend.
+        backend = service.backend("common_backend")
+        calibrator = Executor(mode=backend)
+        self.assertEqual(calibrator.backend(), backend)
+        self.assertEqual(calibrator.mode, None)
+
+        # Session mode.
+        session = Session(backend)
+        calibrator = Executor(mode=session)
+        self.assertEqual(calibrator.backend(), backend)
+        self.assertEqual(calibrator.mode, session)
+
+        # Batch mode.
+        batch = Batch(backend)
+        calibrator = Executor(mode=batch)
+        self.assertEqual(calibrator.backend(), backend)
+        self.assertEqual(calibrator.mode, batch)
+
+        # `None` mode (inside session).
+        with Session(backend) as session:
+            calibrator = Executor()
+            self.assertEqual(calibrator.backend(), backend)
+            self.assertEqual(calibrator.mode, session)

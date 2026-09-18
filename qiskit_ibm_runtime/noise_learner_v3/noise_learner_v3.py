@@ -82,7 +82,7 @@ class NoiseLearnerV3:
         # Coerced to `NoiseLearnerV3Options` via `__setattr__()`.
         self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
 
-        self._session, self._service, self._backend = get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
@@ -100,6 +100,19 @@ class NoiseLearnerV3:
             elif not isinstance(value, NoiseLearnerV3Options):
                 raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
         super().__setattr__(name, value)
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
+    @property
+    def mode(self) -> Session | Batch | None:
+        """Return the execution mode used by this primitive.
+
+        Returns:
+            Mode used by this primitive, or ``None`` if an execution mode is not used.
+        """
+        return self._mode
 
     def run(
         self, instructions: Iterable[CircuitInstruction], dry_run: bool = False
@@ -155,8 +168,8 @@ class NoiseLearnerV3:
             raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         params = converter.encoder(instructions, self.options)
-        if self._session:
-            _run = self._session._run
+        if self._mode:
+            _run = self._mode._run
         else:
             _run = self._service._run
 
@@ -180,7 +193,3 @@ class NoiseLearnerV3:
             calibration_id=getattr(self._backend, "calibration_id", None),
             dry_run=dry_run,
         )
-
-    def backend(self) -> BackendV2:
-        """Return the backend the primitive query will be run on."""
-        return self._backend

@@ -1,0 +1,2 @@
+:class:`~.Executor` and :class:`~.NoiseLearnerV3` now have a ``mode`` property that returns the
+execution mode used by those primitives.
