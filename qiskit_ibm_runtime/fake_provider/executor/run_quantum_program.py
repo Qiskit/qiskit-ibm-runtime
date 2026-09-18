@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from qiskit.primitives.containers.bindings_array import BindingsArray
@@ -85,22 +85,25 @@ def find_box_type(instruction: CircuitInstruction) -> BoxType:
     return "unknown"
 
 
-def _before_or_after(layer: CircuitInstruction) -> bool:
-    """Determines if noise needs to be injected before or after the ideal gate operation.
+def determine_barrier_position(layer: CircuitInstruction) -> Literal["L", "M", "R"]:
+    """Determines the barrier position to inject noise based on the box type and dressing.
 
     Args:
         layer: The layer to evaluate.
 
     Returns:
-        Whether to inject noise before or after the ideal gate operation.
+        The barrier position to inject the noise into.
     """
     box_type = find_box_type(layer)
-    dressing = get_annotation(layer.operation, Twirl).dressing.value
 
-    if box_type == "measurement" and dressing == "left":
-        return False
+    if box_type == "measurement":
+        return "M"
 
-    return True
+    if box_type == "gates" and (twirl := get_annotation(layer.operation, Twirl)) is not None:
+        if twirl.dressing.value == "right":
+            return "L"
+
+    return "R"
 
 
 @HAS_AER.require_in_call
@@ -132,12 +135,12 @@ def run_quantum_program(
     rng = np.random.default_rng(seed)
 
     noise_dict = {}
-    noise_after = {}
+    noise_pos = {}
     if layer_noise_model := options.layer_noise_model:
         for instr, pauli_map in layer_noise_model:
             if annotation := get_annotation(instr.operation, Tag):
                 noise_dict[annotation.ref] = pauli_map
-                noise_after[annotation.ref] = _before_or_after(instr)
+                noise_pos[annotation.ref] = determine_barrier_position(instr)
 
     result_list = []
     for prog_item in program.items:
@@ -146,7 +149,7 @@ def run_quantum_program(
                 [
                     InsertNoisePass(
                         noise_dict=noise_dict,
-                        noise_after=noise_after,
+                        noise_pos=noise_pos,
                         warn_absent=options.warn_absent,
                     )
                 ]

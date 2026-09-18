@@ -46,15 +46,13 @@ def _noise_error_ops(circuit: QuantumCircuit) -> list:
 class TestInsertNoisePass(IBMTestCase):
     """Tests for InsertNoisePass."""
 
-    @data((True, "R", 1), (True, "M", 0), (False, "R", 0), (False, "M", 1))
+    @data(("R", "R", 1), ("R", "M", 0), ("M", "R", 0), ("M", "M", 1))
     @unpack
-    def test_noise_after_true_injects_at_r_barriers(
-        self, noise_after, barrier_type, num_noise_error_ops
-    ):
-        """Test `noise_after` for different types of barriers."""
+    def test_noise_pos_injects_at_r_barriers(self, noise_pos, barrier_type, num_noise_error_ops):
+        """Test `noise_pos` for different types of barriers."""
         inject_noise = InsertNoisePass(
             noise_dict={"r0": PauliLindbladMap.from_list([("XI", 0.1), ("IX", 0.2)])},
-            noise_after={"r0": noise_after},
+            noise_pos={"r0": noise_pos},
         )
         pm = PassManager([inject_noise])
         result = pm.run(_circuit_with_barrier(2, label=f"{barrier_type}0@tag=r0"))
