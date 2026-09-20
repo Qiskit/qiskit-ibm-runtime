@@ -30,7 +30,13 @@ from samplomatic.utils import find_unique_box_instructions, get_annotation
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.calculate_twirling_shots import calculate_twirling_shots
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
+
+# TODO: find_unique_layers is imported from the sampler module as a temporary workaround.
+# The prepare() method internally uses
+# qiskit_mitigation.find_combined_unique_layers. These two paths could silently produce
+# different InjectNoise.ref values if they ever diverge. A permanent solution backed by
+# the estimator's find_combined_unique_layers path is needed.
+from qiskit_ibm_runtime.executor_sampler.utils import find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
