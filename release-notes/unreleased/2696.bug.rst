@@ -1,0 +1,6 @@
+``RuntimeDecoder`` now restores special types inside ``QuantumCircuit.metadata`` when
+decoding payloads that contain circuits. The QPY load path passes
+``metadata_deserializer=RuntimeDecoder`` to ``qiskit.qpy.load``, matching the
+``RuntimeEncoder`` that the dump path already passes as ``metadata_serializer``.
+Previously, circuit metadata containing values such as NumPy arrays came back as raw
+``{"__type__": ...}`` dictionaries after decoding, instead of the original objects.
