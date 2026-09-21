@@ -108,7 +108,7 @@ class Session:
         create_new: bool | None = True,
     ):
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService | None = None
-        self._backend: BackendV2 | None = None
+        self._backend: BackendV2
         self._instance = None
         self._active = True
         self._session_id = None
@@ -191,6 +191,7 @@ class Session:
                 start_session=False,
                 result_decoder=result_decoder,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
             if self._backend is None:

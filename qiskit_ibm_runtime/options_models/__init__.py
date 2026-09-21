@@ -55,7 +55,6 @@ Suboptions
    PostSelectionOptions
    PreCircuitBitFlipChecksOptions
    ResilienceOptions
-   SamplerEnvironmentOptions
    SamplerExecutionOptions
    SimulatorOptions
    TwirlingOptions
@@ -69,7 +68,7 @@ from .bit_flip_checks import (
     PreCircuitBitFlipChecksOptions,
 )
 from .dynamical_decoupling import DynamicalDecouplingOptions
-from .environment import EnvironmentOptions, SamplerEnvironmentOptions
+from .environment import EnvironmentOptions
 from .estimator import EstimatorOptions
 from .execution import ExecutionOptions, SamplerExecutionOptions
 from .executor import ExecutorOptions

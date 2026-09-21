@@ -45,8 +45,8 @@ def get_mode_service_backend(
     mode: BackendV2 | Session | Batch | None = None,
 ) -> tuple[
     Session | Batch | None,
-    QiskitRuntimeService | QiskitRuntimeLocalService | None,
-    BackendV2 | None,
+    QiskitRuntimeService | QiskitRuntimeLocalService,
+    BackendV2,
 ]:
     """A utility function that returns mode, service, and backend for a given execution mode.
 
@@ -173,6 +173,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 inputs=primitive_inputs,
                 options=runtime_options,
                 calibration_id=calibration_id,
+                dry_run=dry_run,
             )
 
         if self._backend:
@@ -203,6 +204,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             options=runtime_options,
             inputs=primitive_inputs,
             calibration_id=calibration_id,
+            dry_run=dry_run,
         )
 
     @property

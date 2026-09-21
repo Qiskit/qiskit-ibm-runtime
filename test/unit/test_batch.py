@@ -14,9 +14,12 @@
 
 from qiskit_ibm_runtime import Batch
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
+from ..registries import OneInstanceDryRunRegistry
 from ..utils import get_mocked_backend
 
 
@@ -57,3 +60,13 @@ class TestBatch(IBMTestCase):
             session._run(program_id="foo", inputs={})
             session.cancel()
         self.assertFalse(session._active)
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Batch mode can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        with Batch(backend=backend) as session:
+            job = session._run(program_id="foo", inputs={}, dry_run=True)
+
+        self.assertEqual(job.backend().name, "mock_foo")

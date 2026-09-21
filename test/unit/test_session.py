@@ -25,7 +25,7 @@ from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..registries import Backend
+from ..registries import Backend, OneInstanceDryRunRegistry
 from ..registries import Session as RegistrySession
 from ..utils import get_mocked_backend
 
@@ -153,3 +153,13 @@ class TestSession(IBMTestCase):
         backend = get_mocked_backend(name=backend_name)
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
             Session(backend=backend)
+
+    @mock_responses(OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry):
+        """Session mode can run in `dry-run` mode."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("ibm_foo")
+        with Session(backend=backend) as session:
+            job = session._run(program_id="foo", inputs={}, dry_run=True)
+
+        self.assertEqual(job.backend().name, "mock_foo")

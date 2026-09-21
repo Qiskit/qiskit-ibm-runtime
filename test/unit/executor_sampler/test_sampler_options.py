@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_sampler import Sampler
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
-from qiskit_ibm_runtime.options_models.environment import SamplerEnvironmentOptions
+from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution import SamplerExecutionOptions
 from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
 
@@ -56,7 +56,7 @@ class TestSamplerUsingOptions(IBMTestCase):
         sampler = Sampler(mode=FakeBrisbane(), options={"execution": {"init_qubits": False}})
         self.assertFalse(sampler.options.execution.init_qubits)
         self.assertIsNone(sampler.options.execution.rep_delay)
-        self.assertEqual(sampler.options.environment, SamplerEnvironmentOptions())
+        self.assertEqual(sampler.options.environment, EnvironmentOptions())
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
