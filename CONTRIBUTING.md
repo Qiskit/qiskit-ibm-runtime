@@ -288,7 +288,9 @@ This will run the tools against your staged changes, and will automatically upda
 conform to the style in some instances (for example, a subset of the `ruff` issues). For
 other errors, you will have to fix the issues manually by updating your code, and re-run again.
 Please refer to the tools' documentation for more information on running them manually and
-customizing your workflow if needed.
+customizing your workflow if needed. Ensure that you are running `pre-commit` inside the activated
+`venv` or an environment that contains the package installed, as some of the hooks depend on the
+package and their dependencies to be available for functioning correctly.
 
 If you edit any documentation, refer to [IBM Quantum's writing style guide]. You can use
 [Vale](https://vale.sh) to automatically check some of these rules for you. With Vale installed,
