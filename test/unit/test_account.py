@@ -21,6 +21,7 @@ from typing import Any
 from unittest import skipIf
 
 from ddt import data, ddt
+from requests.exceptions import ProxyError
 
 from qiskit_ibm_runtime import IBMInputValueError
 from qiskit_ibm_runtime.accounts import (
@@ -74,6 +75,8 @@ _TEST_FILENAME = "/tmp/temp_qiskit_account.json"
 
 _DEFAULT_CRN = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
 
+MOCK_PROXY_CONFIG_DICT = {"urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}}
+
 
 @ddt
 class TestAccount(IBMTestCase):
@@ -88,6 +91,17 @@ class TestAccount(IBMTestCase):
         account = copy.deepcopy(test_account)
         account.resolve_crn()
         self.assertEqual(account.instance, test_account.instance)
+
+    def test_resolve_crn_proxied(self):
+        """Account.resolve_crn() should go through proxies if specified."""
+        account = Account.create_account(
+            channel="ibm_quantum_platform",
+            token="my_token",
+            proxies=ProxyConfiguration(**MOCK_PROXY_CONFIG_DICT),
+        )
+        with self.assertRaises(ProxyError):
+            # Requests go through a proxy, which is not available in this test.
+            account.resolve_crn()
 
     def test_invalid_channel(self):
         """Test invalid values for channel parameter."""
@@ -597,9 +611,6 @@ class TestAccountManager(IBMTestCase):
         super().tearDown()
         if os.path.exists(_TEST_FILENAME):
             os.remove(_TEST_FILENAME)
-
-
-MOCK_PROXY_CONFIG_DICT = {"urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}}
 
 
 # NamedTemporaryFiles not supported in Windows
