@@ -263,7 +263,12 @@ def _cast_strings_keys_to_int(obj: dict) -> dict:
 
 
 class RuntimeEncoder(json.JSONEncoder):
-    """JSON Encoder used by IBM Quantum Compute service."""
+    """JSON Encoder used by IBM Quantum Compute service.
+
+    This class has been designed for using as part of IBM Quantum Compute client. It provides no
+    guarantees on the safety, validity and potential side effects. It is recommended to only call
+    this function on trusted input.
+    """
 
     def default(self, obj: Any) -> Any:
         """Return a serializable object for ``obj``."""
@@ -456,7 +461,12 @@ class RuntimeEncoder(json.JSONEncoder):
 
 
 class RuntimeDecoder(json.JSONDecoder):
-    """JSON Decoder used by IBM Quantum Compute service."""
+    """JSON Decoder used by IBM Quantum Compute service.
+
+    This class has been designed for using as part of IBM Quantum Compute client. It provides no
+    guarantees on the safety, validity and potential side effects. It is recommended to only call
+    this function on trusted input.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any):
         if "encoding" in kwargs:
