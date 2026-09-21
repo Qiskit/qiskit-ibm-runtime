@@ -297,7 +297,7 @@ class CloudAccount(Account):
         return IAMAuthenticator(
             apikey=self.token,
             url=iam_url,
-            disable_ssl_verification=not self.verify,
+            disable_ssl_verification=True if self.verify is not False else False,
             **proxies_kwargs,
         )
 
