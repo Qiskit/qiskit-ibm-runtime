@@ -206,12 +206,14 @@ class TestEstimatorWithNoise(IBMTestCase):
             shots_per_randomization=200,
             options_overrides={"resilience_level": 0},
         )
+        estimator.options.resilience.measure_mitigation = True
         estimator.options.simulator.layer_noise_model = [
             (layer, PauliLindbladMap.from_list([("IX", 0.05)]))
             for layer in estimator.find_unique_layers([pub], types="all")
         ]
 
         result = estimator.run([pub]).result()
+        print(result[0].data.evs)
         np.testing.assert_array_less(result[0].data.evs, 1)
 
 
