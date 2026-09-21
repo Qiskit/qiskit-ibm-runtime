@@ -46,9 +46,9 @@ When a user submits a job through :meth:`~.Estimator.run`, the underlying proces
 
 .. note::
 
-    For large or complex workloads, the client-side preparation step can be resource intensive
-    and may cause a delay before the job is submitted. Set the ``qiskit_ibm_runtime`` logger to
-    ``INFO`` to monitor preparation progress::
+    For large or complex workloads, the client-side pre- and post-processing steps can be resource
+    intensive and may cause a delay before the job is submitted.
+    Set the ``qiskit_ibm_runtime`` logger to ``INFO`` to monitor client-side processing::
 
         import logging
         logger = logging.getLogger("qiskit_ibm_runtime")
@@ -260,7 +260,7 @@ Job-level metadata
 * ``"options"`` — the finalized
   :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`, as a dictionary.
   Inactive resilience sub-options are pruned (for example, the ``zne`` sub-dictionary is omitted
-  when ``zne_mitigation=False``).
+  when ``zne_mitigation=False``), and noise model (if provided) is removed.
 * ``"target_precision"`` — the precision resolved from the PUBs and the ``precision`` argument of
   :meth:`~.Estimator.run`, or ``None`` if neither specified one. In that case, the shot count
   comes from ``default_shots``, falling back to ``default_precision``.
