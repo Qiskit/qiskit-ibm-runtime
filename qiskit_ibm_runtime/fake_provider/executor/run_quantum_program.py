@@ -101,17 +101,20 @@ def determine_barrier_position(layer: CircuitInstruction) -> Literal["L", "M", "
     """
     box_type = find_box_type(layer)
 
-    if box_type == "unknown":
-        raise TypeError(f"Unsupported box type: {box_type}")
-
     if box_type == "measurement":
         return "M"
 
-    if box_type == "gates" and (twirl := get_annotation(layer.operation, Twirl)) is not None:
-        if twirl.dressing.value == "right":
+    if box_type == "gates":
+        if (twirl := get_annotation(layer.operation, Twirl)) is not None and twirl.dressing.value == "right":
             return "L"
-
-    return "R"
+        return "R"
+            
+    raise TypeError(
+         "Unsupported box type: Simulations are only supported for "
+         "circuits that contain gate boxes and/or measurement boxes,"
+         "but not mixed boxes containing both gates and measurements "
+         "or boxes containing instructions of different type."
+     )
 
 
 @HAS_AER.require_in_call
