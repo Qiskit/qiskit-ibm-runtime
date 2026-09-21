@@ -12,7 +12,7 @@
 
 """
 ================================================================================
-Client-based Estimator (:mod:`qiskit_ibm_runtime.executor_estimator`)
+Client-side Estimator (:mod:`qiskit_ibm_runtime.executor_estimator`)
 ================================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.executor_estimator
