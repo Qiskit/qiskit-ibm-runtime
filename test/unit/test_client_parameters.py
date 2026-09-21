@@ -12,8 +12,10 @@
 
 """Tests for ClientParameters."""
 
+from __future__ import annotations
+
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from requests_ntlm import HttpNtlmAuth
 
@@ -22,6 +24,9 @@ from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
 from ..ibm_test_case import IBMTestCase
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class TestClientParameters(IBMTestCase):
@@ -141,7 +146,7 @@ class TestClientParameters(IBMTestCase):
             "password_ntlm": 5678,
         }
         malformed_ntlm_credentials = self._get_client_params(
-            proxies=malformed_ntlm_credentials_dict
+            proxies=malformed_ntlm_credentials_dict  # type: ignore[arg-type]
         )
         # Should raise when trying to do username.split('\\', <int>)
         # in NTLM credentials due to int not facilitating 'split'.
@@ -172,14 +177,14 @@ class TestClientParameters(IBMTestCase):
 
     def _get_client_params(
         self,
-        channel="ibm_quantum_platform",
-        token="dummy_token",
-        url="https://dummy_url",
-        instance=None,
-        proxies=None,
-        verify=None,
-        url_resolver=None,
-    ):
+        channel: str = "ibm_quantum_platform",
+        token: str = "dummy_token",
+        url: str = "https://dummy_url",
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = None,
+        url_resolver: Callable | None = None,
+    ) -> ClientParameters:
         """Return a custom ClientParameters."""
         if verify is None:
             verify = True

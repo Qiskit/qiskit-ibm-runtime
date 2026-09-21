@@ -73,7 +73,7 @@ class IBMTestCase(TestCase):
     def assertDictFlatPartiallyEqual(self, a: dict, b: dict) -> None:
         """Assert that (when flattened) all keys in ``b`` are in ``a`` and have the same values."""
 
-        def _flat_dict(in_dict, out_dict):
+        def _flat_dict(in_dict: dict, out_dict: dict) -> None:
             """Flat the dictionaries, and compare.
 
             Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have
@@ -187,7 +187,7 @@ class IBMBoxedCircuitTestCase(IBMTestCase):
     ) -> None:
         """Assert two circuits are equal, ignoring any annotations on box operations."""
 
-        def strip_annotations(circuit):
+        def strip_annotations(circuit: QuantumCircuit) -> QuantumCircuit:
             """Return a copy of the circuit without annotations.
 
             Annotations cannot be mutated in python space, so data is recreated.
@@ -545,9 +545,10 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
 
     log: logging.Logger
     program_ids: dict[str, str]
+    sim_backends: dict[str, str | None]
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
@@ -558,7 +559,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         cls._find_sim_backends()
 
     @classmethod
-    def _find_sim_backends(cls):
+    def _find_sim_backends(cls) -> None:
         """Find a simulator or test backend for each service."""
         backends = cls.service.backends()
         # Simulators or tests backends can be not available

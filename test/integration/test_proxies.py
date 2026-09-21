@@ -123,7 +123,7 @@ class TestProxies(IBMTestCase):
             service.jobs(limit=1)
 
 
-def pproxy_desired_access_log_line(url):
+def pproxy_desired_access_log_line(url: str) -> str:
     """Return a desired pproxy log entry given a url."""
     qe_url_parts = urllib.parse.urlparse(url)
     protocol_port = "443" if qe_url_parts.scheme == "https" else "80"
