@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -89,12 +88,6 @@ def prepare(
     """
     coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
     finalized_options = finalize_estimator_options(options)
-
-    if add_tags and finalized_options.resilience.measure_mitigation:
-        warnings.warn(
-            "Simulating estimation jobs with measure mitigation is not yet supported; "
-            "measure mitigation will not be applied to the results."
-        )
 
     _validate(coerced_pubs, finalized_options, backend)
 
