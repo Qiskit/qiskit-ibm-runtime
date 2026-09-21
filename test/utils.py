@@ -36,6 +36,7 @@ from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, B
 
 if TYPE_CHECKING:
     import logging
+    from collections.abc import Callable, Iterable
 
     from qiskit.providers.backend import Backend, BackendV2
 
@@ -240,7 +241,9 @@ class Case(dict):
     """<no description>."""
 
 
-def generate_cases(docstring, dsc=None, name=None, **kwargs):
+def generate_cases(
+    docstring: str, dsc: str | None = None, name: str | None = None, **kwargs: Any
+) -> list[Case]:
     """Combines kwargs in Cartesian product and creates Case with them."""
     ret = []
     keys = kwargs.keys()
@@ -257,7 +260,7 @@ def generate_cases(docstring, dsc=None, name=None, **kwargs):
     return ret
 
 
-def combine(**kwargs):
+def combine(**kwargs: Any) -> Callable[[Callable], Callable]:
     """Decorator to create combinations and tests.
 
     @combine(level=[0, 1, 2, 3],
@@ -266,13 +269,13 @@ def combine(**kwargs):
              name='{circuit.__name__}_level{level}').
     """
 
-    def deco(func):
+    def deco(func: Callable) -> Callable:
         return data(*generate_cases(docstring=func.__doc__, **kwargs))(unpack(func))
 
     return deco
 
 
-def bell():
+def bell() -> QuantumCircuit:
     """Return a Bell circuit."""
     quantum_register = QuantumRegister(2, name="qr")
     classical_register = ClassicalRegister(2, name="cr")
@@ -387,7 +390,7 @@ def get_primitive_inputs(primitive, backend=None, num_sets=1):
         raise ValueError(f"Invalid primitive type {type(primitive)}")
 
 
-def transpile_pubs(in_pubs, backend, program):
+def transpile_pubs(in_pubs: Iterable[Any], backend: Backend, program: str) -> list[tuple[Any, ...]]:
     """Return pubs with transformed circuits and observables."""
     t_pubs = []
     for pub in in_pubs:
@@ -406,10 +409,12 @@ def transpile_pubs(in_pubs, backend, program):
     return t_pubs
 
 
-def remap_observables(observables, isa_circuit):
+def remap_observables(
+    observables: Iterable[str | SparsePauliOp | dict], isa_circuit: QuantumCircuit
+) -> list[str | SparsePauliOp | dict]:
     """Remap observables based on input circuit."""
 
-    def _convert_paul_or_str(_obs):
+    def _convert_paul_or_str(_obs: str | Pauli) -> str | Pauli:
         if isinstance(_obs, str):
             return _obs + "I" * (len(layout.input_qubit_mapping) - len(_obs))
         return Pauli("X" * (len(layout.input_qubit_mapping)))

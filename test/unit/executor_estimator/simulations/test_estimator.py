@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from ddt import data, ddt
-from qiskit.quantum_info import PauliLindbladMap
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 
@@ -182,6 +183,36 @@ class TestEstimatorWithNoise(IBMTestCase):
 
         debug_message = f"Ideal errors: {errors}\nDivergent errors: {divergent_errors}"
         np.testing.assert_array_less(errors, divergent_errors, err_msg=debug_message)
+
+    def test_measurement_noise_injection(self):
+        """Tests that measurement noise injection works as expected.
+
+        Estimator result quality is expected to degrade with measurement
+        noise injection.
+        """
+        backend = AerSimulator()
+        circuit = QuantumCircuit(2)
+        circuit.measure_all()
+
+        preset_pass_manager = generate_preset_pass_manager(backend=backend)
+        isa_circuit = preset_pass_manager.run(circuit)
+
+        observable = SparsePauliOp("Z" * circuit.num_qubits)
+        pub = (isa_circuit, observable)
+
+        estimator = create_local_mode_estimator(
+            backend,
+            num_randomizations=1000,
+            shots_per_randomization=200,
+            options_overrides={"resilience_level": 0},
+        )
+        estimator.options.simulator.layer_noise_model = [
+            (layer, PauliLindbladMap.from_list([("IX", 0.05)]))
+            for layer in estimator.find_unique_layers([pub], types="all")
+        ]
+
+        result = estimator.run([pub]).result()
+        np.testing.assert_array_less(result[0].data.evs, 1)
 
 
 @ddt

@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 import numpy as np
 from qiskit.primitives.containers.bindings_array import BindingsArray
@@ -35,13 +35,15 @@ if TYPE_CHECKING:
     from qiskit.circuit import CircuitInstruction
     from qiskit.providers import BackendV2
 
-    from ...executor_estimator.utils import BoxType
     from ...options_models.simulator import SimulatorOptions
     from ...quantum_program import QuantumProgram
 
 if HAS_AER:
     from qiskit_aer import AerSimulator
     from qiskit_aer.primitives import SamplerV2 as AerSamplerV2
+
+# TypeAlias for a BoxOp type
+BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
 
 
 def _round_to_clifford(values: np.ndarray, decimals: int) -> np.ndarray:
@@ -93,17 +95,28 @@ def determine_barrier_position(layer: CircuitInstruction) -> Literal["L", "M", "
 
     Returns:
         The barrier position to inject the noise into.
+
+    Raises:
+        TypeError: If ``layer`` is an "unknown" box type.
     """
     box_type = find_box_type(layer)
 
     if box_type == "measurement":
         return "M"
 
-    if box_type == "gates" and (twirl := get_annotation(layer.operation, Twirl)) is not None:
-        if twirl.dressing.value == "right":
+    if box_type == "gates":
+        if (
+            twirl := get_annotation(layer.operation, Twirl)
+        ) is not None and twirl.dressing.value == "right":
             return "L"
+        return "R"
 
-    return "R"
+    raise TypeError(
+        "Unsupported box type: Simulations are only supported for "
+        "circuits that contain gate boxes and/or measurement boxes,"
+        "but not mixed boxes containing both gates and measurements "
+        "or boxes containing instructions of different type."
+    )
 
 
 @HAS_AER.require_in_call
