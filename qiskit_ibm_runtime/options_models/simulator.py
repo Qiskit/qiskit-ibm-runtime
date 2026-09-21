@@ -14,13 +14,16 @@
 
 from __future__ import annotations
 
-from typing import Annotated, TypeAlias
+from typing import TYPE_CHECKING, Annotated, TypeAlias
 
 from pydantic import AfterValidator, InstanceOf
 from qiskit.circuit import BoxOp, CircuitInstruction
 from qiskit.quantum_info import PauliLindbladMap
 
 from .base import BaseOptionsModel
+
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
 
 
 def validate_layer_noise_model(value: LayerNoiseModel | None) -> LayerNoiseModel | None:
@@ -42,6 +45,86 @@ LayerNoiseModel: TypeAlias = Annotated[
     AfterValidator(validate_layer_noise_model),
 ]
 
+BARRIER_POSITIONS = ("L", "M", "R")
+"""Noise positions naming one of the three barriers samplomatic emits around a layer."""
+
+BODY_POSITIONS = ("before", "after")
+"""Noise positions naming a side of a layer's body, resolved against the layer's dressing."""
+
+NOISE_POSITIONS = (*BARRIER_POSITIONS, *BODY_POSITIONS)
+"""The positions at which a layer's noise may be placed."""
+
+
+def body_is_absorbed_into_dressing(body: QuantumCircuit) -> bool:
+    """Return whether every operation in a layer's body is absorbed into its dressing.
+
+    Samplomatic pushes single-qubit gates out of a box body and into the dressing, so a body holding
+    nothing else is equivalent to an empty one: the barriers on either side of it end up adjacent.
+
+    Args:
+        body: The body of a boxed layer.
+    """
+    # `measure` and `reset` are single-qubit but are not standard gates, so they are not absorbed.
+    return all(
+        instruction.is_standard_gate() and instruction.operation.num_qubits == 1
+        for instruction in body.data
+    )
+
+
+def validate_positioned_layer_noise_model(
+    value: PositionedLayerNoiseModel,
+) -> PositionedLayerNoiseModel:
+    """Validate a ``LayerNoiseModel`` entry that may carry a noise position."""
+    validate_layer_noise_model(value[:2])  # type: ignore[arg-type]
+
+    if len(value) == 3:
+        position = value[2]
+        if position not in NOISE_POSITIONS:
+            raise ValueError(
+                f"Found the noise position {position!r}, but expected one of "
+                f"{list(NOISE_POSITIONS)}."
+            )
+        if position in BODY_POSITIONS and body_is_absorbed_into_dressing(value[0].operation.body):
+            raise ValueError(
+                f"The noise position {position!r} is ambiguous for a layer whose body holds "
+                f"nothing but single-qubit gates: those gates are absorbed into the layer's "
+                f"dressing, leaving 'before' and 'after' naming the same point. Name a barrier "
+                f"explicitly, one of {list(BARRIER_POSITIONS)}, or use 'preparation_noise' if this "
+                f"is a preparation layer and the noise belongs before it."
+            )
+
+    return value
+
+
+def validate_preparation_noise(value: PreparationNoise) -> PreparationNoise:
+    """Validate the ``PreparationNoise``."""
+    for qubits, noise in value.items():
+        if len(set(qubits)) != len(qubits):
+            raise ValueError(f"Found the repeated qubit(s) {qubits} in a preparation noise key.")
+        if len(qubits) != noise.num_qubits:
+            raise ValueError(
+                f"Found the {len(qubits)} qubits {qubits} but a noise model with "
+                f"{noise.num_qubits}."
+            )
+    return value
+
+
+PreparationNoise: TypeAlias = Annotated[
+    dict[tuple[int, ...], Annotated[PauliLindbladMap, InstanceOf]],
+    AfterValidator(validate_preparation_noise),
+]
+
+
+PositionedLayerNoiseModel: TypeAlias = Annotated[
+    tuple[Annotated[CircuitInstruction, InstanceOf], Annotated[PauliLindbladMap, InstanceOf]]
+    | tuple[
+        Annotated[CircuitInstruction, InstanceOf],
+        Annotated[PauliLindbladMap, InstanceOf],
+        str,
+    ],
+    AfterValidator(validate_positioned_layer_noise_model),
+]
+
 
 class SimulatorOptions(BaseOptionsModel):
     """Simulator options."""
@@ -54,16 +137,50 @@ class SimulatorOptions(BaseOptionsModel):
     angles are nominally Clifford.
     """
 
-    layer_noise_model: list[LayerNoiseModel] | None = None
+    layer_noise_model: list[PositionedLayerNoiseModel] | None = None
     """Noise model specified by a collection of instructions and the noise that affects them.
+
+    Each entry is a ``(instruction, noise)`` pair, or a ``(instruction, noise, position)`` triple
+    where ``position`` is one of :data:`NOISE_POSITIONS` and says where in the layer the noise acts.
+    An entry that omits the position has one derived from what its layer's body does: a layer that
+    measures gets ``"before"``, and every other layer gets ``"after"``.
+
+    A position is either body-relative, ``"before"`` or ``"after"`` the layer's body, or one of the
+    barriers ``"L"``, ``"M"`` and ``"R"`` that samplomatic emits around the layer.
+
+    .. note::
+        A body-relative position is relative to the layer's body *after dressing*, which is not
+        always the body as written.  Single-qubit gates are moved out of a body and into the
+        dressing — those leading it under left dressing, those trailing it under right dressing — so
+        for a left-dressed layer holding ``x(0); cz(0, 1)`` the ``x`` becomes dressing, and
+        ``"before"`` places the noise *after* the ``x`` rather than before it.
+
+        An error is raised if ``"before"`` or ``"after"`` is used for a layer whose body holds
+        nothing but single-qubit gates.
 
     When simulating an estimator job, if this value is set to ``None``,
     it defaults to the value of
     :attr:`qiskit_ibm_runtime.options_models.ResilienceOptions.layer_noise_model`.
     """
 
+    preparation_noise: PreparationNoise | None = None
+    """Noise applied at the very front of every circuit, keyed by the qubits it acts on.
+
+    Qubits are indexed as the circuit indexes them, and each map must be defined on exactly the
+    qubits of its key.
+
+    .. code-block:: python
+
+        options.simulator.preparation_noise = {(0, 1): prep_map, (5,): other_prep_map}
+    """
+
     seed_simulator: int | None = None
     """Random seed to control sampling."""
 
     warn_absent: bool = True
-    """Whether to emit a warning when an entry is missing in :attr:`layer_noise_dict`."""
+    """Whether to warn when a :attr:`layer_noise_model` entry names a layer no circuit contains.
+
+    Such an entry's noise is never applied, which usually means the noise model was built from
+    different circuits than the ones being run.  Nothing is reported for the reverse case, a layer
+    that carries no noise, because a noise model covering only some layers is normal.
+    """
