@@ -28,7 +28,7 @@ LogLevelType = Literal[
 ]
 
 
-def warn_max_execution_time(value: bool) -> bool:
+def warn_max_execution_time(value: int | None) -> int | None:
     """Warn that ``max_execution_time`` is deprecated."""
     if value:
         issue_deprecation_msg(
