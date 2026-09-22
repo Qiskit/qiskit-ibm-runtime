@@ -55,6 +55,7 @@ def sampler_option_to_executor_options(options: SamplerOptions) -> ExecutorOptio
     """
     executor_options = ExecutorOptions()
 
+    executor_options.max_execution_time = options.max_execution_time
     executor_options.environment = EnvironmentOptions(**options.environment.model_dump())
     executor_options.execution = ExecutionOptions(
         **options.execution.model_dump(exclude={"meas_type"})
@@ -81,6 +82,7 @@ def estimator_options_to_executor_options(options: EstimatorOptions) -> Executor
     """
     executor_options = ExecutorOptions()
 
+    executor_options.max_execution_time = options.max_execution_time
     executor_options.environment = EnvironmentOptions(**options.environment.model_dump())
     executor_options.execution = ExecutionOptions(**options.execution.model_dump())
     executor_options.simulator = SimulatorOptions(**options.simulator.model_dump())
