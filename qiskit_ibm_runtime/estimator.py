@@ -121,6 +121,16 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         mode: BackendV2 | Session | Batch | str | None = None,
         options: dict | options.EstimatorOptions | None = None,
     ):
+        issue_deprecation_msg(
+            msg="The EstimatorV2 class is deprecated",
+            version="0.50.0",
+            remedy="`qiskit_ibm_runtime.executor_estimator.Estimator` provides a new Estimator "
+            "implementation that runs all the pre- and post-processing in the client side. "
+            "The top-level `qiskit_ibm_runtime.Estimator` import will be updated to point "
+            "to the client-side estimator in an upcoming release, with the legacy Estimator "
+            "being available until the deprecation is completed.",
+            stacklevel=2,
+        )
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
 
