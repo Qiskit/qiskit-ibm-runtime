@@ -109,7 +109,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about the ``Execution modes``.
 
-        options: Estimator options, see :class:`EstimatorOptions` for detailed description.
+        options: Estimator options, see :class:`~qiskit_ibm_runtime.options.EstimatorOptions`
+            for detailed description.
     """
 
     _options_class = EstimatorOptions
