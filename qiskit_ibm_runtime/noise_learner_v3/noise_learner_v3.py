@@ -186,9 +186,16 @@ class NoiseLearnerV3:
         inputs = params.model_dump(mode="json")
         inputs["version"] = 3
 
+        # 'EnvironmentOptions.max_execution_time' is deprecated, and when users set it there, they
+        # get a warning. Hence, in case both are set, we make 'ExecutorOptions.max_execution_time'
+        # prevail
+        max_execution_time = (
+            self.options.max_execution_time or self.options.environment.max_execution_time
+        )
+
         return _run(
             program_id=self._PROGRAM_ID,
-            options=to_runtime_options(self.options.environment, self._backend),
+            options=to_runtime_options(self.options.environment, self._backend, max_execution_time),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
             dry_run=dry_run,

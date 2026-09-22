@@ -27,16 +27,22 @@ if TYPE_CHECKING:
     from .sampler import SamplerOptions
 
 
-def to_runtime_options(options: EnvironmentOptions, backend: IBMBackend) -> dict:
+def to_runtime_options(
+    options: EnvironmentOptions,
+    backend: IBMBackend,
+    max_execution_time: int | None = None,
+) -> dict:
     """Convert `EnvironmentOptions` into runtime options.
 
     Args:
         options: environment options to convert.
         backend: backend to use for runtime options.
+        max_execution_time: The maximum execution time in seconds.
     """
     runtime_options = options.model_dump()
     runtime_options["backend"] = backend.name
     runtime_options["instance"] = backend._instance
+    runtime_options["max_execution_time"] = max_execution_time
 
     return runtime_options
 
