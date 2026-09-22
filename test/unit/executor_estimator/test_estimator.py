@@ -25,6 +25,7 @@ from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler import generate_preset_pass_manager
 
+from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import Estimator
@@ -35,6 +36,7 @@ from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+from qiskit_ibm_runtime.session import Session
 
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
@@ -343,7 +345,7 @@ class TestEstimatorRun(IBMTestCase):
         executor_options = self.mock_executor_class.call_args[1]["options"]
         self.assertTrue(executor_options.execution.init_qubits)
         self.assertEqual(executor_options.execution.rep_delay, 0.001)
-        self.assertEqual(executor_options.environment.max_execution_time, 300)
+        self.assertEqual(executor_options.max_execution_time, 300)
 
     def test_run_adds_options_to_passthrough_data(self):
         """Test that run adds options, shots and precision to passthrough data."""
@@ -524,24 +526,34 @@ class TestEstimatorRunNoPatching(IBMTestCase):
         job = estimator.run([(circuit, observable)], precision=0.03125, dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
-
-class TestEstimatorV2RunNoPatching(IBMTestCase):
-    """Tests for the Estimator.run() method (with no Python methods patching)."""
-
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_dry_run(self, registry):
-        """Estimator can run in `dry-run` mode."""
+    @mock_responses
+    def test_mode(self, registry):
+        """Estimator `mode` and `backend()` is based on `mode` init argument."""
         service = QiskitRuntimeService(token="my_token")
-        backend = service.backend("ibm_foo")
+
+        # Job mode, online backend.
+        backend = service.backend("common_backend")
         estimator = Estimator(mode=backend)
+        self.assertEqual(estimator.backend(), backend)
+        self.assertEqual(estimator.mode, None)
 
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        # Session mode.
+        session = Session(backend)
+        estimator = Estimator(mode=session)
+        self.assertEqual(estimator.backend(), backend)
+        self.assertEqual(estimator.mode, session)
 
-        job = estimator.run([(circuit, observable)], precision=0.03125, dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        # Batch mode.
+        batch = Batch(backend)
+        estimator = Estimator(mode=batch)
+        self.assertEqual(estimator.backend(), backend)
+        self.assertEqual(estimator.mode, batch)
+
+        # `None` mode (inside session).
+        with Session(backend) as session:
+            estimator = Estimator()
+            self.assertEqual(estimator.backend(), backend)
+            self.assertEqual(estimator.mode, session)
 
 
 class TestEstimatorSimulatorMode(IBMTestCase):

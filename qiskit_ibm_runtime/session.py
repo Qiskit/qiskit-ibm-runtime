@@ -108,7 +108,7 @@ class Session:
         create_new: bool | None = True,
     ):
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService | None = None
-        self._backend: BackendV2 | None = None
+        self._backend: BackendV2
         self._instance = None
         self._active = True
         self._session_id = None

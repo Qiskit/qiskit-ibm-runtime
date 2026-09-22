@@ -1,1 +1,0 @@
-The minimal version of Samplomatic required is now ``0.21.0``.

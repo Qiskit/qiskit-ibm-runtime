@@ -90,7 +90,7 @@ class Executor:
         # Coerced to `ExecutorOptions` via `__setattr__()`.
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
-        self._session, self._service, self._backend = get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -106,6 +106,19 @@ class Executor:
                 raise TypeError(f"Expected ExecutorOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
+    @property
+    def mode(self) -> Session | Batch | None:
+        """Return the execution mode used by this primitive.
+
+        Returns:
+            Mode used by this primitive, or ``None`` if an execution mode is not used.
+        """
+        return self._mode
 
     def run(self, program: QuantumProgram, dry_run: bool = False) -> RuntimeJobV2 | LocalRuntimeJob:
         """Run a quantum program.
@@ -134,8 +147,8 @@ class Executor:
 
         params = converter.encoder(program, self.options)
 
-        if self._session:
-            _run = self._session._run
+        if self._mode:
+            _run = self._mode._run
         else:
             _run = self._service._run
 
@@ -151,14 +164,17 @@ class Executor:
 
         inputs = params.model_dump(mode="json")
 
+        # 'EnvironmentOptions.max_execution_time' is deprecated, and when users set it there, they
+        # get a warning. Hence, in case both are set, we make 'ExecutorOptions.max_execution_time'
+        # prevail
+        max_execution_time = (
+            self.options.max_execution_time or self.options.environment.max_execution_time
+        )
+
         return _run(
             program_id=self._PROGRAM_ID,
-            options=to_runtime_options(self.options.environment, self._backend),
+            options=to_runtime_options(self.options.environment, self._backend, max_execution_time),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
             dry_run=dry_run,
         )
-
-    def backend(self) -> BackendV2:
-        """Return the backend the primitive query will be run on."""
-        return self._backend

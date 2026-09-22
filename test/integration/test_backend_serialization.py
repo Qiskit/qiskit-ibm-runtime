@@ -117,7 +117,7 @@ def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
             _find_potential_encoded(value, full_key, tally)
 
 
-def _check_encoded(data):
+def _check_encoded(data: list | str) -> bool:
     """Check if the input data is potentially in JSON serialized format."""
     if isinstance(data, list) and len(data) == 2 and all(isinstance(x, (float, int)) for x in data):
         return True
@@ -128,18 +128,3 @@ def _check_encoded(data):
         except ValueError:
             pass
     return False
-
-
-def _array_to_list(data):
-    """Convert numpy arrays to lists."""
-    for key, value in data.items():
-        if hasattr(value, "tolist"):
-            data[key] = value.tolist()
-        elif isinstance(value, dict):
-            _array_to_list(value)
-        elif isinstance(value, list):
-            for index, item in enumerate(value):
-                if isinstance(item, dict):
-                    value[index] = _array_to_list(item)
-
-    return data

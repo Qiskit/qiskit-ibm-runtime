@@ -22,7 +22,8 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..executor_estimator.utils import BoxType, find_box_type, find_unique_layers
+from ..executor_estimator.utils import find_unique_layers
+from ..fake_provider.executor.run_quantum_program import BoxType, find_box_type
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options
@@ -126,6 +127,19 @@ class Sampler(BaseSamplerV2):
                 raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
+    @property
+    def mode(self) -> Session | Batch | None:
+        """Return the execution mode used by this primitive.
+
+        Returns:
+            Mode used by this primitive, or ``None`` if an execution mode is not used.
+        """
+        return self._mode
 
     def find_unique_layers(
         self, pubs: Iterable[SamplerPubLike], types: Literal["gates", "all"] = "gates"

@@ -1,0 +1,1 @@
+Bumped the lowest supported version of `ibm-quantum-schemas` to `0.12.20260921` and `samplomatic` to `0.21.0`.

@@ -21,11 +21,7 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_estimator.utils import (
-    box_circuit,
-    find_box_type,
-    resolve_precision,
-)
+from qiskit_ibm_runtime.executor_estimator.utils import box_circuit, resolve_precision
 
 from ...ibm_test_case import IBMBoxedCircuitTestCase, IBMTestCase
 
@@ -318,36 +314,3 @@ class TestBoxCircuit(IBMBoxedCircuitTestCase):
                 0,
                 msg=f"Expected at least one tagged box for add_tags={add_tags!r}, but found none.",
             )
-
-
-class TestFindBoxType(IBMTestCase):
-    """Tests for ``find_box_type``."""
-
-    def test_gates(self):
-        """Test that ``find_box_type`` returns "gates" as the type."""
-        circuit = QuantumCircuit(2)
-        with circuit.box():
-            circuit.h(0)
-            circuit.barrier()
-            circuit.cx(0, 1)
-
-        self.assertEqual(find_box_type(circuit.data[0]), "gates")
-
-    def test_measurement(self):
-        """Test that ``find_box_type`` returns "measurement" as the type."""
-        circuit = QuantumCircuit(2, 2)
-        with circuit.box():
-            circuit.barrier()
-            circuit.measure(0, 0)
-            circuit.measure(1, 1)
-
-        self.assertEqual(find_box_type(circuit.data[0]), "measurement")
-
-    def test_unknown(self):
-        """Test that ``find_box_type`` returns "unknown" as the type."""
-        circuit = QuantumCircuit(2, 1)
-        with circuit.box():
-            circuit.h(0)
-            circuit.measure(0, 0)
-
-        self.assertEqual(find_box_type(circuit.data[0]), "unknown")

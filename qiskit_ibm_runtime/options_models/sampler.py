@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
-from .environment import SamplerEnvironmentOptions
+from .environment import EnvironmentOptions
 from .execution import SamplerExecutionOptions
 from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
@@ -37,14 +37,19 @@ class SamplerOptions(BaseOptionsModel):
     twirling: TwirlingOptions = TwirlingOptions()
     """Pauli twirling options."""
 
+    max_execution_time: int | None = None
+    """Maximum execution time in seconds.
+
+    This value bounds system execution time (not wall clock time). System execution time is the
+    amount of time that the system is dedicated to processing your job. If a job exceeds this time
+    limit, it is forcibly cancelled.
+    """
+
     simulator: SimulatorOptions = SimulatorOptions()
     """Options related to local mode simulations."""
 
     experimental: dict = {}
     """Experimental options."""
 
-    max_execution_time: int | None = None
-    """Maximum execution time in seconds, based on system execution time (not wall clock time)."""
-
-    environment: SamplerEnvironmentOptions = SamplerEnvironmentOptions()
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""

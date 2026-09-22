@@ -17,6 +17,7 @@ import os
 import uuid
 from contextlib import ContextDecorator
 from tempfile import NamedTemporaryFile
+from typing import Any
 
 from qiskit_ibm_runtime.accounts import management
 from qiskit_ibm_runtime.accounts.account import IBM_QUANTUM_PLATFORM_API_URL
@@ -25,7 +26,7 @@ from qiskit_ibm_runtime.accounts.account import IBM_QUANTUM_PLATFORM_API_URL
 class custom_envs(ContextDecorator):
     """Context manager that modifies environment variables."""
 
-    def __init__(self, new_environ):
+    def __init__(self, new_environ: dict):
         """custom_envs constructor.
 
         Args:
@@ -47,7 +48,7 @@ class custom_envs(ContextDecorator):
 class no_envs(ContextDecorator):
     """Context manager that disables environment variables."""
 
-    def __init__(self, vars_to_remove):
+    def __init__(self, vars_to_remove: list[str]):
         """no_envs constructor.
 
         Args:
@@ -70,7 +71,7 @@ class no_envs(ContextDecorator):
 class temporary_account_config_file(ContextDecorator):
     """Context manager that uses a temporary json file."""
 
-    def __init__(self, contents=None, **kwargs):
+    def __init__(self, contents: str | dict | None = None, **kwargs: Any) -> None:
         # Create a temporary file with the contents.
         contents = contents if contents is not None else get_account_config_contents(**kwargs)
 
@@ -91,15 +92,15 @@ class temporary_account_config_file(ContextDecorator):
 
 
 def get_account_config_contents(
-    name=None,
-    channel="ibm_quantum_platform",
-    token=None,
-    url=None,
-    instance=None,
-    verify=None,
-    proxies=None,
-    set_default=None,
-):
+    name: str | None = None,
+    channel: str = "ibm_quantum_platform",
+    token: str | None = None,
+    url: str | None = None,
+    instance: str | None = None,
+    verify: bool | None = None,
+    proxies: dict | None = None,
+    set_default: bool | None = None,
+) -> dict:
     """Generate account config file content."""
     token = token or uuid.uuid4().hex
     if name is None:
@@ -110,7 +111,7 @@ def get_account_config_contents(
         )
     if url is None:
         url = IBM_QUANTUM_PLATFORM_API_URL
-    out = {
+    out: dict[str, Any] = {
         name: {
             "channel": channel,
             "url": url,

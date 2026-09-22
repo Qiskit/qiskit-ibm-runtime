@@ -14,8 +14,9 @@
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import AfterValidator, Field
 
+from ..utils.deprecation import issue_deprecation_msg
 from .base import BaseOptionsModel
 
 LogLevelType = Literal[
@@ -25,6 +26,18 @@ LogLevelType = Literal[
     "ERROR",
     "CRITICAL",
 ]
+
+
+def warn_max_execution_time(value: int | None) -> int | None:
+    """Warn that ``max_execution_time`` is deprecated."""
+    if value:
+        issue_deprecation_msg(
+            msg="Setting `max_execution_time` via `EnvironmentOptions` is deprecated",
+            version="0.50.0",
+            remedy="Set it from top-level options.",
+            stacklevel=3,
+        )
+    return value
 
 
 class EnvironmentOptions(BaseOptionsModel):
@@ -49,46 +62,12 @@ class EnvironmentOptions(BaseOptionsModel):
     results follow the standard retention behavior of the API.
     """
 
-    max_execution_time: int | None = None
+    max_execution_time: Annotated[int | None, AfterValidator(warn_max_execution_time)] = None
     """Maximum execution time in seconds.
 
     This value bounds system execution time (not wall clock time). System execution time is the
     amount of time that the system is dedicated to processing your job. If a job exceeds this time
     limit, it is forcibly cancelled.
-    """
-
-    image: (
-        Annotated[
-            str,
-            Field(
-                pattern="[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-            ),
-        ]
-        | None
-    ) = None
-    """IBM Quantum Compute (formerly Qiskit Runtime) image used for this job."""
-
-
-class SamplerEnvironmentOptions(BaseOptionsModel):
-    """Options related to the execution environment."""
-
-    log_level: LogLevelType = "WARNING"
-    """Logging level to set in the execution environment."""
-
-    job_tags: list[str] = []
-    """Tags to be assigned to the job.
-
-    The tags can subsequently be used as a filter in the
-    :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()` function call.
-    """
-
-    private: bool = False
-    """Boolean that indicates whether the job is marked as private.
-
-    When set to ``True``, input parameters are not returned, and the results can only be read once.
-    After the job is completed, input parameters are deleted from the service. After the results are
-    read, these are also deleted from the service. When set to ``False``, the input parameters and
-    results follow the standard retention behavior of the API.
     """
 
     image: (

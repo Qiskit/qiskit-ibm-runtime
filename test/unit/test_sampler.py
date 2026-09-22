@@ -42,14 +42,14 @@ class MockSession(Session):
     _instance = None
 
 
-def _measured(n):
+def _measured(n: int) -> QuantumCircuit:
     """Return an n-qubit circuit with all qubits measured."""
     qc = QuantumCircuit(n)
     qc.measure_all()
     return qc
 
 
-def _real_amplitudes_measured(num_qubits, reps):
+def _real_amplitudes_measured(num_qubits: int, reps: int) -> QuantumCircuit:
     """Return a real_amplitudes circuit with all qubits measured."""
     qc = real_amplitudes(num_qubits=num_qubits, reps=reps)
     qc.measure_all()
