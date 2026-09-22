@@ -92,3 +92,11 @@ class EstimatorOptions(BaseOptionsModel):
     <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide for more
     information about the error mitigation methods used at each level.
     """
+
+    max_execution_time: int | None = None
+    """Maximum execution time in seconds.
+
+    This value bounds system execution time (not wall clock time). System execution time is the
+    amount of time that the system is dedicated to processing your job. If a job exceeds this time
+    limit, it is forcibly cancelled.
+    """
