@@ -14,8 +14,9 @@
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import AfterValidator, Field
 
+from ..utils.deprecation import issue_deprecation_msg
 from .base import BaseOptionsModel
 
 LogLevelType = Literal[
@@ -25,6 +26,18 @@ LogLevelType = Literal[
     "ERROR",
     "CRITICAL",
 ]
+
+
+def warn_max_execution_time(value: int | None) -> int | None:
+    """Warn that ``max_execution_time`` is deprecated."""
+    if value:
+        issue_deprecation_msg(
+            msg="Setting `max_execution_time` via `EnvironmentOptions` is deprecated",
+            version="0.50.0",
+            remedy="Set it from top-level options.",
+            stacklevel=3,
+        )
+    return value
 
 
 class EnvironmentOptions(BaseOptionsModel):
@@ -49,7 +62,7 @@ class EnvironmentOptions(BaseOptionsModel):
     results follow the standard retention behavior of the API.
     """
 
-    max_execution_time: int | None = None
+    max_execution_time: Annotated[int | None, AfterValidator(warn_max_execution_time)] = None
     """Maximum execution time in seconds.
 
     This value bounds system execution time (not wall clock time). System execution time is the

@@ -82,6 +82,17 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         mode: BackendV2 | Session | Batch | None = None,
         options: dict | options.SamplerOptions | None = None,
     ):
+        issue_deprecation_msg(
+            msg="The SamplerV2 class is deprecated",
+            version="0.50.0",
+            remedy="`qiskit_ibm_runtime.executor_sampler.Sampler` provides a new Sampler "
+            "implementation that runs all the pre- and post-processing in the client side. "
+            "The top-level `qiskit_ibm_runtime.Sampler` import will be updated to point "
+            "to the client-side sampler in an upcoming release, with the legacy Sampler "
+            "being available until the deprecation is completed.",
+            stacklevel=2,
+        )
+
         BaseSamplerV2.__init__(self)
         Sampler.__init__(self)
 
