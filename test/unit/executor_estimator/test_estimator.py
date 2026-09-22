@@ -330,7 +330,7 @@ class TestEstimatorRun(IBMTestCase):
         options = EstimatorOptions()
         options.execution.init_qubits = True
         options.execution.rep_delay = 0.001
-        options.environment.max_execution_time = 300
+        options.max_execution_time = 300
 
         estimator = Estimator(mode=self.backend, options=options)
 
@@ -345,7 +345,7 @@ class TestEstimatorRun(IBMTestCase):
         executor_options = self.mock_executor_class.call_args[1]["options"]
         self.assertTrue(executor_options.execution.init_qubits)
         self.assertEqual(executor_options.execution.rep_delay, 0.001)
-        self.assertEqual(executor_options.environment.max_execution_time, 300)
+        self.assertEqual(executor_options.max_execution_time, 300)
 
     def test_run_adds_options_to_passthrough_data(self):
         """Test that run adds options, shots and precision to passthrough data."""
