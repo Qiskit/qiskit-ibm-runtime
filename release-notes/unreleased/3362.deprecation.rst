@@ -1,10 +1,10 @@
 class:`~qiskit_ibm_runtime.EstimatorV2` and class:`~qiskit_ibm_runtime.SamplerV2` are deprecated.
 Two new client-side class:`~qiskit_ibm_runtime.executor_estimator.Estimator` and client-side
 class:`~qiskit_ibm_runtime.executor_sampler.Sampler` primitives provide a new implementation that
-runts all the pre- and post-processing in the client side.
+runs all the pre- and post-processing in the client side.
 
 Both sets of primitives will co-exist until the deprecation process is completed. The top-level
 imports (``qiskit_ibm_runtime.Sampler`` and ``qiskit_ibm_runtime.Estimator``, as well as the aliases
-with their ``V2`` suffix) will be updated to point to the client-side Primitives in an upcoming
-release, maintaining the legacy primitives available as part of the package in a different
-namespace until a later release.
+with their ``V2`` suffix) will be updated in an upcoming release to point to the client-side
+Primitives in an upcoming, maintaining the legacy primitives available as part of the package in a
+different namespace until a later release.
