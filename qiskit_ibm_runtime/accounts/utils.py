@@ -45,7 +45,14 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
 
 
-def resolve_crn(channel: str, url: str, instance: str, token: str) -> list[str]:
+def resolve_crn(
+    channel: str,
+    url: str,
+    instance: str,
+    token: str,
+    proxies_kwargs: dict,
+    verify: bool = True,
+) -> list[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
     if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
         raise ValueError("CRN value can only be resolved for cloud accounts.")
@@ -56,10 +63,16 @@ def resolve_crn(channel: str, url: str, instance: str, token: str) -> list[str]:
     else:
         with requests.Session() as session:
             # resolve CRN value based on the provided service name
-            authenticator = IAMAuthenticator(token, url=get_iam_api_url(url))
+            authenticator = IAMAuthenticator(
+                token,
+                url=get_iam_api_url(url),
+                disable_ssl_verification=not verify,
+                proxies=proxies_kwargs,
+            )
             client = ResourceControllerV2(authenticator=authenticator)
             client.set_service_url(get_resource_controller_api_url(url))
             client.set_http_client(session)
+            client.set_http_config(proxies_kwargs | {"verify": verify})
             client.configure_service("resource_controller")
             list_response = client.list_resource_instances(name=instance)
             result = list_response.get_result()
