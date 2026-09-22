@@ -297,7 +297,7 @@ class CloudAccount(Account):
         return IAMAuthenticator(
             apikey=self.token,
             url=iam_url,
-            disable_ssl_verification=True if self.verify is not False else False,
+            disable_ssl_verification=not self.verify,
             **proxies_kwargs,
         )
 
@@ -318,7 +318,7 @@ class CloudAccount(Account):
             token=self.token,
             instance=self.instance,
             proxies_kwargs=self._get_proxies_kwargs(),
-            verify=bool(self.verify),
+            verify=True if self.verify is not False else False,
         )
         if len(crn) == 0:
             raise CloudResourceNameResolutionError(
