@@ -266,7 +266,7 @@ class RuntimeEncoder(json.JSONEncoder):
     """JSON Encoder used by IBM Quantum Compute service.
 
     This class has been designed for using as part of IBM Quantum Compute client. When using as
-    standalone or outside the regular flow of the `qiskit_ibm_runtime` package, it provides no
+    standalone or outside the regular flow of the ``qiskit_ibm_runtime`` package, it provides no
     guarantees on the safety, validity and potential side effects. It is recommended to only use
     this class and its functions on trusted input.
     """
@@ -465,7 +465,7 @@ class RuntimeDecoder(json.JSONDecoder):
     """JSON Decoder used by IBM Quantum Compute service.
 
     This class has been designed for using as part of IBM Quantum Compute client. When using as
-    standalone or outside the regular flow of the `qiskit_ibm_runtime` package, it provides no
+    standalone or outside the regular flow of the ``qiskit_ibm_runtime`` package, it provides no
     guarantees on the safety, validity and potential side effects. It is recommended to only use
     this class and its functions on trusted input.
     """
