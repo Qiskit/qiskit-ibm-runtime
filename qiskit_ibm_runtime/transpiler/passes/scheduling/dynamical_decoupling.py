@@ -40,7 +40,6 @@ if TYPE_CHECKING:
     from qiskit.circuit import Gate, Qubit
     from qiskit.dagcircuit import DAGCircuit, DAGNode
     from qiskit.transpiler import CouplingMap, Target
-    from qiskit.transpiler.instruction_durations import InstructionDurations
 
     from .utils import BlockOrderingCallableType
 
@@ -125,7 +124,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
         alignment constraints for dynamic circuit backends.
 
     Args:
-        durations: Durations of instructions to be used in scheduling.
         dd_sequences: Sequence of gates to apply in idle spots.
             Alternatively a list of gate sequences may be supplied that
             will preferentially be inserted if there is a delay of sufficient
@@ -365,7 +363,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
                         except:  # noqa: E722 bare-except
                             gate_length = None
                     else:
-                        gate_length = self._durations.get(gate, physical_index)
+                        raise TranspilerError("Target cannot be 'None'.")
 
                     if gate_length is None:
                         raise TranspilerError(
