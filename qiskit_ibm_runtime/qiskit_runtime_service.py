@@ -193,6 +193,9 @@ class QiskitRuntimeService:
         IBMInputValueError: If an input is invalid.
     """
 
+    is_local: bool = False
+    """Whether the service is local or remote."""
+
     def __new__(cls, *args: Any, **kwargs: Any) -> QiskitRuntimeService:
         """Construct a ``QiskitRuntimeService`` instance."""
         channel = kwargs.get("channel", None)

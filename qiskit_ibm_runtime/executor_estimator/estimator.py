@@ -23,7 +23,6 @@ from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
 from .options_to_mitigation import estimator_options_to_boxing_options
@@ -255,7 +254,7 @@ class Estimator(BaseEstimatorV2):
             pubs,
             self.options,
             precision,
-            add_tags=isinstance(self._service, QiskitRuntimeLocalService),
+            add_tags=self._service.is_local,
             backend=self._backend,
         )
 

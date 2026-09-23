@@ -46,6 +46,9 @@ logger = logging.getLogger(__name__)
 class QiskitRuntimeLocalService:
     """Class for local testing mode."""
 
+    is_local: bool = True
+    """Whether the service is local or remote."""
+
     def backend(
         self,
         name: str | None = None,
