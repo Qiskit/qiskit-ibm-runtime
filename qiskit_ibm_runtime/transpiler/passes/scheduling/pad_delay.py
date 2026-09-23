@@ -78,15 +78,6 @@ class PadDelay(BlockBasePadder):
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ):
-        # if durations:
-        #     warnings.warn(
-        #         "The `durations` input argument of `PadDelay` is deprecated "
-        #         "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
-        #         "Provide a `target` instance instead ex: PadDelay(target=backend.target).",
-        #         DeprecationWarning,
-        #         stacklevel=2,
-        #     )
-
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,
