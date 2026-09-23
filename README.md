@@ -120,7 +120,26 @@ There are several different options you can specify when calling the primitives.
 
 ### Primitive versions
 
-Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. Version 1 of the primitives is no longer supported. Refer to [Introduction to primitives](https://quantum.cloud.ibm.com/docs/migration-guides/primitives) for information about V2 primitives. The examples below all use V2 primitives.
+This package provides implementations of the Version 2 of the `Sampler` and `Estimator` primitives.
+Refer to [Introduction to primitives] for information about primitives definitions and versions.
+
+Starting with release `0.50.0`, the package provides _client-side_ `Sampler` and `Estimator`
+primitives. Unlike their _legacy_ counterparts, they perform pre- and post-processing on the client
+side and delegate execution through `Executor`. Running on the client side provide greater
+transparency, faster debugging feedback, and finer control.
+
+> [!IMPORTANT]
+> Client-side primitives will become the default in an upcoming release, with the top-level imports
+> `qiskit_ibm_primitives.Sampler` and `qiskit_ibm_primitives.Estimator` pointing to them. The
+> examples below use the legacy primitives - you can opt-in already by replacing the imports to:
+>
+> ```python
+> from qiskit_ibm_runtime.executor_sampler import Sampler
+> from qiskit_ibm_runtime.executor_estimator import Estimator
+> ```
+>
+> The legacy primitives are marked as deprecated by release `0.50.0`, and will continue to be
+> available as a dedicated, not top-level import until the deprecation is completed.
 
 ### Sampler
 
@@ -378,3 +397,4 @@ If you use Qiskit, please cite as per the included [BibTeX file](https://github.
 [BibTeX file]: https://github.com/Qiskit/qiskit/blob/master/Qiskit.bib
 [Apache License 2.0]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/LICENSE.txt
 [tutorials]: https://learning.quantum.ibm.com/catalog/tutorials
+[Introduction to primitives]: (https://quantum.cloud.ibm.com/docs/en/guides/qiskit-runtime-primitives)
