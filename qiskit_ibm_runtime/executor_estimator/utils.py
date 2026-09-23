@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 from ..exceptions import IBMInputValueError
+from ..options_models.zne import DEFAULT_NOISE_FACTORS
 
 _REQUIRED_NOISE_FACTORS = {
     "linear": 2,
@@ -47,8 +48,6 @@ def resolve_noise_factors(zne_options: ZneOptions) -> tuple[np.ndarray, np.ndarr
     Returns:
         A tuple ``(noise_factors, extrapolated_noise_factors)`` as float arrays.
     """
-    from ..options_models.zne import DEFAULT_NOISE_FACTORS
-
     noise_factors = (
         np.array(DEFAULT_NOISE_FACTORS, dtype=float)
         if zne_options.noise_factors == "auto"
