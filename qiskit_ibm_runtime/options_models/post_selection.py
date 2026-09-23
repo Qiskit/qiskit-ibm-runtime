@@ -12,22 +12,33 @@
 
 """Post selection options."""
 
-from typing import Annotated, Literal
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import AfterValidator
 
 from ..utils.deprecation import issue_deprecation_msg
 from .base import BaseOptionsModel
 
+if TYPE_CHECKING:
+    from pydantic import ValidationInfo
 
-def warn_post_selection(value: bool) -> bool:
+
+def warn_post_selection(value: bool, info: ValidationInfo) -> bool:
     """Warn that the post selection options are deprecated."""
+    # The stack contains different number of levels depending on whether the validator is invoked
+    # due to model initialization and due to field assignment. We take advantage of `info.data` for
+    # detecting it (assignment contains all model fields, initialization contains only the fields
+    # declared prior to `enable`) and adjust the warning `stacklevel` accordingly.
+    stacklevel = 3 if "x_pulse_type" not in info.data else 4
+
     if value:
         issue_deprecation_msg(
             msg="The 'post_selection' field of NoiseLearnerV3 is deprecated",
             version="0.49.0",
             remedy="Use 'bit_flip_check' field instead",
-            stacklevel=2,
+            stacklevel=stacklevel,
         )
     return value
 
