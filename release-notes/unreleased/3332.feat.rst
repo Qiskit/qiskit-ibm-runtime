@@ -5,7 +5,7 @@ The client-side primitives are implementations of the Sampler and Estimator abst
 Unlike the "legacy" :class:`qiskit_ibm_runtime.sampler.Sampler` and
 :class:`qiskit_ibm_runtime.estimator.Estimator` classes, they perform pre- and post-processing
 on the client side and delegate execution to the :class:`qiskit_ibm_runtime.Executor`. Running
-on the client side provide greater transparency, faster debugging feedback, and finer control.
+on the client side provides greater transparency, faster debugging feedback, and finer control.
 
 The client-side primitives share the same API as the legacy primitives, so switching from one to the
 other only requires updating the imports in your scripts:
