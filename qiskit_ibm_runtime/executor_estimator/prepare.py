@@ -31,8 +31,8 @@ from ..options_models.converters import estimator_options_to_executor_options
 from ..quantum_program import QuantumProgram
 from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_estimator_options
-from .pec_utils import calculate_pec_twirling_shots, resolve_pec_max_overhead
-from .trex_utils import apply_trex
+from .pec import calculate_pec_twirling_shots, resolve_pec_max_overhead
+from .trex import apply_trex
 from .utils import (
     estimator_options_to_boxing_options,
     has_projection_operators,
