@@ -289,7 +289,7 @@ class BlockBasePadder(TransformationPass):
             else:
                 duration = self._target.seconds_to_dt(props.duration)
         else:
-            duration = self._durations.get(node.op, indices, unit="dt")
+            raise TranspilerError("Could not identify a duration.")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(

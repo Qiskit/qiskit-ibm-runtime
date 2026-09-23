@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING
 
 from qiskit.circuit.delay import Delay
@@ -26,7 +25,6 @@ if TYPE_CHECKING:
     from qiskit.circuit import Qubit
     from qiskit.dagcircuit import DAGNode
     from qiskit.transpiler import Target
-    from qiskit.transpiler.instruction_durations import InstructionDurations
 
     from .utils import BlockOrderingCallableType
 
@@ -63,7 +61,6 @@ class PadDelay(BlockBasePadder):
 
 
     Args:
-        durations: Durations of instructions to be used in scheduling.
         fill_very_end: Set ``True`` to fill the end of circuit with delay.
         schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
             This is useful for timeline visualizations, but may cause issues for execution
@@ -76,26 +73,24 @@ class PadDelay(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations | None = None,
         fill_very_end: bool = True,
         schedule_idle_qubits: bool = False,
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ):
-        if durations:
-            warnings.warn(
-                "The `durations` input argument of `PadDelay` is deprecated "
-                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
-                "Provide a `target` instance instead ex: PadDelay(target=backend.target).",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+        # if durations:
+        #     warnings.warn(
+        #         "The `durations` input argument of `PadDelay` is deprecated "
+        #         "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
+        #         "Provide a `target` instance instead ex: PadDelay(target=backend.target).",
+        #         DeprecationWarning,
+        #         stacklevel=2,
+        #     )
 
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,
         )
-        self._durations = durations
         self._target = target
         self.fill_very_end = fill_very_end
 
