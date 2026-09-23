@@ -27,7 +27,6 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
     ALAPScheduleAnalysis,
     ASAPScheduleAnalysis,
 )
-from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import DynamicCircuitInstructionDurations
 
 from .....ibm_test_case import IBMTestCase
 
@@ -2499,10 +2498,9 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         """Test scheduling works with transpilation."""
         backend = FakeJakartaV2()
 
-        durations = DynamicCircuitInstructionDurations.from_backend(backend)
         pm = PassManager(
             [
-                ALAPScheduleAnalysis(durations),
+                ALAPScheduleAnalysis(target=backend.target),
                 PadDelay(target=backend.target, schedule_idle_qubits=True),
             ]
         )

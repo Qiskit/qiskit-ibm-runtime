@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import itertools
-import warnings
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
@@ -29,7 +28,6 @@ from qiskit.transpiler.passes.scheduling.time_unit_conversion import TimeUnitCon
 from .utils import block_order_op_nodes
 
 if TYPE_CHECKING:
-    import qiskit
     from qiskit.circuit import Bit, Clbit
     from qiskit.dagcircuit import DAGCircuit, DAGNode
     from qiskit.transpiler import Target
@@ -56,7 +54,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         block.
 
     Args:
-        durations: Durations of instructions to be used in scheduling.
         block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
             the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
             used.
@@ -65,21 +62,9 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
     def __init__(
         self,
-        durations: qiskit.transpiler.instruction_durations.InstructionDurations | None = None,
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ) -> None:
-        if durations:
-            warnings.warn(
-                "The `durations` input argument of `BaseDynamicCircuitAnalysis` is deprecated "
-                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
-                "Provide a `target` instance instead ex: "
-                "BaseDynamicCircuitAnalysis(target=backend.target).",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-        self._durations = durations
         self._target = target
         self._block_ordering_callable = (
             block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
@@ -109,7 +94,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         # Nodes that the scheduling of this node is tied to.
         self._bit_indices: dict[Qubit, int] | None = None
 
-        self._time_unit_converter = TimeUnitConversion(durations)
+        self._time_unit_converter = TimeUnitConversion(target=self._target)
 
         super().__init__()
 
@@ -243,7 +228,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                     else:
                         duration = self._target.seconds_to_dt(props.duration)
         else:
-            duration = self._durations.get(node.op, indices, unit="dt")
+            raise TranspilerError("Could not identify a duration.")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(
