@@ -64,7 +64,8 @@ class TestAccountClient(IBMTestCase):
                 client = self._get_client()
                 self.fake_server.set_error_response(err_resp)
                 with self.assertRaises(RequestsApiError) as err_cm:
-                    client.backend_status("ibmq_qasm_simulator")
+                    with self.assertWarns(UserWarning):
+                        client.backend_status("ibmq_qasm_simulator")
                 if err_resp:
                     self.assertIn("Bad client input", str(err_cm.exception))
 
