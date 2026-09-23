@@ -58,8 +58,8 @@ class ResilienceOptions(BaseOptionsModel):
     :class:`~.ZneOptions` for additional ZNE related options.
 
     If ``zne_mitigation`` is left as ``None``, it inherits the default for the configured
-    :attr:`~.EstimatorOptions.resilience_level`: ``False`` for resilience levels ``0`` and ``1``,
-    and ``True`` for resilience level ``2``.
+    :attr:`~qiskit_ibm_runtime.options_models.EstimatorOptions.resilience_level`: ``False``
+    for resilience levels ``0`` and ``1``, and ``True`` for resilience level ``2``.
     """
 
     zne: ZneOptions = ZneOptions()
