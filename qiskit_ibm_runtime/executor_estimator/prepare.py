@@ -33,7 +33,7 @@ from ..utils.utils import validate_no_boxes
 from .finalize_options import finalize_estimator_options
 from .options_to_mitigation import estimator_options_to_boxing_options
 from .pec_utils import calculate_pec_twirling_shots, resolve_pec_max_overhead
-from .trex_setup import apply_trex
+from .trex_utils import apply_trex
 from .utils import (
     has_projection_operators,
     resolve_noise_factors,
