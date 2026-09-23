@@ -193,7 +193,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations | None = None,
         dd_sequences: list[Gate] | list[list[Gate]] | None = None,
         qubits: list[int] | None = None,
         spacings: list[list[float]] | list[float] | None = None,
@@ -209,21 +208,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ):
-        if durations:
-            warnings.warn(
-                "The `durations` input argument of `PadDynamicalDecoupling` is deprecated "
-                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
-                "Provide a `target` instance instead ex: "
-                "PadDynamicalDecoupling(target=backend.target).",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,
         )
-        self._durations = durations
         self._target = target
 
         # Enforce list of DD sequences
