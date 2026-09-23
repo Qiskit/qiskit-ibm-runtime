@@ -31,11 +31,9 @@ from samplomatic.builders.build import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
+from qiskit_ibm_runtime.executor_sampler.utils import find_box_type
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
-from qiskit_ibm_runtime.fake_provider.executor.run_quantum_program import (
-    find_box_type,
-    run_quantum_program,
-)
+from qiskit_ibm_runtime.fake_provider.executor.run_quantum_program import run_quantum_program
 from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramItemResult

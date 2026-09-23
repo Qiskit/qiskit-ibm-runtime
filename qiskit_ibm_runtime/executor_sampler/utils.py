@@ -14,12 +14,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from qiskit.circuit import ClassicalRegister
+from qiskit.circuit import CircuitInstruction, ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions
+from samplomatic.utils import find_unique_box_instructions, undress_box
 
 from ..exceptions import IBMInputValueError
 
@@ -33,6 +33,10 @@ if TYPE_CHECKING:
 
     from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
     from ..options_models.twirling import TwirlingOptions
+
+
+BoxType: TypeAlias = Literal["gates", "measurement", "unknown"]
+"""TypeAlias for a BoxOp type."""
 
 
 def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | None) -> None:
@@ -237,3 +241,35 @@ def find_unique_layers(
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True
     )
+
+
+def find_box_type(instruction: CircuitInstruction) -> BoxType:
+    """Find the type of :class:`~qiskit.circuit.BoxOp` that ``instruction`` contains.
+
+    Args:
+        instruction: The instruction to get the type of.
+
+    Returns:
+        The box type. Can be one of ``"gates"``, ``"measurement"``, or ``"unknown"``.
+
+    Raises:
+        IBMInputValueError: If ``instruction`` does not contain a box.
+    """
+    box = instruction.operation
+    if (name := box.name) != "box":
+        raise IBMInputValueError(f"Expected a 'box' but found '{name}'.")
+
+    undressed_box = undress_box(box)
+
+    if len(undressed_box.body) == 0:
+        return "gates"
+
+    all_gates = all(op.is_standard_gate() or op.name == "barrier" for op in undressed_box.body)
+    all_measurement = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
+
+    if all_gates and not all_measurement:
+        return "gates"
+    elif not all_gates and all_measurement:
+        return "measurement"
+
+    return "unknown"
