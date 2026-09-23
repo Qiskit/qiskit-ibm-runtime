@@ -172,7 +172,7 @@ def get_mocked_backend(
     properties: dict | None = None,
 ) -> IBMBackend:
     """Return a mock backend."""
-    mock_service = mock.MagicMock(spec=QiskitRuntimeService)
+    mock_service = mock.MagicMock(spec=QiskitRuntimeService, is_local=False)
     mock_api_client = mock.MagicMock()
     mock_api_client._instance = "mock_instance"
     mock_service._active_api_client = mock_api_client
@@ -205,8 +205,8 @@ def get_mocked_session(backend: Any = None) -> mock.MagicMock:
     session = mock.MagicMock(spec=Session)
     session._instance = None
     session._backend = backend or get_mocked_backend()
-    session._service = getattr(backend, "service", None) or mock.MagicMock(
-        spec=QiskitRuntimeService
+    session.service = getattr(backend, "service", None) or mock.MagicMock(
+        spec=QiskitRuntimeService, is_local=False
     )
     return session
 
