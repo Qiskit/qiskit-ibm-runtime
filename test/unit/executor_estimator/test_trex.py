@@ -12,7 +12,7 @@
 
 """Unit tests for Estimator TREX helper functions."""
 
-from qiskit_ibm_runtime.executor_estimator.trex_setup import resolve_trex_num_randomizations
+from qiskit_ibm_runtime.executor_estimator.trex import resolve_trex_num_randomizations
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 
 from ...ibm_test_case import IBMTestCase

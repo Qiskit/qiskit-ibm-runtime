@@ -25,8 +25,8 @@ from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
-from .options_to_mitigation import estimator_options_to_boxing_options
 from .prepare import choose_task_class, prepare
+from .utils import estimator_options_to_boxing_options
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
