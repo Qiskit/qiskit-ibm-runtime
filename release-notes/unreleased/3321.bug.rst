@@ -1,2 +1,2 @@
-The ``fallback`` extrapolator in :class:`.ZneOptions` now requires at least 2
+The ``fallback`` extrapolator in :class:`qiskit_ibm_runtime.options.ZneOptions` now requires at least 2
 noise factors. Previously it only required 1.
