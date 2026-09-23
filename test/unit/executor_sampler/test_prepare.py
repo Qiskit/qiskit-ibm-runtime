@@ -15,7 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from samplomatic import Tag
@@ -349,6 +349,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
         self.assertEqual(executor_options.max_execution_time, 800)
 
 
+@ddt
 class TestPrepareTwirling(IBMTestCase):
     """Unit tests for prepare() method with twirling enabled."""
 
@@ -369,6 +370,30 @@ class TestPrepareTwirling(IBMTestCase):
         # Verify SamplexItem was created
         self.assertEqual(len(qp.items), 1)
         self.assertIsInstance(qp.items[0], SamplexItem)
+
+    @data([1000, "auto", "auto", 1024], [1000, 5, "auto", 1000], [1000, 5, 3, 15])
+    @unpack
+    def test_sampler_num_shots(
+        self,
+        default_shots,
+        num_randomizations,
+        shots_per_randomization,
+        expected_num_shots,
+    ):
+        """Test program items' shape for different twirling options."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.default_shots = default_shots
+        options.twirling.num_randomizations = num_randomizations
+        options.twirling.shots_per_randomization = shots_per_randomization
+
+        qp, _ = prepare([(circuit,)], options, shots=default_shots)
+        num_shots = qp.items[0].shape[0] * qp.shots
+        self.assertEqual(num_shots, expected_num_shots)
 
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
