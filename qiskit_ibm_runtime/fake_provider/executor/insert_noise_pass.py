@@ -16,10 +16,11 @@
 
 When ``layer_noise_model`` is provided in :class:`~.SimulatorOptions`, Pauli-Lindblad noise
 is injected into circuits at tagged barriers via :class:`~.InsertNoisePass`.  Samplomatic inserts
-three barriers around each boxed gate — left (``L``), middle (``M``), and right (``R``) — with
-labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``).  By default, noise is injected at
-the ``R`` (right) barriers, i.e. *after* the gate.  Use ``noise_after=False`` on
-:class:`~.InsertNoisePass` to target ``M`` barriers instead (noise *before* the gate).
+three barriers around each boxed layer — left (``L``), middle (``M``), and right (``R``) — with
+labels of the form ``<pos><idx>@tag=<tag>`` (e.g. ``R0@tag=r0``). By default, noise is injected
+*after* the gate which selects the ``R`` or ``M`` barrier depending on the whether the gate has been
+dressed "left" or "right", respectively. A ``noise_pos`` argument is provided to modify this
+selection on a per layer basis.
 
 The ``noise_dict`` format is:
 
@@ -39,7 +40,7 @@ from __future__ import annotations
 import re
 import warnings
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.converters import circuit_to_dag
@@ -72,7 +73,8 @@ class InsertNoisePass(TransformationPass):
     Args:
         noise_dict: Map from gate-name tags to Pauli-Lindblad noise maps.  Pass ``None`` to
             perform a no-op (no noise is inserted).
-        noise_after: If ``True`` (default), insert noise after the barrier; otherwise before.
+        noise_pos: Map from tags to the barrier position to inject noise into. Pass ``None``
+            to apply "R" (after) to all layers.
         noise_scale: Multiplicative scale factor applied to all noise rates.
         warn_absent: If ``True`` (default), emit a warning when a tagged barrier's tag is not
             found in ``noise_dict``.  Set to ``False`` to suppress these warnings.
@@ -81,14 +83,14 @@ class InsertNoisePass(TransformationPass):
     def __init__(
         self,
         noise_dict: dict[str, PauliLindbladMap] | None,
-        noise_after: bool = True,
+        noise_pos: dict[str, Literal["L", "M", "R"]] | None = None,
         noise_scale: float = 1.0,
         warn_absent: bool = True,
     ):
         self._noise_dict = noise_dict or {}
-        self._noise_after = noise_after
         self._noise_scale = noise_scale
         self._warn_absent = warn_absent
+        self._noise_pos = noise_pos or {}
 
         self._pattern = re.compile(r"^(?P<pos>[A-Za-z])(?P<idx>\d+)(.*?)tag=(?P<tag>.+)(.*?)")
 
@@ -117,13 +119,9 @@ class InsertNoisePass(TransformationPass):
         pos = match_group.group("pos")
         tag = match_group.group("tag")
 
-        if self._noise_after:
-            if pos != "R":
-                return None
-        else:
-            if pos != "M":
-                return None
-
+        noise_pos = self._noise_pos.get(tag, "R")  # default to the right barrier
+        if pos != noise_pos:
+            return None
         return tag
 
     def _new_subdag(

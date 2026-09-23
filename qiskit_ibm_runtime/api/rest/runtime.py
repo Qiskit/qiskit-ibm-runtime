@@ -265,7 +265,7 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("workloads")
-        payload = {
+        payload: dict[str, Any] = {
             "user": user,
             "sort": sort,
             "limit": limit,

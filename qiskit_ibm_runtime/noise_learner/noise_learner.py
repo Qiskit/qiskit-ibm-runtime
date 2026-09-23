@@ -110,7 +110,8 @@ class NoiseLearner:
             `Qiskit Runtime documentation <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about the execution modes.
 
-        options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
+        options: :class:`NoiseLearnerOptions`. Alternatively,
+            :class:`~qiskit_ibm_runtime.options.EstimatorOptions` can be
             provided for convenience, in which case the estimator options get reformatted into
             noise learner options and all the irrelevant fields are ignored.
 

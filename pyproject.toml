@@ -60,13 +60,11 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 strict_optional = false
 show_error_codes = true
-no_site_packages = true
-disable_error_code = "import-untyped"
 
 [[tool.mypy.overrides]]
 module = "test.*"
-disallow_untyped_calls = false
 disallow_untyped_defs = false
+disable_error_code = "import-untyped"
 
 [[tool.mypy.overrides]]
 module = [
@@ -74,20 +72,17 @@ module = [
     "ibm_cloud_sdk_core.*",
     "ibm_platform_services.*",
     "ibm_quantum_schemas.*",
-    "numpy.*",
+    "dateutil.*",
     "plotly.*",
-    "pydantic.*",
     "qiskit_aer.*",
     "qiskit.*",
     "qiskit_mitigation.*",
     "requests_ntlm.*",
-    "responses.*",
-    "rustworkx",
     "samplomatic.*",
-    "urllib3.*",
-    "pytest",
+    "scipy.*",
 ]
 ignore_missing_imports = true
+disable_error_code = "import-untyped"
 
 [tool.coverage.run]
 source = ["qiskit_ibm_runtime"]
@@ -186,7 +181,7 @@ dependencies = [
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas>=0.11.20260824,<1",
+    "ibm-quantum-schemas>=0.12.20260921,<1",
     "pydantic>=2.13.0",
     "qiskit>=2.3.0",
     "pybase64>=1.4.0",

@@ -22,11 +22,12 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
+from ..fake_provider.executor.run_quantum_program import BoxType, find_box_type
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options
 from .prepare import prepare
-from .utils import BoxType, find_box_type, find_unique_layers
+from .utils import find_unique_layers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

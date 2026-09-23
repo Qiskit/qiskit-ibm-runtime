@@ -317,6 +317,8 @@ class CloudAccount(Account):
             url=self.url,
             token=self.token,
             instance=self.instance,
+            proxies_kwargs=self._get_proxies_kwargs(),
+            verify=True if self.verify is not False else False,
         )
         if len(crn) == 0:
             raise CloudResourceNameResolutionError(

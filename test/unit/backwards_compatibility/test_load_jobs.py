@@ -14,6 +14,9 @@
 
 from pathlib import Path
 
+from ddt import data, ddt
+from qiskit.primitives import PrimitiveResult
+
 from qiskit_ibm_runtime.fake_provider import FakeFez
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
@@ -21,16 +24,17 @@ from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import Backend, Job, OneInstanceNoBackendsRegistry
+from .catalog import ESTIMATOR_JOBS, EXECUTOR_JOBS, SAMPLER_JOBS
 
 
+@ddt
 class StoredJobsTestCase(IBMTestCase):
     """Test for loading stored jobs from earlier versions."""
 
     @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_executor_jobs(self, registry: OneInstanceNoBackendsRegistry) -> None:
+    @data(*EXECUTOR_JOBS["0.49"])
+    def test_executor_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored Executor jobs."""
-        job_id = "da66nicgd8dc73doc6mg"
-
         resources_path = Path(__file__).resolve().parent / "resources"
         job_details = (resources_path / f"{job_id}_details.json").read_text(encoding="utf-8")
         job_results = (resources_path / f"{job_id}_results.json").read_text(encoding="utf-8")
@@ -45,7 +49,53 @@ class StoredJobsTestCase(IBMTestCase):
         job = service.job(job_id)
         result = job.result()
 
-        # Job should be an executor (wrapped sampler) job.
+        # Job should be an executor job.
         self.assertEqual(job.primitive_id, "executor")
         # Result should be loaded correctly.
         self.assertIsInstance(result, QuantumProgramResult)
+
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    @data(*ESTIMATOR_JOBS["0.49"])
+    def test_estimator_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
+        """Test stored client-side Estimator jobs."""
+        resources_path = Path(__file__).resolve().parent / "resources"
+        job_details = (resources_path / f"{job_id}_details.json").read_text(encoding="utf-8")
+        job_results = (resources_path / f"{job_id}_results.json").read_text(encoding="utf-8")
+
+        # Prepare the contents of the registry.
+        registry.add_backend(Backend.from_(FakeFez))
+        registry.add_job(
+            Job(job_id, "ibm_fez", raw_details=job_details, raw_results=job_results), "a"
+        )
+
+        service = QiskitRuntimeService(token="my_token")
+        job = service.job(job_id)
+        result = job.result()
+
+        # Job should be an executor job.
+        self.assertEqual(job.primitive_id, "executor")
+        # Result should be loaded correctly.
+        self.assertIsInstance(result, PrimitiveResult)
+
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    @data(*SAMPLER_JOBS["0.49"])
+    def test_sampler_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
+        """Test stored client-side Sampler jobs."""
+        resources_path = Path(__file__).resolve().parent / "resources"
+        job_details = (resources_path / f"{job_id}_details.json").read_text(encoding="utf-8")
+        job_results = (resources_path / f"{job_id}_results.json").read_text(encoding="utf-8")
+
+        # Prepare the contents of the registry.
+        registry.add_backend(Backend.from_(FakeFez))
+        registry.add_job(
+            Job(job_id, "ibm_fez", raw_details=job_details, raw_results=job_results), "a"
+        )
+
+        service = QiskitRuntimeService(token="my_token")
+        job = service.job(job_id)
+        result = job.result()
+
+        # Job should be an executor job.
+        self.assertEqual(job.primitive_id, "executor")
+        # Result should be loaded correctly.
+        self.assertIsInstance(result, PrimitiveResult)
