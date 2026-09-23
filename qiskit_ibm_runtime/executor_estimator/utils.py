@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
+    from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
+
     from ..options_models.zne import ZneOptions
 
 import numpy as np
@@ -122,3 +124,46 @@ def resolve_precision(
         raise IBMInputValueError("The precision value must be strictly greater than 0.")
 
     return precision
+
+
+def estimator_options_to_boxing_options(
+    twirling_options: TwirlingOptions,
+    measure_mitigation: bool,
+    inject_noise: bool,
+    add_tags: bool = False,
+) -> dict:
+    """Translate twirling options into a ``custom_boxing_options`` dict for qiskit-mitigation.
+
+    The function assumes that options were finalized and ``twirling_options`` doesn't contain
+    ``None``.
+
+    This dict is passed directly to ``MitigationTask.prepare()`` (and its subclasses)
+    as the ``custom_boxing_options`` argument.
+
+    Noise-injection options (``inject_noise_*``) are **not** set here — ``PEC``
+    and ``PEA`` enforce their own required values for those fields.
+
+    Args:
+        twirling_options: The finalized twirling options.
+        measure_mitigation: Whether measurement mitigation (TREX) is enabled.
+            When ``True``, ``measure_annotations`` is set to ``"all"``; otherwise
+            ``"change_basis"``.
+        inject_noise: Whether noise-injection boxing is requested (PEC/PEA paths).
+            When ``True``, ``enable_gates`` is forced on regardless of the twirling setting.
+        add_tags: Whether to tag boxes with a hash (``True``) or suppress tags (``False``).
+            Used in local/simulator mode for noise injection.
+
+    Returns:
+        A dict suitable as ``custom_boxing_options`` for qiskit-mitigation task ``prepare()``.
+    """
+    return {
+        # Gate twirling is on when requested OR when noise injection is needed.
+        "enable_gates": twirling_options.enable_gates or inject_noise,
+        "enable_measures": True,
+        "twirling_strategy": twirling_options.strategy.replace("-", "_"),
+        "twirling_group": twirling_options.group,
+        "add_tags": "unique_box" if add_tags else "none",
+        "measure_annotations": "all"
+        if (measure_mitigation or twirling_options.enable_measure)
+        else "change_basis",
+    }
