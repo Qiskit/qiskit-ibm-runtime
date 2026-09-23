@@ -1,0 +1,2 @@
+The ``fallback`` extrapolator in :class:`.ZneOptionsModel` now requires at least 2
+noise factors. Previously it only required 1.
