@@ -32,12 +32,6 @@ from samplomatic.utils import get_annotation
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_estimator_options
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-
-# TODO: find_unique_layers is imported from the sampler module as a temporary workaround.
-# The prepare() method internally uses
-# qiskit_mitigation.find_combined_unique_layers. These two paths could silently produce
-# different InjectNoise.ref values if they ever diverge. A permanent solution backed by
-# the estimator's find_combined_unique_layers path is needed.
 from qiskit_ibm_runtime.executor_sampler.utils import find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
