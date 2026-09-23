@@ -130,8 +130,8 @@ transparency, faster debugging feedback, and finer control.
 
 > [!IMPORTANT]
 > Client-side primitives will become the default in an upcoming release, with the top-level imports
-> `qiskit_ibm_primitives.Sampler` and `qiskit_ibm_primitives.Estimator` pointing to them. The
-> examples below use the legacy primitives - you can opt-in already by replacing the imports to:
+> `qiskit_ibm_runtime.Sampler` and `qiskit_ibm_runtime.Estimator` pointing to them. The examples
+> below use the legacy primitives - you can opt-in already by replacing the imports to:
 >
 > ```python
 > from qiskit_ibm_runtime.executor_sampler import Sampler
