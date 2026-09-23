@@ -125,8 +125,8 @@ Refer to [Introduction to primitives] for information about primitives definitio
 
 Starting with release `0.50.0`, the package provides _client-side_ `Sampler` and `Estimator`
 primitives. Unlike their _legacy_ counterparts, they perform pre- and post-processing on the client
-side and delegate execution through `Executor`. Running on the client side provide greater
-transparency, faster debugging feedback, and finer control.
+side and delegate execution to `Executor`. Running on the client side provides greater transparency,
+faster debugging feedback, and finer control.
 
 > [!IMPORTANT]
 > Client-side primitives will become the default in an upcoming release, with the top-level imports
