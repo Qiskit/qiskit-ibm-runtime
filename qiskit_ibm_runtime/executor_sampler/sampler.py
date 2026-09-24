@@ -223,7 +223,7 @@ class Sampler(BaseSamplerV2):
         # Set semantic role for post-processing dispatch
         quantum_program._semantic_role = "sampler_v2"
 
-        executor = Executor(mode=self._backend, options=executor_options)
+        executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
         logger.info(
             "Submitting %d pub%s to executor with %d shots",
