@@ -183,7 +183,7 @@ dependencies = [
     "ibm-platform-services>=0.61.1",
     "ibm-quantum-schemas>=0.12.20260921,<1",
     "pydantic>=2.13.0",
-    "qiskit>=2.3.0",
+    "qiskit>=2.3.0,<3",
     "pybase64>=1.4.0",
     "samplomatic>=0.21.0",
     "qiskit-mitigation==0.1.0",
