@@ -2537,24 +2537,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         """Test scheduling works with both fast- and standard path after transpiling."""
         backend = FakeJakartaV2()
 
-        # here we would use backend.target, but DynamicCircuitInstructionDurations
-        # modifies the values so we are adapting the target durations to match the
-        # resuls. Replace with backend.target once DynamicCircuitInstructionDurations
-        # is removed (this will change the final output)
-        target = Target(num_qubits=2, dt=1)
-        target.add_instruction(
-            XGate(),
-            {
-                (0,): InstructionProperties(duration=250),
-                (1,): InstructionProperties(duration=160),
-            },
-        )
-        target.add_instruction(
-            Measure(),
-            {
-                (0,): InstructionProperties(duration=24992),
-            },
-        )
+        target = backend.target
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(target=target),
@@ -2579,7 +2562,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qr = QuantumRegister(7, name="q")
         expected = QuantumCircuit(qr, cr)
         for q_ind in range(1, 7):
-            expected.delay(24992, qr[q_ind])
+            time_meas = backend.target.durations().get("measure", [qr.index(qr[q_ind])])
+            expected.delay(time_meas, qr[q_ind])
         expected.measure(qr[0], cr[0])
         with expected.if_test((cr[0], 1)):
             expected.x(qr[0])
@@ -2642,29 +2626,10 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         """
         backend = FakeJakartaV2()
 
-        # here we would use backend.target, but DynamicCircuitInstructionDurations
-        # modifies the values so we are adapting the target durations to match the
-        # resuls. Replace with backend.target once DynamicCircuitInstructionDurations
-        # is removed (this will change the final output)
-        target = Target(num_qubits=2, dt=1)
-        target.add_instruction(
-            CXGate(),
-            {
-                (0, 1): InstructionProperties(duration=250),
-                (1, 3): InstructionProperties(duration=4000),
-            },
-        )
-        target.add_instruction(
-            Measure(),
-            {
-                (0,): InstructionProperties(duration=2760),
-                (1,): InstructionProperties(duration=2760),
-            },
-        )
         pm = PassManager(
             [
-                ALAPScheduleAnalysis(target=target),
-                PadDelay(target=target),
+                ALAPScheduleAnalysis(target=backend.target),
+                PadDelay(target=backend.target),
             ]
         )
 
@@ -2676,10 +2641,12 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc_transpiled = transpile(qc, backend, initial_layout=[1, 3, 0, 2])
         scheduled = pm.run(qc_transpiled)
         delay_dict = self.get_delay_dict(scheduled.data[-1].operation.params[0])
-        self.assertEqual(delay_dict[0][0], 4000)
+        expected_time = backend.target.durations().get("cx", [1, 3])
+        self.assertEqual(delay_dict[0][0], expected_time)
 
         # different layout
         qc_transpiled = transpile(qc, backend, initial_layout=[0, 1, 2, 3])
         scheduled = pm.run(qc_transpiled)
         delay_dict = self.get_delay_dict(scheduled.data[-1].operation.params[0])
-        self.assertEqual(delay_dict[2][0], 250)
+        expected_time = backend.target.durations().get("cx", [0, 1])
+        self.assertEqual(delay_dict[2][0], expected_time)
