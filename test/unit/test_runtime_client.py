@@ -64,7 +64,7 @@ class TestAccountClient(IBMTestCase):
                 client = self._get_client()
                 self.fake_server.set_error_response(err_resp)
                 with self.assertRaises(RequestsApiError) as err_cm:
-                    with self.assertWarns(UserWarning):
+                    with self.assertWarnsRegex(UserWarning, "Provided API key could not be found."):
                         client.backend_status("ibmq_qasm_simulator")
                 if err_resp:
                     self.assertIn("Bad client input", str(err_cm.exception))
