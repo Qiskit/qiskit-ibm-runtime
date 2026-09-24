@@ -17,6 +17,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from qiskit import QuantumCircuit
+
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
@@ -49,9 +51,14 @@ def prepare(
     Will carry serialized qiskit-noise-learning description of the experiments as passthrough data.
     """
     executor_options = noise_learner_options_to_executor_options(options)
-    return QuantumProgram(
-        shots=options.num_randomizations * options.shots_per_randomization
-    ), executor_options
+    qp = QuantumProgram(shots=options.num_randomizations * options.shots_per_randomization)
+    qubits = list({qubit for instr in instructions for qubit in instr.qubits})
+    clbits = list({clbit for instr in instructions for clbit in instr.clbits})
+    circuit = QuantumCircuit(list(qubits), list(clbits))
+    for instr in instructions:
+        circuit.append(instr, instr.qubits, instr.clbits)
+    qp.append_circuit_item(circuit)
+    return qp, executor_options
 
 
 def noise_learner_options_to_executor_options(options: NoiseLearnerV3Options) -> ExecutorOptions:
