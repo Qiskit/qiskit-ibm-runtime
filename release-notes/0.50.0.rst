@@ -101,11 +101,11 @@ New Features
   (`3288 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3288>`__)
 - The primitives' ``run()`` methods:
 
-  * meth:`~qiskit_ibm_runtime.EstimatorV2.run`
-  * meth:`~qiskit_ibm_runtime.Executor.run`
-  * meth:`~qiskit_ibm_runtime.NoiseLearner.run`
-  * meth:`~qiskit_ibm_runtime.NoiseLearnerV3.run`
-  * meth:`~qiskit_ibm_runtime.SamplerV2.run`
+  * :meth:`~qiskit_ibm_runtime.EstimatorV2.run`
+  * :meth:`~qiskit_ibm_runtime.Executor.run`
+  * :meth:`~qiskit_ibm_runtime.NoiseLearner.run`
+  * :meth:`~qiskit_ibm_runtime.NoiseLearnerV3.run`
+  * :meth:`~qiskit_ibm_runtime.SamplerV2.run`
 
   now accept a new ``dry_run`` argument. It performs a dry run without executing the job on a QPU.
   This mode can be used to validate the job, estimate usage consumption, and retrieve circuit timing
