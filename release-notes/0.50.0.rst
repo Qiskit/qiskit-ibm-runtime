@@ -4,16 +4,13 @@
 Deprecation Notes
 -----------------
 
-- class:`~qiskit_ibm_runtime.EstimatorV2` and class:`~qiskit_ibm_runtime.SamplerV2` are deprecated.
-  Two new client-side class:`~qiskit_ibm_runtime.executor_estimator.Estimator` and client-side
-  class:`~qiskit_ibm_runtime.executor_sampler.Sampler` primitives provide a new implementation that
-  runs all the pre- and post-processing in the client side.
+- class:`~qiskit_ibm_runtime.EstimatorV2` and class:`~qiskit_ibm_runtime.SamplerV2` are deprecated. Please use the 
+new client-side implementations of these primitive interfaces: `~qiskit_ibm_runtime.executor_estimator.Estimator` and 
+  class:`~qiskit_ibm_runtime.executor_sampler.Sampler` instead. See the `New Features` section for more information about them. 
 
-  Both sets of primitives will co-exist until the deprecation process is completed. The top-level
-  imports (``qiskit_ibm_runtime.Sampler`` and ``qiskit_ibm_runtime.Estimator``, as well as the aliases
-  with their ``V2`` suffix) will be updated in an upcoming release to point to the client-side
-  primitives, maintaining the legacy primitives available as part of the package in a
-  different namespace until a later release. (`3362 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3362>`__)
+  At the end of the deprecation period, the legacy server-side implementations will be removed, and the top-level
+  imports (``qiskit_ibm_runtime.Sampler[V2]`` and ``qiskit_ibm_runtime.Estimator[V2]`` will be updated to point to the client-side
+  implementations. (`3362 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3362>`__)
 - The following entities related to ``QuantumProgram`` have been moved to the ``samplomatic`` package:
 
   * ``qiskit_ibm_runtime.quantum_program.CircuitItem```
@@ -45,13 +42,13 @@ New Features
   :class:`qiskit_ibm_runtime.executor_estimator.Estimator`.
 
   The client-side primitives are implementations of the Sampler and Estimator abstractions in Qiskit.
-  Unlike the "legacy" :class:`qiskit_ibm_runtime.sampler.Sampler` and
+  Unlike the legacy server-side :class:`qiskit_ibm_runtime.sampler.Sampler` and
   :class:`qiskit_ibm_runtime.estimator.Estimator` classes, they perform pre- and post-processing
   on the client side and delegate execution to the :class:`qiskit_ibm_runtime.Executor`. Running
   on the client side provides greater transparency, faster debugging feedback, and finer control.
 
   The client-side primitives share the same API as the legacy primitives, so switching from one to the
-  other only requires updating the imports in your scripts:
+  other only requires updating the imports in your scripts in virtually all cases:
 
   .. code-block:: python
 
