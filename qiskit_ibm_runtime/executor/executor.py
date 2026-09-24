@@ -15,10 +15,9 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ..base_primitive import get_mode_service_backend
-from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
@@ -29,6 +28,7 @@ if TYPE_CHECKING:
 
     from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
+    from ..fake_provider.local_service import QiskitRuntimeLocalService
     from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
@@ -135,8 +135,9 @@ class Executor:
         Returns:
             A job.
         """
-        if isinstance(self._service, QiskitRuntimeLocalService):
-            return self._service._run_executor(
+        if self._service.is_local:
+            service = cast("QiskitRuntimeLocalService", self._service)
+            return service._run_executor(
                 self._backend, self.options.simulator, program, dry_run=dry_run
             )
 
@@ -164,9 +165,16 @@ class Executor:
 
         inputs = params.model_dump(mode="json")
 
+        # 'EnvironmentOptions.max_execution_time' is deprecated, and when users set it there, they
+        # get a warning. Hence, in case both are set, we make 'ExecutorOptions.max_execution_time'
+        # prevail
+        max_execution_time = (
+            self.options.max_execution_time or self.options.environment.max_execution_time
+        )
+
         return _run(
             program_id=self._PROGRAM_ID,
-            options=to_runtime_options(self.options.environment, self._backend),
+            options=to_runtime_options(self.options.environment, self._backend, max_execution_time),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
             dry_run=dry_run,

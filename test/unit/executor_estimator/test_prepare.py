@@ -30,7 +30,7 @@ from samplomatic.utils import find_unique_box_instructions, get_annotation
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.calculate_twirling_shots import calculate_twirling_shots
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
+from qiskit_ibm_runtime.executor_sampler.utils import find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions

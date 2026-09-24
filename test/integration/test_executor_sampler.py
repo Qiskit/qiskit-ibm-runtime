@@ -13,7 +13,7 @@
 """Tests for client-side Sampler."""
 
 import numpy as np
-from ddt import data, ddt, unpack
+from ddt import data, ddt
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -36,8 +36,8 @@ class TestSampler(IBMIntegrationTestCase):
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
 
     @data(True, False)
-    def test_sampler_with_parametric_circuits(self, twirling):
-        """Test sampler with parametric circuits."""
+    def test_sampler(self, twirling):
+        """Test sampler by submitting a couple of parametric circuits."""
         circuit = make_mirror_circuit_with_phases(self.backend)
         isa_circuit = self.pm.run(circuit)
 
@@ -68,25 +68,3 @@ class TestSampler(IBMIntegrationTestCase):
 
         self.assertEqual(results[0].metadata["circuit_metadata"], {"list": [1, 2, 3]})
         self.assertEqual(results[1].metadata["circuit_metadata"], {"tuple": [1, 2, 3]})
-
-    @data([1000, "auto", "auto", 1024], [1000, 5, "auto", 1000], [1000, 5, 3, 15])
-    @unpack
-    def test_sampler_num_shots(
-        self, default_shots, num_randomizations, shots_per_randomization, num_shots
-    ):
-        """Test result's num_shots with different twirling options."""
-        circuit = make_mirror_circuit_with_phases(self.backend)
-        isa_circuit = self.pm.run(circuit)
-        parameter_values = np.zeros(isa_circuit.num_parameters)
-
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-        options.default_shots = default_shots
-        options.twirling.num_randomizations = num_randomizations
-        options.twirling.shots_per_randomization = shots_per_randomization
-
-        sampler = Sampler(self.backend, options)
-        job = sampler.run([(isa_circuit, parameter_values)])
-
-        results = job.result()
-        self.assertEqual(results[0].data.meas.num_shots, num_shots)

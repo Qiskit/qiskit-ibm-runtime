@@ -37,6 +37,14 @@ class SamplerOptions(BaseOptionsModel):
     twirling: TwirlingOptions = TwirlingOptions()
     """Pauli twirling options."""
 
+    max_execution_time: int | None = None
+    """Maximum execution time in seconds.
+
+    This value bounds system execution time (not wall clock time). System execution time is the
+    amount of time that the system is dedicated to processing your job. If a job exceeds this time
+    limit, it is forcibly cancelled.
+    """
+
     simulator: SimulatorOptions = SimulatorOptions()
     """Options related to local mode simulations."""
 

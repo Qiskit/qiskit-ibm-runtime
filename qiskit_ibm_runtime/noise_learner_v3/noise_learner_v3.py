@@ -18,7 +18,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
-from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session
@@ -84,7 +83,7 @@ class NoiseLearnerV3:
 
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
-        if isinstance(self._service, QiskitRuntimeLocalService):
+        if self._service.is_local:
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -186,9 +185,16 @@ class NoiseLearnerV3:
         inputs = params.model_dump(mode="json")
         inputs["version"] = 3
 
+        # 'EnvironmentOptions.max_execution_time' is deprecated, and when users set it there, they
+        # get a warning. Hence, in case both are set, we make 'ExecutorOptions.max_execution_time'
+        # prevail
+        max_execution_time = (
+            self.options.max_execution_time or self.options.environment.max_execution_time
+        )
+
         return _run(
             program_id=self._PROGRAM_ID,
-            options=to_runtime_options(self.options.environment, self._backend),
+            options=to_runtime_options(self.options.environment, self._backend, max_execution_time),
             inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
             dry_run=dry_run,

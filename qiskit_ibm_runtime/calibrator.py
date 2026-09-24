@@ -18,7 +18,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from .base_primitive import get_mode_service_backend
-from .fake_provider.local_service import QiskitRuntimeLocalService
 from .options_models.calibrator import CalibratorOptions
 from .options_models.converters import to_runtime_options
 from .utils.default_session import get_cm_session
@@ -68,7 +67,7 @@ class Calibrator:
         self.options = options if options is not None else CalibratorOptions()  # type: ignore[assignment]
 
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
-        if isinstance(self._service, QiskitRuntimeLocalService):
+        if self._service.is_local:
             raise ValueError("The calibrator is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:

@@ -23,7 +23,6 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from ..base_primitive import get_mode_service_backend
-from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..ibm_backend import IBMBackend
 from ..options.estimator_options import EstimatorOptions
 from ..options.noise_learner_options import NoiseLearnerOptions
@@ -110,7 +109,8 @@ class NoiseLearner:
             `Qiskit Runtime documentation <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
             for more information about the execution modes.
 
-        options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
+        options: :class:`NoiseLearnerOptions`. Alternatively,
+            :class:`~qiskit_ibm_runtime.options.EstimatorOptions` can be
             provided for convenience, in which case the estimator options get reformatted into
             noise learner options and all the irrelevant fields are ignored.
 
@@ -128,7 +128,7 @@ class NoiseLearner:
         options: dict | NoiseLearnerOptions | options.EstimatorOptions | None = None,
     ):
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
-        if isinstance(self._service, QiskitRuntimeLocalService):
+        if self._service.is_local:
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")
 
         self._set_options(options)

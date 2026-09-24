@@ -1,0 +1,2 @@
+:meth:`~.Account.resolve_crn` now takes into account the proxies and SSL verification arguments
+set in the account when resolving the CRN.

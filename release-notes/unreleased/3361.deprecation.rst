@@ -1,0 +1,2 @@
+The ``max_execution_time`` field of ``qiskit_ibm_runtime.options_models.EnvironmentOptions`` has been deprecated.
+``max_execution_time`` can now be set at top-level.

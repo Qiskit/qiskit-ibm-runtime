@@ -30,7 +30,7 @@ class TestEstimatorOptions(IBMTestCase):
         self.assertIsInstance(options.dynamical_decoupling, DynamicalDecouplingOptions)
         self.assertIsInstance(options.execution, ExecutionOptions)
         self.assertEqual(options.experimental, {})
-        self.assertIsNone(options.environment.max_execution_time)
+        self.assertIsNone(options.max_execution_time)
         self.assertIsInstance(options.environment, EnvironmentOptions)
         self.assertIsNone(options.resilience.measure_mitigation)
         self.assertEqual(options.resilience.measure_noise_learning.num_randomizations, "auto")
