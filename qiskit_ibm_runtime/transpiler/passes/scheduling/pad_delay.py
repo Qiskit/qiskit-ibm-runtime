@@ -36,8 +36,6 @@ class PadDelay(BlockBasePadder):
 
     .. code-block::python
 
-        durations = InstructionDurations([("x", None, 160), ("cx", None, 800)])
-
         qc = QuantumCircuit(2)
         qc.delay(100, 0)
         qc.x(1)

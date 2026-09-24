@@ -71,8 +71,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
         from qiskit.transpiler import PassManager, InstructionDurations
         from qiskit.visualization import timeline_drawer
 
+        from qiskit_ibm_runtime import QiskitRuntimeService
         from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
         from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDynamicalDecoupling
+
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
 
         circ = QuantumCircuit(4)
         circ.h(0)
@@ -80,16 +84,11 @@ class PadDynamicalDecoupling(BlockBasePadder):
         circ.cx(1, 2)
         circ.cx(2, 3)
         circ.measure_all()
-        durations = InstructionDurations(
-            [("h", 0, 50), ("cx", [0, 1], 700), ("reset", None, 10),
-             ("cx", [1, 2], 200), ("cx", [2, 3], 300),
-             ("x", None, 50), ("measure", None, 1000)]
-        )
 
         # balanced X-X sequence on all qubits
         dd_sequence = [XGate(), XGate()]
-        pm = PassManager([ALAPScheduleAnalysis(durations),
-                          PadDynamicalDecoupling(durations, dd_sequence)])
+        pm = PassManager([ALAPScheduleAnalysis(backend.target),
+                          PadDynamicalDecoupling(backend.target, dd_sequence)])
         circ_dd = pm.run(circ)
         circ_dd.draw('mpl', style="iqp")
 
@@ -109,8 +108,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
         spacings.append(1 - sum(spacings))
         pm = PassManager(
             [
-                ALAPScheduleAnalysis(durations),
-                PadDynamicalDecoupling(durations, dd_sequence, qubits=[0], spacings=spacings),
+                ALAPScheduleAnalysis(backend.target),
+                PadDynamicalDecoupling(backend.target, dd_sequence, qubits=[0], spacings=spacings),
             ]
         )
         circ_dd = pm.run(circ)
