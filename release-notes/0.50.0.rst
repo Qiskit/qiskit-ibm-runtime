@@ -4,9 +4,9 @@
 Deprecation Notes
 -----------------
 
-- class:`~qiskit_ibm_runtime.EstimatorV2` and class:`~qiskit_ibm_runtime.SamplerV2` are deprecated. Please use the 
-new client-side implementations of these primitive interfaces: `~qiskit_ibm_runtime.executor_estimator.Estimator` and 
-  class:`~qiskit_ibm_runtime.executor_sampler.Sampler` instead. See the `New Features` section for more information about them. 
+- :class:`~qiskit_ibm_runtime.EstimatorV2` and :class:`~qiskit_ibm_runtime.SamplerV2` are deprecated. Please use
+  the new client-side implementations of these primitive interfaces: `~qiskit_ibm_runtime.executor_estimator.Estimator` and
+  :class:`~qiskit_ibm_runtime.executor_sampler.Sampler` instead. See the `New Features` section for more information about them.
 
   At the end of the deprecation period, the legacy server-side implementations will be removed, and the top-level
   imports (``qiskit_ibm_runtime.Sampler[V2]`` and ``qiskit_ibm_runtime.Estimator[V2]`` will be updated to point to the client-side
