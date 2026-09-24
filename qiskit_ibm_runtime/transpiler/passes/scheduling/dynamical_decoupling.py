@@ -71,24 +71,27 @@ class PadDynamicalDecoupling(BlockBasePadder):
         from qiskit.transpiler import PassManager, InstructionDurations
         from qiskit.visualization import timeline_drawer
 
-        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
         from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
         from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDynamicalDecoupling
 
-        service = QiskitRuntimeService()
-        backend = service.least_busy(operational=True, simulator=False)
+        backend = FakeMarrakesh()
 
         circ = QuantumCircuit(4)
-        circ.h(0)
-        circ.cx(0, 1)
-        circ.cx(1, 2)
-        circ.cx(2, 3)
+        circ.x(0)
+        circ.cz(0, 1)
+        circ.cz(1, 2)
+        circ.cz(2, 3)
         circ.measure_all()
 
         # balanced X-X sequence on all qubits
         dd_sequence = [XGate(), XGate()]
-        pm = PassManager([ALAPScheduleAnalysis(backend.target),
-                          PadDynamicalDecoupling(backend.target, dd_sequence)])
+        pm = PassManager(
+            [
+                ALAPScheduleAnalysis(target=backend.target),
+                PadDynamicalDecoupling(dd_sequence, target=backend.target)
+            ]
+        )
         circ_dd = pm.run(circ)
         circ_dd.draw('mpl', style="iqp")
 
@@ -108,8 +111,13 @@ class PadDynamicalDecoupling(BlockBasePadder):
         spacings.append(1 - sum(spacings))
         pm = PassManager(
             [
-                ALAPScheduleAnalysis(backend.target),
-                PadDynamicalDecoupling(backend.target, dd_sequence, qubits=[0], spacings=spacings),
+                ALAPScheduleAnalysis(target=backend.target),
+                PadDynamicalDecoupling(
+                    dd_sequence,
+                    qubits=[0],
+                    spacings=spacings,
+                    target=backend.target,
+                ),
             ]
         )
         circ_dd = pm.run(circ)
