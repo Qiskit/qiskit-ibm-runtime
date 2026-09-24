@@ -34,6 +34,7 @@ from ibm_quantum_schemas.executor.version_2_0 import (
 )
 
 from ..executor_estimator.post_processor_v0_1 import estimator_v2_post_processor_v0_1
+from ..executor_noise_learner.post_processor_v0_1 import noise_learner_v3_post_processor_v0_1
 from ..executor_sampler.post_processor_v0_1 import sampler_v2_post_processor_v0_1
 from ..result_decoder import ResultDecoder
 from .converters import (
@@ -51,6 +52,9 @@ SUPPORTED_POST_PROCESSORS = {
     "estimator_v2": {
         "v0.1": estimator_v2_post_processor_v0_1,
     },
+    "noise_learner_v3": {
+        "v0.1": noise_learner_v3_post_processor_v0_1,
+    },
 }
 """The available post processors.
 
@@ -61,6 +65,7 @@ This is a dictionary mapping semantic roles to maps between versions and functio
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult
 
+    from ...results.noise_learner_v3 import NoiseLearnerV3Result
     from ...results.quantum_program import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
@@ -78,7 +83,9 @@ class QuantumProgramResultDecoder(ResultDecoder):
     """Decoder for quantum program results."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> QuantumProgramResult | PrimitiveResult:
+    def decode(
+        cls, raw_result: str
+    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Result:
         """Decode raw json to result type."""
         decoded: dict[str, str] = super().decode(raw_result)
 
@@ -98,7 +105,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
     @staticmethod
     def _apply_post_processing(
         result: QuantumProgramResult,
-    ) -> QuantumProgramResult | PrimitiveResult:
+    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Result:
         """Apply post-processing to the decoded result.
 
         Post-processing is only applied if ``result._semantic_role`` has a supported value.
