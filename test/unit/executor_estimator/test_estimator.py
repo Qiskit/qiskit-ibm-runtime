@@ -13,7 +13,7 @@
 """Unit tests for Estimator run method."""
 
 import warnings
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
 from ddt import data, ddt
@@ -41,7 +41,7 @@ from qiskit_ibm_runtime.session import Session
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend
+from ...utils import get_mocked_backend, get_mocked_batch, get_mocked_session
 
 
 class TestEstimatorUsingOptions(IBMTestCase):
@@ -506,6 +506,23 @@ class TestEstimatorRun(IBMTestCase):
             "PEC mitigation and ZNE mitigation are incompatible with one another",
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
+
+    @data(get_mocked_session, get_mocked_batch)
+    def test_run_uses_mode_not_backend(self, get_mode):
+        """Executor is constructed with the Session/Batch, not the bare backend."""
+        mode = get_mode(self.backend)
+
+        estimator = Estimator(mode=mode)
+        estimator.options.resilience_level = 0
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator.run([(circuit, observable)], precision=0.03125)
+
+        self.mock_executor_class.assert_called_once_with(mode=mode, options=ANY)
 
 
 class TestEstimatorRunNoPatching(IBMTestCase):

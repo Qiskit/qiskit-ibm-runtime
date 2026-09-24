@@ -28,10 +28,12 @@ def finalize_sampler_options(options: SamplerOptions) -> SamplerOptions:
     defaults (``False`` for both ``enable_gates`` and ``enable_measure``).
 
     Args:
-        options: The un-finalized :class:`~.SamplerOptions` to process.
+        options: The un-finalized :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
+            to process.
 
     Returns:
-        A finalized copy of the given :class:`~.SamplerOptions`.
+        A finalized copy of the given
+        :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`.
     """
     finalized_options = deepcopy(options)
 

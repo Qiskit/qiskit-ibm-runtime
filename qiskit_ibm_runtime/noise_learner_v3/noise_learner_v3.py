@@ -18,7 +18,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
-from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import to_runtime_options
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session
@@ -84,7 +83,7 @@ class NoiseLearnerV3:
 
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
-        if isinstance(self._service, QiskitRuntimeLocalService):
+        if self._service.is_local:
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:

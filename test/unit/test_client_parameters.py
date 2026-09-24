@@ -167,11 +167,16 @@ class TestClientParameters(IBMTestCase):
         )
         handler = params.get_auth_handler()
         self.assertIsInstance(handler, CloudAuth)
-        self.assertIn(f"apikey {token}", handler.get_headers().values())
+
+        with self.assertWarnsRegex(UserWarning, "Unable to retrieve"):
+            headers = handler.get_headers()
+        self.assertIn(f"apikey {token}", headers.values())
 
         # Use a new handler, for avoiding delay in second response.
         handler = params.get_auth_handler()
-        self.assertIn(instance, handler.get_headers().values())
+        with self.assertWarnsRegex(UserWarning, "Unable to retrieve"):
+            headers = handler.get_headers()
+        self.assertIn(f"apikey {token}", headers.values())
         self.assertEqual(handler.tm.disable_ssl_verification, not verify)
         self.assertEqual(handler.tm.proxies, self.mock_proxies_urls)
 

@@ -23,11 +23,10 @@ from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
-from .options_to_mitigation import estimator_options_to_boxing_options
 from .prepare import choose_task_class, prepare
+from .utils import estimator_options_to_boxing_options
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -89,8 +88,7 @@ class Estimator(BaseEstimatorV2):
             for more information about execution modes.
 
         options: Estimator options.
-            See
-            :class:`~qiskit_ibm_runtime.options_models.estimator.EstimatorOptions`
+            See :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`
             for all available options.
     """
 
@@ -256,14 +254,14 @@ class Estimator(BaseEstimatorV2):
             pubs,
             self.options,
             precision,
-            add_tags=isinstance(self._service, QiskitRuntimeLocalService),
+            add_tags=self._service.is_local,
             backend=self._backend,
         )
 
         # Set semantic role for post-processing dispatch
         quantum_program._semantic_role = "estimator_v2"
 
-        executor = Executor(mode=self._backend, options=executor_options)
+        executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
         logger.info(
             "Submitting %d pub%s to executor with %d total shots",
