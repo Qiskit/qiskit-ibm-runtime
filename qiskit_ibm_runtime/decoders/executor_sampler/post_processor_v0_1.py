@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from qiskit.primitives import PrimitiveResult
 
@@ -46,13 +46,12 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if len(result) == 0:
         return PrimitiveResult([])
 
-    if not isinstance(result.passthrough_data, dict):
+    if not isinstance(passthrough := result.passthrough_data, dict):
         raise ValueError(
             "Wrong type for passthrough data: Expected a 'dict', found "
             f"'{type(result.passthrough_data)}'."
         )
 
-    passthrough: dict[str, Any] = result.passthrough_data or {}
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (twirling := post_processor_data.get("twirling", None)) is None:
@@ -106,4 +105,4 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         pub_results.append(pub_result)
 
     metadata = {"executor": result.metadata, "options": options, "shots": shots}
-    return PrimitiveResult(pub_results, metadata=metadata or {})
+    return PrimitiveResult(pub_results, metadata=metadata)
