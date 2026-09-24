@@ -40,7 +40,6 @@ Classes
     BlockBasePadder
     ALAPScheduleAnalysis
     ASAPScheduleAnalysis
-    DynamicCircuitInstructionDurations
     PadDelay
     PadDynamicalDecoupling
 
@@ -138,4 +137,3 @@ from .block_base_padder import BlockBasePadder
 from .dynamical_decoupling import PadDynamicalDecoupling
 from .pad_delay import PadDelay
 from .scheduler import ALAPScheduleAnalysis, ASAPScheduleAnalysis
-from .utils import DynamicCircuitInstructionDurations

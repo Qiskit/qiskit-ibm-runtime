@@ -28,7 +28,6 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.dynamical_decoupling import
     PadDynamicalDecoupling,
 )
 from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import ASAPScheduleAnalysis
-from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import DynamicCircuitInstructionDurations
 
 from .....ibm_test_case import IBMTestCase
 
@@ -55,20 +54,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         self.midmeas.cx(1, 2)
         self.midmeas.cx(0, 1)
 
-        self.durations = DynamicCircuitInstructionDurations(
-            [
-                ("h", 0, 50),
-                ("cx", [0, 1], 700),
-                ("cx", [1, 2], 200),
-                ("cx", [2, 3], 300),
-                ("x", None, 50),
-                ("y", None, 50),
-                ("u", None, 100),
-                ("rx", None, 100),
-                ("measure", None, 840),
-                ("reset", None, 1340),
-            ]
-        )
         self.target = Target(num_qubits=5, dt=1)
         self.target.add_instruction(
             XGate(),

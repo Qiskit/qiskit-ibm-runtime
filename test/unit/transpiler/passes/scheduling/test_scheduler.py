@@ -623,8 +623,6 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         target.add_instruction(
             Reset(),
             {
-                # when using DynamicCircuitInstructionDurations,
-                # the duration of "reset" gets replaced with "measure"
                 (0,): InstructionProperties(duration=600),
                 (1,): InstructionProperties(duration=700),
             },
@@ -680,8 +678,6 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         target.add_instruction(
             Reset(),
             {
-                # when using DynamicCircuitInstructionDurations,
-                # the duration of "reset" gets replaced with "measure"
                 (0,): InstructionProperties(duration=600),
                 (1,): InstructionProperties(duration=700),
             },
@@ -1786,8 +1782,6 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         target.add_instruction(
             Reset(),
             {
-                # when using DynamicCircuitInstructionDurations,
-                # the duration of "reset" gets replaced with "measure"
                 (0,): InstructionProperties(duration=600),
                 (1,): InstructionProperties(duration=700),
             },
@@ -1843,8 +1837,6 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         target.add_instruction(
             Reset(),
             {
-                # when using DynamicCircuitInstructionDurations,
-                # the duration of "reset" gets replaced with "measure"
                 (0,): InstructionProperties(duration=600),
                 (1,): InstructionProperties(duration=700),
             },
