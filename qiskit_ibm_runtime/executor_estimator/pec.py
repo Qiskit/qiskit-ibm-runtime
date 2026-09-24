@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Helper functions for the PEC error mitigation method."""
+"""Functionality specific to PEC for the client-side Estimator."""
 
 from __future__ import annotations
 
