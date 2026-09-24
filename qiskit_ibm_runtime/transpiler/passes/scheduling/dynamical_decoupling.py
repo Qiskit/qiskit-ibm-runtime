@@ -357,13 +357,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     continue
 
                 for index, gate in enumerate(seq):
+                    gate_length = None
                     if self._target:
                         try:
                             gate_length = self._target[gate.name].get((physical_index,)).duration
                         except:  # noqa: E722 bare-except
-                            gate_length = None
-                    else:
-                        raise TranspilerError("Target cannot be 'None'.")
+                            pass
 
                     if gate_length is None:
                         raise TranspilerError(

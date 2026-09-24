@@ -210,6 +210,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
         indices = [self._bit_indices[qarg] for qarg in self._map_qubits(node)]
 
+        duration = None
         if node.name == "delay":
             duration = node.op.duration
         elif node.name == "barrier":
@@ -227,8 +228,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                         duration = props.duration
                     else:
                         duration = self._target.seconds_to_dt(props.duration)
-        else:
-            raise TranspilerError("Could not identify a duration.")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(
