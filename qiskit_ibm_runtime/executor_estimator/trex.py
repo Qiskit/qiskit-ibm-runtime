@@ -31,6 +31,7 @@ def apply_trex(
     quantum_program: QuantumProgram,
     measure_noise_learning: MeasureNoiseLearningOptions,
     num_randomizations: int,
+    custom_boxing_options: dict | None = None,
 ) -> None:
     """Append the TREX calibration circuit to ``quantum_program``.
 
@@ -55,11 +56,12 @@ def apply_trex(
         num_randomizations: The twirling ``num_randomizations`` used for the main
             circuit items, used when ``measure_noise_learning.num_randomizations``
             is ``"auto"``.
+        custom_boxing_options: The custom boxing options passed to ``TREX.prepare``.
     """
     trex_num_randomizations = resolve_trex_num_randomizations(
         measure_noise_learning, num_randomizations
     )
-    trex.prepare(trex_num_randomizations, quantum_program)
+    trex.prepare(trex_num_randomizations, quantum_program, custom_boxing_options)
     logger.info("TREX calibration circuit added (%d randomizations).", trex_num_randomizations)
 
 

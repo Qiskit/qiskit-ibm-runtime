@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -89,12 +88,6 @@ def prepare(
     """
     coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
     finalized_options = finalize_estimator_options(options)
-
-    if add_tags and finalized_options.resilience.measure_mitigation:
-        warnings.warn(
-            "Simulating estimation jobs with measure mitigation is not yet supported; "
-            "measure mitigation will not be applied to the results."
-        )
 
     _validate(coerced_pubs, finalized_options, backend)
 
@@ -287,7 +280,12 @@ def _build_quantum_program(
 
     # TREX finalisation (must be after all task.prepare() calls)
     if trex is not None:
-        apply_trex(trex, quantum_program, measure_noise_learning, num_randomizations)
+        trex_boxing_options = {}
+        if add_tags := boxing_options.get("add_tags", None):
+            trex_boxing_options["add_tags"] = add_tags
+        apply_trex(
+            trex, quantum_program, measure_noise_learning, num_randomizations, trex_boxing_options
+        )
 
     # Dynamical decoupling
     if finalized_options.dynamical_decoupling.enable:
