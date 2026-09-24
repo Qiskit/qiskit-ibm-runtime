@@ -17,15 +17,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from qiskit import QuantumCircuit
-
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options_models import EnvironmentOptions, ExecutionOptions
-from ..options_models.executor import ExecutorOptions
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
-from ..quantum_program import QuantumProgram
+from .prepare import prepare
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -39,47 +35,6 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
-
-
-def prepare(
-    backend: BackendV2,
-    options: NoiseLearnerV3Options,
-    instructions: Iterable[CircuitInstruction],
-) -> tuple[QuantumProgram, ExecutorOptions]:  # TODO: qiskit-noise-learning
-    """Construct the quantum program for running learning experiments for the given instructions.
-
-    Will carry serialized qiskit-noise-learning description of the experiments as passthrough data.
-    """
-    executor_options = noise_learner_options_to_executor_options(options)
-    qp = QuantumProgram(shots=options.num_randomizations * options.shots_per_randomization)
-    qubits = list({qubit for instr in instructions for qubit in instr.qubits})
-    clbits = list({clbit for instr in instructions for clbit in instr.clbits})
-    circuit = QuantumCircuit(list(qubits), list(clbits))
-    for instr in instructions:
-        circuit.append(instr, instr.qubits, instr.clbits)
-    qp.append_circuit_item(circuit)
-    return qp, executor_options
-
-
-def noise_learner_options_to_executor_options(options: NoiseLearnerV3Options) -> ExecutorOptions:
-    """Map NoiseLearnerV3Options to ExecutorOptions, ignoring all irrelevant fields.
-
-    Returns:
-        Mapped executor options.
-    """
-    executor_options = ExecutorOptions()
-
-    executor_options.max_execution_time = options.max_execution_time
-    executor_options.environment = EnvironmentOptions(**options.environment.model_dump())
-    executor_options.execution = ExecutionOptions(**options.execution.model_dump())
-
-    # TODO: add local mode support
-    # executor_options.simulator = SimulatorOptions(**options.simulator.model_dump())
-
-    if options.experimental:
-        executor_options.experimental.update(options.experimental)
-
-    return executor_options
 
 
 class NoiseLearnerV3:
@@ -201,9 +156,9 @@ class NoiseLearnerV3:
         """
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
-            backend=self._backend,
-            options=self.options,
             instructions=instructions,
+            options=self.options,
+            backend=self._backend,
         )
 
         # Set semantic role for post-processing dispatch
