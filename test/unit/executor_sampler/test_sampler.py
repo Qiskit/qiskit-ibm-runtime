@@ -13,9 +13,10 @@
 """Tests for client-side Sampler."""
 
 from unittest import skipUnless
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
+from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -31,7 +32,7 @@ from qiskit_ibm_runtime.session import Session
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend
+from ...utils import get_mocked_backend, get_mocked_batch, get_mocked_session
 
 
 class TestSamplerSimpleCircuits(IBMTestCase):
@@ -255,6 +256,7 @@ class TestSamplerCircuitValidation(IBMTestCase):
         mock_run.assert_not_called()
 
 
+@ddt
 class TestSamplerShotsHandling(IBMTestCase):
     """Tests for shots handling in Sampler."""
 
@@ -297,6 +299,21 @@ class TestSamplerShotsHandling(IBMTestCase):
 
         # All items should use the same shots
         self.assertEqual(quantum_program.shots, 2048)
+
+    @data(get_mocked_session, get_mocked_batch)
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor")
+    def test_run_uses_mode_not_backend(self, get_mode, mock_executor_class):
+        """Executor is constructed with the Session/Batch, not the bare backend."""
+        mock_executor_class.return_value.run.return_value = MagicMock()
+        mode = get_mode(self.backend)
+
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        Sampler(mode=mode).run([circuit], shots=1024)
+
+        mock_executor_class.assert_called_once_with(mode=mode, options=ANY)
 
 
 class TestSamplerQuantumProgramIntegrity(IBMTestCase):

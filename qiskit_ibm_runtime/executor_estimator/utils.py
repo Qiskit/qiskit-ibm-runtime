@@ -115,7 +115,7 @@ def resolve_precision(
 
     if len(pub_precisions) != 1:
         raise IBMInputValueError(
-            f"All pubs must have the same precision. Found: {pub_precisions}"
+            f"All pubs must have the same precision. Found: {pub_precisions} "
             "(possibly via the run provided precision parameter)"
         )
 
