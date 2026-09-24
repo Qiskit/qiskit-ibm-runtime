@@ -16,9 +16,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from functools import lru_cache
-from typing import TypeAlias
 
-from qiskit.circuit import ControlFlowOp, Measure, Parameter, Reset
+from qiskit.circuit import ControlFlowOp, Measure, Reset
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
 
 BlockOrderingCallableType = Callable[[DAGCircuit], Generator[DAGOpNode, None, None]]
@@ -122,8 +121,3 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         next_nodes = to_push
 
     _emit.cache_clear()
-
-
-InstrKey: TypeAlias = (
-    tuple[str, None, None] | tuple[str, tuple[int], None] | tuple[str, tuple[int], tuple[Parameter]]
-)
