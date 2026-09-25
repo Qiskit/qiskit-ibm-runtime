@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Post-processing for the client-side NoiseLearnerV3: delegates to qiskit-noise-learning."""
+"""Post-processing for the client-side noise learner: delegates to qiskit-noise-learning."""
 
 from __future__ import annotations
 

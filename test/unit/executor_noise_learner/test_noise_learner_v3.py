@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for client-side NoiseLearner."""
+"""Tests for client-side noise learner."""
 
 from unittest.mock import MagicMock, patch
 

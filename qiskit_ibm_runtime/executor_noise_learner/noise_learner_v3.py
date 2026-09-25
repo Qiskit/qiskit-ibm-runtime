@@ -67,9 +67,6 @@ class NoiseLearnerV3:
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
-    _PROGRAM_ID = "noise-learner"
-    _SCHEMA_VERSION = "v0.3"
-
     options: NoiseLearnerV3Options
     """The options in this noise learner."""
 

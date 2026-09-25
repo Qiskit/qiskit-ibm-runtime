@@ -10,4 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Result decoder for client-side NoiseLearnerV3."""
+"""Result decoder for client-side noise learner."""

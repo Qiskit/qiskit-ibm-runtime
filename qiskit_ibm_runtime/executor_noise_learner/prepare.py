@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Prepare function for client-side NoiseLearnerV3 primitive."""
+"""Prepare function for client-side noise learner primitive."""
 
 from __future__ import annotations
 

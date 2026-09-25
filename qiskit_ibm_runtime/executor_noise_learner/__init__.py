@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-===============================================================================
-Client-side Noise learner V3 (:mod:`qiskit_ibm_runtime.executor_noise_learner`)
-===============================================================================
+============================================================================
+Client-side noise learner (:mod:`qiskit_ibm_runtime.executor_noise_learner`)
+============================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.executor_noise_learner
 
