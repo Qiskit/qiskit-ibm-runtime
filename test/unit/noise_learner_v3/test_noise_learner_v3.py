@@ -190,7 +190,7 @@ class TestNoiseLearnerV3(IBMTestCase):
     @data("job", "session", "batch")
     @mock_responses
     def test_mode_handling(self, mode_id, registry):
-        """Executor `mode` init argument should propagate to interface and through `run()`."""
+        """NoiseLearner `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
 

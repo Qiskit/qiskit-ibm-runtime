@@ -12,11 +12,10 @@
 
 """Tests the `Calibrator` class."""
 
-from unittest.mock import patch
+from ddt import data, ddt
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.calibrator import Calibrator
-from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
@@ -24,7 +23,7 @@ from qiskit_ibm_runtime.session import Session
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..utils import get_mocked_backend, get_mocked_session
+from ..utils import get_mocked_backend
 
 
 class TestCalibratorOptions(IBMTestCase):
@@ -58,57 +57,36 @@ class TestCalibratorOptions(IBMTestCase):
         self.assertIs(calibrator.options, new_opts)
 
 
+@ddt
 class TestCalibrator(IBMTestCase):
     """Tests the ``Calibrator`` class."""
 
-    def test_run_of_session_is_selected(self):
-        """Test ``Calibrator.run`` selects the service ``run`` method, if session is specified."""
-        backend_name = "ibm_hello"
-        session = get_mocked_session(get_mocked_backend(backend_name))
-        with (
-            patch.object(session, "_run", return_value="session"),
-            patch.object(session.service, "_run", return_value="service"),
-        ):
-            calibrator = Calibrator(mode=session)
-            selected_run = calibrator.run()
-            self.assertEqual(selected_run, "session")
-
-    def test_run_of_service_is_selected(self):
-        """Test ``Calibrator.run`` selects the service ``run`` method.
-
-        This is tested when session is not specified.
-        """
-        backend = get_mocked_backend()
-        with patch.object(backend.service, "_run", return_value="service"):
-            calibrator = Calibrator(mode=backend)
-            selected_run = calibrator.run()
-            self.assertEqual(selected_run, "service")
-
+    @data("job", "session", "batch")
     @mock_responses
-    def test_mode(self, registry):
-        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+    def test_mode_handling(self, mode_id, registry):
+        """Calibrator `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
-
-        # Job mode, online backend.
         backend = service.backend("common_backend")
-        calibrator = Executor(mode=backend)
-        self.assertEqual(calibrator.backend(), backend)
-        self.assertEqual(calibrator.mode, None)
 
-        # Session mode.
-        session = Session(backend)
-        calibrator = Executor(mode=session)
-        self.assertEqual(calibrator.backend(), backend)
-        self.assertEqual(calibrator.mode, session)
+        match mode_id:
+            case "job":
+                mode = backend
+                expected_mode = None
+                expected_session_id = None
+            case "session":
+                mode = Session(backend)
+                expected_mode = mode
+                expected_session_id = "session-12345"
+            case "batch":
+                mode = Batch(backend)
+                expected_mode = mode
+                expected_session_id = "session-12345"
 
-        # Batch mode.
-        batch = Batch(backend)
-        calibrator = Executor(mode=batch)
+        # Public interfaces should respect `mode`.
+        calibrator = Calibrator(mode=mode)
         self.assertEqual(calibrator.backend(), backend)
-        self.assertEqual(calibrator.mode, batch)
+        self.assertEqual(calibrator.mode, expected_mode)
 
-        # `None` mode (inside session).
-        with Session(backend) as session:
-            calibrator = Executor()
-            self.assertEqual(calibrator.backend(), backend)
-            self.assertEqual(calibrator.mode, session)
+        # Jobs issued should belong to a session under `session` / `batch`` modes.
+        job = calibrator.run()
+        self.assertEqual(job._session_id, expected_session_id)
