@@ -178,6 +178,9 @@ class Job:
     usage: dict | None = None
     """Job usage dictionary."""
 
+    calibration_id: str | None = None
+    """Calibration id used to run the job."""
+
     statuses: list[JobStatus] = field(default_factory=lambda: ["completed"])
     """States that a job goes through."""
 
@@ -612,6 +615,7 @@ class BaseRegistry(FirstMatchRegistry):
                 "state": {"status": job.status.capitalize()},
                 "program": {"id": job.program},
                 "usage": job.usage,
+                "calibration_id": job.calibration_id,
             }
             for job in self.jobs[instance.name].values()
             if job.status in statuses
@@ -663,6 +667,7 @@ class BaseRegistry(FirstMatchRegistry):
                     "state": state,
                     "program": {"id": job.program},
                     "usage": job.usage,
+                    "calibration_id": job.calibration_id,
                 }
             )
 
