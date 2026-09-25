@@ -32,7 +32,4 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
     Returns:
         A :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result`.
     """
-    if len(result) == 0:
-        return NoiseLearnerV3Result()
-
     return NoiseLearnerV3Result()
