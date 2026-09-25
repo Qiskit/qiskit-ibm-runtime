@@ -73,6 +73,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         tags: Tags assigned to the job.
         version: Primitive version.
         private: Marks job as private.
+        calibration_id: Calibration ID used to run the job.
     """
 
     JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
@@ -92,6 +93,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         tags: list | None = None,
         version: int | None = None,
         private: bool | None = False,
+        calibration_id: str | None = None,
     ) -> None:
         BasePrimitiveJob.__init__(self, job_id=job_id)
         BaseRuntimeJob.__init__(
@@ -110,6 +112,12 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             private=private,
         )
         self._status: JobStatus = "INITIALIZING"
+        self._calibration_id = calibration_id
+
+    @property
+    def calibration_id(self) -> str | None:
+        """Return the calibration ID used to run this job, if any."""
+        return getattr(self, "_calibration_id", None)
 
     def result(
         self,

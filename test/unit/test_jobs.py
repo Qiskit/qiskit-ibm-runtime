@@ -67,6 +67,7 @@ def run_program(
     backend_name: str = "common_backend",
     dry_run: bool = False,
     instance: str = "a",
+    calibration_id: str | None = None,
 ) -> tuple[RuntimeJobV2, Job]:
     """Run a program using the `service`, and add a corresponding job to the registry.
 
@@ -82,13 +83,16 @@ def run_program(
         backend_name: name of the backend to run against.
         dry_run: whether to execute in dry_run mode.
         instance: the instance where the job will be appended to.
+        calibration_id: calibration ID to use for the job.
 
     Returns:
         The real job which results of the execution of the program, and the registry job that is
         added to the registry.
     """
     options.update({"backend": backend_name, "instance": registry.instances[instance].crn})
-    job = service._run("sampler", inputs, options, dry_run=dry_run)
+    job = service._run(
+        "sampler", inputs, options, dry_run=dry_run, calibration_id=calibration_id
+    )
     registry_job = Job(
         job.job_id(),
         backend_name,
@@ -116,6 +120,17 @@ class TestRuntimeJob(IBMTestCase):
         job.wait_for_final_state(poll_interval=0.1)
         self.assertEqual(job.status(), "DONE")
         self.assertTrue(job.result())
+
+    @mock_responses
+    def test_run_program_calibration_id(self, registry):
+        """Test a submitted job exposes its calibration id."""
+        service = QiskitRuntimeService(token="my_token")
+
+        job, _ = run_program(
+            service, registry, {"param1": "foo"}, {}, calibration_id="calibration-123"
+        )
+
+        self.assertEqual(job.calibration_id, "calibration-123")
 
     @mock_responses
     def test_run_program_phantom_backend(self, registry):

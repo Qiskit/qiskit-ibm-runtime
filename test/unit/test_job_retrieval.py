@@ -36,6 +36,19 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertEqual(job.job_id(), "my_job")
         self.assertEqual(job.primitive_id, "sampler")
 
+    @data(None, "calibration-123")
+    @mock_responses
+    def test_retrieve_job_calibration_id(self, calibration_id, registry):
+        """Test retrieving a job exposes its calibration id."""
+        registry.add_job(
+            Job("my_job", "common_backend", calibration_id=calibration_id), "a"
+        )
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+
+        self.assertEqual(service.job("my_job").calibration_id, calibration_id)
+        self.assertEqual(service.jobs()[0].calibration_id, calibration_id)
+
     @mock_responses
     def test_jobs_no_limit(self, registry):
         """Test retrieving jobs without limit."""
