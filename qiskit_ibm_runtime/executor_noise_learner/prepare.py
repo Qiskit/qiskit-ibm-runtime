@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 
 
-# TODO: use `qiskit_noise_mitigation.prepare` once available
+# TODO: use `qiskit_noise_learning.prepare` once available
 def prepare(
     instructions: Iterable[CircuitInstruction],
     options: NoiseLearnerV3Options,
