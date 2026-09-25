@@ -67,11 +67,11 @@ class TestSamplerSimpleCircuits(IBMTestCase):
             case "session":
                 mode = Session(backend)
                 expected_mode = mode
-                expected_session_id = "session-12345"
+                expected_session_id = "session_12345"
             case "batch":
                 mode = Batch(backend)
                 expected_mode = mode
-                expected_session_id = "session-12345"
+                expected_session_id = "session_12345"
 
         # Public interfaces should respect `mode`.
         sampler = Sampler(mode=mode)

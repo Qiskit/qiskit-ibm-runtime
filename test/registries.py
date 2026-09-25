@@ -570,7 +570,7 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
 
         response_body = {
-            "id": "job-12345",
+            "id": "job_12345",
             "backend": backend_name,
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
@@ -784,7 +784,7 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
 
         response_body = {
-            "id": "session-12345",
+            "id": "session_12345",
             "backend_name": backend_name,
             "mode": request_body["mode"],
         }
@@ -806,7 +806,7 @@ class BaseRegistry(FirstMatchRegistry):
         session = self.sessions[instance.name][session_id]
 
         response_body = {
-            "id": "session-12345",
+            "id": "session_12345",
             "backend_name": session.backend_name,
             "mode": session.mode,
         }
