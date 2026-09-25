@@ -570,7 +570,7 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
 
         response_body = {
-            "id": "12345",
+            "id": "job-12345",
             "backend": backend_name,
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
@@ -783,7 +783,11 @@ class BaseRegistry(FirstMatchRegistry):
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
 
-        response_body = {"id": "12345", "backend_name": backend_name, "mode": request_body["mode"]}
+        response_body = {
+            "id": "session-12345",
+            "backend_name": backend_name,
+            "mode": request_body["mode"],
+        }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def callback_sessions_id(self, request: PreparedRequest) -> CallbackResult:
@@ -801,7 +805,11 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
         session = self.sessions[instance.name][session_id]
 
-        response_body = {"id": "12345", "backend_name": session.backend_name, "mode": session.mode}
+        response_body = {
+            "id": "session-12345",
+            "backend_name": session.backend_name,
+            "mode": session.mode,
+        }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def callback_sessions_patch(self, request: PreparedRequest) -> CallbackResult:
