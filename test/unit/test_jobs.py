@@ -286,6 +286,27 @@ class TestRuntimeJob(IBMTestCase):
         self.assertTrue(job.status())
 
     @mock_responses
+    def test_retrieved_failed_job_result(self, registry):
+        """Test a cached failed status still loads its error message on demand."""
+        registry.add_job(
+            Job(
+                "my_job",
+                "common_backend",
+                status="failed",
+                statuses=["failed"],
+                raw_results=json.dumps("Content from results"),
+            ),
+            "a",
+        )
+        service = QiskitRuntimeService(token="my_token", instance="a")
+
+        job = service.job("my_job")
+
+        self.assertEqual(job.status(), "ERROR")
+        with self.assertRaisesRegex(RuntimeJobFailureError, "Content from results"):
+            job.result()
+
+    @mock_responses
     def test_wait_for_final_state(self, registry):
         """Test wait for final state."""
         service = QiskitRuntimeService(token="my_token")

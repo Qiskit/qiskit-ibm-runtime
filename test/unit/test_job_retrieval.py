@@ -36,6 +36,51 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertEqual(job.job_id(), "my_job")
         self.assertEqual(job.primitive_id, "sampler")
 
+    @data(("completed", "DONE"), ("failed", "ERROR"), ("cancelled", "CANCELLED"))
+    @mock_responses(expose_responses_mock=True)
+    def test_retrieved_final_job_status_is_cached(self, status, registry, responses):
+        """Test final statuses do not require another API request."""
+        api_status, expected_status = status
+        registry.add_job(
+            Job(
+                "my_job",
+                "common_backend",
+                status=api_status,
+                statuses=[api_status],
+            ),
+            "a",
+        )
+        service = QiskitRuntimeService(token="my_token", instance="a")
+
+        job = service.job("my_job")
+        request_count = len(responses.calls)
+        self.assertEqual(job.status(), expected_status)
+        self.assertEqual(len(responses.calls), request_count)
+
+        job = service.jobs()[0]
+        request_count = len(responses.calls)
+        self.assertEqual(job.status(), expected_status)
+        self.assertEqual(len(responses.calls), request_count)
+
+    @mock_responses(expose_responses_mock=True)
+    def test_retrieved_pending_job_status_is_refreshed(self, registry, responses):
+        """Test pending statuses continue to be refreshed."""
+        registry.add_job(
+            Job(
+                "my_job",
+                "common_backend",
+                status="running",
+                statuses=["running", "completed"],
+            ),
+            "a",
+        )
+        service = QiskitRuntimeService(token="my_token", instance="a")
+
+        job = service.job("my_job")
+        request_count = len(responses.calls)
+        self.assertEqual(job.status(), "DONE")
+        self.assertEqual(len(responses.calls), request_count + 1)
+
     @mock_responses
     def test_jobs_no_limit(self, registry):
         """Test retrieving jobs without limit."""
