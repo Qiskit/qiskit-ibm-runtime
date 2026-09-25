@@ -139,8 +139,8 @@ class TestNoiseLearnerUsingOptions(IBMTestCase):
 
 
 @ddt
-class TestNoiseLearnerRunNoPatching(IBMTestCase):
-    """Tests for the NoiseLearnerV3.run() method (with no Python methods patching)."""
+class TestNoiseLearnerRun(IBMTestCase):
+    """Tests for the NoiseLearnerV3.run() method."""
 
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
