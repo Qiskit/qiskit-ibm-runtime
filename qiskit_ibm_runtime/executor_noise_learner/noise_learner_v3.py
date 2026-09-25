@@ -136,7 +136,7 @@ class NoiseLearnerV3:
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
         logger.info(
-            "Submitting %d pub%s to executor with %d total shots",
+            "Submitting %d instructions%s to executor with %d total shots",
             len(quantum_program.items),
             "s" if len(quantum_program.items) > 1 else "",
             quantum_program.shots * sum(item.size() for item in quantum_program.items),
