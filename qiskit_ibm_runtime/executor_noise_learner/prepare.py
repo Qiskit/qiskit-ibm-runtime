@@ -53,5 +53,8 @@ def prepare(
     """
     executor_options = noise_learner_options_to_executor_options(options)
     quantum_program = QuantumProgram(shots=1)
-    quantum_program.append_circuit_item(QuantumCircuit(1))
+    
+    circuit = QuantumCircuit(1)
+    circuit.measure_all()
+    quantum_program.append_circuit_item(circuit)
     return quantum_program, executor_options
