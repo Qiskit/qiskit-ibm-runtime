@@ -24,6 +24,7 @@ from .simulator import SimulatorOptions
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
     from .estimator import EstimatorOptions
+    from .noise_learner_v3 import NoiseLearnerV3Options
     from .sampler import SamplerOptions
 
 
@@ -92,5 +93,23 @@ def estimator_options_to_executor_options(options: EstimatorOptions) -> Executor
 
     if executor_options.simulator.layer_noise_model is None:
         executor_options.simulator.layer_noise_model = options.resilience.layer_noise_model
+
+    return executor_options
+
+
+def noise_learner_options_to_executor_options(options: NoiseLearnerV3Options) -> ExecutorOptions:
+    """Map NoiseLearnerV3Options to ExecutorOptions, ignoring all irrelevant fields.
+
+    Returns:
+        Mapped executor options.
+    """
+    executor_options = ExecutorOptions()
+
+    executor_options.max_execution_time = options.max_execution_time
+    executor_options.environment = EnvironmentOptions(**options.environment.model_dump())
+    executor_options.execution = ExecutionOptions(**options.execution.model_dump())
+
+    if options.experimental:
+        executor_options.experimental.update(options.experimental)
 
     return executor_options
