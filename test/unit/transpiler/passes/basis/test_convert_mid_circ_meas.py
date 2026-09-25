@@ -114,7 +114,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         """Test correct replacing of measure_2.
 
         Test that non-terminal measure is only replaced if measure_2 is defined
-        in corresponding qarg (else, it's left untouched).
+        in corresponding qarg (else, it's left untouched, and a warning is raised).
         """
         num_qubits = 5
         mcm = MidCircuitMeasure()
@@ -134,7 +134,8 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
 
         custom_pass = ConvertToMidCircuitMeasure(target)
         pm = PassManager([custom_pass])
-        transpiled = pm.run(qc)
+        with self.assertWarnsRegex(UserWarning, "'measure_2'"):
+            transpiled = pm.run(qc)
 
         # The transpiled circuit will not contain any MidCircuitMeasure instance
         self.assertNotIsInstance(transpiled.data[0].operation, MidCircuitMeasure)
