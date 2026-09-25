@@ -12,8 +12,7 @@
 
 """Tests the `Executor` class."""
 
-from unittest.mock import patch
-
+from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 
@@ -29,7 +28,7 @@ from qiskit_ibm_runtime.session import Session
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend, get_mocked_session
+from ...utils import get_mocked_backend
 
 
 class TestExecutorOptions(IBMTestCase):
@@ -140,6 +139,7 @@ class TestExecutorOptions(IBMTestCase):
             options.not_a_variable = 0
 
 
+@ddt
 class TestExecutor(IBMTestCase):
     """Tests the ``Executor`` class."""
 
@@ -148,26 +148,6 @@ class TestExecutor(IBMTestCase):
         super().setUp()
         self.program = QuantumProgram(10)
         self.program.append_circuit_item(circuit=QuantumCircuit(1))
-
-    def test_run_of_session_is_selected(self):
-        """Test ``Executor.run`` selects the service ``run`` method, if session is specified."""
-        backend_name = "ibm_hello"
-        session = get_mocked_session(get_mocked_backend(backend_name))
-        with (
-            patch.object(session, "_run", return_value="session"),
-            patch.object(session.service, "_run", return_value="service"),
-        ):
-            executor = Executor(mode=session)
-            selected_run = executor.run(self.program)
-            self.assertEqual(selected_run, "session")
-
-    def test_run_of_service_is_selected(self):
-        """Test ``Executor.run`` selects the service ``run`` method, if session is not specified."""
-        backend = get_mocked_backend()
-        with patch.object(backend.service, "_run", return_value="service"):
-            executor = Executor(mode=backend)
-            selected_run = executor.run(self.program)
-            self.assertEqual(selected_run, "service")
 
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
@@ -178,31 +158,32 @@ class TestExecutor(IBMTestCase):
         job = executor.run(self.program, dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
+    @data("job", "session", "batch")
     @mock_responses
-    def test_mode(self, registry):
-        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+    def test_mode_handling(self, mode_id, registry):
+        """Executor `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
-
-        # Job mode, online backend.
         backend = service.backend("common_backend")
-        executor = Executor(mode=backend)
-        self.assertEqual(executor.backend(), backend)
-        self.assertEqual(executor.mode, None)
 
-        # Session mode.
-        session = Session(backend)
-        executor = Executor(mode=session)
-        self.assertEqual(executor.backend(), backend)
-        self.assertEqual(executor.mode, session)
+        match mode_id:
+            case "job":
+                mode = backend
+                expected_mode = None
+                expected_session_id = None
+            case "session":
+                mode = Session(backend)
+                expected_mode = mode
+                expected_session_id = "session-12345"
+            case "batch":
+                mode = Batch(backend)
+                expected_mode = mode
+                expected_session_id = "session-12345"
 
-        # Batch mode.
-        batch = Batch(backend)
-        executor = Executor(mode=batch)
+        # Public interfaces should respect `mode`.
+        executor = Executor(mode=mode)
         self.assertEqual(executor.backend(), backend)
-        self.assertEqual(executor.mode, batch)
+        self.assertEqual(executor.mode, expected_mode)
 
-        # `None` mode (inside session).
-        with Session(backend) as session:
-            executor = Executor()
-            self.assertEqual(executor.backend(), backend)
-            self.assertEqual(executor.mode, session)
+        # Jobs issued should belong to a session under `session` / `batch`` modes.
+        job = executor.run(self.program)
+        self.assertEqual(job._session_id, expected_session_id)
