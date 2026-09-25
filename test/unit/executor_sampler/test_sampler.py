@@ -83,7 +83,7 @@ class TestSamplerSimpleCircuits(IBMTestCase):
         circuit.h(0)
         circuit.measure_all()
         job = sampler.run([circuit])
-        self.assertEqual(job.session_id, expected_session_id)
+        self.assertEqual(job._session_id, expected_session_id)
 
 
 class TestSamplerCircuitValidation(IBMTestCase):
