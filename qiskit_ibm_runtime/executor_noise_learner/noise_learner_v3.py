@@ -111,20 +111,6 @@ class NoiseLearnerV3:
     ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Submit a request to the noise learner program.
 
-        Two protocols are supported:
-
-        - Lindblad: for boxed instructions which content can be cast to
-            :class:`~.qiskit.quantum_info.Clifford` and contain a single layer of
-            (up to) two qubit gates.
-
-        - TREX: for boxed instructions which content can contain exactly one measurement per qubit.
-
-        .. note::
-
-            To minimize the number of noise learning experiments, call
-            :meth:`~samplomatic.utils.find_unique_box_instructions` before
-            running the noise learning job.
-
         Args:
             instructions: The instructions to learn the noise of.
             dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
@@ -136,16 +122,6 @@ class NoiseLearnerV3:
 
         Returns:
             The submitted job.
-
-        Raises:
-            IBMInputValueError: If the instructions cannot be used with the noise learner, such as:
-
-                * If an instruction contains a box without twirl annotation.
-                * If an instruction contains unphysical qubits, i.e., qubits that do not belong to
-                  the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
-                  for the backend in use.
-                * If an instruction contains a box with non-ISA gates.
-                * If an instruction cannot be learned by any of the supported learning protocols.
         """
         logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare(
