@@ -55,7 +55,7 @@ class StoredJobsTestCase(IBMTestCase):
         self.assertIsInstance(result, QuantumProgramResult)
 
     @mock_responses(OneInstanceNoBackendsRegistry)
-    @data(*ESTIMATOR_JOBS["0.49"])
+    @data(*ESTIMATOR_JOBS["0.50"])
     def test_estimator_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Estimator jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
