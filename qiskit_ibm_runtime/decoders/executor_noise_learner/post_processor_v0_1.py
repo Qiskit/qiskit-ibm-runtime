@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
 
 
+# TODO: use `qiskit_noise_mitigation.post_process` once available
 def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseLearnerV3Result:
     """Convert a quantum program result to a noise learner result for NoiseLearnerV3.
 
