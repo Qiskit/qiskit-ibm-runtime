@@ -527,35 +527,6 @@ class TestEstimatorRunNoPatching(IBMTestCase):
         job = estimator.run([(circuit, observable)], precision=0.03125, dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
-    @mock_responses
-    def test_mode(self, registry):
-        """Estimator `mode` and `backend()` is based on `mode` init argument."""
-        service = QiskitRuntimeService(token="my_token")
-
-        # Job mode, online backend.
-        backend = service.backend("common_backend")
-        estimator = Estimator(mode=backend)
-        self.assertEqual(estimator.backend(), backend)
-        self.assertEqual(estimator.mode, None)
-
-        # Session mode.
-        session = Session(backend)
-        estimator = Estimator(mode=session)
-        self.assertEqual(estimator.backend(), backend)
-        self.assertEqual(estimator.mode, session)
-
-        # Batch mode.
-        batch = Batch(backend)
-        estimator = Estimator(mode=batch)
-        self.assertEqual(estimator.backend(), backend)
-        self.assertEqual(estimator.mode, batch)
-
-        # `None` mode (inside session).
-        with Session(backend) as session:
-            estimator = Estimator()
-            self.assertEqual(estimator.backend(), backend)
-            self.assertEqual(estimator.mode, session)
-
     @data("job", "session", "batch")
     @mock_responses
     def test_mode_handling(self, mode_id, registry):
