@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
-from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 from .prepare import prepare
 
@@ -79,9 +78,6 @@ class NoiseLearnerV3:
         self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
 
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
-
-        if isinstance(self._service, QiskitRuntimeLocalService):
-            raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -161,7 +157,7 @@ class NoiseLearnerV3:
         # Set semantic role for post-processing dispatch
         quantum_program._semantic_role = "noise_learner_v3"
 
-        executor = Executor(mode=self._backend, options=executor_options)
+        executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
         logger.info(
             "Submitting %d pub%s to executor with %d total shots",
