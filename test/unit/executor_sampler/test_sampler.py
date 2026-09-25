@@ -15,6 +15,7 @@
 from unittest import skipUnless
 
 import numpy as np
+from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -31,15 +32,11 @@ from qiskit_ibm_runtime.session import Session
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend
 
 
+@ddt
 class TestSamplerSimpleCircuits(IBMTestCase):
     """Tests for Sampler with simple (non-parametric) circuits."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = get_mocked_backend()
 
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
@@ -55,34 +52,38 @@ class TestSamplerSimpleCircuits(IBMTestCase):
         job = sampler.run([circuit], dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
+    @data("job", "session", "batch")
     @mock_responses
-    def test_mode(self, registry):
-        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+    def test_mode_handling(self, mode_id, registry):
+        """Sampler `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
-
-        # Job mode, online backend.
         backend = service.backend("common_backend")
-        sampler = Sampler(mode=backend)
-        self.assertEqual(sampler.backend(), backend)
-        self.assertEqual(sampler.mode, None)
 
-        # Session mode.
-        session = Session(backend)
-        sampler = Sampler(mode=session)
-        self.assertEqual(sampler.backend(), backend)
-        self.assertEqual(sampler.mode, session)
+        match mode_id:
+            case "job":
+                mode = backend
+                expected_mode = None
+                expected_session_id = None
+            case "session":
+                mode = Session(backend)
+                expected_mode = mode
+                expected_session_id = "session-12345"
+            case "batch":
+                mode = Batch(backend)
+                expected_mode = mode
+                expected_session_id = "session-12345"
 
-        # Batch mode.
-        batch = Batch(backend)
-        sampler = Sampler(mode=batch)
+        # Public interfaces should respect `mode`.
+        sampler = Sampler(mode=mode)
         self.assertEqual(sampler.backend(), backend)
-        self.assertEqual(sampler.mode, batch)
+        self.assertEqual(sampler.mode, expected_mode)
 
-        # `None` mode (inside session).
-        with Session(backend) as session:
-            sampler = Sampler()
-            self.assertEqual(sampler.backend(), backend)
-            self.assertEqual(sampler.mode, session)
+        # Jobs issued should belong to a session under `session` / `batch`` modes.
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+        job = sampler.run([circuit])
+        self.assertEqual(job.session_id, expected_session_id)
 
 
 class TestSamplerCircuitValidation(IBMTestCase):
