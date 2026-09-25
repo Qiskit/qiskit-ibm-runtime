@@ -13,10 +13,10 @@
 """Test the conversion of Id gate operations to a delay."""
 
 from qiskit.circuit import QuantumCircuit
+from qiskit.transpiler.instruction_durations import InstructionDurations
 from qiskit.transpiler.passmanager import PassManager
 
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import ConvertIdToDelay
-from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import DynamicCircuitInstructionDurations
 
 from .....ibm_test_case import IBMTestCase
 
@@ -28,7 +28,7 @@ class TestConvertIdToDelay(IBMTestCase):
         """Test level setup."""
         super().setUp()
 
-        self.durations = DynamicCircuitInstructionDurations([("sx", None, 160), ("x", None, 200)])
+        self.durations = InstructionDurations([("sx", None, 160), ("x", None, 200)])
 
     def test_id_gate(self):
         """Test if Id gate is converted a delay."""

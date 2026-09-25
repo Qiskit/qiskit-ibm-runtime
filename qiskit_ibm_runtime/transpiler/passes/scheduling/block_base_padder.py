@@ -273,6 +273,7 @@ class BlockBasePadder(TransformationPass):
 
         indices = [self._bit_indices[qarg] for qarg in self._map_wires(node.qargs)]
 
+        duration = None
         if node.name == "delay":
             duration = node.op.duration
         elif node.name == "barrier":
@@ -288,8 +289,6 @@ class BlockBasePadder(TransformationPass):
                 duration = props.duration
             else:
                 duration = self._target.seconds_to_dt(props.duration)
-        else:
-            duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(
