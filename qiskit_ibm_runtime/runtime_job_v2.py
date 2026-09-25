@@ -145,7 +145,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         self.wait_for_final_state(timeout=timeout, poll_interval=poll_interval)
         if self._status == "ERROR":
-            error_message = self._reason if self._reason else self._error_message
+            error_message = self._reason or self._error_message or self.error_message()
             if self._reason_code == 1305:
                 raise RuntimeJobMaxTimeoutError(error_message)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
@@ -181,6 +181,16 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         """
         self._set_status_and_error_message()
         return self._status
+
+    def error_message(self) -> str | None:
+        """Return the reason the job failed, if any."""
+        if self._status == self.ERROR and self._error_message is None:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._set_status(response)
+            self._set_error_message(response)
+        else:
+            self._set_status_and_error_message()
+        return self._error_message
 
     def _status_from_job_response(self, response: dict) -> JobStatus | str:
         """Returns the job status from an API response.
