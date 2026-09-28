@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 import os
-from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from urllib.parse import urlparse
 
@@ -49,193 +48,6 @@ logger = logging.getLogger(__name__)
 
 
 class Account:
-    """Class that represents an account. This is an abstract class.
-
-    Args:
-        channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
-        token: Account token to use.
-        instance: Service instance to use.
-        proxies: Proxy configuration.
-        verify: Whether to verify server's TLS certificate.
-    """
-
-    def __init__(
-        self,
-        token: str,
-        instance: str | None = None,
-        proxies: ProxyConfiguration | None = None,
-        verify: bool | None = True,
-    ):
-        self.channel: str = None
-        self.url: str = None
-        self.token = token
-        self.instance = instance
-        self.proxies = proxies
-        self.verify = verify
-        self.private_endpoint: bool = False
-        self.region: str = None
-        self.plans_preference: list[str] = None
-        self.tags: list[str] = None
-
-    def to_saved_format(self) -> dict:
-        """Returns a dictionary that represents how the account is saved on disk."""
-        result = {k: v for k, v in self.__dict__.items() if v is not None}
-        if self.proxies:
-            result["proxies"] = self.proxies.to_dict()
-        return result
-
-    @classmethod
-    def from_saved_format(cls, data: dict) -> Account:
-        """Creates an account instance from data saved on disk."""
-        channel = data.get("channel")
-        proxies = data.get("proxies")
-        proxies = ProxyConfiguration(**proxies) if proxies else None
-        url = data.get("url")
-        token = data.get("token")
-        instance = data.get("instance")
-        verify = data.get("verify", True)
-        private_endpoint = data.get("private_endpoint", False)
-        region = data.get("region")
-        plans_preference = data.get("plans_preference")
-        tags = data.get("tags")
-        return cls.create_account(
-            channel=channel,
-            url=url,
-            token=token,
-            instance=instance,
-            proxies=proxies,
-            verify=verify,
-            private_endpoint=private_endpoint,
-            region=region,
-            plans_preference=plans_preference,
-            tags=tags,
-        )
-
-    @classmethod
-    def create_account(
-        cls,
-        channel: str,
-        token: str,
-        url: str | None = None,
-        instance: str | None = None,
-        proxies: ProxyConfiguration | None = None,
-        verify: bool | None = True,
-        private_endpoint: bool | None = False,
-        region: str | None = None,
-        plans_preference: list[str] | None = None,
-        tags: list[str] | None = None,
-    ) -> Account:
-        """Creates an account for a specific channel."""
-        if channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            return CloudAccount(
-                url=url,
-                token=token,
-                instance=instance,
-                proxies=proxies,
-                verify=verify,
-                private_endpoint=private_endpoint,
-                region=region,
-                plans_preference=plans_preference,
-                channel=channel,
-                tags=tags,
-            )
-        else:
-            raise InvalidAccountError(
-                f"Invalid `channel` value. Expected one of "
-                f"{['ibm_cloud', 'ibm_quantum_platform']}, got '{channel}'."
-            )
-
-    def resolve_crn(self) -> None:
-        """Resolves the corresponding CRN, updating the ``instance`` attribute accordingly.
-
-        Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique
-        service instance name and updates the ``instance`` attribute accordingly. Relevant for
-        "ibm_cloud" channel only.
-        """
-        pass
-
-    def list_instances(self) -> list[dict[str, Any]]:  # type: ignore
-        """Retrieve all crns with the IBM Cloud Global Search API."""
-        pass
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Account):
-            return False
-        return all(
-            [
-                self.channel == other.channel,
-                self.token == other.token,
-                self.url == other.url,
-                self.instance == other.instance,
-                self.proxies == other.proxies,
-                self.verify == other.verify,
-            ]
-        )
-
-    def validate(self) -> Account:
-        """Validates the account instance.
-
-        Raises:
-            InvalidAccountError: if the account is invalid
-
-        Returns:
-            This Account instance.
-        """
-        self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
-        self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
-        self._assert_valid_token(self.token)
-        self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.instance)  # type: ignore[arg-type]
-        self._assert_valid_proxies(self.proxies)  # type: ignore[arg-type]
-        return self
-
-    @staticmethod
-    def _assert_valid_channel(channel: ChannelType) -> None:
-        """Assert that the channel parameter is valid."""
-        if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
-            raise InvalidAccountError(
-                f"Invalid `channel` value. Expected one of "
-                f"['ibm_cloud', 'ibm_quantum_platform], got '{channel}'."
-            )
-
-    @staticmethod
-    def _assert_valid_token(token: str) -> None:
-        """Assert that the token is valid."""
-        if not (isinstance(token, str) and len(token) > 0):
-            raise InvalidAccountError(
-                f"Invalid `token` value. Expected a non-empty string, got '{token}'."
-            )
-
-    @staticmethod
-    def _assert_valid_url(url: str) -> None:
-        """Assert that the URL is valid."""
-        try:
-            urlparse(url)
-        except:  # noqa: E722 bare-except
-            raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
-
-    @staticmethod
-    def _assert_valid_proxies(config: ProxyConfiguration) -> None:
-        """Assert that the proxy configuration is valid."""
-        if config is not None:
-            config.validate()
-
-    @staticmethod
-    @abstractmethod
-    def _assert_valid_instance(instance: str) -> None:
-        """Assert that the instance name is valid for the given account type."""
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def _assert_valid_preferences(
-        region: str, plans_preference: list[str], tags: list[str]
-    ) -> None:
-        """Assert that the account preferences are valid."""
-        pass
-
-
-class CloudAccount(Account):
     """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'.
 
     Args:
@@ -265,14 +77,99 @@ class CloudAccount(Account):
         channel: str | None = "ibm_quantum_platform",
         tags: list[str] | None = None,
     ):
-        super().__init__(token, instance, proxies, verify)
-        raw_url = url or IBM_QUANTUM_PLATFORM_API_URL
+        # super().__init__(token, instance, proxies, verify)
+        self.token = token
+        self.instance = instance
+        self.proxies = proxies
+        self.verify = verify
         self.channel = channel
-        self.url = raw_url
+        self.url = url or IBM_QUANTUM_PLATFORM_API_URL
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
         self.tags = tags
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Account):
+            return False
+        return all(
+            [
+                self.channel == other.channel,
+                self.token == other.token,
+                self.url == other.url,
+                self.instance == other.instance,
+                self.proxies == other.proxies,
+                self.verify == other.verify,
+            ]
+        )
+
+    @classmethod
+    def create_account(
+        cls,
+        channel: str,
+        token: str,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> Account:
+        """Creates an account for a specific channel."""
+        if channel in ["ibm_cloud", "ibm_quantum_platform"]:
+            return cls(
+                url=url,
+                token=token,
+                instance=instance,
+                proxies=proxies,
+                verify=verify,
+                private_endpoint=private_endpoint,
+                region=region,
+                plans_preference=plans_preference,
+                channel=channel,
+                tags=tags,
+            )
+        else:
+            raise InvalidAccountError(
+                f"Invalid `channel` value. Expected one of "
+                f"{['ibm_cloud', 'ibm_quantum_platform']}, got '{channel}'."
+            )
+
+    @classmethod
+    def from_saved_format(cls, data: dict) -> Account:
+        """Creates an account instance from data saved on disk."""
+        channel = data.get("channel")
+        proxies = data.get("proxies")
+        proxies = ProxyConfiguration(**proxies) if proxies else None
+        url = data.get("url")
+        token = data.get("token")
+        instance = data.get("instance")
+        verify = data.get("verify", True)
+        private_endpoint = data.get("private_endpoint", False)
+        region = data.get("region")
+        plans_preference = data.get("plans_preference")
+        tags = data.get("tags")
+        return cls.create_account(
+            channel=channel,
+            url=url,
+            token=token,
+            instance=instance,
+            proxies=proxies,
+            verify=verify,
+            private_endpoint=private_endpoint,
+            region=region,
+            plans_preference=plans_preference,
+            tags=tags,
+        )
+
+    def to_saved_format(self) -> dict:
+        """Returns a dictionary that represents how the account is saved on disk."""
+        result = {k: v for k, v in self.__dict__.items() if v is not None}
+        if self.proxies:
+            result["proxies"] = self.proxies.to_dict()
+        return result
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
@@ -426,6 +323,54 @@ class CloudAccount(Account):
             if not search_cursor:
                 break
         return all_crns
+
+    def validate(self) -> Account:
+        """Validates the account instance.
+
+        Raises:
+            InvalidAccountError: if the account is invalid
+
+        Returns:
+            This Account instance.
+        """
+        self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
+        self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
+        self._assert_valid_token(self.token)
+        self._assert_valid_url(self.url)
+        self._assert_valid_instance(self.instance)  # type: ignore[arg-type]
+        self._assert_valid_proxies(self.proxies)  # type: ignore[arg-type]
+        return self
+
+    @staticmethod
+    def _assert_valid_channel(channel: ChannelType) -> None:
+        """Assert that the channel parameter is valid."""
+        if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
+            raise InvalidAccountError(
+                f"Invalid `channel` value. Expected one of "
+                f"['ibm_cloud', 'ibm_quantum_platform], got '{channel}'."
+            )
+
+    @staticmethod
+    def _assert_valid_token(token: str) -> None:
+        """Assert that the token is valid."""
+        if not (isinstance(token, str) and len(token) > 0):
+            raise InvalidAccountError(
+                f"Invalid `token` value. Expected a non-empty string, got '{token}'."
+            )
+
+    @staticmethod
+    def _assert_valid_url(url: str) -> None:
+        """Assert that the URL is valid."""
+        try:
+            urlparse(url)
+        except:  # noqa: E722 bare-except
+            raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
+
+    @staticmethod
+    def _assert_valid_proxies(config: ProxyConfiguration) -> None:
+        """Assert that the proxy configuration is valid."""
+        if config is not None:
+            config.validate()
 
     @staticmethod
     def _assert_valid_instance(instance: str) -> None:
