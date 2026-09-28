@@ -21,11 +21,11 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.debug_tools import Neat, NeatResult
+from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
 from ...ibm_test_case import IBMTestCase
 
 if HAS_AER:
-    from qiskit_aer import AerSimulator
     from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 
@@ -37,15 +37,7 @@ class TestNeat(IBMTestCase):
         """Test level setup."""
         super().setUp()
 
-        noise_strength = 0.05
-        self.noise_model = NoiseModel()
-        self.noise_model.add_quantum_error(depolarizing_error(noise_strength, 2), ["cx"], [0, 1])
-        self.noise_model.add_quantum_error(depolarizing_error(noise_strength, 2), ["cx"], [1, 0])
-        self.noise_model.add_quantum_error(depolarizing_error(noise_strength, 2), ["cx"], [1, 2])
-        self.backend = AerSimulator(
-            noise_model=self.noise_model, coupling_map=[[0, 1], [1, 0], [1, 2]]
-        )
-
+        self.backend = FakeVigoV2()
         pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
 
         self.c1 = QuantumCircuit(2)
@@ -87,7 +79,10 @@ class TestNeat(IBMTestCase):
 
     def test_noisy_sim(self):
         """Test the ``noisy_sim`` method."""
-        analyzer = Neat(self.backend, self.noise_model)
+        noise_model = NoiseModel()
+        noise_model.add_quantum_error(depolarizing_error(0, 2), ["cx"], [0, 1])
+
+        analyzer = Neat(self.backend, noise_model)
 
         r1 = analyzer.noisy_sim([(self.c1, self.obs1_xx)])
         self.assertIsInstance(r1, NeatResult)
