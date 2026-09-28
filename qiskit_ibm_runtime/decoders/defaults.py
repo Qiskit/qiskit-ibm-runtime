@@ -21,9 +21,9 @@ from .noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
 from .result_decoder import ResultDecoder
 from .runner import RunnerResultDecoder
 
-DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
-    "sampler": ResultDecoder,
-    "estimator": ResultDecoder,
+DEFAULT_DECODERS: dict[str, list[type[ResultDecoder]]] = {
+    "sampler": [ResultDecoder],
+    "estimator": [ResultDecoder],
     "executor": [
         ExecutorResultDecoder,
         ClientSideSamplerResultDecoder,
@@ -31,7 +31,7 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
         ClientSideNoiseLearnerResultDecoder,
     ],
     "noise-learner": [NoiseLearnerResultDecoder, NoiseLearnerV3ResultDecoder],
-    "circuit-runner": RunnerResultDecoder,
-    "qasm3-runner": RunnerResultDecoder,
-    "calibrate": ResultDecoder,
+    "circuit-runner": [RunnerResultDecoder],
+    "qasm3-runner": [RunnerResultDecoder],
+    "calibrate": [ResultDecoder],
 }

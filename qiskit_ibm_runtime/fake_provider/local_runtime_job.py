@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from functools import reduce
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.primitive_job import PrimitiveJob
 
@@ -147,14 +147,13 @@ class LocalRuntimeJob(PrimitiveJob):
         result = super().result()
 
         if self.primitive_id == "executor":
-            decoders: list = cast("list", DEFAULT_DECODERS["executor"])[1:]
             # Invoke all decoders, chaining them (one decoders output becomes the next's input) and
             # skipping the ones that are not applicable.
             return reduce(
                 lambda result, decoder: decoder.decode(result)
                 if decoder.is_applicable(result)
                 else result,
-                decoders,
+                DEFAULT_DECODERS["executor"],
                 result,
             )
 

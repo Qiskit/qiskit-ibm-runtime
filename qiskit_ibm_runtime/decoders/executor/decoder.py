@@ -65,6 +65,13 @@ class ExecutorResultDecoder(ResultDecoder):
     """Decoder for Executor results."""
 
     @classmethod
+    def is_applicable(cls, data: Any) -> bool:
+        """Return `True` if this decoder can be applied."""
+        if isinstance(data, QuantumProgramResult):
+            return False
+        return True
+
+    @classmethod
     def decode(
         cls, raw_result: str
     ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Result:
