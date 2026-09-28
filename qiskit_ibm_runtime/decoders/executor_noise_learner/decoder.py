@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Decoders for quantum programs."""
+"""Result decoder for client-side noise learner."""
 
 from __future__ import annotations
 
@@ -27,9 +27,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
 class ClientSideNoiseLearnerResultDecoder(BaseClientSideResultDecoder):
     """Decoder for quantum program results."""
-    
+
     SEMANTIC_ROLE = "noise_learner_v3"
 
     SUPPORTED_POST_PROCESSORS = {
@@ -40,4 +41,3 @@ class ClientSideNoiseLearnerResultDecoder(BaseClientSideResultDecoder):
     def decode(cls, result: QuantumProgramResult) -> NoiseLearnerV3Result:
         """Decode a QuantumProgramResult into the result type."""
         return super().decode(result)
-
