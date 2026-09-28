@@ -27,7 +27,7 @@ from ibm_cloud_sdk_core.authenticators import NoAuthAuthenticator
 from responses import RequestsMock
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime.accounts.account import CloudAccount
+from qiskit_ibm_runtime.accounts.account import Account
 
 from .registries import DefaultRegistry
 
@@ -89,7 +89,7 @@ def mock_responses(
             with (
                 # Patch authentication, in order to simplify flow.
                 patch.object(
-                    CloudAccount, "get_iam_authentificator", return_value=NoAuthAuthenticator()
+                    Account, "get_iam_authentificator", return_value=NoAuthAuthenticator()
                 ),
                 patch.object(IAMTokenManager, "get_token", return_value="bearer token"),
                 # Patch HTTP responses, allowing using a custom registry.
