@@ -13,7 +13,6 @@
 """Tests the `Calibrator` class."""
 
 from ddt import data, ddt
-
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.batch import Batch
