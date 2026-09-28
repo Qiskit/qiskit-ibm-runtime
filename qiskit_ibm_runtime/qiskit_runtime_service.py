@@ -379,7 +379,7 @@ class QiskitRuntimeService:
             )
         else:
             # If plans_preference is not set, prioritize free and trial plans.
-            # Note that `unknown` is not returned by the API but by `CloudAccount.list_instances()`
+            # Note that `unknown` is not returned by the API but by `Account.list_instances()`
             ordered_pricing_types = ["free", "trial", "paygo", "paid", "subscription", "unknown"]
             self._backend_instance_groups = sorted(
                 self._backend_instance_groups,
