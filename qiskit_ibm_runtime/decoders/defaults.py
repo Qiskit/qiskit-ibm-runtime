@@ -12,12 +12,12 @@
 
 """Mapping between program names and decoders."""
 
+from .executor.decoder import QuantumProgramResultDecoder
 from .executor_estimator.decoder import ClientSideEstimatorDecoder
 from .executor_noise_learner.decoder import ClientSideNoiseLearnerResultDecoder
 from .executor_sampler.decoder import ClientSideSamplerResultDecoder
 from .noise_learner import NoiseLearnerResultDecoder
 from .noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
-from .quantum_program.decoder import QuantumProgramResultDecoder
 from .result_decoder import ResultDecoder
 from .runner import RunnerResultDecoder
 

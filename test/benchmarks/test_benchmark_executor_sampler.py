@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.decoders.executor.decoder import QuantumProgramResultDecoder
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.options_models.sampler import SamplerOptions

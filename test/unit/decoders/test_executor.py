@@ -25,7 +25,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
 )
 
-from qiskit_ibm_runtime.decoders.quantum_program.decoder import (
+from qiskit_ibm_runtime.decoders.executor.decoder import (
     BaseClientSideResultDecoder,
     QuantumProgramResultDecoder,
 )

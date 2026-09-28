@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from ..quantum_program.decoder import BaseClientSideResultDecoder
+from ..executor.decoder import BaseClientSideResultDecoder
 from .post_processor_v0_1 import noise_learner_v3_post_processor_v0_1
 
 if TYPE_CHECKING:

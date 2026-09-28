@@ -29,7 +29,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
-from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.decoders.executor.decoder import QuantumProgramResultDecoder
 from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_estimator_options
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.executor_sampler.utils import find_unique_layers
