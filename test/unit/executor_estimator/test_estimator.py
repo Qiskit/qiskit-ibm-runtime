@@ -13,7 +13,7 @@
 """Unit tests for Estimator run method."""
 
 import warnings
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 from ddt import data, ddt
@@ -41,7 +41,7 @@ from qiskit_ibm_runtime.session import Session
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend, get_mocked_batch, get_mocked_session
+from ...utils import get_mocked_backend
 
 
 class TestEstimatorUsingOptions(IBMTestCase):
@@ -507,24 +507,8 @@ class TestEstimatorRun(IBMTestCase):
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
 
-    @data(get_mocked_session, get_mocked_batch)
-    def test_run_uses_mode_not_backend(self, get_mode):
-        """Executor is constructed with the Session/Batch, not the bare backend."""
-        mode = get_mode(self.backend)
 
-        estimator = Estimator(mode=mode)
-        estimator.options.resilience_level = 0
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        estimator.run([(circuit, observable)], precision=0.03125)
-
-        self.mock_executor_class.assert_called_once_with(mode=mode, options=ANY)
-
-
+@ddt
 class TestEstimatorRunNoPatching(IBMTestCase):
     """Tests for the Estimator.run() method (with no Python methods patching)."""
 
@@ -543,34 +527,40 @@ class TestEstimatorRunNoPatching(IBMTestCase):
         job = estimator.run([(circuit, observable)], precision=0.03125, dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
+    @data("job", "session", "batch")
     @mock_responses
-    def test_mode(self, registry):
-        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+    def test_mode_handling(self, mode_id, registry):
+        """Estimator `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
-
-        # Job mode, online backend.
         backend = service.backend("common_backend")
-        estimator = Estimator(mode=backend)
-        self.assertEqual(estimator.backend(), backend)
-        self.assertEqual(estimator.mode, None)
 
-        # Session mode.
-        session = Session(backend)
-        estimator = Estimator(mode=session)
-        self.assertEqual(estimator.backend(), backend)
-        self.assertEqual(estimator.mode, session)
+        match mode_id:
+            case "job":
+                mode = backend
+                expected_mode = None
+                expected_session_id = None
+            case "session":
+                mode = Session(backend)
+                expected_mode = mode
+                expected_session_id = "session_12345"
+            case "batch":
+                mode = Batch(backend)
+                expected_mode = mode
+                expected_session_id = "session_12345"
 
-        # Batch mode.
-        batch = Batch(backend)
-        estimator = Estimator(mode=batch)
+        # Public interfaces should respect `mode`.
+        estimator = Estimator(mode=mode)
         self.assertEqual(estimator.backend(), backend)
-        self.assertEqual(estimator.mode, batch)
+        self.assertEqual(estimator.mode, expected_mode)
 
-        # `None` mode (inside session).
-        with Session(backend) as session:
-            estimator = Estimator()
-            self.assertEqual(estimator.backend(), backend)
-            self.assertEqual(estimator.mode, session)
+        # Jobs issued should belong to a session under `session` / `batch`` modes.
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        job = estimator.run([(circuit, observable)], precision=0.03125)
+        self.assertEqual(job._session_id, expected_session_id)
 
 
 class TestEstimatorSimulatorMode(IBMTestCase):

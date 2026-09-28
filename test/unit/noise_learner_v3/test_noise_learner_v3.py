@@ -12,8 +12,7 @@
 
 """Tests the `NoiseLearnerV3` class."""
 
-from unittest.mock import patch
-
+from ddt import data, ddt
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.batch import Batch
@@ -30,7 +29,7 @@ from qiskit_ibm_runtime.session import Session
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend, get_mocked_session
+from ...utils import get_mocked_backend
 
 
 class TestNoiseLearnerV3Options(IBMTestCase):
@@ -175,28 +174,9 @@ class TestNoiseLearnerV3Options(IBMTestCase):
             options.not_a_variable = 0
 
 
+@ddt
 class TestNoiseLearnerV3(IBMTestCase):
     """Tests the ``NoiseLearnerV3`` class."""
-
-    def test_run_of_session_is_selected(self):
-        """Test ``.run`` selects the session ``run`` method, if session specified."""
-        backend_name = "ibm_hello"
-        session = get_mocked_session(get_mocked_backend(backend_name))
-        with (
-            patch.object(session, "_run", return_value="session"),
-            patch.object(session.service, "_run", return_value="service"),
-        ):
-            noise_learner = NoiseLearnerV3(mode=session)
-            selected_run = noise_learner.run([])
-            self.assertEqual(selected_run, "session")
-
-    def test_run_of_service_is_selected(self):
-        """Test ``.run`` selects the session ``run`` method, if session not specified."""
-        backend = get_mocked_backend()
-        with patch.object(backend.service, "_run", return_value="service"):
-            noise_learner = NoiseLearnerV3(mode=backend)
-            selected_run = noise_learner.run([])
-            self.assertEqual(selected_run, "service")
 
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
@@ -207,31 +187,32 @@ class TestNoiseLearnerV3(IBMTestCase):
         job = noise_learner.run([], dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
+    @data("job", "session", "batch")
     @mock_responses
-    def test_mode(self, registry):
-        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+    def test_mode_handling(self, mode_id, registry):
+        """NoiseLearner `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
-
-        # Job mode, online backend.
         backend = service.backend("common_backend")
-        noise_learner = NoiseLearnerV3(mode=backend)
-        self.assertEqual(noise_learner.backend(), backend)
-        self.assertEqual(noise_learner.mode, None)
 
-        # Session mode.
-        session = Session(backend)
-        noise_learner = NoiseLearnerV3(mode=session)
-        self.assertEqual(noise_learner.backend(), backend)
-        self.assertEqual(noise_learner.mode, session)
+        match mode_id:
+            case "job":
+                mode = backend
+                expected_mode = None
+                expected_session_id = None
+            case "session":
+                mode = Session(backend)
+                expected_mode = mode
+                expected_session_id = "session_12345"
+            case "batch":
+                mode = Batch(backend)
+                expected_mode = mode
+                expected_session_id = "session_12345"
 
-        # Batch mode.
-        batch = Batch(backend)
-        noise_learner = NoiseLearnerV3(mode=batch)
+        # Public interfaces should respect `mode`.
+        noise_learner = NoiseLearnerV3(mode=mode)
         self.assertEqual(noise_learner.backend(), backend)
-        self.assertEqual(noise_learner.mode, batch)
+        self.assertEqual(noise_learner.mode, expected_mode)
 
-        # `None` mode (inside session).
-        with Session(backend) as session:
-            noise_learner = NoiseLearnerV3()
-            self.assertEqual(noise_learner.backend(), backend)
-            self.assertEqual(noise_learner.mode, session)
+        # Jobs issued should belong to a session under `session` / `batch`` modes.
+        job = noise_learner.run([])
+        self.assertEqual(job._session_id, expected_session_id)

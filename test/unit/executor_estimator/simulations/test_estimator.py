@@ -125,6 +125,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         """
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
+        error = 0.005
 
         pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
 
@@ -140,8 +141,16 @@ class TestEstimatorWithNoise(IBMTestCase):
         # Add noise to every unique layer, independent of its content (gates or measurements).
         layers = base_level_estimator.find_unique_layers([pub], types="all")
         simulated_noise_model = [
-            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
-            for layer in layers
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, error)]))
+            for layer in layers[:-1]
+        ]
+        simulated_noise_model += [
+            (
+                layers[-1],
+                PauliLindbladMap.from_list(
+                    [("X" + "I" * (layers[-1].operation.num_qubits - 1), error)]
+                ),
+            )
         ]
         base_level_estimator.options.simulator.layer_noise_model = simulated_noise_model
 
@@ -160,7 +169,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         estimator.options.simulator.layer_noise_model = simulated_noise_model
         # Run a noisy simulation, injecting the same noise as in the simulation
         estimator.options.resilience.layer_noise_model = [
-            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, error)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
         ]
         result = estimator.run([pub]).result()
