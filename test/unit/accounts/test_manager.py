@@ -12,21 +12,26 @@
 
 """Tests for the account manager functionality."""
 
-
-from qiskit_ibm_runtime.accounts import Account, AccountAlreadyExistsError, AccountManager, AccountNotFoundError
-from qiskit_ibm_runtime.accounts.management import _DEFAULT_ACCOUNT_NAME_IBM_CLOUD, _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM
-from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
-from test.account import custom_envs, no_envs, temporary_account_config_file
-from test.decorators import mock_responses
-from test.ibm_test_case import IBMTestCase
-from test.unit.accounts.test_account import _DEFAULT_CRN, _TEST_IBM_CLOUD_ACCOUNT, _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
-
-
 import json
 import os
 import uuid
 from unittest import skipIf
+
+from qiskit_ibm_runtime.accounts import (
+    Account,
+    AccountAlreadyExistsError,
+    AccountManager,
+    AccountNotFoundError,
+)
+from qiskit_ibm_runtime.accounts.management import (
+    _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
+    _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
+)
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from test.account import custom_envs, no_envs, temporary_account_config_file
+from test.decorators import mock_responses
+from test.ibm_test_case import IBMTestCase
 
 _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",

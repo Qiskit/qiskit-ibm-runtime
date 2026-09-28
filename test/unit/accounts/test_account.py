@@ -23,11 +23,7 @@ from ddt import data, ddt
 from requests.exceptions import ProxyError
 
 from qiskit_ibm_runtime import IBMInputValueError
-from qiskit_ibm_runtime.accounts import (
-    Account,
-    AccountNotFoundError,
-    InvalidAccountError,
-)
+from qiskit_ibm_runtime.accounts import Account, AccountNotFoundError, InvalidAccountError
 from qiskit_ibm_runtime.accounts.account import IBM_QUANTUM_PLATFORM_API_URL
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
