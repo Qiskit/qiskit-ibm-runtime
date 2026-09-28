@@ -77,7 +77,6 @@ class Account:
         channel: str | None = "ibm_quantum_platform",
         tags: list[str] | None = None,
     ):
-        # super().__init__(token, instance, proxies, verify)
         self.token = token
         self.instance = instance
         self.proxies = proxies
@@ -333,68 +332,46 @@ class Account:
         Returns:
             This Account instance.
         """
-        self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
-        self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
-        self._assert_valid_token(self.token)
-        self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.instance)  # type: ignore[arg-type]
-        self._assert_valid_proxies(self.proxies)  # type: ignore[arg-type]
-        return self
-
-    @staticmethod
-    def _assert_valid_channel(channel: ChannelType) -> None:
-        """Assert that the channel parameter is valid."""
-        if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
+        # Validate preferences.
+        if self.region and (
+            self.region not in ["us-east", "eu-de"] or not isinstance(self.region, str)
+        ):
             raise InvalidAccountError(
-                f"Invalid `channel` value. Expected one of "
-                f"['ibm_cloud', 'ibm_quantum_platform], got '{channel}'."
+                f"Invalid `region` value. Expected `us-east` or `eu-de`, got '{self.region}' "
+                "instead."
             )
-
-    @staticmethod
-    def _assert_valid_token(token: str) -> None:
-        """Assert that the token is valid."""
-        if not (isinstance(token, str) and len(token) > 0):
-            raise InvalidAccountError(
-                f"Invalid `token` value. Expected a non-empty string, got '{token}'."
-            )
-
-    @staticmethod
-    def _assert_valid_url(url: str) -> None:
-        """Assert that the URL is valid."""
-        try:
-            urlparse(url)
-        except:  # noqa: E722 bare-except
-            raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
-
-    @staticmethod
-    def _assert_valid_proxies(config: ProxyConfiguration) -> None:
-        """Assert that the proxy configuration is valid."""
-        if config is not None:
-            config.validate()
-
-    @staticmethod
-    def _assert_valid_instance(instance: str) -> None:
-        """Assert that the instance name is valid for the given account type."""
-        if instance and not isinstance(instance, str):
-            raise InvalidAccountError(
-                f"Invalid `instance` value. Expected an IBM Cloud crn, got '{instance}' instead. "
-            )
-
-    @staticmethod
-    def _assert_valid_preferences(
-        region: str, plans_preference: list[str], tags: list[str]
-    ) -> None:
-        """Assert that the account preferences are valid."""
-        if region and (region not in ["us-east", "eu-de"] or not isinstance(region, str)):
-            raise InvalidAccountError(
-                f"Invalid `region` value. Expected `us-east` or `eu-de`, got '{region}' instead. "
-            )
-        if plans_preference and not isinstance(plans_preference, list):
+        if self.plans_preference and not isinstance(self.plans_preference, list):
             raise InvalidAccountError(
                 "Invalid `plans_preference` value. Expected a list of strings, "
-                f"got '{plans_preference}' instead."
+                f"got '{self.plans_preference}' instead."
             )
-        if tags and not isinstance(tags, list):
+        if self.tags and not isinstance(self.tags, list):
             raise InvalidAccountError(
-                f"Invalid `tags` value. Expected a list of strings. got '{tags}' instead."
+                f"Invalid `tags` value. Expected a list of strings. got '{self.tags}' instead."
             )
+
+        # Validate channel, token, url, instance.
+        if self.channel not in ["ibm_cloud", "ibm_quantum_platform"]:
+            raise InvalidAccountError(
+                f"Invalid `channel` value. Expected one of "
+                f"['ibm_cloud', 'ibm_quantum_platform], got '{self.channel}'."
+            )
+        if not (isinstance(self.token, str) and len(self.token) > 0):
+            raise InvalidAccountError(
+                f"Invalid `token` value. Expected a non-empty string, got '{self.token}'."
+            )
+        try:
+            urlparse(self.url)
+        except:  # noqa: E722 bare-except
+            raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{self.url}' as URL.")
+        if self.instance and not isinstance(self.instance, str):
+            raise InvalidAccountError(
+                f"Invalid `instance` value. Expected an IBM Cloud crn, got '{self.instance}'"
+                "instead. "
+            )
+
+        # Validate proxies.
+        if self.proxies is not None:
+            self.proxies.validate()
+
+        return self
