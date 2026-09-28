@@ -159,8 +159,9 @@ class BlockBasePadder(TransformationPass):
         the unit.
 
         .. note::
-            `dag.unit` raises a deprecation warning. Similar to Qiskit (see e.g. 'BasePadding'), we
-            use `dag._unit`.
+            `dag.unit` raises a deprecation warning. We handled this as in Qiskit, using `dag._unit`
+                (see Qiskit PR #14133 for more details). In the future, we should evolve this part
+                of the code in the same way as Qiskit does.
         """
         if (unit := dag._unit) and unit != "dt":
             raise TranspilerError(
