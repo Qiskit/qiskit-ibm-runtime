@@ -42,6 +42,11 @@ class ResultDecoder:
     """
 
     @classmethod
+    def is_applicable(cls, data: Any) -> bool:
+        """Return `True` if this decoder can be applied."""
+        return True
+
+    @classmethod
     def decode(cls, data: Any) -> Any:
         """Decode the result data.
 

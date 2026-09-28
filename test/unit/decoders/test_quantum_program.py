@@ -14,7 +14,6 @@
 
 import json
 from datetime import datetime
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 from ibm_quantum_schemas.common import TensorModel
@@ -25,9 +24,11 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultItemModel,
     QuantumProgramResultModel,
 )
-from qiskit.primitives import PrimitiveResult
 
-from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.decoders.quantum_program.decoder import (
+    BaseClientSideResultDecoder,
+    QuantumProgramResultDecoder,
+)
 from qiskit_ibm_runtime.results.quantum_program import Metadata, QuantumProgramResult
 
 from ...ibm_test_case import IBMTestCase
@@ -103,79 +104,46 @@ class TestDecoder(IBMTestCase):
             QuantumProgramResultDecoder.decode(encoded_as_str)
 
 
-class TestDecoderPostProcessing(IBMTestCase):
-    """Test QuantumProgram decoder post-processing logic."""
+class MyDecoder(BaseClientSideResultDecoder):
+    """Custom `BaseClientSideResultDecoder` for tests."""
+
+    SEMANTIC_ROLE = "foo"
+    SUPPORTED_POST_PROCESSORS = {"v0.1": lambda x: x}
+
+
+class TestBaseClientSideResultDecoder(IBMTestCase):
+    """Test BaseClientSideResultDecoder decoder."""
 
     def setUp(self):
         """Set up test fixtures."""
-        # Create minimal passthrough data
-        passthrough_data = {
-            "post_processor": {
-                "version": "v0.1",
-            }
-        }
-
-        self.qp_result = QuantumProgramResult(
+        self.result = QuantumProgramResult(
             data=[{"dummy": np.array([1, 2, 3])}],
             metadata=Metadata(),
-            passthrough_data=passthrough_data,
+            passthrough_data={},
         )
 
-    def test_sampler_valid_result(self):
-        """A QuantumProgramResult from a Sampler job should be post-processed."""
-        mock_result = PrimitiveResult([])
-        mock_post_processor = MagicMock(return_value=mock_result)
+    def test_is_applicable(self):
+        """A decoder should not be applicable depending on input."""
+        # Not applicable if the result has already been processed by a previous decoder.
+        self.assertEqual(BaseClientSideResultDecoder.is_applicable({}), False)
 
-        with patch.dict(
-            "qiskit_ibm_runtime.decoders.quantum_program.decoder.SUPPORTED_POST_PROCESSORS",
-            {"sampler_v2": {"v0.1": mock_post_processor}},
-            clear=False,
-        ):
-            self.qp_result._semantic_role = "sampler_v2"
-            processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+        # Not applicable if the result does not have semantic role.
+        self.assertEqual(BaseClientSideResultDecoder.is_applicable(self.result), False)
 
-            # Verify the post-processor was called with the result
-            mock_post_processor.assert_called_once_with(self.qp_result)
-            self.assertIs(processed, mock_result)
+        # Not applicable if the result has a different semantic role.
+        self.result._semantic_role = "not_foo"
+        self.assertEqual(MyDecoder.is_applicable(self.result), False)
 
-    def test_estimator_valid_result(self):
-        """A QuantumProgramResult from an Estimator job should be post-processed."""
-        mock_result = PrimitiveResult([])
-        mock_post_processor = MagicMock(return_value=mock_result)
+    def test_decode_raises(self):
+        """A decoder `decode` method should raise depending on the input."""
+        self.result._semantic_role = "foo"
 
-        with patch.dict(
-            "qiskit_ibm_runtime.decoders.quantum_program.decoder.SUPPORTED_POST_PROCESSORS",
-            {"estimator_v2": {"v0.1": mock_post_processor}},
-            clear=False,
-        ):
-            self.qp_result._semantic_role = "estimator_v2"
-            processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
-
-            # Verify the post-processor was called with the result
-            mock_post_processor.assert_called_once_with(self.qp_result)
-            self.assertIs(processed, mock_result)
-
-    def test_no_semantic_role(self):
-        """A QuantumProgramResult with unset semantic role is returned unchanged."""
-        processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
-        self.assertEqual(processed, self.qp_result)
-
-    def test_unsupported_semantic_role(self):
-        """A QuantumProgramResult with unsupported semantic role is returned unchanged."""
-        self.qp_result._semantic_role = "unsupported_semantic_role"
-        processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
-        self.assertEqual(processed, self.qp_result)
-
-    def test_passthrough_data_missing_version(self):
-        """A QuantumProgramResult with no post_processor version raises ValueError."""
-        self.qp_result._semantic_role = "sampler_v2"
-        self.qp_result.passthrough_data["post_processor"].pop("version")
+        # Raises if version is not present.
+        self.result.passthrough_data = {"post_processor": {}}
         with self.assertRaises(ValueError):
-            QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+            MyDecoder.decode(self.result)
 
-    def test_passthrough_data_unsupported_version(self):
-        """A QuantumProgramResult with unsupported post_processor version raises ValueError."""
-        self.qp_result._semantic_role = "sampler_v2"
-        self.qp_result.passthrough_data["post_processor"]["version"] = "non-existing"
+        # Raises if version is unsupported.
+        self.result.passthrough_data = {"post_processor": {"version": "9.8"}}
         with self.assertRaises(ValueError):
-            QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+            MyDecoder.decode(self.result)
