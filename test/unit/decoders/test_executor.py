@@ -27,7 +27,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 
 from qiskit_ibm_runtime.decoders.executor.decoder import (
     BaseClientSideResultDecoder,
-    QuantumProgramResultDecoder,
+    ExecutorResultDecoder,
 )
 from qiskit_ibm_runtime.results.quantum_program import Metadata, QuantumProgramResult
 
@@ -71,7 +71,7 @@ class TestDecoder(IBMTestCase):
 
     def test_decoder(self):
         """Tests the decoder."""
-        decoded = QuantumProgramResultDecoder.decode(self.encoded)
+        decoded = ExecutorResultDecoder.decode(self.encoded)
 
         self.assertTrue(np.array_equal(decoded[0]["meas"], self.meas1))
         self.assertTrue(np.array_equal(decoded[1]["meas"], self.meas2))
@@ -93,7 +93,7 @@ class TestDecoder(IBMTestCase):
         del encoded_as_json["schema_version"]
         encoded_as_str = json.dumps(encoded_as_json)
         with self.assertRaisesRegex(ValueError, "Missing schema version."):
-            QuantumProgramResultDecoder.decode(encoded_as_str)
+            ExecutorResultDecoder.decode(encoded_as_str)
 
     def test_unknown_schema_version(self):
         """Verify an error is raised if the schema version specified does not exist."""
@@ -101,7 +101,7 @@ class TestDecoder(IBMTestCase):
         encoded_as_json["schema_version"] = "unknown"
         encoded_as_str = json.dumps(encoded_as_json)
         with self.assertRaisesRegex(ValueError, "No decoder found for schema version unknown."):
-            QuantumProgramResultDecoder.decode(encoded_as_str)
+            ExecutorResultDecoder.decode(encoded_as_str)
 
 
 class MyDecoder(BaseClientSideResultDecoder):

@@ -61,8 +61,8 @@ AVAILABLE_DECODERS = {
 }
 
 
-class QuantumProgramResultDecoder(ResultDecoder):
-    """Decoder for quantum program results."""
+class ExecutorResultDecoder(ResultDecoder):
+    """Decoder for Executor results."""
 
     @classmethod
     def decode(
@@ -85,10 +85,14 @@ class QuantumProgramResultDecoder(ResultDecoder):
 
 
 class BaseClientSideResultDecoder(ResultDecoder):
-    """Base class for client-side primitives decoders."""
+    """Base class for client-side primitives decoders.
+
+    This decoder is meant to be used as a base class for the decoders for client-side primitives
+    that are based on `Executor`.
+    """
 
     SEMANTIC_ROLE: str
-    """The semantic tole for this decoder."""
+    """The semantic role for this decoder."""
 
     SUPPORTED_POST_PROCESSORS: dict[str, Callable]
     """The available post processors.

@@ -27,6 +27,10 @@ class ResultDecoder:
         class MyResultDecoder(ResultDecoder):
 
             @classmethod
+            def is_applicable(cls, data):
+                return False  # perform custom logic that decides if the decoder is to be invoked.
+
+            @classmethod
             def decode(cls, data):
                 decoded = super().decode(data)
                 custom_processing(decoded)  # perform custom processing
@@ -38,7 +42,8 @@ class ResultDecoder:
     Result decoders are chainable: when passing a sequence of result decoders to a function, they
     will be invoked sequentially. The first decoder in the sequence will receive a raw ``json``
     string as the ``data`` argument, and subsequent decoders will have the output of the previous
-    one as its input.
+    one as its input. If any of the decoders returns ``False`` for ``is_applicable``, the decoder
+    is skipped.
     """
 
     @classmethod

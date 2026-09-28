@@ -12,7 +12,7 @@
 
 """Mapping between program names and decoders."""
 
-from .executor.decoder import QuantumProgramResultDecoder
+from .executor.decoder import ExecutorResultDecoder
 from .executor_estimator.decoder import ClientSideEstimatorDecoder
 from .executor_noise_learner.decoder import ClientSideNoiseLearnerResultDecoder
 from .executor_sampler.decoder import ClientSideSamplerResultDecoder
@@ -25,7 +25,7 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "sampler": ResultDecoder,
     "estimator": ResultDecoder,
     "executor": [
-        QuantumProgramResultDecoder,
+        ExecutorResultDecoder,
         ClientSideSamplerResultDecoder,
         ClientSideEstimatorDecoder,
         ClientSideNoiseLearnerResultDecoder,
