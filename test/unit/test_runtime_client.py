@@ -12,8 +12,8 @@
 
 """Tests for the RuntimeClient class."""
 
+from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.clients import RuntimeClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from ..account import custom_envs, no_envs
