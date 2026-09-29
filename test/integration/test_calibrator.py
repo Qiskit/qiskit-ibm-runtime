@@ -14,6 +14,7 @@
 
 import unittest
 
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -30,7 +31,8 @@ class TestCalibrator(IBMIntegrationTestCase):
 
     def test_calibrator(self):
         """Test that a calibration job runs and returns a result."""
-        calibrator = Calibrator(self.backend)
-        job = calibrator.run()
-        result = job.result()
-        self.assertIn("calibration_result", result)
+        with Session(backend=backend) as session:
+            calibrator = Calibrator(self.backend)
+            job = calibrator.run()
+            result = job.result()
+            self.assertIn("calibration_result", result)
