@@ -38,7 +38,7 @@ from .exceptions import (
 if TYPE_CHECKING:
     from qiskit.providers.backend import Backend
 
-    from .api.clients import RuntimeClient
+    from .api.client import RuntimeClient
     from .decoders.result_decoder import ResultDecoder
     from .qiskit_runtime_service import QiskitRuntimeService
 

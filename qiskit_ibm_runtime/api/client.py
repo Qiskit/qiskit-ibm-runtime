@@ -17,15 +17,15 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ...api.session import RetrySession
-from ..rest.runtime import Runtime
+from .rest.runtime import Runtime
+from .session import RetrySession
 
 if TYPE_CHECKING:
     from datetime import datetime as python_datetime
 
     from requests import Response
 
-    from ..client_parameters import ClientParameters
+    from .client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 

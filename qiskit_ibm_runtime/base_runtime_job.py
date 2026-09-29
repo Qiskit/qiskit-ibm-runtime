@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from qiskit.providers.backend import Backend
     from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 
-    from .api.clients import RuntimeClient
+    from .api.client import RuntimeClient
     from .models import BackendProperties
     from .qiskit_runtime_service import QiskitRuntimeService
 

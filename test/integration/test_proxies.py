@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
+from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
 from ..decorators import integration_test_setup
