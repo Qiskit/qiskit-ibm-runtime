@@ -430,9 +430,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         if self._qubits and self._block_dag.qubits.index(qubit) not in self._qubits:
             # Target physical qubit is not the target of this DD sequence.
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
+            unit = self._verify_dag_unit(self._block_dag, False)
+            self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
             return
 
         if not self._skip_reset_qubits and qubit not in self._dirty_qubits:
@@ -450,9 +449,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
         if qubit not in self._dirty_qubits or (self._dd_barrier and not enable_dd):
             # Previous node is the start edge or reset, i.e. qubit is ground state;
             # or dd to be applied before named barrier only
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
+            unit = self._verify_dag_unit(self._block_dag)
+            self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
             return
 
         for sequence_idx, _ in enumerate(self._dd_sequences):
@@ -521,12 +519,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     sequence_gphase += phase
                 else:
                     # Don't do anything if there's no single-qubit gate to absorb the inverse
-                    self._apply_scheduled_op(
-                        block_idx,
-                        t_start,
-                        Delay(time_interval, self._block_dag.unit),
-                        qubit,
-                    )
+                    unit = self._verify_dag_unit(self._block_dag, False)
+                    self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
                     return
 
             def _constrained_length(values: npt.NDArray[np.floating]) -> npt.NDArray[np.floating]:
@@ -572,11 +566,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     # Delay only accept integer durations if the unit is 'dt',
                     # but the tau calculation can result in floating-point
                     # rounding errors (like 4.99999 instead of 5).
-                    if self._dag.unit == "dt":
+                    unit = self._verify_dag_unit(self._block_dag, False)
+                    if unit == "dt":
                         tau = round(tau)
-                    self._apply_scheduled_op(
-                        block_idx, idle_after, Delay(tau, self._dag.unit), qubit
-                    )
+                    self._apply_scheduled_op(block_idx, idle_after, Delay(tau, unit), qubit)
                     idle_after += tau
 
                 # Detect if we are on a sequence boundary
@@ -597,7 +590,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
             return
 
         # DD could not be applied, delay instead
-        self._apply_scheduled_op(
-            block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-        )
+        unit = self._verify_dag_unit(self._block_dag, False)
+        self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
         return
