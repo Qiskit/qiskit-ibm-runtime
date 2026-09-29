@@ -503,6 +503,7 @@ class BaseRegistry(FirstMatchRegistry):
                     "status": {"name": backend.status},
                     "queue_length": backend.queue_length,
                 }
+                | ({"class": "mock"} if backend.is_mock else {})
                 for backend in backends
             ]
         }
