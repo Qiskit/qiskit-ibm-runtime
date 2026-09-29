@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Any
 
 from ...api.session import RetrySession
 from ..rest.runtime import Runtime
-from .backend import BaseBackendClient
 
 if TYPE_CHECKING:
     from datetime import datetime as python_datetime
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class RuntimeClient(BaseBackendClient):
+class RuntimeClient:
     """Client for accessing IBM Quantum Compute service.
 
     Args:
