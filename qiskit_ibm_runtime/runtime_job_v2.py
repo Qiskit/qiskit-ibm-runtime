@@ -155,8 +155,19 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
-        # Invoke all decoders, chaining them (one decoders output becomes the next's input).
-        return reduce(lambda x, d: d.decode(x), decoders, result_raw) if result_raw else None
+        # Invoke all decoders, chaining them (one decoders output becomes the next's input) and
+        # skipping the ones that are not applicable.
+        return (
+            reduce(
+                lambda result, decoder: decoder.decode(result)
+                if decoder.is_applicable(result)
+                else result,
+                decoders,
+                result_raw,
+            )
+            if result_raw
+            else None
+        )
 
     def cancel(self) -> None:
         """Cancel the job.

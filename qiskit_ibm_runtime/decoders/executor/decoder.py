@@ -10,12 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Decoders for quantum programs."""
+"""Result decoder for Executor."""
 
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_1,
@@ -33,9 +33,7 @@ from ibm_quantum_schemas.executor.version_2_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_2_0,
 )
 
-from ..executor_estimator.post_processor_v0_1 import estimator_v2_post_processor_v0_1
-from ..executor_noise_learner.post_processor_v0_1 import noise_learner_v3_post_processor_v0_1
-from ..executor_sampler.post_processor_v0_1 import sampler_v2_post_processor_v0_1
+from ...results.quantum_program import QuantumProgramResult
 from ..result_decoder import ResultDecoder
 from .converters import (
     quantum_program_result_from_0_1,
@@ -45,28 +43,12 @@ from .converters import (
     quantum_program_result_from_2_0,
 )
 
-SUPPORTED_POST_PROCESSORS = {
-    "sampler_v2": {
-        "v0.1": sampler_v2_post_processor_v0_1,
-    },
-    "estimator_v2": {
-        "v0.1": estimator_v2_post_processor_v0_1,
-    },
-    "noise_learner_v3": {
-        "v0.1": noise_learner_v3_post_processor_v0_1,
-    },
-}
-"""The available post processors.
-
-This is a dictionary mapping semantic roles to maps between versions and functions.
-"""
-
-
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from qiskit.primitives.containers import PrimitiveResult
 
     from ...results.noise_learner_v3 import NoiseLearnerV3Result
-    from ...results.quantum_program import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
@@ -79,8 +61,15 @@ AVAILABLE_DECODERS = {
 }
 
 
-class QuantumProgramResultDecoder(ResultDecoder):
-    """Decoder for quantum program results."""
+class ExecutorResultDecoder(ResultDecoder):
+    """Decoder for Executor results."""
+
+    @classmethod
+    def is_applicable(cls, data: Any) -> bool:
+        """Return `True` if this decoder can be applied."""
+        if isinstance(data, QuantumProgramResult):
+            return False
+        return True
 
     @classmethod
     def decode(
@@ -99,41 +88,50 @@ class QuantumProgramResultDecoder(ResultDecoder):
         except KeyError:
             raise ValueError(f"No decoder found for schema version {schema_version}.")
 
-        quantum_program_result = decoder(model.model_validate_json(raw_result))
-        return cls._apply_post_processing(quantum_program_result)
+        return decoder(model.model_validate_json(raw_result))
 
-    @staticmethod
-    def _apply_post_processing(
-        result: QuantumProgramResult,
-    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Result:
-        """Apply post-processing to the decoded result.
 
-        Post-processing is only applied if ``result._semantic_role`` has a supported value.
-        Otherwise, the result is returned unchanged.
+class BaseClientSideResultDecoder(ResultDecoder):
+    """Base class for client-side primitives decoders.
 
-        Args:
-            result: The decoded result.
+    This decoder is meant to be used as a base class for the decoders for client-side primitives
+    that are based on `Executor`.
+    """
 
-        Returns:
-            Post-processed result or original result if no post-processing applies.
-        """
-        if not (semantic_role := result._semantic_role):
-            return result
+    SEMANTIC_ROLE: str
+    """The semantic role for this decoder."""
 
-        if semantic_role in SUPPORTED_POST_PROCESSORS:
-            if not isinstance(result.passthrough_data, dict):
-                raise ValueError("Expected passthrough data to be of dict-like format.")
+    SUPPORTED_POST_PROCESSORS: dict[str, Callable]
+    """The available post processors.
 
-            try:
-                version = result.passthrough_data.get("post_processor", {})["version"]
-            except KeyError:
-                raise ValueError("Could not determine a post-processor version.")
+    This is a dictionary mapping between versions and functions.
+    """
 
-            try:
-                post_processor_fn = SUPPORTED_POST_PROCESSORS[semantic_role][version]
-            except KeyError:
-                raise ValueError(f"No post-processor found for {semantic_role} version {version}.")
+    @classmethod
+    def is_applicable(cls, data: Any) -> bool:
+        """Return `True` if this decoder can be applied."""
+        if not isinstance(data, QuantumProgramResult):
+            return False
 
-            return post_processor_fn(result)
+        if not (semantic_role := data._semantic_role):
+            return False
+        else:
+            return semantic_role == cls.SEMANTIC_ROLE
 
-        return result
+    @classmethod
+    def decode(cls, result: QuantumProgramResult) -> PrimitiveResult | NoiseLearnerV3Result:
+        """Decode a QuantumProgramResult into the result type."""
+        if not isinstance(result.passthrough_data, dict):
+            raise ValueError("Expected passthrough data to be of dict-like format.")
+
+        try:
+            version: str = result.passthrough_data.get("post_processor", {})["version"]
+        except KeyError:
+            raise ValueError("Could not determine a post-processor version.")
+
+        try:
+            post_processor_fn = cls.SUPPORTED_POST_PROCESSORS[version]
+        except KeyError:
+            raise ValueError(f"No post-processor found for {cls.SEMANTIC_ROLE} version {version}.")
+
+        return post_processor_fn(result)

@@ -15,11 +15,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+from functools import reduce
 from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.primitive_job import PrimitiveJob
 
-from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
+from ..decoders.defaults import DEFAULT_DECODERS
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -146,6 +147,14 @@ class LocalRuntimeJob(PrimitiveJob):
         result = super().result()
 
         if self.primitive_id == "executor":
-            return QuantumProgramResultDecoder._apply_post_processing(result)
+            # Invoke all decoders, chaining them (one decoders output becomes the next's input) and
+            # skipping the ones that are not applicable.
+            return reduce(
+                lambda result, decoder: decoder.decode(result)
+                if decoder.is_applicable(result)
+                else result,
+                DEFAULT_DECODERS["executor"],
+                result,
+            )
 
         return result

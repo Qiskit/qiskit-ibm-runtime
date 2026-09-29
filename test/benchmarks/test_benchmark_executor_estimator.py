@@ -29,7 +29,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
-from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.decoders.executor.decoder import ExecutorResultDecoder
 from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_estimator_options
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.executor_sampler.utils import find_unique_layers
@@ -148,7 +148,7 @@ def test_executor_estimator_post_processor(benchmark, variant_id, variant_option
     quantum_program_result = create_dummy_executor_result(quantum_program)
 
     def run_post_processor():
-        QuantumProgramResultDecoder._apply_post_processing(quantum_program_result)
+        ExecutorResultDecoder._apply_post_processing(quantum_program_result)
 
     benchmark(run_post_processor)
 
