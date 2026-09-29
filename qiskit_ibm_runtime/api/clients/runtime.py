@@ -126,6 +126,7 @@ class RuntimeClient(BaseBackendClient):
         created_after: python_datetime | None = None,
         created_before: python_datetime | None = None,
         descending: bool = True,
+        include_mocks: bool = False,
     ) -> dict:
         """Get job data for all jobs.
 
@@ -146,6 +147,8 @@ class RuntimeClient(BaseBackendClient):
                 local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
+            include_mocks: If ``True``, include the backends that are used for job usage estimation
+                in the results.
 
         Returns:
             JSON response.
@@ -161,6 +164,7 @@ class RuntimeClient(BaseBackendClient):
             created_after=created_after,
             created_before=created_before,
             descending=descending,
+            include_mocks=include_mocks,
         )
 
     def job_results(self, job_id: str) -> str:
@@ -256,13 +260,17 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.runtime_session(session_id=session_id).details()
 
-    def list_backends(self) -> list[dict[str, Any]]:
+    def list_backends(self, include_mocks: bool = False) -> list[dict[str, Any]]:
         """Return IBM backends available for this service instance.
+
+        Args:
+            include_mocks: If ``True``, include the backends that are used for job usage estimation
+                in the results.
 
         Returns:
             IBM backends available for this service instance.
         """
-        return self._api.backends()["devices"]
+        return self._api.backends(include_mocks)["devices"]
 
     def backend_configuration(
         self, backend_name: str, refresh: bool = False, calibration_id: str | None = None
