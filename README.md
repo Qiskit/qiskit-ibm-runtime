@@ -368,7 +368,7 @@ export USAGE_DATA_OPT_OUT=True
 
 If you'd like to contribute to `qiskit-ibm-runtime`, please take a look at our
 [contribution guidelines]. This project adheres to Qiskit's [code of conduct].
-By participating, you are expected to uphold to this code.
+By participating, you are expected to uphold this code.
 
 We use [GitHub issues] for tracking requests and bugs. Please use our [slack]
 for discussion and simple questions. To join our Slack community use the
