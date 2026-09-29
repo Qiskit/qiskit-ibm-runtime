@@ -1232,6 +1232,7 @@ class QiskitRuntimeService:
         created_after: datetime | None = None,
         created_before: datetime | None = None,
         descending: bool = True,
+        include_mocks: bool = False,
     ) -> list[RuntimeJobV2]:
         """Retrieve all IBM Quantum Compute jobs, subject to optional filtering.
 
@@ -1256,6 +1257,8 @@ class QiskitRuntimeService:
                 local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
+            include_mocks: If ``True``, include the backends that are used for job usage estimation
+                in the results.
 
         Returns:
             A list of IBM Quantum Compute jobs.
@@ -1289,6 +1292,7 @@ class QiskitRuntimeService:
                 created_after=created_after,
                 created_before=created_before,
                 descending=descending,
+                include_mocks=include_mocks,
             )
             job_page = jobs_response["jobs"]
             # count is the total number of jobs that would be returned if

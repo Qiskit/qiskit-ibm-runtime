@@ -194,6 +194,48 @@ class TestRetrieveJobs(IBMTestCase):
         job = service.job("my_job")
         self.assertIsNotNone(job.backend())
 
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_jobs_from_mock_devices(self, registry: OneInstanceNoBackendsRegistry) -> None:
+        """Test retrieving jobs from mock devices."""
+        registry.add_backend(Backend("ibm_foo"))
+        registry.add_backend(Backend("mock_foo", is_mock=True))
+        registry.add_job(Job("1", "ibm_foo"), "a")
+        registry.add_job(Job("2", "mock_foo"), "a")
+
+        service = QiskitRuntimeService(token="my_token")
+
+        # Jobs from mock devices should be excluded by default.
+        jobs = service.jobs()
+        self.assertEqual([job.job_id() for job in jobs], ["1"])
+
+        # Jobs from mock devices should be included if passing the flag.
+        jobs = service.jobs(include_mocks=True)
+        self.assertEqual([job.job_id() for job in jobs], ["1", "2"])
+
+        # Jobs should be retrieved in all cases.
+        job_1 = service.job("1")
+        job_2 = service.job("2")
+        self.assertEqual(job_1.backend().backend_name, "ibm_foo")
+        self.assertEqual(job_2.backend().backend_name, "mock_foo")
+
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_jobs_from_retired_backend(self, registry: OneInstanceNoBackendsRegistry) -> None:
+        """Test retrieving jobs that use a retired backend."""
+        registry.add_backend(Backend("ibm_not_retired"))
+        registry.add_job(Job("1", "ibm_retired"), "a")
+        registry.add_job(Job("2", "ibm_not_retired"), "a")
+
+        service = QiskitRuntimeService(token="my_token")
+
+        # Retrieving a job should suceed, and produce a retired backend.
+        job_retired = service.job("1")
+        self.assertIsInstance(job_retired.backend(), IBMRetiredBackend)
+
+        # Retrieving all (2) jobs should suceed, and produce retired and non retired backends.
+        jobs = service.jobs()
+        self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
+        self.assertIsInstance(jobs[1].backend(), IBMBackend)
+
     def _populate_jobs(self, registry):
         """Populate the registry with jobs of all statuses."""
         jobs = []
@@ -220,23 +262,3 @@ class TestRetrieveJobs(IBMTestCase):
 
 class TestRetrieveJobsRegistry(IBMTestCase):
     """Test retrieval of jobs, using a mocked registry."""
-
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_jobs_returned_from_retired_backend(
-        self, registry: OneInstanceNoBackendsRegistry
-    ) -> None:
-        """Test retrieving jobs that use a retired backend."""
-        registry.add_backend(Backend("ibm_not_retired"))
-        registry.add_job(Job("1", "ibm_retired"), "a")
-        registry.add_job(Job("2", "ibm_not_retired"), "a")
-
-        service = QiskitRuntimeService(token="my_token")
-
-        # Retrieving a job should suceed, and produce a retired backend.
-        job_retired = service.job("1")
-        self.assertIsInstance(job_retired.backend(), IBMRetiredBackend)
-
-        # Retrieving all (2) jobs should suceed, and produce retired and non retired backends.
-        jobs = service.jobs()
-        self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
-        self.assertIsInstance(jobs[1].backend(), IBMBackend)
