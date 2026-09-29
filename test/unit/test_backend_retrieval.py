@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-import json
-from typing import TYPE_CHECKING
 from unittest import mock
 
 from ddt import ddt, named_data
@@ -27,12 +25,7 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..registries import Backend, DefaultRegistry, OneInstanceNoBackendsRegistry
-
-if TYPE_CHECKING:
-    from requests import PreparedRequest
-
-    from test.registries import CallbackResult
+from ..registries import Backend, OneInstanceNoBackendsRegistry
 
 
 class TestBackendFilters(IBMTestCase):
@@ -89,6 +82,22 @@ class TestBackendFilters(IBMTestCase):
         # QiskitRuntimeService with DefaultRegistry by default creates 3 backends.
         backend_name = [back.name for back in service.backends()]
         self.assertEqual(len(backend_name), 3)
+
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_filter_mock_devices(self, registry):
+        """Test filtering by configuration properties."""
+        registry.add_backend(Backend("ibm_foo"))
+        registry.add_backend(Backend("mock_foo", is_mock=True))
+
+        # By default, backends() should exclude mock devices.
+        service = QiskitRuntimeService(token="my_token")
+        backends = service.backends()
+        self.assertEqual(len(backends), 1)
+
+        # When passing the flag, backends() should include mock devices.
+        service = QiskitRuntimeService(token="my_token")
+        backends = service.backends(include_mocks=True)
+        self.assertEqual(len(backends), 2)
 
     @mock_responses
     def test_filter_by_name(self, registry):
@@ -197,6 +206,18 @@ class TestBackendFilters(IBMTestCase):
         self.assertEqual(backend.name, "ibm_torino")
 
     @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_least_busy_excludes_mock(self, registry):
+        """least_busy must not include mock devices."""
+        registry.add_backend(Backend.from_(FakeTorino, name="not_mock_device", queue_length=10))
+        registry.add_backend(
+            Backend.from_(FakeTorino, name="mock_device", queue_length=5, is_mock=True)
+        )
+
+        service = QiskitRuntimeService(token="token")
+        backend = service.least_busy()
+        self.assertEqual(backend.name, "not_mock_device")
+
+    @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_least_busy(self, registry):
         """Test filtering by least busy function."""
         registry.add_backend(Backend("backend1", queue_length=10))
@@ -227,14 +248,6 @@ class TestBackendFilters(IBMTestCase):
         self.assertTrue(len(filtered_backends), 2)
         for backend in filtered_backends:
             self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
-
-
-class EmptyBackendListRegistry(DefaultRegistry):
-    """Registry that returns an empty list for the `/backends` endpoint."""
-
-    def callback_backends(self, request: PreparedRequest) -> CallbackResult:
-        """Callback for the IBM Quantum Compute API ``/backends`` endpoint."""
-        return (200, {"Content-Type": "application/json"}, json.dumps({"devices": []}))
 
 
 @ddt
@@ -349,53 +362,63 @@ class TestGetBackend(IBMTestCase):
         with self.assertRaises(QiskitBackendNotFoundError):
             service.backend("ibm_torino", calibration_id="invalid")
 
-    @mock_responses(EmptyBackendListRegistry)
-    def test_backend_not_in_backends_list(self, registry):
-        """Test retrieving a backend that is not in the list of backends.
+    @mock_responses
+    def test_backend_with_mock_devices(self, registry):
+        """Test retrieving a backend that is not in the default list of backends.
 
         This test exercises the case where a backend is retrieved via `backend()`, and that backend
-        is not returned in the `backends()` method.
+        is not returned in the `backends()` method by default.
         """
+        # Make all backends mock devices.
+        registry.backends["a"]["common_backend"].is_mock = True
+        registry.backends["b"]["common_backend"].is_mock = True
+        registry.backends["a"]["unique_backend_a"].is_mock = True
+        registry.backends["b"]["unique_backend_b"].is_mock = True
+
         instance_a = registry.instances["a"]
         instance_b = registry.instances["b"]
 
         service = QiskitRuntimeService(token="my_token")
-        # Ensure that no backend appears in the backends list.
+        # Ensure that no backend appears in the backends list by default.
         self.assertEqual(service.backends(), [])
 
-        # Retrieve an existing backend (available in several instances).
+        # Retrieve an existing mocked backend (available in several instances).
         backend = service.backend("common_backend")
         self.assertEqual(backend.name, "common_backend")
         self.assertEqual(backend._instance, instance_a.crn)
 
-        # Retrieve an existing backend (available in several instances), passing instance.
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
-            backend = service.backend("common_backend", instance="b")
+        # Retrieve an existing mocked backend (available in several instances), passing instance.
+        backend = service.backend("common_backend", instance="b")
         self.assertEqual(backend.name, "common_backend")
         self.assertEqual(backend._instance, instance_b.crn)
 
-        # Retrieve an existing backend (available in one instance).
+        # Retrieve an existing mocked backend (available in one instance).
         backend = service.backend("unique_backend_a")
         self.assertEqual(backend.name, "unique_backend_a")
         self.assertEqual(backend._instance, instance_a.crn)
 
-        # Retrieve an existing backend (available in one instance), with wrong instance.
+        # Retrieve an existing mocked backend (available in one instance), with wrong instance.
         with (
             self.assertRaises(QiskitBackendNotFoundError),
             self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"),
         ):
             backend = service.backend("unique_backend_a", instance="b")
 
-    @mock_responses(EmptyBackendListRegistry)
+    @mock_responses
     def test_backend_not_in_backends_list_instance_auto(self, registry):
-        """Test retrieving a backend not in the list of backends, with service instance `auto`.
+        """Test retrieving a backend not in default the list of backends, with instance `auto`.
 
         This test exercises the case where a backend is retrieved via `backend()`, and that backend
-        is not returned in the `backends()` method.
+        is not returned in the `backends()` method by default.
 
         When passing `instance=auto` to `QiskitRuntimeService()`, warnings should not be emitted
         when guessing instances.
         """
+        # Make all backends mock devices.
+        registry.backends["a"]["common_backend"].is_mock = True
+        registry.backends["b"]["common_backend"].is_mock = True
+        registry.backends["a"]["unique_backend_a"].is_mock = True
+        registry.backends["b"]["unique_backend_b"].is_mock = True
         instance_a = registry.instances["a"]
 
         service = QiskitRuntimeService(token="my_token", instance="auto")

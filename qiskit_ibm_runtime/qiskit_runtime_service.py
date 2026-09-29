@@ -319,7 +319,9 @@ class QiskitRuntimeService:
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
-    def _discover_backends_from_instance(self, instance: str) -> list[str]:
+    def _discover_backends_from_instance(
+        self, instance: str, include_mocks: bool = False
+    ) -> list[str]:
         """Retrieve all backends from the given instance."""
         # TODO refactor this, this is the slowest part
         # ntc 5779 would make things a lot faster - get list of backends
@@ -332,7 +334,9 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            self._backends_info_per_instance[instance] = self._active_api_client.list_backends()
+            self._backends_info_per_instance[instance] = self._active_api_client.list_backends(
+                include_mocks
+            )
             return [backend["name"] for backend in self._backends_info_per_instance[instance]]
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:
@@ -555,6 +559,7 @@ class QiskitRuntimeService:
         *,
         use_fractional_gates: bool | None = False,
         calibration_id: str | None = None,
+        include_mocks: bool = False,
         **kwargs: Any,
     ) -> list[IBMBackend]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -587,6 +592,8 @@ class QiskitRuntimeService:
             calibration_id: The calibration id used for instantiating the backend. This should only
                 be used when selecting a single backend as the calibration id is defined per
                 backend.
+            include_mocks: If ``True``, include the backends that are used for job usage estimation
+                in the results.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -614,7 +621,7 @@ class QiskitRuntimeService:
         backends: list[IBMBackend] = []
 
         unique_backends = set()
-        instance_backends = self._resolve_cloud_instances(instance)
+        instance_backends = self._resolve_cloud_instances(instance, include_mocks)
         for inst, backends_available in instance_backends:
             if name:
                 if name not in backends_available:
@@ -673,7 +680,26 @@ class QiskitRuntimeService:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
 
-    def _resolve_cloud_instances(self, instance: str | None) -> list[tuple[str, list[str]]]:
+    def _resolve_cloud_instances(
+        self, instance: str | None, include_mocks: bool = False
+    ) -> list[tuple[str, list[str]]]:
+        """Resolve the cloud instances to use and the backends available in each.
+
+        Determine which IBM Cloud instances the service should operate over and discover the
+        backends hosted by each, returning one ``(crn, backend_names)`` tuple per instance.
+
+        Args:
+            instance: An instance name or CRN to resolve. If ``None``, the default instance or all
+                account instances are used instead.
+            include_mocks: If ``True``, include the backends that are used for job usage estimation
+                in the results. This will bypass the cached data.
+
+        Returns:
+            A list of ``(crn, backend_names)`` tuples, one per resolved instance.
+
+        Raises:
+            IBMInputValueError: If ``instance`` is provided but cannot be resolved to a valid CRN.
+        """
         if instance:
             if not is_crn(instance):
                 instance = self._get_crn_from_instance_name(self._account, instance)
@@ -683,29 +709,48 @@ class QiskitRuntimeService:
             # return all matching crns (stored in self._saved_instances)
             if self._saved_instances:
                 return [
-                    (inst, self._discover_backends_from_instance(inst))
+                    (inst, self._discover_backends_from_instance(inst, include_mocks))
                     for inst in self._saved_instances
                 ]
-            return [(instance, self._discover_backends_from_instance(instance))]
+            return [(instance, self._discover_backends_from_instance(instance, include_mocks))]
         if self._default_instance:
             # if an instance name is passed in and there are multiple crns,
             # return all matching crns (stored in self._saved_instances)
             default_crn = self._account.instance
             if self._saved_instances:
                 return [
-                    (inst, self._discover_backends_from_instance(inst))
+                    (inst, self._discover_backends_from_instance(inst, include_mocks))
                     for inst in self._saved_instances
                 ]
-            return [(default_crn, self._discover_backends_from_instance(default_crn))]
+            return [
+                (default_crn, self._discover_backends_from_instance(default_crn, include_mocks))
+            ]
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
+
+        if include_mocks:
+            # When requesting mock devices to be included, avoid using the cached data or caching
+            # it, as it has implications in other functions in this class.
+            backend_instance_groups = [
+                {
+                    "name": inst["name"],
+                    "crn": inst["crn"],
+                    "plan": inst["plan"],
+                    "backends": self._discover_backends_from_instance(inst["crn"], include_mocks),
+                    "tags": inst["tags"],
+                    "pricing_type": inst["pricing_type"],
+                }
+                for inst in self._all_instances
+            ]
+            return [(inst["crn"], inst["backends"]) for inst in backend_instance_groups]
+
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
                 {
                     "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst["plan"],
-                    "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "backends": self._discover_backends_from_instance(inst["crn"], include_mocks),
                     "tags": inst["tags"],
                     "pricing_type": inst["pricing_type"],
                 }
@@ -999,34 +1044,8 @@ class QiskitRuntimeService:
             instance=instance,
             use_fractional_gates=use_fractional_gates,
             calibration_id=calibration_id,
+            include_mocks=True,
         )
-
-        # `self.backends()` might not include all the backends by default. If no backend was
-        # returned, make a one-time uncached attempt to retrieve the backend based on its name.
-        if not backends:
-            # Use the specified instance crns, or traverse instances in sensible order.
-            instances = [data[0] for data in self._resolve_cloud_instances(instance)]
-
-            for instance_ in instances:
-                try:
-                    self._get_or_create_cloud_client(instance_)
-                    backends = [
-                        self._create_backend_obj(
-                            name, instance_, use_fractional_gates, calibration_id, cache=False
-                        )
-                    ]
-                    # Show a warning only if the instance is guessed.
-                    if not instance and not self._instance_auto:
-                        for inst_details in self._backend_instance_groups:
-                            if instance_ == inst_details["crn"]:
-                                logger.warning(
-                                    "Using instance: %s, plan: %s",
-                                    inst_details["name"],
-                                    inst_details["plan"],
-                                )
-                    break
-                except QiskitBackendNotFoundError:
-                    pass
 
         if not backends:
             cloud_msg_url = ""
