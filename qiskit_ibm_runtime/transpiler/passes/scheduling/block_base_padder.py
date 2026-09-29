@@ -412,7 +412,7 @@ class BlockBasePadder(TransformationPass):
         prev_block_idx = self._current_block_idx
         self._terminate_block(self._block_duration, self._current_block_idx)
 
-        # `dag.duration` raises a deprecation warning. We handled this as in Qiskit, using
+        # `dag.duration` raises a deprecation warning. We handle this as in Qiskit, using
         # `dag._duration` (see Qiskit PR #14133 for more details). In the future, we should
         # evolve this part of the code in the same way as Qiskit does.
         new_block_dag._duration = prev_block_duration
