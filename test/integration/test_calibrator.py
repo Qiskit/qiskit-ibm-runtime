@@ -31,7 +31,7 @@ class TestCalibrator(IBMIntegrationTestCase):
 
     def test_calibrator(self):
         """Test that a calibration job runs and returns a result."""
-        with Session(backend=backend) as session:
+        with Session(backend=self.backend):
             calibrator = Calibrator(self.backend)
             job = calibrator.run()
             result = job.result()
