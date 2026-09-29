@@ -363,17 +363,16 @@ class TestGetBackend(IBMTestCase):
             service.backend("ibm_torino", calibration_id="invalid")
 
     @mock_responses
-    def test_backend_with_mock_devices(self, registry):
+    def test_retrieve_mock_backend(self, registry):
         """Test retrieving a backend that is not in the default list of backends.
 
         This test exercises the case where a backend is retrieved via `backend()`, and that backend
         is not returned in the `backends()` method by default.
         """
         # Make all backends mock devices.
-        registry.backends["a"]["common_backend"].is_mock = True
-        registry.backends["b"]["common_backend"].is_mock = True
-        registry.backends["a"]["unique_backend_a"].is_mock = True
-        registry.backends["b"]["unique_backend_b"].is_mock = True
+        for instance in registry.backends.values():
+            for backend in instance.values():
+                backend.is_mock = True
 
         instance_a = registry.instances["a"]
         instance_b = registry.instances["b"]
@@ -386,16 +385,19 @@ class TestGetBackend(IBMTestCase):
         backend = service.backend("common_backend")
         self.assertEqual(backend.name, "common_backend")
         self.assertEqual(backend._instance, instance_a.crn)
+        self.assertEqual(backend.is_mock, True)
 
         # Retrieve an existing mocked backend (available in several instances), passing instance.
         backend = service.backend("common_backend", instance="b")
         self.assertEqual(backend.name, "common_backend")
         self.assertEqual(backend._instance, instance_b.crn)
+        self.assertEqual(backend.is_mock, True)
 
         # Retrieve an existing mocked backend (available in one instance).
         backend = service.backend("unique_backend_a")
         self.assertEqual(backend.name, "unique_backend_a")
         self.assertEqual(backend._instance, instance_a.crn)
+        self.assertEqual(backend.is_mock, True)
 
         # Retrieve an existing mocked backend (available in one instance), with wrong instance.
         with (
@@ -405,7 +407,7 @@ class TestGetBackend(IBMTestCase):
             backend = service.backend("unique_backend_a", instance="b")
 
     @mock_responses
-    def test_backend_not_in_backends_list_instance_auto(self, registry):
+    def test_retrieve_mock_backend_instance_auto(self, registry):
         """Test retrieving a backend not in default the list of backends, with instance `auto`.
 
         This test exercises the case where a backend is retrieved via `backend()`, and that backend
@@ -415,10 +417,10 @@ class TestGetBackend(IBMTestCase):
         when guessing instances.
         """
         # Make all backends mock devices.
-        registry.backends["a"]["common_backend"].is_mock = True
-        registry.backends["b"]["common_backend"].is_mock = True
-        registry.backends["a"]["unique_backend_a"].is_mock = True
-        registry.backends["b"]["unique_backend_b"].is_mock = True
+        for instance in registry.backends.values():
+            for backend in instance.values():
+                backend.is_mock = True
+
         instance_a = registry.instances["a"]
 
         service = QiskitRuntimeService(token="my_token", instance="auto")

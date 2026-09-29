@@ -242,6 +242,11 @@ class IBMBackend(Backend):
         return self._calibration_id
 
     @property
+    def is_mock(self) -> bool:
+        """Return whether the backend is used for usage estimation."""
+        return self._is_mock
+
+    @property
     def service(self) -> QiskitRuntimeService:
         """Return the ``service`` object.
 
