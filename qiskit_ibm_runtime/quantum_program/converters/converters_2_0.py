@@ -40,6 +40,7 @@ from ..quantum_program import QuantumProgram
 if TYPE_CHECKING:
     from ibm_quantum_schemas.executor.version_2_0.models import DataTree as DataTreeModel
     from qiskit.circuit import QuantumCircuit
+    from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
     from samplomatic.quantum_program.datatree import DataTree
 
 
@@ -121,7 +122,9 @@ def quantum_program_from_2_0(model: ParamsModel) -> tuple[QuantumProgram, Execut
     return quantum_program, options
 
 
-def quantum_program_to_2_0(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
+def quantum_program_to_2_0(
+    program: SamplomaticQuantumProgram, options: ExecutorOptions
+) -> ParamsModel:
     """Convert a :class:`~.QuantumProgram` to a V2.0 model."""
     model_items = []
     circuits = []
@@ -169,7 +172,7 @@ def quantum_program_to_2_0(program: QuantumProgram, options: ExecutorOptions) ->
             items=model_items,
             meas_level=program.meas_level,
             passthrough_data=passthrough_data_to_2_0(program.passthrough_data),
-            semantic_role=program._semantic_role,
+            semantic_role=getattr(program, "_semantic_role", None),
         ),
         options=options_dict,
     )
