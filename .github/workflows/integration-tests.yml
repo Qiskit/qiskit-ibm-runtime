@@ -36,7 +36,10 @@ jobs:
       QISKIT_IBM_QPU: ${{ secrets.QISKIT_IBM_QPU }}
       QISKIT_IN_PARALLEL: True
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
-      PYTEST_ADDOPTS: "-v -s --durations=0"
+      PYTEST_ADDOPTS: |
+        -v -s --durations=10
+        -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
+        -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -104,7 +107,10 @@ jobs:
     env:
       QISKIT_IN_PARALLEL: True
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
-      PYTEST_ADDOPTS: "--durations=10"
+      PYTEST_ADDOPTS: |
+        -v -s --durations=10
+        -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
+        -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
     steps:
       - uses: actions/checkout@v6
         with:
