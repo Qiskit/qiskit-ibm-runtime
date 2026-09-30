@@ -1,0 +1,2 @@
+`DynamicCircuitInstructionDurations`, which was previously deprecated, is now removed.
+So are the `durations` arguments of `PadDynamicalDecoupling`, `PadDelay`, and `BaseDynamicCircuitAnalysis`.

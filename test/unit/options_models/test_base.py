@@ -64,4 +64,7 @@ class TestBaseOptionsModel(IBMTestCase):
     def test_asdict(self):
         """Test the ability to use `dataclass.asdict()` in an OptionsModel."""
         options = Options()
-        self.assertEqual(asdict(options), options.model_dump())
+        with self.assertWarnsRegex(DeprecationWarning, "is deprecated"):
+            options_as_dict = asdict(options)
+
+        self.assertEqual(options_as_dict, options.model_dump())

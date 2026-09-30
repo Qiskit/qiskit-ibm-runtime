@@ -67,7 +67,10 @@ class TestQiskitRuntimeService(IBMTestCase):
             ) as api_client_c_run,
         ):
             # Run a job with the client and instance active in the service.
-            pubs = transpile_pubs([(QuantumCircuit(1),)], backend_a, "sampler")
+            circuit = QuantumCircuit(1)
+            circuit.measure_all()
+
+            pubs = transpile_pubs([(circuit,)], backend_a, "sampler")
             sampler = SamplerV2(mode=backend_a)
             _ = sampler.run(pubs)
             api_client_a_run.assert_called()

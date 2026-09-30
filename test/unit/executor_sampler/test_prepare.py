@@ -15,7 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from samplomatic import Tag
@@ -349,6 +349,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
         self.assertEqual(executor_options.max_execution_time, 800)
 
 
+@ddt
 class TestPrepareTwirling(IBMTestCase):
     """Unit tests for prepare() method with twirling enabled."""
 
@@ -369,6 +370,30 @@ class TestPrepareTwirling(IBMTestCase):
         # Verify SamplexItem was created
         self.assertEqual(len(qp.items), 1)
         self.assertIsInstance(qp.items[0], SamplexItem)
+
+    @data([1000, "auto", "auto", 1024], [1000, 5, "auto", 1000], [1000, 5, 3, 15])
+    @unpack
+    def test_sampler_num_shots(
+        self,
+        default_shots,
+        num_randomizations,
+        shots_per_randomization,
+        expected_num_shots,
+    ):
+        """Test program items' shape for different twirling options."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.default_shots = default_shots
+        options.twirling.num_randomizations = num_randomizations
+        options.twirling.shots_per_randomization = shots_per_randomization
+
+        qp, _ = prepare([(circuit,)], options, shots=default_shots)
+        num_shots = qp.items[0].shape[0] * qp.shots
+        self.assertEqual(num_shots, expected_num_shots)
 
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
@@ -465,45 +490,33 @@ class TestPrepareTwirling(IBMTestCase):
         # Verify build was called with boxed circuit
         mock_build.assert_called_once_with(boxed_circuit)
 
-    @patch("samplomatic.build")
-    @patch("samplomatic.transpiler.generate_boxing_pass_manager")
-    def test_prepare_calculates_shots_correctly(self, mock_boxing_pm, mock_build):
+    @data(
+        (1024, "auto", "auto", 64, (16,)),
+        (1024, "auto", 128, 128, (8,)),
+        (1024, 10, "auto", 103, (10,)),
+        (1024, 20, 50, 50, (20,)),
+    )
+    @unpack
+    def test_prepare_calculates_shots_correctly(
+        self, pub_shots, num_rand, shots_per_rand, expected_qp_shots, expected_shape
+    ):
         """Test prepare() calculates shots_per_randomization and num_randomizations correctly."""
-        # Setup mocks
-        mock_pm_instance = MagicMock()
-        mock_boxing_pm.return_value = mock_pm_instance
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
-        mock_pm_instance.run.return_value = circuit
-        mock_build.return_value = (circuit, MagicMock())
 
-        test_cases = [
-            # (pub_shots, num_rand, shots_per_rand, expected_qp_shots, expected_shape)
-            (1024, "auto", "auto", 64, (16,)),  # Both auto
-            (1024, "auto", 128, 128, (8,)),  # num_rand auto
-            (1024, 10, "auto", 103, (10,)),  # shots_per_rand auto
-            (1024, 20, 50, 50, (20,)),  # Both explicit
-        ]
+        pub = (circuit, None, pub_shots)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+        options.twirling.enable_gates = True
+        options.twirling.num_randomizations = num_rand
+        options.twirling.shots_per_randomization = shots_per_rand
 
-        for pub_shots, num_rand, shots_per_rand, expected_qp_shots, expected_shape in test_cases:
-            with self.subTest(
-                pub_shots=pub_shots, num_rand=num_rand, shots_per_rand=shots_per_rand
-            ):
-                pub = (circuit, None, pub_shots)
-                options = SamplerOptions(
-                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
-                )
-                options.twirling.enable_gates = True
-                options.twirling.num_randomizations = num_rand
-                options.twirling.shots_per_randomization = shots_per_rand
+        qp, _ = prepare([pub], options, shots=pub_shots)
 
-                qp, _ = prepare([pub], options, shots=pub_shots)
-
-                # Verify QuantumProgram shots (should be shots_per_randomization)
-                self.assertEqual(qp.shots, expected_qp_shots)
-                # Verify SamplexItem shape (should be num_randomizations)
-                self.assertEqual(qp.items[0].shape, expected_shape)
+        # Verify QuantumProgram shots (should be shots_per_randomization)
+        self.assertEqual(qp.shots, expected_qp_shots)
+        # Verify SamplexItem shape (should be num_randomizations)
+        self.assertEqual(qp.items[0].shape, expected_shape)
 
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")

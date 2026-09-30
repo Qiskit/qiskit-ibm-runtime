@@ -104,9 +104,9 @@ class Calibrator:
         Returns:
             A calibration job.
         """
-        options_dict = {}
-        if self.options.experimental:
-            options_dict["experimental"] = self.options.experimental
+        inputs = {
+            "options": self.options.model_dump(mode="json", exclude={"environment"}),
+        }
 
         if self._mode:
             _run = self._mode._run
@@ -126,6 +126,6 @@ class Calibrator:
         return _run(
             program_id=self._PROGRAM_ID,
             options=to_runtime_options(self.options.environment, self._backend),
-            inputs={"options": options_dict},
+            inputs=inputs,
             calibration_id=getattr(self._backend, "calibration_id", None),
         )

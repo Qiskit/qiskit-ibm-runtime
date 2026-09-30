@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from qiskit.circuit import CircuitInstruction, ClassicalRegister
+from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions, undress_box
@@ -188,7 +188,6 @@ def options_to_boxing_pm_kwargs(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to inject noise.
-        twirling_group: The group to use for the twirling boxes.
         add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
             (will pass the "none" value to the relevant attribute), while ``True`` will cause tags
             with the twirled boxes hash to be added (using the "unique_box" value of the relevant

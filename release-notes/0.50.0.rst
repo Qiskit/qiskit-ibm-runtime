@@ -1,0 +1,175 @@
+0.50.0 (2026-09-24)
+===================
+
+Deprecation Notes
+-----------------
+
+- :class:`~qiskit_ibm_runtime.EstimatorV2` and :class:`~qiskit_ibm_runtime.SamplerV2` are deprecated. Please use
+  the new client-side implementations of these primitive interfaces: :class:`~qiskit_ibm_runtime.executor_estimator.Estimator` and
+  :class:`~qiskit_ibm_runtime.executor_sampler.Sampler` instead. See the `New Features` section for more information about them.
+
+  At the end of the deprecation period, the legacy server-side implementations will be removed, and the top-level
+  imports (``qiskit_ibm_runtime.Sampler[V2]`` and ``qiskit_ibm_runtime.Estimator[V2]`` will be updated to point to the client-side
+  implementations. (`3362 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3362>`__)
+- The following entities related to ``QuantumProgram`` have been moved to the ``samplomatic`` package:
+
+  * ``qiskit_ibm_runtime.quantum_program.CircuitItem```
+  * ``qiskit_ibm_runtime.quantum_program.QuantumProgramItem``
+  * ``qiskit_ibm_runtime.quantum_program.SamplexItem```
+  * ``qiskit_ibm_runtime.quantum_program.datatree.DataTree```
+  * ``qiskit_ibm_runtime.results.ChunkPart``
+  * ``qiskit_ibm_runtime.results.ChunkSpan``
+  * ``qiskit_ibm_runtime.results.ChunkTiming``
+
+  They should now be imported from the ``samplomatic.quantum_program`` module.
+
+  A visualization function has been moved to the ``samplomatic`` package:
+
+  * ``qiskit_ibm_runtime.visualization.draw_chunk_timings``
+
+  It should now be imported from the ``samplomatic.visualization`` module.
+
+  Importing these from ``qiskit_ibm_runtime`` is now deprecated. The imports will continue to work
+  until they are fully removed in a later version. (`3290 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3290>`__)
+- The ``max_execution_time`` field of ``qiskit_ibm_runtime.options_models.EnvironmentOptions`` has been deprecated.
+  ``max_execution_time`` can now be set at top-level. (`3361 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3361>`__)
+
+
+New Features
+------------
+
+- Added the client-side primitives :class:`qiskit_ibm_runtime.executor_sampler.Sampler` and
+  :class:`qiskit_ibm_runtime.executor_estimator.Estimator`.
+
+  The client-side primitives are implementations of the Sampler and Estimator abstractions in Qiskit.
+  Unlike the legacy server-side :class:`qiskit_ibm_runtime.sampler.Sampler` and
+  :class:`qiskit_ibm_runtime.estimator.Estimator` classes, they perform pre- and post-processing
+  on the client side and delegate execution to the :class:`qiskit_ibm_runtime.Executor`. Running
+  on the client side provides greater transparency, faster debugging feedback, and finer control.
+
+  The client-side primitives share the same API as the legacy primitives, so switching from one to the
+  other only requires updating the imports in your scripts in virtually all cases:
+
+  .. code-block:: python
+
+      from qiskit.circuit import QuantumCircuit
+      from qiskit_aer import AerSimulator
+
+      # Replace import statement with new import statement
+      # from qiskit_ibm_runtime import Sampler
+      from qiskit_ibm_runtime.executor_sampler import Sampler
+
+      circuit = QuantumCircuit(3)
+      circuit.h(0)
+      circuit.cx(0, 1)
+      circuit.measure_all()
+
+      sampler = Sampler(mode=AerSimulator())
+      job = sampler.run([circuit])
+
+      result = job.result()
+      print(result[0].data.meas)
+
+  (`3332 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3332>`__)
+- Added local mode support to :class:`~qiskit_ibm_runtime.executor.Executor`.
+
+  When specifying a :class:`~qiskit_ibm_runtime.fake_provider.FakeBackendV2` or
+  :class:`~qiskit_aer.AerSimulator` as the backend, :meth:`~qiskit_ibm_runtime.executor.Executor.run`
+  will operate as a `qiskit_aer` simulator. Behavior can be controlled by the new
+  :class:`~qiskit_ibm_runtime.option_models.simulator.SimulatorOptions` class accessed via the
+  :attr:`~qiskit_ibm_runtime.option_models.executor.ExecutorOptions.simulator` attribute.
+
+  For example, the following code simulates a simple two-qubit circuit:
+
+  .. code-block:: python
+
+      from qiskit import QuantumCircuit
+      from qiskit_aer import AerSimulator
+      from qiskit_ibm_runtime import Executor, QuantumProgram
+
+      circuit = QuantumCircuit(2)
+      circuit.cx(0, 1)
+      circuit.measure_all()
+
+      program = QuantumProgram(1)
+      program.append_circuit_item(circuit)
+
+      executor = Executor(AerSimulator())
+      job = executor.run(program)
+      job.result()
+
+  (`3288 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3288>`__)
+- The primitives' ``run()`` methods:
+
+  * :meth:`~qiskit_ibm_runtime.EstimatorV2.run`
+  * :meth:`~qiskit_ibm_runtime.Executor.run`
+  * :meth:`~qiskit_ibm_runtime.NoiseLearner.run`
+  * :meth:`~qiskit_ibm_runtime.NoiseLearnerV3.run`
+  * :meth:`~qiskit_ibm_runtime.SamplerV2.run`
+
+  now accept a new ``dry_run`` argument. It performs a dry run without executing the job on a QPU.
+  This mode can be used to validate the job, estimate usage consumption, and retrieve circuit timing
+  metadata. Returned results preserve the expected schema but contain randomized mock data rather
+  than actual or simulated measurement results. Unlike the fake backends, the processing of this dry
+  run happens on the server side, so the job might not finish immediately.
+
+  Note that access to this feature may be restricted, and it is not widely available yet. (`3314 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3314>`__)
+- Added :class:`~qiskit_ibm_runtime.circuit.library.MeasureReset` instruction to
+  the :mod:`qiskit_ibm_runtime.circuit.library` package. This instruction
+  represents a reset operation that also exposes its intermediate measurement
+  result to the user: it measures a qubit into a classical bit and then
+  conditionally flips the qubit back to :math:`|0\rangle`, so the measurement
+  outcome is retained. The instruction name must start with ``measure_reset``
+  (for example: ``measure_reset``, ``measure_reset_2``), which allows it to be mapped
+  to the corresponding hardware-level implementation. (`3199 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3199>`__)
+- Added :class:`~qiskit_ibm_runtime.circuit.library.XSlowGate`, a single-qubit gate
+  that represents the hardware-native ``xslow`` instruction. The gate can be appended
+  to a :class:`~qiskit.circuit.QuantumCircuit` and passes through the Qiskit transpiler
+  unchanged when the backend target includes the ``xslow`` instruction.
+
+  .. code:: python
+
+      from qiskit import QuantumCircuit
+      from qiskit_ibm_runtime.circuit.library import XSlowGate
+
+      qc = QuantumCircuit(1)
+      qc.append(XSlowGate(), [0])
+
+  (`3244 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3244>`__)
+- Added :meth:`~qiskit_ibm_runtime.results.noise_learner_v3.NoiseLearnerV3Results.to_pauli_lindblad_maps`,
+  a method to return the list of :class:`qiskit.quantum_info.PauliLindbladMap` of the items stored in a
+  :class:`~qiskit_ibm_runtime.results.noise_learner_v3.NoiseLearnerV3Results`. (`3257 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3257>`__)
+- The following ``QuantumProgram`` related entities have been moved to the ``samplomatic`` package,
+  and ``qiskit_ibm_runtime`` uses them as base classes, providing custom classes for the three of
+  them:
+
+  * ``qiskit_ibm_runtime.quantum_program.QuantumProgram``
+  * ``qiskit_ibm_runtime.results.QuantumProgramResult``
+  * ``qiskit_ibm_runtime.results.QuantumProgramItemResult``
+
+  (`3290 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3290>`__)
+- :class:`~.Executor` and :class:`~.NoiseLearnerV3` now have a ``mode`` property that returns the
+  execution mode used by those primitives. (`3333 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3333>`__)
+
+
+Bug Fixes
+---------
+
+- Jobs from retired backends can now be retrieved successfully via
+  :meth:`.QiskitRuntimeService.job` and :meth:`.QiskitRuntimeService.jobs`. (`3020 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3020>`__)
+- Fixed :meth:`.QiskitRuntimeService.backend` so that retrieving a backend without a
+  ``calibration_id`` after retrieving it with a custom calibration returns the default backend
+  configuration. Calibration-specific backend configurations are no longer cached, so custom
+  calibration data does not replace the cached default backend configuration. (`3275 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3275>`__)
+- The ``fallback`` extrapolator in :class:`qiskit_ibm_runtime.options.ZneOptions` now requires at least two
+  noise factors. Previously it only required one. (`3321 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3321>`__)
+- :meth:`~.Account.resolve_crn` now takes into account the proxies and SSL verification arguments
+  set in the account when resolving the CRN. (`3353 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3353>`__)
+
+
+Other Notes
+-----------
+
+- Bumped the lowest supported version of `ibm-quantum-schemas` to `0.12.20260921` and `samplomatic`
+  to `0.21.0`. (`3348 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3348>`__)
+- The deprecated Python package ``extras`` (``common`` and ``documentation``) has been removed. (`3286 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3286>`__)
