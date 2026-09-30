@@ -52,7 +52,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
             f"'{type(result.passthrough_data)}'."
         )
 
-    passthrough: dict[str, Any] = result.passthrough_data or {}
+    passthrough: dict[str, Any] = result.passthrough_data
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (twirling := post_processor_data.get("twirling", None)) is None:
@@ -106,4 +106,4 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         pub_results.append(pub_result)
 
     metadata = {"executor": result.metadata, "options": options, "shots": shots}
-    return PrimitiveResult(pub_results, metadata=metadata or {})
+    return PrimitiveResult(pub_results, metadata=metadata)

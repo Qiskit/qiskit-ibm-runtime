@@ -12,8 +12,8 @@
 
 """Tests for the RuntimeClient class."""
 
+from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.clients import RuntimeClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from ..account import custom_envs, no_envs
@@ -64,7 +64,8 @@ class TestAccountClient(IBMTestCase):
                 client = self._get_client()
                 self.fake_server.set_error_response(err_resp)
                 with self.assertRaises(RequestsApiError) as err_cm:
-                    client.backend_status("ibmq_qasm_simulator")
+                    with self.assertWarnsRegex(UserWarning, "Provided API key could not be found."):
+                        client.backend_status("ibmq_qasm_simulator")
                 if err_resp:
                     self.assertIn("Bad client input", str(err_cm.exception))
 

@@ -24,8 +24,8 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from .accounts import Account, AccountManager
+from .api.client import RuntimeClient
 from .api.client_parameters import ClientParameters
-from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .exceptions import (
     IBMInputValueError,
@@ -379,7 +379,7 @@ class QiskitRuntimeService:
             )
         else:
             # If plans_preference is not set, prioritize free and trial plans.
-            # Note that `unknown` is not returned by the API but by `CloudAccount.list_instances()`
+            # Note that `unknown` is not returned by the API but by `Account.list_instances()`
             ordered_pricing_types = ["free", "trial", "paygo", "paid", "subscription", "unknown"]
             self._backend_instance_groups = sorted(
                 self._backend_instance_groups,

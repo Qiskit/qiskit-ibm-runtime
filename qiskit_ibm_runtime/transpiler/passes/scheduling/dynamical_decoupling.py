@@ -40,7 +40,6 @@ if TYPE_CHECKING:
     from qiskit.circuit import Gate, Qubit
     from qiskit.dagcircuit import DAGCircuit, DAGNode
     from qiskit.transpiler import CouplingMap, Target
-    from qiskit.transpiler.instruction_durations import InstructionDurations
 
     from .utils import BlockOrderingCallableType
 
@@ -72,25 +71,27 @@ class PadDynamicalDecoupling(BlockBasePadder):
         from qiskit.transpiler import PassManager, InstructionDurations
         from qiskit.visualization import timeline_drawer
 
+        from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
         from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
         from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDynamicalDecoupling
 
+        backend = FakeMarrakesh()
+
         circ = QuantumCircuit(4)
-        circ.h(0)
-        circ.cx(0, 1)
-        circ.cx(1, 2)
-        circ.cx(2, 3)
+        circ.x(0)
+        circ.cz(0, 1)
+        circ.cz(1, 2)
+        circ.cz(2, 3)
         circ.measure_all()
-        durations = InstructionDurations(
-            [("h", 0, 50), ("cx", [0, 1], 700), ("reset", None, 10),
-             ("cx", [1, 2], 200), ("cx", [2, 3], 300),
-             ("x", None, 50), ("measure", None, 1000)]
-        )
 
         # balanced X-X sequence on all qubits
         dd_sequence = [XGate(), XGate()]
-        pm = PassManager([ALAPScheduleAnalysis(durations),
-                          PadDynamicalDecoupling(durations, dd_sequence)])
+        pm = PassManager(
+            [
+                ALAPScheduleAnalysis(target=backend.target),
+                PadDynamicalDecoupling(dd_sequence, target=backend.target)
+            ]
+        )
         circ_dd = pm.run(circ)
         circ_dd.draw('mpl', style="iqp")
 
@@ -110,8 +111,13 @@ class PadDynamicalDecoupling(BlockBasePadder):
         spacings.append(1 - sum(spacings))
         pm = PassManager(
             [
-                ALAPScheduleAnalysis(durations),
-                PadDynamicalDecoupling(durations, dd_sequence, qubits=[0], spacings=spacings),
+                ALAPScheduleAnalysis(target=backend.target),
+                PadDynamicalDecoupling(
+                    dd_sequence,
+                    qubits=[0],
+                    spacings=spacings,
+                    target=backend.target,
+                ),
             ]
         )
         circ_dd = pm.run(circ)
@@ -125,7 +131,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
         alignment constraints for dynamic circuit backends.
 
     Args:
-        durations: Durations of instructions to be used in scheduling.
         dd_sequences: Sequence of gates to apply in idle spots.
             Alternatively a list of gate sequences may be supplied that
             will preferentially be inserted if there is a delay of sufficient
@@ -193,7 +198,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations | None = None,
         dd_sequences: list[Gate] | list[list[Gate]] | None = None,
         qubits: list[int] | None = None,
         spacings: list[list[float]] | list[float] | None = None,
@@ -209,21 +213,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ):
-        if durations:
-            warnings.warn(
-                "The `durations` input argument of `PadDynamicalDecoupling` is deprecated "
-                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
-                "Provide a `target` instance instead ex: "
-                "PadDynamicalDecoupling(target=backend.target).",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,
         )
-        self._durations = durations
         self._target = target
 
         # Enforce list of DD sequences
@@ -371,13 +364,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     continue
 
                 for index, gate in enumerate(seq):
+                    gate_length = None
                     if self._target:
                         try:
                             gate_length = self._target[gate.name].get((physical_index,)).duration
                         except:  # noqa: E722 bare-except
-                            gate_length = None
-                    else:
-                        gate_length = self._durations.get(gate, physical_index)
+                            pass
 
                     if gate_length is None:
                         raise TranspilerError(
@@ -438,9 +430,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         if self._qubits and self._block_dag.qubits.index(qubit) not in self._qubits:
             # Target physical qubit is not the target of this DD sequence.
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
+            unit = self._verify_dag_unit(self._block_dag, False)
+            self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
             return
 
         if not self._skip_reset_qubits and qubit not in self._dirty_qubits:
@@ -458,9 +449,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
         if qubit not in self._dirty_qubits or (self._dd_barrier and not enable_dd):
             # Previous node is the start edge or reset, i.e. qubit is ground state;
             # or dd to be applied before named barrier only
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
+            unit = self._verify_dag_unit(self._block_dag)
+            self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
             return
 
         for sequence_idx, _ in enumerate(self._dd_sequences):
@@ -529,12 +519,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     sequence_gphase += phase
                 else:
                     # Don't do anything if there's no single-qubit gate to absorb the inverse
-                    self._apply_scheduled_op(
-                        block_idx,
-                        t_start,
-                        Delay(time_interval, self._block_dag.unit),
-                        qubit,
-                    )
+                    unit = self._verify_dag_unit(self._block_dag, False)
+                    self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
                     return
 
             def _constrained_length(values: npt.NDArray[np.floating]) -> npt.NDArray[np.floating]:
@@ -580,11 +566,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     # Delay only accept integer durations if the unit is 'dt',
                     # but the tau calculation can result in floating-point
                     # rounding errors (like 4.99999 instead of 5).
-                    if self._dag.unit == "dt":
+                    unit = self._verify_dag_unit(self._block_dag, False)
+                    if unit == "dt":
                         tau = round(tau)
-                    self._apply_scheduled_op(
-                        block_idx, idle_after, Delay(tau, self._dag.unit), qubit
-                    )
+                    self._apply_scheduled_op(block_idx, idle_after, Delay(tau, unit), qubit)
                     idle_after += tau
 
                 # Detect if we are on a sequence boundary
@@ -605,7 +590,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
             return
 
         # DD could not be applied, delay instead
-        self._apply_scheduled_op(
-            block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-        )
+        unit = self._verify_dag_unit(self._block_dag, False)
+        self._apply_scheduled_op(block_idx, t_start, Delay(time_interval, unit), qubit)
         return

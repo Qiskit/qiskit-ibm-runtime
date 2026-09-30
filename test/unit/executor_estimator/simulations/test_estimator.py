@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from ddt import data, ddt
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 
@@ -125,6 +125,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         """
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
+        error = 0.005
 
         pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
 
@@ -140,8 +141,16 @@ class TestEstimatorWithNoise(IBMTestCase):
         # Add noise to every unique layer, independent of its content (gates or measurements).
         layers = base_level_estimator.find_unique_layers([pub], types="all")
         simulated_noise_model = [
-            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
-            for layer in layers
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, error)]))
+            for layer in layers[:-1]
+        ]
+        simulated_noise_model += [
+            (
+                layers[-1],
+                PauliLindbladMap.from_list(
+                    [("X" + "I" * (layers[-1].operation.num_qubits - 1), error)]
+                ),
+            )
         ]
         base_level_estimator.options.simulator.layer_noise_model = simulated_noise_model
 
@@ -160,7 +169,7 @@ class TestEstimatorWithNoise(IBMTestCase):
         estimator.options.simulator.layer_noise_model = simulated_noise_model
         # Run a noisy simulation, injecting the same noise as in the simulation
         estimator.options.resilience.layer_noise_model = [
-            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.005)]))
+            (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, error)]))
             for layer in estimator.find_unique_layers([pub], types="gates")
         ]
         result = estimator.run([pub]).result()
@@ -184,21 +193,24 @@ class TestEstimatorWithNoise(IBMTestCase):
         debug_message = f"Ideal errors: {errors}\nDivergent errors: {divergent_errors}"
         np.testing.assert_array_less(errors, divergent_errors, err_msg=debug_message)
 
-    def test_measurement_noise_injection(self):
+    def test_result_quality_with_measurement_noise_injection(self):
         """Tests that measurement noise injection works as expected.
 
-        Estimator result quality is expected to degrade with measurement
-        noise injection.
+        Estimator result quality is expected to degrade with measurement noise injection, but
+        applying TREX should improve the results.
         """
-        backend = AerSimulator()
         circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
         circuit.measure_all()
 
-        preset_pass_manager = generate_preset_pass_manager(backend=backend)
+        preset_pass_manager = generate_preset_pass_manager(backend := AerSimulator())
         isa_circuit = preset_pass_manager.run(circuit)
 
-        observable = SparsePauliOp("Z" * circuit.num_qubits)
-        pub = (isa_circuit, observable)
+        observables = ["ZZ", "XX"]
+        pub = (isa_circuit, observables)
+
+        measure_noise_model = PauliLindbladMap.from_list([("IX", 0.05)])
 
         estimator = create_local_mode_estimator(
             backend,
@@ -206,13 +218,26 @@ class TestEstimatorWithNoise(IBMTestCase):
             shots_per_randomization=200,
             options_overrides={"resilience_level": 0},
         )
+        layers = estimator.find_unique_layers([pub], types="all")
         estimator.options.simulator.layer_noise_model = [
-            (layer, PauliLindbladMap.from_list([("IX", 0.05)]))
-            for layer in estimator.find_unique_layers([pub], types="all")
+            (layer, measure_noise_model) for layer in layers
         ]
 
-        result = estimator.run([pub]).result()
-        np.testing.assert_array_less(result[0].data.evs, 1)
+        unmitigated_result = estimator.run([pub]).result()
+        unmitigated_evs = unmitigated_result[0].data.evs
+
+        estimator.options.resilience.measure_mitigation = True
+        layers = estimator.find_unique_layers([pub], types="all")
+        estimator.options.simulator.layer_noise_model = [
+            (layer, measure_noise_model) for layer in layers
+        ]
+
+        mitigated_result = estimator.run([pub]).result()
+        mitigated_evs = mitigated_result[0].data.evs
+
+        np.testing.assert_array_less(unmitigated_evs, 1)
+        np.testing.assert_array_almost_equal(mitigated_evs, 1, decimal=2)
+        np.testing.assert_array_less(unmitigated_evs, mitigated_evs)
 
 
 @ddt
