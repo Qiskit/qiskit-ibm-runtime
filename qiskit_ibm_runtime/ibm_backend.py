@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from qiskit.transpiler.target import Target
 
     from . import QiskitRuntimeService
-    from .api.clients import RuntimeClient
+    from .api.client import RuntimeClient
     from .models import BackendProperties
 
 

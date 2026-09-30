@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from qiskit.circuit import Clbit, ControlFlowOp, Gate, IfElseOp, Measure, Qubit
 from qiskit.circuit.controlflow import condition_resources
@@ -151,6 +151,27 @@ class BlockBasePadder(TransformationPass):
         self._prev_node = None
         self._wire_map = {}
 
+    def _verify_dag_unit(self, dag: DAGCircuit, set: bool = False) -> Literal["dt"] | None:
+        """Verify DAG's unit.
+
+        This function checks the DAG's unit, raising if it set to anything other than '"dt"'. If
+        ``set`` is ``True``, it also sets it to '"dt"', modifying ``dag`` in place. Then, it returns
+        the unit.
+
+        .. note::
+            `dag.unit` raises a deprecation warning. We handled this as in Qiskit, using `dag._unit`
+                (see Qiskit PR #14133 for more details). In the future, we should evolve this part
+                of the code in the same way as Qiskit does.
+        """
+        if (unit := dag._unit) and unit != "dt":
+            raise TranspilerError(
+                'All blocks must have time units of "dt". '
+                "Please run TimeUnitConversion pass prior to padding."
+            )
+        if set:
+            dag._unit = "dt"
+        return dag._unit
+
     def _empty_dag_like(
         self,
         dag: DAGCircuit,
@@ -201,14 +222,9 @@ class BlockBasePadder(TransformationPass):
 
         new_dag.name = dag.name
         new_dag.metadata = dag.metadata
-        new_dag.unit = self.property_set["time_unit"] or "dt"
-        if new_dag.unit != "dt":
-            raise TranspilerError(
-                'All blocks must have time units of "dt". '
-                "Please run TimeUnitConversion pass prior to padding."
-            )
-
         new_dag.global_phase = dag.global_phase
+
+        self._verify_dag_unit(new_dag, set=True)
         return new_dag
 
     def _pre_runhook(self, dag: DAGCircuit) -> None:
@@ -224,6 +240,13 @@ class BlockBasePadder(TransformationPass):
             raise TranspilerError(
                 f"The input circuit {dag.name} is not scheduled. Call one of scheduling passes "
                 f"before running the {self.__class__.__name__} pass."
+            )
+
+        self.property_set["time_unit"] = self.property_set["time_unit"] or "dt"
+        if self.property_set["time_unit"] != "dt":
+            raise TranspilerError(
+                'All blocks must have time units of "dt". '
+                "Please run TimeUnitConversion pass prior to padding."
             )
 
     def _pad(
@@ -388,7 +411,11 @@ class BlockBasePadder(TransformationPass):
         prev_block_duration = self._block_duration
         prev_block_idx = self._current_block_idx
         self._terminate_block(self._block_duration, self._current_block_idx)
-        new_block_dag.duration = prev_block_duration
+
+        # `dag.duration` raises a deprecation warning. We handle this as in Qiskit, using
+        # `dag._duration` (see Qiskit PR #14133 for more details). In the future, we should
+        # evolve this part of the code in the same way as Qiskit does.
+        new_block_dag._duration = prev_block_duration
 
         # Edge-case: Add a barrier if the final node is a fast-path
         if self._prev_node in self._fast_path_nodes:
