@@ -167,8 +167,7 @@ class Runtime(RestAdapterBase):
                 local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
+            include_mocks: If ``True``, include jobs from mock backends in the results.
 
         Returns:
             JSON response.
@@ -220,8 +219,7 @@ class Runtime(RestAdapterBase):
 
         Args:
             timeout: Number of seconds to wait for the request.
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
+            include_mocks: If ``True``, include mock backends in the results.
 
         Returns:
             JSON response.
@@ -272,8 +270,7 @@ class Runtime(RestAdapterBase):
             created_after: Initial date of workloads to be included.
             created_before: Last date of workloads to be included.
             tags: List of tags for the worload.
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
+            include_mocks: If ``True``, include jobs from mock backends in the results.
 
         Returns:
             JSON response.
