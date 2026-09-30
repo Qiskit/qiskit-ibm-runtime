@@ -40,8 +40,9 @@ from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 from qiskit_ibm_runtime.options_models.zne import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
-from ...ibm_test_case import IBMEstimatorPrepareTestCase, IBMTestCase
+from ...ibm_test_case import IBMTestCase
 from ...utils import combine
+from .case import IBMEstimatorPrepareTestCase
 from .utils import (
     PARAM_BASIS_3Q_SCENARIOS,
     SAMPLEX_CIRCUIT_SCENARIOS,

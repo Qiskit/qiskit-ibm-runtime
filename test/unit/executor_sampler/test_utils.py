@@ -22,7 +22,8 @@ from samplomatic.utils import get_annotation
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.utils import box_circuit, extract_shots_from_pubs
 
-from ...ibm_test_case import IBMBoxedCircuitTestCase, IBMTestCase
+from ...ibm_test_case import IBMTestCase
+from .case import IBMBoxedCircuitTestCase
 
 
 class TestExtractShotsFromPubs(IBMTestCase):
