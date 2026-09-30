@@ -68,9 +68,7 @@ def assert_circuits_annotations_are_equal(
         for ann1 in annotations_1:
             # Look up the matching annotation in circuit_2 by type (order-independent).
             ann2 = get_annotation(instr2.operation, type(ann1))
-            assert ann2 is not None, (
-                f"circuit_2 box is missing a {type(ann1).__name__} annotation"
-            )
+            assert ann2 is not None, f"circuit_2 box is missing a {type(ann1).__name__} annotation"
             if isinstance(ann1, (ChangeBasis, InjectNoise)):
                 # ref is a runtime-unique identifier; normalise ann2's ref to ann1's before
                 # comparing so only the semantically meaningful fields are checked.

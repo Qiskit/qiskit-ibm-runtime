@@ -94,12 +94,8 @@ def assert_samplex_arguments_are_correct(
             f"pauli_lindblad_maps key(s), got {len(plm_keys)}; keys={keys}"
         )
     else:
-        assert noise_keys == [], (
-            f"[{scenario.label}] noise_scales must be absent; keys={keys}"
-        )
-        assert plm_keys == [], (
-            f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}"
-        )
+        assert noise_keys == [], f"[{scenario.label}] noise_scales must be absent; keys={keys}"
+        assert plm_keys == [], f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}"
 
 
 def assert_template_circuit_is_correct(
@@ -199,8 +195,7 @@ def assert_trex_item_is_correct(
         f"Expected {2 * n} sx operations (2 per qubit), got {op_counts['sx']}"
     )
     assert set(op_counts) - {"barrier"} == {"measure", "rz", "sx"}, (
-        f"Expected exactly gate types {{measure, rz, sx}} (plus barriers),"
-        f"got {dict(op_counts)}"
+        f"Expected exactly gate types {{measure, rz, sx}} (plus barriers),got {dict(op_counts)}"
     )
 
     qm_entries = program.passthrough_data.get("qiskit_mitigation", [])  # type: ignore[union-attr]
