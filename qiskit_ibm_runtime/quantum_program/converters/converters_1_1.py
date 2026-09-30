@@ -169,7 +169,7 @@ def quantum_program_to_1_1(program: QuantumProgram, options: ExecutorOptions) ->
             items=model_items,
             meas_level=program.meas_level,
             passthrough_data=passthrough_data_to_1_1(program.passthrough_data),
-            semantic_role=getattr(program, "_semantic_role", None),
+            semantic_role=program._semantic_role,
         ),
         options=options_dict,
     )

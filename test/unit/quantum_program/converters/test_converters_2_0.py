@@ -30,7 +30,6 @@ from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
 from samplomatic.quantum_program import CircuitItem, SamplexItem
-from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 
 from qiskit_ibm_runtime.decoders.executor.converters import quantum_program_result_from_2_0
 from qiskit_ibm_runtime.options_models.executor import ExecutionOptions, ExecutorOptions
@@ -281,13 +280,3 @@ class TestQuantumProgramConverters(IBMTestCase):
         np.testing.assert_array_equal(
             passthrough_data["array"], quantum_program_out.passthrough_data["array"]
         )
-
-    def test_quantum_program_to_2_0_samplomatic_program(self):
-        """Test that a samplomatic QuantumProgram is converted without error."""
-        program = SamplomaticQuantumProgram(shots=50)
-        circuit = QuantumCircuit(1)
-        program.append_circuit_item(circuit)
-
-        params_model = quantum_program_to_2_0(program, ExecutorOptions())
-
-        self.assertIsNone(params_model.quantum_program.semantic_role)

@@ -20,11 +20,13 @@ from typing import TYPE_CHECKING, Any, cast
 from ..base_primitive import get_mode_service_backend
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
+from ..quantum_program import coerce_to_quantum_program
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
+    from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 
     from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
@@ -120,11 +122,17 @@ class Executor:
         """
         return self._mode
 
-    def run(self, program: QuantumProgram, dry_run: bool = False) -> RuntimeJobV2 | LocalRuntimeJob:
+    def run(
+        self,
+        program: QuantumProgram | SamplomaticQuantumProgram,
+        dry_run: bool = False,
+    ) -> RuntimeJobV2 | LocalRuntimeJob:
         """Run a quantum program.
 
         Args:
-            program: The program to run.
+            program: The program to run. Can be a :class:`~.QuantumProgram` or a
+                :class:`~samplomatic.quantum_program.QuantumProgram`; the latter is
+                automatically promoted to a :class:`~.QuantumProgram`.
             dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
                 can be used to validate the job, estimate usage consumption, and retrieve circuit
                 timing metadata. Returned results preserve the expected schema but contain
@@ -135,6 +143,8 @@ class Executor:
         Returns:
             A job.
         """
+        program = coerce_to_quantum_program(program)
+
         if self._service.is_local:
             service = cast("QiskitRuntimeLocalService", self._service)
             return service._run_executor(
