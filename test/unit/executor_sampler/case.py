@@ -14,14 +14,14 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import BoxOp
-from samplomatic import ChangeBasis, InjectNoise, Tag
-from samplomatic.utils import get_annotation
-
 from test.ibm_test_case import IBMTestCase
+
+from .asserts import (
+    assert_circuits_annotations_are_equal,
+    assert_circuits_equal_ignoring_annotations,
+)
 
 if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
@@ -34,56 +34,10 @@ class IBMBoxedCircuitTestCase(IBMTestCase):
         self, circuit_1: QuantumCircuit, circuit_2: QuantumCircuit
     ) -> None:
         """Assert two circuits are equal, ignoring any annotations on box operations."""
-
-        def strip_annotations(circuit: QuantumCircuit) -> QuantumCircuit:
-            """Return a copy of the circuit without annotations.
-
-            Annotations cannot be mutated in python space, so data is recreated.
-            """
-            new_data = []
-            for instr in circuit.data:
-                if isinstance(instr.operation, BoxOp):
-                    stripped_op = deepcopy(instr.operation)
-                    stripped_op.annotations = []
-                    new_data.append(instr.replace(operation=stripped_op))
-                else:
-                    new_data.append(instr)
-            circuit_copy = circuit.copy_empty_like()
-            circuit_copy.data = new_data
-            return circuit_copy
-
-        self.assertEqual(strip_annotations(circuit_1), strip_annotations(circuit_2))
+        assert_circuits_equal_ignoring_annotations(circuit_1, circuit_2)
 
     def assertCircuitsAnnotationsAreEqual(
         self, circuit_1: QuantumCircuit, circuit_2: QuantumCircuit
     ) -> None:
         """Assert annotations on box operations are equal between two circuits, up to ref."""
-        self.assertEqual(len(circuit_1.data), len(circuit_2.data))
-
-        for instr1, instr2 in zip(circuit_1.data, circuit_2.data):
-            if not isinstance(instr1.operation, BoxOp):
-                continue
-            self.assertIsInstance(instr2.operation, BoxOp)
-
-            annotations_1 = instr1.operation.annotations
-            annotations_2 = instr2.operation.annotations
-            self.assertEqual(len(annotations_1), len(annotations_2))
-
-            for ann1 in annotations_1:
-                # Look up the matching annotation in circuit_2 by type (order-independent).
-                ann2 = get_annotation(instr2.operation, type(ann1))
-                self.assertIsNotNone(
-                    ann2, msg=f"circuit_2 box is missing a {type(ann1).__name__} annotation"
-                )
-                if isinstance(ann1, (ChangeBasis, InjectNoise)):
-                    # ref is a runtime-unique identifier; normalise ann2's ref to ann1's before
-                    # comparing so only the semantically meaningful fields are checked.
-                    ann2_normalised = deepcopy(ann2)
-                    ann2_normalised.ref = ann1.ref
-                    self.assertEqual(ann1, ann2_normalised)
-                elif isinstance(ann1, Tag):
-                    # Tag has only ref. Nothing to compare beyond presence.
-                    continue
-                else:
-                    # Twirl has no ref; also future-proofs for new annotation types.
-                    self.assertEqual(ann1, ann2)
+        assert_circuits_annotations_are_equal(circuit_1, circuit_2)

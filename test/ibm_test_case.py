@@ -14,12 +14,10 @@
 
 from __future__ import annotations
 
-import inspect
 import logging
 import os
-import warnings
 from collections import defaultdict
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from typing import TYPE_CHECKING
 from unittest import TestCase  # noqa: TID251 -- IBMTestCase legitimatelly inherits from it.
 
@@ -27,11 +25,17 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
 
+from .asserts import (
+    assert_dict_flat_partially_equal,
+    assert_dict_keys_equal,
+    assert_dict_partially_equal,
+    assert_warns_strict,
+)
 from .decorators import integration_test_setup
 from .utils import bell
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from contextlib import AbstractContextManager
 
     from plotly.graph_objects import Figure as PlotlyFigure
 
@@ -45,82 +49,23 @@ class IBMTestCase(TestCase):
 
     def assertDictPartiallyEqual(self, a: dict, b: dict) -> None:
         """Assert that all keys in ``b`` are in ``a`` and have the same values."""
-
-        def _dict_partially_equal(dict1: dict, dict2: dict) -> bool:
-            """Determine whether all keys in dict2 are in dict1 and have same values."""
-            for key, val in dict2.items():
-                if isinstance(val, dict):
-                    if not _dict_partially_equal(dict1.get(key, {}), val):
-                        return False
-                elif key not in dict1 or val != dict1[key]:
-                    return False
-
-            return True
-
-        if not _dict_partially_equal(a, b):
-            raise AssertionError(f"Dicts are not partially equal: {a}, {b}")
+        assert_dict_partially_equal(a, b)
 
     def assertDictFlatPartiallyEqual(self, a: dict, b: dict) -> None:
         """Assert that (when flattened) all keys in ``b`` are in ``a`` and have the same values."""
-
-        def _flat_dict(in_dict: dict, out_dict: dict) -> None:
-            """Flat the dictionaries, and compare.
-
-            Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have
-            the same values.
-            """
-            for key_, val_ in in_dict.items():
-                if isinstance(val_, dict):
-                    _flat_dict(val_, out_dict)
-                else:
-                    out_dict[key_] = val_
-
-        flat_dict1: dict = {}
-        flat_dict2: dict = {}
-        _flat_dict(a, flat_dict1)
-        _flat_dict(b, flat_dict2)
-
-        for key, val in flat_dict2.items():
-            if key not in flat_dict1 or flat_dict1[key] != val:
-                raise AssertionError(f"Dicts are not partially equal when flattened: {a}, {b}")
+        assert_dict_flat_partially_equal(a, b)
 
     def assertDictKeysEqual(self, a: dict, b: dict, exclude_keys: list | None = None) -> None:
         """Assert recursively that ``a`` and ``b`` have the same keys, optionally excluding keys."""
+        assert_dict_keys_equal(a, b, exclude_keys)
 
-        def _dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
-            """Recursively determine whether the dictionaries have the same keys.
-
-            Args:
-                dict1: First dictionary.
-                dict2: Second dictionary.
-                exclude_keys: A list of keys in dictionary 1 to be excluded.
-
-            Returns:
-                Whether the two dictionaries have the same keys.
-            """
-            exclude_keys = exclude_keys or []
-            for key, val in dict1.items():
-                if key in exclude_keys:
-                    continue
-                if key not in dict2:
-                    return False
-                if isinstance(val, dict):
-                    if not _dict_keys_equal(val, dict2[key]):
-                        return False
-
-            return True
-
-        if not _dict_keys_equal(a, b, exclude_keys):
-            raise AssertionError(f"Dicts don't have the same keys: {a}, {b}")
-
-    @contextmanager
     def assertWarnsStrict(
         self,
         warning: type[Warning],
         msg: str,
         num_appearances: int,
         attributed_to_caller: bool = True,
-    ) -> Iterator[None]:
+    ) -> AbstractContextManager[None]:
         """Assert that a warning matching the category and message appears a set number of times.
 
         Args:
@@ -135,38 +80,7 @@ class IBMTestCase(TestCase):
                 ``with`` block; set to ``False`` when the call is wrapped in a helper defined in
                 another file.
         """
-        # The caller is the frame that opened the ``with`` block: this generator frame (0),
-        # contextlib's ``_GeneratorContextManager`` wrapper (1), then the caller (2).
-        caller = inspect.stack()[2]
-
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always", warning)
-            yield
-
-        matching_warnings = [
-            w for w in caught if issubclass(w.category, warning) and msg in str(w.message)
-        ]
-        all_warnings = [
-            f"{w.category.__name__}: {w.message}" for w in caught if issubclass(w.category, Warning)
-        ]
-        self.assertEqual(
-            len(matching_warnings),
-            num_appearances,
-            f"Expected {num_appearances} {warning.__name__} warnings containing "
-            f"{msg!r}, found {len(matching_warnings)}. All warnings: {all_warnings}",
-        )
-
-        if attributed_to_caller:
-            caller_file = os.path.abspath(caller.filename)
-            for w in matching_warnings:
-                self.assertEqual(
-                    os.path.abspath(w.filename),
-                    caller_file,
-                    f"Warning {msg!r} was blamed on {w.filename}:{w.lineno}, not the caller's "
-                    f"frame ({caller.filename}:{caller.lineno}). Its stacklevel must point at "
-                    f"the user's code -- past any qiskit_ibm_runtime or pydantic internals -- "
-                    f"so the warning is visible in scripts and Jupyter notebooks.",
-                )
+        return assert_warns_strict(warning, msg, num_appearances, attributed_to_caller)
 
 
 class IBMVisualizationTestCase(IBMTestCase):

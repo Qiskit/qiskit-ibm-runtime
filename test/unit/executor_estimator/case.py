@@ -16,15 +16,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import numpy as np
-from samplomatic.quantum_program import SamplexItem
-
 from test.ibm_test_case import IBMTestCase
+
+from .asserts import (
+    assert_samplex_arguments_are_correct,
+    assert_template_circuit_is_correct,
+    assert_trex_item_is_correct,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from samplomatic.quantum_program import SamplexItem
 
     from qiskit_ibm_runtime.quantum_program import QuantumProgram
     from test.unit.executor_estimator.utils import SamplexCircuitScenario, TemplateCircuitScenario
@@ -61,83 +65,7 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
             inject_noise: ``True`` for methods that inject noise (PEA, PEC);
                 ``False`` for methods that do not (vanilla, ZNE).
         """
-        keys = list(item.samplex_arguments)
-        basis_keys = [k for k in keys if k.startswith("basis_changes.")]
-        noise_keys = [k for k in keys if k.startswith("noise_scales.")]
-        plm_keys = [k for k in keys if k.startswith("pauli_lindblad_maps.")]
-
-        self.assertEqual(
-            "parameter_values" in keys,
-            scenario.has_parameter_values,
-            msg=f"[{scenario.label}] parameter_values presence mismatch; keys={keys}",
-        )
-        if scenario.has_parameter_values:
-            expected_pv = scenario.pub.parameter_values.as_array(scenario.pub.circuit.parameters)
-            actual_pv = np.squeeze(np.asarray(item.samplex_arguments["parameter_values"]))
-            self.assertTrue(
-                np.array_equal(actual_pv, np.squeeze(expected_pv)),
-                msg=(
-                    f"[{scenario.label}] parameter_values mismatch; "
-                    f"got {actual_pv!r}, expected {np.squeeze(expected_pv)!r}"
-                ),
-            )
-        self.assertEqual(
-            len(basis_keys),
-            scenario.num_basis_changes,
-            msg=(
-                f"[{scenario.label}] expected {scenario.num_basis_changes} "
-                f"basis_changes key(s), got {len(basis_keys)}; keys={keys}"
-            ),
-        )
-        zero_bc_keys = [k for k in basis_keys if np.all(np.asarray(item.samplex_arguments[k]) == 0)]
-        nonzero_bc_keys = [
-            k for k in basis_keys if not np.all(np.asarray(item.samplex_arguments[k]) == 0)
-        ]
-        self.assertEqual(
-            len(zero_bc_keys),
-            scenario.num_basis_changes - 1,
-            msg=(
-                f"[{scenario.label}] expected {scenario.num_basis_changes - 1} all-zero "
-                f"basis_changes key(s) (mid-circuit boxes), got {len(zero_bc_keys)}; "
-                f"keys={basis_keys}"
-            ),
-        )
-        self.assertEqual(
-            len(nonzero_bc_keys),
-            1,
-            msg=(
-                f"[{scenario.label}] expected exactly 1 non-zero basis_changes key "
-                f"(final measurement box), got {len(nonzero_bc_keys)}; keys={basis_keys}"
-            ),
-        )
-        if inject_noise:
-            self.assertEqual(
-                len(noise_keys),
-                scenario.num_noise_maps,
-                msg=(
-                    f"[{scenario.label}] expected {scenario.num_noise_maps} noise_scales "
-                    f"key(s), got {len(noise_keys)}; keys={keys}"
-                ),
-            )
-            self.assertEqual(
-                len(plm_keys),
-                scenario.num_noise_maps,
-                msg=(
-                    f"[{scenario.label}] expected {scenario.num_noise_maps} "
-                    f"pauli_lindblad_maps key(s), got {len(plm_keys)}; keys={keys}"
-                ),
-            )
-        else:
-            self.assertEqual(
-                noise_keys,
-                [],
-                msg=f"[{scenario.label}] noise_scales must be absent; keys={keys}",
-            )
-            self.assertEqual(
-                plm_keys,
-                [],
-                msg=f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}",
-            )
+        assert_samplex_arguments_are_correct(item, scenario, inject_noise)
 
     def assertTemplateCircuitIsCorrect(
         self,
@@ -171,32 +99,7 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
             noise_factor: The ZNE gate-folding noise factor (default ``1``, i.e. no
                 folding).  Only meaningful when ``enable_gates=True``.
         """
-        circuit = item.circuit
-        if enable_gates:
-            expected_num_params = (
-                scenario.num_circuit_parameters_gates_on
-                + scenario.num_parameters_per_noise_factor * (noise_factor - 1)
-            )
-        else:
-            expected_num_params = scenario.num_circuit_parameters_gates_off
-
-        self.assertEqual(
-            circuit.num_clbits,
-            scenario.expected_num_clbits,
-            msg=(
-                f"[{scenario.label}] template num_clbits mismatch; "
-                f"got {circuit.num_clbits}, expected {scenario.expected_num_clbits}"
-            ),
-        )
-        self.assertEqual(
-            circuit.num_parameters,
-            expected_num_params,
-            msg=(
-                f"[{scenario.label}] template num_parameters mismatch "
-                f"(enable_gates={enable_gates}, noise_factor={noise_factor}); "
-                f"got {circuit.num_parameters}, expected {expected_num_params}"
-            ),
-        )
+        assert_template_circuit_is_correct(item, scenario, enable_gates, noise_factor)
 
     def assertTrexItemIsCorrect(
         self,
@@ -224,48 +127,4 @@ class IBMEstimatorPrepareTestCase(IBMTestCase):
             expected_num_randomizations: The expected randomization count encoded in
                 ``trex_item.shape[0]``.
         """
-        trex_item = program.items[-1]
-        self.assertIsInstance(trex_item, SamplexItem, "Last item must be a SamplexItem (TREX)")
-
-        self.assertEqual(
-            trex_item.shape,
-            (expected_num_randomizations,),
-            f"Expected TREX item shape ({expected_num_randomizations},), got {trex_item.shape}",
-        )
-
-        n = max(pub.circuit.num_qubits for pub in pubs)
-        self.assertEqual(
-            trex_item.circuit.num_qubits,
-            n,
-            f"Expected TREX circuit width {n}, got {trex_item.circuit.num_qubits}",
-        )
-
-        op_counts = trex_item.circuit.count_ops()
-        self.assertEqual(
-            op_counts["measure"],
-            n,
-            f"Expected {n} measure operations (one per qubit), got {op_counts['measure']}",
-        )
-        self.assertEqual(
-            op_counts["rz"],
-            3 * n,
-            f"Expected {3 * n} rz operations (3 per qubit), got {op_counts['rz']}",
-        )
-        self.assertEqual(
-            op_counts["sx"],
-            2 * n,
-            f"Expected {2 * n} sx operations (2 per qubit), got {op_counts['sx']}",
-        )
-        self.assertEqual(
-            set(op_counts) - {"barrier"},
-            {"measure", "rz", "sx"},
-            f"Expected exactly gate types {{measure, rz, sx}} (plus barriers),"
-            f"got {dict(op_counts)}",
-        )
-
-        qm_entries = program.passthrough_data.get("qiskit_mitigation", [])  # type: ignore[union-attr]
-        has_trex_entry = any(e.get("mitigation") == "trex" for e in qm_entries)
-        self.assertTrue(
-            has_trex_entry,
-            "passthrough_data['qiskit_mitigation'] must contain a 'trex' entry",
-        )
+        assert_trex_item_is_correct(program, pubs, expected_num_randomizations)
