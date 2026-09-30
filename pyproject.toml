@@ -141,6 +141,10 @@ split-on-trailing-comma = false
     "TC",     # flake8-type-checking -- ruff moves Unset and Dict to TYPE_CHECKING block
 ]
 
+"test/**/asserts.py" = [
+    "S101",   # assert -- only allow them on files that contain pytest asserts
+]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
