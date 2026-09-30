@@ -1375,7 +1375,7 @@ class QiskitRuntimeService:
                 api=None,
             )
 
-        return RuntimeJobV2(
+        job = RuntimeJobV2(
             backend=backend,
             api_client=self._active_api_client,
             service=self,
@@ -1387,6 +1387,8 @@ class QiskitRuntimeService:
             tags=raw_data.get("tags"),
             private=raw_data.get("private", False),
         )
+        job._set_status(raw_data)
+        return job
 
     def least_busy(
         self,

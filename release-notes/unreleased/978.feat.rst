@@ -1,0 +1,4 @@
+Jobs returned by :meth:`.QiskitRuntimeService.job` and
+:meth:`.QiskitRuntimeService.jobs` now retain their current status. Calling
+``status()`` on a job already in a final state no longer makes a redundant API
+request. Pending jobs continue to refresh their status normally.
