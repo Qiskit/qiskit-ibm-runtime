@@ -27,6 +27,8 @@ from responses.registries import FirstMatchRegistry
 from qiskit_ibm_runtime.fake_provider import FakeLimaV2
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from requests import PreparedRequest
 
     from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
@@ -116,6 +118,9 @@ class Backend:
     calibrations: dict[str, dict] = field(default_factory=dict)
     """Configuration overrides keyed by calibration id."""
 
+    is_mock: bool = False
+    """Whether the backend is a mock device."""
+
     def __post_init__(self) -> None:
         if not self.configuration:
             self.configuration = DEFAULT_BACKED_CONFIGURATION.copy()
@@ -132,6 +137,8 @@ class Backend:
         name: str | None = None,
         status: Literal["online", "paused", "offline"] = "online",
         queue_length: int = 0,
+        calibrations: dict[str, dict] | None = None,
+        is_mock: bool = False,
     ) -> Backend:
         """Create a ``Backend`` with the configuration and properties of ``fake_backend``."""
         reference = fake_backend()
@@ -147,6 +154,8 @@ class Backend:
             properties=properties,
             status=status,
             queue_length=queue_length,
+            calibrations=calibrations or {},
+            is_mock=is_mock,
         )
 
 
@@ -476,6 +485,17 @@ class BaseRegistry(FirstMatchRegistry):
         if instance.name not in self.instances:
             return (404, {"Content-Type": "application/json"}, "{}")
 
+        # Get filtering parameters.
+        query_params = parse_qs(urlparse(request.url).query)
+        include_mocks = query_params.get("include_mocks", [False][0])
+
+        if not include_mocks:
+            backends: Iterable[Backend] = (
+                backend for backend in self.backends[instance.name].values() if not backend.is_mock
+            )
+        else:
+            backends = self.backends[instance.name].values()
+
         response_body = {
             "devices": [
                 {
@@ -483,7 +503,8 @@ class BaseRegistry(FirstMatchRegistry):
                     "status": {"name": backend.status},
                     "queue_length": backend.queue_length,
                 }
-                for backend in self.backends[instance.name].values()
+                | ({"class": "mock"} if backend.is_mock else {})
+                for backend in backends
             ]
         }
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
@@ -595,6 +616,20 @@ class BaseRegistry(FirstMatchRegistry):
         offset_param = query_params.get("offset", [None])[0]
         offset = int(offset_param) if offset_param else 0
         pending = query_params.get("pending", [None])[0]
+        include_mocks = query_params.get("include_mocks", [False][0])
+
+        # Exclude jobs from mock backends.
+        mock_backends = [
+            backend.name for backend in self.backends[instance.name].values() if backend.is_mock
+        ]
+        if not include_mocks:
+            jobs: Iterable[Job] = (
+                job
+                for job in self.jobs[instance.name].values()
+                if job.backend_name not in mock_backends
+            )
+        else:
+            jobs = self.jobs[instance.name].values()
 
         statuses = get_args(JobStatus)
         if pending is not None:
@@ -604,7 +639,7 @@ class BaseRegistry(FirstMatchRegistry):
                 statuses = ("completed", "cancelled", "failed")
 
         # Get the candidate jobs, applying the filters.
-        jobs = [
+        filtered_jobs = [
             {
                 "id": job.id,
                 "backend": job.backend_name,
@@ -613,16 +648,16 @@ class BaseRegistry(FirstMatchRegistry):
                 "program": {"id": job.program},
                 "usage": job.usage,
             }
-            for job in self.jobs[instance.name].values()
+            for job in jobs
             if job.status in statuses
         ]
-        count = len(jobs)
+        count = len(filtered_jobs)
 
         # Trim according to offset and limit.
-        jobs = jobs[offset : limit + offset]
+        filtered_jobs = filtered_jobs[offset : limit + offset]
 
         response_body = {
-            "jobs": jobs,
+            "jobs": filtered_jobs,
             "count": count,
             "limit": limit,
             "offset": offset,
@@ -836,6 +871,31 @@ class BaseRegistry(FirstMatchRegistry):
         References:
             https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/workloads
         """
+        # Get filtering parameters.
+        query_params = parse_qs(urlparse(request.url).query)
+        include_mocks = query_params.get("include_mocks", [False][0])
+
+        # Exclude jobs from mock backends.
+        mock_backends = [
+            backend.name
+            for instance in self.instances.values()
+            for backend in self.backends[instance.name].values()
+            if backend.is_mock
+        ]
+        if not include_mocks:
+            jobs = (
+                (job, instance)
+                for instance in self.instances.values()
+                for job in self.jobs[instance.name].values()
+                if job.backend_name not in mock_backends
+            )
+        else:
+            jobs = (
+                (job, instance)
+                for instance in self.instances.values()
+                for job in self.jobs[instance.name].values()
+            )
+
         workloads = [
             {
                 "id": job.id,
@@ -847,8 +907,7 @@ class BaseRegistry(FirstMatchRegistry):
                 "mode": "job",
                 "instance": instance.crn,
             }
-            for instance in self.instances.values()
-            for job in self.jobs[instance.name].values()
+            for job, instance in jobs
         ]
 
         response_body = {
