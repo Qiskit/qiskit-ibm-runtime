@@ -146,6 +146,7 @@ class Runtime(RestAdapterBase):
         created_after: datetime | None = None,
         created_before: datetime | None = None,
         descending: bool = True,
+        include_mocks: bool = False,
     ) -> dict:
         """Get a list of job data.
 
@@ -166,6 +167,7 @@ class Runtime(RestAdapterBase):
                 local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
+            include_mocks: If ``True``, include jobs from mock backends in the results.
 
         Returns:
             JSON response.
@@ -193,6 +195,8 @@ class Runtime(RestAdapterBase):
             payload["created_before"] = local_to_utc(created_before).isoformat()
         if descending is False:
             payload["sort"] = "ASC"
+        if include_mocks:
+            payload["include_mocks"] = True
         return self.session.get(url, params=payload, headers=self._HEADER_JSON_ACCEPT).json()
 
     def backend(self, backend_name: str) -> CloudBackend:
@@ -209,17 +213,22 @@ class Runtime(RestAdapterBase):
     def backends(
         self,
         timeout: float | None = None,
+        include_mocks: bool = False,
     ) -> dict[str, Any]:
         """Return a list of IBM backends.
 
         Args:
             timeout: Number of seconds to wait for the request.
+            include_mocks: If ``True``, include mock backends in the results.
 
         Returns:
             JSON response.
         """
         url = self.get_url("backends")
-        return self.session.get(url, timeout=timeout, headers=self._HEADER_JSON_ACCEPT).json()
+        payload = {"include_mocks": True} if include_mocks else {}
+        return self.session.get(
+            url, params=payload, timeout=timeout, headers=self._HEADER_JSON_ACCEPT
+        ).json()
 
     def cloud_usage(self) -> dict[str, Any]:
         """Return cloud instance usage information.
@@ -244,6 +253,7 @@ class Runtime(RestAdapterBase):
         created_after: datetime | None = None,
         created_before: datetime | None = None,
         tags: list[str] | None = None,
+        include_mocks: bool = False,
     ) -> dict:
         """Get a list of user instance workloads.
 
@@ -260,6 +270,7 @@ class Runtime(RestAdapterBase):
             created_after: Initial date of workloads to be included.
             created_before: Last date of workloads to be included.
             tags: List of tags for the worload.
+            include_mocks: If ``True``, include jobs from mock backends in the results.
 
         Returns:
             JSON response.
@@ -280,6 +291,7 @@ class Runtime(RestAdapterBase):
             ),
             "created_after": (local_to_utc(created_after).isoformat() if created_after else None),
             "tags": tags,
+            "include_mocks": include_mocks or None,
         }
         payload = {k: v for k, v in payload.items() if v is not None}
 
