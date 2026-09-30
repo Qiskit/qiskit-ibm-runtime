@@ -265,7 +265,6 @@ class QiskitRuntimeService:
         # Contains the output of the /backends endpoint, keyed by instance crn.
         self._backends_info_per_instance: dict[str, list[dict[str, Any]]] = {}
         self._backend_instance_groups: list[dict[str, Any]] = []
-        self._mocks_retrieved = False
         self._region = region or self._account.region
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
@@ -280,10 +279,10 @@ class QiskitRuntimeService:
             self._default_instance = True
             self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
             self._active_api_client = self._api_clients[self._account.instance]
-            self._resolve_cloud_instances(self._account.instance)
+            self._resolve_cloud_instances(self._account.instance, include_mocks=True)
         else:
             self._api_clients = {}
-            instance_backends = self._resolve_cloud_instances(instance)
+            instance_backends = self._resolve_cloud_instances(instance, include_mocks=True)
             instance_names = [instance.get("name") for instance in self._backend_instance_groups]
             instance_plan_names = {
                 instance.get("plan") for instance in self._backend_instance_groups
@@ -742,7 +741,7 @@ class QiskitRuntimeService:
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
 
-        if not self._backend_instance_groups or not self._mocks_retrieved and include_mocks:
+        if not self._backend_instance_groups:
             self._backend_instance_groups = [
                 {
                     "name": inst["name"],
@@ -755,8 +754,6 @@ class QiskitRuntimeService:
                 for inst in self._all_instances
             ]
             self._filter_instances_by_saved_preferences()
-            if include_mocks:
-                self._mocks_retrieved = True
 
         return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
