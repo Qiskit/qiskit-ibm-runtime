@@ -1384,14 +1384,28 @@ class QiskitRuntimeService:
             Decoded job data.
         """
         instance = self._active_api_client._instance
+
         # Try to find the right backend
         try:
-            if "backend" in raw_data:
+            if backend_name := raw_data.get("backend"):
+                # Use cached information to attempt to determine if it is a mock device.
+                try:
+                    instance_info = next(
+                        info for info in self._backend_instance_groups if info["crn"] == instance
+                    )
+                    is_mock = next(
+                        is_mock
+                        for name, is_mock in instance_info["backends"]
+                        if name == backend_name
+                    )
+                except StopIteration:
+                    is_mock = False
+
                 backend = self._create_backend_obj(
-                    raw_data["backend"],
+                    backend_name,
                     instance=instance,
                     use_fractional_gates=False,
-                    is_mock=raw_data.get("class", None) == "mock",
+                    is_mock=is_mock,
                 )
             else:
                 backend = None

@@ -216,7 +216,9 @@ class TestRetrieveJobs(IBMTestCase):
         job_1 = service.job("1")
         job_2 = service.job("2")
         self.assertEqual(job_1.backend().backend_name, "ibm_foo")
+        self.assertFalse(job_1.backend().is_mock)
         self.assertEqual(job_2.backend().backend_name, "mock_foo")
+        self.assertTrue(job_2.backend().is_mock)
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_jobs_from_retired_backend(self, registry: OneInstanceNoBackendsRegistry) -> None:
