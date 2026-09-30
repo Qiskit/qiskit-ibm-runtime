@@ -1,0 +1,3 @@
+The :class:`.RuntimeJobV2` class now exposes the ``calibration_id`` used to
+run a job. The value is available for jobs returned by
+:meth:`.QiskitRuntimeService.job` and :meth:`.QiskitRuntimeService.jobs`.
