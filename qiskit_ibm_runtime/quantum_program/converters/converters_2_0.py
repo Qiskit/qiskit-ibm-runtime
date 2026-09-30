@@ -125,7 +125,7 @@ def quantum_program_from_2_0(model: ParamsModel) -> tuple[QuantumProgram, Execut
 def quantum_program_to_2_0(
     program: SamplomaticQuantumProgram, options: ExecutorOptions
 ) -> ParamsModel:
-    """Convert a :class:`~.QuantumProgram` to a V2.0 model."""
+    """Convert a :class:`~samplomatic.quantum_program.QuantumProgram` to a V2.0 model."""
     model_items = []
     circuits = []
     for item in program.items:
