@@ -1,0 +1,2 @@
+:class:`~qiskit_ibm_runtime.noise_learner.NoiseLearner` is deprecated.
+Please use :class:`~qiskit_ibm_runtime.NoiseLearnerV3` instead.
