@@ -279,10 +279,11 @@ class QiskitRuntimeService:
             self._default_instance = True
             self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
             self._active_api_client = self._api_clients[self._account.instance]
-            self._resolve_cloud_instances(self._account.instance, include_mocks=True)
+            # Force populating state, providing parity compared to not specifying `instance`.
+            self._resolve_cloud_instances(self._account.instance)
         else:
             self._api_clients = {}
-            instance_backends = self._resolve_cloud_instances(instance, include_mocks=True)
+            instance_backends = self._resolve_cloud_instances(instance)
             instance_names = [instance.get("name") for instance in self._backend_instance_groups]
             instance_plan_names = {
                 instance.get("plan") for instance in self._backend_instance_groups
@@ -320,9 +321,7 @@ class QiskitRuntimeService:
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
-    def _discover_backends_from_instance(
-        self, instance: str, include_mocks: bool = False
-    ) -> list[tuple[str, bool]]:
+    def _discover_backends_from_instance(self, instance: str) -> list[tuple[str, bool]]:
         """Retrieve all backends from the given instance.
 
         Returns:
@@ -339,9 +338,7 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            self._backends_info_per_instance[instance] = self._active_api_client.list_backends(
-                include_mocks
-            )
+            self._backends_info_per_instance[instance] = self._active_api_client.list_backends(True)
             return [
                 (backend["name"], backend.get("class") == "mock")
                 for backend in self._backends_info_per_instance[instance]
@@ -629,7 +626,7 @@ class QiskitRuntimeService:
         backends: list[IBMBackend] = []
 
         unique_backends = set()
-        instance_backends = self._resolve_cloud_instances(instance, include_mocks)
+        instance_backends = self._resolve_cloud_instances(instance)
         for inst, backends_available in instance_backends:
             if name:
                 match = [b for b in backends_available if b[0] == name]
@@ -693,7 +690,7 @@ class QiskitRuntimeService:
         return filter_backends(backends, filters=filters, **kwargs)
 
     def _resolve_cloud_instances(
-        self, instance: str | None, include_mocks: bool = False
+        self, instance: str | None
     ) -> list[tuple[str, list[tuple[str, bool]]]]:
         """Resolve the cloud instances to use and the backends available in each.
 
@@ -704,8 +701,6 @@ class QiskitRuntimeService:
         Args:
             instance: An instance name or CRN to resolve. If ``None``, the default instance or all
                 account instances are used instead.
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
 
         Returns:
             A list of ``(crn, [(backend_name, is_mock)])`` tuples, one per resolved instance.
@@ -722,22 +717,20 @@ class QiskitRuntimeService:
             # return all matching crns (stored in self._saved_instances)
             if self._saved_instances:
                 return [
-                    (inst, self._discover_backends_from_instance(inst, include_mocks))
+                    (inst, self._discover_backends_from_instance(inst))
                     for inst in self._saved_instances
                 ]
-            return [(instance, self._discover_backends_from_instance(instance, include_mocks))]
+            return [(instance, self._discover_backends_from_instance(instance))]
         if self._default_instance:
             # if an instance name is passed in and there are multiple crns,
             # return all matching crns (stored in self._saved_instances)
             default_crn = self._account.instance
             if self._saved_instances:
                 return [
-                    (inst, self._discover_backends_from_instance(inst, include_mocks))
+                    (inst, self._discover_backends_from_instance(inst))
                     for inst in self._saved_instances
                 ]
-            return [
-                (default_crn, self._discover_backends_from_instance(default_crn, include_mocks))
-            ]
+            return [(default_crn, self._discover_backends_from_instance(default_crn))]
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
 
@@ -747,7 +740,7 @@ class QiskitRuntimeService:
                     "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst["plan"],
-                    "backends": self._discover_backends_from_instance(inst["crn"], include_mocks),
+                    "backends": self._discover_backends_from_instance(inst["crn"]),
                     "tags": inst["tags"],
                     "pricing_type": inst["pricing_type"],
                 }
