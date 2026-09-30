@@ -38,32 +38,27 @@ def assert_dict_partially_equal(a: dict, b: dict) -> None:
 
         return True
 
-    if not _dict_partially_equal(a, b):
-        raise AssertionError(f"Dicts are not partially equal: {a}, {b}")
+    assert _dict_partially_equal(a, b), f"Dicts are not partially equal: {a}, {b}"
 
 
 def assert_dict_flat_partially_equal(a: dict, b: dict) -> None:
     """Assert that (when flattened) all keys in ``b`` are in ``a`` and have the same values."""
 
-    def _flat_dict(in_dict: dict, out_dict: dict) -> None:
-        """Flat the dictionaries, and compare.
-
-        Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have the
-        same values.
-        """
+    def _flat_dict(in_dict: dict) -> dict:
+        """Recursively flatten ``in_dict``, merging every nested dict into a single level."""
+        out_dict: dict = {}
         for key_, val_ in in_dict.items():
             if isinstance(val_, dict):
-                _flat_dict(val_, out_dict)
+                out_dict.update(_flat_dict(val_))
             else:
                 out_dict[key_] = val_
+        return out_dict
 
-    flat_dict1: dict = {}
-    flat_dict2: dict = {}
-    _flat_dict(a, flat_dict1)
-    _flat_dict(b, flat_dict2)
+    flat_a = _flat_dict(a)
+    flat_b = _flat_dict(b)
 
-    for key, val in flat_dict2.items():
-        if key not in flat_dict1 or flat_dict1[key] != val:
+    for key, val in flat_b.items():
+        if key not in flat_a or flat_a[key] != val:
             raise AssertionError(f"Dicts are not partially equal when flattened: {a}, {b}")
 
 
@@ -93,8 +88,7 @@ def assert_dict_keys_equal(a: dict, b: dict, exclude_keys: list | None = None) -
 
         return True
 
-    if not _dict_keys_equal(a, b, exclude_keys):
-        raise AssertionError(f"Dicts don't have the same keys: {a}, {b}")
+    assert _dict_keys_equal(a, b, exclude_keys), f"Dicts don't have the same keys: {a}, {b}"
 
 
 @contextmanager
