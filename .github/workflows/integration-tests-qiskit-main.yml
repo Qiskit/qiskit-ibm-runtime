@@ -40,6 +40,7 @@ jobs:
         -v -s --durations=10
         -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
         -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
+        -W 'ignore:The NoiseLearner class is deprecated:DeprecationWarning'
     steps:
       - uses: actions/checkout@v6
         with:
