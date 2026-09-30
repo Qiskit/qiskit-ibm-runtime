@@ -56,7 +56,6 @@ class TestAccountClient(IBMTestCase):
 
         responses.add(responses.POST, url="https://iam.cloud.ibm.com/identity/token", json=None)
 
-        # self.fake_server.set_error_response(response)
         client = self._get_client()
         with self.assertRaises(RequestsApiError) as err_cm:
             with self.assertWarnsRegex(UserWarning, "Provided API key could not be found."):
