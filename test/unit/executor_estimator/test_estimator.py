@@ -223,11 +223,14 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator.run([(circuit, observable)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+            estimator.run([(circuit, observable)], precision=0.03125)
+
+        run_spy.assert_called_once()
+        # Uses the `options` attribute on the `Executor` instance` (arg 0 is `self`).
+        executor_options = run_spy.call_args[0][0].options
 
         # Verify Executor was constructed with the correctly mapped executor options.
-        self.mock_executor_class.assert_called_once()
-        executor_options = self.mock_executor_class.call_args[1]["options"]
         self.assertTrue(executor_options.execution.init_qubits)
         self.assertEqual(executor_options.execution.rep_delay, 0.001)
         self.assertEqual(executor_options.max_execution_time, 300)
