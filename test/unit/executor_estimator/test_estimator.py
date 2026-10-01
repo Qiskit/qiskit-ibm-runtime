@@ -55,7 +55,7 @@ class TestEstimatorRun(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             job = estimator.run([(circuit, observable)], precision=0.03125)
 
         # Verify executor.run was called.
@@ -85,7 +85,7 @@ class TestEstimatorRun(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             job = estimator.run([(circuit, observable, None, 0.01)])
 
         run_spy.assert_called_once()
@@ -106,7 +106,7 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             estimator.run([(circuit, observable)])
 
         # Verify executor.run was called.
@@ -130,7 +130,7 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             estimator.run([(circuit, observable)], precision=0.015625)
 
         # Verify precision parameter was used instead of options.
@@ -152,7 +152,7 @@ class TestEstimatorRun(IBMTestCase):
         observable = SparsePauliOp.from_list([("ZZ", 1)])
         parameter_values = np.array([[0], [np.pi / 2], [np.pi]])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             job = estimator.run([(circuit, observable, parameter_values)], precision=0.03125)
 
         run_spy.assert_called_once()
@@ -176,7 +176,7 @@ class TestEstimatorRun(IBMTestCase):
 
         pubs = [(circuit1, observable1), (circuit2, observable2)]
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             estimator.run(pubs, precision=0.03125)
 
         run_spy.assert_called_once()
@@ -197,7 +197,7 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             estimator.run([(circuit, observable)])
 
         # Verify executor.run was called.
@@ -223,7 +223,7 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             estimator.run([(circuit, observable)], precision=0.03125)
 
         run_spy.assert_called_once()
@@ -250,7 +250,7 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             estimator.run([(circuit, observable)], precision=0.03125)
 
         # Verify executor.run was called.
@@ -286,7 +286,7 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             estimator.run([(circuit, observable)], precision=0.03125)
 
         run_spy.assert_called_once()
@@ -315,7 +315,7 @@ class TestEstimatorRun(IBMTestCase):
             SparsePauliOp.from_list([("YY", 1)]),
         ]
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             job = estimator.run([(circuit, observables)], precision=0.03125)
 
         run_spy.assert_called_once()
@@ -333,7 +333,7 @@ class TestEstimatorRun(IBMTestCase):
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with patch.object(Executor, "run", autospec=True, wraps=Executor.run) as run_spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             job = estimator.run([(circuit, observable)], precision=0.03125)
 
         run_spy.assert_called_once()
@@ -388,12 +388,12 @@ class TestEstimatorRun(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
 
-        with patch.object(Executor, "run", wraps=Executor.run) as spy:
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
             with self.assertRaisesRegex(IBMInputValueError, "No pubs provided"):
                 estimator.run([])
 
         # Executor should never be reached.
-        spy.assert_not_called()
+        run_spy.assert_not_called()
 
     @mock_responses
     def test_run_raises_error_when_pec_and_zne_both_enabled(self, registry):
