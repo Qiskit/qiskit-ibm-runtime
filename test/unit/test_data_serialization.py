@@ -173,7 +173,6 @@ def assert_noise_learner_results_equal(result1, result2):
     assert result1.metadata == result2.metadata
 
 
-
 @ddt
 class TestDataSerialization(IBMTestCase):
     """Class for testing runtime data serialization."""
