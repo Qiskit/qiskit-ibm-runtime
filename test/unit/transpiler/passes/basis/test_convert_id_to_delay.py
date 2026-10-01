@@ -21,21 +21,20 @@ from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import Conve
 from .....ibm_test_case import IBMTestCase
 
 
+def durations():
+    """Return the durations of a 160dt `sx` gate and a 200dt `x` gate."""
+    return InstructionDurations([("sx", None, 160), ("x", None, 200)])
+
+
 class TestConvertIdToDelay(IBMTestCase):
     """Tests the ConvertIdToDelay pass."""
-
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        self.durations = InstructionDurations([("sx", None, 160), ("x", None, 200)])
 
     def test_id_gate(self):
         """Test if Id gate is converted a delay."""
         qc = QuantumCircuit(1, 0)
         qc.id(0)
 
-        pm = PassManager([ConvertIdToDelay(self.durations)])
+        pm = PassManager([ConvertIdToDelay(durations())])
         transformed = pm.run(qc)
 
         expected = QuantumCircuit(1, 0)
@@ -48,7 +47,7 @@ class TestConvertIdToDelay(IBMTestCase):
         qc = QuantumCircuit(1, 0)
         qc.id(0)
 
-        pm = PassManager([ConvertIdToDelay(self.durations, "x")])
+        pm = PassManager([ConvertIdToDelay(durations(), "x")])
         transformed = pm.run(qc)
 
         expected = QuantumCircuit(1, 0)
@@ -63,7 +62,7 @@ class TestConvertIdToDelay(IBMTestCase):
         with qc.if_test((0, 1)):
             qc.id(0)
 
-        pm = PassManager([ConvertIdToDelay(self.durations)])
+        pm = PassManager([ConvertIdToDelay(durations())])
         transformed = pm.run(qc)
 
         expected = QuantumCircuit(1, 1)
@@ -80,7 +79,7 @@ class TestConvertIdToDelay(IBMTestCase):
         with else_:
             qc.id(0)
 
-        pm = PassManager([ConvertIdToDelay(self.durations)])
+        pm = PassManager([ConvertIdToDelay(durations())])
         transformed = pm.run(qc)
 
         expected = QuantumCircuit(1, 1)

@@ -32,8 +32,8 @@ from qiskit_ibm_runtime.fake_provider import (
     FakePerth,
     FakeRochesterV2,
     FakeTorino,
+    FakeVigoV2,
 )
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.visualization.embeddings import Embedding
 
 from ...ibm_test_case import IBMTestCase
@@ -73,39 +73,30 @@ def ascii_to_coords(image: str, col_major: bool = False) -> list[tuple[int, int]
 class TestEmbedding(IBMTestCase):
     """Class for testing the Embedding class."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        service = QiskitRuntimeLocalService()
-        self.aer = AerSimulator()
-        self.kyiv = service.backend("fake_kyiv")
-        self.vigo = service.backend("fake_vigo")
-        self.armonk = service.backend("fake_armonk")
-
     def test_from_backend(self):
         """Test the constructor from backend."""
-        e = Embedding.from_backend(self.vigo)
+        vigo = FakeVigoV2()
+        e = Embedding.from_backend(vigo)
 
         coo = [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
         self.assertEqual(e.coordinates, coo)
-        self.assertEqual(e.coupling_map, self.vigo.coupling_map)
+        self.assertEqual(e.coupling_map, vigo.coupling_map)
 
     def test_init_error(self):
-        """Test the errors raised by the constructor."""
-        e_vigo = Embedding.from_backend(self.vigo)
-        e_kyiv = Embedding.from_backend(self.kyiv)
+        """Test the errors raised `by the constructor."""
+        e_vigo = Embedding.from_backend(FakeVigoV2())
+        e_kyiv = Embedding.from_backend(FakeKyiv())
 
         with self.assertRaisesRegex(
             ValueError, "Coupling map for backend 'aer_simulator' is unknown."
         ):
-            Embedding.from_backend(self.aer)
+            Embedding.from_backend(AerSimulator())
 
         with self.assertRaisesRegex(ValueError, "Invalid coupling map."):
             Embedding(e_vigo.coordinates, e_kyiv.coupling_map)
 
         with self.assertRaisesRegex(ValueError, "Failed to fetch coordinates for backend"):
-            Embedding.from_backend(self.armonk)
+            Embedding.from_backend(FakeArmonkV2())
 
 
 class TestCoordinates(IBMTestCase):
