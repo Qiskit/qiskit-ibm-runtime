@@ -26,25 +26,39 @@ from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 from qiskit.primitives.containers import PrimitiveResult
 
 from .api.exceptions import RequestsApiError
-from .base_runtime_job import BaseRuntimeJob
+from .decoders.defaults import DEFAULT_DECODERS
+from .decoders.result_decoder import ResultDecoder
 from .exceptions import (
+    IBMApiError,
+    IBMError,
     IBMRuntimeError,
     RuntimeInvalidStateError,
     RuntimeJobFailureError,
     RuntimeJobMaxTimeoutError,
     RuntimeJobTimeoutError,
 )
+from .utils import utc_to_local, validate_job_tags
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from qiskit.providers.backend import Backend
+    from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 
     from .api.client import RuntimeClient
-    from .decoders.result_decoder import ResultDecoder
+    from .models import BackendProperties
     from .qiskit_runtime_service import QiskitRuntimeService
 
 logger = logging.getLogger(__name__)
 
 JobStatus = Literal["INITIALIZING", "QUEUED", "RUNNING", "CANCELLED", "DONE", "ERROR"]
+
+API_TO_JOB_ERROR_MESSAGE = {
+    "FAILED": "Job {} has failed:\n{}",
+    "CANCELLED - RAN TOO LONG": "Job {} ran longer than maximum execution time. "
+    "Job was cancelled:\n{}",
+}
+
 API_TO_JOB_STATUS: dict[str, JobStatus] = {
     "QUEUED": "QUEUED",
     "RUNNING": "RUNNING",
@@ -54,7 +68,7 @@ API_TO_JOB_STATUS: dict[str, JobStatus] = {
 }
 
 
-class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
+class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
     """Representation of a IBM Quantum Compute (formerly Qiskit Runtime) V2 primitive execution.
 
     Args:
@@ -76,7 +90,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     """
 
     JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
-    ERROR = "ERROR"
+    ERROR: str | RuntimeJobStatus = "ERROR"
 
     def __init__(
         self,
@@ -94,22 +108,200 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         private: bool | None = False,
     ) -> None:
         BasePrimitiveJob.__init__(self, job_id=job_id)
-        BaseRuntimeJob.__init__(
-            self,
-            backend=backend,
-            api_client=api_client,
-            job_id=job_id,
-            program_id=program_id,
-            service=service,
-            creation_date=creation_date,
-            result_decoder=result_decoder,
-            image=image,
-            session_id=session_id,
-            tags=tags,
-            version=version,
-            private=private,
-        )
+        self._backend = backend
+        self._job_id = job_id
+        self._api_client = api_client
+        self._creation_date = creation_date
+        self._program_id = program_id
+        self._reason: str | None = None
+        self._reason_code: int | None = None
+        self._error_message: str | None = None
+        self._image = image
+        self._service = service
+        self._session_id = session_id
+        self._tags = tags
+        self._usage_estimation: dict[str, Any] = {}
+        self._version = version
+        self._queue_info = None
+        self._private = private
         self._status: JobStatus = "INITIALIZING"
+
+        # Store the list of decoders for this job.
+        decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
+        if not isinstance(decoder, Sequence):
+            self._result_decoders: Sequence[type[ResultDecoder]] = [decoder]
+        else:
+            self._result_decoders = decoder
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}('{self._job_id}', '{self._program_id}')>"
+
+
+    def usage(self, partial: bool = False) -> float:
+        """Return job usage in seconds.
+
+        By default, the job usage returned is ``0`` until the usage calculation is
+        completed. Accumulated intermediate usage can be returned by the method by using the
+        ``partial`` flag.
+
+        .. note::
+            When using ``partial``, note that is not guaranteed that the final usage is returned as
+            soon as the job is completed. It is recommended to invoke the method with
+            ``partial=False`` for guarantees that the usage returned is final, or to use the
+            :meth:`.metrics` method for details on the completion status.
+
+        Args:
+            partial: if ``True``, return the accumulated intermediate usage thus far until final
+                usage is reached.
+        """
+        try:
+            metrics = self._api_client.job_metadata(self.job_id())
+            usage = metrics.get("usage", {})
+            if partial:
+                return usage.get("qpu_charge_time_seconds")
+            if usage.get("status", "pending") == "pending":
+                return 0
+            return usage.get("qpu_charge_time_seconds")
+        except RequestsApiError as err:
+            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
+
+    def metrics(self) -> dict[str, Any]:
+        """Return job metrics.
+
+        Returns:
+            A dictionary with job metrics including but not limited to the following:
+
+            * ``timestamps``: Timestamps of when the job was created, started running, and finished.
+            * ``usage``: Details regarding job usage, the measurement of the amount of
+                time the QPU is locked for your workload.
+
+        Raises:
+            IBMRuntimeError: If a network error occurred.
+        """
+        try:
+            return self._api_client.job_metadata(self.job_id())
+        except RequestsApiError as err:
+            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
+
+    def update_tags(self, new_tags: list[str]) -> list[str]:
+        """Update the tags associated with this job.
+
+        Args:
+            new_tags: New tags to assign to the job.
+
+        Returns:
+            The new tags associated with this job.
+
+        Raises:
+            IBMApiError: If an unexpected error occurred when communicating
+                with the server or updating the job tags.
+        """
+        tags_to_update = set(new_tags)
+        validate_job_tags(new_tags)
+
+        response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
+
+        if response.status_code == 204:
+            api_response = self._api_client.job_get(self.job_id())
+            self._tags = api_response.pop("tags", [])
+            return self._tags
+        else:
+            raise IBMApiError(
+                "An unexpected error occurred when updating the "
+                f"tags for job {self.job_id()}. The tags were not updated for "
+                "the job."
+            )
+
+    def properties(self, refresh: bool = False) -> BackendProperties | None:
+        """Return the backend properties for this job.
+
+        Args:
+            refresh: If ``True``, re-query the server for the backend properties.
+                Otherwise, return a cached version.
+
+        Returns:
+            The backend properties used for this job, at the time the job started running,
+            or ``None`` if properties are not available.
+        """
+        job_date = self.creation_date
+        job_running_date = self.metrics().get("timestamps", {}).get("running")
+        if job_running_date:
+            job_date = utc_to_local(job_running_date)
+        return self._backend.properties(refresh, job_date)
+
+    def error_message(self) -> str | None:
+        """Returns the reason if the job failed.
+
+        Returns:
+            Error message string or ``None``.
+        """
+        self._set_status_and_error_message()
+        return self._error_message
+
+    def _set_status_and_error_message(self) -> None:
+        """Fetch and set status and error message."""
+        if self._status not in self.JOB_FINAL_STATES:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._set_status(response)
+            self._set_error_message(response)
+
+    def _set_status(self, job_response: dict) -> None:
+        """Set status.
+
+        Args:
+            job_response: Job response from IBM Quantum Compute API.
+
+        Raises:
+            IBMError: If an unknown status is returned from the server.
+        """
+        try:
+            reason = job_response["state"].get("reason")
+            reason_code = job_response["state"].get("reasonCode") or job_response["state"].get(
+                "reason_code"
+            )
+            if reason:
+                self._reason = reason
+                if reason_code:
+                    self._reason = f"Error code {reason_code}; {self._reason}"
+                    self._reason_code = reason_code
+            self._status = self._status_from_job_response(job_response)
+        except KeyError:
+            raise IBMError(f"Unknown status: {job_response['state']['status']}")
+
+    def _set_error_message(self, job_response: dict) -> None:
+        """Set error message if the job failed.
+
+        Args:
+            job_response: Job response from IBM Quantum Compute API.
+        """
+        if self._status == self.ERROR:
+            self._error_message = self._error_msg_from_job_response(job_response)
+        else:
+            self._error_message = None
+
+    def _error_msg_from_job_response(self, response: dict) -> str:
+        """Returns the error message from an API response.
+
+        Args:
+            response: Job response from the IBM Quantum Compute API.
+
+        Returns:
+            Error message.
+        """
+        status = response["state"]["status"].upper()
+
+        job_result_raw = self._api_client.job_results(job_id=self.job_id())
+
+        index = job_result_raw.rfind("Traceback")
+        if index != -1:
+            job_result_raw = job_result_raw[index:]
+
+        if status == "CANCELLED" and self._reason_code == 1305:
+            error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
+            return error_msg.format(self.job_id(), job_result_raw)
+        else:
+            error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
+            return error_msg.format(self.job_id(), self._reason or job_result_raw)
 
     def result(
         self,
@@ -310,3 +502,100 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             except RequestsApiError as err:
                 raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
         return self._backend
+
+    @property
+    def private(self) -> bool:
+        """Returns a boolean indicating whether or not the job is private."""
+        return self._private
+
+    def job_id(self) -> str:
+        """Return a unique id identifying the job."""
+        return self._job_id
+
+    @property
+    def image(self) -> str:
+        """Return the IBM Quantum Compute image used for the job.
+
+        Returns:
+            The IBM Quantum Compute image ``image_name:tag`` or ``""`` if the default image is used.
+        """
+        return self._image
+
+    @property
+    def inputs(self) -> dict:
+        """Job input parameters.
+
+        Returns:
+            Input parameters used in this job.
+        """
+        response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
+        return response.get("params", {})
+
+    @property
+    def primitive_id(self) -> str:
+        """Primitive name.
+
+        Returns:
+            Primitive this job is for.
+        """
+        return self._program_id
+
+    @property
+    def creation_date(self) -> datetime | None:
+        """Job creation date in local time.
+
+        Returns:
+            The job creation date as a datetime object, in local time, or
+            ``None`` if creation date is not available.
+        """
+        if not self._creation_date:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._creation_date = response.get("created", None)
+
+        if not self._creation_date:
+            return None
+        creation_date_local_dt = utc_to_local(self._creation_date)
+        return creation_date_local_dt
+
+    @property
+    def session_id(self) -> str:
+        """Session ID.
+
+        Returns:
+            Session ID. None if the backend is a simulator.
+        """
+        if not self._session_id:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._session_id = response.get("session_id", None)
+        return self._session_id
+
+    @property
+    def tags(self) -> list:
+        """Job tags.
+
+        Returns:
+            Tags assigned to the job that can be used for filtering.
+        """
+        return self._tags
+
+    @property
+    def usage_estimation(self) -> dict[str, Any]:
+        """Return the usage estimation information for this job.
+
+        Returns:
+            ``quantum_seconds`` which is the estimated system execution time
+            of the job in seconds. Quantum time represents the time that
+            the system is dedicated to processing your job.
+        """
+        if not self._usage_estimation:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._usage_estimation = {
+                "quantum_seconds": response.pop("estimated_running_time_seconds", None),
+            }
+
+        return self._usage_estimation
+
+    @property
+    def instance(self) -> str | None:
+        """Return the IBM Cloud instance CRN."""
+        return self._backend._instance
