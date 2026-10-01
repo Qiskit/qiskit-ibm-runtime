@@ -65,7 +65,7 @@ This is a dictionary mapping semantic roles to maps between versions and functio
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult
 
-    from ...results.noise_learner_v3 import NoiseLearnerV3Result
+    from ...results.noise_learner_v3 import NoiseLearnerV3Results
     from ...results.quantum_program import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
     @classmethod
     def decode(
         cls, raw_result: str
-    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Result:
+    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Results:
         """Decode raw json to result type."""
         decoded: dict[str, str] = super().decode(raw_result)
 
@@ -105,7 +105,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
     @staticmethod
     def _apply_post_processing(
         result: QuantumProgramResult,
-    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Result:
+    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Results:
         """Apply post-processing to the decoded result.
 
         Post-processing is only applied if ``result._semantic_role`` has a supported value.

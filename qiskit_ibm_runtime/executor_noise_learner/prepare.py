@@ -16,10 +16,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit import QuantumCircuit
+from qiskit_noise_learning.protocols import prepare_learning_program
 
 from ..options_models.converters import noise_learner_options_to_executor_options
-from ..quantum_program import QuantumProgram
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -29,9 +28,9 @@ if TYPE_CHECKING:
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
+    from ..quantum_program import QuantumProgram
 
 
-# TODO: use `qiskit_noise_learning.prepare` once available
 def prepare(
     instructions: Iterable[CircuitInstruction],
     options: NoiseLearnerV3Options,
@@ -52,9 +51,17 @@ def prepare(
         - :class:`~.ExecutorOptions` The finalized executor options.
     """
     executor_options = noise_learner_options_to_executor_options(options)
-    quantum_program = QuantumProgram(shots=1)
-
-    circuit = QuantumCircuit(1)
-    circuit.measure_all()
-    quantum_program.append_circuit_item(circuit)
+    quantum_program = prepare_learning_program(
+        backend=backend,
+        instructions=instructions,
+        num_randomizations=options.num_randomizations,
+        shots_per_randomization=options.shots_per_randomization,
+        fragment_depths=options.layer_pair_depths,
+        creg_prefix="meas",
+        local_clifford_ref_prefix="c",
+        pass_manager=None,
+    )
+    quantum_program.passthrough_data["post_processor"] = {  # type: ignore[index]
+        "version": "v0.1",
+    }
     return quantum_program, executor_options

@@ -16,20 +16,37 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...results.noise_learner_v3 import NoiseLearnerV3Result
+from qiskit.quantum_info import QubitSparsePauliList
+from qiskit_noise_learning.protocols import process_learning_results
+
+from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
 
 
-# TODO: use `qiskit_noise_learning.post_process` once available
-def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseLearnerV3Result:
+def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseLearnerV3Results:
     """Convert a quantum program result to a noise learner result for NoiseLearnerV3.
 
     Args:
         result: The raw quantum program result.
 
     Returns:
-        A :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result`.
+        A :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Results`, with one
+        :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result` per gate in the model.
     """
-    return NoiseLearnerV3Result()
+    result_fit = process_learning_results(result)
+    maps = result_fit.model.to_pauli_lindblad_maps(result_fit.model_data)  # type: ignore
+    return NoiseLearnerV3Results(
+        [
+            NoiseLearnerV3Result.from_generators(
+                generators=[
+                    QubitSparsePauliList.from_qubit_sparse_paulis([pauli])
+                    for pauli in plm.generators()
+                ],
+                rates=plm.rates,
+                metadata={"gate_name": gate_name},
+            )
+            for gate_name, plm in maps.items()
+        ]
+    )
