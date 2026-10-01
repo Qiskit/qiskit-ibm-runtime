@@ -129,28 +129,6 @@ def assert_correct(
 class TestRunQuantumProgram(IBMTestCase):
     """Test for running quantum programs."""
 
-    def assertCorrect(
-        self, expected: dict[str, np.ndarray], executor_results: dict[str, np.ndarray]
-    ) -> None:
-        """Assert that results match the expected bit arrays after flip correction.
-
-        Bit arrays use LSB-first ordering: ``data[..., 0]`` corresponds to classical
-        register bit 0.
-
-        Args:
-            expected: A map from classical register names to boolean arrays of shape
-                ``(num_bits,)`` giving the expected deterministic outcome.
-            executor_results: A map from register names to boolean arrays of shape
-                ``(num_randomizations, num_shots, num_bits)``, and optionally
-                ``measurement_flips.<name>`` arrays that broadcast over the shots axis.
-
-        Raises:
-            AssertionError: If not every expected key is present in the results.
-            AssertionError: If any result array is not 3-d bool with the correct last axis.
-            AssertionError: If corrected data does not exactly match the expected outcome.
-        """
-        return assert_correct(expected, executor_results)
-
     def test_angle_rounding_snaps_near_clifford(self):
         """RZ(π + ε) with a tiny ε should round to π, yielding |1⟩ deterministically.
 
@@ -251,7 +229,7 @@ class TestRunQuantumProgram(IBMTestCase):
         item_data = result[0]
 
         # CX|00⟩ = |00⟩
-        self.assertCorrect({"c": np.array([False, False])}, item_data)
+        assert_correct({"c": np.array([False, False])}, item_data)
 
     def test_circuit_item_with_circuit_arguments(self):
         """Run a parameterized Circuit item by supplying circuit arguments directly.
@@ -498,16 +476,16 @@ class TestRunQuantumProgram(IBMTestCase):
             }
 
         # theta=0, phi=0: CX|00⟩ = |00⟩, no flip on q1 → |00⟩
-        self.assertCorrect({"c": np.array([False, False])}, sweep_slice(0, 0))
+        assert_correct({"c": np.array([False, False])}, sweep_slice(0, 0))
 
         # theta=0, phi=π: CX|00⟩ = |00⟩, X on q1 → |01⟩
-        self.assertCorrect({"c": np.array([False, True])}, sweep_slice(0, 1))
+        assert_correct({"c": np.array([False, True])}, sweep_slice(0, 1))
 
         # theta=π, phi=0: CX|10⟩ = |11⟩, no flip on q1 → |11⟩
-        self.assertCorrect({"c": np.array([True, True])}, sweep_slice(1, 0))
+        assert_correct({"c": np.array([True, True])}, sweep_slice(1, 0))
 
         # theta=π, phi=π: CX|10⟩ = |11⟩, X on q1 → |10⟩
-        self.assertCorrect({"c": np.array([True, False])}, sweep_slice(1, 1))
+        assert_correct({"c": np.array([True, False])}, sweep_slice(1, 1))
 
     def test_unsupported_item_type_raises_type_error(self):
         """Test unsupported types."""
