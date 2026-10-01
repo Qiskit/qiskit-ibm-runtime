@@ -36,7 +36,6 @@ from qiskit_ibm_runtime.session import Session
 from ...decorators import mock_responses
 from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend
 
 
 @ddt
@@ -553,13 +552,9 @@ class TestEstimatorSimulatorMode(IBMTestCase):
 class TestFinalizeOptions(IBMTestCase):
     """Tests for ``finalize_options``."""
 
-    def setUp(self):
-        """Test level setup."""
-        self.backend = get_mocked_backend()
-
     def test_resilience_level_0(self):
         """Tests for resilience level 0."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = 0
 
         finalized_options = estimator.finalize_options()
@@ -570,7 +565,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_resilience_level_1(self):
         """Tests for resilience level 1."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = 1
 
         finalized_options = estimator.finalize_options()
@@ -581,7 +576,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_resilience_level_2(self):
         """Tests for resilience level 2."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = 2
 
         finalized_options = estimator.finalize_options()
@@ -593,7 +588,7 @@ class TestFinalizeOptions(IBMTestCase):
     @data(0, 1, 2)
     def test_set_values_are_preserved(self, resilience_level):
         """Test that when the user sets values, resilience level does not override them."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.twirling.enable_gates = False
         estimator.options.twirling.enable_measure = True
         estimator.options.resilience.measure_mitigation = False
@@ -609,13 +604,13 @@ class TestFinalizeOptions(IBMTestCase):
     @data(0, 1, 2)
     def test_forced_values(self, resilience_level):
         """Test that finalize force-set certain values."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.measure_mitigation = True
         finalized_options = estimator.finalize_options()
         self.assertTrue(finalized_options.twirling.enable_measure)
 
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.amplifier = "pea"
@@ -623,7 +618,7 @@ class TestFinalizeOptions(IBMTestCase):
         self.assertTrue(finalized_options.twirling.enable_gates)
         self.assertTrue(finalized_options.twirling.enable_measure)
 
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.pec_mitigation = True
         finalized_options = estimator.finalize_options()
@@ -632,7 +627,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_no_warning_when_twirling_field_not_set_by_user(self):
         """No warning when the user never set the twirling field that is being overridden."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         # Use resilience_level=0 so enable_measure defaults to False, ensuring the only
         # thing suppressing the warning is the field being absent from model_fields_set.
         estimator.options.resilience_level = 0
@@ -646,7 +641,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_no_warning_when_user_set_field_to_true(self):
         """No warning when the user already set the field to True (no conflict)."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.twirling.enable_measure = True
         estimator.options.resilience.measure_mitigation = True
         with warnings.catch_warnings(record=True) as caught:
@@ -657,7 +652,7 @@ class TestFinalizeOptions(IBMTestCase):
 
     def test_warning_measure_mitigation_overrides_enable_measure_false(self):
         """Warning when measure_mitigation=True overrides user-set enable_measure=False."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.twirling.enable_measure = False
         estimator.options.resilience.measure_mitigation = True
         with self.assertWarns(UserWarning) as ctx:
@@ -669,7 +664,7 @@ class TestFinalizeOptions(IBMTestCase):
     @data("enable_gates", "enable_measure")
     def test_warning_pea_overrides_twirling_field_false(self, field):
         """Warning when PEA overrides user-set enable_gates=False or enable_measure=False."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         setattr(estimator.options.twirling, field, False)
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.measure_mitigation = False
@@ -683,7 +678,7 @@ class TestFinalizeOptions(IBMTestCase):
     @data("enable_gates", "enable_measure")
     def test_warning_pec_overrides_twirling_field_false(self, field):
         """Warning when PEC overrides user-set enable_gates=False or enable_measure=False."""
-        estimator = Estimator(self.backend)
+        estimator = Estimator(GenericBackendV2(num_qubits=2))
         setattr(estimator.options.twirling, field, False)
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.measure_mitigation = False
