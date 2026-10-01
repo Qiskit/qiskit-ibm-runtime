@@ -104,7 +104,9 @@ class Calibrator:
         Returns:
             A calibration job.
         """
-        inputs = self.options.model_dump(mode="json", exclude={"environment"})
+        inputs = {
+            "options": self.options.model_dump(mode="json", exclude={"environment"}),
+        }
 
         if self._mode:
             _run = self._mode._run

@@ -38,8 +38,8 @@ allows you to make iterative calls to the quantum computer more efficiently.
 Below is an example of using primitives within a session::
 
     from qiskit_ibm_runtime import QiskitRuntimeService, Session
-    from qiskit_ibm_runtime import SamplerV2 as Sampler
-    from qiskit_ibm_runtime import EstimatorV2 as Estimator
+    from qiskit_ibm_runtime.executor_sampler import Sampler
+    from qiskit_ibm_runtime.executor_estimator import Estimator
     from qiskit.circuit.library import real_amplitudes
     from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
     from qiskit.quantum_info import SparsePauliOp
@@ -98,7 +98,7 @@ instance is used when instantiating a primitive or a session. For example::
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
     from qiskit_ibm_runtime import Session
-    from qiskit_ibm_runtime import SamplerV2 as Sampler
+    from qiskit_ibm_runtime.executor_sampler import Sampler
     from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
     # Bell Circuit
@@ -154,6 +154,8 @@ to invoke the primitive, a
 :class:`RuntimeJobV2` instance is returned. This class has all the basic job
 methods, such as :meth:`RuntimeJobV2.status`, :meth:`RuntimeJobV2.result`, and
 :meth:`RuntimeJobV2.cancel`.
+
+.. _logging_guide:
 
 Logging
 -------

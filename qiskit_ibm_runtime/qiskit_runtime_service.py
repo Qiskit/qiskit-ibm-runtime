@@ -24,8 +24,8 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from .accounts import Account, AccountManager
+from .api.client import RuntimeClient
 from .api.client_parameters import ClientParameters
-from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .exceptions import (
     IBMInputValueError,
