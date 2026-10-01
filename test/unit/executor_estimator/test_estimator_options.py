@@ -10,15 +10,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Tests for setting Estimator options."""
+
+from pydantic import ValidationError
+
 from qiskit_ibm_runtime.executor_estimator.estimator import Estimator
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from test.ibm_test_case import IBMTestCase
-
-
-from pydantic import ValidationError
 
 
 class TestEstimatorUsingOptions(IBMTestCase):
