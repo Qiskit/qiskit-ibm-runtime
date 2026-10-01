@@ -235,13 +235,8 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         backend = most_busy_backend(TestIBMJob.service)
         sampler = Sampler(mode=backend)
         job = sampler.run([transpile(bell(), backend=backend)])
-        try:
-            self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
-        finally:
-            # Ensure all threads ended.
-            for thread in job._executor._threads:
-                thread.join(0.1)
-            cancel_job_safe(job, self.log)
+        self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
+        cancel_job_safe(job, self.log)
 
     def test_job_circuits(self):
         """Test job circuits."""
