@@ -44,6 +44,29 @@ if TYPE_CHECKING:
     from .decorators import IntegrationTestDependencies
 
 
+def save_plotly_artifact(test_id: str, fig: PlotlyFigure, artifact_dir: str) -> str:
+    """Save a Plotly figure as an HTML artifact, nested under `artifact_dir` by `test_id`.
+
+    Args:
+        test_id: the dotted id of the test (`package.module.Class.method`).
+        fig: the figure to save.
+        artifact_dir: the root directory for the artifacts.
+
+    Returns:
+        The path of the saved artifact.
+    """
+    # nested folder path based on the test module, class, and method
+    test_path = test_id.split(".")[1:]
+    nested_dir = os.path.join(artifact_dir, *test_path[:-1])
+    name = test_path[-1]
+    os.makedirs(nested_dir, exist_ok=True)
+
+    # save figure
+    artifact_path = os.path.join(nested_dir, f"{name}.html")
+    fig.write_html(artifact_path)
+    return artifact_path
+
+
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
@@ -98,16 +121,7 @@ class IBMVisualizationTestCase(IBMTestCase):
 
     def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
         """Save a Plotly figure as an HTML artifact."""
-        # nested folder path based on the test module, class, and method
-        test_path = self.id().split(".")[1:]
-        nested_dir = os.path.join(self.ARTIFACT_DIR, *test_path[:-1])
-        name = test_path[-1]
-        os.makedirs(nested_dir, exist_ok=True)
-
-        # save figure
-        artifact_path = os.path.join(nested_dir, f"{name}.html")
-        fig.write_html(artifact_path)
-        return artifact_path
+        return save_plotly_artifact(self.id(), fig, self.ARTIFACT_DIR)
 
 
 class IBMIntegrationTestCase(IBMTestCase):
