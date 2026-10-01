@@ -25,17 +25,6 @@ from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 class TestDrawCircuitScheduleTiming(IBMVisualizationTestCase):
     """Tests for the ``draw_circuit_schedule_timing`` function."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
-        self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
-            "scheduler_timing"
-        ]["timing"]
-
-    def get_mock_data(self):
-        """Return the data object."""
-        return self.circuit_schedule_data
-
     @ddt.data(
         (None, False, False, 104),
         (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 26),
@@ -45,7 +34,8 @@ class TestDrawCircuitScheduleTiming(IBMVisualizationTestCase):
         self, included_channels, filter_readout_channels, filter_barriers, expected_n_traces
     ):
         """Test to make sure that it produces the right figure."""
-        circuit_schedule = self.get_mock_data()
+        pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
+        circuit_schedule = pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
 
         if included_channels is not None:
             included_channels = list(included_channels)

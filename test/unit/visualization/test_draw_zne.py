@@ -21,45 +21,44 @@ from qiskit_ibm_runtime.visualization import draw_zne_evs, draw_zne_extrapolator
 from ...ibm_test_case import IBMVisualizationTestCase
 
 
-class DrawZNEBase(IBMVisualizationTestCase):
-    """Base class for testing the functions that visualize ZNE expectation values."""
-
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        data = DataBin(
-            shape=(1,),
-            evs=np.ones((1,)),
-            stds=np.zeros((1,)),
-            evs_noise_factors=np.ones((1, 3)),
-            stds_noise_factors=np.zeros((1, 3)),
-            ensemble_stds_noise_factors=np.zeros((1, 3)),
-            evs_extrapolated=np.ones((1, 2, 4)),
-            stds_extrapolated=np.zeros((1, 2, 4)),
-        )
-        metadata = {
-            "resilience": {
-                "zne": {
-                    "noise_factors": [1, 3, 5],
-                    "extrapolated_noise_factors": [0, 1, 3, 5],
-                    "extrapolators": ["exponential", "linear"],
-                }
+def zne_results():
+    """Return a pub result holding ZNE data, and pub results missing that data."""
+    data = DataBin(
+        shape=(1,),
+        evs=np.ones((1,)),
+        stds=np.zeros((1,)),
+        evs_noise_factors=np.ones((1, 3)),
+        stds_noise_factors=np.zeros((1, 3)),
+        ensemble_stds_noise_factors=np.zeros((1, 3)),
+        evs_extrapolated=np.ones((1, 2, 4)),
+        stds_extrapolated=np.zeros((1, 2, 4)),
+    )
+    metadata = {
+        "resilience": {
+            "zne": {
+                "noise_factors": [1, 3, 5],
+                "extrapolated_noise_factors": [0, 1, 3, 5],
+                "extrapolators": ["exponential", "linear"],
             }
         }
+    }
 
-        self.zne_data = EstimatorPubResult(data, metadata)
-        self.error_data = [
-            EstimatorPubResult(data),
-            EstimatorPubResult(data, metadata={"resilience": {}}),
-        ]
+    zne_data = EstimatorPubResult(data, metadata)
+    error_data = [
+        EstimatorPubResult(data),
+        EstimatorPubResult(data, metadata={"resilience": {}}),
+    ]
+
+    return zne_data, error_data
 
 
-class TestDrawZNE(DrawZNEBase):
+class TestDrawZNE(IBMVisualizationTestCase):
     """Class for testing the ``draw_zne_evs`` function."""
 
     def test_plotting(self):
         """Test to make sure that it produces the right figure."""
-        fig = draw_zne_evs(self.zne_data)
+        zne_data, _ = zne_results()
+        fig = draw_zne_evs(zne_data)
 
         # 1 expectation value with 2 extrapolators each with 1 std is
         # 1 + 2 * 2 = 5 traces
@@ -68,17 +67,19 @@ class TestDrawZNE(DrawZNEBase):
 
     def test_errors(self):
         """Test error when no ZNE data is present."""
-        for error in self.error_data:
+        _, error_data = zne_results()
+        for error in error_data:
             with self.assertRaises(ValueError):
                 draw_zne_evs(error)
 
 
-class TestDrawZNEExtrapolators(DrawZNEBase):
+class TestDrawZNEExtrapolators(IBMVisualizationTestCase):
     """Class for testing the ``draw_zne_extrapolators`` function."""
 
     def test_plotting(self):
         """Test to make sure that it produces the right figure."""
-        fig = draw_zne_extrapolators(self.zne_data)
+        zne_data, _ = zne_results()
+        fig = draw_zne_extrapolators(zne_data)
 
         # 2 figures (one per extrapolator) with 3 traces each is 6
         self.assertEqual(len(fig.data), 6)
@@ -86,6 +87,7 @@ class TestDrawZNEExtrapolators(DrawZNEBase):
 
     def test_errors(self):
         """Test error when no ZNE data is present."""
-        for error in self.error_data:
+        _, error_data = zne_results()
+        for error in error_data:
             with self.assertRaises(ValueError):
                 draw_zne_extrapolators(error)
