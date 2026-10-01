@@ -18,7 +18,6 @@ import logging
 import time
 import warnings
 from collections.abc import Sequence
-from concurrent import futures
 from functools import reduce
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -290,21 +289,16 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
             )
         poll_interval = max(min_poll_interval, poll_interval or default_poll_interval)
 
-        try:
-            start_time = time.time()
+        start_time = time.time()
+        status = self.status()
+        while status not in self.JOB_FINAL_STATES:
+            elapsed_time = time.time() - start_time
+            if timeout is not None and elapsed_time >= timeout:
+                raise RuntimeJobTimeoutError(
+                    f"Timed out waiting for job to complete after {timeout} secs."
+                )
+            time.sleep(poll_interval)
             status = self.status()
-            while status not in self.JOB_FINAL_STATES:
-                elapsed_time = time.time() - start_time
-                if timeout is not None and elapsed_time >= timeout:
-                    raise RuntimeJobTimeoutError(
-                        f"Timed out waiting for job to complete after {timeout} secs."
-                    )
-                time.sleep(poll_interval)
-                status = self.status()
-        except futures.TimeoutError:
-            raise RuntimeJobTimeoutError(
-                f"Timed out waiting for job to complete after {timeout} secs."
-            )
 
     def error_message(self) -> str | None:
         """Returns the reason if the job failed.
@@ -547,7 +541,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
 
-    def _status_from_job_response(self, response: dict) -> JobStatus | str:
+    def _status_from_job_response(self, response: dict) -> JobStatus:
         """Returns the job status from an API response.
 
         Args:
