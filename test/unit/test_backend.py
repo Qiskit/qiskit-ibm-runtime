@@ -32,6 +32,15 @@ from ..utils import create_faulty_backend
 from .mock.fake_backends import FakeMidcircuit
 
 
+def assert_props(backend, name, ref_error, ref_duration):
+    """Assert that all instruction properties for ``name`` have the given error and duration."""
+    for _, props in backend.target[name].items():
+        error = props.error if props else None
+        duration = props.duration if props else None
+        assert error == ref_error
+        assert duration == ref_duration
+
+
 @ddt
 class TestBackend(IBMTestCase):
     """Tests for IBMBackend class."""
@@ -349,14 +358,6 @@ class TestBackend(IBMTestCase):
 
     def test_instruction_signatures(self):
         """Test building a target with alternative instruction signatures in its configuration."""
-
-        def assert_props(name, ref_error, ref_duration):
-            for _, props in backend.target[name].items():
-                error = props.error if props else None
-                duration = props.duration if props else None
-                self.assertEqual(error, ref_error)
-                self.assertEqual(duration, ref_duration)
-
         backend = FakeMidcircuit()
 
         self.assertEqual(set(backend.basis_gates), {"id", "rz", "sx", "x", "cx"})
@@ -377,8 +378,8 @@ class TestBackend(IBMTestCase):
                 "alternative_rx",
             },
         )
-        assert_props("measure_2", 3.142, None)
-        assert_props("reset_2", None, 3.142e-08)
+        assert_props(backend, "measure_2", 3.142, None)
+        assert_props(backend, "reset_2", None, 3.142e-08)
 
         # Test transpilation with FakeMidcircuit
         mcm = MidCircuitMeasure()
