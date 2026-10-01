@@ -284,94 +284,103 @@ if __name__ == '__main__':
         self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
 
 
+def assert_observable_arrays_equal(obs1, obs2):
+    """Tests that two ObservableArray objects are equal."""
+    assert obs1.tolist() == obs2.tolist()
+
+
+def assert_binding_arrays_equal(barr1, barr2):
+    """Tests that two BindingArray objects are equal."""
+
+    def _to_str_keyed(_in_dict):
+        _out_dict = {}
+        for a_key_tuple, val in _in_dict.items():
+            str_key = tuple(
+                a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple
+            )
+            _out_dict[str_key] = val
+        return _out_dict
+
+    assert barr1.shape == barr2.shape
+    barr1_str_keyed = _to_str_keyed(barr1.data)
+    barr2_str_keyed = _to_str_keyed(barr2.data)
+    for key, val in barr1_str_keyed.items():
+        assert key in barr2_str_keyed
+        np.testing.assert_allclose(val, barr2_str_keyed[key])
+
+
+def assert_data_bins_equal(dbin1, dbin2):
+    """Compares two DataBins.
+
+    Field types are compared up to their string representation.
+    """
+    assert tuple(dbin1) == tuple(dbin2)
+    assert dbin1.shape == dbin2.shape
+    for field_name in dbin1:
+        field_1 = dbin1[field_name]
+        field_2 = dbin2[field_name]
+        if isinstance(field_1, np.ndarray):
+            np.testing.assert_allclose(field_1, field_2)
+        else:
+            assert field_1 == field_2
+
+
+def assert_estimator_pubs_equal(pub1, pub2):
+    """Tests that two EstimatorPub objects are equal."""
+    assert pub1.circuit == pub2.circuit
+    assert_observable_arrays_equal(pub1.observables, pub2.observables)
+    assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
+    assert pub1.precision == pub2.precision
+
+
+def assert_sampler_pubs_equal(pub1, pub2):
+    """Tests that two SamplerPub objects are equal."""
+    assert pub1.circuit == pub2.circuit
+    assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
+    assert pub1.shots == pub2.shots
+
+
+def assert_pub_results_equal(pub_result1, pub_result2):
+    """Tests that two PubResult objects are equal."""
+    assert_data_bins_equal(pub_result1.data, pub_result2.data)
+    assert pub_result1.metadata == pub_result2.metadata
+
+
+def assert_primitive_results_equal(primitive_result1, primitive_result2):
+    """Tests that two PrimitiveResult objects are equal."""
+    assert len(primitive_result1) == len(primitive_result2)
+    for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
+        assert_pub_results_equal(pub_result1, pub_result2)
+
+    assert primitive_result1.metadata == primitive_result2.metadata
+
+
+def assert_pauli_lindblad_error_equal(error1, error2):
+    """Tests that two PauliLindbladError objects are equal."""
+    if error1 or error2:
+        assert error1.generators == error2.generators
+        assert error1.rates.tolist() == error2.rates.tolist()
+
+
+def assert_layer_errors_equal(layer_error1, layer_error2):
+    """Tests that two LayerError objects are equal."""
+    assert layer_error1.circuit == layer_error2.circuit
+    assert layer_error1.qubits == layer_error2.qubits
+    assert_pauli_lindblad_error_equal(layer_error1.error, layer_error2.error)
+
+
+def assert_noise_learner_results_equal(result1, result2):
+    """Tests that two NoiseLearnerResult objects are equal."""
+    assert len(result1) == len(result2)
+    for layer_error1, layer_error2 in zip(result1, result2):
+        assert_layer_errors_equal(layer_error1, layer_error2)
+
+    assert result1.metadata == result2.metadata
+
+
 @ddt
 class TestContainerSerialization(IBMTestCase):
     """Class for testing primitive containers serialization."""
-
-    # Container specific assertEqual methods
-    def assert_observable_arrays_equal(self, obs1, obs2):
-        """Tests that two ObservableArray objects are equal."""
-        self.assertEqual(obs1.tolist(), obs2.tolist())
-
-    def assert_binding_arrays_equal(self, barr1, barr2):
-        """Tests that two BindingArray objects are equal."""
-
-        def _to_str_keyed(_in_dict):
-            _out_dict = {}
-            for a_key_tuple, val in _in_dict.items():
-                str_key = tuple(
-                    a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple
-                )
-                _out_dict[str_key] = val
-            return _out_dict
-
-        self.assertEqual(barr1.shape, barr2.shape)
-        barr1_str_keyed = _to_str_keyed(barr1.data)
-        barr2_str_keyed = _to_str_keyed(barr2.data)
-        for key, val in barr1_str_keyed.items():
-            self.assertIn(key, barr2_str_keyed)
-            np.testing.assert_allclose(val, barr2_str_keyed[key])
-
-    def assert_data_bins_equal(self, dbin1, dbin2):
-        """Compares two DataBins.
-
-        Field types are compared up to their string representation.
-        """
-        self.assertEqual(tuple(dbin1), tuple(dbin2))
-        self.assertEqual(dbin1.shape, dbin2.shape)
-        for field_name in dbin1:
-            field_1 = dbin1[field_name]
-            field_2 = dbin2[field_name]
-            if isinstance(field_1, np.ndarray):
-                np.testing.assert_allclose(field_1, field_2)
-            else:
-                self.assertEqual(field_1, field_2)
-
-    def assert_estimator_pubs_equal(self, pub1, pub2):
-        """Tests that two EstimatorPub objects are equal."""
-        self.assertEqual(pub1.circuit, pub2.circuit)
-        self.assert_observable_arrays_equal(pub1.observables, pub2.observables)
-        self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
-        self.assertEqual(pub1.precision, pub2.precision)
-
-    def assert_sampler_pubs_equal(self, pub1, pub2):
-        """Tests that two SamplerPub objects are equal."""
-        self.assertEqual(pub1.circuit, pub2.circuit)
-        self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
-        self.assertEqual(pub1.shots, pub2.shots)
-
-    def assert_pub_results_equal(self, pub_result1, pub_result2):
-        """Tests that two PubResult objects are equal."""
-        self.assert_data_bins_equal(pub_result1.data, pub_result2.data)
-        self.assertEqual(pub_result1.metadata, pub_result2.metadata)
-
-    def assert_primitive_results_equal(self, primitive_result1, primitive_result2):
-        """Tests that two PrimitiveResult objects are equal."""
-        self.assertEqual(len(primitive_result1), len(primitive_result2))
-        for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
-            self.assert_pub_results_equal(pub_result1, pub_result2)
-
-        self.assertEqual(primitive_result1.metadata, primitive_result2.metadata)
-
-    def assert_pauli_lindblad_error_equal(self, error1, error2):
-        """Tests that two PauliLindbladError objects are equal."""
-        if error1 or error2:
-            self.assertEqual(error1.generators, error2.generators)
-            self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
-
-    def assert_layer_errors_equal(self, layer_error1, layer_error2):
-        """Tests that two LayerError objects are equal."""
-        self.assertEqual(layer_error1.circuit, layer_error2.circuit)
-        self.assertEqual(layer_error1.qubits, layer_error2.qubits)
-        self.assert_pauli_lindblad_error_equal(layer_error1.error, layer_error2.error)
-
-    def assert_noise_learner_results_equal(self, result1, result2):
-        """Tests that two NoiseLearnerResult objects are equal."""
-        self.assertEqual(len(result1), len(result2))
-        for layer_error1, layer_error2 in zip(result1, result2):
-            self.assert_layer_errors_equal(layer_error1, layer_error2)
-
-        self.assertEqual(result1.metadata, result2.metadata)
 
     # Data generation methods
 
@@ -545,7 +554,7 @@ class TestContainerSerialization(IBMTestCase):
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, ObservablesArray)
-        self.assert_observable_arrays_equal(decoded, oarray)
+        assert_observable_arrays_equal(decoded, oarray)
 
     @data(
         BindingsArray({"a": [1, 2, 3.4]}),
@@ -574,7 +583,7 @@ class TestContainerSerialization(IBMTestCase):
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BindingsArray)
-        self.assert_binding_arrays_equal(decoded, barray)
+        assert_binding_arrays_equal(decoded, barray)
 
     @data(
         BitArray(
@@ -599,7 +608,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
             self.assertIsInstance(decoded, DataBin)
-            self.assert_data_bins_equal(dbin, decoded)
+            assert_data_bins_equal(dbin, decoded)
 
     def test_estimator_pub(self):
         """Test encoding and decoding EstimatorPub."""
@@ -610,7 +619,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assertIsInstance(decoded, (list, tuple))
             self.assertEqual(len(decoded), 4)
             decoded_pub = EstimatorPub.coerce(decoded)
-            self.assert_estimator_pubs_equal(pub, decoded_pub)
+            assert_estimator_pubs_equal(pub, decoded_pub)
 
     def test_sampler_pub(self):
         """Test encoding and decoding SamplerPub."""
@@ -621,7 +630,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assertIsInstance(decoded, (list, tuple))
             self.assertEqual(len(decoded), 3)
             decoded_pub = SamplerPub.coerce(decoded)
-            self.assert_sampler_pubs_equal(pub, decoded_pub)
+            assert_sampler_pubs_equal(pub, decoded_pub)
 
     def test_pub_result(self):
         """Test encoding and decoding PubResult."""
@@ -630,7 +639,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
             self.assertIsInstance(decoded, PubResult)
-            self.assert_pub_results_equal(pub_result, decoded)
+            assert_pub_results_equal(pub_result, decoded)
 
     def test_estimator_pub_result(self):
         """Test encoding and decoding EstimatorPubResult."""
@@ -639,7 +648,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["estimator_pub_result"]
             self.assertIsInstance(decoded, EstimatorPubResult)
-            self.assert_pub_results_equal(pub_result, decoded)
+            assert_pub_results_equal(pub_result, decoded)
 
     def test_sampler_pub_result(self):
         """Test encoding and decoding SamplerPubResult."""
@@ -648,7 +657,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["sampler_pub_result"]
             self.assertIsInstance(decoded, SamplerPubResult)
-            self.assert_pub_results_equal(pub_result, decoded)
+            assert_pub_results_equal(pub_result, decoded)
 
     def test_primitive_result(self):
         """Test encoding and decoding PubResult."""
@@ -657,7 +666,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
             self.assertIsInstance(decoded, PrimitiveResult)
-            self.assert_primitive_results_equal(primitive_result, decoded)
+            assert_primitive_results_equal(primitive_result, decoded)
 
     @data(True, False)
     def test_noise_learner_result(self, unknown_err):
@@ -667,7 +676,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]
             self.assertIsInstance(decoded, NoiseLearnerResult)
-            self.assert_noise_learner_results_equal(noise_learner_result, decoded)
+            assert_noise_learner_results_equal(noise_learner_result, decoded)
 
     @data(
         PauliLindbladMap.from_sparse_list([("XX", (0, 1), 0.5)], num_qubits=5),
