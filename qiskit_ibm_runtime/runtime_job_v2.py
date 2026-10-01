@@ -136,381 +136,14 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}('{self._job_id}', '{self._program_id}')>"
 
-
-    def usage(self, partial: bool = False) -> float:
-        """Return job usage in seconds.
-
-        By default, the job usage returned is ``0`` until the usage calculation is
-        completed. Accumulated intermediate usage can be returned by the method by using the
-        ``partial`` flag.
-
-        .. note::
-            When using ``partial``, note that is not guaranteed that the final usage is returned as
-            soon as the job is completed. It is recommended to invoke the method with
-            ``partial=False`` for guarantees that the usage returned is final, or to use the
-            :meth:`.metrics` method for details on the completion status.
-
-        Args:
-            partial: if ``True``, return the accumulated intermediate usage thus far until final
-                usage is reached.
-        """
-        try:
-            metrics = self._api_client.job_metadata(self.job_id())
-            usage = metrics.get("usage", {})
-            if partial:
-                return usage.get("qpu_charge_time_seconds")
-            if usage.get("status", "pending") == "pending":
-                return 0
-            return usage.get("qpu_charge_time_seconds")
-        except RequestsApiError as err:
-            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
-
-    def metrics(self) -> dict[str, Any]:
-        """Return job metrics.
-
-        Returns:
-            A dictionary with job metrics including but not limited to the following:
-
-            * ``timestamps``: Timestamps of when the job was created, started running, and finished.
-            * ``usage``: Details regarding job usage, the measurement of the amount of
-                time the QPU is locked for your workload.
-
-        Raises:
-            IBMRuntimeError: If a network error occurred.
-        """
-        try:
-            return self._api_client.job_metadata(self.job_id())
-        except RequestsApiError as err:
-            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
-
-    def update_tags(self, new_tags: list[str]) -> list[str]:
-        """Update the tags associated with this job.
-
-        Args:
-            new_tags: New tags to assign to the job.
-
-        Returns:
-            The new tags associated with this job.
-
-        Raises:
-            IBMApiError: If an unexpected error occurred when communicating
-                with the server or updating the job tags.
-        """
-        tags_to_update = set(new_tags)
-        validate_job_tags(new_tags)
-
-        response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
-
-        if response.status_code == 204:
-            api_response = self._api_client.job_get(self.job_id())
-            self._tags = api_response.pop("tags", [])
-            return self._tags
-        else:
-            raise IBMApiError(
-                "An unexpected error occurred when updating the "
-                f"tags for job {self.job_id()}. The tags were not updated for "
-                "the job."
-            )
-
-    def properties(self, refresh: bool = False) -> BackendProperties | None:
-        """Return the backend properties for this job.
-
-        Args:
-            refresh: If ``True``, re-query the server for the backend properties.
-                Otherwise, return a cached version.
-
-        Returns:
-            The backend properties used for this job, at the time the job started running,
-            or ``None`` if properties are not available.
-        """
-        job_date = self.creation_date
-        job_running_date = self.metrics().get("timestamps", {}).get("running")
-        if job_running_date:
-            job_date = utc_to_local(job_running_date)
-        return self._backend.properties(refresh, job_date)
-
-    def error_message(self) -> str | None:
-        """Returns the reason if the job failed.
-
-        Returns:
-            Error message string or ``None``.
-        """
-        self._set_status_and_error_message()
-        return self._error_message
-
-    def _set_status_and_error_message(self) -> None:
-        """Fetch and set status and error message."""
-        if self._status not in self.JOB_FINAL_STATES:
-            response = self._api_client.job_get(job_id=self.job_id())
-            self._set_status(response)
-            self._set_error_message(response)
-
-    def _set_status(self, job_response: dict) -> None:
-        """Set status.
-
-        Args:
-            job_response: Job response from IBM Quantum Compute API.
-
-        Raises:
-            IBMError: If an unknown status is returned from the server.
-        """
-        try:
-            reason = job_response["state"].get("reason")
-            reason_code = job_response["state"].get("reasonCode") or job_response["state"].get(
-                "reason_code"
-            )
-            if reason:
-                self._reason = reason
-                if reason_code:
-                    self._reason = f"Error code {reason_code}; {self._reason}"
-                    self._reason_code = reason_code
-            self._status = self._status_from_job_response(job_response)
-        except KeyError:
-            raise IBMError(f"Unknown status: {job_response['state']['status']}")
-
-    def _set_error_message(self, job_response: dict) -> None:
-        """Set error message if the job failed.
-
-        Args:
-            job_response: Job response from IBM Quantum Compute API.
-        """
-        if self._status == self.ERROR:
-            self._error_message = self._error_msg_from_job_response(job_response)
-        else:
-            self._error_message = None
-
-    def _error_msg_from_job_response(self, response: dict) -> str:
-        """Returns the error message from an API response.
-
-        Args:
-            response: Job response from the IBM Quantum Compute API.
-
-        Returns:
-            Error message.
-        """
-        status = response["state"]["status"].upper()
-
-        job_result_raw = self._api_client.job_results(job_id=self.job_id())
-
-        index = job_result_raw.rfind("Traceback")
-        if index != -1:
-            job_result_raw = job_result_raw[index:]
-
-        if status == "CANCELLED" and self._reason_code == 1305:
-            error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
-            return error_msg.format(self.job_id(), job_result_raw)
-        else:
-            error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
-            return error_msg.format(self.job_id(), self._reason or job_result_raw)
-
-    def result(
-        self,
-        timeout: float | None = None,
-        decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
-        poll_interval: float | None = None,
-    ) -> Any:
-        """Return the results of the job.
-
-        Args:
-            timeout: Number of seconds to wait for job.
-            decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
-                of such subclasses. If more than one decoder is specified, they will be called in
-                chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
-                decoder.
-            poll_interval: Number of seconds to wait between successive queries of the job's status.
-                of the job.
-
-                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
-                * For session jobs, the default and the floor value are ``100ms``.
-
-        Returns:
-            IBM Quantum Compute job result (post-processed if applicable).
-
-        Raises:
-            RuntimeJobFailureError: If the job failed.
-            RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
-            RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
-        """
-        if decoder and not isinstance(decoder, Sequence):
-            decoder = [decoder]
-        decoders: Sequence[type[ResultDecoder]] = decoder or self._result_decoders  # type: ignore[assignment]
-
-        self.wait_for_final_state(timeout=timeout, poll_interval=poll_interval)
-        if self._status == "ERROR":
-            error_message = self._reason if self._reason else self._error_message
-            if self._reason_code == 1305:
-                raise RuntimeJobMaxTimeoutError(error_message)
-            raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
-        if self._status == "CANCELLED":
-            raise RuntimeInvalidStateError(
-                f"Unable to retrieve result for job {self.job_id()}. Job was cancelled."
-            )
-
-        result_raw = self._api_client.job_results(job_id=self.job_id())
-        # Invoke all decoders, chaining them (one decoders output becomes the next's input) and
-        # skipping the ones that are not applicable.
-        return (
-            reduce(
-                lambda result, decoder: decoder.decode(result)
-                if decoder.is_applicable(result)
-                else result,
-                decoders,
-                result_raw,
-            )
-            if result_raw
-            else None
-        )
-
-    def cancel(self) -> None:
-        """Cancel the job.
-
-        Raises:
-            RuntimeInvalidStateError: If the job is in a state that cannot be cancelled.
-            IBMRuntimeError: If unable to cancel job.
-        """
-        try:
-            self._api_client.job_cancel(self.job_id())
-        except RequestsApiError as ex:
-            if ex.status_code == 409:
-                raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
-            raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
-        self._status = "CANCELLED"
-
-    def status(self) -> JobStatus:
-        """Return the status of the job.
-
-        Returns:
-            Status of this job.
-        """
-        self._set_status_and_error_message()
-        return self._status
-
-    def _status_from_job_response(self, response: dict) -> JobStatus | str:
-        """Returns the job status from an API response.
-
-        Args:
-            response: Job response from the IBM Quantum Compute API.
-
-        Returns:
-            Job status.
-        """
-        api_status = response["state"]["status"].upper()
-        if api_status in API_TO_JOB_STATUS:
-            mapped_job_status = API_TO_JOB_STATUS[api_status]
-            if mapped_job_status == "CANCELLED" and self._reason_code == 1305:
-                mapped_job_status = "ERROR"
-            return mapped_job_status
-        return api_status
-
-    def cancelled(self) -> bool:
-        """Return whether the job has been cancelled."""
-        return self.status() == "CANCELLED"
-
-    def done(self) -> bool:
-        """Return whether the job has successfully run."""
-        return self.status() == "DONE"
-
-    def errored(self) -> bool:
-        """Return whether the job has failed."""
-        return self.status() == "ERROR"
-
-    def in_final_state(self) -> bool:
-        """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
-        return self.status() in self.JOB_FINAL_STATES
-
-    def running(self) -> bool:
-        """Return whether the job is actively running."""
-        return self.status() == "RUNNING"
-
-    def logs(self) -> str:
-        """Return job logs.
-
-        Note:
-            Job logs are only available after the job finishes.
-
-        Returns:
-            Job logs, including standard output and error.
-
-        Raises:
-            IBMRuntimeError: If a network error occurred.
-        """
-        if self.status() not in self.JOB_FINAL_STATES:
-            logger.warning("Job logs are only available after the job finishes.")
-        try:
-            return self._api_client.job_logs(self.job_id())
-        except RequestsApiError as err:
-            if err.status_code == 404:
-                return ""
-            raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
-
-    def wait_for_final_state(
-        self,
-        timeout: float | None = None,
-        poll_interval: float | None = None,
-    ) -> None:
-        """Poll for the job status from the API until the status is in a final state.
-
-        Args:
-            timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
-            poll_interval: Number of seconds to wait between querying the service for the status
-                of the job.
-
-                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
-                * For session jobs, the default and the floor value is ``100ms``.
-
-        Raises:
-            RuntimeJobTimeoutError: If the job does not complete within given timeout.
-        """
-        # Calculate the poll interval.
-        min_poll_interval = 0.1
-        default_poll_interval = 0.1 if self._session_id else 0.5
-        if poll_interval and poll_interval < 0.1:
-            warnings.warn(
-                "The poll interval specified is lower than the minimal allowed. Using "
-                f"{min_poll_interval} as the poll interval."
-            )
-        poll_interval = max(min_poll_interval, poll_interval or default_poll_interval)
-
-        try:
-            start_time = time.time()
-            status = self.status()
-            while status not in self.JOB_FINAL_STATES:
-                elapsed_time = time.time() - start_time
-                if timeout is not None and elapsed_time >= timeout:
-                    raise RuntimeJobTimeoutError(
-                        f"Timed out waiting for job to complete after {timeout} secs."
-                    )
-                time.sleep(poll_interval)
-                status = self.status()
-        except futures.TimeoutError:
-            raise RuntimeJobTimeoutError(
-                f"Timed out waiting for job to complete after {timeout} secs."
-            )
-
-    def backend(self, timeout: float | None = None) -> Backend | None:
-        """Return the backend where this job was executed. Retrieve data again if backend is None.
-
-        Raises:
-            IBMRuntimeError: If a network error occurred.
-        """
-        if not self._backend:
-            self.wait_for_final_state(timeout=timeout)
-            try:
-                raw_data = self._api_client.job_get(self.job_id())
-                if raw_data.get("backend"):
-                    self._backend = self._service.backend(raw_data["backend"])
-            except RequestsApiError as err:
-                raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
-        return self._backend
+    def job_id(self) -> str:
+        """Return a unique id identifying the job."""
+        return self._job_id
 
     @property
     def private(self) -> bool:
         """Returns a boolean indicating whether or not the job is private."""
         return self._private
-
-    def job_id(self) -> str:
-        """Return a unique id identifying the job."""
-        return self._job_id
 
     @property
     def image(self) -> str:
@@ -599,3 +232,369 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
     def instance(self) -> str | None:
         """Return the IBM Cloud instance CRN."""
         return self._backend._instance
+
+    def status(self) -> JobStatus:
+        """Return the status of the job.
+
+        Returns:
+            Status of this job.
+        """
+        self._set_status_and_error_message()
+        return self._status
+
+    def cancelled(self) -> bool:
+        """Return whether the job has been cancelled."""
+        return self.status() == "CANCELLED"
+
+    def done(self) -> bool:
+        """Return whether the job has successfully run."""
+        return self.status() == "DONE"
+
+    def errored(self) -> bool:
+        """Return whether the job has failed."""
+        return self.status() == "ERROR"
+
+    def in_final_state(self) -> bool:
+        """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
+        return self.status() in self.JOB_FINAL_STATES
+
+    def running(self) -> bool:
+        """Return whether the job is actively running."""
+        return self.status() == "RUNNING"
+
+    def wait_for_final_state(
+        self,
+        timeout: float | None = None,
+        poll_interval: float | None = None,
+    ) -> None:
+        """Poll for the job status from the API until the status is in a final state.
+
+        Args:
+            timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
+            poll_interval: Number of seconds to wait between querying the service for the status
+                of the job.
+
+                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
+                * For session jobs, the default and the floor value is ``100ms``.
+
+        Raises:
+            RuntimeJobTimeoutError: If the job does not complete within given timeout.
+        """
+        # Calculate the poll interval.
+        min_poll_interval = 0.1
+        default_poll_interval = 0.1 if self._session_id else 0.5
+        if poll_interval and poll_interval < 0.1:
+            warnings.warn(
+                "The poll interval specified is lower than the minimal allowed. Using "
+                f"{min_poll_interval} as the poll interval."
+            )
+        poll_interval = max(min_poll_interval, poll_interval or default_poll_interval)
+
+        try:
+            start_time = time.time()
+            status = self.status()
+            while status not in self.JOB_FINAL_STATES:
+                elapsed_time = time.time() - start_time
+                if timeout is not None and elapsed_time >= timeout:
+                    raise RuntimeJobTimeoutError(
+                        f"Timed out waiting for job to complete after {timeout} secs."
+                    )
+                time.sleep(poll_interval)
+                status = self.status()
+        except futures.TimeoutError:
+            raise RuntimeJobTimeoutError(
+                f"Timed out waiting for job to complete after {timeout} secs."
+            )
+
+    def error_message(self) -> str | None:
+        """Returns the reason if the job failed.
+
+        Returns:
+            Error message string or ``None``.
+        """
+        self._set_status_and_error_message()
+        return self._error_message
+
+    def result(
+        self,
+        timeout: float | None = None,
+        decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
+        poll_interval: float | None = None,
+    ) -> Any:
+        """Return the results of the job.
+
+        Args:
+            timeout: Number of seconds to wait for job.
+            decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+                of such subclasses. If more than one decoder is specified, they will be called in
+                chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+                decoder.
+            poll_interval: Number of seconds to wait between successive queries of the job's status.
+                of the job.
+
+                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
+                * For session jobs, the default and the floor value are ``100ms``.
+
+        Returns:
+            IBM Quantum Compute job result (post-processed if applicable).
+
+        Raises:
+            RuntimeJobFailureError: If the job failed.
+            RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
+            RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
+        """
+        if decoder and not isinstance(decoder, Sequence):
+            decoder = [decoder]
+        decoders: Sequence[type[ResultDecoder]] = decoder or self._result_decoders  # type: ignore[assignment]
+
+        self.wait_for_final_state(timeout=timeout, poll_interval=poll_interval)
+        if self._status == "ERROR":
+            error_message = self._reason if self._reason else self._error_message
+            if self._reason_code == 1305:
+                raise RuntimeJobMaxTimeoutError(error_message)
+            raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
+        if self._status == "CANCELLED":
+            raise RuntimeInvalidStateError(
+                f"Unable to retrieve result for job {self.job_id()}. Job was cancelled."
+            )
+
+        result_raw = self._api_client.job_results(job_id=self.job_id())
+        # Invoke all decoders, chaining them (one decoders output becomes the next's input) and
+        # skipping the ones that are not applicable.
+        return (
+            reduce(
+                lambda result, decoder: decoder.decode(result)
+                if decoder.is_applicable(result)
+                else result,
+                decoders,
+                result_raw,
+            )
+            if result_raw
+            else None
+        )
+
+    def cancel(self) -> None:
+        """Cancel the job.
+
+        Raises:
+            RuntimeInvalidStateError: If the job is in a state that cannot be cancelled.
+            IBMRuntimeError: If unable to cancel job.
+        """
+        try:
+            self._api_client.job_cancel(self.job_id())
+        except RequestsApiError as ex:
+            if ex.status_code == 409:
+                raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
+            raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
+        self._status = "CANCELLED"
+
+    def usage(self, partial: bool = False) -> float:
+        """Return job usage in seconds.
+
+        By default, the job usage returned is ``0`` until the usage calculation is
+        completed. Accumulated intermediate usage can be returned by the method by using the
+        ``partial`` flag.
+
+        .. note::
+            When using ``partial``, note that is not guaranteed that the final usage is returned as
+            soon as the job is completed. It is recommended to invoke the method with
+            ``partial=False`` for guarantees that the usage returned is final, or to use the
+            :meth:`.metrics` method for details on the completion status.
+
+        Args:
+            partial: if ``True``, return the accumulated intermediate usage thus far until final
+                usage is reached.
+        """
+        try:
+            metrics = self._api_client.job_metadata(self.job_id())
+            usage = metrics.get("usage", {})
+            if partial:
+                return usage.get("qpu_charge_time_seconds")
+            if usage.get("status", "pending") == "pending":
+                return 0
+            return usage.get("qpu_charge_time_seconds")
+        except RequestsApiError as err:
+            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
+
+    def metrics(self) -> dict[str, Any]:
+        """Return job metrics.
+
+        Returns:
+            A dictionary with job metrics including but not limited to the following:
+
+            * ``timestamps``: Timestamps of when the job was created, started running, and finished.
+            * ``usage``: Details regarding job usage, the measurement of the amount of
+                time the QPU is locked for your workload.
+
+        Raises:
+            IBMRuntimeError: If a network error occurred.
+        """
+        try:
+            return self._api_client.job_metadata(self.job_id())
+        except RequestsApiError as err:
+            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
+
+    def logs(self) -> str:
+        """Return job logs.
+
+        Note:
+            Job logs are only available after the job finishes.
+
+        Returns:
+            Job logs, including standard output and error.
+
+        Raises:
+            IBMRuntimeError: If a network error occurred.
+        """
+        if self.status() not in self.JOB_FINAL_STATES:
+            logger.warning("Job logs are only available after the job finishes.")
+        try:
+            return self._api_client.job_logs(self.job_id())
+        except RequestsApiError as err:
+            if err.status_code == 404:
+                return ""
+            raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
+
+    def properties(self, refresh: bool = False) -> BackendProperties | None:
+        """Return the backend properties for this job.
+
+        Args:
+            refresh: If ``True``, re-query the server for the backend properties.
+                Otherwise, return a cached version.
+
+        Returns:
+            The backend properties used for this job, at the time the job started running,
+            or ``None`` if properties are not available.
+        """
+        job_date = self.creation_date
+        job_running_date = self.metrics().get("timestamps", {}).get("running")
+        if job_running_date:
+            job_date = utc_to_local(job_running_date)
+        return self._backend.properties(refresh, job_date)
+
+    def backend(self, timeout: float | None = None) -> Backend | None:
+        """Return the backend where this job was executed. Retrieve data again if backend is None.
+
+        Raises:
+            IBMRuntimeError: If a network error occurred.
+        """
+        if not self._backend:
+            self.wait_for_final_state(timeout=timeout)
+            try:
+                raw_data = self._api_client.job_get(self.job_id())
+                if raw_data.get("backend"):
+                    self._backend = self._service.backend(raw_data["backend"])
+            except RequestsApiError as err:
+                raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
+        return self._backend
+
+    def update_tags(self, new_tags: list[str]) -> list[str]:
+        """Update the tags associated with this job.
+
+        Args:
+            new_tags: New tags to assign to the job.
+
+        Returns:
+            The new tags associated with this job.
+
+        Raises:
+            IBMApiError: If an unexpected error occurred when communicating
+                with the server or updating the job tags.
+        """
+        tags_to_update = set(new_tags)
+        validate_job_tags(new_tags)
+
+        response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
+
+        if response.status_code == 204:
+            api_response = self._api_client.job_get(self.job_id())
+            self._tags = api_response.pop("tags", [])
+            return self._tags
+        else:
+            raise IBMApiError(
+                "An unexpected error occurred when updating the "
+                f"tags for job {self.job_id()}. The tags were not updated for "
+                "the job."
+            )
+
+    def _set_status_and_error_message(self) -> None:
+        """Fetch and set status and error message."""
+        if self._status not in self.JOB_FINAL_STATES:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._set_status(response)
+            self._set_error_message(response)
+
+    def _set_status(self, job_response: dict) -> None:
+        """Set status.
+
+        Args:
+            job_response: Job response from IBM Quantum Compute API.
+
+        Raises:
+            IBMError: If an unknown status is returned from the server.
+        """
+        try:
+            reason = job_response["state"].get("reason")
+            reason_code = job_response["state"].get("reasonCode") or job_response["state"].get(
+                "reason_code"
+            )
+            if reason:
+                self._reason = reason
+                if reason_code:
+                    self._reason = f"Error code {reason_code}; {self._reason}"
+                    self._reason_code = reason_code
+            self._status = self._status_from_job_response(job_response)
+        except KeyError:
+            raise IBMError(f"Unknown status: {job_response['state']['status']}")
+
+    def _status_from_job_response(self, response: dict) -> JobStatus | str:
+        """Returns the job status from an API response.
+
+        Args:
+            response: Job response from the IBM Quantum Compute API.
+
+        Returns:
+            Job status.
+        """
+        api_status = response["state"]["status"].upper()
+        if api_status in API_TO_JOB_STATUS:
+            mapped_job_status = API_TO_JOB_STATUS[api_status]
+            if mapped_job_status == "CANCELLED" and self._reason_code == 1305:
+                mapped_job_status = "ERROR"
+            return mapped_job_status
+        return api_status
+
+    def _set_error_message(self, job_response: dict) -> None:
+        """Set error message if the job failed.
+
+        Args:
+            job_response: Job response from IBM Quantum Compute API.
+        """
+        if self._status == self.ERROR:
+            self._error_message = self._error_msg_from_job_response(job_response)
+        else:
+            self._error_message = None
+
+    def _error_msg_from_job_response(self, response: dict) -> str:
+        """Returns the error message from an API response.
+
+        Args:
+            response: Job response from the IBM Quantum Compute API.
+
+        Returns:
+            Error message.
+        """
+        status = response["state"]["status"].upper()
+
+        job_result_raw = self._api_client.job_results(job_id=self.job_id())
+
+        index = job_result_raw.rfind("Traceback")
+        if index != -1:
+            job_result_raw = job_result_raw[index:]
+
+        if status == "CANCELLED" and self._reason_code == 1305:
+            error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
+            return error_msg.format(self.job_id(), job_result_raw)
+        else:
+            error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
+            return error_msg.format(self.job_id(), self._reason or job_result_raw)
