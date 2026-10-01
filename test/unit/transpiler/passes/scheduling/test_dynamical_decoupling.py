@@ -32,87 +32,97 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import ASAPSchedu
 from .....ibm_test_case import IBMTestCase
 
 
+def ghz4_circuit():
+    """Return a four-qubit GHZ circuit."""
+    circuit = QuantumCircuit(4)
+    circuit.h(0)
+    circuit.cx(0, 1)
+    circuit.cx(1, 2)
+    circuit.cx(2, 3)
+    return circuit
+
+
+def midmeas_circuit():
+    """Return a three-qubit circuit with a measurement in the middle."""
+    circuit = QuantumCircuit(3, 1)
+    circuit.cx(0, 1)
+    circuit.cx(1, 2)
+    circuit.u(pi, 0, pi, 0)
+    circuit.measure(2, 0)
+    circuit.cx(1, 2)
+    circuit.cx(0, 1)
+    return circuit
+
+
+def five_qubit_target():
+    """Return a five-qubit target with durations for the gates used by the tests."""
+    target = Target(num_qubits=5, dt=1)
+    target.add_instruction(
+        XGate(),
+        {(i,): InstructionProperties(duration=50) for i in range(5)},
+    )
+    target.add_instruction(
+        HGate(),
+        {(i,): InstructionProperties(duration=50) for i in range(5)},
+    )
+    target.add_instruction(
+        CXGate(),
+        {
+            (0, 1): InstructionProperties(duration=700),
+            (1, 2): InstructionProperties(duration=200),
+            (2, 3): InstructionProperties(duration=300),
+        },
+    )
+    target.add_instruction(
+        YGate(),
+        {(i,): InstructionProperties(duration=50) for i in range(5)},
+    )
+    target.add_instruction(
+        UGate(Parameter("theta"), Parameter("phi"), Parameter("lambda")),
+        {(i,): InstructionProperties(duration=100) for i in range(5)},
+    )
+    target.add_instruction(
+        RXGate(Parameter("phi")),
+        {(i,): InstructionProperties(duration=100) for i in range(5)},
+    )
+    target.add_instruction(
+        Measure(),
+        {(i,): InstructionProperties(duration=1000) for i in range(5)},
+    )
+    target.add_instruction(
+        Reset(),
+        {(i,): InstructionProperties(duration=1000) for i in range(5)},
+    )
+    return target
+
+
 @ddt
 class TestPadDynamicalDecoupling(IBMTestCase):
     """Tests PadDynamicalDecoupling pass."""
 
-    def setUp(self):
-        """Circuits to test dynamical decoupling on."""
-        super().setUp()
-
-        self.ghz4 = QuantumCircuit(4)
-        self.ghz4.h(0)
-        self.ghz4.cx(0, 1)
-        self.ghz4.cx(1, 2)
-        self.ghz4.cx(2, 3)
-
-        self.midmeas = QuantumCircuit(3, 1)
-        self.midmeas.cx(0, 1)
-        self.midmeas.cx(1, 2)
-        self.midmeas.u(pi, 0, pi, 0)
-        self.midmeas.measure(2, 0)
-        self.midmeas.cx(1, 2)
-        self.midmeas.cx(0, 1)
-
-        self.target = Target(num_qubits=5, dt=1)
-        self.target.add_instruction(
-            XGate(),
-            {(i,): InstructionProperties(duration=50) for i in range(5)},
-        )
-        self.target.add_instruction(
-            HGate(),
-            {(i,): InstructionProperties(duration=50) for i in range(5)},
-        )
-        self.target.add_instruction(
-            CXGate(),
-            {
-                (0, 1): InstructionProperties(duration=700),
-                (1, 2): InstructionProperties(duration=200),
-                (2, 3): InstructionProperties(duration=300),
-            },
-        )
-        self.target.add_instruction(
-            YGate(),
-            {(i,): InstructionProperties(duration=50) for i in range(5)},
-        )
-        self.target.add_instruction(
-            UGate(Parameter("theta"), Parameter("phi"), Parameter("lambda")),
-            {(i,): InstructionProperties(duration=100) for i in range(5)},
-        )
-        self.target.add_instruction(
-            RXGate(Parameter("phi")),
-            {(i,): InstructionProperties(duration=100) for i in range(5)},
-        )
-        self.target.add_instruction(
-            Measure(),
-            {(i,): InstructionProperties(duration=1000) for i in range(5)},
-        )
-        self.target.add_instruction(
-            Reset(),
-            {(i,): InstructionProperties(duration=1000) for i in range(5)},
-        )
-        self.coupling_map = CouplingMap([[0, 1], [1, 2], [2, 3]])
-
     def test_insert_dd_ghz(self):
         """Test DD gates are inserted in correct spots."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[1.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
-        ghz4_dd = pm.run(self.ghz4)
+        ghz4_dd = pm.run(ghz4)
 
-        expected = self.ghz4.copy()
+        expected = ghz4.copy()
         expected = expected.compose(Delay(50), [1], front=True)
         expected = expected.compose(Delay(750), [2], front=True)
         expected = expected.compose(Delay(950), [3], front=True)
@@ -134,6 +144,9 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_insert_dd_ghz_one_qubit(self, use_topological_ordering):
         """Test DD gates are inserted on only one qubit."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
 
         if use_topological_ordering:
@@ -148,7 +161,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(
-                    target=self.target,
+                    target=target,
                     block_ordering_callable=block_ordering_callable,
                 ),
                 PadDynamicalDecoupling(
@@ -157,14 +170,14 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     pulse_alignment=1,
                     schedule_idle_qubits=True,
                     block_ordering_callable=block_ordering_callable,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
-        ghz4_dd = pm.run(self.ghz4.measure_all(inplace=False))
+        ghz4_dd = pm.run(ghz4.measure_all(inplace=False))
 
-        expected = self.ghz4.copy()
+        expected = ghz4.copy()
         expected = expected.compose(Delay(50), [1], front=True)
         expected = expected.compose(Delay(750), [2], front=True)
         expected = expected.compose(Delay(950), [3], front=True)
@@ -183,25 +196,28 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_insert_dd_ghz_everywhere(self):
         """Test DD gates even on initial idle spots."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [YGate(), YGate()]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     skip_reset_qubits=False,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[0.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
-        ghz4_dd = pm.run(self.ghz4)
+        ghz4_dd = pm.run(ghz4)
 
-        expected = self.ghz4.copy()
+        expected = ghz4.copy()
         expected = expected.compose(Delay(50), [1], front=True)
 
         expected = expected.compose(Delay(100), [0])
@@ -232,23 +248,26 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_insert_dd_ghz_xy4(self):
         """Test XY4 sequence of DD gates."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), YGate(), XGate(), YGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[1.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
-        ghz4_dd = pm.run(self.ghz4)
+        ghz4_dd = pm.run(ghz4)
 
-        expected = self.ghz4.copy()
+        expected = ghz4.copy()
         expected = expected.compose(Delay(50), [1], front=True)
         expected = expected.compose(Delay(750), [2], front=True)
         expected = expected.compose(Delay(950), [3], front=True)
@@ -278,6 +297,9 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_insert_midmeas_hahn(self, use_topological_ordering):
         """Test a single X gate as Hahn echo can absorb in the upstream circuit."""
+        midmeas = midmeas_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [RXGate(pi / 4)]
 
         if use_topological_ordering:
@@ -292,19 +314,19 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(
-                    target=self.target, block_ordering_callable=block_ordering_callable
+                    target=target, block_ordering_callable=block_ordering_callable
                 ),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     schedule_idle_qubits=True,
                     block_ordering_callable=block_ordering_callable,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
-        midmeas_dd = pm.run(self.midmeas)
+        midmeas_dd = pm.run(midmeas)
 
         combined_u = UGate(3 * pi / 4, -pi / 2, pi / 2)
 
@@ -336,6 +358,9 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         [1] Uhrig, G. "Keeping a quantum bit alive by optimized π-pulse sequences."
         Physical Review Letters 98.10 (2007): 100504.
         """
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         n = 8
         dd_sequence = [XGate()] * n
 
@@ -351,7 +376,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     qubits=[0],
@@ -359,14 +384,14 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     sequence_min_length_ratios=[0.0],
                     pulse_alignment=1,
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
-        ghz4_dd = pm.run(self.ghz4)
+        ghz4_dd = pm.run(ghz4)
 
-        expected = self.ghz4.copy()
+        expected = ghz4.copy()
         expected = expected.compose(Delay(50), [1], front=True)
         expected = expected.compose(Delay(750), [2], front=True)
         expected = expected.compose(Delay(950), [3], front=True)
@@ -395,18 +420,20 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_asymmetric_xy4_in_t2(self):
         """Test insertion of XY4 sequence with unbalanced spacing."""
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), YGate()] * 2
         spacing = [0] + [1 / 4] * 4
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     spacings=spacing,
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -437,12 +464,14 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_dd_after_reset(self):
         """Test skip_reset_qubits option works."""
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
         spacing = [0.1, 0.9]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     spacings=spacing,
@@ -450,7 +479,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     pulse_alignment=1,
                     sequence_min_length_ratios=[0.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -482,38 +511,44 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_insert_dd_bad_sequence(self):
         """Test DD raises when non-identity sequence is inserted."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), YGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
-                    dd_sequences=dd_sequence, schedule_idle_qubits=True, target=self.target
+                    dd_sequences=dd_sequence, schedule_idle_qubits=True, target=target
                 ),
             ]
         )
         with self.assertRaises(TranspilerError):
-            pm.run(self.ghz4)
+            pm.run(ghz4)
 
     def test_insert_dd_ghz_xy4_with_alignment(self):
         """Test DD with pulse alignment constraints."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), YGate(), XGate(), YGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=10,
                     extra_slack_distribution="edges",
                     sequence_min_length_ratios=[1.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
-        ghz4_dd = pm.run(self.ghz4)
+        ghz4_dd = pm.run(ghz4)
 
-        expected = self.ghz4.copy()
+        expected = ghz4.copy()
         expected = expected.compose(Delay(50), [1], front=True)
         expected = expected.compose(Delay(750), [2], front=True)
         expected = expected.compose(Delay(950), [3], front=True)
@@ -547,52 +582,57 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         - if global phase is properly propagated from the previous padding node.
         - if node_start_time property is properly updated for new dag circuit.
         """
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), YGate(), XGate(), YGate()]
 
         pm1 = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     qubits=[0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     qubits=[1],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
         pm2 = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     qubits=[0, 1],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
-        circ1 = pm1.run(self.ghz4)
-        circ2 = pm2.run(self.ghz4)
+        circ1 = pm1.run(ghz4)
+        circ2 = pm2.run(ghz4)
         self.assertEqual(circ1, circ2)
 
     def test_back_to_back_if_test(self):
         """Test DD with if_test circuit back to back."""
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[0.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -639,17 +679,19 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_dd_if_test(self):
         """Test DD with if_test circuit."""
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[0.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -715,6 +757,8 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_reproducible(self):
         """Test DD calls are reproducible."""
+        target = five_qubit_target()
+
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
         qc.x(2)
@@ -732,17 +776,17 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         pm0 = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
-                    dd_sequences=dd_sequence, schedule_idle_qubits=True, target=self.target
+                    dd_sequences=dd_sequence, schedule_idle_qubits=True, target=target
                 ),
             ]
         )
         pm1 = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
-                    dd_sequences=dd_sequence, schedule_idle_qubits=True, target=self.target
+                    dd_sequences=dd_sequence, schedule_idle_qubits=True, target=target
                 ),
             ]
         )
@@ -753,17 +797,19 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_nested_block_dd(self):
         """Test DD applied within a block."""
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[0.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -799,6 +845,8 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_multiple_dd_sequences(self):
         """Test multiple DD sequence can be submitted."""
+        target = five_qubit_target()
+
         qc = QuantumCircuit(2, 0)
         qc.x(0)  # First delay so qubits are touched
         qc.x(1)
@@ -813,13 +861,13 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[1.5, 0.0],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -879,6 +927,8 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_multiple_dd_sequence_cycles(self):
         """Test a single DD sequence can be inserted for multiple cycles in a single delay."""
+        target = five_qubit_target()
+
         qc = QuantumCircuit(1, 0)
         qc.x(0)  # First delay so qubit is touched
         qc.delay(2000, 0)
@@ -889,7 +939,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     extra_slack_distribution="edges",
@@ -897,7 +947,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     sequence_min_length_ratios=[10.0],
                     insert_multiple_cycles=True,
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -920,17 +970,20 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_staggered_dd(self):
         """Test that timing on DD can be staggered if coupled with each other."""
+        target = five_qubit_target()
+        coupling_map = CouplingMap([[0, 1], [1, 2], [2, 3]])
+
         dd_sequence = [XGate(), XGate()]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
-                    coupling_map=self.coupling_map,
+                    coupling_map=coupling_map,
                     alt_spacings=[0.1, 0.8, 0.1],
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -982,19 +1035,22 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_staggered_dd_multiple_cycles(self):
         """Test staggered DD with multiple cycles in a single delay."""
+        target = five_qubit_target()
+        coupling_map = CouplingMap([[0, 1], [1, 2], [2, 3]])
+
         dd_sequence = [XGate(), XGate()]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
-                    coupling_map=self.coupling_map,
+                    coupling_map=coupling_map,
                     alt_spacings=[0.1, 0.8, 0.1],
                     sequence_min_length_ratios=[4.0],
                     insert_multiple_cycles=True,
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -1046,60 +1102,73 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_insert_dd_bad_spacings(self):
         """Test DD raises when spacings don't add up to 1."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+        coupling_map = CouplingMap([[0, 1], [1, 2], [2, 3]])
+
         dd_sequence = [XGate(), XGate()]
 
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     spacings=[0.1, 0.9, 0.1],
-                    coupling_map=self.coupling_map,
-                    target=self.target,
+                    coupling_map=coupling_map,
+                    target=target,
                 ),
             ]
         )
 
         with self.assertRaises(TranspilerError):
-            pm.run(self.ghz4)
+            pm.run(ghz4)
 
     def test_insert_dd_bad_alt_spacings(self):
         """Test DD raises when alt_spacings don't add up to 1."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+        coupling_map = CouplingMap([[0, 1], [1, 2], [2, 3]])
+
         dd_sequence = [XGate(), XGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     alt_spacings=[0.1, 0.9, 0.1],
-                    coupling_map=self.coupling_map,
-                    target=self.target,
+                    coupling_map=coupling_map,
+                    target=target,
                 ),
             ]
         )
 
         with self.assertRaises(TranspilerError):
-            pm.run(self.ghz4)
+            pm.run(ghz4)
 
     def test_unsupported_coupling_map(self):
         """Test DD raises if coupling map is not supported."""
+        ghz4 = ghz4_circuit()
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     coupling_map=CouplingMap([[0, 1], [0, 2], [1, 2], [2, 3]]),
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
 
         with self.assertRaises(TranspilerError):
-            pm.run(self.ghz4)
+            pm.run(ghz4)
 
     def test_disjoint_coupling_map(self):
         """Test staggered DD with disjoint coupling map."""
+        target = five_qubit_target()
+
         qc = QuantumCircuit(5)
         for q in range(5):
             qc.x(q)
@@ -1110,12 +1179,12 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         dd_sequence = [XGate(), XGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     coupling_map=CouplingMap([[0, 1], [1, 2], [3, 4]]),
                     schedule_idle_qubits=True,
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )
@@ -1170,7 +1239,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     sequence_min_length_ratios=[0.0],
-                    target=self.target,
+                    target=five_qubit_target(),
                 ),
             ]
         )
@@ -1188,15 +1257,17 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     def test_dd_named_barriers(self):
         """Test DD applied on delays ending on named barriers."""
+        target = five_qubit_target()
+
         dd_sequence = [XGate(), XGate()]
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(target=self.target),
+                ASAPScheduleAnalysis(target=target),
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
                     dd_barrier="dd",
-                    target=self.target,
+                    target=target,
                 ),
             ]
         )

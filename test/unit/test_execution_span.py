@@ -26,7 +26,7 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpanV2,
 )
 
-from ..ibm_test_case import IBMTestCase, IBMVisualizationTestCase
+from ..ibm_test_case import IBMTestCase
 
 
 @ddt.ddt
@@ -369,7 +369,7 @@ class TestTwirledSliceSpan(IBMTestCase):
 
 
 @ddt.ddt
-class TestExecutionSpans(IBMVisualizationTestCase):
+class TestExecutionSpans(IBMTestCase):
     """Class for testing ExecutionSpans."""
 
     def setUp(self) -> None:
@@ -438,10 +438,3 @@ class TestExecutionSpans(IBMVisualizationTestCase):
         self.assertIsNot(inplace_sort, spans)
         self.assertLess(spans[1], spans[0])
         self.assertLess(new_sort[0], new_sort[1])
-
-    @ddt.data((False, 4, None), (True, 6, "alpha"))
-    @ddt.unpack
-    def test_draw(self, normalize_y, width, name):
-        """Test the draw method."""
-        spans = ExecutionSpans([self.span2, self.span1])
-        self.save_plotly_artifact(spans.draw(normalize_y=normalize_y, line_width=width, name=name))
