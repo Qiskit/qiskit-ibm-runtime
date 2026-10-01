@@ -17,8 +17,8 @@ import ddt
 from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
 from qiskit_ibm_runtime.visualization.circuit_schedule import CircuitSchedule
 
-from ...ibm_test_case import IBMVisualizationTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
+from .case import IBMVisualizationTestCase
 
 
 @ddt.ddt

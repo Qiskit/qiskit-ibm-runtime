@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections import defaultdict
 from contextlib import suppress
 from typing import TYPE_CHECKING
@@ -37,34 +36,9 @@ from .utils import bell
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
 
-    from plotly.graph_objects import Figure as PlotlyFigure
-
     from qiskit_ibm_runtime import QiskitRuntimeService
 
     from .decorators import IntegrationTestDependencies
-
-
-def save_plotly_artifact(test_id: str, fig: PlotlyFigure, artifact_dir: str) -> str:
-    """Save a Plotly figure as an HTML artifact, nested under `artifact_dir` by `test_id`.
-
-    Args:
-        test_id: the dotted id of the test (`package.module.Class.method`).
-        fig: the figure to save.
-        artifact_dir: the root directory for the artifacts.
-
-    Returns:
-        The path of the saved artifact.
-    """
-    # nested folder path based on the test module, class, and method
-    test_path = test_id.split(".")[1:]
-    nested_dir = os.path.join(artifact_dir, *test_path[:-1])
-    name = test_path[-1]
-    os.makedirs(nested_dir, exist_ok=True)
-
-    # save figure
-    artifact_path = os.path.join(nested_dir, f"{name}.html")
-    fig.write_html(artifact_path)
-    return artifact_path
 
 
 class IBMTestCase(TestCase):
@@ -104,24 +78,6 @@ class IBMTestCase(TestCase):
                 another file.
         """
         return assert_warns_strict(warning, msg, num_appearances, attributed_to_caller)
-
-
-class IBMVisualizationTestCase(IBMTestCase):
-    """Test case for use with visualization-related features."""
-
-    ARTIFACT_DIR = ".test_artifacts"
-
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-
-        # Ensure the artifact directory exists
-        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
-
-    def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
-        """Save a Plotly figure as an HTML artifact."""
-        return save_plotly_artifact(self.id(), fig, self.ARTIFACT_DIR)
 
 
 class IBMIntegrationTestCase(IBMTestCase):

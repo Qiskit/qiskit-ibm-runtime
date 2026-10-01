@@ -18,7 +18,7 @@ from qiskit.primitives.containers import DataBin
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 from qiskit_ibm_runtime.visualization import draw_zne_evs, draw_zne_extrapolators
 
-from ...ibm_test_case import IBMVisualizationTestCase
+from .case import IBMVisualizationTestCase
 
 
 def zne_results():

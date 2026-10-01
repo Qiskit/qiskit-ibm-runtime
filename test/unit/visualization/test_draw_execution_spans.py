@@ -20,7 +20,7 @@ import ddt
 from qiskit_ibm_runtime.execution_span import ExecutionSpans, SliceSpan
 from qiskit_ibm_runtime.visualization import draw_execution_spans
 
-from ...ibm_test_case import IBMVisualizationTestCase
+from .case import IBMVisualizationTestCase
 
 
 def execution_spans(seed: int = 100) -> tuple[ExecutionSpans, ExecutionSpans]:
