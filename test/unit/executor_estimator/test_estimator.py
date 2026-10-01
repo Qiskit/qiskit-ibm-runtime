@@ -413,11 +413,6 @@ class TestEstimatorRun(IBMTestCase):
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
 
-
-@ddt
-class TestEstimatorRunNoPatching(IBMTestCase):
-    """Tests for the Estimator.run() method (with no Python methods patching)."""
-
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
         """Estimator can run in `dry-run` mode."""
