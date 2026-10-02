@@ -19,35 +19,29 @@ from ddt import data, ddt
 from qiskit_ibm_runtime import SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceDryRunRegistry
 from ..registries import Session as RegistrySession
-from ..utils import get_mocked_backend
 
 
 @ddt
 class TestSession(IBMTestCase):
     """Class for testing the Session class."""
 
-    def test_passing_ibm_backend(self):
+    @mock_responses
+    def test_passing_ibm_backend(self, registry):
         """Test passing in IBMBackend instance."""
-        backend_name = "ibm_gotham"
-        backend = get_mocked_backend(name=backend_name)
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         session = Session(backend=backend)
-        self.assertEqual(session.backend(), backend_name)
+        self.assertEqual(session.backend(), "common_backend")
 
     def test_max_time(self):
         """Test max time."""
-        model_backend = FakeManilaV2()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(),
-            service=MagicMock(),
-            api_client=None,
-        )
+        backend = FakeManilaV2()
         max_times = [
             (42, 42),
             ("1h", 1 * 60 * 60),
@@ -56,26 +50,25 @@ class TestSession(IBMTestCase):
         ]
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
-                backend = get_mocked_backend("ibm_gotham")
                 session = Session(backend=backend, max_time=max_t)
                 self.assertEqual(session._max_time, expected)
 
     def test_run_after_close(self):
         """Test running after session is closed."""
-        backend = get_mocked_backend("ibm_gotham")
+        backend = FakeManilaV2()
         session = Session(backend=backend)
         session.cancel()
         with self.assertRaises(IBMRuntimeError):
             session._run(program_id="program_id", inputs={})
 
-    def test_run(self):
+    @mock_responses
+    def test_run(self, registry):
         """Test the run method."""
-        backend_name = "ibm_gotham"
-        backend = get_mocked_backend(backend_name)
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         job = MagicMock()
         job.job_id.return_value = "12345"
-        service = backend.service
-        service._run.return_value = job
+        service._run = MagicMock(return_value=job)
         inputs = {"name": "bruce wayne"}
         options = {"log_level": "INFO"}
         program_id = "batman_begins"
@@ -94,11 +87,13 @@ class TestSession(IBMTestCase):
         self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
         self.assertDictEqual(kwargs["inputs"], inputs)
         self.assertEqual(kwargs["result_decoder"], decoder)
-        self.assertEqual(session.backend(), backend_name)
+        self.assertEqual(session.backend(), "common_backend")
 
-    def test_context_manager(self):
+    @mock_responses
+    def test_context_manager(self, registry):
         """Test session as a context manager."""
-        backend = get_mocked_backend("ibm_gotham")
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with Session(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
@@ -141,10 +136,11 @@ class TestSession(IBMTestCase):
             primitive = SamplerV2()
             self.assertTrue(primitive._backend.options.use_fractional_gates)
 
-    def test_backend_instance_warnings(self):
+    @mock_responses
+    def test_backend_instance_warnings(self, registry):
         """Test backend instance warnings do not appear."""
-        backend_name = "ibm_gotham"
-        backend = get_mocked_backend(name=backend_name)
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
             Session(backend=backend)
 
