@@ -33,19 +33,6 @@ FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 class TestFakeBackends(IBMTestCase):
     """Test case for fake backends."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.circuit = QuantumCircuit(2)
-        cls.circuit.h(0)
-        cls.circuit.h(1)
-        cls.circuit.h(0)
-        cls.circuit.h(1)
-        cls.circuit.x(0)
-        cls.circuit.x(1)
-        cls.circuit.measure_all()
-
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_properties(self, backend):
         """Test converting backend properties to dict."""

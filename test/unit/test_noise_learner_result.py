@@ -35,26 +35,22 @@ if HAS_AER:
     from qiskit_aer import AerSimulator
 
 
+def generators_and_rates():
+    """Return a set of generators and their rates, for one and for two qubits."""
+    generators = [PauliList(["X", "Z"]), PauliList(["XX", "ZZ", "IY"])]
+    rates = [[0.1, 0.2], [0.3, 0.4, 0.5]]
+
+    return generators, rates
+
+
 class TestPauliLindbladError(IBMTestCase):
     """Class for testing the PauliLindbladError class."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        # A set of generators
-        generators1 = PauliList(["X", "Z"])
-        generators2 = PauliList(["XX", "ZZ", "IY"])
-        self.generators = [generators1, generators2]
-
-        # A set of rates
-        rates1 = [0.1, 0.2]
-        rates2 = [0.3, 0.4, 0.5]
-        self.rates = [rates1, rates2]
-
     def test_valid_inputs(self):
         """Test PauliLindbladError with valid inputs."""
-        for generators, rates in zip(self.generators, self.rates):
+        all_generators, all_rates = generators_and_rates()
+
+        for generators, rates in zip(all_generators, all_rates):
             error = PauliLindbladError(generators, rates)
             self.assertEqual(error.generators, generators)
             self.assertEqual(error.rates.tolist(), rates)
@@ -62,12 +58,16 @@ class TestPauliLindbladError(IBMTestCase):
 
     def test_invalid_inputs(self):
         """Test PauliLindbladError with invalid inputs."""
+        all_generators, all_rates = generators_and_rates()
+
         with self.assertRaises(ValueError):
-            PauliLindbladError(self.generators[0], self.rates[1])
+            PauliLindbladError(all_generators[0], all_rates[1])
 
     def test_json_roundtrip(self):
         """Tests a roundtrip with `_json`."""
-        for generators, rates in zip(self.generators, self.rates):
+        all_generators, all_rates = generators_and_rates()
+
+        for generators, rates in zip(all_generators, all_rates):
             error1 = PauliLindbladError(generators, rates)
             error2 = PauliLindbladError(**error1._json())
             self.assertEqual(error1.generators, error2.generators)
@@ -92,45 +92,50 @@ class TestPauliLindbladError(IBMTestCase):
         self.assertEqual(error.restrict_num_bodies(2).rates.tolist(), error2.rates.tolist())
 
 
+def circuits_qubits_and_errors():
+    """Return a set of circuits, the qubits they act on, and their errors.
+
+    The last error is `None`, to cover layer errors without one.
+    """
+    c1 = QuantumCircuit(2)
+    c1.cx(0, 1)
+
+    c2 = QuantumCircuit(3)
+    c2.cx(0, 1)
+    c2.cx(1, 2)
+
+    circuits = [c1, c2]
+
+    qubits = [[8, 9], [7, 11, 27]]
+
+    errors = [
+        PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2]),
+        PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5]),
+        None,
+    ]
+
+    return circuits, qubits, errors
+
+
+def layer_error_to_draw():
+    """Return a four-qubit layer error, with both one-body and two-body generators."""
+    circuit = QuantumCircuit(4)
+    qubits = [1, 2, 3, 4]
+    generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
+    rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
+
+    return LayerError(circuit, qubits, PauliLindbladError(generators, rates))
+
+
 @ddt
 class TestLayerError(IBMTestCase):
     """Class for testing the LayerError class."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        # A set of circuits
-        c1 = QuantumCircuit(2)
-        c1.cx(0, 1)
-
-        c2 = QuantumCircuit(3)
-        c2.cx(0, 1)
-        c2.cx(1, 2)
-
-        self.circuits = [c1, c2]
-
-        # A set of qubits
-        qubits1 = [8, 9]
-        qubits2 = [7, 11, 27]
-        self.qubits = [qubits1, qubits2]
-
-        # A set of errors
-        error1 = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
-        error2 = PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5])
-        error3 = None
-        self.errors = [error1, error2, error3]
-
-        # Another set of errors used in the visualization tests
-        circuit = QuantumCircuit(4)
-        qubits = [1, 2, 3, 4]
-        generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
-        rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
-        self.layer_error_viz = LayerError(circuit, qubits, PauliLindbladError(generators, rates))
-
     def test_valid_inputs(self):
         """Test LayerError with valid inputs."""
-        for circuit, qubits, error in zip(self.circuits, self.qubits, self.errors):
+        circuits, all_qubits, errors = circuits_qubits_and_errors()
+
+        for circuit, qubits, error in zip(circuits, all_qubits, errors):
             layer_error = LayerError(circuit, qubits, error)
             self.assertEqual(layer_error.circuit, circuit)
             self.assertEqual(layer_error.qubits, qubits)
@@ -141,18 +146,22 @@ class TestLayerError(IBMTestCase):
 
     def test_invalid_inputs(self):
         """Test LayerError with invalid inputs."""
-        with self.assertRaises(ValueError):
-            LayerError(self.circuits[1], self.qubits[0], self.errors[0])
+        circuits, qubits, errors = circuits_qubits_and_errors()
 
         with self.assertRaises(ValueError):
-            LayerError(self.circuits[0], self.qubits[1], self.errors[0])
+            LayerError(circuits[1], qubits[0], errors[0])
 
         with self.assertRaises(ValueError):
-            LayerError(self.circuits[0], self.qubits[0], self.errors[1])
+            LayerError(circuits[0], qubits[1], errors[0])
+
+        with self.assertRaises(ValueError):
+            LayerError(circuits[0], qubits[0], errors[1])
 
     def test_json_roundtrip(self):
         """Tests a roundtrip with `_json`."""
-        for circuit, qubits, error in zip(self.circuits, self.qubits, self.errors):
+        circuits, all_qubits, errors = circuits_qubits_and_errors()
+
+        for circuit, qubits, error in zip(circuits, all_qubits, errors):
             layer_error1 = LayerError(circuit, qubits, error)
             layer_error2 = LayerError(**layer_error1._json())
             self.assertEqual(layer_error1.circuit, layer_error2.circuit)
@@ -164,12 +173,12 @@ class TestLayerError(IBMTestCase):
     def test_no_coupling_map(self):
         """Tests the `draw_map` function with invalid coordinates."""
         with self.assertRaises(ValueError):
-            self.layer_error_viz.draw_map(AerSimulator())
+            layer_error_to_draw().draw_map(AerSimulator())
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_plotting(self):
         """Tests the `draw_map` function to make sure that it produces the right figure."""
-        fig = self.layer_error_viz.draw_map(
+        fig = layer_error_to_draw().draw_map(
             embedding=FakeKyiv(),
             color_no_data="blue",
             colorscale="reds",
