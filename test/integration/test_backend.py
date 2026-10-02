@@ -27,8 +27,8 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..decorators import production_only, run_integration_test, staging_only
-from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import bell
+from .case import IBMIntegrationTestCase
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):

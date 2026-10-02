@@ -22,8 +22,8 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 
-from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import make_mirror_circuit_with_phases
+from .case import IBMIntegrationTestCase
 
 
 @ddt

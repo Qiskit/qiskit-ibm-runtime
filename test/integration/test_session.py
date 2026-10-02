@@ -24,8 +24,8 @@ from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMRuntimeError
 
 from ..decorators import run_integration_test
-from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import bell
+from .case import IBMIntegrationTestCase
 from .test_account import _get_service_instance_name_for_crn
 
 
