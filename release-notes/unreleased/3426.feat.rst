@@ -1,0 +1,3 @@
+:meth:`.Session.details` and :meth:`.Batch.details` now include a ``timestamps`` entry with
+the list of state transitions of the session, when it is returned by the API. Each entry is a
+dictionary with the ``status`` and the ``timestamp`` of when the session transitioned into it.
