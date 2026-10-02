@@ -64,6 +64,16 @@ DUMMY_TOKEN = "123"
 DUMMY_IBM_CLOUD_URL = "https://quantum.cloud.ibm.com"
 
 
+def assert_preferences(prefs, account):
+    """Assert that the preferences set in `prefs` match the ones of `account`."""
+    if "proxies" in prefs:
+        assert account.proxies == ProxyConfiguration(**prefs["proxies"])
+    if "verify" in prefs:
+        assert account.verify == prefs["verify"]
+    if "instance" in prefs:
+        assert account.instance == prefs["instance"]
+
+
 @ddt
 class TestAccount(IBMTestCase):
     """Tests for Account class."""
@@ -355,7 +365,7 @@ class TestEnableAccount(IBMTestCase):
         with temporary_account_config_file(name=name, verify=True, proxies={}):
             service = QiskitRuntimeService(name=name, **params)
         self.assertTrue(service._account)
-        self._verify_prefs(params, service._account)
+        assert_preferences(params, service._account)
 
     @mock_responses
     @combine(
@@ -375,7 +385,7 @@ class TestEnableAccount(IBMTestCase):
         ):
             service = QiskitRuntimeService(channel=channel, **params)
             self.assertTrue(service._account)
-            self._verify_prefs(params, service._account)
+            assert_preferences(params, service._account)
 
     @mock_responses
     @data(
@@ -397,7 +407,7 @@ class TestEnableAccount(IBMTestCase):
             service = QiskitRuntimeService(**params)
 
         self.assertTrue(service._account)
-        self._verify_prefs(params, service._account)
+        assert_preferences(params, service._account)
 
     @mock_responses
     def test_enable_account_by_name_input_instance(self, registry):
@@ -488,11 +498,3 @@ class TestEnableAccount(IBMTestCase):
             service = QiskitRuntimeService()
         self.assertTrue(service._instance_auto)
         self.assertIsNone(service._account.instance)
-
-    def _verify_prefs(self, prefs, account):
-        if "proxies" in prefs:
-            self.assertEqual(account.proxies, ProxyConfiguration(**prefs["proxies"]))
-        if "verify" in prefs:
-            self.assertEqual(account.verify, prefs["verify"])
-        if "instance" in prefs:
-            self.assertEqual(account.instance, prefs["instance"])
