@@ -704,12 +704,8 @@ class BaseRegistry(FirstMatchRegistry):
         # Validate the instance CRN and session id.
         instance = self.get_crn_from_request(request)
         session_id = request.path_url.split("/")[-2].split("?")[0]
-        if instance.name not in self.backends:
+        if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
-
-        if session_id in self.sessions[instance.name]:
-            self.sessions[instance.name][session_id].state = "closed"
-            self.sessions[instance.name][session_id].accepting_jobs = False
 
         return (204, {}, "")
 
