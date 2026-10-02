@@ -18,7 +18,6 @@ import socket
 import subprocess
 import urllib
 from time import sleep
-from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
@@ -26,11 +25,8 @@ from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
-from ..decorators import integration_test_setup
 from ..ibm_test_case import IBMTestCase
-
-if TYPE_CHECKING:
-    from ..decorators import IntegrationTestDependencies
+from .case import integration_test_dependencies
 
 ADDRESS = "127.0.0.1"
 PORT = 8085
@@ -73,9 +69,9 @@ class TestProxies(IBMTestCase):
             self.proxy_process.wait()
         socket.socket.connect = self._original_connect
 
-    @integration_test_setup(supported_channel=["ibm_quantum_platform"], init_service=False)
-    def test_proxies_cloud_runtime_client(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_proxies_cloud_runtime_client(self) -> None:
         """Should reach the proxy using RuntimeClient."""
+        dependencies = integration_test_dependencies(init_service=False)
         params = ClientParameters(
             instance=dependencies.instance,
             token=dependencies.token,
@@ -91,11 +87,9 @@ class TestProxies(IBMTestCase):
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
         self.assertIn(api_line, proxy_output)
 
-    @integration_test_setup(supported_channel=["ibm_quantum_platform"], init_service=False)
-    def test_proxies_qiskit_runtime_service(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_proxies_qiskit_runtime_service(self) -> None:
         """Should reach the proxy using QiskitRuntimeService."""
+        dependencies = integration_test_dependencies(init_service=False)
         service = QiskitRuntimeService(
             instance=dependencies.instance,
             token=dependencies.token,
@@ -111,9 +105,9 @@ class TestProxies(IBMTestCase):
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
         self.assertIn(api_line, proxy_output)
 
-    @integration_test_setup(supported_channel=["ibm_quantum_platform"], init_service=False)
-    def test_no_proxy_raises_exception(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_no_proxy_raises_exception(self) -> None:
         """Should raise an exception when no proxy is specified."""
+        dependencies = integration_test_dependencies(init_service=False)
         with self.assertRaises(InvalidAccountError):
             service = QiskitRuntimeService(
                 instance=dependencies.instance,

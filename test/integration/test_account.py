@@ -33,7 +33,7 @@ from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalSer
 from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
-    from ..decorators import IntegrationTestDependencies
+    from .case import IntegrationTestDependencies
 
 
 def _get_service_instance_name_for_crn(

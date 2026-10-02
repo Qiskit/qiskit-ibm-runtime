@@ -26,7 +26,6 @@ from qiskit.compiler import transpile
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from ..decorators import integration_test_setup
 from ..utils import bell
 from .case import IBMIntegrationJobTestCase
 
@@ -34,8 +33,6 @@ if TYPE_CHECKING:
     from qiskit import QuantumCircuit
 
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
-
-    from ..decorators import IntegrationTestDependencies
 
 
 class TestIBMJobAttributes(IBMIntegrationJobTestCase):
@@ -47,13 +44,10 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
     last_week: datetime
 
     @classmethod
-    @integration_test_setup()
-    def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
+    def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        cls.dependencies = dependencies
-        cls.service = dependencies.service
-        cls.sim_backend = dependencies.service.backend(dependencies.qpu)
+        cls.sim_backend = cls.service.backend(cls.dependencies.qpu)
         cls.bell = transpile(bell(), cls.sim_backend)
         sampler = Sampler(mode=cls.sim_backend)
         cls.sim_job = sampler.run([cls.bell])

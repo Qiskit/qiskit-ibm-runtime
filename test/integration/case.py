@@ -15,20 +15,70 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections import defaultdict
 from contextlib import suppress
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from unittest import SkipTest
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import SamplerV2
-from test.decorators import integration_test_setup
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
 from test.ibm_test_case import IBMTestCase
 from test.utils import bell
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import QiskitRuntimeService
-    from test.decorators import IntegrationTestDependencies
+    from qiskit_ibm_runtime.accounts import ChannelType
+
+
+@dataclass
+class IntegrationTestDependencies:
+    """Integration test dependencies."""
+
+    service: QiskitRuntimeService
+    instance: str | None
+    qpu: str
+    token: str
+    channel: ChannelType
+    url: str
+
+
+def integration_test_dependencies(init_service: bool = True) -> IntegrationTestDependencies:
+    """Return the dependencies of an integration test, from the environment configuration.
+
+    Args:
+        init_service: whether to initialize the `QiskitRuntimeService` from the environment
+            configuration. When `False`, the returned dependencies have no service.
+
+    Returns:
+        The dependencies of an integration test.
+
+    Raises:
+        SkipTest: if the environment does not provide a token and a url.
+    """
+    channel: ChannelType = "ibm_quantum_platform"
+    token = os.getenv("QISKIT_IBM_TOKEN")
+    url = os.getenv("QISKIT_IBM_URL")
+    instance = os.getenv("QISKIT_IBM_INSTANCE")
+
+    if not token or not url:
+        raise SkipTest("No integration test credentials available.")
+
+    service = (
+        QiskitRuntimeService(channel=channel, token=token, url=url, instance=instance)
+        if init_service
+        else None
+    )
+
+    return IntegrationTestDependencies(
+        channel=channel,
+        token=token,
+        url=url,
+        instance=instance,
+        qpu=os.getenv("QISKIT_IBM_QPU"),
+        service=service,
+    )
 
 
 class IBMIntegrationTestCase(IBMTestCase):
@@ -38,12 +88,11 @@ class IBMIntegrationTestCase(IBMTestCase):
     service: QiskitRuntimeService
 
     @classmethod
-    @integration_test_setup()
-    def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
+    def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        cls.dependencies = dependencies
-        cls.service = dependencies.service
+        cls.dependencies = integration_test_dependencies()
+        cls.service = cls.dependencies.service
 
     def setUp(self) -> None:
         """Test level setup."""
