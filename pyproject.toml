@@ -77,6 +77,7 @@ module = [
     "qiskit_aer.*",
     "qiskit.*",
     "qiskit_mitigation.*",
+    "qiskit_noise_learning.*",
     "requests_ntlm.*",
     "samplomatic.*",
     "scipy.*",
@@ -191,6 +192,7 @@ dependencies = [
     "pybase64>=1.4.0",
     "samplomatic>=0.21.0",
     "qiskit-mitigation>=0.1.1",
+    "qiskit-noise-learning @ git+https://github.com/Qiskit/qiskit-noise-learning.git@learning-protocols",
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
