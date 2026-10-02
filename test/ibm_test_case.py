@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections import defaultdict
 from contextlib import suppress
 from typing import TYPE_CHECKING
@@ -36,8 +35,6 @@ from .utils import bell
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
-
-    from plotly.graph_objects import Figure as PlotlyFigure
 
     from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -81,33 +78,6 @@ class IBMTestCase(TestCase):
                 another file.
         """
         return assert_warns_strict(warning, msg, num_appearances, attributed_to_caller)
-
-
-class IBMVisualizationTestCase(IBMTestCase):
-    """Test case for use with visualization-related features."""
-
-    ARTIFACT_DIR = ".test_artifacts"
-
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-
-        # Ensure the artifact directory exists
-        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
-
-    def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
-        """Save a Plotly figure as an HTML artifact."""
-        # nested folder path based on the test module, class, and method
-        test_path = self.id().split(".")[1:]
-        nested_dir = os.path.join(self.ARTIFACT_DIR, *test_path[:-1])
-        name = test_path[-1]
-        os.makedirs(nested_dir, exist_ok=True)
-
-        # save figure
-        artifact_path = os.path.join(nested_dir, f"{name}.html")
-        fig.write_html(artifact_path)
-        return artifact_path
 
 
 class IBMIntegrationTestCase(IBMTestCase):

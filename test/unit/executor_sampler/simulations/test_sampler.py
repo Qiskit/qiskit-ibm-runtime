@@ -38,22 +38,16 @@ class TestSampler(IBMTestCase):
     All the tests in this class perform noiseless simulations.
     """
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        self.backend = AerSimulator()
-
-        # The tolerance used when verifying simulated counts with exact probabilities via
-        # Hellinger distance.
-        self.tolerance = 0.01
-
     def verify_pub_result(self, pub: SamplerPub, pub_result: SamplerPubResult) -> None:
         """A helper to verify the correctness of PUB results.
 
         It computes the probabilities of each outcome exactly using Qiskit's StateVector class.
         Then, it compares them to the given ``counts`` via Hellinger distance.
         """
+        # The tolerance used when verifying simulated counts with exact probabilities via
+        # Hellinger distance.
+        tolerance = 0.01
+
         # Avoid modifying the given circuit
         circuit_cp = pub.circuit.copy()
         circuit_cp.remove_final_measurements()
@@ -74,7 +68,7 @@ class TestSampler(IBMTestCase):
                 fidelity := hellinger_fidelity(array[index].get_counts(), probabilities),
                 1.0,
                 msg=f"Fidelity: {fidelity}",
-                delta=self.tolerance,
+                delta=tolerance,
             )
 
     @data([True, False], [False, True], [True, True], [False, False])
@@ -89,12 +83,14 @@ class TestSampler(IBMTestCase):
           either gate or measurement twirling is enabled, and the requested ``shots``
           otherwise.
         """
-        circuit = make_mirror_circuit_with_phases(self.backend)
+        backend = AerSimulator()
+
+        circuit = make_mirror_circuit_with_phases(backend)
         parameters = np.random.random((2, 3) + (circuit.num_parameters,))
 
         pubs = [SamplerPub.coerce([circuit, parameters])]
 
-        sampler = Sampler(self.backend)
+        sampler = Sampler(backend)
 
         sampler.options.twirling.enable_gates = enable_gates
         sampler.options.twirling.enable_measure = enable_measure
