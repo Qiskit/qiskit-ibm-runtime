@@ -89,10 +89,6 @@ class TestSamplerSimpleCircuits(IBMTestCase):
 class TestSamplerCircuitValidation(IBMTestCase):
     """Tests for circuit validation in Sampler."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = FakeVigoV2()
-
     def test_multiple_circuits_one_with_box_raises_error(self):
         """Test that BoxOp in any circuit raises an error."""
         circuit1 = QuantumCircuit(1, 1)
@@ -106,7 +102,7 @@ class TestSamplerCircuitValidation(IBMTestCase):
         circuit2.append(BoxOp(inner_circuit), [0, 1])
         circuit2.measure_all()
 
-        sampler = Sampler(mode=self.backend)
+        sampler = Sampler(mode=FakeVigoV2())
 
         with self.assertRaisesRegex(IBMInputValueError, "BoxOp"):
             sampler.run([circuit1, circuit2], shots=1024)
