@@ -17,9 +17,9 @@ from __future__ import annotations
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..account import custom_envs
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
+from ...account import custom_envs
+from ...decorators import mock_responses
+from ...ibm_test_case import IBMTestCase
 
 
 class TestAPISession(IBMTestCase):

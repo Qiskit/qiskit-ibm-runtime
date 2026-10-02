@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 
 @ddt
