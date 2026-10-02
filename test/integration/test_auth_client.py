@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from unittest import skip
-
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
 from ..ibm_test_case import IBMTestCase
@@ -25,7 +23,6 @@ from .case import integration_test_dependencies
 class TestAuthClient(IBMTestCase):
     """Tests for the AuthClient."""
 
-    @skip("The integration test configuration does not provide `ibm_cloud` credentials.")
     def test_cloud_access_token(self) -> None:
         """Test valid cloud authentication."""
         dependencies = integration_test_dependencies(init_service=False)
