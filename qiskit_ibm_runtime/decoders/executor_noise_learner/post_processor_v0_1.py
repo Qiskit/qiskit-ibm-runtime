@@ -36,7 +36,9 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
         :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result` per gate in the model.
     """
     result_fit = process_learning_results(result)
-    maps = result_fit.model.to_pauli_lindblad_maps(result_fit.model_data)  # type: ignore
+    maps = result_fit.model.to_pauli_lindblad_maps(
+        result_fit.model_data, restrict_to_qubit_idxs=True
+    )  # type: ignore
     return NoiseLearnerV3Results(
         [
             NoiseLearnerV3Result.from_generators(
