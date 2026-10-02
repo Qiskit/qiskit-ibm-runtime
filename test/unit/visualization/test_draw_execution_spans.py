@@ -20,7 +20,8 @@ import ddt
 from qiskit_ibm_runtime.execution_span import ExecutionSpans, SliceSpan
 from qiskit_ibm_runtime.visualization import draw_execution_spans
 
-from .case import IBMVisualizationTestCase
+from ...ibm_test_case import IBMTestCase
+from .case import save_plotly_artifact
 
 
 def execution_spans(seed: int = 100) -> tuple[ExecutionSpans, ExecutionSpans]:
@@ -64,7 +65,7 @@ def spans_to_draw():
 
 
 @ddt.ddt
-class TestExecutionSpans(IBMVisualizationTestCase):
+class TestExecutionSpans(IBMTestCase):
     """Class for testing the draw method of ExecutionSpans."""
 
     @ddt.data((False, 4, None), (True, 6, "alpha"))
@@ -72,11 +73,13 @@ class TestExecutionSpans(IBMVisualizationTestCase):
     def test_draw(self, normalize_y, width, name):
         """Test the draw method."""
         spans = spans_to_draw()
-        self.save_plotly_artifact(spans.draw(normalize_y=normalize_y, line_width=width, name=name))
+        save_plotly_artifact(
+            self.id(), spans.draw(normalize_y=normalize_y, line_width=width, name=name)
+        )
 
 
 @ddt.ddt
-class TestDrawExecutionSpans(IBMVisualizationTestCase):
+class TestDrawExecutionSpans(IBMTestCase):
     """Tests for the ``draw_execution_spans`` function."""
 
     @ddt.data(False, True)
@@ -84,7 +87,7 @@ class TestDrawExecutionSpans(IBMVisualizationTestCase):
         """Test with one set of spans."""
         spans0, _ = execution_spans()
         fig = draw_execution_spans(spans0, normalize_y=normalize_y)
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(self.id(), fig)
 
     @ddt.data(
         (False, False, 4, None), (True, True, 8, "alpha"), (True, False, 4, ["alpha", "beta"])
@@ -101,4 +104,4 @@ class TestDrawExecutionSpans(IBMVisualizationTestCase):
             line_width=width,
             names=names,
         )
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(self.id(), fig)

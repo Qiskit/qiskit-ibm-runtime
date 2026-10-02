@@ -22,7 +22,8 @@ from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 from qiskit_ibm_runtime.visualization import draw_layer_error_map, draw_layer_errors_swarm
 
-from .case import IBMVisualizationTestCase
+from ...ibm_test_case import IBMTestCase
+from .case import save_plotly_artifact
 
 if HAS_AER:
     from qiskit_aer import AerSimulator
@@ -49,7 +50,7 @@ def layer_errors():
     ]
 
 
-class TestDrawLayerErrorMap(IBMVisualizationTestCase):
+class TestDrawLayerErrorMap(IBMTestCase):
     """Class for testing the ``draw_layer_error_map`` function."""
 
     def test_plotting(self):
@@ -72,7 +73,7 @@ class TestDrawLayerErrorMap(IBMVisualizationTestCase):
         self.assertEqual(layout["height"], 1000)
         self.assertEqual(layout["width"], 1000)
 
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(self.id(), fig)
 
     @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_no_coupling_map(self):
@@ -82,7 +83,7 @@ class TestDrawLayerErrorMap(IBMVisualizationTestCase):
             draw_layer_error_map(errors[0], AerSimulator())
 
 
-class TestDrawLayerErrorsSwarm(IBMVisualizationTestCase):
+class TestDrawLayerErrorsSwarm(IBMTestCase):
     """Class for testing the ``draw_layer_errors_swarm`` function."""
 
     def test_plotting(self):
@@ -120,7 +121,7 @@ class TestDrawLayerErrorsSwarm(IBMVisualizationTestCase):
         self.assertEqual(layout["width"], 1000)
         self.assertEqual(layout["height"], 800)
 
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(self.id(), fig)
 
     def test_errors(self):
         """Test errors."""
