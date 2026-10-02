@@ -29,18 +29,23 @@ from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
 
 
+def boxed_mirror_circuit(backend):
+    """Return a mirror circuit, and the boxed and ISA-compliant version of it for `backend`."""
+    circuit = make_mirror_circuit_with_phases(backend)
+
+    pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+    pass_manager.post_scheduling = generate_boxing_pass_manager(
+        enable_gates=True,
+        enable_measures=True,
+        add_tags="unique_box",
+        inject_noise_site="after",
+    )
+
+    return circuit, pass_manager.run(circuit)
+
+
 class TestExecutor(IBMTestCase):
     """Executor tests centered around qiskit-aer simulations."""
-
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        self.backend = AerSimulator()
-
-        # The tolerance used when verifying simulated counts with exact probabilities via
-        # Hellinger distance.
-        self.tolerance = 0.01
 
     def test_noiseless_simulation(self):
         """Test noiseless local mode simulations with the executor.
@@ -50,17 +55,11 @@ class TestExecutor(IBMTestCase):
         * The results are correct via Hellinger distance. Probabilities of each outcome are computed
           exactly using Qiskit's StateVector class.
         """
-        circuit = make_mirror_circuit_with_phases(self.backend)
+        # The tolerance used when verifying simulated counts with exact probabilities via
+        # Hellinger distance.
+        tolerance = 0.01
 
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
-        pm.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True,
-            enable_measures=True,
-            add_tags="unique_box",
-            inject_noise_site="after",
-        )
-
-        boxed_isa_circuit = pm.run(circuit)
+        circuit, boxed_isa_circuit = boxed_mirror_circuit(AerSimulator())
         isa_template, samplex = build(boxed_isa_circuit)
 
         shape = (2, 4)
@@ -92,7 +91,7 @@ class TestExecutor(IBMTestCase):
                 ),
                 1.0,
                 msg=f"Fidelity: {fidelity}",
-                delta=self.tolerance,
+                delta=tolerance,
             )
 
     def test_noisy_simulation(self):
@@ -103,17 +102,7 @@ class TestExecutor(IBMTestCase):
           Probabilities of each outcome are computed exactly using Qiskit's StateVector class
           and fidelities are computed via Hellinger distance.
         """
-        circuit = make_mirror_circuit_with_phases(self.backend)
-
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
-        pm.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True,
-            enable_measures=True,
-            add_tags="unique_box",
-            inject_noise_site="after",
-        )
-
-        boxed_isa_circuit = pm.run(circuit)
+        circuit, boxed_isa_circuit = boxed_mirror_circuit(AerSimulator())
         isa_template, samplex = build(boxed_isa_circuit)
 
         parameter_values = np.random.random((circuit.num_parameters,))

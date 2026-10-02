@@ -31,6 +31,14 @@ from ...registries import OneInstanceDryRunRegistry
 from ...utils import get_mocked_backend
 
 
+def single_circuit_program():
+    """Return a ten-shot program holding a single one-qubit circuit."""
+    program = QuantumProgram(10)
+    program.append_circuit_item(circuit=QuantumCircuit(1))
+
+    return program
+
+
 class TestExecutorOptions(IBMTestCase):
     """Tests option setting on the ``Executor`` class."""
 
@@ -143,25 +151,23 @@ class TestExecutorOptions(IBMTestCase):
 class TestExecutor(IBMTestCase):
     """Tests the ``Executor`` class."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        self.program = QuantumProgram(10)
-        self.program.append_circuit_item(circuit=QuantumCircuit(1))
-
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
         """Executor can run in `dry-run` mode."""
+        program = single_circuit_program()
+
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
         executor = Executor(mode=backend)
-        job = executor.run(self.program, dry_run=True)
+        job = executor.run(program, dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
     @data("job", "session", "batch")
     @mock_responses
     def test_mode_handling(self, mode_id, registry):
         """Executor `mode` init argument should propagate to interface and through `run()`."""
+        program = single_circuit_program()
+
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
 
@@ -185,5 +191,5 @@ class TestExecutor(IBMTestCase):
         self.assertEqual(executor.mode, expected_mode)
 
         # Jobs issued should belong to a session under `session` / `batch`` modes.
-        job = executor.run(self.program)
+        job = executor.run(program)
         self.assertEqual(job._session_id, expected_session_id)

@@ -117,20 +117,18 @@ class TestMakeDDSequence(IBMTestCase):
 class TestGenerateDDPassManager(IBMTestCase):
     """Tests for generate_dd_pass_manager function."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = FakeManilaV2()
-
     def test_returns_pass_manager(self):
         """Test that function returns a PassManager."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
         self.assertIsInstance(pm, PassManager)
 
     def test_pass_manager_has_correct_number_of_passes(self):
         """Test that pass manager contains exactly 4 passes."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         passes = flow_controller.passes
@@ -140,10 +138,11 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_alap_scheduling_pass_is_used(self):
         """Test that ALAP scheduling pass is used when specified."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
             enable=True, sequence_type="XX", scheduling_method="alap"
         )
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         passes = flow_controller.passes
@@ -153,10 +152,11 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_asap_scheduling_pass_is_used(self):
         """Test that ASAP scheduling pass is used when specified."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
             enable=True, sequence_type="XX", scheduling_method="asap"
         )
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         passes = flow_controller.passes
@@ -166,8 +166,9 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_time_unit_conversion_pass_is_first(self):
         """Test that TimeUnitConversion is the first pass."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         passes = flow_controller.passes
@@ -176,8 +177,9 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_pad_dynamical_decoupling_pass_has_correct_target(self):
         """Test that PadDynamicalDecoupling pass has correct target."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         passes = flow_controller.passes
@@ -185,12 +187,13 @@ class TestGenerateDDPassManager(IBMTestCase):
         # Third pass should be PadDynamicalDecoupling
         dd_pass = passes[2]
         self.assertIsInstance(dd_pass, PadDynamicalDecoupling)
-        self.assertEqual(dd_pass.target, self.backend.target)
+        self.assertEqual(dd_pass.target, backend.target)
 
     def test_pad_dynamical_decoupling_pass_has_xx_sequence(self):
         """Test that PadDynamicalDecoupling has correct XX sequence."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         dd_pass = flow_controller.passes[2]
@@ -202,8 +205,9 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_pad_dynamical_decoupling_pass_has_xpxm_sequence(self):
         """Test that PadDynamicalDecoupling has correct XpXm sequence."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XpXm")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         dd_pass = flow_controller.passes[2]
@@ -217,8 +221,9 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_pad_dynamical_decoupling_pass_has_xy4_sequence(self):
         """Test that PadDynamicalDecoupling has correct XY4 sequence."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XY4")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         dd_pass = flow_controller.passes[2]
@@ -228,12 +233,13 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_pad_dynamical_decoupling_pass_extra_slack_distribution_is_propagated(self):
         """Test that extra_slack_distribution is propagated."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
             enable=True,
             sequence_type="XX",
             extra_slack_distribution="edges",
         )
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         dd_pass = flow_controller.passes[2]
@@ -242,10 +248,11 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_pad_dynamical_decoupling_pass_skip_reset_qubits_is_propagated(self):
         """Test that skip_reset_qubits is propagated."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
             enable=True, sequence_type="XX", skip_reset_qubits=False
         )
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         dd_pass = flow_controller.passes[2]
@@ -254,15 +261,16 @@ class TestGenerateDDPassManager(IBMTestCase):
 
     def test_pad_delay_pass_is_last(self):
         """Test that PadDelay is the last pass."""
+        backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
-        pm = generate_dd_pass_manager(backend=self.backend, options=options)
+        pm = generate_dd_pass_manager(backend=backend, options=options)
 
         flow_controller = pm.to_flow_controller()
         passes = flow_controller.passes
 
         # Last pass should be PadDelay
         self.assertIsInstance(passes[3], PadDelay)
-        self.assertEqual(passes[3].target, self.backend.target)
+        self.assertEqual(passes[3].target, backend.target)
 
     def test_backend_without_target_raises_error(self):
         """Test that backend without target raises ValueError."""
@@ -335,13 +343,10 @@ class TestGenerateDDPassManager(IBMTestCase):
 class TestApplyDynamicalDecoupling(IBMTestCase):
     """Tests for apply_dynamical_decoupling function."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = FakeManilaV2()
-
     @patch("qiskit_ibm_runtime.executor.dynamical_decoupling.generate_dd_pass_manager")
     def test_pass_manager_called_once_per_item(self, mock_generate_pm):
         """Test that pass manager is called once per item with mixed CircuitItem and SamplexItem."""
+        backend = FakeManilaV2()
         # Create a mock pass manager
         mock_pm = MagicMock(spec=PassManager)
         mock_pm.run = MagicMock(side_effect=lambda circ: circ)
@@ -380,13 +385,13 @@ class TestApplyDynamicalDecoupling(IBMTestCase):
 
         # Apply DD
         result_program = apply_dynamical_decoupling(
-            backend=self.backend,
+            backend=backend,
             dd_options=dd_options,
             quantum_program=quantum_program,
         )
 
         mock_generate_pm.assert_called_once_with(
-            backend=self.backend,
+            backend=backend,
             options=dd_options,
         )
         self.assertEqual(mock_pm.run.call_count, 3)
