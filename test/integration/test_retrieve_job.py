@@ -17,8 +17,8 @@ from datetime import datetime, timedelta, timezone
 from qiskit.providers.jobstatus import JobStatus
 
 from ..decorators import run_integration_test
-from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..utils import wait_for_status
+from .case import IBMIntegrationJobTestCase
 
 
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):

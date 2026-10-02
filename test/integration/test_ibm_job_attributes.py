@@ -27,8 +27,8 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..decorators import integration_test_setup
-from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..utils import bell
+from .case import IBMIntegrationJobTestCase
 
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit

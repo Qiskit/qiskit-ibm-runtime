@@ -30,7 +30,7 @@ from qiskit_ibm_runtime.accounts.utils import (
 )
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 
-from ..ibm_test_case import IBMIntegrationTestCase
+from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
     from ..decorators import IntegrationTestDependencies
