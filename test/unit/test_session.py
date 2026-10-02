@@ -14,9 +14,9 @@
 
 from unittest.mock import MagicMock
 
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 
-from qiskit_ibm_runtime import SamplerV2, Session
+from qiskit_ibm_runtime import Batch, SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -135,6 +135,32 @@ class TestSession(IBMTestCase):
 
         registry.add_session(RegistrySession(session.session_id, "common_backend"), "a")
         self.assertEqual(session.details()["mode"], "dedicated")
+
+    @data(
+        (Session, None),
+        (Batch, None),
+        (Session, [{"status": "open", "timestamp": "2026-01-01T00:00:00Z"}]),
+        (
+            Batch,
+            [
+                {"status": "open", "timestamp": "2026-01-01T00:00:00Z"},
+                {"status": "active", "timestamp": "2026-01-01T00:01:00Z"},
+                {"status": "closed", "timestamp": "2026-01-01T00:02:00Z"},
+            ],
+        ),
+    )
+    @unpack
+    @mock_responses
+    def test_details_timestamps(self, session_cls, timestamps, registry):
+        """Test that the session state transitions are included in the details."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        session = session_cls(backend=backend)
+
+        registry.add_session(
+            RegistrySession(session.session_id, "common_backend", timestamps=timestamps), "a"
+        )
+        self.assertEqual(session.details()["timestamps"], timestamps)
 
     @mock_responses
     def test_cm_session_fractional(self, registry):

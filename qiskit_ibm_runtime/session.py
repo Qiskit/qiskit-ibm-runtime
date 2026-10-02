@@ -300,6 +300,9 @@ class Session:
             * ``mode``: Execution mode of the session.
             * ``usage_time``: The usage time, in seconds, of this Session or Batch.
               Usage is defined as the time a quantum system is committed to complete a job.
+            * ``timestamps``: List of the state transitions of the session, if available. Each
+              entry is a dictionary with the ``status`` (open, active, inactive, or closed) and
+              the ``timestamp`` of when the session transitioned into that status.
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             response = self._service._get_api_client(self._instance).session_details(
@@ -321,6 +324,7 @@ class Session:
                     "activated_at": response.get("activated_at"),
                     "mode": response.get("mode"),
                     "usage_time": response.get("elapsed_time"),
+                    "timestamps": response.get("timestamps"),
                 }
         return None
 
