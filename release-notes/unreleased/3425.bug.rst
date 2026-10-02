@@ -1,0 +1,4 @@
+The validation of ``rzz`` gate angles now rejects ``nan`` values, which previously passed the
+check for the range ``[0, pi/2]`` and only failed later during execution. Non-finite parameter
+values bound to a parameterized ``rzz`` angle now also raise an :class:`.IBMInputValueError`
+with a descriptive message, instead of a ``ValueError``.
