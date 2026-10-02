@@ -205,3 +205,6 @@ class Session:
 
     mode: Literal["batch", "dedicated"] = "dedicated"
     """Session mode."""
+
+    timestamps: list[dict[str, str]] | None = None
+    """Session state transitions, as returned by the API."""
