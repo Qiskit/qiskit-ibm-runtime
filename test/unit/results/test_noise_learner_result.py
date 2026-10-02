@@ -22,7 +22,7 @@ from qiskit.utils.optionals import HAS_AER
 from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 try:
     import plotly.graph_objects as go

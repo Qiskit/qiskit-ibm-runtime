@@ -19,7 +19,7 @@ from qiskit.primitives import DataBin
 
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 try:
     import plotly.graph_objects as go
