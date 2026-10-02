@@ -286,7 +286,7 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @data(-1, 1, 2)
+    @data(-1, 1, 2, float("nan"))
     def test_rzz_fixed_angle_validation(self, angle):
         """Test exception when rzz gate is used with an angle outside the range [0, pi/2]."""
         backend = FakeFractionalBackend()
@@ -301,7 +301,7 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaisesRegex(IBMInputValueError, f"{angle}"):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @data(-1, 1, 2)
+    @data(-1, 1, 2, float("nan"))
     def test_rzz_parametrized_angle_validation(self, angle):
         """Test rzz gate with parameter outside range.
 
