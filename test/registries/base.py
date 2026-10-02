@@ -656,11 +656,13 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
         session = self.sessions[instance.name][session_id]
 
-        response_body = {
+        response_body: dict[str, object] = {
             "id": "session_12345",
             "backend_name": session.backend_name,
             "mode": session.mode,
         }
+        if session.timestamps is not None:
+            response_body["timestamps"] = session.timestamps
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def callback_sessions_patch(self, request: PreparedRequest) -> CallbackResult:
