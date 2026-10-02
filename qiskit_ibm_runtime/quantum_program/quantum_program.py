@@ -30,6 +30,28 @@ from samplomatic.quantum_program import QuantumProgram as BaseQuantumProgram
 from samplomatic.quantum_program.datatree import DataTree  # noqa: TC002
 
 
+def coerce_to_quantum_program(program: BaseQuantumProgram) -> QuantumProgram:
+    """Coerce a :class:`~samplomatic.quantum_program.QuantumProgram`.
+
+    Args:
+        program: A samplomatic or runtime :class:`~.QuantumProgram`.
+
+    Returns:
+        The same object if it is already a :class:`~.QuantumProgram`, otherwise a new
+        :class:`~.QuantumProgram` that wraps the same data.
+    """
+    if isinstance(program, QuantumProgram):
+        return program
+
+    return QuantumProgram(
+        shots=program.shots,
+        items=program.items,
+        noise_maps=program.noise_maps,
+        meas_level=program.meas_level,
+        passthrough_data=program.passthrough_data,
+    )
+
+
 class QuantumProgram(BaseQuantumProgram):
     """A quantum runtime executable.
 

@@ -16,8 +16,9 @@ import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
+from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
+from qiskit_ibm_runtime.quantum_program import QuantumProgram, coerce_to_quantum_program
 
 from ...ibm_test_case import IBMTestCase
 
@@ -143,3 +144,25 @@ class TestQuantumProgram(IBMTestCase):
         self.assertEqual(samplex_item.chunk_size, 7)
         self.assertEqual(samplex_item.shape, (4, 3, 2))
         self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.pl1"], noise_models[1])
+
+    def test_coerce_to_quantum_program_from_samplomatic(self):
+        """Test that a samplomatic QuantumProgram is promoted to a runtime QuantumProgram."""
+        circuit = QuantumCircuit(1)
+        samplomatic_program = SamplomaticQuantumProgram(shots=50)
+        samplomatic_program.append_circuit_item(circuit)
+
+        result = coerce_to_quantum_program(samplomatic_program)
+
+        self.assertIsInstance(result, QuantumProgram)
+        self.assertEqual(result.shots, 50)
+        self.assertEqual(result.items, samplomatic_program.items)
+        self.assertIsNone(result._semantic_role)
+
+    def test_coerce_to_quantum_program_no_change(self):
+        """Test that a runtime QuantumProgram is returned unchanged."""
+        program = QuantumProgram(shots=100)
+        program._semantic_role = "sampler-v2"
+
+        result = coerce_to_quantum_program(program)
+
+        self.assertIs(result, program)
