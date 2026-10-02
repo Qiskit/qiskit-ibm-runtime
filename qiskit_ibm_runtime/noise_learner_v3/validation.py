@@ -186,7 +186,7 @@ def _validate_rzz_angle(angle: float) -> str:
     Returns:
         An empty string if the angle is valid, otherwise an error message.
     """
-    if not isinstance(angle, ParameterExpression) and (angle < 0.0 or angle > np.pi / 2 + 1e-10):
+    if not isinstance(angle, ParameterExpression) and not 0.0 <= angle <= np.pi / 2 + 1e-10:
         return (
             f"'rzz' is supported only for angles in the range ``[0, pi/2]``, but an angle "
             f"({angle}) outside of this range has been requested."
