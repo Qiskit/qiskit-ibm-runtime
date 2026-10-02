@@ -23,14 +23,14 @@ from urllib.parse import parse_qs, urlparse
 from responses import DELETE, GET, PATCH, POST, CallbackResponse
 from responses.registries import FirstMatchRegistry
 
-from .entities import JobStatus
+from .entities import JobStatus, Session
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from requests import PreparedRequest
 
-    from .entities import Backend, Instance, Job, Session
+    from .entities import Backend, Instance, Job
 
 
 CallbackResult: TypeAlias = tuple[int, dict[str, str], str]
@@ -214,6 +214,15 @@ class BaseRegistry(FirstMatchRegistry):
                 method=PATCH,
                 url=re.compile(r"https://my-region.quantum.cloud.ibm.com/api/v1/sessions/\w+"),
                 callback=self.callback_sessions_patch,
+            ),
+        )
+        self.add(
+            CallbackResponse(
+                method=DELETE,
+                url=re.compile(
+                    r"https://my-region.quantum.cloud.ibm.com/api/v1/sessions/\w+/close"
+                ),
+                callback=self.callback_sessions_close,
             ),
         )
 
@@ -634,8 +643,13 @@ class BaseRegistry(FirstMatchRegistry):
         if instance.name not in self.backends or backend_name not in self.backends[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
 
+        session_id = "session_12345"
+        self.sessions[instance.name][session_id] = Session(
+            session_id, backend_name, mode=request_body["mode"]
+        )
+
         response_body = {
-            "id": "session_12345",
+            "id": session_id,
             "backend_name": backend_name,
             "mode": request_body["mode"],
         }
@@ -677,7 +691,27 @@ class BaseRegistry(FirstMatchRegistry):
         if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
 
-        return (204, {"Content-Type": "application/json"}, json.dumps({}))
+        return (204, {}, "")
+
+    def callback_sessions_close(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions/{id}/close`` endpoint.
+
+        Dynamically cancel a session.
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and session id.
+        instance = self.get_crn_from_request(request)
+        session_id = request.path_url.split("/")[-2].split("?")[0]
+        if instance.name not in self.backends:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        if session_id in self.sessions[instance.name]:
+            self.sessions[instance.name][session_id].state = "closed"
+            self.sessions[instance.name][session_id].accepting_jobs = False
+
+        return (204, {}, "")
 
     def callback_workloads_get(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/workloads`` endpoint.
