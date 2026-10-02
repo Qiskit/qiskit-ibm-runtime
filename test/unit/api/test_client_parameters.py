@@ -29,10 +29,11 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
+MOCK_PROXIES_URLS = {"http": "localhost:8080", "https": "localhost:8080"}
+
+
 class TestClientParameters(IBMTestCase):
     """Test for ``ClientParameters``."""
-
-    mock_proxies_urls = {"http": "localhost:8080", "https": "localhost:8080"}
 
     def test_no_proxy_params(self) -> None:
         """Test when no proxy parameters are passed."""
@@ -50,9 +51,9 @@ class TestClientParameters(IBMTestCase):
 
     def test_proxy_param(self) -> None:
         """Test using only proxy urls (no NTLM credentials)."""
-        proxies_only_expected_result = {"verify": True, "proxies": self.mock_proxies_urls}
+        proxies_only_expected_result = {"verify": True, "proxies": MOCK_PROXIES_URLS}
         proxies_only_credentials = self._get_client_params(
-            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls})  # type: ignore[arg-type]
+            proxies=ProxyConfiguration(**{"urls": MOCK_PROXIES_URLS})  # type: ignore[arg-type]
         )
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
@@ -115,13 +116,13 @@ class TestClientParameters(IBMTestCase):
     def test_proxies_param_with_ntlm(self) -> None:
         """Test proxies with NTLM credentials."""
         proxies_with_ntlm_dict = {
-            "urls": self.mock_proxies_urls,
+            "urls": MOCK_PROXIES_URLS,
             "username_ntlm": "domain\\username",
             "password_ntlm": "password",
         }
         ntlm_expected_result: dict[str, Any] = {
             "verify": True,
-            "proxies": self.mock_proxies_urls,
+            "proxies": MOCK_PROXIES_URLS,
             "auth": HttpNtlmAuth("domain\\username", "password"),
         }
         proxies_with_ntlm_credentials = self._get_client_params(
@@ -141,7 +142,7 @@ class TestClientParameters(IBMTestCase):
     def test_malformed_ntlm_params(self) -> None:
         """Test input with malformed NTLM credentials."""
         malformed_ntlm_credentials_dict = {
-            "urls": self.mock_proxies_urls,
+            "urls": MOCK_PROXIES_URLS,
             "username_ntlm": 1234,
             "password_ntlm": 5678,
         }
@@ -162,7 +163,7 @@ class TestClientParameters(IBMTestCase):
             channel="ibm_quantum_platform",
             token=token,
             instance=instance,
-            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls}),
+            proxies=ProxyConfiguration(**{"urls": MOCK_PROXIES_URLS}),
             verify=False,
         )
         handler = params.get_auth_handler()
@@ -178,7 +179,7 @@ class TestClientParameters(IBMTestCase):
             headers = handler.get_headers()
         self.assertIn(f"apikey {token}", headers.values())
         self.assertEqual(handler.tm.disable_ssl_verification, not verify)
-        self.assertEqual(handler.tm.proxies, self.mock_proxies_urls)
+        self.assertEqual(handler.tm.proxies, MOCK_PROXIES_URLS)
 
     def _get_client_params(
         self,
