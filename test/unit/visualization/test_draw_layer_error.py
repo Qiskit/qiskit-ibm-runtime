@@ -23,7 +23,7 @@ from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladEr
 from qiskit_ibm_runtime.visualization import draw_layer_error_map, draw_layer_errors_swarm
 
 from ...ibm_test_case import IBMTestCase
-from .case import save_plotly_artifact
+from .utils import save_plotly_artifact
 
 if HAS_AER:
     from qiskit_aer import AerSimulator

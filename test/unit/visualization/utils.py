@@ -14,16 +14,16 @@
 
 from __future__ import annotations
 
-import os
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
 
-ARTIFACT_DIR = ".test_artifacts"
+ARTIFACT_DIR = Path(".test_artifacts")
 
 
-def save_plotly_artifact(test_id: str, fig: PlotlyFigure) -> str:
+def save_plotly_artifact(test_id: str, fig: PlotlyFigure) -> Path:
     """Save a Plotly figure as an HTML artifact, nested under `ARTIFACT_DIR` by `test_id`.
 
     Args:
@@ -33,13 +33,12 @@ def save_plotly_artifact(test_id: str, fig: PlotlyFigure) -> str:
     Returns:
         The path of the saved artifact.
     """
-    # nested folder path based on the test module, class, and method
-    test_path = test_id.split(".")[1:]
-    nested_dir = os.path.join(ARTIFACT_DIR, *test_path[:-1])
-    name = test_path[-1]
-    os.makedirs(nested_dir, exist_ok=True)
+    # Nested folder path based on the test module, class, and method.
+    *test_path, name = test_id.split(".")[1:]
+    nested_dir = ARTIFACT_DIR.joinpath(*test_path)
+    nested_dir.mkdir(parents=True, exist_ok=True)
 
-    # save figure
-    artifact_path = os.path.join(nested_dir, f"{name}.html")
+    # Save figure.
+    artifact_path = nested_dir / f"{name}.html"
     fig.write_html(artifact_path)
     return artifact_path
