@@ -31,6 +31,16 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
 from .....ibm_test_case import IBMTestCase
 
 
+def delay_dict(circ):
+    """Return a dictionary with a list of delays for each qubit."""
+    dag = circuit_to_dag(circ)
+    delays = dag.op_nodes(Delay)
+    delays_per_qubit = {q_ind: [] for q_ind in range(len(circ.qubits))}
+    for delay in delays:
+        delays_per_qubit[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
+    return delays_per_qubit
+
+
 @ddt
 class TestASAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ASAP Scheduling passes."""
@@ -1102,15 +1112,6 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 @ddt
 class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ALAP Scheduling passes."""
-
-    def get_delay_dict(self, circ):
-        """Return a dictionary with a list of delays for each qubit."""
-        dag = circuit_to_dag(circ)
-        delays = dag.op_nodes(Delay)
-        delay_dict = {q_ind: [] for q_ind in range(len(circ.qubits))}
-        for delay in delays:
-            delay_dict[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
-        return delay_dict
 
     def test_alap(self):
         """Test standard ALAP scheduling."""
@@ -2640,13 +2641,13 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc.cx(0, 1)
         qc_transpiled = transpile(qc, backend, initial_layout=[1, 3, 0, 2])
         scheduled = pm.run(qc_transpiled)
-        delay_dict = self.get_delay_dict(scheduled.data[-1].operation.params[0])
+        delays = delay_dict(scheduled.data[-1].operation.params[0])
         expected_time = backend.target.durations().get("cx", [1, 3])
-        self.assertEqual(delay_dict[0][0], expected_time)
+        self.assertEqual(delays[0][0], expected_time)
 
         # different layout
         qc_transpiled = transpile(qc, backend, initial_layout=[0, 1, 2, 3])
         scheduled = pm.run(qc_transpiled)
-        delay_dict = self.get_delay_dict(scheduled.data[-1].operation.params[0])
+        delays = delay_dict(scheduled.data[-1].operation.params[0])
         expected_time = backend.target.durations().get("cx", [0, 1])
-        self.assertEqual(delay_dict[2][0], expected_time)
+        self.assertEqual(delays[2][0], expected_time)
