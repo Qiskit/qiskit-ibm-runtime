@@ -149,7 +149,7 @@ def _load_qpy(file_obj: BinaryIO) -> list[Any]:
             UserWarning,
             stacklevel=2,
         )
-    return load(file_obj)
+    return load(file_obj, metadata_deserializer=RuntimeDecoder)
 
 
 def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool = True) -> Any:
