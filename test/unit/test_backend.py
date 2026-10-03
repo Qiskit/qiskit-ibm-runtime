@@ -32,6 +32,30 @@ from ..utils import create_faulty_backend
 from .mock.fake_backends import FakeMidcircuit
 
 
+def dynamic_circuits_backend():
+    """Create a test backend with an IfElseOp enables."""
+    model_backend = FakeManilaV2()
+    properties = model_backend.properties()
+
+    out_backend = IBMBackend(
+        configuration=model_backend.configuration(),
+        service=mock.MagicMock(),
+        api_client=None,
+        instance=None,
+    )
+
+    out_backend.status = lambda: BackendStatus(
+        backend_name="foo",
+        backend_version="1.0",
+        operational=True,
+        pending_jobs=0,
+        status_msg="",
+    )
+    out_backend.properties = lambda: properties
+
+    return out_backend
+
+
 def assert_props(backend, name, ref_error, ref_duration):
     """Assert that all instruction properties for ``name`` have the given error and duration."""
     for _, props in backend.target[name].items():
@@ -140,33 +164,9 @@ class TestBackend(IBMTestCase):
 
         mock_run.assert_called_once()
 
-    @staticmethod
-    def _create_dc_test_backend():
-        """Create a test backend with an IfElseOp enables."""
-        model_backend = FakeManilaV2()
-        properties = model_backend.properties()
-
-        out_backend = IBMBackend(
-            configuration=model_backend.configuration(),
-            service=mock.MagicMock(),
-            api_client=None,
-            instance=None,
-        )
-
-        out_backend.status = lambda: BackendStatus(
-            backend_name="foo",
-            backend_version="1.0",
-            operational=True,
-            pending_jobs=0,
-            status_msg="",
-        )
-        out_backend.properties = lambda: properties
-
-        return out_backend
-
     def test_single_dynamic_circuit_submission(self):
         """Test submitting single circuit with dynamic=True."""
-        backend = self._create_dc_test_backend()
+        backend = dynamic_circuits_backend()
         sampler = SamplerV2(backend)
 
         circ = QuantumCircuit(2, 2)
@@ -181,7 +181,7 @@ class TestBackend(IBMTestCase):
 
     def test_multi_dynamic_circuit_submission(self):
         """Test submitting multiple circuits with dynamic=True."""
-        backend = self._create_dc_test_backend()
+        backend = dynamic_circuits_backend()
         sampler = SamplerV2(backend)
 
         circ = QuantumCircuit(2, 2)
@@ -198,7 +198,7 @@ class TestBackend(IBMTestCase):
 
     def test_single_openqasm3_submission(self):
         """Test submitting a single openqasm3 strings with dynamic=True."""
-        backend = self._create_dc_test_backend()
+        backend = dynamic_circuits_backend()
         sampler = SamplerV2(backend)
 
         circ = QuantumCircuit(2, 2)
@@ -215,7 +215,7 @@ class TestBackend(IBMTestCase):
 
     def test_runtime_image_selection_submission(self):
         """Test image selection from runtime."""
-        backend = self._create_dc_test_backend()
+        backend = dynamic_circuits_backend()
         sampler = SamplerV2(backend)
 
         circ = QuantumCircuit(2, 2)
@@ -230,7 +230,7 @@ class TestBackend(IBMTestCase):
 
     def test_deepcopy(self):
         """Test that deepcopy of a backend works properly."""
-        backend = self._create_dc_test_backend()
+        backend = dynamic_circuits_backend()
         backend_copy = copy.deepcopy(backend)
         self.assertEqual(backend_copy.name, backend.name)
 
