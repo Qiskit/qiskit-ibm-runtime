@@ -5,7 +5,7 @@ documentation:
 
 https://github.com/Qiskit/qiskit/blob/main/CONTRIBUTING.md
 
-In addition to the general guidelines there are specific details for contributing to
+In addition to the general guidelines, there are specific details for contributing to
 `qiskit-ibm-runtime`, which are documented below.
 
 ## Installing from source
@@ -40,17 +40,17 @@ We use [GitHub pull requests] to accept contributions, and [GitHub issues] as th
 and coordination vehicle.
 
 * Before contributing to the project with a new feature, fix or idea, please search through the
-  existing list of issues, so you can benefit from the topic having been evaluated before and check
-  if there are other related contributions or work in progress.
-* For new contributions, open a new issue using the existing templates describing the feature or
-  fix. This is an important step in starting a discussion with the community about your work. The
-  issue gives us a place to talk about the idea and how we can work together to implement it in
+  existing list of issues: this allows you to check whether the topic has been evaluated before,
+  and whether there are other related contributions or work in progress.
+* For new contributions, open an issue describing the feature or fix, using the existing
+  templates. This is an important step in starting a discussion with the community about your work.
+  The issue gives us a place to talk about the idea and how we can work together to implement it in
   the code. It also lets the community know what you're working on, and if you need help, you can
   reference the issue when discussing it with other community and team members.
   * For documentation issues relating to pages in the Guides, Tutorials, and Migration guides
     sections of https://quantum.cloud.ibm.com/docs, please open an issue in the
     [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather
-    than the `Qiskit/qiskit-ibm-runtime repo`. In other words, any page that DOES NOT have `/api/`
+    than the `Qiskit/qiskit-ibm-runtime` repo. In other words, any page that DOES NOT have `/api/`
     in the url should be addressed in the `Qiskit/documentation` repo. (Exception: the Migration guide
     urls contain `/api/` but are managed in the Qiskit/documentation repo.)
   * For issues relating to API reference pages (any page that contains `/api/` in the url), please
@@ -58,10 +58,10 @@ and coordination vehicle.
 
 > [!IMPORTANT]
 > When you have identified an existing issue or created a new one you intend to contribute to,
-> express your interest by commenting in the issue and interact with the repository maintainers
+> express your interest by commenting on the issue and interact with the repository maintainers
 > _before_ starting the technical work. This allows the maintainers to provide you with more
-> context about the issue, confirm that the issue is in scope, and facilitate coordinating of the
-> work and ensuring that there is no overlap with other potential contributors and contributions.
+> context about the issue, confirm that the issue is in scope, and coordinate the work to avoid
+> overlap with other ongoing contributions.
 
 ## Pull request checklist
 
@@ -70,7 +70,7 @@ Before pushing your contribution please ensure that:
 1. The code follows the code style of this project. For convenience, you can
    check [Style guide](#style-guide)
 2. If it makes sense, add tests that cover the new changes.
-3. All tests pass. For convenience, you can verify the [Test Types](#test).
+3. All tests pass. For convenience, you can verify the [Test types](#test-types).
 4. The documentation has been updated accordingly. In particular, if a
    function or class has been modified during your contribution, please update
    the *docstring* accordingly. For convenience, you can check [Building the
@@ -104,7 +104,7 @@ The current categories for each label are as follows:
 | Changelog: Removal     | Removed            |
 | Changelog: Bugfix      | Fixed              |
 
-## Release Notes
+## Release notes
 
 When making any end user facing changes in a contribution, we have to make sure
 we document that when we release a new version of qiskit-ibm-runtime. The
@@ -201,7 +201,7 @@ Finally, preview the docs build by following the instructions in
 
 ## Building documentation locally
 
-Building The release notes are part of the standard qiskit-ibm-runtime
+The release notes are part of the standard qiskit-ibm-runtime
 documentation builds. To check what the rendered html output of the release
 notes will look like for the current state of the repo you can run:
 `tox -e docs` which will build all the documentation into `docs/_build/html`
@@ -210,7 +210,7 @@ and the release notes in particular will be located at
 
 ## Test
 
-### Test Types
+### Test types
 
 There are three different types of tests in `qiskit-ibm-runtime`. The implementation is based upon
 the well-documented [unittest] Unit testing framework, and the default test runner used in this
@@ -333,11 +333,11 @@ please update the `.git-blame-ignore-revs` file adding an entry to the end of th
 comment pointing to the pull request. Please check the [Ignore commits in the blame view]
 GitHub documentation for instructions on using the ignore list locally and for general information.
 
-## Development Cycle
+## Development cycle
 
 The development cycle for `qiskit-ibm-runtime` is all handled in the repository. We use milestones
-in Github to track work for specific releases. The features or other changes that we want to
-include in a release will be tagged and discussed in Github. As we're preparing a new release
+on GitHub to track work for specific releases. The features or other changes that we want to
+include in a release will be tagged and discussed on GitHub. As we're preparing a new release,
 we'll document what has changed since the previous version in the release notes.
 
 ## Branches
