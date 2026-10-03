@@ -51,8 +51,8 @@ and coordination vehicle.
     sections of https://quantum.cloud.ibm.com/docs, please open an issue in the
     [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather
     than the `Qiskit/qiskit-ibm-runtime` repo. In other words, any page that DOES NOT have `/api/`
-    in the url should be addressed in the `Qiskit/documentation` repo. (Exception: the Migration guide
-    urls contain `/api/` but are managed in the Qiskit/documentation repo.)
+    in the url should be addressed in the `Qiskit/documentation` repo. (Exception: the Migration
+    guide urls contain `/api/` but are managed in the Qiskit/documentation repo.)
   * For issues relating to API reference pages (any page that contains `/api/` in the url), please
     open an issue in the repo specific to that API reference.
 
