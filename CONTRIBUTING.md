@@ -1,16 +1,14 @@
 # Contributing
 
-First read the overall project contributing guidelines. These are all
-included in the qiskit documentation:
+First read the overall project contributing guidelines. These are all included in the qiskit
+documentation:
 
 https://github.com/Qiskit/qiskit/blob/main/CONTRIBUTING.md
 
-## Contributing to qiskit-ibm-runtime
+In addition to the general guidelines there are specific details for contributing to
+`qiskit-ibm-runtime`, which are documented below.
 
-In addition to the general guidelines there are specific details for
-contributing to qiskit-ibm-runtime, these are documented below.
-
-### Installing from source
+## Installing from source
 
 To install from source download this repository and follow the next steps.
 
@@ -36,13 +34,36 @@ To install from source download this repository and follow the next steps.
   supported by the package can be found at the `[project.optional-dependencies]` section of
   [pyproject.toml].
 
-### Open an issue
+## Issues and pull requests
 
-* For documentation issues relating to pages in the Guides, Tutorials, and Migration guides sections of https://quantum.cloud.ibm.com/docs, please open an issue in the [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather than the Qiskit/qiskit-ibm-runtime repo. In other words, any page that DOES NOT have `/api/` in the url should be addressed in the Qiskit/documentation repo. (Exception: the Migration guide urls contain `/api/` but are managed in the Qiskit/documentation repo.)
+We use [GitHub pull requests] to accept contributions, and [GitHub issues] as the communication
+and coordination vehicle.
 
-* For issues relating to API reference pages (any page that contains /api/ in the url), please open an issue in the repo specific to that API reference.
+* Before contributing to the project with a new feature, fix or idea, please search through the
+  existing list of issues, so you can benefit from the topic having been evaluated before and check
+  if there are other related contributions or work in progress.
+* For new contributions, open a new issue using the existing templates describing the feature or
+  fix. This is an important step in starting a discussion with the community about your work. The
+  issue gives us a place to talk about the idea and how we can work together to implement it in
+  the code. It also lets the community know what you're working on, and if you need help, you can
+  reference the issue when discussing it with other community and team members.
+  * For documentation issues relating to pages in the Guides, Tutorials, and Migration guides
+    sections of https://quantum.cloud.ibm.com/docs, please open an issue in the
+    [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather
+    than the `Qiskit/qiskit-ibm-runtime repo`. In other words, any page that DOES NOT have `/api/`
+    in the url should be addressed in the `Qiskit/documentation` repo. (Exception: the Migration guide
+    urls contain `/api/` but are managed in the Qiskit/documentation repo.)
+  * For issues relating to API reference pages (any page that contains `/api/` in the url), please
+    open an issue in the repo specific to that API reference.
 
-### Pull request checklist
+> [!IMPORTANT]
+> When you have identified an existing issue or created a new one you intend to contribute to,
+> express your interest by commenting in the issue and interact with the repository maintainers
+> _before_ starting the technical work. This allows the maintainers to provide you with more
+> context about the issue, confirm that the issue is in scope, and facilitate coordinating of the
+> work and ensuring that there is no overlap with other potential contributors and contributions.
+
+## Pull request checklist
 
 Before pushing your contribution please ensure that:
 
@@ -55,12 +76,12 @@ Before pushing your contribution please ensure that:
    the *docstring* accordingly. For convenience, you can check [Building the
    Documentation Locally](#building-documentation-locally).
 
-### Pull request creation
+## Pull request creation
 
 When submitting a pull request and your updates have end user facing impact (new feature, deprecation, removal
 etc), please ensure that you add a release note.
 
-### Changelog generation
+## Changelog generation
 
 The changelog is automatically generated as part of the release process
 automation. This works through a combination of the git log and the pull
@@ -83,7 +104,7 @@ The current categories for each label are as follows:
 | Changelog: Removal     | Removed            |
 | Changelog: Bugfix      | Fixed              |
 
-### Release Notes
+## Release Notes
 
 When making any end user facing changes in a contribution, we have to make sure
 we document that when we release a new version of qiskit-ibm-runtime. The
@@ -102,7 +123,7 @@ changes over a release cycle we require that all user facing changes include
 documentation at the same time as the code. To accomplish this, we use the
 [Towncrier](https://towncrier.readthedocs.io/en/stable/) tool.
 
-#### Adding a new release note
+### Adding a new release note
 
 To create a new release note, first find either the issue or PR number associated with
 your change from GitHub because Towncrier links every release note to a GitHub issue
@@ -167,7 +188,7 @@ After you've finished writing your release note, you need to add the note
 file to your commit with `git add` and commit them to your PR branch to make
 sure they're included with the code in your PR.
 
-#### Preview the release notes
+### Preview the release notes
 
 You can preview how the release notes look with the Sphinx docs build by
 using Towncrier. First, install Towncrier with [`pipx`](https://pipx.pypa.io/stable/) by
@@ -178,7 +199,7 @@ Then, run `towncrier build --version=unreleased --keep`. Be careful to not save 
 Finally, preview the docs build by following the instructions in
 [Building documentation locally](#building-documentation-locally).
 
-### Building documentation locally
+## Building documentation locally
 
 Building The release notes are part of the standard qiskit-ibm-runtime
 documentation builds. To check what the rendered html output of the release
@@ -187,15 +208,15 @@ notes will look like for the current state of the repo you can run:
 and the release notes in particular will be located at
 `docs/_build/html/release_notes.html`.
 
-### Test
+## Test
 
-#### Test Types
+### Test Types
 
 There are three different types of tests in `qiskit-ibm-runtime`. The implementation is based upon
 the well-documented [unittest] Unit testing framework, and the default test runner used in this
 project is [pytest].
 
-##### 1. Unit tests
+#### 1. Unit tests
 
 These tests run locally without connecting to an external system. They are short-running, stable
 and give a basic level of confidence during development.
@@ -206,7 +227,7 @@ To execute all unit tests, run:
 make unit-test
 ```
 
-##### 2. Integration tests
+#### 2. Integration tests
 
 The integration tests are executed against an external system which is configured via environment
 variables. They provide coverage of happy and non-happy paths, and are long-running and unstable at
@@ -219,7 +240,7 @@ To execute all integration tests, run
 make integration-test
 ```
 
-##### 3. Smoke tests
+#### 3. Smoke tests
 
 The smoke tests are a small suite of tests that exercise the critical functionality of the package.
 They are executed against an external system (configured in the same way as for the integration
@@ -231,7 +252,7 @@ To execute the smoke tests, run
 make smoke-test
 ```
 
-#### Configuration
+### Configuration
 
 Integration and smoke tests require an environment configuration and can be run against the IBM
 Quantum Platform API (`ibm_quantum_platform` channel).
@@ -253,7 +274,7 @@ For example, in your github fork settings, add the environment you want to run t
 (`ibm-cloud-production`, `ibm-cloud-staging`). Then add the appropriate environment secrets
 (`QISKIT_IBM_INSTANCE`, `QISKIT_IBM_TOKEN`, `QISKIT_IBM_URL`, `QISKIT_IBM_QPU`).
 
-#### Benchmarking
+### Benchmarking
 
 Experimental support for benchmarking is available via:
 
@@ -261,7 +282,7 @@ Experimental support for benchmarking is available via:
 make benchmark
 ```
 
-### Style guide
+## Style guide
 
 Please submit clean code and please make effort to follow existing conventions in order to keep it
 as readable as possible. We use:
@@ -303,7 +324,7 @@ make docs-test
 This test also runs on CI and will fail if Vale encounters any spelling mistakes. To add a word to
 the dictionary, add it to `test/docs/dictionary.txt`.
 
-### Using the `git blame` ignored revisions list
+## Using the `git blame` ignored revisions list
 
 This repository contains a list of commits for `git blame` to ignore: commits that are style or
 linting changes that affect formatting, and thus tend to be disruptive when comparing changes in
@@ -312,16 +333,14 @@ please update the `.git-blame-ignore-revs` file adding an entry to the end of th
 comment pointing to the pull request. Please check the [Ignore commits in the blame view]
 GitHub documentation for instructions on using the ignore list locally and for general information.
 
-### Development Cycle
+## Development Cycle
 
-The development cycle for qiskit-ibm  is all handled in the open using
-the project boards in Github for project management. We use milestones
-in Github to track work for specific releases. The features or other changes
-that we want to include in a release will be tagged and discussed in Github.
-As we're preparing a new release we'll document what has changed since the
-previous version in the release notes.
+The development cycle for `qiskit-ibm-runtime` is all handled in the repository. We use milestones
+in Github to track work for specific releases. The features or other changes that we want to
+include in a release will be tagged and discussed in Github. As we're preparing a new release
+we'll document what has changed since the previous version in the release notes.
 
-### Branches
+## Branches
 
 * `main`:
 
@@ -336,7 +355,7 @@ that minor version on pypi. For example, stable/0.8 contains the code for the
 0.8.2 release on pypi. The API on these branches are stable and the only changes
 merged to it are bugfixes.
 
-### Release cycle
+## Release cycle
 
 When it is time to release a new minor version of qiskit-ibm-runtime, first open a PR
 to prepare the release notes. Install the tool `towncrier` with `pipx install towncrier`.
@@ -352,7 +371,7 @@ version number, like `git tag 0.22.0`. Push the tag to GitHub. Also create a new
 GitHub Actions will automatically build and upload the wheels to PyPI. The
 qiskit-bot should also automatically create the GitHub Release for you.
 
-#### Patch releases
+### Patch releases
 
 The `stable/*` branches should only receive changes in the form of bug fixes.
 These bug fixes should first land on `main`, then be `git cherry-pick`ed to
@@ -380,3 +399,5 @@ the `main` branch, such as from `stable/0.21` to `main`.
 [IBM Quantum's writing style guide]: https://github.com/IBM/ibm-quantum-style-guide
 [pyproject.toml]: ./pyproject.toml
 [Ignore commits in the blame view]: https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#ignore-commits-in-the-blame-view
+[GitHub pull requests]: https://help.github.com/articles/about-pull-requests
+[GitHub issues]: https://github.com/features/issues
