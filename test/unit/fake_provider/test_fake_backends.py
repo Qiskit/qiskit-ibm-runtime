@@ -40,6 +40,27 @@ from ...ibm_test_case import IBMTestCase
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
 
+def make_refresh_service(backend):
+    """Build a mocked service that returns ``backend``'s own bundled data as the real data.
+
+    This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is
+    injected so tests can assert the in-session update actually took effect.
+    """
+    real_config = backend.configuration()
+    real_config.backend_version = "9.9.9-refreshed"
+    real_props = backend.properties()
+
+    fake_real_backend = mock.MagicMock()
+    fake_real_backend.properties.return_value = real_props
+    service = mock.MagicMock(spec=QiskitRuntimeService)
+    service.backends.return_value = [fake_real_backend]
+
+    patcher = mock.patch.object(
+        fake_backend, "configuration_from_server_data", return_value=real_config
+    )
+    return service, patcher
+
+
 class FakeBackendsTest(IBMTestCase):
     """fake backends test."""
 
@@ -102,26 +123,6 @@ class FakeBackendRefreshTest(IBMTestCase):
     :meth:`~.FakeBackendV2.refresh` succeeds without modifying the installed package.
     """
 
-    def _make_refresh_service(self, backend):
-        """Build a mocked service that returns ``backend``'s own bundled data as the real data.
-
-        This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is
-        injected so tests can assert the in-session update actually took effect.
-        """
-        real_config = backend.configuration()
-        real_config.backend_version = "9.9.9-refreshed"
-        real_props = backend.properties()
-
-        fake_real_backend = mock.MagicMock()
-        fake_real_backend.properties.return_value = real_props
-        service = mock.MagicMock(spec=QiskitRuntimeService)
-        service.backends.return_value = [fake_real_backend]
-
-        patcher = mock.patch.object(
-            fake_backend, "configuration_from_server_data", return_value=real_config
-        )
-        return service, patcher
-
     def test_refresh_no_persist_leaves_package_untouched(self):
         """``persist=False`` writes to a temp dir and never modifies the bundled files."""
         backend = FakeAthensV2()
@@ -131,7 +132,7 @@ class FakeBackendRefreshTest(IBMTestCase):
         pkg_conf_mtime = os.stat(pkg_conf).st_mtime_ns
         pkg_props_mtime = os.stat(pkg_props).st_mtime_ns
 
-        service, patcher = self._make_refresh_service(backend)
+        service, patcher = make_refresh_service(backend)
         with patcher:
             with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                 backend.refresh(service, persist=False)
@@ -166,7 +167,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = self._make_refresh_service(backend)
+            service, patcher = make_refresh_service(backend)
             with patcher:
                 backend.refresh(service, persist=False)
                 self.assertIsNotNone(backend._tmp_data_dir)
@@ -192,7 +193,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = self._make_refresh_service(backend)
+            service, patcher = make_refresh_service(backend)
             with patcher:
                 with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                     backend.refresh(service)
