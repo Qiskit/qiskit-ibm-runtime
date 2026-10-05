@@ -67,6 +67,7 @@ def prepare(
     pre = options.bit_flip_checks.pre_circuit
     post = options.bit_flip_checks.post_circuit
     coupling_map = backend.target.build_coupling_map()
+    pass_manager = None
 
     if post_selection.enable:
         post_selection_passes = [
@@ -89,10 +90,6 @@ def prepare(
                 AddSpectatorPostCircuitBitFlipChecks(coupling_map, post_x_pulse_type)
             )
             pass_manager = PassManager(bit_flip_passes)
-        pass_manager = None
-    else:
-        pass_manager = None
-
     quantum_program = prepare_learning_program(
         backend=backend,
         instructions=instructions,
