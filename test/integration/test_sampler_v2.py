@@ -31,7 +31,7 @@ from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
 from ..decorators import run_configured_sampler_implementations
-from ..ibm_test_case import IBMIntegrationTestCase
+from .case import IBMIntegrationTestCase
 
 
 @ddt

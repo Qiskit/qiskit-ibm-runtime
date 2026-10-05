@@ -18,17 +18,17 @@ import dateutil.parser
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
-from ..decorators import production_only, run_integration_test
-from ..ibm_test_case import IBMIntegrationTestCase
+from ..decorators import production_only
+from .case import IBMIntegrationTestCase
 
 
 class TestSerialization(IBMIntegrationTestCase):
     """Test data serialization."""
 
     @production_only
-    @run_integration_test
-    def test_backend_configuration(self, service):
+    def test_backend_configuration(self):
         """Test deserializing backend configuration."""
+        service = self.service
         instance = None
         backends = service.backends(operational=True, simulator=False, instance=instance)
 
@@ -52,9 +52,9 @@ class TestSerialization(IBMIntegrationTestCase):
             with self.subTest(msg=f"backend_{i}"):
                 self._verify_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
-    @run_integration_test
-    def test_backend_properties(self, service):
+    def test_backend_properties(self):
         """Test deserializing backend properties."""
+        service = self.service
         instance = None
         backends = service.backends(operational=True, simulator=False, instance=instance)
 

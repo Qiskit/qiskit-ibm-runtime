@@ -17,7 +17,7 @@ import unittest
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
 
-from ..ibm_test_case import IBMIntegrationTestCase
+from .case import IBMIntegrationTestCase
 
 
 @unittest.skip("This feature is not yet supported.")

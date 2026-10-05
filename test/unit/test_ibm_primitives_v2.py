@@ -624,13 +624,6 @@ class TestPrimitivesV2(IBMTestCase):
             inst = primitive()
             self.assertEqual(inst.backend().name, backend.name)
 
-    def _update_dict(self, dict1, dict2):
-        for key, val in dict1.items():
-            if isinstance(val, dict):
-                self._update_dict(val, dict2.pop(key, {}))
-            elif key in dict2.keys():
-                dict1[key] = dict2.pop(key)
-
 
 class TestGetModeServiceBackend(IBMTestCase):
     """Test the function ``get_mode_service_backend``."""
