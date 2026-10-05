@@ -41,4 +41,4 @@ Classes
 
 from samplomatic.quantum_program import CircuitItem, QuantumProgramItem, SamplexItem
 
-from .quantum_program import QuantumProgram, coerce_to_quantum_program
+from .quantum_program import QuantumProgram
