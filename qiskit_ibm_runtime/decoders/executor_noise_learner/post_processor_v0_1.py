@@ -52,13 +52,12 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
     post = options["bit_flip_checks"]["post_circuit"]
 
     raw_data_stage = None
-    if post_selection["enable"]:
+    if post_selection["enable"]:  # TODO: creg_identifier
         raw_data_stage = FlipPostSelect(creg_identifier=None, mode=post_selection["strategy"])
     elif pre["enable"] or post["enable"]:
-        # pre_mode = pre["strategy"]
-        # post_mode = post["strategy"]
-        # raw_data_stage = FlipPostSelect(creg_identifier=None, mode=None)
-        pass
+        raw_data_stage = FlipPostSelect(
+            creg_identifier=None, mode=pre["strategy"]
+        ) + FlipPostSelect(creg_identifier=None, mode=post["strategy"])
     result_fit = process_learning_results(result, raw_data_stage=raw_data_stage)
     maps = result_fit.model.to_pauli_lindblad_maps(
         result_fit.model_data, restrict_to_qubit_idxs=True
