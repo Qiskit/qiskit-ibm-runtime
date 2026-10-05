@@ -40,7 +40,7 @@ from ...ibm_test_case import IBMTestCase
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
 
-def refresh_service(backend):
+def make_refresh_service(backend):
     """Build a mocked service that returns ``backend``'s own bundled data as the real data.
 
     This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is
@@ -132,7 +132,7 @@ class FakeBackendRefreshTest(IBMTestCase):
         pkg_conf_mtime = os.stat(pkg_conf).st_mtime_ns
         pkg_props_mtime = os.stat(pkg_props).st_mtime_ns
 
-        service, patcher = refresh_service(backend)
+        service, patcher = make_refresh_service(backend)
         with patcher:
             with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                 backend.refresh(service, persist=False)
@@ -167,7 +167,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = refresh_service(backend)
+            service, patcher = make_refresh_service(backend)
             with patcher:
                 backend.refresh(service, persist=False)
                 self.assertIsNotNone(backend._tmp_data_dir)
@@ -193,7 +193,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = refresh_service(backend)
+            service, patcher = make_refresh_service(backend)
             with patcher:
                 with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                     backend.refresh(service)
