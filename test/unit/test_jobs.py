@@ -23,7 +23,6 @@ from ddt import data, ddt
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import RuntimeJobV2
-from qiskit_ibm_runtime.base_runtime_job import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
 from qiskit_ibm_runtime.exceptions import (
     RuntimeInvalidStateError,
@@ -32,6 +31,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobNotFound,
 )
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.runtime_job_v2 import API_TO_JOB_ERROR_MESSAGE
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase

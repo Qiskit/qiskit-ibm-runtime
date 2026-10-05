@@ -146,8 +146,7 @@ class RuntimeClient:
                 local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
+            include_mocks: If ``True``, include jobs from mock backends in the results.
 
         Returns:
             JSON response.
@@ -263,8 +262,7 @@ class RuntimeClient:
         """Return IBM backends available for this service instance.
 
         Args:
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
+            include_mocks: If ``True``, include mock backends in the results.
 
         Returns:
             IBM backends available for this service instance.

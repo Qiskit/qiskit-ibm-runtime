@@ -23,7 +23,11 @@ jobs:
     env:
       QISKIT_IN_PARALLEL: True
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
-      PYTEST_ADDOPTS: "-v -s"
+      PYTEST_ADDOPTS: |
+        -v -s
+        -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
+        -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
+        -W 'ignore:The NoiseLearner class is deprecated:DeprecationWarning'
     steps:
       - uses: actions/checkout@v6
         with:

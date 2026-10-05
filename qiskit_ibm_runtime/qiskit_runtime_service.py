@@ -597,8 +597,7 @@ class QiskitRuntimeService:
             calibration_id: The calibration id used for instantiating the backend. This should only
                 be used when selecting a single backend as the calibration id is defined per
                 backend.
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
+            include_mocks: If ``True``, include mock backends in the results.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -1250,8 +1249,7 @@ class QiskitRuntimeService:
                 local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
-            include_mocks: If ``True``, include the backends that are used for job usage estimation
-                in the results.
+            include_mocks: If ``True``, include mock backends in the results.
 
         Returns:
             A list of IBM Quantum Compute jobs.

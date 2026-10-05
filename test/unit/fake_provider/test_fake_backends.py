@@ -18,19 +18,47 @@ import tempfile
 import unittest
 from unittest import mock
 
+from ddt import data, ddt
 from qiskit import QuantumCircuit, transpile
+from qiskit.circuit.library import CZGate, ECRGate
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2, fake_provider
 from qiskit_ibm_runtime.fake_provider import (
     FakeAthensV2,
+    FakeMumbaiV2,
     FakePerth,
+    FakePrague,
     FakeProviderForBackendV2,
+    FakeSherbrooke,
     fake_backend,
 )
 from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 
 from ...ibm_test_case import IBMTestCase
+
+FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
+
+
+def make_refresh_service(backend):
+    """Build a mocked service that returns ``backend``'s own bundled data as the real data.
+
+    This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is
+    injected so tests can assert the in-session update actually took effect.
+    """
+    real_config = backend.configuration()
+    real_config.backend_version = "9.9.9-refreshed"
+    real_props = backend.properties()
+
+    fake_real_backend = mock.MagicMock()
+    fake_real_backend.properties.return_value = real_props
+    service = mock.MagicMock(spec=QiskitRuntimeService)
+    service.backends.return_value = [fake_real_backend]
+
+    patcher = mock.patch.object(
+        fake_backend, "configuration_from_server_data", return_value=real_config
+    )
+    return service, patcher
 
 
 class FakeBackendsTest(IBMTestCase):
@@ -95,26 +123,6 @@ class FakeBackendRefreshTest(IBMTestCase):
     :meth:`~.FakeBackendV2.refresh` succeeds without modifying the installed package.
     """
 
-    def _make_refresh_service(self, backend):
-        """Build a mocked service that returns ``backend``'s own bundled data as the real data.
-
-        This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is
-        injected so tests can assert the in-session update actually took effect.
-        """
-        real_config = backend.configuration()
-        real_config.backend_version = "9.9.9-refreshed"
-        real_props = backend.properties()
-
-        fake_real_backend = mock.MagicMock()
-        fake_real_backend.properties.return_value = real_props
-        service = mock.MagicMock(spec=QiskitRuntimeService)
-        service.backends.return_value = [fake_real_backend]
-
-        patcher = mock.patch.object(
-            fake_backend, "configuration_from_server_data", return_value=real_config
-        )
-        return service, patcher
-
     def test_refresh_no_persist_leaves_package_untouched(self):
         """``persist=False`` writes to a temp dir and never modifies the bundled files."""
         backend = FakeAthensV2()
@@ -124,7 +132,7 @@ class FakeBackendRefreshTest(IBMTestCase):
         pkg_conf_mtime = os.stat(pkg_conf).st_mtime_ns
         pkg_props_mtime = os.stat(pkg_props).st_mtime_ns
 
-        service, patcher = self._make_refresh_service(backend)
+        service, patcher = make_refresh_service(backend)
         with patcher:
             with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                 backend.refresh(service, persist=False)
@@ -159,7 +167,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = self._make_refresh_service(backend)
+            service, patcher = make_refresh_service(backend)
             with patcher:
                 backend.refresh(service, persist=False)
                 self.assertIsNotNone(backend._tmp_data_dir)
@@ -185,7 +193,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = self._make_refresh_service(backend)
+            service, patcher = make_refresh_service(backend)
             with patcher:
                 with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                     backend.refresh(service)
@@ -203,3 +211,104 @@ class FakeBackendRefreshTest(IBMTestCase):
             reloaded._conf_dict = reloaded._get_conf_dict_from_json()
             self.assertEqual(reloaded._conf_dict["backend_version"], "9.9.9-refreshed")
             self.assertEqual(backend._conf_dict["backend_version"], "9.9.9-refreshed")
+
+
+@ddt
+class TestFakeBackends(IBMTestCase):
+    """Test case for fake backends."""
+
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_to_dict_properties(self, backend):
+        """Test converting backend properties to dict."""
+        properties = backend.properties()
+        if properties:
+            self.assertIsInstance(backend.properties().to_dict(), dict)
+        else:
+            self.assertTrue(backend.configuration().simulator)
+
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_convert_to_target(self, backend):
+        """Test backend target's dt."""
+        target = backend.target
+        if target.dt is not None:
+            self.assertLess(target.dt, 1e-6)
+
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_backend_v2_dtm(self, backend):
+        """Test backend dtm"."""
+        if backend.dtm:
+            self.assertLess(backend.dtm, 1e-6)
+
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_to_dict_configuration(self, backend):
+        """Test backend configuration."""
+        configuration = backend.configuration()
+        if configuration.open_pulse:
+            self.assertLess(configuration.dt, 1e-6)
+            self.assertLess(configuration.dtm, 1e-6)
+            for i in configuration.qubit_lo_range:
+                self.assertGreater(i[0], 1e6)
+                self.assertGreater(i[1], 1e6)
+                self.assertLess(i[0], i[1])
+
+            for i in configuration.meas_lo_range:
+                self.assertGreater(i[0], 1e6)
+                self.assertGreater(i[0], 1e6)
+                self.assertLess(i[0], i[1])
+
+            for i in configuration.rep_times:
+                self.assertGreater(i, 0)
+                self.assertLess(i, 1)
+
+        self.assertIsInstance(configuration.to_dict(), dict)
+        # test unit/value consistency on roundtrip
+        if hasattr(configuration, "rep_times"):
+            config_dict = configuration.to_dict()
+            roundtrip_config = configuration.from_dict(config_dict)
+            self.assertEqual(configuration.rep_times, roundtrip_config.rep_times)
+
+    def test_delay_circuit(self):
+        """Test transpiling with delay."""
+        backend = FakeMumbaiV2()
+        qc = QuantumCircuit(2)
+        qc.delay(502, 0, unit="ns")
+        qc.x(1)
+        qc.delay(250, 1, unit="ns")
+        qc.measure_all()
+        res = transpile(qc, backend)
+        self.assertIn("delay", res.count_ops())
+
+    def test_non_cx_tests(self):
+        """Test using non cx gates."""
+        backend = FakePrague()
+        self.assertIsInstance(backend.target.operation_from_name("cz"), CZGate)
+        backend = FakeSherbrooke()
+        self.assertIsInstance(backend.target.operation_from_name("ecr"), ECRGate)
+
+    def test_backend_configuration_attributes(self):
+        """Test specific backend configuration attributes."""
+        backend = FakeMumbaiV2()
+        self.assertTrue(backend.dynamic_reprate_enabled)
+        self.assertTrue(backend.rep_delay_range)
+
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_backend_physical_qubits(self, backend):
+        """Test the `physical_qubits` property of backends.
+
+        `physical_qubits` was added to all the backends that were active at the time.
+        """
+        backends_with_physical_qubits = [
+            "fake_aachen",
+            "fake_berlin",
+            "fake_boston",
+            "fake_fez",
+            "fake_kingston",
+            "fake_marrakesh",
+            "fake_miami",
+            "fake_pittsburgh",
+        ]
+
+        if backend.name in backends_with_physical_qubits:
+            self.assertIsInstance(backend.physical_qubits, int)
+        else:
+            self.assertIsNone(backend.physical_qubits)

@@ -163,7 +163,7 @@ grouped into categories, such as ``execution``. Specify the options in this form
 See `Introduction to options
 <https://quantum.cloud.ibm.com/docs/guides/runtime-options-overview>`_
 for an overview on specifying primitive options.
-See `Specify Estimator options <https://quantum.cloud.ibm.com/docs/en/guides/estimator-options>`_
+See `Specify Estimator options <https://quantum.cloud.ibm.com/docs/guides/estimator-options>`_
 and `Configure noise management with Estimator
 <https://quantum.cloud.ibm.com/docs/guides/estimator-noise-management>`_
 for more information about Estimator options.

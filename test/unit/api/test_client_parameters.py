@@ -23,36 +23,60 @@ from qiskit_ibm_runtime.api.auth import CloudAuth
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 
+MOCK_PROXIES_URLS = {"http": "localhost:8080", "https": "localhost:8080"}
+
+
+def client_params(
+    channel: str = "ibm_quantum_platform",
+    token: str = "dummy_token",
+    url: str = "https://dummy_url",
+    instance: str | None = None,
+    proxies: ProxyConfiguration | None = None,
+    verify: bool | None = None,
+    url_resolver: Callable | None = None,
+) -> ClientParameters:
+    """Return a custom ClientParameters."""
+    if verify is None:
+        verify = True
+    return ClientParameters(
+        channel=channel,
+        token=token,
+        url=url,
+        instance=instance,
+        proxies=proxies,
+        verify=verify,
+        url_resolver=url_resolver,
+    )
+
+
 class TestClientParameters(IBMTestCase):
     """Test for ``ClientParameters``."""
-
-    mock_proxies_urls = {"http": "localhost:8080", "https": "localhost:8080"}
 
     def test_no_proxy_params(self) -> None:
         """Test when no proxy parameters are passed."""
         no_params_expected_result = {"verify": True}
-        no_params_credentials = self._get_client_params()
+        no_params_credentials = client_params()
         result = no_params_credentials.connection_parameters()
         self.assertDictEqual(no_params_expected_result, result)
 
     def test_verify_param(self) -> None:
         """Test 'verify' arg is acknowledged."""
         false_verify_expected_result = {"verify": False}
-        false_verify_credentials = self._get_client_params(verify=False)
+        false_verify_credentials = client_params(verify=False)
         result = false_verify_credentials.connection_parameters()
         self.assertDictEqual(false_verify_expected_result, result)
 
     def test_proxy_param(self) -> None:
         """Test using only proxy urls (no NTLM credentials)."""
-        proxies_only_expected_result = {"verify": True, "proxies": self.mock_proxies_urls}
-        proxies_only_credentials = self._get_client_params(
-            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls})  # type: ignore[arg-type]
+        proxies_only_expected_result = {"verify": True, "proxies": MOCK_PROXIES_URLS}
+        proxies_only_credentials = client_params(
+            proxies=ProxyConfiguration(**{"urls": MOCK_PROXIES_URLS})  # type: ignore[arg-type]
         )
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
@@ -107,7 +131,7 @@ class TestClientParameters(IBMTestCase):
         for spec in test_specs:
             channel, instance, url, url_resolver, expected = spec
             with self.subTest(instance=instance, url=url):
-                params = self._get_client_params(
+                params = client_params(
                     channel=channel, instance=instance, url=url, url_resolver=url_resolver
                 )
                 self.assertEqual(params.get_runtime_api_base_url(), expected)
@@ -115,16 +139,16 @@ class TestClientParameters(IBMTestCase):
     def test_proxies_param_with_ntlm(self) -> None:
         """Test proxies with NTLM credentials."""
         proxies_with_ntlm_dict = {
-            "urls": self.mock_proxies_urls,
+            "urls": MOCK_PROXIES_URLS,
             "username_ntlm": "domain\\username",
             "password_ntlm": "password",
         }
         ntlm_expected_result: dict[str, Any] = {
             "verify": True,
-            "proxies": self.mock_proxies_urls,
+            "proxies": MOCK_PROXIES_URLS,
             "auth": HttpNtlmAuth("domain\\username", "password"),
         }
-        proxies_with_ntlm_credentials = self._get_client_params(
+        proxies_with_ntlm_credentials = client_params(
             proxies=ProxyConfiguration(**proxies_with_ntlm_dict)  # type: ignore[arg-type]
         )
         result = proxies_with_ntlm_credentials.connection_parameters()
@@ -141,11 +165,11 @@ class TestClientParameters(IBMTestCase):
     def test_malformed_ntlm_params(self) -> None:
         """Test input with malformed NTLM credentials."""
         malformed_ntlm_credentials_dict = {
-            "urls": self.mock_proxies_urls,
+            "urls": MOCK_PROXIES_URLS,
             "username_ntlm": 1234,
             "password_ntlm": 5678,
         }
-        malformed_ntlm_credentials = self._get_client_params(
+        malformed_ntlm_credentials = client_params(
             proxies=malformed_ntlm_credentials_dict  # type: ignore[arg-type]
         )
         # Should raise when trying to do username.split('\\', <int>)
@@ -158,11 +182,11 @@ class TestClientParameters(IBMTestCase):
         token = uuid.uuid4().hex
         instance = uuid.uuid4().hex
         verify = False
-        params = self._get_client_params(
+        params = client_params(
             channel="ibm_quantum_platform",
             token=token,
             instance=instance,
-            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls}),
+            proxies=ProxyConfiguration(**{"urls": MOCK_PROXIES_URLS}),
             verify=False,
         )
         handler = params.get_auth_handler()
@@ -178,27 +202,4 @@ class TestClientParameters(IBMTestCase):
             headers = handler.get_headers()
         self.assertIn(f"apikey {token}", headers.values())
         self.assertEqual(handler.tm.disable_ssl_verification, not verify)
-        self.assertEqual(handler.tm.proxies, self.mock_proxies_urls)
-
-    def _get_client_params(
-        self,
-        channel: str = "ibm_quantum_platform",
-        token: str = "dummy_token",
-        url: str = "https://dummy_url",
-        instance: str | None = None,
-        proxies: ProxyConfiguration | None = None,
-        verify: bool | None = None,
-        url_resolver: Callable | None = None,
-    ) -> ClientParameters:
-        """Return a custom ClientParameters."""
-        if verify is None:
-            verify = True
-        return ClientParameters(
-            channel=channel,
-            token=token,
-            url=url,
-            instance=instance,
-            proxies=proxies,
-            verify=verify,
-            url_resolver=url_resolver,
-        )
+        self.assertEqual(handler.tm.proxies, MOCK_PROXIES_URLS)

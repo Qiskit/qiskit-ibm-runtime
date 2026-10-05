@@ -21,7 +21,7 @@ from qiskit.transpiler import CouplingMap
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.runtime_options import RuntimeOptions
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 
 @ddt

@@ -37,6 +37,37 @@ from qiskit_ibm_runtime.results.quantum_program import (
 from ....ibm_test_case import IBMTestCase
 
 
+def result_twirling(data, twirling_enabled=False, meas_type="classified", shots=128):
+    """Helper to build a QuantumProgramResult with twirling flag.
+
+    Args:
+        data: Measurement data for the result
+        twirling_enabled: Whether twirling is enabled
+        meas_type: Measurement type
+        shots: shots
+    """
+    options = SamplerOptions()
+    options.twirling.enable_gates = twirling_enabled
+    passthrough_data = {
+        "post_processor": {
+            "version": "v0.1",
+            "options": options.model_dump(),
+            "twirling": twirling_enabled,
+            "meas_type": meas_type,
+            "shots": shots,
+        }
+    }
+
+    result = QuantumProgramResult(
+        data=data,
+        metadata=Metadata(),
+        passthrough_data=passthrough_data,
+    )
+    result._semantic_role = "sampler_v2"
+
+    return result
+
+
 @ddt
 class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
     """Test ``quantum_program_item_result_to_sampler_pub_result``."""
@@ -477,36 +508,6 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
     ``pub_shapes`` stored in ``passthrough_data``.
     """
 
-    def _make_result(self, data, twirling_enabled=False, meas_type="classified", shots=128):
-        """Helper to build a QuantumProgramResult with twirling flag.
-
-        Args:
-            data: Measurement data for the result
-            twirling_enabled: Whether twirling is enabled
-            meas_type: Measurement type
-            shots: shots
-        """
-        options = SamplerOptions()
-        options.twirling.enable_gates = twirling_enabled
-        passthrough_data = {
-            "post_processor": {
-                "version": "v0.1",
-                "options": options.model_dump(),
-                "twirling": twirling_enabled,
-                "meas_type": meas_type,
-                "shots": shots,
-            }
-        }
-
-        result = QuantumProgramResult(
-            data=data,
-            metadata=Metadata(),
-            passthrough_data=passthrough_data,
-        )
-        result._semantic_role = "sampler_v2"
-
-        return result
-
     def test_twirled_no_sweep_flattened(self):
         """Twirled non-parametric pub: (num_rand, shots_per_rand, bits) -> (total_shots, bits)."""
         num_rand, shots_per_rand, num_bits = 4, 64, 3
@@ -514,7 +515,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v0_1(
-            self._make_result([{"meas": meas_data}], twirling_enabled=True)
+            result_twirling([{"meas": meas_data}], twirling_enabled=True)
         )
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
@@ -531,7 +532,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             0, 2, size=(num_rand, s1, s2, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v0_1(
-            self._make_result([{"meas": meas_data}], twirling_enabled=True)
+            result_twirling([{"meas": meas_data}], twirling_enabled=True)
         )
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
@@ -545,7 +546,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v0_1(
-            self._make_result([{"meas": meas_data}], twirling_enabled=True)
+            result_twirling([{"meas": meas_data}], twirling_enabled=True)
         )
         expected_flat = meas_data.reshape(num_rand * shots_per_rand, num_bits)
         reconstructed = result[0].data.meas.to_bool_array(order="little")
@@ -557,7 +558,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
         meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
         # twirling_enabled=False (default)
         result = sampler_v2_post_processor_v0_1(
-            self._make_result([{"meas": meas_data}], twirling_enabled=False)
+            result_twirling([{"meas": meas_data}], twirling_enabled=False)
         )
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_shots)
@@ -638,7 +639,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             0, 2, size=(num_rand, 3, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v0_1(
-            self._make_result([{"meas": meas0}, {"meas": meas1}], twirling_enabled=True)
+            result_twirling([{"meas": meas0}, {"meas": meas1}], twirling_enabled=True)
         )
         self.assertEqual(result[0].data.meas.num_shots, num_rand * shots_per_rand)
         self.assertEqual(result[0].data.shape, ())
@@ -666,7 +667,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
                 meas_data[r, p, :, :] = (r + p) % 2
 
         result = sampler_v2_post_processor_v0_1(
-            self._make_result([{"meas": meas_data}], twirling_enabled=True)
+            result_twirling([{"meas": meas_data}], twirling_enabled=True)
         )
 
         bit_array = result[0].data.meas
@@ -715,7 +716,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             num_rand, shots_per_rand, num_components
         )
         result = sampler_v2_post_processor_v0_1(
-            self._make_result(
+            result_twirling(
                 [{"meas_avg_iq": meas_data}],
                 twirling_enabled=True,
                 meas_type="avg_kerneled",
@@ -738,7 +739,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             num_rand, shots_per_rand, num_components
         )
         result = sampler_v2_post_processor_v0_1(
-            self._make_result(
+            result_twirling(
                 [{"meas_avg_iq": meas_data}],
                 twirling_enabled=True,
                 meas_type="avg_kerneled",

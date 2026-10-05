@@ -22,6 +22,29 @@ from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, Job, OneInstanceNoBackendsRegistry
 
 
+def populate_jobs(registry):
+    """Populate the registry with jobs of all statuses."""
+    pending_jobs_count = 0
+    returned_jobs_count = 0
+    status_count = {
+        "queued": 3,
+        "running": 4,
+        "completed": 2,
+        "failed": 3,
+        "cancelled": 2,
+    }
+
+    pending_status = ["running", "queued"]
+    for status, count in status_count.items():
+        for i in range(count):
+            registry.add_job(Job(f"my_job_{status}_{i}", "common_backend", status=status), "a")
+            if status in pending_status:
+                pending_jobs_count += 1
+            else:
+                returned_jobs_count += 1
+    return pending_jobs_count, returned_jobs_count
+
+
 @ddt
 class TestRetrieveJobs(IBMTestCase):
     """Class for testing job retrieval."""
@@ -92,7 +115,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_pending(self, registry):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        _, pending_jobs_count, _ = self._populate_jobs(registry)
+        pending_jobs_count, _ = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(pending=True)
@@ -101,7 +124,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_limit_pending(self, registry):
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit."""
-        self._populate_jobs(registry)
+        populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         limit = 4
@@ -111,7 +134,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_skip_pending(self, registry):
         """Test retrieving pending jobs (QUEUED, RUNNING) with skip."""
-        _, pending_jobs_count, _ = self._populate_jobs(registry)
+        pending_jobs_count, _ = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         skip = 4
@@ -121,7 +144,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_limit_skip_pending(self, registry):
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit and skip."""
-        self._populate_jobs(registry)
+        populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         limit = 2
@@ -132,7 +155,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_returned(self, registry):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
-        _, _, returned_jobs_count = self._populate_jobs(registry)
+        _, returned_jobs_count = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(pending=False)
@@ -141,7 +164,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_limit_returned(self, registry):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit."""
-        self._populate_jobs(registry)
+        populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         limit = 6
@@ -151,7 +174,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_skip_returned(self, registry):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with skip."""
-        _, _, returned_jobs_count = self._populate_jobs(registry)
+        _, returned_jobs_count = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         skip = 4
@@ -161,7 +184,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses
     def test_jobs_limit_skip_returned(self, registry):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit and skip."""
-        self._populate_jobs(registry)
+        populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         limit = 4
@@ -237,29 +260,6 @@ class TestRetrieveJobs(IBMTestCase):
         jobs = service.jobs()
         self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
         self.assertIsInstance(jobs[1].backend(), IBMBackend)
-
-    def _populate_jobs(self, registry):
-        """Populate the registry with jobs of all statuses."""
-        jobs = []
-        pending_jobs_count = 0
-        returned_jobs_count = 0
-        status_count = {
-            "queued": 3,
-            "running": 4,
-            "completed": 2,
-            "failed": 3,
-            "cancelled": 2,
-        }
-
-        pending_status = ["running", "queued"]
-        for status, count in status_count.items():
-            for i in range(count):
-                registry.add_job(Job(f"my_job_{status}_{i}", "common_backend", status=status), "a")
-                if status in pending_status:
-                    pending_jobs_count += 1
-                else:
-                    returned_jobs_count += 1
-        return jobs, pending_jobs_count, returned_jobs_count
 
 
 class TestRetrieveJobsRegistry(IBMTestCase):

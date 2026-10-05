@@ -19,9 +19,9 @@ from ddt import data, ddt
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.results.runner import RunnerResult
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
-from ..registries import Job
+from ...decorators import mock_responses
+from ...ibm_test_case import IBMTestCase
+from ...registries import Job
 
 
 @ddt

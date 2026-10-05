@@ -24,7 +24,7 @@ from qiskit_ibm_runtime.options.utils import (
     remove_empty_dict,
 )
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 
 @ddt

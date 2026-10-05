@@ -31,51 +31,42 @@ if TYPE_CHECKING:
     from qiskit.result import SamplerPubResult
 
 
+def assert_pub_result(pub: SamplerPub, pub_result: SamplerPubResult) -> None:
+    """Assert that the counts of `pub_result` match the exact probabilities of `pub`.
+
+    The probabilities of each outcome are computed exactly using Qiskit's StateVector class, and
+    compared to the given counts via Hellinger distance.
+    """
+    # The tolerance used when verifying simulated counts with exact probabilities via
+    # Hellinger distance.
+    tolerance = 0.01
+
+    # Avoid modifying the given circuit.
+    circuit_cp = pub.circuit.copy()
+    circuit_cp.remove_final_measurements()
+
+    # Convert to at least 1D array, so that we can loop through its elements.
+    parameter_values = pub.parameter_values.as_array(pub.circuit.parameters)
+    parameter_values = np.atleast_1d(parameter_values)
+
+    array = pub_result.data.meas
+    assert array.shape == pub.shape
+
+    for index in np.ndindex(parameter_values.shape[:-1]):
+        assigned_parameters = parameter_values[index]
+        bound_circuit = circuit_cp.assign_parameters(assigned_parameters)
+        probabilities = Statevector(bound_circuit).probabilities_dict()
+
+        fidelity = hellinger_fidelity(array[index].get_counts(), probabilities)
+        assert abs(fidelity - 1.0) <= tolerance, f"Fidelity: {fidelity}"
+
+
 @ddt
 class TestSampler(IBMTestCase):
     """Client-side Sampler tests centered around qiskit-aer simulations.
 
     All the tests in this class perform noiseless simulations.
     """
-
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        self.backend = AerSimulator()
-
-        # The tolerance used when verifying simulated counts with exact probabilities via
-        # Hellinger distance.
-        self.tolerance = 0.01
-
-    def verify_pub_result(self, pub: SamplerPub, pub_result: SamplerPubResult) -> None:
-        """A helper to verify the correctness of PUB results.
-
-        It computes the probabilities of each outcome exactly using Qiskit's StateVector class.
-        Then, it compares them to the given ``counts`` via Hellinger distance.
-        """
-        # Avoid modifying the given circuit
-        circuit_cp = pub.circuit.copy()
-        circuit_cp.remove_final_measurements()
-
-        # Convert to at least 1D array, so that we can loop through its elements.
-        parameter_values = pub.parameter_values.as_array(pub.circuit.parameters)
-        parameter_values = np.atleast_1d(parameter_values)
-
-        array = pub_result.data.meas
-        self.assertEqual(array.shape, pub.shape)
-
-        for index in np.ndindex(parameter_values.shape[:-1]):
-            assigned_parameters = parameter_values[index]
-            bound_circuit = circuit_cp.assign_parameters(assigned_parameters)
-            probabilities = Statevector(bound_circuit).probabilities_dict()
-
-            self.assertAlmostEqual(
-                fidelity := hellinger_fidelity(array[index].get_counts(), probabilities),
-                1.0,
-                msg=f"Fidelity: {fidelity}",
-                delta=self.tolerance,
-            )
 
     @data([True, False], [False, True], [True, True], [False, False])
     @unpack
@@ -89,12 +80,14 @@ class TestSampler(IBMTestCase):
           either gate or measurement twirling is enabled, and the requested ``shots``
           otherwise.
         """
-        circuit = make_mirror_circuit_with_phases(self.backend)
+        backend = AerSimulator()
+
+        circuit = make_mirror_circuit_with_phases(backend)
         parameters = np.random.random((2, 3) + (circuit.num_parameters,))
 
         pubs = [SamplerPub.coerce([circuit, parameters])]
 
-        sampler = Sampler(self.backend)
+        sampler = Sampler(backend)
 
         sampler.options.twirling.enable_gates = enable_gates
         sampler.options.twirling.enable_measure = enable_measure
@@ -113,4 +106,4 @@ class TestSampler(IBMTestCase):
         )
 
         for pub, pub_result in zip(pubs, result):
-            self.verify_pub_result(pub, pub_result)
+            assert_pub_result(pub, pub_result)
