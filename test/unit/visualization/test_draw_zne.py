@@ -18,7 +18,8 @@ from qiskit.primitives.containers import DataBin
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 from qiskit_ibm_runtime.visualization import draw_zne_evs, draw_zne_extrapolators
 
-from .case import IBMVisualizationTestCase
+from ...ibm_test_case import IBMTestCase
+from .utils import save_plotly_artifact
 
 
 def zne_results():
@@ -52,7 +53,7 @@ def zne_results():
     return zne_data, error_data
 
 
-class TestDrawZNE(IBMVisualizationTestCase):
+class TestDrawZNE(IBMTestCase):
     """Class for testing the ``draw_zne_evs`` function."""
 
     def test_plotting(self):
@@ -63,7 +64,7 @@ class TestDrawZNE(IBMVisualizationTestCase):
         # 1 expectation value with 2 extrapolators each with 1 std is
         # 1 + 2 * 2 = 5 traces
         self.assertEqual(len(fig.data), 5)
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(self.id(), fig)
 
     def test_errors(self):
         """Test error when no ZNE data is present."""
@@ -73,7 +74,7 @@ class TestDrawZNE(IBMVisualizationTestCase):
                 draw_zne_evs(error)
 
 
-class TestDrawZNEExtrapolators(IBMVisualizationTestCase):
+class TestDrawZNEExtrapolators(IBMTestCase):
     """Class for testing the ``draw_zne_extrapolators`` function."""
 
     def test_plotting(self):
@@ -83,7 +84,7 @@ class TestDrawZNEExtrapolators(IBMVisualizationTestCase):
 
         # 2 figures (one per extrapolator) with 3 traces each is 6
         self.assertEqual(len(fig.data), 6)
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(self.id(), fig)
 
     def test_errors(self):
         """Test error when no ZNE data is present."""

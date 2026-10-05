@@ -29,14 +29,14 @@ from qiskit_ibm_runtime.options import EstimatorOptions, MeasureNoiseLearningOpt
 from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend, get_primitive_inputs
 
+SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG = (
+    "Specifying 'measure_noise_learning.shots_per_randomization' as an integer is deprecated"
+)
+
 
 @ddt
 class TestEstimatorOptions(IBMTestCase):
     """Class for testing the EstimatorOptions class."""
-
-    _shots_per_randomization_deprecation_msg = (
-        "Specifying 'measure_noise_learning.shots_per_randomization' as an integer is deprecated"
-    )
 
     @data(
         ({"resilience_level": -1}, "resilience_level must be >=0"),
@@ -102,7 +102,7 @@ class TestEstimatorOptions(IBMTestCase):
     ):
         """Integer shots_per_randomization warns when set via nested EstimatorOptions init."""
         with self.assertWarnsStrict(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
+            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             options = EstimatorOptions(
                 resilience={
@@ -122,7 +122,7 @@ class TestEstimatorOptions(IBMTestCase):
         options = MeasureNoiseLearningOptions()
 
         with self.assertWarnsStrict(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
+            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             options.shots_per_randomization = value
 
@@ -137,7 +137,7 @@ class TestEstimatorOptions(IBMTestCase):
         estimator = Estimator(mode=get_mocked_backend())
 
         with self.assertWarnsStrict(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
+            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             estimator.options.resilience.measure_noise_learning.shots_per_randomization = value
 
@@ -152,7 +152,7 @@ class TestEstimatorOptions(IBMTestCase):
     ):
         """Auto shots_per_randomization does not warn on option init."""
         with self.assertWarnsStrict(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
+            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             options = MeasureNoiseLearningOptions(shots_per_randomization=value)
 
@@ -162,9 +162,7 @@ class TestEstimatorOptions(IBMTestCase):
         """Auto shots_per_randomization does not warn on attribute assignment."""
         options = MeasureNoiseLearningOptions()
 
-        with self.assertWarnsStrict(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 0
-        ):
+        with self.assertWarnsStrict(DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, 0):
             options.shots_per_randomization = "auto"
 
         self.assertEqual(options.shots_per_randomization, "auto")

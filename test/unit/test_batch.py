@@ -15,7 +15,6 @@
 from qiskit_ibm_runtime import Batch
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
-from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
@@ -25,11 +24,6 @@ from ..utils import get_mocked_backend
 
 class TestBatch(IBMTestCase):
     """Class for testing the Batch class."""
-
-    def tearDown(self) -> None:
-        """Test level teardown."""
-        super().tearDown()
-        _DEFAULT_SESSION.set(None)
 
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
