@@ -12,13 +12,43 @@
 
 """Tests for job functions using real runtime service."""
 
-from datetime import datetime, timedelta, timezone
+from __future__ import annotations
 
+import re
+from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
+from unittest import SkipTest
+
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..utils import wait_for_status
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime import IBMBackend, QiskitRuntimeService
+
+
+def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IBMBackend]:
+    """Return a pair of backends: real backend, mocked backend.
+
+    Raises:
+        SkiTest: if no backend that has a corresponding mock backend is available.
+    """
+    backends = service.backends(include_mocks=True)
+
+    try:
+        # Find a suitable backend that has a mock backend.
+        dry_run_backend = next(
+            backend
+            for backend in backends
+            if backend.name.startswith("mock_") and backend.status().status_msg == "active"
+        )
+        backend_name = re.sub(r"^[^_]+", "ibm", dry_run_backend.name)
+        return service.backend(backend_name), dry_run_backend
+    except (StopIteration, QiskitBackendNotFoundError):
+        raise SkipTest("No backend with corresponding mock backend available.")
 
 
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
@@ -171,3 +201,17 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         jobs = service.jobs(backend_name=backend)
         for job in jobs:
             self.assertEqual(backend, job.backend().name)
+
+    def test_retrieve_jobs_include_mocks(self):
+        """`service.jobs()` should respect the `include_mocks` flag."""
+        service = self.service
+        # Skip the test if there are no mock backends.
+        _, mock_backend = get_mock_backend_pair(service)
+
+        # Submit job against the mock device.
+        job = self._run_program(service, backend=mock_backend.name)
+        jobs_no_mocks = service.jobs(limit=1)
+        jobs_include_mocks = service.jobs(limit=1, include_mocks=True)
+
+        self.assertEqual(jobs_include_mocks[0].job_id(), job.job_id())
+        self.assertNotEqual(jobs_no_mocks[0].job_id(), job.job_id())
