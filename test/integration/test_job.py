@@ -16,8 +16,6 @@ import logging
 import random
 import time
 
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-
 from qiskit_ibm_runtime.exceptions import (
     IBMRuntimeError,
     RuntimeInvalidStateError,
@@ -26,7 +24,7 @@ from qiskit_ibm_runtime.exceptions import (
 
 from ..decorators import production_only, run_integration_test
 from ..serialization import SerializableClass
-from ..utils import bell, cancel_job_safe, get_real_device, wait_for_status
+from ..utils import cancel_job_safe, get_real_device, wait_for_status
 from .case import IBMIntegrationJobTestCase
 
 logger = logging.getLogger(__name__)
@@ -107,11 +105,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_delete_job_queued(self, service):
         """Test deleting a queued job."""
         real_device_name = get_real_device(service)
-        real_device = service.backend(real_device_name)
-        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
-        isa_circuit = pm.run([bell()])
-        _ = self._run_program(service, circuits=isa_circuit, backend=real_device_name)
-        job = self._run_program(service, circuits=isa_circuit, backend=real_device_name)
+        _ = self._run_program(service, backend=real_device_name)
+        job = self._run_program(service, backend=real_device_name)
         wait_for_status(job, "QUEUED")
         try:
             service.delete_job(job.job_id())
@@ -132,7 +127,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_backend(self, service):
         """Test job backend."""
         job = self._run_program(service)
-        self.assertEqual(self.sim_backends[service.channel], job.backend().name)
+        self.assertEqual(self.test_backend.name, job.backend().name)
 
     @run_integration_test
     def test_job_program_id(self, service):

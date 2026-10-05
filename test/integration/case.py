@@ -29,8 +29,19 @@ from test.utils import bell
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.accounts import ChannelType
+    from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
 logger = logging.getLogger(__name__)
+
+
+def get_test_backend(service: QiskitRuntimeService) -> IBMBackend | None:
+    """Return a test backend, if available."""
+    # Simulators or tests backends can be not available
+    for backend in service.backends():
+        if backend.name.startswith("test_eagle"):
+            return backend
+
+    return None
 
 
 @dataclass
@@ -100,17 +111,15 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
     program_ids: dict[str, str]
-    sim_backends: dict[str, str | None]
+    test_backend: IBMBackend | None
 
     @classmethod
     def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
         cls.program_ids = {}
-        cls.sim_backends = {}
-        service = cls.service
-        cls.program_ids[service.channel] = "sampler"
-        cls._find_sim_backends()
+        cls.program_ids[cls.service.channel] = "sampler"
+        cls.test_backend = get_test_backend(cls.service)
 
     def setUp(self) -> None:
         """Test level setup."""
@@ -126,28 +135,16 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             with suppress(Exception):
                 job.cancel()
 
-    @classmethod
-    def _find_sim_backends(cls) -> None:
-        """Find a simulator or test backend for each service."""
-        backends = cls.service.backends()
-        # Simulators or tests backends can be not available
-        cls.sim_backends[cls.service.channel] = None
-        for backend in backends:
-            if backend.name.startswith("test_eagle"):
-                cls.sim_backends[cls.service.channel] = backend.name
-                break
-
-    def _run_program(self, service, circuits=None, backend=None, job_tags=None):
+    def _run_program(self, service, backend=None, job_tags=None):
         """Run a program."""
         logger.debug("Running program on %s", service.channel)
-        backend_name = backend if backend is not None else self.sim_backends[service.channel]
-        backend = service.backend(backend_name)
+        backend = service.backend(backend) if backend is not None else self.test_backend
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         sampler = SamplerV2(mode=backend)
         if job_tags:
             sampler.options.environment.job_tags = job_tags
-        job = sampler.run([pm.run(circuits) if circuits else pm.run(bell())])
+        job = sampler.run([pm.run(bell())])
 
         logger.info("Runtime job %s submitted.", job.job_id())
         self.to_cancel.append(job)
