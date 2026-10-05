@@ -15,11 +15,10 @@
 import subprocess
 import sys
 from functools import partial
-from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-from ..decorators import get_integration_test_config
+from ..integration.case import integration_test_dependencies
 
 
 def run_in_subprocess(cmd: str) -> None:
@@ -41,16 +40,14 @@ def test_import_qiskit_ibm_runtime(benchmark):
 
 def test_instantiate_qiskit_runtime_service(benchmark):
     """Benchmark the instantating of `QiskitRuntimeService`."""
-    channel, token, url, instance, _ = get_integration_test_config()
-    if not all([channel, token, url]):
-        raise SkipTest("No accounts available")
+    dependencies = integration_test_dependencies(init_service=False)
 
     benchmark(
         partial(
             QiskitRuntimeService,
-            instance=instance,
-            channel=channel,
-            token=token,
-            url=url,
+            instance=dependencies.instance,
+            channel=dependencies.channel,
+            token=dependencies.token,
+            url=dependencies.url,
         )
     )

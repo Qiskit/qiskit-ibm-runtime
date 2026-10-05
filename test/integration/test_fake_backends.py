@@ -36,8 +36,9 @@ from qiskit_ibm_runtime.fake_provider import (
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
 from ..decorators import production_only
-from ..ibm_test_case import IBMIntegrationTestCase, IBMTestCase
+from ..ibm_test_case import IBMTestCase
 from ..utils import combine
+from .case import IBMIntegrationTestCase
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 

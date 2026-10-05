@@ -27,7 +27,7 @@ from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
 from ..decorators import run_integration_test
-from ..ibm_test_case import IBMIntegrationTestCase
+from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import RuntimeJobV2
