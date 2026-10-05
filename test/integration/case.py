@@ -110,15 +110,12 @@ class IBMIntegrationTestCase(IBMTestCase):
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
-    program_ids: dict[str, str]
     test_backend: IBMBackend | None
 
     @classmethod
     def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        cls.program_ids = {}
-        cls.program_ids[cls.service.channel] = "sampler"
         cls.test_backend = get_test_backend(cls.service)
 
     def setUp(self) -> None:

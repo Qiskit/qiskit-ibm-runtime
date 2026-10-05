@@ -32,7 +32,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         wait_for_status(job, "QUEUED")
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
-        self.assertEqual(self.program_ids[service.channel], rjob.primitive_id)
+        self.assertEqual("sampler", rjob.primitive_id)
 
     @run_integration_test
     def test_retrieve_job_running(self, service):
@@ -41,7 +41,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         wait_for_status(job, "RUNNING")
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
-        self.assertEqual(self.program_ids[service.channel], rjob.primitive_id)
+        self.assertEqual("sampler", rjob.primitive_id)
 
     @run_integration_test
     def test_retrieve_job_done(self, service):
@@ -50,7 +50,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
-        self.assertEqual(self.program_ids[service.channel], rjob.primitive_id)
+        self.assertEqual("sampler", rjob.primitive_id)
 
     @run_integration_test
     def test_retrieve_all_jobs(self, service):
@@ -72,7 +72,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for _ in range(3):
             jobs.append(self._run_program(service))
 
-        rjobs = service.jobs(limit=2, program_id=self.program_ids[service.channel])
+        rjobs = service.jobs(limit=2, program_id="sampler")
         self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
 
     @run_integration_test
