@@ -60,13 +60,23 @@ _DEFAULT_CRN = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
 
 MOCK_PROXY_CONFIG_DICT = {"urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}}
 
+DUMMY_TOKEN = "123"
+DUMMY_IBM_CLOUD_URL = "https://quantum.cloud.ibm.com"
+
+
+def assert_preferences(prefs, account):
+    """Assert that the preferences set in `prefs` match the ones of `account`."""
+    if "proxies" in prefs:
+        assert account.proxies == ProxyConfiguration(**prefs["proxies"])
+    if "verify" in prefs:
+        assert account.verify == prefs["verify"]
+    if "instance" in prefs:
+        assert account.instance == prefs["instance"]
+
 
 @ddt
 class TestAccount(IBMTestCase):
     """Tests for Account class."""
-
-    dummy_token = "123"
-    dummy_ibm_cloud_url = "https://quantum.cloud.ibm.com"
 
     @data(_TEST_IBM_CLOUD_ACCOUNT, _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT)
     def test_skip_crn_resolution_for_crn(self, test_account):
@@ -92,8 +102,8 @@ class TestAccount(IBMTestCase):
             invalid_channel: Any = "phantom"
             Account.create_account(
                 channel=invalid_channel,
-                token=self.dummy_token,
-                url=self.dummy_ibm_cloud_url,
+                token=DUMMY_TOKEN,
+                url=DUMMY_IBM_CLOUD_URL,
             ).validate()
         self.assertIn("Invalid `channel` value.", str(err.exception))
 
@@ -106,7 +116,7 @@ class TestAccount(IBMTestCase):
                     Account.create_account(
                         channel="ibm_cloud",
                         token=token,
-                        url=self.dummy_ibm_cloud_url,
+                        url=DUMMY_IBM_CLOUD_URL,
                     ).validate()
                 self.assertIn("Invalid `token` value.", str(err.exception))
 
@@ -118,7 +128,7 @@ class TestAccount(IBMTestCase):
         for params in subtests:
             with self.subTest(params=params):
                 with self.assertRaises(InvalidAccountError) as err:
-                    Account.create_account(**params, token=self.dummy_token).validate()
+                    Account.create_account(**params, token=DUMMY_TOKEN).validate()
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
     def test_invalid_account_prefs(self):
@@ -126,8 +136,8 @@ class TestAccount(IBMTestCase):
         with self.assertRaises(InvalidAccountError) as err:
             Account.create_account(
                 channel="ibm_quantum_platform",
-                token=self.dummy_token,
-                url=self.dummy_ibm_cloud_url,
+                token=DUMMY_TOKEN,
+                url=DUMMY_IBM_CLOUD_URL,
                 region="invalid-region",
             ).validate()
         self.assertIn("Invalid `region` value.", str(err.exception))
@@ -135,8 +145,8 @@ class TestAccount(IBMTestCase):
         with self.assertRaises(InvalidAccountError) as err:
             Account.create_account(
                 channel="ibm_quantum_platform",
-                token=self.dummy_token,
-                url=self.dummy_ibm_cloud_url,
+                token=DUMMY_TOKEN,
+                url=DUMMY_IBM_CLOUD_URL,
                 plans_preference="invalid-plans",
             ).validate()
         self.assertIn("Invalid `plans_preference` value.", str(err.exception))
@@ -144,8 +154,8 @@ class TestAccount(IBMTestCase):
         with self.assertRaises(InvalidAccountError) as err:
             Account.create_account(
                 channel="ibm_quantum_platform",
-                token=self.dummy_token,
-                url=self.dummy_ibm_cloud_url,
+                token=DUMMY_TOKEN,
+                url=DUMMY_IBM_CLOUD_URL,
                 tags="invalid-tags",
             ).validate()
         self.assertIn("Invalid `tags` value.", str(err.exception))
@@ -355,7 +365,7 @@ class TestEnableAccount(IBMTestCase):
         with temporary_account_config_file(name=name, verify=True, proxies={}):
             service = QiskitRuntimeService(name=name, **params)
         self.assertTrue(service._account)
-        self._verify_prefs(params, service._account)
+        assert_preferences(params, service._account)
 
     @mock_responses
     @combine(
@@ -375,7 +385,7 @@ class TestEnableAccount(IBMTestCase):
         ):
             service = QiskitRuntimeService(channel=channel, **params)
             self.assertTrue(service._account)
-            self._verify_prefs(params, service._account)
+            assert_preferences(params, service._account)
 
     @mock_responses
     @data(
@@ -397,7 +407,7 @@ class TestEnableAccount(IBMTestCase):
             service = QiskitRuntimeService(**params)
 
         self.assertTrue(service._account)
-        self._verify_prefs(params, service._account)
+        assert_preferences(params, service._account)
 
     @mock_responses
     def test_enable_account_by_name_input_instance(self, registry):
@@ -488,11 +498,3 @@ class TestEnableAccount(IBMTestCase):
             service = QiskitRuntimeService()
         self.assertTrue(service._instance_auto)
         self.assertIsNone(service._account.instance)
-
-    def _verify_prefs(self, prefs, account):
-        if "proxies" in prefs:
-            self.assertEqual(account.proxies, ProxyConfiguration(**prefs["proxies"]))
-        if "verify" in prefs:
-            self.assertEqual(account.verify, prefs["verify"])
-        if "instance" in prefs:
-            self.assertEqual(account.instance, prefs["instance"])

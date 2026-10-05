@@ -21,7 +21,6 @@ from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
-from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
@@ -33,11 +32,6 @@ from ..utils import get_mocked_backend
 @ddt
 class TestSession(IBMTestCase):
     """Class for testing the Session class."""
-
-    def tearDown(self) -> None:
-        """Test level teardown."""
-        super().tearDown()
-        _DEFAULT_SESSION.set(None)
 
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
