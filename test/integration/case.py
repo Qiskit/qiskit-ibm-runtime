@@ -137,57 +137,18 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
                 cls.sim_backends[cls.service.channel] = backend.name
                 break
 
-    def _run_program(
-        self,
-        service,
-        program_id=None,
-        inputs=None,
-        circuits=None,
-        callback=None,
-        backend=None,
-        log_level=None,
-        job_tags=None,
-        max_execution_time=None,
-        session_id=None,
-        start_session=False,
-    ):
+    def _run_program(self, service, circuits=None, backend=None, job_tags=None):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
-        pid = program_id or self.program_ids[service.channel]
         backend_name = backend if backend is not None else self.sim_backends[service.channel]
         backend = service.backend(backend_name)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        inputs = (
-            inputs
-            if inputs is not None
-            else {
-                "circuits": pm.run(circuits) if circuits else pm.run(bell()),
-            }
-        )
 
-        options = {
-            "backend": backend_name,
-            "log_level": log_level,
-            "job_tags": job_tags,
-            "max_execution_time": max_execution_time,
-        }
-        if pid == "sampler":
-            sampler = SamplerV2(mode=backend)
-            if job_tags:
-                sampler.options.environment.job_tags = job_tags
-            if circuits:
-                job = sampler.run([pm.run(circuits) if circuits else pm.run(bell())])
-            else:
-                job = sampler.run([pm.run(bell())])
-        else:
-            job = service._run(
-                program_id=pid,
-                inputs=inputs,
-                options=options,
-                session_id=session_id,
-                callback=callback,
-                start_session=start_session,
-            )
+        sampler = SamplerV2(mode=backend)
+        if job_tags:
+            sampler.options.environment.job_tags = job_tags
+        job = sampler.run([pm.run(circuits) if circuits else pm.run(bell())])
+
         self.log.info("Runtime job %s submitted.", job.job_id())
         self.to_cancel.append(job)
         return job
