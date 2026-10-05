@@ -30,6 +30,8 @@ from test.utils import bell
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.accounts import ChannelType
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class IntegrationTestDependencies:
@@ -97,7 +99,6 @@ class IBMIntegrationTestCase(IBMTestCase):
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
-    log: logging.Logger
     program_ids: dict[str, str]
     sim_backends: dict[str, str | None]
 
@@ -105,7 +106,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        cls.log = logging.getLogger(cls.__name__)
         cls.program_ids = {}
         cls.sim_backends = {}
         service = cls.service
@@ -139,7 +139,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
 
     def _run_program(self, service, circuits=None, backend=None, job_tags=None):
         """Run a program."""
-        self.log.debug("Running program on %s", service.channel)
+        logger.debug("Running program on %s", service.channel)
         backend_name = backend if backend is not None else self.sim_backends[service.channel]
         backend = service.backend(backend_name)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -149,6 +149,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             sampler.options.environment.job_tags = job_tags
         job = sampler.run([pm.run(circuits) if circuits else pm.run(bell())])
 
-        self.log.info("Runtime job %s submitted.", job.job_id())
+        logger.info("Runtime job %s submitted.", job.job_id())
         self.to_cancel.append(job)
         return job

@@ -13,6 +13,7 @@
 """IBMJob Test."""
 
 import copy
+import logging
 from datetime import datetime, timedelta
 
 from dateutil import tz
@@ -25,6 +26,8 @@ from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound, RuntimeJobTimeoutE
 
 from ..utils import bell, cancel_job_safe, most_busy_backend, submit_and_cancel
 from .case import IBMIntegrationJobTestCase
+
+logger = logging.getLogger(__name__)
 
 
 class TestIBMJob(IBMIntegrationJobTestCase):
@@ -46,7 +49,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         """Test job cancellation."""
         # Find the most busy backend
         backend = most_busy_backend(self.service)
-        submit_and_cancel(backend, self.log)
+        submit_and_cancel(backend, logger)
 
     def test_retrieve_jobs(self):
         """Test retrieving jobs."""
@@ -236,7 +239,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         sampler = Sampler(mode=backend)
         job = sampler.run([transpile(bell(), backend=backend)])
         self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
-        cancel_job_safe(job, self.log)
+        cancel_job_safe(job, logger)
 
     def test_job_circuits(self):
         """Test job circuits."""

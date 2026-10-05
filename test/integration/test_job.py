@@ -12,6 +12,7 @@
 
 """Tests for job functions using real runtime service."""
 
+import logging
 import random
 import time
 
@@ -27,6 +28,8 @@ from ..decorators import production_only, run_integration_test
 from ..serialization import SerializableClass
 from ..utils import bell, cancel_job_safe, get_real_device, wait_for_status
 from .case import IBMIntegrationJobTestCase
+
+logger = logging.getLogger(__name__)
 
 
 class TestIntegrationJob(IBMIntegrationJobTestCase):
@@ -60,7 +63,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         )
         job = self._run_program(service)
         wait_for_status(job, "QUEUED")
-        if not cancel_job_safe(job, self.log):
+        if not cancel_job_safe(job, logger):
             return
         time.sleep(15)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
@@ -73,7 +76,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             service,
         )
         rjob = service.job(job.job_id())
-        if not cancel_job_safe(rjob, self.log):
+        if not cancel_job_safe(rjob, logger):
             return
         time.sleep(5)
         self.assertEqual(rjob.status(), "CANCELLED")
