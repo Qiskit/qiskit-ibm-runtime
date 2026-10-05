@@ -36,7 +36,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_run_program(self):
         """Test running a program."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         self.assertEqual("DONE", job.status())
         self.assertTrue(job.result())
@@ -46,7 +46,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         service = self.service
         try:
             __import__("simplejson")
-            job = self._run_program(service=service)
+            job = self.submit_bell_job(service=service)
             job.wait_for_final_state()
             self.assertTrue(job.result())
         except ImportError:
@@ -56,10 +56,10 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_cancel_job_queued(self):
         """Test canceling a queued job."""
         service = self.service
-        _ = self._run_program(
+        _ = self.submit_bell_job(
             service,
         )
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         wait_for_status(job, "QUEUED")
         if not cancel_job_safe(job, logger):
             return
@@ -70,7 +70,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_cancel_job_running(self):
         """Test canceling a running job."""
         service = self.service
-        job = self._run_program(
+        job = self.submit_bell_job(
             service,
         )
         rjob = service.job(job.job_id())
@@ -82,7 +82,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_cancel_job_done(self):
         """Test canceling a finished job."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         with self.assertRaises(RuntimeInvalidStateError):
             job.cancel()
@@ -90,7 +90,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_delete_job(self):
         """Test deleting a job."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         wait_for_status(job, "DONE")
         try:
             service.delete_job(job.job_id())
@@ -105,8 +105,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test deleting a queued job."""
         service = self.service
         real_device_name = get_real_device(service)
-        _ = self._run_program(service, backend=real_device_name)
-        job = self._run_program(service, backend=real_device_name)
+        _ = self.submit_bell_job(service, backend_name=real_device_name)
+        job = self.submit_bell_job(service, backend_name=real_device_name)
         wait_for_status(job, "QUEUED")
         try:
             service.delete_job(job.job_id())
@@ -119,33 +119,33 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_status(self):
         """Test job status."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         time.sleep(random.randint(1, 5))
         self.assertTrue(job.status())
 
     def test_job_backend(self):
         """Test job backend."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         self.assertEqual(self.test_backend.name, job.backend().name)
 
     def test_job_program_id(self):
         """Test job program ID."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         self.assertEqual("sampler", job.primitive_id)
 
     def test_wait_for_final_state(self):
         """Test wait for final state."""
         service = self.service
-        job = self._run_program(service, backend=self.dependencies.qpu)
+        job = self.submit_bell_job(service, backend_name=self.dependencies.qpu)
         job.wait_for_final_state()
         self.assertEqual("DONE", job.status())
 
     def test_wait_for_final_state_after_job_status(self):
         """Test wait for final state on a completed job when the status is updated first."""
         service = self.service
-        job = self._run_program(service, backend=self.dependencies.qpu)
+        job = self.submit_bell_job(service, backend_name=self.dependencies.qpu)
         status = job.status()
         while status not in ["DONE", "CANCELLED", "ERROR"]:
             status = job.status()
@@ -155,7 +155,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_creation_date(self):
         """Test job creation date."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         self.assertTrue(job.creation_date)
         rjob = service.job(job.job_id())
         self.assertTrue(rjob.creation_date)
@@ -166,7 +166,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_metrics(self):
         """Test job metrics."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         metrics = job.metrics()
         self.assertTrue(metrics)
@@ -176,7 +176,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_usage_estimation(self):
         """Test job usage estimation."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         self.assertTrue(job.usage_estimation)
         self.assertIn("quantum_seconds", job.usage_estimation)
@@ -184,21 +184,21 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_usage(self):
         """Test job usage."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         self.assertIsInstance(job.usage(), (float, int))
 
     def test_job_logs(self):
         """Test job logs."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         self.assertIsInstance(job.logs(), str)
 
     def test_updating_job_tags(self):
         """Test job metrics."""
         service = self.service
-        job = self._run_program(service, job_tags=["test_tag123"])
+        job = self.submit_bell_job(service, job_tags=["test_tag123"])
         job.wait_for_final_state()
         new_job_tag = ["new_test_tag"]
         job.update_tags(new_job_tag)
@@ -207,7 +207,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_circuit_params_not_stored(self):
         """Test that circuits are not automatically stored in the job params."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         self.assertFalse(hasattr(job, "_params"))
         self.assertTrue(job.inputs)

@@ -23,13 +23,13 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
     def test_result_timeout(self):
         """Test job result timeout."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         with self.assertRaises(RuntimeJobTimeoutError):
             job.result(0.1)
 
     def test_wait_for_final_state_timeout(self):
         """Test job wait_for_final_state timeout."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         with self.assertRaises(RuntimeJobTimeoutError):
             job.wait_for_final_state(0.1)

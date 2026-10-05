@@ -26,8 +26,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_job_queued(self):
         """Test retrieving a queued job."""
         service = self.service
-        _ = self._run_program(service)
-        job = self._run_program(service)
+        _ = self.submit_bell_job(service)
+        job = self.submit_bell_job(service)
         wait_for_status(job, "QUEUED")
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
@@ -36,7 +36,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_job_running(self):
         """Test retrieving a running job."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         wait_for_status(job, "RUNNING")
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
@@ -45,7 +45,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_job_done(self):
         """Test retrieving a finished job."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
@@ -54,7 +54,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_all_jobs(self):
         """Test retrieving all jobs."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         rjobs = service.jobs()
         found = False
         for rjob in rjobs:
@@ -69,7 +69,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         service = self.service
         jobs = []
         for _ in range(3):
-            jobs.append(self._run_program(service))
+            jobs.append(self.submit_bell_job(service))
 
         rjobs = service.jobs(limit=2, program_id="sampler")
         self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
@@ -77,7 +77,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_pending_jobs(self):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         wait_for_status(job, "RUNNING")
         rjobs = service.jobs(pending=True)
         after_status = job.status()
@@ -96,7 +96,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_returned_jobs(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         rjobs = service.jobs(pending=False)
         found = False
@@ -119,7 +119,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         """Test retrieving jobs by job_tags."""
         service = self.service
         job_tags = ["job_tag_test"]
-        job = self._run_program(service, job_tags=job_tags)
+        job = self.submit_bell_job(service, job_tags=job_tags)
         job.wait_for_final_state()
         rjobs = service.jobs(job_tags=job_tags)
         self.assertIn(job.job_id(), [j.job_id() for j in rjobs])
@@ -138,7 +138,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         """Test retrieving jobs by creation date."""
         service = self.service
         current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
         time_after_job = datetime.now(timezone.utc) + timedelta(minutes=1)
         rjobs = service.jobs(
@@ -152,9 +152,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_jobs_sorted_by_date(self):
         """Test retrieving jobs sorted by the date."""
         service = self.service
-        job = self._run_program(service)
+        job = self.submit_bell_job(service)
         job.wait_for_final_state()
-        job_2 = self._run_program(service)
+        job_2 = self.submit_bell_job(service)
         job_2.wait_for_final_state()
         rjobs = service.jobs()
         rjobs_desc = service.jobs(descending=True)

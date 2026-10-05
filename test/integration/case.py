@@ -30,13 +30,13 @@ from test.utils import bell
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.accounts import ChannelType
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 logger = logging.getLogger(__name__)
 
 
 def get_test_backend(service: QiskitRuntimeService) -> IBMBackend | None:
     """Return a test backend, if available."""
-    # Simulators or tests backends can be not available
     for backend in service.backends():
         if backend.name.startswith("test_eagle"):
             return backend
@@ -132,15 +132,31 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             with suppress(Exception):
                 job.cancel()
 
-    def _run_program(self, service, backend=None, job_tags=None):
-        """Run a program."""
-        logger.debug("Running program on %s", service.channel)
-        backend = service.backend(backend) if backend is not None else self.test_backend
+    def submit_bell_job(
+        self,
+        service: QiskitRuntimeService,
+        backend_name: str | None = None,
+        job_tags: list[str] | None = None,
+    ) -> RuntimeJobV2:
+        """Submit a sampler job running a bell circuit.
+
+        The job is registered for cancellation during teardown.
+
+        Args:
+            service: the service to submit the job through.
+            backend_name: the name of the backend to use. Defaults to the test backend.
+            job_tags: optional tags to set on the job.
+
+        Returns:
+            The submitted job. The method does not wait for it to complete.
+        """
+        logger.debug("Submitting bell job on %s", service.channel)
+        backend = service.backend(backend_name) if backend_name else self.test_backend
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         sampler = SamplerV2(mode=backend)
         if job_tags:
-            sampler.options.environment.job_tags = job_tags
+            sampler.options.environment.job_tags = job_tags  # type: ignore[union-attr]
         job = sampler.run([pm.run(bell())])
 
         logger.info("Runtime job %s submitted.", job.job_id())
