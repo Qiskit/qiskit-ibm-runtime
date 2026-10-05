@@ -102,5 +102,6 @@ def prepare(
     )
     quantum_program.passthrough_data["post_processor"] = {  # type: ignore[index]
         "version": "v0.1",
+        "options": options.model_dump(),
     }
     return quantum_program, executor_options

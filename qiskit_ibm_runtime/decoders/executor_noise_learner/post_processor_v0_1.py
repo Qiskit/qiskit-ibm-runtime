@@ -14,9 +14,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qiskit.quantum_info import QubitSparsePauliList
+from qiskit_noise_learning.analysis import FlipPostSelect
 from qiskit_noise_learning.protocols import process_learning_results
 
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
@@ -35,7 +36,30 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
         A :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Results`, with one
         :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result` per gate in the model.
     """
-    result_fit = process_learning_results(result)
+    if not isinstance(result.passthrough_data, dict):
+        raise ValueError(
+            "Wrong type for passthrough data: Expected a 'dict', found "
+            f"'{type(result.passthrough_data)}'."
+        )
+    passthrough: dict[str, Any] = result.passthrough_data
+    if (post_processor_data := passthrough.get("post_processor")) is None:
+        raise ValueError("Missing 'post_processor' in passthrough data.")
+    if (options := post_processor_data.get("options", None)) is None:
+        raise ValueError("Missing 'options' in passthrough data.")
+
+    post_selection = options["post_selection"]
+    pre = options["bit_flip_checks"]["pre_circuit"]
+    post = options["bit_flip_checks"]["post_circuit"]
+
+    raw_data_stage = None
+    if post_selection["enable"]:
+        raw_data_stage = FlipPostSelect(creg_identifier=None, mode=post_selection["strategy"])
+    elif pre["enable"] or post["enable"]:
+        # pre_mode = pre["strategy"]
+        # post_mode = post["strategy"]
+        # raw_data_stage = FlipPostSelect(creg_identifier=None, mode=None)
+        pass
+    result_fit = process_learning_results(result, raw_data_stage=raw_data_stage)
     maps = result_fit.model.to_pauli_lindblad_maps(
         result_fit.model_data, restrict_to_qubit_idxs=True
     )  # type: ignore
