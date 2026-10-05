@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 import os
-from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -94,22 +93,6 @@ class IBMIntegrationTestCase(IBMTestCase):
         cls.dependencies = integration_test_dependencies()
         cls.service = cls.dependencies.service
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        self.to_delete: defaultdict = defaultdict(list)
-        self.to_cancel: defaultdict = defaultdict(list)
-
-    def tearDown(self) -> None:
-        """Test level teardown."""
-        super().tearDown()
-        service = self.service
-
-        # Cancel and delete jobs.
-        for job in self.to_cancel[service.channel]:
-            with suppress(Exception):
-                job.cancel()
-
 
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
@@ -128,6 +111,20 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         service = cls.service
         cls.program_ids[service.channel] = "sampler"
         cls._find_sim_backends()
+
+    def setUp(self) -> None:
+        """Test level setup."""
+        super().setUp()
+        self.to_cancel: list = []
+
+    def tearDown(self) -> None:
+        """Test level teardown."""
+        super().tearDown()
+
+        # Cancel submitted jobs.
+        for job in self.to_cancel:
+            with suppress(Exception):
+                job.cancel()
 
     @classmethod
     def _find_sim_backends(cls) -> None:
@@ -192,5 +189,5 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
                 start_session=start_session,
             )
         self.log.info("Runtime job %s submitted.", job.job_id())
-        self.to_cancel[service.channel].append(job)
+        self.to_cancel.append(job)
         return job
