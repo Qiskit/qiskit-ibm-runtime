@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 from unittest import SkipTest
@@ -26,15 +25,12 @@ from ibm_cloud_sdk_core import IAMTokenManager
 from ibm_cloud_sdk_core.authenticators import NoAuthAuthenticator
 from responses import RequestsMock
 
-from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.account import Account
 
 from .registries import DefaultRegistry
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from qiskit_ibm_runtime.accounts import ChannelType
 
     from .registries import BaseRegistry
 
@@ -138,33 +134,6 @@ def staging_only(func):
     return _wrapper
 
 
-def get_integration_test_config():
-    """Return a tuple with the specified configuration from env vars."""
-    token, url, instance, qpu = (
-        os.getenv("QISKIT_IBM_TOKEN"),
-        os.getenv("QISKIT_IBM_URL"),
-        os.getenv("QISKIT_IBM_INSTANCE"),
-        os.getenv("QISKIT_IBM_QPU"),
-    )
-    channel: str = "ibm_quantum_platform"
-    return channel, token, url, instance, qpu
-
-
-def run_integration_test(func):
-    """Decorator that injects preinitialized service and device parameters.
-
-    To be used in combination with the integration_test_setup decorator function.
-    """
-
-    @wraps(func)
-    def _wrapper(self, *args, **kwargs):
-        if self.dependencies.service:
-            kwargs["service"] = self.dependencies.service
-        func(self, *args, **kwargs)
-
-    return _wrapper
-
-
 def run_configured_sampler_implementations(
     test_func: Callable[..., Any],
 ) -> Callable[..., Any]:
@@ -185,72 +154,3 @@ def run_configured_sampler_implementations(
         else [("legacy", LegacySampler)]
     )
     return named_data(*implementations)(test_func)
-
-
-def integration_test_setup(
-    supported_channel: list[str] | None = None,
-    init_service: bool | None = True,
-) -> Callable:
-    """Returns a decorator for integration test initialization.
-
-    Args:
-        supported_channel: a list of channel types that this test supports
-        init_service: to initialize the QiskitRuntimeService based on the current environment
-            configuration and return it via the test dependencies
-
-    Returns:
-        A decorator that handles initialization of integration test dependencies.
-    """
-
-    def _decorator(func):
-        @wraps(func)
-        def _wrapper(self, *args, **kwargs):
-            _supported_channel = (
-                ["ibm_cloud", "ibm_quantum_platform"]
-                if supported_channel is None
-                else supported_channel
-            )
-
-            channel, token, url, instance, qpu = get_integration_test_config()
-            if not all([channel, token, url]):
-                raise Exception("Configuration Issue")
-
-            if channel not in _supported_channel:
-                raise SkipTest(
-                    f"Skipping integration test. Test does not support channel type {channel}"
-                )
-
-            service = None
-            if init_service:
-                service = QiskitRuntimeService(
-                    instance=instance,
-                    channel=channel,
-                    token=token,
-                    url=url,
-                )
-            dependencies = IntegrationTestDependencies(
-                channel=channel,
-                token=token,
-                url=url,
-                instance=instance,
-                qpu=qpu,
-                service=service,
-            )
-            kwargs["dependencies"] = dependencies
-            func(self, *args, **kwargs)
-
-        return _wrapper
-
-    return _decorator
-
-
-@dataclass
-class IntegrationTestDependencies:
-    """Integration test dependencies."""
-
-    service: QiskitRuntimeService
-    instance: str | None
-    qpu: str
-    token: str
-    channel: ChannelType
-    url: str
