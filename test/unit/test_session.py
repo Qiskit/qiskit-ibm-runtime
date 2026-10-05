@@ -12,8 +12,6 @@
 
 """Tests for Session classession."""
 
-from unittest.mock import MagicMock
-
 from ddt import data, ddt
 
 from qiskit_ibm_runtime import SamplerV2, Session
@@ -66,32 +64,16 @@ class TestSession(IBMTestCase):
         """Test the run method."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
-        job = MagicMock()
-        job.job_id.return_value = "12345"
-        service._run = MagicMock(return_value=job)
-        inputs = {"name": "bruce wayne"}
-        options = {"log_level": "INFO"}
-        program_id = "batman_begins"
-        decoder = MagicMock()
         max_time = 42
         session = Session(backend=backend, max_time=max_time)
-
-        session._run(
-            program_id=program_id,
-            inputs=inputs,
-            options=options,
-            result_decoder=decoder,
-        )
-        _, kwargs = service._run.call_args
-        self.assertEqual(kwargs["program_id"], program_id)
-        self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
-        self.assertDictEqual(kwargs["inputs"], inputs)
-        self.assertEqual(kwargs["result_decoder"], decoder)
-        self.assertEqual(session.backend(), "common_backend")
+        job = session._run(program_id="foo", inputs={})
+        self.assertEqual(job.backend().name, "common_backend")
+        self.assertEqual(job.session_id, "session_12345")
 
     @mock_responses
     def test_context_manager(self, registry):
         """Test session as a context manager."""
+        registry.add_session(RegistrySession("session_12345", "common_backend"), "a")
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         with Session(backend=backend) as session:

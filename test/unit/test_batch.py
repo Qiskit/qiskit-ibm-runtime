@@ -20,6 +20,7 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import OneInstanceDryRunRegistry
+from ..registries import Session as RegistrySession
 
 
 class TestBatch(IBMTestCase):
@@ -52,6 +53,7 @@ class TestBatch(IBMTestCase):
     @mock_responses
     def test_context_manager(self, registry):
         """Test session as a context manager."""
+        registry.add_session(RegistrySession("session_12345", "common_backend", mode="batch"), "a")
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         with Batch(backend=backend) as session:
