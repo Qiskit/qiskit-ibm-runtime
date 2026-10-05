@@ -14,23 +14,22 @@
 
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
 
-from ..decorators import run_integration_test
 from .case import IBMIntegrationJobTestCase
 
 
 class TestIntegrationResults(IBMIntegrationJobTestCase):
     """Integration tests for result callbacks."""
 
-    @run_integration_test
-    def test_result_timeout(self, service):
+    def test_result_timeout(self):
         """Test job result timeout."""
-        job = self._run_program(service)
+        service = self.service
+        job = self.submit_bell_job(service)
         with self.assertRaises(RuntimeJobTimeoutError):
             job.result(0.1)
 
-    @run_integration_test
-    def test_wait_for_final_state_timeout(self, service):
+    def test_wait_for_final_state_timeout(self):
         """Test job wait_for_final_state timeout."""
-        job = self._run_program(service)
+        service = self.service
+        job = self.submit_bell_job(service)
         with self.assertRaises(RuntimeJobTimeoutError):
             job.wait_for_final_state(0.1)

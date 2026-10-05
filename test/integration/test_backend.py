@@ -26,7 +26,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from ..decorators import production_only, run_integration_test, staging_only
+from ..decorators import production_only, staging_only
 from ..utils import bell
 from .case import IBMIntegrationTestCase
 
@@ -34,9 +34,9 @@ from .case import IBMIntegrationTestCase
 class TestIntegrationBackend(IBMIntegrationTestCase):
     """Integration tests for backend functions."""
 
-    @run_integration_test
-    def test_least_busy(self, service):
+    def test_least_busy(self):
         """Test the least busy method."""
+        service = self.service
         # test passing an instance
         instance = self.dependencies.instance
         backend = service.least_busy(instance=instance)
@@ -51,9 +51,9 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         backend = service_with_no_default_instance.least_busy()
         self.assertTrue(backend)
 
-    @run_integration_test
-    def test_backends(self, service):
+    def test_backends(self):
         """Test getting all backends."""
+        service = self.service
         backends = service.backends()
         self.assertTrue(backends)
         backend_names = [back.name for back in backends]
@@ -63,22 +63,22 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
             f"backend_names={backend_names}",
         )
 
-    @run_integration_test
-    def test_get_backend(self, service):
+    def test_get_backend(self):
         """Test getting a backend."""
+        service = self.service
         backends = service.backends()
         backend = service.backend(backends[0].name)
         self.assertTrue(backend)
 
-    @run_integration_test
-    def test_target_reset(self, service):
+    def test_target_reset(self):
         """Test confirming target contains reset."""
+        service = self.service
         backend = service.backend(self.dependencies.qpu)
         self.assertIn("reset", backend.target)
 
-    @run_integration_test
-    def test_backends_physical_qubits(self, service):
+    def test_backends_physical_qubits(self):
         """All backends should have a `physical_qubits` property."""
+        service = self.service
         backends = service.backends()
 
         for backend in backends:
@@ -193,7 +193,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_pending_jobs(self):
         """Test pending jobs are returned."""
-        backends = self.service.backends()
+        service = self.service
+        backends = service.backends()
         self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
@@ -229,8 +230,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_retrieve_backend_not_exist(self):
         """Test that an error is raised when retrieving a backend that does not exist."""
+        service = self.service
         with self.assertRaises(QiskitBackendNotFoundError):
-            self.service.backend("nonexistent_backend")
+            service.backend("nonexistent_backend")
 
     def test_too_many_qubits_in_circuit(self):
         """Check error message if circuit contains more qubits than supported on the backend."""
@@ -248,10 +250,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_use_fractional_gates_flag(self):
         """Test use_fractional_gates returns correct backend config."""
+        service = self.service
         try:
             real_device_name = "alt_fez"
-            real_device_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
-            real_device_fg = self.service.backend(real_device_name, use_fractional_gates=True)
+            real_device_no_fg = service.backend(real_device_name, use_fractional_gates=False)
+            real_device_fg = service.backend(real_device_name, use_fractional_gates=True)
         except QiskitBackendNotFoundError:
             self.skipTest("Real backend not available.")
         self.assertIn("rzz", real_device_fg.basis_gates)
@@ -259,6 +262,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_fractional_gates_error(self):
         """Test that use_fractional_gates = True raises error for unsupported backends."""
+        service = self.service
         backend = self.backend
         if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
             self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
@@ -269,17 +273,18 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 "but use_fractional_gates was set to True."
             ),
         ):
-            self.service.backend(backend.name, use_fractional_gates=True)
+            service.backend(backend.name, use_fractional_gates=True)
 
     def test_backend_fractional_gates_cache_behavior(self):
         """Test backend config cache/refresh logic for use_fractional_gates."""
+        service = self.service
         try:
             real_device_name = "ibm_miami"
-            backend_fg = self.service.backend(real_device_name, use_fractional_gates=True)
-            backend_fg2 = self.service.backend(real_device_name, use_fractional_gates=True)
-            backend_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
-            backend_no_fg2 = self.service.backend(real_device_name, use_fractional_gates=False)
-            backend_fg3 = self.service.backend(real_device_name, use_fractional_gates=True)
+            backend_fg = service.backend(real_device_name, use_fractional_gates=True)
+            backend_fg2 = service.backend(real_device_name, use_fractional_gates=True)
+            backend_no_fg = service.backend(real_device_name, use_fractional_gates=False)
+            backend_no_fg2 = service.backend(real_device_name, use_fractional_gates=False)
+            backend_fg3 = service.backend(real_device_name, use_fractional_gates=True)
         except QiskitBackendNotFoundError:
             self.skipTest("Real backend not available.")
 
@@ -303,22 +308,24 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_renew_backend_properties(self):
         """Test renewed backend property."""
+        service = self.service
         name = self.backend.name
-        backend = self.service.backend(name)
+        backend = service.backend(name)
         basis_gates = copy.copy(backend.basis_gates)
         # modify a property
         backend.basis_gates.remove(basis_gates[0])
         # renew backend
-        backend = self.service.backend(name)
+        backend = service.backend(name)
         self.assertEqual(backend.basis_gates, basis_gates)
 
     def test_backend_calibration_id(self):
         """Test calibration_id is used when fetching the configuration."""
+        service = self.service
         name = self.backend.name
         calibration_id = "invalid_id"
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as log:
             with self.assertRaises(QiskitBackendNotFoundError):
-                self.service.backend(name, calibration_id=calibration_id)
+                service.backend(name, calibration_id=calibration_id)
 
         self.assertTrue(any(calibration_id in record for record in log.output))
 
@@ -329,7 +336,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
         This test does not use ``dependencies.qpu``, but instead attempts to find a backend that
         can be used for ``dry_run`` mode, skipping if not.
         """
-        backends = self.service.backends()
+        service = self.service
+        backends = service.backends()
 
         try:
             # Find a suitable backend: has a mock
@@ -339,7 +347,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 if backend.name.startswith("mock_") and backend.status().status_msg == "active"
             )
             backend_name = re.sub(r"^[^_]+", "ibm", dry_run_backend.name)
-            backend = self.service.backend(backend_name)
+            backend = service.backend(backend_name)
         except (StopIteration, QiskitBackendNotFoundError):
             self.skipTest("No dry_run backends available.")
 

@@ -83,6 +83,7 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
 
     def test_job_tags(self):
         """Test using job tags."""
+        service = self.service
         # Use a unique tag.
         job_tags = [
             uuid.uuid4().hex[0:16],
@@ -96,13 +97,13 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
 
         no_rjobs_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
         for tags in no_rjobs_tags:
-            rjobs = self.service.jobs(job_tags=tags, created_after=self.last_week)
+            rjobs = service.jobs(job_tags=tags, created_after=self.last_week)
             self.assertEqual(len(rjobs), 0, f"Expected job {job.job_id()}, got {rjobs}")
 
         has_rjobs_tags = [job_tags, job_tags[1:3]]
         for tags in has_rjobs_tags:
             with self.subTest(tags=tags):
-                rjobs = self.service.jobs(
+                rjobs = service.jobs(
                     job_tags=tags,
                     created_after=self.last_week,
                 )
@@ -133,13 +134,14 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
+        service = self.service
         with self.assertRaises(ValidationError):
             sampler = Sampler(mode=self.sim_backend)
             sampler.options.environment.job_tags = "foo"
 
         self.assertRaises(
             IBMInputValueError,
-            self.service.jobs,
+            service.jobs,
             job_tags=[1, 2, 3],
         )
 

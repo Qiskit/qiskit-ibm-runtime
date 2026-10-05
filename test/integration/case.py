@@ -29,6 +29,19 @@ from test.utils import bell
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.accounts import ChannelType
+    from qiskit_ibm_runtime.ibm_backend import IBMBackend
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
+logger = logging.getLogger(__name__)
+
+
+def get_test_backend(service: QiskitRuntimeService) -> IBMBackend | None:
+    """Return a test backend, if available."""
+    for backend in service.backends():
+        if backend.name.startswith("test_eagle"):
+            return backend
+
+    return None
 
 
 @dataclass
@@ -97,20 +110,13 @@ class IBMIntegrationTestCase(IBMTestCase):
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     """Custom integration test case for job-related tests."""
 
-    log: logging.Logger
-    program_ids: dict[str, str]
-    sim_backends: dict[str, str | None]
+    test_backend: IBMBackend | None
 
     @classmethod
     def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        cls.log = logging.getLogger(cls.__name__)
-        cls.program_ids = {}
-        cls.sim_backends = {}
-        service = cls.service
-        cls.program_ids[service.channel] = "sampler"
-        cls._find_sim_backends()
+        cls.test_backend = get_test_backend(cls.service)
 
     def setUp(self) -> None:
         """Test level setup."""
@@ -126,68 +132,33 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             with suppress(Exception):
                 job.cancel()
 
-    @classmethod
-    def _find_sim_backends(cls) -> None:
-        """Find a simulator or test backend for each service."""
-        backends = cls.service.backends()
-        # Simulators or tests backends can be not available
-        cls.sim_backends[cls.service.channel] = None
-        for backend in backends:
-            if backend.name.startswith("test_eagle"):
-                cls.sim_backends[cls.service.channel] = backend.name
-                break
-
-    def _run_program(
+    def submit_bell_job(
         self,
-        service,
-        program_id=None,
-        inputs=None,
-        circuits=None,
-        callback=None,
-        backend=None,
-        log_level=None,
-        job_tags=None,
-        max_execution_time=None,
-        session_id=None,
-        start_session=False,
-    ):
-        """Run a program."""
-        self.log.debug("Running program on %s", service.channel)
-        pid = program_id or self.program_ids[service.channel]
-        backend_name = backend if backend is not None else self.sim_backends[service.channel]
-        backend = service.backend(backend_name)
-        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        inputs = (
-            inputs
-            if inputs is not None
-            else {
-                "circuits": pm.run(circuits) if circuits else pm.run(bell()),
-            }
-        )
+        service: QiskitRuntimeService,
+        backend_name: str | None = None,
+        job_tags: list[str] | None = None,
+    ) -> RuntimeJobV2:
+        """Submit a sampler job running a bell circuit.
 
-        options = {
-            "backend": backend_name,
-            "log_level": log_level,
-            "job_tags": job_tags,
-            "max_execution_time": max_execution_time,
-        }
-        if pid == "sampler":
-            sampler = SamplerV2(mode=backend)
-            if job_tags:
-                sampler.options.environment.job_tags = job_tags
-            if circuits:
-                job = sampler.run([pm.run(circuits) if circuits else pm.run(bell())])
-            else:
-                job = sampler.run([pm.run(bell())])
-        else:
-            job = service._run(
-                program_id=pid,
-                inputs=inputs,
-                options=options,
-                session_id=session_id,
-                callback=callback,
-                start_session=start_session,
-            )
-        self.log.info("Runtime job %s submitted.", job.job_id())
+        The job is registered for cancellation during teardown.
+
+        Args:
+            service: the service to submit the job through.
+            backend_name: the name of the backend to use. Defaults to the test backend.
+            job_tags: optional tags to set on the job.
+
+        Returns:
+            The submitted job. The method does not wait for it to complete.
+        """
+        logger.debug("Submitting bell job on %s", service.channel)
+        backend = service.backend(backend_name) if backend_name else self.test_backend
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+
+        sampler = SamplerV2(mode=backend)
+        if job_tags:
+            sampler.options.environment.job_tags = job_tags  # type: ignore[union-attr]
+        job = sampler.run([pm.run(bell())])
+
+        logger.info("Runtime job %s submitted.", job.job_id())
         self.to_cancel.append(job)
         return job

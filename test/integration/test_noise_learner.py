@@ -26,7 +26,6 @@ from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
-from ..decorators import run_integration_test
 from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
@@ -61,8 +60,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             "twirling_strategy": "active-accum",
         }
 
-    @run_integration_test
-    def test_with_default_options(self, service):
+    def test_with_default_options(self):
         """Test noise learner with default options."""
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=self._backend, options=options)
@@ -73,8 +71,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         self._verify(job, self.default_input_options, 3)
 
-    @run_integration_test
-    def test_with_non_default_options(self, service):
+    def test_with_non_default_options(self):
         """Test noise learner with non-default options."""
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
@@ -90,8 +87,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         input_options["layer_pair_depths"] = [0, 1]
         self._verify(job, input_options, 1)
 
-    @run_integration_test
-    def test_with_no_layers(self, service):
+    def test_with_no_layers(self):
         """Test noise learner when `max_layers_to_learn` is `0`."""
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
@@ -107,8 +103,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         input_options["max_layers_to_learn"] = 0
         self._verify(job, input_options, 0)
 
-    @run_integration_test
-    def test_learner_plus_estimator(self, service):
+    def test_learner_plus_estimator(self):
         """Test feeding noise learner data to estimator."""
         options = EstimatorOptions()
         options.resilience.zne_mitigation = True
