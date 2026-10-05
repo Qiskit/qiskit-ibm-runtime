@@ -23,7 +23,6 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMRuntimeError
 
-from ..decorators import run_integration_test
 from ..utils import bell
 from .case import IBMIntegrationTestCase
 from .test_account import _get_service_instance_name_for_crn
@@ -32,9 +31,9 @@ from .test_account import _get_service_instance_name_for_crn
 class TestIntegrationSession(IBMIntegrationTestCase):
     """Integration tests for Session."""
 
-    @run_integration_test
-    def test_estimator_sampler(self, service):
+    def test_estimator_sampler(self):
         """Test calling both estimator and sampler."""
+        service = self.service
         backend = service.backend(self.dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -60,9 +59,9 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertIsInstance(result, PrimitiveResult)
             session.close()
 
-    @run_integration_test
-    def test_session_from_id(self, service):
+    def test_session_from_id(self):
         """Test creating a session from a given id."""
+        service = self.service
         backend = service.backend(self.dependencies.qpu)
         if backend.configuration().simulator:
             raise SkipTest("No proper backends available")
@@ -85,9 +84,9 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
 
-    @run_integration_test
-    def test_session_from_id_no_backend(self, service):
+    def test_session_from_id_no_backend(self):
         """Test error is raised if session has no backend."""
+        service = self.service
         backend = service.backend(self.dependencies.qpu)
         if backend.configuration().simulator:
             raise SkipTest("No proper backends available")
@@ -99,9 +98,9 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             with self.assertRaises(IBMRuntimeError):
                 Session.from_id(session_id=session._session_id, service=service)
 
-    @run_integration_test
-    def test_session_backend(self, service):
+    def test_session_backend(self):
         """Test session backend is the correct backend."""
+        service = self.service
         backend = service.backend(self.dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)

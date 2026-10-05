@@ -134,21 +134,6 @@ def staging_only(func):
     return _wrapper
 
 
-def run_integration_test(func):
-    """Decorator that injects preinitialized service and device parameters.
-
-    To be used in test cases whose dependencies are set by `integration_test_dependencies`.
-    """
-
-    @wraps(func)
-    def _wrapper(self, *args, **kwargs):
-        if self.dependencies.service:
-            kwargs["service"] = self.dependencies.service
-        func(self, *args, **kwargs)
-
-    return _wrapper
-
-
 def run_configured_sampler_implementations(
     test_func: Callable[..., Any],
 ) -> Callable[..., Any]:

@@ -47,13 +47,15 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_cancel(self):
         """Test job cancellation."""
+        service = self.service
         # Find the most busy backend
-        backend = most_busy_backend(self.service)
+        backend = most_busy_backend(service)
         submit_and_cancel(backend, logger)
 
     def test_retrieve_jobs(self):
         """Test retrieving jobs."""
-        job_list = self.service.jobs(
+        service = self.service
+        job_list = service.jobs(
             backend_name=self.sim_backend.name,
             limit=5,
             skip=0,
@@ -65,7 +67,8 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_retrieve_completed_jobs(self):
         """Test retrieving jobs with the completed filter."""
-        completed_job_list = self.service.jobs(
+        service = self.service
+        completed_job_list = service.jobs(
             backend_name=self.sim_backend.name, limit=3, pending=False
         )
         for job in completed_job_list:
@@ -84,8 +87,9 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
+        service = self.service
         yesterday = datetime.now() - timedelta(days=1)
-        pending_job_list = self.service.jobs(
+        pending_job_list = service.jobs(
             program_id="sampler",
             limit=3,
             pending=True,
@@ -99,17 +103,20 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_retrieve_job(self):
         """Test retrieving a single job."""
-        retrieved_job = self.service.job(self.sim_job.job_id())
+        service = self.service
+        retrieved_job = service.job(self.sim_job.job_id())
         self.assertEqual(self.sim_job.job_id(), retrieved_job.job_id())
         self.assertEqual(self.sim_job.result().metadata, retrieved_job.result().metadata)
 
     def test_retrieve_job_error(self):
         """Test retrieving an invalid job."""
-        self.assertRaises(RuntimeJobNotFound, self.service.job, "BAD_JOB_ID")
+        service = self.service
+        self.assertRaises(RuntimeJobNotFound, service.job, "BAD_JOB_ID")
 
     def test_retrieve_jobs_status(self):
         """Test retrieving jobs filtered by status."""
-        backend_jobs = self.service.jobs(
+        service = self.service
+        backend_jobs = service.jobs(
             backend_name=self.sim_backend.name,
             limit=5,
             skip=5,
@@ -136,11 +143,12 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_retrieve_jobs_created_after(self):
         """Test retrieving jobs created after a specified datetime."""
+        service = self.service
         past_month = datetime.now() - timedelta(days=30)
         # Add local tz in order to compare to `creation_date` which is tz aware.
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
 
-        job_list = self.service.jobs(
+        job_list = service.jobs(
             backend_name=self.sim_backend.name,
             limit=2,
             created_after=past_month,
@@ -155,11 +163,12 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_retrieve_jobs_created_before(self):
         """Test retrieving jobs created before a specified datetime."""
+        service = self.service
         past_month = datetime.now() - timedelta(days=30)
         # Add local tz in order to compare to `creation_date` which is tz aware.
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
 
-        job_list = self.service.jobs(
+        job_list = service.jobs(
             backend_name=self.sim_backend.name,
             limit=2,
             created_before=past_month,
@@ -174,6 +183,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_retrieve_jobs_between_datetime(self):
         """Test retrieving jobs created between two specified datetime."""
+        service = self.service
         date_today = datetime.now()
         past_one_month = date_today - timedelta(30)
 
@@ -181,7 +191,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         today_tz_aware = date_today.replace(tzinfo=tz.tzlocal())
         past_one_month_tz_aware = past_one_month.replace(tzinfo=tz.tzlocal())
 
-        job_list = self.service.jobs(
+        job_list = service.jobs(
             backend_name=self.sim_backend.name,
             limit=2,
             created_after=past_one_month,
@@ -196,10 +206,11 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
+        service = self.service
         sampler = Sampler(mode=self.sim_backend)
         job = sampler.run([self.isa_circuit])
         job.wait_for_final_state()
-        newest_jobs = self.service.jobs(
+        newest_jobs = service.jobs(
             limit=20,
             pending=False,
             descending=True,
@@ -207,7 +218,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         )
         self.assertIn(job.job_id(), [rjob.job_id() for rjob in newest_jobs])
 
-        oldest_jobs = self.service.jobs(
+        oldest_jobs = service.jobs(
             limit=10,
             pending=False,
             descending=False,

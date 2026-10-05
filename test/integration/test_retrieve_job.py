@@ -16,7 +16,6 @@ from datetime import datetime, timedelta, timezone
 
 from qiskit.providers.jobstatus import JobStatus
 
-from ..decorators import run_integration_test
 from ..utils import wait_for_status
 from .case import IBMIntegrationJobTestCase
 
@@ -24,9 +23,9 @@ from .case import IBMIntegrationJobTestCase
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     """Integration tests for job retrieval functions."""
 
-    @run_integration_test
-    def test_retrieve_job_queued(self, service):
+    def test_retrieve_job_queued(self):
         """Test retrieving a queued job."""
+        service = self.service
         _ = self._run_program(service)
         job = self._run_program(service)
         wait_for_status(job, "QUEUED")
@@ -34,27 +33,27 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual("sampler", rjob.primitive_id)
 
-    @run_integration_test
-    def test_retrieve_job_running(self, service):
+    def test_retrieve_job_running(self):
         """Test retrieving a running job."""
+        service = self.service
         job = self._run_program(service)
         wait_for_status(job, "RUNNING")
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual("sampler", rjob.primitive_id)
 
-    @run_integration_test
-    def test_retrieve_job_done(self, service):
+    def test_retrieve_job_done(self):
         """Test retrieving a finished job."""
+        service = self.service
         job = self._run_program(service)
         job.wait_for_final_state()
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual("sampler", rjob.primitive_id)
 
-    @run_integration_test
-    def test_retrieve_all_jobs(self, service):
+    def test_retrieve_all_jobs(self):
         """Test retrieving all jobs."""
+        service = self.service
         job = self._run_program(service)
         rjobs = service.jobs()
         found = False
@@ -65,9 +64,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         self.assertTrue(found, f"Job {job.job_id()} not returned.")
 
-    @run_integration_test
-    def test_retrieve_jobs_limit(self, service):
+    def test_retrieve_jobs_limit(self):
         """Test retrieving jobs with limit."""
+        service = self.service
         jobs = []
         for _ in range(3):
             jobs.append(self._run_program(service))
@@ -75,9 +74,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         rjobs = service.jobs(limit=2, program_id="sampler")
         self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
 
-    @run_integration_test
-    def test_retrieve_pending_jobs(self, service):
+    def test_retrieve_pending_jobs(self):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
+        service = self.service
         job = self._run_program(service)
         wait_for_status(job, "RUNNING")
         rjobs = service.jobs(pending=True)
@@ -94,9 +93,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             f"Pending job {job.job_id()} not retrieved.",
         )
 
-    @run_integration_test
-    def test_retrieve_returned_jobs(self, service):
+    def test_retrieve_returned_jobs(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
+        service = self.service
         job = self._run_program(service)
         job.wait_for_final_state()
         rjobs = service.jobs(pending=False)
@@ -108,17 +107,17 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
 
-    @run_integration_test
-    def test_retrieve_jobs_by_program_id(self, service):
+    def test_retrieve_jobs_by_program_id(self):
         """Test retrieving jobs by Program ID."""
+        service = self.service
         program_id = "sampler"
         jobs = service.jobs(program_id=program_id)
         for job in jobs:
             self.assertEqual(program_id, job.primitive_id)
 
-    @run_integration_test
-    def test_retrieve_jobs_by_job_tags(self, service):
+    def test_retrieve_jobs_by_job_tags(self):
         """Test retrieving jobs by job_tags."""
+        service = self.service
         job_tags = ["job_tag_test"]
         job = self._run_program(service, job_tags=job_tags)
         job.wait_for_final_state()
@@ -127,17 +126,17 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         rjobs = service.jobs(job_tags=["no_test_tag"])
         self.assertFalse(rjobs)
 
-    @run_integration_test
-    def test_retrieve_jobs_by_instance(self, service):
+    def test_retrieve_jobs_by_instance(self):
         """Test retrieving jobs by instance."""
+        service = self.service
         instance = self.dependencies.instance
         rjobs = service.jobs(instance=instance)
         for job in rjobs:
             self.assertEqual(instance, job.instance)
 
-    @run_integration_test
-    def test_jobs_filter_by_date(self, service):
+    def test_jobs_filter_by_date(self):
         """Test retrieving jobs by creation date."""
+        service = self.service
         current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
         job = self._run_program(service)
         job.wait_for_final_state()
@@ -150,9 +149,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             self.assertTrue(job.creation_date <= time_after_job)
             self.assertTrue(job.creation_date >= current_time)
 
-    @run_integration_test
-    def test_retrieve_jobs_sorted_by_date(self, service):
+    def test_retrieve_jobs_sorted_by_date(self):
         """Test retrieving jobs sorted by the date."""
+        service = self.service
         job = self._run_program(service)
         job.wait_for_final_state()
         job_2 = self._run_program(service)
@@ -164,9 +163,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertTrue(rjobs[1], rjobs_asc[0])
         self.assertEqual([job.job_id() for job in rjobs], [job.job_id() for job in rjobs_desc])
 
-    @run_integration_test
-    def test_retrieve_jobs_backend(self, service):
+    def test_retrieve_jobs_backend(self):
         """Test retrieving jobs with backend filter."""
+        service = self.service
         backend_name = self.test_backend.name
         jobs = service.jobs(backend_name=backend_name)
         for job in jobs:
