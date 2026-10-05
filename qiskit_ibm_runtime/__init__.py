@@ -155,6 +155,8 @@ to invoke the primitive, a
 methods, such as :meth:`RuntimeJobV2.status`, :meth:`RuntimeJobV2.result`, and
 :meth:`RuntimeJobV2.cancel`.
 
+.. _logging_guide:
+
 Logging
 -------
 

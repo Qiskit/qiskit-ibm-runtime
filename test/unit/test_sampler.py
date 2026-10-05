@@ -60,11 +60,6 @@ def _real_amplitudes_measured(num_qubits: int, reps: int) -> QuantumCircuit:
 class TestSamplerV2(IBMTestCase):
     """Class for testing the Sampler class."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        self.circuit = QuantumCircuit(1, 1)
-
     @data(
         [(_real_amplitudes_measured(num_qubits=2, reps=1), [1, 2, 3, 4])],
         [(_measured(2),)],
@@ -148,7 +143,7 @@ class TestSamplerV2(IBMTestCase):
         for options, expected in options_vars:
             with self.subTest(options=options):
                 inst = SamplerV2(mode=session, options=options)
-                inst.run((self.circuit,))
+                inst.run((QuantumCircuit(1, 1),))
                 inputs = session._run.call_args.kwargs["inputs"]["options"]
                 self.assertDictPartiallyEqual(inputs, expected)
 
@@ -548,5 +543,5 @@ class TestSamplerV2(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
         sampler = SamplerV2(mode=backend)
-        job = sampler.run((self.circuit,), dry_run=True)
+        job = sampler.run((QuantumCircuit(1, 1),), dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")

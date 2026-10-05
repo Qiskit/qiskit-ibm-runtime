@@ -22,47 +22,38 @@ from ...ibm_test_case import IBMTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 
 
+def large_timing():
+    """Return the whole scheduler timing of the fake sampler pub results."""
+    pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
+    return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
+
+
+def small_timing():
+    """Return a small constant portion of the scheduler timing."""
+    pub_result = FakeCircuitScheduleInputData.sampler_pub_result_small
+    return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
+
+
+def merge_timing():
+    """Return the scheduler timing of a merge use case."""
+    pub_result = FakeCircuitScheduleInputData.sampler_pub_result_merge
+    return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
+
+
 @ddt.ddt
 class TestCircuitSchedule(IBMTestCase):
     """Tests for CircuitSchedule class."""
 
-    def setUp(self) -> None:
-        """Set up."""
-        fake_sampler_pub_result_large = FakeCircuitScheduleInputData.sampler_pub_result_large
-        fake_sampler_pub_result_small = FakeCircuitScheduleInputData.sampler_pub_result_small
-        fake_sampler_pub_result_merge = FakeCircuitScheduleInputData.sampler_pub_result_merge
-        self.circuit_schedule_large_data = fake_sampler_pub_result_large.metadata["compilation"][
-            "scheduler_timing"
-        ]["timing"]
-        self.circuit_schedule_small_data = fake_sampler_pub_result_small.metadata["compilation"][
-            "scheduler_timing"
-        ]["timing"]
-        self.circuit_schedule_merge_data = fake_sampler_pub_result_merge.metadata["compilation"][
-            "scheduler_timing"
-        ]["timing"]
-
-    def get_large_mock_data(self):
-        """Return the whole data object."""
-        return self.circuit_schedule_large_data
-
-    def get_small_mock_data(self):
-        """Return small constant portion of data object."""
-        return self.circuit_schedule_small_data
-
-    def get_merge_mock_data(self):
-        """Return a merge use case data object."""
-        return self.circuit_schedule_merge_data
-
     def test__load(self):
         """Test data loading."""
-        data = self.get_small_mock_data()
+        data = small_timing()
         loaded_data = CircuitSchedule._load(data)
-        expected_loaded_data = self.get_small_mock_data().split("\n")
+        expected_loaded_data = small_timing().split("\n")
         self.assertEqual(loaded_data, expected_loaded_data)
 
     def test__parse(self):
         """Test circuit schedule data parsing."""
-        data = self.get_small_mock_data()
+        data = small_timing()
         circuit_schedule = CircuitSchedule(data)
         self.assertIsNotNone(circuit_schedule.circuit_scheduling)
 
@@ -103,7 +94,7 @@ class TestCircuitSchedule(IBMTestCase):
         top_channel,
     ):
         """Test for correct circuit schedule preprocessing."""
-        data = self.get_large_mock_data()
+        data = large_timing()
         circuit_schedule = CircuitSchedule(data)
 
         if included_channels is not None:
@@ -127,7 +118,7 @@ class TestCircuitSchedule(IBMTestCase):
     @ddt.unpack
     def test_merge_common_instructions(self, to_merge_instruction, n_instructions):
         """Test for instructions merging."""
-        data = self.get_merge_mock_data()
+        data = merge_timing()
         circuit_schedule = CircuitSchedule(data)
 
         circuit_schedule.preprocess(
@@ -167,7 +158,7 @@ class TestCircuitSchedule(IBMTestCase):
     def test_trace_finite_duration_instruction(self):
         """Test that finite duration traces are created correctly."""
         # initialize a class
-        data = self.get_small_mock_data()
+        data = small_timing()
         circuit_schedule = CircuitSchedule(data)
         circuit_schedule.preprocess()
 
@@ -182,7 +173,7 @@ class TestCircuitSchedule(IBMTestCase):
     def test_trace_zero_duration_instruction(self):
         """Test that shift phase (zero duration) traces are created correctly."""
         # initialize a class
-        data = self.get_large_mock_data()
+        data = large_timing()
         circuit_schedule = CircuitSchedule(data)
         circuit_schedule.preprocess()
 
@@ -216,7 +207,7 @@ class TestCircuitSchedule(IBMTestCase):
         """Test for making sure the figure is populated correctly."""
         go = plotly_module(".graph_objects")
 
-        data = self.get_large_mock_data()
+        data = large_timing()
         circuit_schedule = CircuitSchedule(data)
 
         if included_channels is not None:

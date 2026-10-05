@@ -26,8 +26,8 @@ from qiskit_ibm_runtime import EstimatorV2 as Estimator
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options import EstimatorOptions, MeasureNoiseLearningOptions
 
-from ..ibm_test_case import IBMTestCase
-from ..utils import get_mocked_backend, get_primitive_inputs
+from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend, get_primitive_inputs
 
 
 @ddt

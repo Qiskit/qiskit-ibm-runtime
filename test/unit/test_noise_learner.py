@@ -26,58 +26,61 @@ from ..registries import OneInstanceDryRunRegistry
 from ..utils import combine, get_mocked_backend
 
 
+def circuits():
+    """Return a set of circuits, acting on two and three qubits."""
+    c1 = QuantumCircuit(2)
+    c1.cx(0, 1)
+
+    c2 = QuantumCircuit(3)
+    c2.cx(0, 1)
+    c2.cx(1, 2)
+
+    return [c1, c2]
+
+
+def equivalent_options():
+    """Return a set of non-trivial and equivalent learner, estimator, and dictionary options."""
+    nl_options = NoiseLearnerOptions()
+    nl_options.layer_pair_depths = [0, 2, 4]
+
+    est_options = EstimatorOptions()
+    est_options.resilience.layer_noise_learning.layer_pair_depths = [0, 2, 4]
+    est_options.resilience_level = 2
+
+    dict_options = {"layer_pair_depths": [0, 2, 4]}
+
+    return nl_options, est_options, dict_options
+
+
 @ddt
 class TestNoiseLearner(IBMTestCase):
     """Class for testing the NoiseLearner class."""
-
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        # A set of circuits
-        c1 = QuantumCircuit(2)
-        c1.cx(0, 1)
-
-        c2 = QuantumCircuit(3)
-        c2.cx(0, 1)
-        c2.cx(1, 2)
-
-        self.circuits = [c1, c2]
-
-        # A set of non-trivial and equivalent options
-        self.nl_options = NoiseLearnerOptions()
-        self.nl_options.layer_pair_depths = [0, 2, 4]
-
-        self.est_options = EstimatorOptions()
-        self.est_options.resilience.layer_noise_learning.layer_pair_depths = [0, 2, 4]
-        self.est_options.resilience_level = 2
-
-        self.dict_options = {"layer_pair_depths": [0, 2, 4]}
 
     @combine(task_type=["circs", "pubs"], options_type=["learner", "estimator", "dict"])
     def test_run_program_inputs(self, task_type, options_type):
         """Test all supported tasks and options types."""
         backend = get_mocked_backend()
+        nl_options, est_options, dict_options = equivalent_options()
 
         if task_type == "circs":
-            tasks = [transpile(c) for c in self.circuits]
+            tasks = [transpile(c) for c in circuits()]
         else:
-            tasks = [(transpile(c), "Z" * c.num_qubits) for c in self.circuits]
+            tasks = [(transpile(c), "Z" * c.num_qubits) for c in circuits()]
 
         if options_type == "learner":
-            options = self.nl_options
+            options = nl_options
         elif options_type == "estimator":
-            options = self.est_options
+            options = est_options
         else:
-            options = self.dict_options
+            options = dict_options
 
         inst = NoiseLearner(backend, options)
         inst.run(tasks)
 
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertEqual(input_params["circuits"], [transpile(c) for c in self.circuits])
+        self.assertEqual(input_params["circuits"], [transpile(c) for c in circuits()])
 
-        expected = self.dict_options
+        expected = dict_options
         expected["support_qiskit"] = True
         self.assertEqual(input_params["options"], expected)
 
@@ -89,27 +92,27 @@ class TestNoiseLearner(IBMTestCase):
         """
         backend = get_mocked_backend()
 
-        def circuit_generator(circuits):
-            yield from circuits
+        def circuit_generator(generated_circuits):
+            yield from generated_circuits
 
-        def pub_generator(circuits):
-            for c in circuits:
+        def pub_generator(generated_circuits):
+            for c in generated_circuits:
                 yield (c, "Z" * c.num_qubits)
 
         if task_type == "circs":
-            tasks = [transpile(c) for c in self.circuits]
+            tasks = [transpile(c) for c in circuits()]
         elif task_type == "circs_iterator":
-            tasks = circuit_generator([transpile(c) for c in self.circuits])
+            tasks = circuit_generator([transpile(c) for c in circuits()])
         elif task_type == "pubs":
-            tasks = [(transpile(c), "Z" * c.num_qubits) for c in self.circuits]
+            tasks = [(transpile(c), "Z" * c.num_qubits) for c in circuits()]
         else:
-            tasks = pub_generator([transpile(c) for c in self.circuits])
+            tasks = pub_generator([transpile(c) for c in circuits()])
 
         inst = NoiseLearner(backend)
         inst.run(tasks)
 
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertEqual(input_params["circuits"], [transpile(c) for c in self.circuits])
+        self.assertEqual(input_params["circuits"], [transpile(c) for c in circuits()])
         self.assertEqual(input_params["options"], {"support_qiskit": True})
 
     def test_run_program_inputs_with_no_learnable_layers(self):
@@ -155,5 +158,5 @@ class TestNoiseLearner(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
         noise_learner = NoiseLearner(mode=backend)
-        job = noise_learner.run([transpile(c) for c in self.circuits], dry_run=True)
+        job = noise_learner.run([transpile(c) for c in circuits()], dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")

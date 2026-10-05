@@ -22,8 +22,8 @@ from qiskit.utils.optionals import HAS_AER
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
 
-from ..ibm_test_case import IBMTestCase
-from ..utils import get_mocked_backend, get_primitive_inputs
+from ...ibm_test_case import IBMTestCase
+from ...utils import get_mocked_backend, get_primitive_inputs
 
 if HAS_AER:
     from qiskit_aer.noise import NoiseModel

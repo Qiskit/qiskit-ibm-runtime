@@ -26,34 +26,34 @@ from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
 from .....ibm_test_case import IBMTestCase
 
 
+def target_with_mid_circuit_instructions(measure_name="measure_2", reset_name="reset_2"):
+    """Return a target supporting a mid-circuit measure and reset on every qubit."""
+    target = GenericBackendV2(num_qubits=5, seed=0).target
+    target.add_instruction(MidCircuitMeasure(measure_name), {(i,): None for i in range(5)})
+    target.add_instruction(MidCircuitReset(reset_name), {(i,): None for i in range(5)})
+    return target
+
+
+def circuit_with_mid_circuit_instructions():
+    """Return a circuit with mid-circuit measures and resets, plus terminal measures."""
+    circuit = QuantumCircuit(2, 2)
+    circuit.x(0)
+    circuit.append(MidCircuitMeasure(), [0], [0])
+    circuit.append(MidCircuitReset(), [0])
+    circuit.reset(0)
+    circuit.measure([0], [0])
+    circuit.measure_all()
+    return circuit
+
+
 class TestConvertToMidCircuitMeasure(IBMTestCase):
     """Tests the ConvertToMidCircuitMeasure pass."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        num_qubits = 5
-        mcm = MidCircuitMeasure()
-        mcr = MidCircuitReset()
-        self.target_without = GenericBackendV2(num_qubits=num_qubits, seed=0).target
-        self.target_with = GenericBackendV2(num_qubits=num_qubits, seed=0).target
-        self.target_with.add_instruction(mcm, {(i,): None for i in range(num_qubits)})
-        self.target_with.add_instruction(mcr, {(i,): None for i in range(num_qubits)})
-
-        self.qc = QuantumCircuit(2, 2)
-        self.qc.x(0)
-        self.qc.append(mcm, [0], [0])
-        self.qc.append(mcr, [0])
-        self.qc.reset(0)
-        self.qc.measure([0], [0])
-        self.qc.measure_all()
-
     def test_convert_default(self):
         """Test basic conversion to measure_2 and reset_2."""
-        custom_pass = ConvertToMidCircuitResetAndMeasure(self.target_with)
+        custom_pass = ConvertToMidCircuitResetAndMeasure(target_with_mid_circuit_instructions())
         pm = PassManager([custom_pass])
-        transpiled = pm.run(self.qc)
+        transpiled = pm.run(circuit_with_mid_circuit_instructions())
 
         # The transpiled circuit will contain measure_2 in the two mid-circ-measurements
         # and regular Measure instances in terminal measurements,
@@ -76,7 +76,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
             r"Supported operations are: dict_keys\(\['cx', 'id', 'rz', "
             r"'sx', 'x', 'reset', 'delay', 'measure'\]\)",
         ):
-            ConvertToMidCircuitMeasure(self.target_without)
+            ConvertToMidCircuitMeasure(GenericBackendV2(num_qubits=5, seed=0).target)
 
     def test_convert_measure_3(self):
         """Test conversion with non-default alternative measure and reset.
@@ -85,16 +85,11 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         measure_2 instruction is left untouched.
         Similarly, it will convert the reset into reset_3, leaving the existing reset_2 untouched.
         """
-        num_qubits = 5
-        mcm = MidCircuitMeasure("measure_3")
-        mcr = MidCircuitReset("reset_3")
-        target = GenericBackendV2(num_qubits=num_qubits, seed=0).target
-        target.add_instruction(mcm, {(i,): None for i in range(num_qubits)})
-        target.add_instruction(mcr, {(i,): None for i in range(num_qubits)})
+        target = target_with_mid_circuit_instructions("measure_3", "reset_3")
 
         custom_pass = ConvertToMidCircuitResetAndMeasure(target, "measure_3", "reset_3")
         pm = PassManager([custom_pass])
-        transpiled = pm.run(self.qc)
+        transpiled = pm.run(circuit_with_mid_circuit_instructions())
 
         self.assertIsInstance(transpiled.data[1].operation, MidCircuitMeasure)
         self.assertIsInstance(transpiled.data[2].operation, MidCircuitReset)

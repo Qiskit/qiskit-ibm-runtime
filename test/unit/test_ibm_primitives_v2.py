@@ -27,11 +27,9 @@ from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
-    bell,
     combine,
     create_faulty_backend,
     get_mocked_backend,
@@ -44,18 +42,6 @@ from ..utils import (
 @ddt
 class TestPrimitivesV2(IBMTestCase):
     """Class for testing the Sampler and Estimator classes."""
-
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        cls.circ = bell()
-        cls.obs = SparsePauliOp.from_list([("IZ", 1)])
-        return super().setUpClass()
-
-    def tearDown(self) -> None:
-        """Test level teardown."""
-        super().tearDown()
-        _DEFAULT_SESSION.set(None)
 
     @data(EstimatorV2, SamplerV2)
     def test_dict_options(self, primitive):

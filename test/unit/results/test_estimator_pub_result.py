@@ -19,7 +19,7 @@ from qiskit.primitives import DataBin
 
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 try:
     import plotly.graph_objects as go
@@ -29,42 +29,43 @@ except ImportError:
     PLOTLY_INSTALLED = False
 
 
-class TestEstimatorPubResult(IBMTestCase):
-    """Class for testing the EstimatorPubResult class."""
+def zne_pub_result():
+    """Return a pub result holding ZNE data for two noise factors and one extrapolator."""
+    nfs = np.zeros((2, 2))
+    extrapolated = np.zeros((2, 2, 3))
+    data = DataBin(
+        shape=(2,),
+        evs_noise_factors=nfs,
+        stds_noise_factors=nfs,
+        evs_extrapolated=extrapolated,
+        stds_extrapolated=extrapolated,
+    )
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        nfs = np.zeros((2, 2))
-        extrapolated = np.zeros((2, 2, 3))
-        data = DataBin(
-            shape=(2,),
-            evs_noise_factors=nfs,
-            stds_noise_factors=nfs,
-            evs_extrapolated=extrapolated,
-            stds_extrapolated=extrapolated,
-        )
-
-        metadata = {
-            "resilience": {
-                "zne": {
-                    "extrapolators": ["linear"],
-                    "extrapolated_noise_factors": [0, 2, 3],
-                    "noise_factors": [2, 3],
-                }
+    metadata = {
+        "resilience": {
+            "zne": {
+                "extrapolators": ["linear"],
+                "extrapolated_noise_factors": [0, 2, 3],
+                "noise_factors": [2, 3],
             }
         }
+    }
 
-        self.pub_result = EstimatorPubResult(data, metadata)
+    return EstimatorPubResult(data, metadata)
+
+
+class TestEstimatorPubResult(IBMTestCase):
+    """Class for testing the EstimatorPubResult class."""
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_plot_zne(self):
         """Test that plots are generated with each method."""
-        fig = self.pub_result.draw_zne_evs()
+        pub_result = zne_pub_result()
+
+        fig = pub_result.draw_zne_evs()
         self.assertIsInstance(fig, go.Figure)
 
-        fig = self.pub_result.draw_zne_extrapolators()
+        fig = pub_result.draw_zne_extrapolators()
         self.assertIsInstance(fig, go.Figure)
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")

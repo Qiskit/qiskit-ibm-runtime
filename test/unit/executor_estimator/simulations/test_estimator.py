@@ -244,14 +244,6 @@ class TestEstimatorWithNoise(IBMTestCase):
 class TestEstimatorWithoutNoise(IBMTestCase):
     """Tests client-side Estimator using noise-less simulator through local mode."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
-        self.preset_pass_manager = generate_preset_pass_manager(
-            optimization_level=1, backend=self.backend
-        )
-
     @data(
         RESILIENCE_LEVEL_0,
         RESILIENCE_LEVEL_1,
@@ -261,8 +253,11 @@ class TestEstimatorWithoutNoise(IBMTestCase):
     )
     def test_correct_estimates(self, option_overrides):
         """Tests Estimator configurations to produce correct results in a noise-less environment."""
+        backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
+        preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
+
         estimator = create_local_mode_estimator(
-            self.backend,
+            backend,
             num_randomizations=100,
             shots_per_randomization=200,
             options_overrides=option_overrides,
@@ -270,7 +265,7 @@ class TestEstimatorWithoutNoise(IBMTestCase):
 
         include_projections = not estimator.finalize_options().resilience.measure_mitigation
         pub, ideal_evs = create_estimator_test_data_extended(
-            self.backend, self.preset_pass_manager, include_projections
+            backend, preset_pass_manager, include_projections
         )
 
         # TODO: no DD possible on AER without gate durations.
