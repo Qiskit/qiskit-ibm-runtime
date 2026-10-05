@@ -693,19 +693,12 @@ class QiskitRuntimeService:
     ) -> list[tuple[str, list[tuple[str, bool]]]]:
         """Resolve the cloud instances to use and the backends available in each.
 
-        Determine which IBM Cloud instances the service should operate over and discover the
-        backends hosted by each, returning one ``(crn, [(backend_name, is_mock)])`` tuple per
-        instance.
-
         Args:
             instance: An instance name or CRN to resolve. If ``None``, the default instance or all
                 account instances are used instead.
 
         Returns:
             A list of ``(crn, [(backend_name, is_mock)])`` tuples, one per resolved instance.
-
-        Raises:
-            IBMInputValueError: If ``instance`` is provided but cannot be resolved to a valid CRN.
         """
         if instance:
             if not is_crn(instance):
@@ -732,7 +725,6 @@ class QiskitRuntimeService:
             return [(default_crn, self._discover_backends_from_instance(default_crn))]
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
-
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
                 {

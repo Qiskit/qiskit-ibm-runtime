@@ -243,7 +243,7 @@ class IBMBackend(Backend):
 
     @property
     def is_mock(self) -> bool:
-        """Return whether the backend is used for usage estimation."""
+        """Return whether the backend is a mock device."""
         return self._is_mock
 
     @property
