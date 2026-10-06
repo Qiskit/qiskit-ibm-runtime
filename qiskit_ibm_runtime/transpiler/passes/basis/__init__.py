@@ -13,5 +13,9 @@
 """Passes to layout circuits to IBM backend's instruction sets."""
 
 from .convert_id_to_delay import ConvertIdToDelay
-from .convert_mid_circ_meas import ConvertToMidCircuitMeasure, ConvertToMidCircuitResetAndMeasure
+from .convert_mid_circ_meas import (
+    ConvertToMeasureReset,
+    ConvertToMidCircuitMeasure,
+    ConvertToMidCircuitResetAndMeasure,
+)
 from .fold_rzz_angle import FoldRzzAngle

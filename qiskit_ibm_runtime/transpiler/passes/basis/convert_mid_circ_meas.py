@@ -21,6 +21,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 from qiskit.circuit import Measure, Reset
+from qiskit.dagcircuit import DAGOpNode
 from qiskit.transpiler import TransformationPass
 from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_ops
 
@@ -157,3 +158,51 @@ class ConvertToMidCircuitMeasure(TransformationPass):
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         """Run the pass on a dag."""
         return self._inner_pass.run(dag)
+
+
+class ConvertToMeasureReset(TransformationPass):
+    """Transpiler pass replacing measure-reset sequence.
+
+    Transpiler pass that replaces Measure instructions followed by a Reset instruction on the same
+    qubit with ``MeasureReset`` instructions. This pass is expected to run after routing, as
+    it will check that ``MeasureReset`` is supported in the corresponding physical qubit.
+
+    Args:
+        target: Backend's target instance.
+        mr_name: Name of the instruction used to replace non-terminal Measure instructions. The
+            name must start with "measure_reset", and the instruction must be contained
+            in the target. The default name is ``measure_reset``.
+
+    Raises:
+        ValueError: If the specified ``mr_name`` does not start with ``measure_reset`` or is not
+            contained in the provided target.
+    """
+
+    def __init__(self, target: Target, mr_name: str = "measure_reset") -> None:
+        super().__init__()
+        self.target = target
+        if not mr_name.startswith("measure_reset"):
+            raise ValueError(
+                "Invalid name for a measure instruction."
+                "The provided name must start with `measure_reset`."
+            )
+        if mr_name not in target.operation_names:
+            raise ValueError(
+                f"{mr_name} is not supported by the given target. "
+                f"Supported operations are: {target.operation_names}"
+            )
+        self.mr_name = mr_name
+
+    def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on a dag."""
+        for node in dag.op_nodes(Measure):
+            successor = next(dag.quantum_successors(node))
+            if isinstance(successor, DAGOpNode) and isinstance(successor.op, Reset):
+                node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+
+                if self.target.instruction_supported(self.mr_name, node_indices):
+                    measure_reset = self.target.operation_from_name(self.mr_name)
+                    dag.remove_op_node(successor)
+                    dag.substitute_node(node, measure_reset, inplace=True)
+
+        return dag

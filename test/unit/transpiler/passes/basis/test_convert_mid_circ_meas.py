@@ -10,15 +10,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test the conversion of terminal Measure to MidCircuitMeasure."""
+"""Test the conversion to mid-circuit instructions."""
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import Measure, Reset
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import PassManager
 
-from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
+from qiskit_ibm_runtime.circuit import MeasureReset, MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
+    ConvertToMeasureReset,
     ConvertToMidCircuitMeasure,
     ConvertToMidCircuitResetAndMeasure,
 )
@@ -44,6 +45,13 @@ def circuit_with_mid_circuit_instructions():
     circuit.measure([0], [0])
     circuit.measure_all()
     return circuit
+
+
+def target_with_measure_reset(measure_reset_name="measure_reset"):
+    """Return a target supporting measure-reset on every qubit."""
+    target = GenericBackendV2(num_qubits=5, seed=0).target
+    target.add_instruction(MeasureReset(measure_reset_name), {(i,): None for i in range(5)})
+    return target
 
 
 class TestConvertToMidCircuitMeasure(IBMTestCase):
@@ -140,3 +148,133 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         # [4] is a barrier
         self.assertNotIsInstance(transpiled.data[5].operation, MidCircuitMeasure)
         self.assertIsInstance(transpiled.data[5].operation, Measure)
+
+
+class TestConvertToMeasureReset(IBMTestCase):
+    """Tests the ConvertToMeasureReset pass."""
+
+    def test_convert_default(self):
+        """Test basic conversion to measure_reset."""
+        custom_pass = ConvertToMeasureReset(target_with_measure_reset())
+        pm = PassManager([custom_pass])
+
+        # Measure - Reset - X, on the same qubit
+        circuit = QuantumCircuit(1, 1)
+        circuit.measure(0, 0)
+        circuit.reset(0)
+        circuit.x(0)
+
+        transpiled = pm.run(circuit)
+
+        # The measure-reset sequence is replaced by a single MeasureReset instruction.
+        self.assertIsInstance(transpiled.data[0].operation, MeasureReset)
+        self.assertEqual(transpiled.data[1].operation.name, "x")
+
+    def test_interrupted_sequence(self):
+        """Test that conversion does not occur with a gate in between."""
+        custom_pass = ConvertToMeasureReset(target_with_measure_reset())
+        pm = PassManager([custom_pass])
+
+        # Measure - X - Reset, on the same qubit
+        circuit = QuantumCircuit(1, 1)
+        circuit.measure(0, 0)
+        circuit.x(0)
+        circuit.reset(0)
+
+        transpiled = pm.run(circuit)
+
+        # The circuit is untouched.
+        self.assertIsInstance(transpiled.data[0].operation, Measure)
+        self.assertEqual(transpiled.data[1].operation.name, "x")
+        self.assertIsInstance(transpiled.data[2].operation, Reset)
+
+        self.assertFalse(
+            any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
+        )
+
+    def test_different_qarg(self):
+        """Test that measure and reset on different qubits are not converted."""
+        custom_pass = ConvertToMeasureReset(target_with_measure_reset())
+        pm = PassManager([custom_pass])
+
+        # Measure on one qubit, Reset on another qubit
+        circuit = QuantumCircuit(2, 1)
+        circuit.measure(0, 0)
+        circuit.reset(1)
+
+        transpiled = pm.run(circuit)
+
+        # The circuit is untouched.
+        measures = [
+            instruction
+            for instruction in transpiled.data
+            if isinstance(instruction.operation, Measure)
+        ]
+        resets = [
+            instruction
+            for instruction in transpiled.data
+            if isinstance(instruction.operation, Reset)
+        ]
+
+        self.assertEqual(len(measures), 1)
+        self.assertEqual(len(resets), 1)
+
+        self.assertEqual(transpiled.find_bit(measures[0].qubits[0]).index, 0)
+        self.assertEqual(transpiled.find_bit(resets[0].qubits[0]).index, 1)
+
+        self.assertFalse(
+            any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
+        )
+
+    def test_unsupported_qarg(self):
+        """Test that conversion only occurs on supported qargs."""
+        target = GenericBackendV2(num_qubits=2, seed=0).target
+
+        # MeasureReset is supported on qubit 0, but not on qubit 1
+        target.add_instruction(MeasureReset(), {(0,): None})
+        custom_pass = ConvertToMeasureReset(target)
+        pm = PassManager([custom_pass])
+
+        circuit = QuantumCircuit(2, 2)
+        # Measure - Reset - X on qubit 0
+        circuit.measure(0, 0)
+        circuit.reset(0)
+        circuit.x(0)
+
+        # Measure - Reset - X on qubit 1
+        circuit.measure(1, 1)
+        circuit.reset(1)
+        circuit.x(1)
+
+        transpiled = pm.run(circuit)
+
+        measure_resets = [
+            instruction
+            for instruction in transpiled.data
+            if isinstance(instruction.operation, MeasureReset)
+        ]
+        measures = [
+            instruction
+            for instruction in transpiled.data
+            if isinstance(instruction.operation, Measure)
+        ]
+        resets = [
+            instruction
+            for instruction in transpiled.data
+            if isinstance(instruction.operation, Reset)
+        ]
+        xs = [instruction for instruction in transpiled.data if instruction.operation.name == "x"]
+
+        # Only one sequence Measure-Reset got converted
+        self.assertEqual(len(measure_resets), 1)
+        self.assertEqual(len(measures), 1)
+        self.assertEqual(len(resets), 1)
+        # The two Xs were untouched
+        self.assertEqual(len(xs), 2)
+
+        # The MeasureReset is on qubit 0
+        self.assertEqual(transpiled.find_bit(measure_resets[0].qubits[0]).index, 0)
+
+        # The Measure and Reset are still on qubit 1
+        self.assertEqual(transpiled.find_bit(measures[0].qubits[0]).index, 1)
+        self.assertEqual(transpiled.find_bit(resets[0].qubits[0]).index, 1)
