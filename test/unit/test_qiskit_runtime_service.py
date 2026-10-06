@@ -127,7 +127,10 @@ class TestQiskitRuntimeService(IBMTestCase):
         )
         # `_backend_instance_groups` contains one entry per instance, with its backends.
         self.assertEqual(
-            {info["crn"]: set(info["backends"]) for info in service._backend_instance_groups},
+            {
+                info["crn"]: {name for name, _ in info["backends"]}
+                for info in service._backend_instance_groups
+            },
             backends_in_registry,
         )
 
@@ -139,6 +142,10 @@ class TestQiskitRuntimeService(IBMTestCase):
         """Test `__init__` state variables, passing the `instance` argument."""
         chosen_crn = registry.instances["a"].crn
         crns_in_registry = {chosen_crn}
+        backends_in_registry = {
+            instance.crn: set(registry.backends[instance.name])
+            for instance in registry.instances.values()
+        }
 
         if with_env_var:
             # Using the `QISKIT_FUNCTIONS_EXPERIMENTAL` should have no side effects.
@@ -156,7 +163,13 @@ class TestQiskitRuntimeService(IBMTestCase):
         # `_active_api_client` is among the ones in `_api_clients`.
         self.assertIn(service._active_api_client, service._api_clients.values())
         # `_backends_info_per_instance` is empty.
-        self.assertEqual(service._backends_info_per_instance, {})
+        self.assertEqual(
+            {
+                crn: {info["name"] for info in value}
+                for crn, value in service._backends_info_per_instance.items()
+            },
+            backends_in_registry,
+        )
         # `_backend_instance_groups` is empty.
         self.assertEqual(service._backend_instance_groups, [])
 
