@@ -319,8 +319,8 @@ class FakeBackendV2(BackendV2):
         # Compatibility workaround for qiskit-aer versions that do not support
         # backend-specific "measure_*" instructions natively.
         # See https://github.com/Qiskit/qiskit-aer/issues/2456
-        is_single_circuit = isinstance(run_input, QuantumCircuit)
-        circuits = [run_input] if is_single_circuit else run_input
+
+        circuits = [run_input] if isinstance(run_input, QuantumCircuit) else run_input
 
         sim_circuits = []
 
@@ -331,7 +331,7 @@ class FakeBackendV2(BackendV2):
                     circuit_copy.data[index] = instruction.replace(operation=Measure())
             sim_circuits.append(circuit_copy)
 
-        sim_input = sim_circuits[0] if is_single_circuit else sim_circuits
+        sim_input = sim_circuits[0] if isinstance(run_input, QuantumCircuit) else sim_circuits
         job = self.sim.run(sim_input, **options)  # type: ignore[attr-defined]
         return job
 
