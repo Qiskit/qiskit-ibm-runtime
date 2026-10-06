@@ -158,11 +158,15 @@ class TestQuantumProgram(IBMTestCase):
         self.assertEqual(result.items, samplomatic_program.items)
         self.assertIsNone(result._semantic_role)
 
-    def test_coerce_no_change(self):
-        """Test that a runtime QuantumProgram is returned unchanged."""
+    def test_coerce_runtime_program(self):
+        """Test that a runtime QuantumProgram is copied with the same attributes."""
         program = QuantumProgram(shots=100)
         program._semantic_role = "sampler-v2"
 
         result = QuantumProgram.coerce(program)
 
-        self.assertIs(result, program)
+        self.assertIsNot(result, program)
+        self.assertIsInstance(result, QuantumProgram)
+        self.assertEqual(result.shots, 100)
+        self.assertEqual(result.items, program.items)
+        self.assertEqual(result._semantic_role, "sampler-v2")

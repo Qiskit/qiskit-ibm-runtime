@@ -27,11 +27,11 @@ from samplomatic.quantum_program import (  # noqa: F401,TC002
     QuantumProgramItem,
     SamplexItem,
 )
-from samplomatic.quantum_program import QuantumProgram as BaseQuantumProgram
+from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 from samplomatic.quantum_program.datatree import DataTree  # noqa: TC002
 
 
-class QuantumProgram(BaseQuantumProgram):
+class QuantumProgram(SamplomaticQuantumProgram):
     """A quantum runtime executable.
 
     A quantum program consists of a list of ordered elements, each of which contains a single
@@ -61,26 +61,25 @@ class QuantumProgram(BaseQuantumProgram):
     """
 
     @classmethod
-    def coerce(cls, program: BaseQuantumProgram) -> Self:
-        """Coerce a :class:`~samplomatic.quantum_program.QuantumProgram`.
+    def coerce(cls, program: QuantumProgram | SamplomaticQuantumProgram) -> Self:
+        """Coerce rogram-like into a :class:`~.QuantumProgram`.
 
         Args:
             program: A samplomatic or runtime :class:`~.QuantumProgram`.
 
         Returns:
-            The same object if it is already a :class:`~.QuantumProgram`, otherwise a new
-            :class:`~.QuantumProgram` that wraps the same data.
+            A new :class:`~.QuantumProgram` instance sharing the data of the input program.
         """
-        if isinstance(program, cls):
-            return program
-
-        return cls(
+        new_program = cls(
             shots=program.shots,
             items=program.items,
             noise_maps=program.noise_maps,
             meas_level=program.meas_level,
             passthrough_data=program.passthrough_data,
         )
+        if isinstance(program, cls):
+            new_program._semantic_role = program._semantic_role
+        return new_program
 
     def __init__(
         self,
