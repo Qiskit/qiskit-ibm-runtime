@@ -20,17 +20,66 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import Measure, Reset
+from qiskit.circuit import ClassicalRegister, IfElseOp, Measure, Reset
+from qiskit.circuit.classical import expr
+from qiskit.circuit.library import XGate
+from qiskit.dagcircuit import DAGOpNode
 from qiskit.transpiler import TransformationPass
 from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_ops
 
 if TYPE_CHECKING:
-    from qiskit.dagcircuit import DAGCircuit
+    from qiskit.circuit import Clbit
+    from qiskit.dagcircuit import DAGCircuit, DAGNode
     from qiskit.transpiler import Target
 
 
+def _is_condition_on_one(condition: tuple | expr.Expr, clbit: Clbit) -> bool:
+    """Return whether ``condition`` is true exactly when ``clbit`` is 1.
+
+    The accepted forms are ``(clbit, 1)``, ``(register, 1)`` for a register containing only
+    ``clbit``, and ``expr.lift(clbit)``.
+    """
+    if isinstance(condition, expr.Var):
+        return condition.var == clbit
+    if not isinstance(condition, tuple):
+        return False
+    bits, value = condition
+    if isinstance(bits, ClassicalRegister):
+        return len(bits) == 1 and bits[0] == clbit and value == 1
+    return bits == clbit and value == 1
+
+
+def _is_conditional_x_on_outcome(
+    dag: DAGCircuit, measure_node: DAGOpNode, successor: DAGNode
+) -> bool:
+    """Return whether ``successor`` flips the measured qubit if the measurement outcome is 1.
+
+    That is, whether ``successor`` is an ``if_else`` without ``else`` branch, conditioned on the
+    clbit of ``measure_node`` being 1, that only applies an ``X`` gate to the measured qubit, and
+    that is the next operation on that qubit and the next one depending on that clbit.
+    """
+    if not isinstance(successor, DAGOpNode) or not isinstance(successor.op, IfElseOp):
+        return False
+    if_else = successor.op
+    if len(if_else.blocks) != 1:
+        return False
+    clbit = measure_node.cargs[0]
+    # ``cargs`` is not compared, as it may omit the condition clbit (e.g. in the output of Qiskit's
+    # ResetAfterMeasureSimplification); the dependency on the clbit is checked below instead.
+    if successor.qargs != measure_node.qargs:
+        return False
+    if successor not in dag.classical_successors(measure_node):
+        return False
+    if not _is_condition_on_one(if_else.condition, clbit):
+        return False
+
+    # The block acts only on the measured qubit, so a single X gate is applied to that qubit.
+    body = if_else.blocks[0]
+    return len(body.data) == 1 and isinstance(body.data[0].operation, XGate)
+
+
 class ConvertToMidCircuitResetAndMeasure(TransformationPass):
-    """Transpiler pass replacing mid-circuit measure and reset instructions.
+    r"""Transpiler pass replacing mid-circuit measure and reset instructions.
 
     Transpiler pass that replaces terminal measure instructions in non-terminal locations
     with ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the
@@ -45,6 +94,31 @@ class ConvertToMidCircuitResetAndMeasure(TransformationPass):
     (e.g., ``"measure_2" -> "measure_3"``) or convert any ``MidCircuitMeasure`` instance
     into a ``Measure``.
 
+    Optionally, if ``mcmr_name`` is given, the pass also replaces a measurement followed by an
+    ``X`` gate conditioned on its outcome, which resets the qubit to :math:`|0\rangle` while
+    keeping the measured value, with a single ``MeasureReset`` instruction:
+
+    .. code-block:: python
+
+        circuit.measure(qubit, clbit)
+        with circuit.if_test((clbit, 1)):
+            circuit.x(qubit)
+
+        # is replaced by
+        circuit.append(MeasureReset(), [qubit], [clbit])
+
+    The pattern is only replaced if the conditional block has no ``else`` branch, contains only
+    an ``X`` gate (:class:`~qiskit.circuit.library.XGate`) on the measured qubit, and is the next
+    operation on that qubit and the next one depending on that clbit. The condition must be one
+    of ``(clbit, 1)``, ``(register, 1)`` for a register containing only that clbit, or
+    ``expr.lift(clbit)``; other equivalent forms are not replaced. These replacements happen
+    before the conversion of the remaining measure and reset instructions, and are not applied
+    inside control-flow blocks.
+
+    Since a single ``MeasureReset`` instruction replaces the measurement, the classical feedforward
+    and the conditional gate, the replacement changes the timing of the circuit, and removes the
+    ``if_else`` from it.
+
     Args:
         target: Backend's target instance.
         mcm_name: Name of the instruction used to replace non-terminal Measure instructions. The
@@ -53,15 +127,23 @@ class ConvertToMidCircuitResetAndMeasure(TransformationPass):
         mcr_name: Name of the instruction used to replace non-terminal Reset instructions. The
             name must start with "reset", and the instruction must be contained in the target.
             The default name is ``reset_2``.
+        mcmr_name: Name of the instruction used to replace a measurement followed by a
+            conditional ``X`` gate. The name must start with "measure_reset", and the instruction
+            must be contained in the target. If ``None`` (default), this replacement is disabled.
 
     Raises:
-        ValueError: If the specified ``mcm_name`` does not start with "measure", or the specified
-            ``mcr_name`` does not start with "reset", or the specified instructions are not
-            contained in the provided target.
+        ValueError: If the specified ``mcm_name`` does not start with "measure", the specified
+            ``mcr_name`` does not start with "reset", the specified ``mcmr_name`` does not start
+            with "measure_reset", or the specified instructions are not contained in the provided
+            target.
     """
 
     def __init__(
-        self, target: Target, mcm_name: str = "measure_2", mcr_name: str = "reset_2"
+        self,
+        target: Target,
+        mcm_name: str = "measure_2",
+        mcr_name: str = "reset_2",
+        mcmr_name: str | None = None,
     ) -> None:
         super().__init__()
         self.target = target
@@ -84,11 +166,39 @@ class ConvertToMidCircuitResetAndMeasure(TransformationPass):
                 f"{mcr_name} is not supported by the given target. "
                 f"Supported operations are: {target.operation_names}"
             )
+        if mcmr_name is not None:
+            if not mcmr_name.startswith("measure_reset"):
+                raise ValueError(
+                    "Invalid name for a measure-reset instruction. "
+                    "The provided name must start with `measure_reset`."
+                )
+            if mcmr_name not in target.operation_names:
+                raise ValueError(
+                    f"{mcmr_name} is not supported by the given target. "
+                    f"Supported operations are: {target.operation_names}"
+                )
         self.mcm_name = mcm_name
         self.mcr_name = mcr_name
+        self.mcmr_name = mcmr_name
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         """Run the pass on a dag."""
+        if self.mcmr_name is not None:
+            for node in dag.op_nodes(Measure):
+                successor = next(dag.quantum_successors(node))
+                if not _is_conditional_x_on_outcome(dag, node, successor):
+                    continue
+                node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+                if self.target.instruction_supported(self.mcmr_name, node_indices):
+                    measure_reset = self.target.operation_from_name(self.mcmr_name)
+                    dag.remove_op_node(successor)
+                    dag.substitute_node(node, measure_reset, inplace=True)
+                else:
+                    warnings.warn(
+                        f"'{self.mcmr_name}' with qubits {node_indices} is not supported "
+                        f"by the given target."
+                    )
+
         if self.mcm_name != "measure":
             final_measure_nodes = set(calc_final_ops(dag, {"measure"}))
             for node in dag.op_nodes(Measure):

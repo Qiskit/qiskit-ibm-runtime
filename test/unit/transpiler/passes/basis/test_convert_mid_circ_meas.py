@@ -12,12 +12,17 @@
 
 """Test the conversion of terminal Measure to MidCircuitMeasure."""
 
-from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.library import Measure, Reset
+import warnings
+
+from ddt import data, ddt
+from qiskit.circuit import ClassicalRegister, IfElseOp, QuantumCircuit, QuantumRegister
+from qiskit.circuit.classical import expr
+from qiskit.circuit.library import Measure, Reset, XGate
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import PassManager
+from qiskit.transpiler.passes import ResetAfterMeasureSimplification
 
-from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
+from qiskit_ibm_runtime.circuit import MeasureReset, MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
     ConvertToMidCircuitMeasure,
     ConvertToMidCircuitResetAndMeasure,
@@ -43,6 +48,77 @@ def circuit_with_mid_circuit_instructions():
     circuit.reset(0)
     circuit.measure([0], [0])
     circuit.measure_all()
+    return circuit
+
+
+def target_with_measure_reset(measure_reset_name="measure_reset", qubits=range(5)):
+    """Return a target supporting mid-circuit instructions, and measure-reset on ``qubits``."""
+    target = target_with_mid_circuit_instructions()
+    target.add_instruction(MeasureReset(measure_reset_name), {(i,): None for i in qubits})
+    return target
+
+
+def two_qubit_circuit():
+    """Return an empty circuit with two qubits and two single-clbit registers."""
+    return QuantumCircuit(
+        QuantumRegister(2, "q"), ClassicalRegister(1, "a"), ClassicalRegister(1, "b")
+    )
+
+
+def apply_x(circuit):
+    """Apply an X gate to qubit 1."""
+    circuit.x(1)
+
+
+def apply_x_and_z(circuit):
+    """Apply an X and a Z gate to qubit 1."""
+    circuit.x(1)
+    circuit.z(1)
+
+
+def apply_x_on_both_qubits(circuit):
+    """Apply an X gate to qubits 1 and 0."""
+    circuit.x(1)
+    circuit.x(0)
+
+
+def measure_and_conditional_x(condition="clbit", before=None, body=apply_x, else_body=None):
+    """Return a circuit measuring qubit 1 into clbit 0, followed by an ``if_else`` on clbit 0.
+
+    Args:
+        condition: ``"clbit"`` for ``(clbit, 1)``, ``"register"`` for ``(register, 1)`` on the
+            single-clbit register of clbit 0, ``"expr"`` for ``expr.lift(clbit)``, ``"zero"`` for
+            ``(clbit, 0)``, ``"register_zero"`` for ``(register, 0)``, or ``"other_clbit"`` for
+            ``(other_clbit, 1)``.
+        before: Function applied to the circuit between the measurement and the ``if_else``.
+        body: Function applied to the circuit inside the ``if`` branch.
+        else_body: Function applied to the circuit inside an ``else`` branch, if given.
+    """
+    circuit = two_qubit_circuit()
+    circuit.measure(1, 0)
+    if before is not None:
+        before(circuit)
+    clbit = circuit.clbits[0]
+    condition = {
+        "clbit": (clbit, 1),
+        "register": (circuit.cregs[0], 1),
+        "expr": expr.lift(clbit),
+        "zero": (clbit, 0),
+        "register_zero": (circuit.cregs[0], 0),
+        "other_clbit": (circuit.clbits[1], 1),
+    }[condition]
+    with circuit.if_test(condition) as else_:
+        body(circuit)
+    if else_body is not None:
+        with else_:
+            else_body(circuit)
+    return circuit
+
+
+def measure_reset_circuit(name="measure_reset"):
+    """Return the expected result of converting ``measure_and_conditional_x``."""
+    circuit = two_qubit_circuit()
+    circuit.append(MeasureReset(name), [1], [0])
     return circuit
 
 
@@ -140,3 +216,181 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         # [4] is a barrier
         self.assertNotIsInstance(transpiled.data[5].operation, MidCircuitMeasure)
         self.assertIsInstance(transpiled.data[5].operation, Measure)
+
+
+@ddt
+class TestConvertToMeasureReset(IBMTestCase):
+    """Tests the conversion to MeasureReset in ConvertToMidCircuitResetAndMeasure."""
+
+    def setUp(self):
+        """Create a pass converting to MeasureReset on every qubit."""
+        super().setUp()
+        self.measure_reset_pass = ConvertToMidCircuitResetAndMeasure(
+            target_with_measure_reset(), mcmr_name="measure_reset"
+        )
+
+    @data(
+        {"condition": "clbit"},
+        {"condition": "register"},
+        {"condition": "expr"},
+        {"body": lambda circuit: circuit.append(XGate(label="flip"), [1])},
+    )
+    def test_convert(self, circuit_kwargs):
+        """Test that a measurement followed by a conditional X is replaced by MeasureReset."""
+        circuit = measure_and_conditional_x(**circuit_kwargs)
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        self.assertEqual(transpiled, measure_reset_circuit())
+
+    def test_convert_custom_name(self):
+        """Test the conversion to a MeasureReset instruction with a non-default name."""
+        custom_pass = ConvertToMidCircuitResetAndMeasure(
+            target_with_measure_reset("measure_reset_2"), mcmr_name="measure_reset_2"
+        )
+        transpiled = PassManager([custom_pass]).run(measure_and_conditional_x())
+
+        self.assertEqual(transpiled, measure_reset_circuit("measure_reset_2"))
+
+    def test_convert_reset_after_measure_simplification(self):
+        """Test the conversion of the output of Qiskit's ResetAfterMeasureSimplification."""
+        circuit = two_qubit_circuit()
+        circuit.measure(1, 0)
+        circuit.reset(1)
+        simplified = PassManager([ResetAfterMeasureSimplification()]).run(circuit)
+
+        transpiled = PassManager([self.measure_reset_pass]).run(simplified)
+
+        self.assertEqual(transpiled, measure_reset_circuit())
+
+    def test_convert_consecutive_patterns(self):
+        """Test that consecutive patterns on the same qubit are all replaced."""
+        circuit = measure_and_conditional_x()
+        circuit.compose(measure_and_conditional_x(), inplace=True)
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        self.assertEqual(transpiled.count_ops(), {"measure_reset": 2})
+
+    @data(
+        {"condition": "zero"},
+        {"condition": "register_zero"},
+        {"condition": "other_clbit"},
+        {"before": lambda circuit: circuit.z(1)},
+        {"before": lambda circuit: circuit.measure(0, 0)},
+        {"body": lambda circuit: circuit.z(1)},
+        {"body": apply_x_and_z},
+        {"body": lambda circuit: circuit.x(0)},
+        {"body": apply_x_on_both_qubits},
+        {"else_body": lambda circuit: circuit.z(1)},
+    )
+    def test_not_converted(self, circuit_kwargs):
+        """Test that variations of the pattern are not replaced by MeasureReset."""
+        circuit = measure_and_conditional_x(**circuit_kwargs)
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        self.assertNotIn("measure_reset", transpiled.count_ops())
+        self.assertIn("if_else", transpiled.count_ops())
+
+    def test_not_converted_if_else_on_two_qubits(self):
+        """Test that the pattern is not replaced if the ``if_else`` acts on another qubit."""
+        circuit = two_qubit_circuit()
+        circuit.measure(1, 0)
+        body = QuantumCircuit(2, 1)
+        body.x(0)
+        circuit.append(IfElseOp((circuit.clbits[0], 1), body), [1, 0], [0])
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        self.assertNotIn("measure_reset", transpiled.count_ops())
+        self.assertIn("if_else", transpiled.count_ops())
+
+    @data(
+        lambda circuit: (circuit.clbits[1], 1),
+        lambda circuit: expr.lift(circuit.clbits[1]),
+    )
+    def test_not_converted_condition_on_other_clbit(self, condition):
+        """Test that the pattern is not replaced if the condition is on another clbit.
+
+        The ``if_else`` still depends on the measured clbit, as it is one of its ``cargs``.
+        """
+        circuit = two_qubit_circuit()
+        circuit.measure(1, 0)
+        body = QuantumCircuit(1, 1)
+        body.x(0)
+        circuit.append(IfElseOp(condition(circuit), body), [1], [0])
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        self.assertNotIn("measure_reset", transpiled.count_ops())
+        self.assertIn("if_else", transpiled.count_ops())
+
+    def test_not_converted_multi_clbit_register(self):
+        """Test that the pattern is not replaced if the condition is on a larger register."""
+        register = ClassicalRegister(2, "c")
+        circuit = QuantumCircuit(QuantumRegister(2, "q"), register)
+        circuit.measure(1, 0)
+        with circuit.if_test((register, 1)):
+            circuit.x(1)
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        self.assertNotIn("measure_reset", transpiled.count_ops())
+        self.assertIn("if_else", transpiled.count_ops())
+
+    def test_not_converted_inside_control_flow(self):
+        """Test that the pattern is not replaced inside a control-flow block."""
+        circuit = two_qubit_circuit()
+        with circuit.if_test((circuit.clbits[1], 1)):
+            circuit.measure(1, 0)
+            with circuit.if_test((circuit.clbits[0], 1)):
+                circuit.x(1)
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        self.assertEqual(transpiled, circuit)
+
+    def test_disabled_by_default(self):
+        """Test that the pattern is not replaced if ``mcmr_name`` is not given."""
+        custom_pass = ConvertToMidCircuitResetAndMeasure(target_with_measure_reset())
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            transpiled = PassManager([custom_pass]).run(measure_and_conditional_x())
+
+        self.assertEqual(transpiled.count_ops(), {"measure_2": 1, "if_else": 1})
+
+    def test_convert_with_mid_circuit_measure_and_reset(self):
+        """Test that MeasureReset replacements happen before the other conversions."""
+        circuit = measure_and_conditional_x()
+        circuit.measure(0, 1)
+        circuit.reset(0)
+        circuit.measure_all()
+
+        transpiled = PassManager([self.measure_reset_pass]).run(circuit)
+
+        expected = measure_reset_circuit()
+        expected.append(MidCircuitMeasure(), [0], [1])
+        expected.append(MidCircuitReset(), [0])
+        expected.measure_all()
+        self.assertEqual(transpiled, expected)
+
+    @data(
+        ("measure_2", "must start with `measure_reset`"),
+        ("measure_reset_3", "measure_reset_3 is not supported by the given target"),
+    )
+    def test_convert_raises(self, name_and_message):
+        """Test that an invalid or unsupported ``mcmr_name`` raises a ValueError."""
+        mcmr_name, message = name_and_message
+        with self.assertRaisesRegex(ValueError, message):
+            ConvertToMidCircuitResetAndMeasure(target_with_measure_reset(), mcmr_name=mcmr_name)
+
+    def test_unsupported_qubit(self):
+        """Test that the pattern is not replaced on qubits without MeasureReset support."""
+        custom_pass = ConvertToMidCircuitResetAndMeasure(
+            target_with_measure_reset(qubits=[0]), mcmr_name="measure_reset"
+        )
+        with self.assertWarnsRegex(UserWarning, "'measure_reset' with qubits \\[1\\]"):
+            transpiled = PassManager([custom_pass]).run(measure_and_conditional_x())
+
+        self.assertEqual(transpiled.count_ops(), {"measure_2": 1, "if_else": 1})
