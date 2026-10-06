@@ -1,18 +1,32 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2023-2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Provides ``get_mode_service_backend`` utility function that returns mode."""
+
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, overload
 
+from qiskit.providers.backend import BackendV2
+
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
-    from qiskit.providers.backend import BackendV2
-
     from .batch import Batch
-    from .session import Session
     from .fake_provider.local_service import QiskitRuntimeLocalService
     from .qiskit_runtime_service import QiskitRuntimeService
+    from .session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +77,8 @@ def get_mode_service_backend(
     """
     # Use runtime imports, to prevent `base_primitive.py` to depend on several core objects.
 
-    from .fake_provider.local_service import QiskitRuntimeLocalService
     from .batch import Batch
+    from .fake_provider.local_service import QiskitRuntimeLocalService
     from .session import Session
 
     if isinstance(mode, (Session, Batch)):

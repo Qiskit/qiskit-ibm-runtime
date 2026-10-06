@@ -19,8 +19,6 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, replace
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from qiskit.providers.backend import BackendV2
-
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
 from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits, validate_rzz_pubs
@@ -30,6 +28,7 @@ from .utils.utils import is_simulator
 if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.primitives.containers.sampler_pub import SamplerPub
+    from qiskit.providers.backend import BackendV2
 
     from .batch import Batch
     from .fake_provider.local_runtime_job import LocalRuntimeJob
