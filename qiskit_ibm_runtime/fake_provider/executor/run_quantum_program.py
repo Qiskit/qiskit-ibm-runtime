@@ -29,6 +29,7 @@ from samplomatic.utils import get_annotation
 from qiskit_ibm_runtime.executor_sampler.utils import find_box_type
 
 from ...results import QuantumProgramItemResult, QuantumProgramResult
+from ..mid_circuit_conversion import convert_mid_circuit_instructions
 from .broadcast_sample import broadcast_sample
 from .insert_noise_pass import InsertNoisePass
 
@@ -135,6 +136,7 @@ def run_quantum_program(
             ).run(prog_item.circuit)
         else:
             circuit = prog_item.circuit
+        circuit = convert_mid_circuit_instructions(circuit)
 
         if isinstance(prog_item, CircuitItem):
             if prog_item.circuit_arguments is not None:
