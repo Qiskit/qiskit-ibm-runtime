@@ -1,0 +1,3 @@
+In local testing mode, ``job.metrics()`` now returns the same layout as jobs run on IBM Quantum Platform:
+timestamps are ISO 8601 UTC strings, and ``usage`` contains ``qpu_charge_time_seconds`` and ``status``
+instead of ``quantum_seconds`` and ``seconds``. The obsolete ``bss`` entry is no longer returned.
