@@ -61,25 +61,30 @@ class QuantumProgram(SamplomaticQuantumProgram):
     """
 
     @classmethod
-    def coerce(cls, program: QuantumProgram | SamplomaticQuantumProgram) -> Self:
-        """Coerce rogram-like into a :class:`~.QuantumProgram`.
+    def from_(cls, program: SamplomaticQuantumProgram) -> Self:
+        """Promote a samplomatic ``QuantumProgram`` to a runtime :class:`~.QuantumProgram`.
+
+        If ``program`` is already an instance of :class:`~.QuantumProgram`, it is returned
+        unchanged. Otherwise, a new :class:`~.QuantumProgram` is constructed sharing the data of
+        the input program.
 
         Args:
-            program: A samplomatic or runtime :class:`~.QuantumProgram`.
+            program: A :class:`~samplomatic.quantum_program.QuantumProgram` to promote.
 
         Returns:
-            A new :class:`~.QuantumProgram` instance sharing the data of the input program.
+            The original program if it is already a :class:`~.QuantumProgram`, or a new
+            :class:`~.QuantumProgram` instance sharing the data of ``program``.
         """
-        new_program = cls(
+        if isinstance(program, cls):
+            return program
+
+        return cls(
             shots=program.shots,
             items=program.items,
             noise_maps=program.noise_maps,
             meas_level=program.meas_level,
             passthrough_data=program.passthrough_data,
         )
-        if isinstance(program, cls):
-            new_program._semantic_role = program._semantic_role
-        return new_program
 
     def __init__(
         self,

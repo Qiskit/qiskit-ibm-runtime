@@ -141,7 +141,8 @@ class Executor:
         Returns:
             A job.
         """
-        program = QuantumProgram.coerce(program)
+        if not isinstance(program, QuantumProgram):
+            program = QuantumProgram.from_(program)
 
         if self._service.is_local:
             service = cast("QiskitRuntimeLocalService", self._service)
