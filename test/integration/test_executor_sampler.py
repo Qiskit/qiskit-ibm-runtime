@@ -28,18 +28,14 @@ from .case import IBMIntegrationTestCase
 class TestSampler(IBMIntegrationTestCase):
     """Test client-side Sampler."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = self.service.backend(self.dependencies.qpu)
-
-        self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
-
     @data(True, False)
     def test_sampler(self, twirling):
         """Test sampler by submitting a couple of parametric circuits."""
-        circuit = make_mirror_circuit_with_phases(self.backend)
-        isa_circuit = self.pm.run(circuit)
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+
+        circuit = make_mirror_circuit_with_phases(backend)
+        isa_circuit = pass_manager.run(circuit)
 
         shapes = [(5, 4), (3,)]
         num_parameters = isa_circuit.num_parameters
@@ -54,7 +50,7 @@ class TestSampler(IBMIntegrationTestCase):
         options.twirling.enable_gates = twirling
         options.default_shots = 1000
 
-        sampler = Sampler(self.backend, options)
+        sampler = Sampler(backend, options)
         job = sampler.run(pubs)
 
         results = job.result()

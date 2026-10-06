@@ -28,14 +28,10 @@ from .case import IBMIntegrationTestCase
 class TestEstimatorV2(IBMIntegrationTestCase):
     """Integration tests for Estimator V2 Primitive."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        self._backend = self.service.backend(self.dependencies.qpu)
-
     def test_estimator_v2_session(self):
         """Verify correct results are returned."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
         psi2 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=3))
@@ -48,7 +44,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
         theta3 = [1, 2, 3, 4, 5, 6]
 
-        with Session(self._backend) as session:
+        with Session(backend) as session:
             estimator = EstimatorV2(mode=session)
 
             job = estimator.run([(psi1, H1, [theta1])])
@@ -65,12 +61,13 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
     def test_estimator_v2_options(self):
         """Test V2 Estimator with different options."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(mode=self._backend)
+        estimator = EstimatorV2(mode=backend)
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
@@ -104,11 +101,12 @@ class TestEstimatorV2(IBMIntegrationTestCase):
     @skip("Skip until simulator options are accepted by server.")
     def test_pec(self):
         """Test running with PEC."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(mode=self._backend)
+        estimator = EstimatorV2(mode=backend)
         estimator.options.resilience_level = 0
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200

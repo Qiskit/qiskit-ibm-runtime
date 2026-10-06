@@ -12,9 +12,12 @@
 
 """Tests for backend functions using real runtime service."""
 
+from __future__ import annotations
+
 import copy
 import re
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from qiskit import QuantumCircuit, transpile
@@ -29,6 +32,9 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from ..decorators import production_only, staging_only
 from ..utils import bell
 from .case import IBMIntegrationTestCase
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime import IBMBackend
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
@@ -88,12 +94,13 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
 class TestIBMBackend(IBMIntegrationTestCase):
     """Test ibm_backend module."""
 
+    backend: IBMBackend
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        if cls.dependencies.channel == "ibm_quantum_platform":
-            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
+        cls.backend = cls.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
         """Check if the service property is set."""
