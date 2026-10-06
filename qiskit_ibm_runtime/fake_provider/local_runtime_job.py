@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from qiskit.primitives.primitive_job import PrimitiveJob
 
 from ..decoders.defaults import DEFAULT_DECODERS
+from ..utils.converters import local_to_utc
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -91,14 +92,18 @@ class LocalRuntimeJob(PrimitiveJob):
             * ``usage``: Details regarding job usage, the measurement of the amount of
                 time the QPU is locked for your workload.
         """
+        # Same structure and value types as the metrics of a job run on the service: ISO 8601 UTC
+        # timestamp strings, and no QPU usage charged for local jobs.
         return {
-            "bss": {"seconds": 0},
-            "usage": {"quantum_seconds": 0, "seconds": 0},
             "timestamps": {
-                "created": self._created,
-                "running": self._running,
-                "finished": self._finished,
+                name: local_to_utc(value).isoformat().replace("+00:00", "Z")
+                for name, value in (
+                    ("created", self._created),
+                    ("running", self._running),
+                    ("finished", self._finished),
+                )
             },
+            "usage": {"qpu_charge_time_seconds": 0, "status": "complete"},
         }
 
     def backend(self) -> FakeBackendV2:
