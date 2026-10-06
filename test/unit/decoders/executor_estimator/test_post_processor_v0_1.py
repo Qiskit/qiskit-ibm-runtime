@@ -274,15 +274,6 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
 class TestEstimatorPostProcessorPEC(IBMTestCase):
     """Integration tests for PEC dispatch in ``estimator_v2_post_processor_v0_1``."""
 
-    def _make_pec_options(self, noise_gain="auto", max_overhead=100):
-        opts = EstimatorOptions()
-        opts.resilience.pec_mitigation = True
-        opts.twirling.enable_gates = True
-        opts.twirling.enable_measure = True
-        opts.resilience.pec.noise_gain = noise_gain
-        opts.resilience.pec.max_overhead = max_overhead
-        return opts
-
     def test_post_processor_pec_dispatch_applies_gamma(self):
         """PEC gamma scaling is applied to the expectation value.
 

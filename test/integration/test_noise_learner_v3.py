@@ -20,7 +20,7 @@ from samplomatic.utils import find_unique_box_instructions
 from qiskit_ibm_runtime import NoiseLearnerV3
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 
-from ..ibm_test_case import IBMIntegrationTestCase
+from .case import IBMIntegrationTestCase
 
 
 class TestNoiseLearnerV3(IBMIntegrationTestCase):

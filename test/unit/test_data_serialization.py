@@ -173,6 +173,143 @@ def assert_noise_learner_results_equal(result1, result2):
     assert result1.metadata == result2.metadata
 
 
+def data_bins():
+    """Return the data bins used to test DataBin serialization."""
+    alpha = np.empty((10, 20), dtype=np.uint16)
+    beta = np.empty((10, 20), dtype=int)
+
+    return [DataBin(alpha=alpha, beta=beta, shape=(10, 20))]
+
+
+def estimator_pubs():
+    """Return the pubs used to test EstimatorPub serialization."""
+    params = (Parameter("a"), Parameter("b"))
+    circuit = QuantumCircuit(2)
+    circuit.rx(params[0], 0)
+    circuit.ry(params[1], 1)
+
+    return [
+        EstimatorPub(
+            circuit=circuit,
+            observables=ObservablesArray([{"XX": 0.1}]),
+            parameter_values=BindingsArray(data={params: np.ones((10, 2))}),
+            precision=0.05,
+        )
+    ]
+
+
+def sampler_pubs():
+    """Return the pubs used to test SamplerPub serialization."""
+    params = (Parameter("a"), Parameter("b"))
+    circuit = QuantumCircuit(2)
+    circuit.rx(params[0], 0)
+    circuit.ry(params[1], 1)
+    circuit.measure_all()
+
+    return [
+        SamplerPub(
+            circuit=circuit,
+            parameter_values=BindingsArray(data={params: np.ones((10, 2))}),
+            shots=1000,
+        )
+    ]
+
+
+def pub_results():
+    """Return the pub results used to test PubResult serialization."""
+    return [
+        PubResult(DataBin(a=1.0, b=2)),
+        PubResult(DataBin(a=1.0, b=2), {"x": 1}),
+    ]
+
+
+def estimator_pub_results():
+    """Return the pub results used to test EstimatorPubResult serialization."""
+    return [
+        EstimatorPubResult(DataBin(a=1.0, b=2)),
+        EstimatorPubResult(DataBin(a=1.0, b=2), {"x": 1}),
+    ]
+
+
+def sampler_pub_results():
+    """Return the pub results used to test SamplerPubResult serialization."""
+    return [
+        SamplerPubResult(DataBin(a=1.0, b=2)),
+        SamplerPubResult(DataBin(a=1.0, b=2), {"x": 1}),
+    ]
+
+
+def primitive_results():
+    """Return the primitive results used to test PrimitiveResult serialization."""
+    alpha = np.empty((10, 20), dtype=np.uint16)
+    beta = np.empty((10, 20), dtype=int)
+
+    results = [
+        PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+        PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+        PubResult(DataBin()),
+    ]
+
+    metadata = {
+        "execution": {
+            "execution_spans": ExecutionSpans(
+                [
+                    SliceSpan(
+                        datetime(2022, 1, 1),
+                        datetime(2023, 1, 1),
+                        {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
+                    ),
+                    SliceSpan(
+                        datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
+                    ),
+                    DoubleSliceSpan(
+                        datetime(2022, 1, 1),
+                        datetime(2023, 1, 1),
+                        {
+                            1: ((100,), slice(4, 9), slice(1, 2)),
+                            0: ((2, 5), slice(5, 7), slice(3, 4)),
+                        },
+                    ),
+                    DoubleSliceSpan(
+                        datetime(2024, 8, 20),
+                        datetime(2024, 8, 21),
+                        {0: ((14,), slice(2, 3), slice(1, 9))},
+                    ),
+                    TwirledSliceSpan(
+                        datetime(2024, 9, 20),
+                        datetime(2024, 3, 21),
+                        {
+                            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
+                            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
+                        },
+                    ),
+                    TwirledSliceSpanV2(
+                        datetime(2024, 9, 20),
+                        datetime(2024, 3, 21),
+                        {
+                            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
+                            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
+                        },
+                    ),
+                ]
+            )
+        }
+    }
+
+    return [PrimitiveResult(results, metadata)]
+
+
+def noise_learner_results(unknown_err=False):
+    """Return the results used to test NoiseLearnerResult serialization."""
+    circuit = QuantumCircuit(2)
+    circuit.cx(0, 1)
+    circuit.measure_all()
+    error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
+    layer_error = LayerError(circuit, [3, 5], error)
+
+    return [NoiseLearnerResult([layer_error])]
+
+
 @ddt
 class TestDataSerialization(IBMTestCase):
     """Class for testing runtime data serialization."""
@@ -382,159 +519,6 @@ if __name__ == '__main__':
 class TestContainerSerialization(IBMTestCase):
     """Class for testing primitive containers serialization."""
 
-    # Data generation methods
-
-    def make_test_data_bins(self):
-        """Generates test data for DataBin test."""
-        result_bins = []
-        alpha = np.empty((10, 20), dtype=np.uint16)
-        beta = np.empty((10, 20), dtype=int)
-        my_bin = DataBin(alpha=alpha, beta=beta, shape=(10, 20))
-        result_bins.append(my_bin)
-        return result_bins
-
-    def make_test_estimator_pubs(self):
-        """Generates test data for EstimatorPub test."""
-        pubs = []
-        params = (Parameter("a"), Parameter("b"))
-        circuit = QuantumCircuit(2)
-        circuit.rx(params[0], 0)
-        circuit.ry(params[1], 1)
-        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
-        observables = ObservablesArray([{"XX": 0.1}])
-        precision = 0.05
-
-        pub = EstimatorPub(
-            circuit=circuit,
-            observables=observables,
-            parameter_values=parameter_values,
-            precision=precision,
-        )
-        pubs.append(pub)
-        return pubs
-
-    def make_test_sampler_pubs(self):
-        """Generates test data for SamplerPub test."""
-        pubs = []
-        params = (Parameter("a"), Parameter("b"))
-        circuit = QuantumCircuit(2)
-        circuit.rx(params[0], 0)
-        circuit.ry(params[1], 1)
-        circuit.measure_all()
-        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
-        shots = 1000
-
-        pub = SamplerPub(
-            circuit=circuit,
-            parameter_values=parameter_values,
-            shots=shots,
-        )
-        pubs.append(pub)
-        return pubs
-
-    def make_test_pub_results(self):
-        """Generates test data for PubResult test."""
-        pub_results = []
-        pub_result = PubResult(DataBin(a=1.0, b=2))
-        pub_results.append(pub_result)
-        pub_result = PubResult(DataBin(a=1.0, b=2), {"x": 1})
-        pub_results.append(pub_result)
-        return pub_results
-
-    def make_test_estimator_pub_results(self):
-        """Generates test data for EstimatorPubResult test."""
-        pub_results = []
-        pub_result = EstimatorPubResult(DataBin(a=1.0, b=2))
-        pub_results.append(pub_result)
-        pub_result = EstimatorPubResult(DataBin(a=1.0, b=2), {"x": 1})
-        pub_results.append(pub_result)
-        return pub_results
-
-    def make_test_sampler_pub_results(self):
-        """Generates test data for SamplerPubResult test."""
-        pub_results = []
-        pub_result = SamplerPubResult(DataBin(a=1.0, b=2))
-        pub_results.append(pub_result)
-        pub_result = SamplerPubResult(DataBin(a=1.0, b=2), {"x": 1})
-        pub_results.append(pub_result)
-        return pub_results
-
-    def make_test_primitive_results(self):
-        """Generates test data for PrimitiveResult test."""
-        primitive_results = []
-
-        alpha = np.empty((10, 20), dtype=np.uint16)
-        beta = np.empty((10, 20), dtype=int)
-
-        pub_results = [
-            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
-            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
-            PubResult(DataBin()),
-        ]
-
-        metadata = {
-            "execution": {
-                "execution_spans": ExecutionSpans(
-                    [
-                        SliceSpan(
-                            datetime(2022, 1, 1),
-                            datetime(2023, 1, 1),
-                            {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
-                        ),
-                        SliceSpan(
-                            datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
-                        ),
-                        DoubleSliceSpan(
-                            datetime(2022, 1, 1),
-                            datetime(2023, 1, 1),
-                            {
-                                1: ((100,), slice(4, 9), slice(1, 2)),
-                                0: ((2, 5), slice(5, 7), slice(3, 4)),
-                            },
-                        ),
-                        DoubleSliceSpan(
-                            datetime(2024, 8, 20),
-                            datetime(2024, 8, 21),
-                            {0: ((14,), slice(2, 3), slice(1, 9))},
-                        ),
-                        TwirledSliceSpan(
-                            datetime(2024, 9, 20),
-                            datetime(2024, 3, 21),
-                            {
-                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
-                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
-                            },
-                        ),
-                        TwirledSliceSpanV2(
-                            datetime(2024, 9, 20),
-                            datetime(2024, 3, 21),
-                            {
-                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
-                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
-                            },
-                        ),
-                    ]
-                )
-            }
-        }
-
-        result = PrimitiveResult(pub_results, metadata)
-        primitive_results.append(result)
-        return primitive_results
-
-    def make_test_noise_learner_results(self, unknown_err=False):
-        """Generates test data for NoiseLearnerResult test."""
-        noise_learner_results = []
-        circuit = QuantumCircuit(2)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-        error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
-        layer_error = LayerError(circuit, [3, 5], error)
-
-        noise_learner_result = NoiseLearnerResult([layer_error])
-        noise_learner_results.append(noise_learner_result)
-        return noise_learner_results
-
     # Tests
     @data(
         ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
@@ -603,7 +587,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_data_bin(self):
         """Test encoding and decoding DataBin."""
-        for dbin in self.make_test_data_bins():
+        for dbin in data_bins():
             payload = {"bin": dbin}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
@@ -612,7 +596,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_estimator_pub(self):
         """Test encoding and decoding EstimatorPub."""
-        for pub in self.make_test_estimator_pubs():
+        for pub in estimator_pubs():
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
@@ -623,7 +607,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_sampler_pub(self):
         """Test encoding and decoding SamplerPub."""
-        for pub in self.make_test_sampler_pubs():
+        for pub in sampler_pubs():
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
@@ -634,7 +618,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_pub_result(self):
         """Test encoding and decoding PubResult."""
-        for pub_result in self.make_test_pub_results():
+        for pub_result in pub_results():
             payload = {"pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
@@ -643,7 +627,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_estimator_pub_result(self):
         """Test encoding and decoding EstimatorPubResult."""
-        for pub_result in self.make_test_estimator_pub_results():
+        for pub_result in estimator_pub_results():
             payload = {"estimator_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["estimator_pub_result"]
@@ -652,7 +636,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_sampler_pub_result(self):
         """Test encoding and decoding SamplerPubResult."""
-        for pub_result in self.make_test_sampler_pub_results():
+        for pub_result in sampler_pub_results():
             payload = {"sampler_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["sampler_pub_result"]
@@ -661,7 +645,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_primitive_result(self):
         """Test encoding and decoding PubResult."""
-        for primitive_result in self.make_test_primitive_results():
+        for primitive_result in primitive_results():
             payload = {"primitive_result": primitive_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
@@ -671,7 +655,7 @@ class TestContainerSerialization(IBMTestCase):
     @data(True, False)
     def test_noise_learner_result(self, unknown_err):
         """Test encoding and decoding NoiseLearnerResult."""
-        for noise_learner_result in self.make_test_noise_learner_results(unknown_err):
+        for noise_learner_result in noise_learner_results(unknown_err):
             payload = {"noise_learner_result": noise_learner_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]

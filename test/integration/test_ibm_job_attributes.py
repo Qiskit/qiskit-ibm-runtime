@@ -26,16 +26,13 @@ from qiskit.compiler import transpile
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from ..decorators import integration_test_setup
-from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..utils import bell
+from .case import IBMIntegrationJobTestCase
 
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit
 
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
-
-    from ..decorators import IntegrationTestDependencies
 
 
 class TestIBMJobAttributes(IBMIntegrationJobTestCase):
@@ -47,13 +44,10 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
     last_week: datetime
 
     @classmethod
-    @integration_test_setup()
-    def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
+    def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        cls.dependencies = dependencies
-        cls.service = dependencies.service
-        cls.sim_backend = dependencies.service.backend(dependencies.qpu)
+        cls.sim_backend = cls.service.backend(cls.dependencies.qpu)
         cls.bell = transpile(bell(), cls.sim_backend)
         sampler = Sampler(mode=cls.sim_backend)
         cls.sim_job = sampler.run([cls.bell])
@@ -89,6 +83,7 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
 
     def test_job_tags(self):
         """Test using job tags."""
+        service = self.service
         # Use a unique tag.
         job_tags = [
             uuid.uuid4().hex[0:16],
@@ -102,13 +97,13 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
 
         no_rjobs_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
         for tags in no_rjobs_tags:
-            rjobs = self.service.jobs(job_tags=tags, created_after=self.last_week)
+            rjobs = service.jobs(job_tags=tags, created_after=self.last_week)
             self.assertEqual(len(rjobs), 0, f"Expected job {job.job_id()}, got {rjobs}")
 
         has_rjobs_tags = [job_tags, job_tags[1:3]]
         for tags in has_rjobs_tags:
             with self.subTest(tags=tags):
-                rjobs = self.service.jobs(
+                rjobs = service.jobs(
                     job_tags=tags,
                     created_after=self.last_week,
                 )
@@ -139,13 +134,14 @@ class TestIBMJobAttributes(IBMIntegrationJobTestCase):
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
+        service = self.service
         with self.assertRaises(ValidationError):
             sampler = Sampler(mode=self.sim_backend)
             sampler.options.environment.job_tags = "foo"
 
         self.assertRaises(
             IBMInputValueError,
-            self.service.jobs,
+            service.jobs,
             job_tags=[1, 2, 3],
         )
 
