@@ -23,10 +23,10 @@ from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime import Batch, EstimatorV2, SamplerV2, Session
-from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.mode_service import get_mode_service_backend
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (

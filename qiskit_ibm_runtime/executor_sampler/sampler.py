@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Literal, get_args
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-from ..base_primitive import get_mode_service_backend
+from ..mode_service import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options

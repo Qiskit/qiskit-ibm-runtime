@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
     from .batch import Batch
+    from .fake_provider.local_runtime_job import LocalRuntimeJob
     from .fake_provider.local_service import QiskitRuntimeLocalService
     from .qiskit_runtime_service import QiskitRuntimeService
     from .runtime_job_v2 import RuntimeJobV2
@@ -39,59 +40,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
-
-
-def get_mode_service_backend(
-    mode: BackendV2 | Session | Batch | None = None,
-) -> tuple[
-    Session | Batch | None,
-    QiskitRuntimeService | QiskitRuntimeLocalService,
-    BackendV2,
-]:
-    """A utility function that returns mode, service, and backend for a given execution mode.
-
-    Args:
-        mode: The execution mode used to make the primitive query. It can be
-
-            * A :class:`Backend` if you are using job mode.
-            * A :class:`Session` if you are using session execution mode.
-            * A :class:`Batch` if you are using batch execution mode.
-    """
-    # Use runtime imports, to prevent `base_primitive.py` to depend on several core objects.
-    from .batch import Batch
-    from .fake_provider.local_service import QiskitRuntimeLocalService
-    from .ibm_backend import IBMBackend
-    from .session import Session
-
-    if isinstance(mode, (Session, Batch)):
-        return mode, mode.service, mode._backend
-    elif isinstance(mode, IBMBackend):
-        if get_cm_session():
-            logger.warning(
-                "A backend was passed in as the mode but a session context manager "
-                "is open so this job will run inside this session/batch "
-                "instead of in job mode."
-            )
-            if get_cm_session()._backend != mode:
-                raise ValueError(
-                    "The backend passed in to the primitive is different from the session backend. "
-                    "Please check which backend you intend to use or leave the mode parameter "
-                    "empty to use the session backend."
-                )
-            return get_cm_session(), mode.service, mode
-        return None, mode.service, mode
-    elif isinstance(mode, BackendV2):
-        return None, QiskitRuntimeLocalService(), mode
-    elif mode is not None:
-        raise ValueError("mode must be of type Backend, Session, Batch or None")
-    elif get_cm_session():
-        mode = get_cm_session()
-        service = mode.service
-        backend = mode._backend
-
-        return mode, service, backend
-    else:
-        raise ValueError("A backend or session must be specified.")
 
 
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
@@ -114,18 +62,23 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     _options_class: type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
+    _mode: Session | Batch | None
+    _service: QiskitRuntimeService | QiskitRuntimeLocalService
+    _backend: BackendV2
 
     def __init__(
         self,
-        mode: BackendV2 | Session | Batch | str | None = None,
+        mode: BackendV2 | Session | Batch | None = None,
         options: dict | OptionsT | None = None,
     ):
+        from .mode_service import get_mode_service_backend
+
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         self._set_options(options)
 
     def _run(
         self, pubs: list[EstimatorPub] | list[SamplerPub], dry_run: bool = False
-    ) -> RuntimeJobV2:
+    ) -> LocalRuntimeJob | RuntimeJobV2:
         """Run the primitive.
 
         Args:

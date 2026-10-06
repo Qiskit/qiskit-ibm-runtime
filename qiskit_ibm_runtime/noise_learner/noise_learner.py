@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from ..base_primitive import get_mode_service_backend
+from ..mode_service import get_mode_service_backend
 from ..ibm_backend import IBMBackend
 from ..options.estimator_options import EstimatorOptions
 from ..options.noise_learner_options import NoiseLearnerOptions
