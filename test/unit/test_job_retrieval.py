@@ -217,14 +217,34 @@ class TestRetrieveJobs(IBMTestCase):
         job = service.job("my_job")
         self.assertIsNotNone(job.backend())
 
+    @mock_responses(OneInstanceNoBackendsRegistry)
+    def test_jobs_from_mock_devices(self, registry: OneInstanceNoBackendsRegistry) -> None:
+        """Test retrieving jobs from mock devices."""
+        registry.add_backend(Backend("ibm_foo"))
+        registry.add_backend(Backend("mock_foo", is_mock=True))
+        registry.add_job(Job("1", "ibm_foo"), "a")
+        registry.add_job(Job("2", "mock_foo"), "a")
 
-class TestRetrieveJobsRegistry(IBMTestCase):
-    """Test retrieval of jobs, using a mocked registry."""
+        service = QiskitRuntimeService(token="my_token")
+
+        # Jobs from mock devices should be excluded by default.
+        jobs = service.jobs()
+        self.assertEqual([job.job_id() for job in jobs], ["1"])
+
+        # Jobs from mock devices should be included if passing the flag.
+        jobs = service.jobs(include_mocks=True)
+        self.assertEqual([job.job_id() for job in jobs], ["1", "2"])
+
+        # Jobs should be retrieved in all cases.
+        job_1 = service.job("1")
+        job_2 = service.job("2")
+        self.assertEqual(job_1.backend().backend_name, "ibm_foo")
+        self.assertFalse(job_1.backend().is_mock)
+        self.assertEqual(job_2.backend().backend_name, "mock_foo")
+        self.assertTrue(job_2.backend().is_mock)
 
     @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_jobs_returned_from_retired_backend(
-        self, registry: OneInstanceNoBackendsRegistry
-    ) -> None:
+    def test_jobs_from_retired_backend(self, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test retrieving jobs that use a retired backend."""
         registry.add_backend(Backend("ibm_not_retired"))
         registry.add_job(Job("1", "ibm_retired"), "a")
@@ -240,3 +260,7 @@ class TestRetrieveJobsRegistry(IBMTestCase):
         jobs = service.jobs()
         self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
         self.assertIsInstance(jobs[1].backend(), IBMBackend)
+
+
+class TestRetrieveJobsRegistry(IBMTestCase):
+    """Test retrieval of jobs, using a mocked registry."""
