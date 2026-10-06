@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import unittest
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -586,7 +585,3 @@ class TestSampler(IBMIntegrationTestCase):
             self.assertIsInstance(pub_result.metadata, dict)
             if targets:
                 self.assertIsInstance(result[idx].data.meas, BitArray)
-
-
-if __name__ == "__main__":
-    unittest.main()
