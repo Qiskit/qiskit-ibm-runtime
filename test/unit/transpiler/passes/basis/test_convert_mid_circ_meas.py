@@ -54,6 +54,13 @@ def target_with_measure_reset(measure_reset_name="measure_reset"):
     return target
 
 
+def append_measure_reset_sequence(circuit, qubit, clbit):
+    """Append a measure followed by a conditional X reset sequence."""
+    circuit.measure(qubit, clbit)
+    with circuit.if_test((circuit.clbits[clbit], 1)):
+        circuit.x(qubit)
+
+
 class TestConvertToMidCircuitMeasure(IBMTestCase):
     """Tests the ConvertToMidCircuitMeasure pass."""
 
@@ -158,15 +165,14 @@ class TestConvertToMeasureReset(IBMTestCase):
         custom_pass = ConvertToMeasureReset(target_with_measure_reset())
         pm = PassManager([custom_pass])
 
-        # Measure - Reset - X, on the same qubit
+        # Measure - (If 1 => X) - X, on the same qubit
         circuit = QuantumCircuit(1, 1)
-        circuit.measure(0, 0)
-        circuit.reset(0)
+        append_measure_reset_sequence(circuit, 0, 0)
         circuit.x(0)
 
         transpiled = pm.run(circuit)
 
-        # The measure-reset sequence is replaced by a single MeasureReset instruction.
+        # The sequence is replaced by a single git diff --check.
         self.assertIsInstance(transpiled.data[0].operation, MeasureReset)
         self.assertEqual(transpiled.data[1].operation.name, "x")
 
@@ -175,32 +181,121 @@ class TestConvertToMeasureReset(IBMTestCase):
         custom_pass = ConvertToMeasureReset(target_with_measure_reset())
         pm = PassManager([custom_pass])
 
-        # Measure - X - Reset, on the same qubit
+        # Measure - X - (If 1 => X), on the same qubit
         circuit = QuantumCircuit(1, 1)
         circuit.measure(0, 0)
         circuit.x(0)
-        circuit.reset(0)
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.x(0)
 
         transpiled = pm.run(circuit)
 
         # The circuit is untouched.
         self.assertIsInstance(transpiled.data[0].operation, Measure)
         self.assertEqual(transpiled.data[1].operation.name, "x")
-        self.assertIsInstance(transpiled.data[2].operation, Reset)
+        self.assertEqual(transpiled.data[2].operation.name, "if_else")
+
+        self.assertFalse(
+            any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
+        )
+
+    def test_condition_zero(self):
+        """Test that conversion does not occur when the condition checks for zero."""
+        custom_pass = ConvertToMeasureReset(target_with_measure_reset())
+        pm = PassManager([custom_pass])
+
+        # Measure - (If 0 => X)
+        circuit = QuantumCircuit(1, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((circuit.clbits[0], 0)):
+            circuit.x(0)
+
+        transpiled = pm.run(circuit)
+
+        # The circuit is untouched
+        self.assertIsInstance(transpiled.data[0].operation, Measure)
+        self.assertEqual(transpiled.data[1].operation.name, "if_else")
+
+        self.assertFalse(
+            any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
+        )
+
+    def test_else_block(self):
+        """Test that conversion does not occur when an else block is present."""
+        custom_pass = ConvertToMeasureReset(target_with_measure_reset())
+        pm = PassManager([custom_pass])
+
+        # Measure - (If 1 => X else Z)
+        circuit = QuantumCircuit(1, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((circuit.clbits[0], 1)) as else_:
+            circuit.x(0)
+        with else_:
+            circuit.z(0)
+
+        transpiled = pm.run(circuit)
+
+        # The circuit is untouched
+        self.assertIsInstance(transpiled.data[0].operation, Measure)
+        self.assertEqual(transpiled.data[1].operation.name, "if_else")
+
+        self.assertFalse(
+            any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
+        )
+
+    def test_multiple_operations_in_true_body(self):
+        """Test that conversion does not occur with multiple operations in the true body."""
+        custom_pass = ConvertToMeasureReset(target_with_measure_reset())
+        pm = PassManager([custom_pass])
+
+        # Measure - (If 1 => (X - Z))
+        circuit = QuantumCircuit(1, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.x(0)
+            circuit.z(0)
+
+        transpiled = pm.run(circuit)
+
+        # The circuit is untouched
+        self.assertIsInstance(transpiled.data[0].operation, Measure)
+        self.assertEqual(transpiled.data[1].operation.name, "if_else")
+
+        self.assertFalse(
+            any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
+        )
+
+    def test_non_x_true_body(self):
+        """Test that conversion does not occur when the true body is not X."""
+        custom_pass = ConvertToMeasureReset(target_with_measure_reset())
+        pm = PassManager([custom_pass])
+
+        # Measure - (If 1 => Z)
+        circuit = QuantumCircuit(1, 1)
+        circuit.measure(0, 0)
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.z(0)
+
+        transpiled = pm.run(circuit)
+
+        # The circuit is untouched
+        self.assertIsInstance(transpiled.data[0].operation, Measure)
+        self.assertEqual(transpiled.data[1].operation.name, "if_else")
 
         self.assertFalse(
             any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
         )
 
     def test_different_qarg(self):
-        """Test that measure and reset on different qubits are not converted."""
+        """Test that a conditional X on another qubit is not converted."""
         custom_pass = ConvertToMeasureReset(target_with_measure_reset())
         pm = PassManager([custom_pass])
 
-        # Measure on one qubit, Reset on another qubit
+        # Measure on one qubit, with X applied to another qubit
         circuit = QuantumCircuit(2, 1)
         circuit.measure(0, 0)
-        circuit.reset(1)
+        with circuit.if_test((circuit.clbits[0], 1)):
+            circuit.x(1)
 
         transpiled = pm.run(circuit)
 
@@ -210,17 +305,15 @@ class TestConvertToMeasureReset(IBMTestCase):
             for instruction in transpiled.data
             if isinstance(instruction.operation, Measure)
         ]
-        resets = [
+        if_else_ops = [
             instruction
             for instruction in transpiled.data
-            if isinstance(instruction.operation, Reset)
+            if instruction.operation.name == "if_else"
         ]
 
+        # The circuit is untouched
         self.assertEqual(len(measures), 1)
-        self.assertEqual(len(resets), 1)
-
-        self.assertEqual(transpiled.find_bit(measures[0].qubits[0]).index, 0)
-        self.assertEqual(transpiled.find_bit(resets[0].qubits[0]).index, 1)
+        self.assertEqual(len(if_else_ops), 1)
 
         self.assertFalse(
             any(isinstance(instruction.operation, MeasureReset) for instruction in transpiled.data)
@@ -236,15 +329,11 @@ class TestConvertToMeasureReset(IBMTestCase):
         pm = PassManager([custom_pass])
 
         circuit = QuantumCircuit(2, 2)
-        # Measure - Reset - X on qubit 0
-        circuit.measure(0, 0)
-        circuit.reset(0)
-        circuit.x(0)
+        # Measure - (If 1 => X) on qubit 0
+        append_measure_reset_sequence(circuit, 0, 0)
 
-        # Measure - Reset - X on qubit 1
-        circuit.measure(1, 1)
-        circuit.reset(1)
-        circuit.x(1)
+        # Measure - (If 1 => X) on qubit 1
+        append_measure_reset_sequence(circuit, 1, 1)
 
         transpiled = pm.run(circuit)
 
@@ -258,23 +347,20 @@ class TestConvertToMeasureReset(IBMTestCase):
             for instruction in transpiled.data
             if isinstance(instruction.operation, Measure)
         ]
-        resets = [
+        if_else_ops = [
             instruction
             for instruction in transpiled.data
-            if isinstance(instruction.operation, Reset)
+            if instruction.operation.name == "if_else"
         ]
-        xs = [instruction for instruction in transpiled.data if instruction.operation.name == "x"]
 
-        # Only one sequence Measure-Reset got converted
+        # Only one sequence measure-conditional reset got converted
         self.assertEqual(len(measure_resets), 1)
         self.assertEqual(len(measures), 1)
-        self.assertEqual(len(resets), 1)
-        # The two Xs were untouched
-        self.assertEqual(len(xs), 2)
+        self.assertEqual(len(if_else_ops), 1)
 
         # The MeasureReset is on qubit 0
         self.assertEqual(transpiled.find_bit(measure_resets[0].qubits[0]).index, 0)
 
-        # The Measure and Reset are still on qubit 1
+        # The Measure and IfElseOp are still on qubit 1
         self.assertEqual(transpiled.find_bit(measures[0].qubits[0]).index, 1)
-        self.assertEqual(transpiled.find_bit(resets[0].qubits[0]).index, 1)
+        self.assertEqual(transpiled.find_bit(if_else_ops[0].qubits[0]).index, 1)

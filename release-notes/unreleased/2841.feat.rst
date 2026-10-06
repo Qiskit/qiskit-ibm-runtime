@@ -1,3 +1,4 @@
 Add the :class:`.ConvertToMeasureReset` transpiler pass to replace
-a ``Measure`` followed by a ``Reset`` on the same qubit with a
+a ``Measure`` followed by an ``IfElseOp`` that conditionally applies an
+``X`` gate to the measured qubit when the measurement result is 1 with a
 ``MeasureReset`` instruction when supported.

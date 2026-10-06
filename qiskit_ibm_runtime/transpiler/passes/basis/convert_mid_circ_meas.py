@@ -20,7 +20,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import Measure, Reset
+from qiskit.circuit import IfElseOp, Measure, Reset
 from qiskit.dagcircuit import DAGOpNode
 from qiskit.transpiler import TransformationPass
 from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_ops
@@ -161,11 +161,14 @@ class ConvertToMidCircuitMeasure(TransformationPass):
 
 
 class ConvertToMeasureReset(TransformationPass):
-    """Transpiler pass replacing measure-reset sequence.
+    """Transpiler pass replacing measure-conditioned reset sequence.
 
-    Transpiler pass that replaces Measure instructions followed by a Reset instruction on the same
-    qubit with ``MeasureReset`` instructions. This pass is expected to run after routing, as
-    it will check that ``MeasureReset`` is supported in the corresponding physical qubit.
+    Transpiler pass that replaces `Measure` instructions followed by a `IfElseOp` that
+    conditionally applies a `X` gate to the measured qubit when the measurement result
+    is a 1 with a `MeasureReset` instruction.
+
+    This pass is expected to run after routing, as it will check that ``MeasureReset``
+    is supported in the corresponding physical qubit.
 
     Args:
         target: Backend's target instance.
@@ -197,12 +200,41 @@ class ConvertToMeasureReset(TransformationPass):
         """Run the pass on a dag."""
         for node in dag.op_nodes(Measure):
             successor = next(dag.quantum_successors(node))
-            if isinstance(successor, DAGOpNode) and isinstance(successor.op, Reset):
-                node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+            if not isinstance(successor, DAGOpNode) or not isinstance(successor.op, IfElseOp):
+                continue
 
-                if self.target.instruction_supported(self.mr_name, node_indices):
-                    measure_reset = self.target.operation_from_name(self.mr_name)
-                    dag.remove_op_node(successor)
-                    dag.substitute_node(node, measure_reset, inplace=True)
+            condition = successor.op.condition
+            blocks = successor.op.blocks
+
+            # Controlled by that classical bit
+            if condition != (node.cargs[0], 1):
+                continue
+
+            # No else block
+            if len(blocks) != 1:
+                continue
+
+            true_body = blocks[0]
+            # Only one operation in the true branch
+            if len(true_body.data) != 1:
+                continue
+
+            true_instruction = true_body.data[0]
+            # The operation must be x
+            if true_instruction.operation.name != "x":
+                continue
+
+            # The conditional x acts on the measured qubit
+            if successor.qargs != node.qargs:
+                continue
+
+            node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+            # MeasureReset is supported on this qubit
+            if not self.target.instruction_supported(self.mr_name, node_indices):
+                continue
+
+            measure_reset = self.target.operation_from_name(self.mr_name)
+            dag.remove_op_node(successor)
+            dag.substitute_node(node, measure_reset, inplace=True)
 
         return dag
