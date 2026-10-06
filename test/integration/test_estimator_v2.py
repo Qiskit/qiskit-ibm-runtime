@@ -25,6 +25,25 @@ from qiskit_ibm_runtime.fake_provider import FakeAuckland
 from .case import IBMIntegrationTestCase
 
 
+def assert_estimator_result(result: PrimitiveResult, shapes: list[tuple[int, ...]]) -> None:
+    """Assert that `result` holds one well-formed pub result per entry of `shapes`.
+
+    Args:
+        result: The result to validate.
+        shapes: The expected shape of the expectation values and standard errors of each pub
+            result, one entry per expected pub result.
+    """
+    assert isinstance(result, PrimitiveResult)
+    assert len(result) == len(shapes)
+
+    for pub_result, shape in zip(result, shapes):
+        assert isinstance(pub_result, PubResult)
+        assert isinstance(pub_result.data, DataBin)
+        assert pub_result.metadata
+        assert pub_result.data.evs.shape == shape
+        assert pub_result.data.stds.shape == shape
+
+
 class TestEstimatorV2(IBMIntegrationTestCase):
     """Integration tests for Estimator V2 Primitive."""
 
@@ -49,15 +68,15 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
             job = estimator.run([(psi1, H1, [theta1])])
             result = job.result()
-            self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
+            assert_estimator_result(result, shapes=[(1,)])
 
             job2 = estimator.run([(psi1, [H1, H3], [theta1, theta3]), (psi2, H2, theta2)])
             result2 = job2.result()
-            self._verify_result_type(result2, num_pubs=2, shapes=[(2,), ()])
+            assert_estimator_result(result2, shapes=[(2,), ()])
 
             job3 = estimator.run([(psi1, H1, theta1), (psi2, H2, theta2), (psi1, H3, theta3)])
             result3 = job3.result()
-            self._verify_result_type(result3, num_pubs=3, shapes=[(), (), ()])
+            assert_estimator_result(result3, shapes=[(), (), ()])
 
     def test_estimator_v2_options(self):
         """Test V2 Estimator with different options."""
@@ -95,7 +114,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
         job = estimator.run([(circuit, observable)])
         result = job.result()
-        self._verify_result_type(result, num_pubs=1, shapes=[()])
+        assert_estimator_result(result, shapes=[()])
         self.assertEqual(result[0].metadata["shots"], 1600)
 
     @skip("Skip until simulator options are accepted by server.")
@@ -115,16 +134,5 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
         job = estimator.run([(circuit, observables)])
         result = job.result()
-        self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
+        assert_estimator_result(result, shapes=[(1,)])
         self.assertIn("sampling_overhead", result[0].metadata["resilience"])
-
-    def _verify_result_type(self, result, num_pubs, shapes):
-        """Verify result type."""
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertEqual(len(result), num_pubs)
-        for idx, pub_result in enumerate(result):
-            self.assertIsInstance(pub_result, PubResult)
-            self.assertIsInstance(pub_result.data, DataBin)
-            self.assertTrue(pub_result.metadata)
-            self.assertEqual(pub_result.data.evs.shape, shapes[idx])
-            self.assertEqual(pub_result.data.stds.shape, shapes[idx])
