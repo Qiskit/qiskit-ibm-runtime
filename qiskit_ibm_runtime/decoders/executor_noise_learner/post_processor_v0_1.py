@@ -60,7 +60,9 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
         ) + FlipPostSelect(creg_identifier=None, mode=post["strategy"])
     result_fit = process_learning_results(result, raw_data_stage=raw_data_stage)
     maps = result_fit.model.to_pauli_lindblad_maps(
-        result_fit.model_data, restrict_to_qubit_idxs=True
+        result_fit.model_data,
+        restrict_to_qubit_idxs=True,
+        include_spam=True,
     )  # type: ignore
     return NoiseLearnerV3Results(
         [
