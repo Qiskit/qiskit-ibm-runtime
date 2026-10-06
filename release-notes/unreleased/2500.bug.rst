@@ -1,0 +1,2 @@
+Fix fake backend execution of circuits containing backend-specific
+``MidCircuitMeasure`` instructions such as ``measure_2``.

@@ -22,7 +22,12 @@ from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2, FakeSherbrooke
+from qiskit_ibm_runtime.fake_provider import (
+    FakeFractionalBackend,
+    FakeKingston,
+    FakeManilaV2,
+    FakeSherbrooke,
+)
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
@@ -388,3 +393,39 @@ class TestBackend(IBMTestCase):
         qc.append(mcm, [0], [0])
         transpiled = pm.run(qc)
         self.assertEqual(transpiled.data[0].operation.name, "measure_2")
+
+    def test_fake_backend_mid_circuit_measure(self):
+        """Test running MidCircuitMeasure on a fake backend."""
+        fake_backend = FakeKingston()
+        sampler = SamplerV2(fake_backend)
+
+        # Circuit with backend-specific measurement
+        circuit = QuantumCircuit(1, 1)
+        circuit.x(0)
+        circuit.append(MidCircuitMeasure(), [0], [0])
+        circuit.measure(0, 0)
+
+        result = sampler.run([circuit]).result()
+
+        # The circuit runs successfully on the fake backend
+        self.assertIsNotNone(result)
+
+        # The input circuit is left untouched by the simulation workaround
+        self.assertEqual(circuit.data[1].operation.name, "measure_2")
+
+    def test_fake_backend_mid_circuit_measure_list(self):
+        """Test running multiple circuits with MidCircuitMeasure on a fake backend."""
+        fake_backend = FakeKingston()
+        sampler = SamplerV2(fake_backend)
+
+        # Circuit with backend-specific measurement
+        circuit = QuantumCircuit(1, 1)
+        circuit.x(0)
+        circuit.append(MidCircuitMeasure(), [0], [0])
+        circuit.measure(0, 0)
+
+        # Running the circuit and a copy of it
+        result = sampler.run([circuit, circuit.copy()]).result()
+
+        # Both circuits are executed successfully
+        self.assertEqual(len(result), 2)
