@@ -57,10 +57,7 @@ def bell_circuit() -> QuantumCircuit:
 
 
 def sampler_cases() -> list[tuple]:
-    """Return the circuit, parameter values, and expected counts of seven sampler cases.
-
-    Cases 2 to 6 are transpiled against a fake backend, so that their expected counts hold.
-    """
+    """Return the circuit, parameter values, and expected counts of seven sampler cases."""
     fake_backend = FakeManilaV2()
 
     hadamard = QuantumCircuit(1, 1, name="Hadamard")

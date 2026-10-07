@@ -216,9 +216,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
         backend = self.service.backend(self.dependencies.qpu)
-        pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=1)
-
-        job = Sampler(mode=backend).run([pass_manager.run(bell())])
+        _, job = run_bell_job(backend)
         job.wait_for_final_state()
 
         newest_jobs = self.service.jobs(
