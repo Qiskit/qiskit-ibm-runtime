@@ -12,9 +12,7 @@
 
 """Test deserializing server data."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import dateutil.parser
 
@@ -23,57 +21,60 @@ from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from ..decorators import production_only
 from .case import IBMIntegrationTestCase
 
-if TYPE_CHECKING:
-    from collections.abc import Iterator
 
-
-def assert_data_not_encoded(
-    data: dict, good_keys: tuple[str, ...], good_key_prefixes: tuple[str, ...] = ()
-) -> None:
-    """Assert that no field of `data` holds a JSON-serialized object.
+def assert_data(data: dict, good_keys: tuple, good_key_prefixes: tuple | None = None) -> None:
+    """Assert that the input data does not contain serialized objects.
 
     Args:
         data: Data to validate.
-        good_keys: Keys known to hold a value that looks serialized but is legitimate.
-        good_key_prefixes: Prefixes of keys known to hold a value that looks serialized
-            but is legitimate.
+        good_keys: A list of known keys that look serialized objects.
+        good_key_prefixes: A list of known prefixes for keys that look like
+            serialized objects.
     """
-    suspects = {
-        key
-        for key in _encoded_looking_keys(data)
-        if key not in good_keys and not key.startswith(good_key_prefixes)
-    }
-    assert not suspects
+    suspect_keys: set[Any] = set()
+    _find_potential_encoded(data, "", suspect_keys)
+    # Remove known good keys from suspect keys.
+    for gkey in good_keys:
+        try:
+            suspect_keys.remove(gkey)
+        except KeyError:
+            pass
+    if good_key_prefixes:
+        for gkey in good_key_prefixes:
+            suspect_keys = {ckey for ckey in suspect_keys if not ckey.startswith(gkey)}
+    assert not suspect_keys
 
 
-def _encoded_looking_keys(data: Any, path: str = "") -> Iterator[str]:
-    """Yield the path of every field of `data` whose value looks JSON-serialized.
+def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
+    """Find data that may be in JSON serialized format.
 
     Args:
-        data: Data to traverse recursively.
-        path: Dot-separated path of the field currently being traversed.
+        data: Data to be recursively traversed to find suspects.
+        c_key: Key of the field currently being traversed.
+        tally: Keys of fields that look suspect.
     """
-    if _looks_encoded(data):
-        yield path
+    if _check_encoded(data):
+        tally.add(c_key)
 
     if isinstance(data, list):
         for item in data:
-            yield from _encoded_looking_keys(item, path)
+            _find_potential_encoded(item, c_key, tally)
     elif isinstance(data, dict):
         for key, value in data.items():
-            yield from _encoded_looking_keys(value, f"{path}.{key}" if path else str(key))
+            full_key = c_key + "." + str(key) if c_key else str(key)
+            _find_potential_encoded(value, full_key, tally)
 
 
-def _looks_encoded(data: Any) -> bool:
-    """Check whether `data` could be a serialized complex number or datetime."""
-    if isinstance(data, list):
-        return len(data) == 2 and all(isinstance(item, (float, int)) for item in data)
-    if isinstance(data, str):
+def _check_encoded(data: list | str) -> bool:
+    """Check if the input data is potentially in JSON serialized format."""
+    if isinstance(data, list) and len(data) == 2 and all(isinstance(x, (float, int)) for x in data):
+        return True
+    elif isinstance(data, str):
         try:
             dateutil.parser.parse(data)
             return True
         except ValueError:
-            return False
+            pass
     return False
 
 
@@ -105,9 +106,7 @@ class TestSerialization(IBMIntegrationTestCase):
 
         for i, backend in enumerate(backends):
             with self.subTest(msg=f"backend_{i}"):
-                assert_data_not_encoded(
-                    backend.configuration().to_dict(), good_keys, good_keys_prefixes
-                )
+                assert_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
     def test_backend_properties(self):
         """Test deserializing backend properties."""
@@ -127,4 +126,4 @@ class TestSerialization(IBMIntegrationTestCase):
                     if ex.status_code == 404:
                         properties = None
                 if properties:
-                    assert_data_not_encoded(properties.to_dict(), good_keys)
+                    assert_data(properties.to_dict(), good_keys)
