@@ -17,7 +17,10 @@ from __future__ import annotations
 import socket
 import subprocess
 import urllib
+from contextlib import contextmanager
 from time import sleep
+from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
@@ -28,6 +31,9 @@ from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from ..ibm_test_case import IBMTestCase
 from .case import integration_test_dependencies
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 ADDRESS = "127.0.0.1"
 PORT = 8085
 VALID_PROXIES = {"https": f"http://{ADDRESS}:{PORT}"}
@@ -35,80 +41,92 @@ INVALID_PORT_PROXIES = {"https": "http://{}:{}".format(ADDRESS, "6666")}
 INVALID_ADDRESS_PROXIES = {"https": "http://{}:{}".format("invalid", PORT)}
 
 
+@contextmanager
+def blocked_network() -> Iterator[None]:
+    """Block the network traffic that is not routed to the proxy, restoring it on exit."""
+    original_connect = socket.socket.connect
+
+    def blocking_connect(sock: socket.socket, address: tuple) -> None:
+        if address != (ADDRESS, PORT):
+            raise RuntimeError(f"Blocked network access to {address}")
+        return original_connect(sock, address)
+
+    with patch.object(socket.socket, "connect", blocking_connect):
+        yield
+
+
+@contextmanager
+def proxy_server() -> Iterator[subprocess.Popen]:
+    """Run a `pproxy` server, blocking the network traffic that is not routed to it.
+
+    Yields:
+        The process running the server. A test can terminate it early to read its output.
+    """
+    command = ["pproxy", "-v", "-l", f"http://{ADDRESS}:{PORT}"]
+    process = subprocess.Popen(command, stdout=subprocess.PIPE)  # noqa: S603
+    sleep(2)  # give the server time to start
+
+    try:
+        with blocked_network():
+            yield process
+    finally:
+        if process.returncode is None:
+            process.stdout.close()  # close the IO buffer
+            process.terminate()
+            process.wait()
+
+
 class TestProxies(IBMTestCase):
     """Tests for proxy capabilities."""
-
-    def setUp(self):
-        """Initial test setup."""
-        super().setUp()
-        # launch a mock server.
-        command = ["pproxy", "-v", "-l", f"http://{ADDRESS}:{PORT}"]
-        self.proxy_process = subprocess.Popen(command, stdout=subprocess.PIPE)
-        # Time for the proxy to start
-        sleep(2)
-        # Block all traffic not routed to the proxy
-        self._original_connect = socket.socket.connect
-
-        def blocking_connect(sock, address):
-            if address != (ADDRESS, PORT):
-                raise RuntimeError(f"Blocked network access to {address}")
-            return self._original_connect(sock, address)
-
-        socket.socket.connect = blocking_connect
-
-    def tearDown(self):
-        """Test cleanup."""
-        super().tearDown()
-
-        # terminate the mock server.
-        if self.proxy_process.returncode is None:
-            self.proxy_process.stdout.close()  # close the IO buffer
-            self.proxy_process.terminate()  # initiate process termination
-
-            # wait for the process to terminate
-            self.proxy_process.wait()
-        socket.socket.connect = self._original_connect
 
     def test_proxies_cloud_runtime_client(self) -> None:
         """Should reach the proxy using RuntimeClient."""
         dependencies = integration_test_dependencies(init_service=False)
-        params = ClientParameters(
-            instance=dependencies.instance,
-            token=dependencies.token,
-            channel=dependencies.channel,
-            verify=False,
-            proxies=ProxyConfiguration(urls=VALID_PROXIES),
-            url=dependencies.url,
-        )
-        client = RuntimeClient(params)
-        client.jobs_get(limit=1)
-        api_line = pproxy_desired_access_log_line(params.url)
-        self.proxy_process.terminate()  # kill to be able of reading the output
-        proxy_output = self.proxy_process.stdout.read().decode("utf-8")
+
+        with proxy_server() as process:
+            params = ClientParameters(
+                instance=dependencies.instance,
+                token=dependencies.token,
+                channel=dependencies.channel,
+                verify=False,
+                proxies=ProxyConfiguration(urls=VALID_PROXIES),
+                url=dependencies.url,
+            )
+            client = RuntimeClient(params)
+            client.jobs_get(limit=1)
+
+            api_line = pproxy_desired_access_log_line(params.url)
+            process.terminate()  # kill to be able of reading the output
+            proxy_output = process.stdout.read().decode("utf-8")
+
         self.assertIn(api_line, proxy_output)
 
     def test_proxies_qiskit_runtime_service(self) -> None:
         """Should reach the proxy using QiskitRuntimeService."""
         dependencies = integration_test_dependencies(init_service=False)
-        service = QiskitRuntimeService(
-            instance=dependencies.instance,
-            token=dependencies.token,
-            channel=dependencies.channel,
-            verify=False,
-            proxies={"urls": VALID_PROXIES},
-            url=dependencies.url,
-        )
-        service.jobs(limit=1)
 
-        api_line = pproxy_desired_access_log_line(dependencies.url)
-        self.proxy_process.terminate()  # kill to be able of reading the output
-        proxy_output = self.proxy_process.stdout.read().decode("utf-8")
+        with proxy_server() as process:
+            service = QiskitRuntimeService(
+                instance=dependencies.instance,
+                token=dependencies.token,
+                channel=dependencies.channel,
+                verify=False,
+                proxies={"urls": VALID_PROXIES},
+                url=dependencies.url,
+            )
+            service.jobs(limit=1)
+
+            api_line = pproxy_desired_access_log_line(dependencies.url)
+            process.terminate()  # kill to be able of reading the output
+            proxy_output = process.stdout.read().decode("utf-8")
+
         self.assertIn(api_line, proxy_output)
 
     def test_no_proxy_raises_exception(self) -> None:
         """Should raise an exception when no proxy is specified."""
         dependencies = integration_test_dependencies(init_service=False)
-        with self.assertRaises(InvalidAccountError):
+
+        with proxy_server(), self.assertRaises(InvalidAccountError):
             service = QiskitRuntimeService(
                 instance=dependencies.instance,
                 token=dependencies.token,
