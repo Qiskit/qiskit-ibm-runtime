@@ -99,7 +99,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         program_id: str,
         service: QiskitRuntimeService,
         creation_date: str | None = None,
-        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
+        result_decoder: type[ResultDecoder]
+        | Sequence[type[ResultDecoder]]
+        | None = None,
         image: str | None = "",
         session_id: str | None = None,
         tags: list | None = None,
@@ -126,7 +128,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         self._status: JobStatus = "INITIALIZING"
 
         # Store the list of decoders for this job.
-        decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
+        decoder = (
+            result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
+        )
         if not isinstance(decoder, Sequence):
             self._result_decoders: Sequence[type[ResultDecoder]] = [decoder]
         else:
@@ -308,8 +312,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         """
         self._set_status_and_error_message()
         if self._status == self.ERROR and self._error_message is None:
-         response = self._api_client.job_get(job_id=self.job_id())
-         self._set_error_message(response)
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._set_error_message(response)
         return self._error_message
 
     def result(
@@ -349,7 +353,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
             error_message = self._reason if self._reason else self.error_message()
             if self._reason_code == 1305:
                 raise RuntimeJobMaxTimeoutError(error_message)
-            raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
+            raise RuntimeJobFailureError(
+                f"Unable to retrieve job result. {error_message}"
+            )
         if self._status == "CANCELLED":
             raise RuntimeInvalidStateError(
                 f"Unable to retrieve result for job {self.job_id()}. Job was cancelled."
@@ -381,7 +387,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
             self._api_client.job_cancel(self.job_id())
         except RequestsApiError as ex:
             if ex.status_code == 409:
-                raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
+                raise RuntimeInvalidStateError(
+                    f"Job cannot be cancelled: {ex}"
+                ) from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self._status = "CANCELLED"
 
@@ -501,7 +509,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         tags_to_update = set(new_tags)
         validate_job_tags(new_tags)
 
-        response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
+        response = self._api_client.update_tags(
+            job_id=self.job_id(), tags=list(tags_to_update)
+        )
 
         if response.status_code == 204:
             api_response = self._api_client.job_get(self.job_id())
@@ -532,9 +542,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         """
         try:
             reason = job_response["state"].get("reason")
-            reason_code = job_response["state"].get("reasonCode") or job_response["state"].get(
-                "reason_code"
-            )
+            reason_code = job_response["state"].get("reasonCode") or job_response[
+                "state"
+            ].get("reason_code")
             if reason:
                 self._reason = reason
                 if reason_code:
