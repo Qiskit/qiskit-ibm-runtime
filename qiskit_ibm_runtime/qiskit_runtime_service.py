@@ -277,18 +277,14 @@ class QiskitRuntimeService:
                     "with this instance available."
                 )
             self._default_instance = True
-            self._api_clients = {
-                self._account.instance: RuntimeClient(self._client_params)
-            }
+            self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
             self._active_api_client = self._api_clients[self._account.instance]
             # Force populating state, providing parity compared to not specifying `instance`.
             self._resolve_cloud_instances(self._account.instance)
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
-            instance_names = [
-                instance.get("name") for instance in self._backend_instance_groups
-            ]
+            instance_names = [instance.get("name") for instance in self._backend_instance_groups]
             instance_plan_names = {
                 instance.get("plan") for instance in self._backend_instance_groups
             }
@@ -342,9 +338,7 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            self._backends_info_per_instance[instance] = (
-                self._active_api_client.list_backends(True)
-            )
+            self._backends_info_per_instance[instance] = self._active_api_client.list_backends(True)
             return [
                 (backend["name"], backend.get("class") == "mock")
                 for backend in self._backends_info_per_instance[instance]
@@ -386,9 +380,7 @@ class QiskitRuntimeService:
             plans = [plan.lower() for plan in self._plans_preference]
             # We should filter out the other instances, minimize api calls
             filtered_groups = [
-                group
-                for group in self._backend_instance_groups
-                if group["plan"] in plans
+                group for group in self._backend_instance_groups if group["plan"] in plans
             ]
 
             self._backend_instance_groups = sorted(
@@ -397,14 +389,7 @@ class QiskitRuntimeService:
         else:
             # If plans_preference is not set, prioritize free and trial plans.
             # Note that `unknown` is not returned by the API but by `Account.list_instances()`
-            ordered_pricing_types = [
-                "free",
-                "trial",
-                "paygo",
-                "paid",
-                "subscription",
-                "unknown",
-            ]
+            ordered_pricing_types = ["free", "trial", "paygo", "paid", "subscription", "unknown"]
             self._backend_instance_groups = sorted(
                 self._backend_instance_groups,
                 key=lambda d: ordered_pricing_types.index(d["pricing_type"]),
@@ -456,9 +441,7 @@ class QiskitRuntimeService:
             account = AccountManager.get(filename=filename, name=name)
         elif channel:
             if channel and channel not in ["ibm_cloud", "ibm_quantum_platform"]:
-                raise ValueError(
-                    "'channel' can only be 'ibm_cloud', or 'ibm_quantum_platform'"
-                )
+                raise ValueError("'channel' can only be 'ibm_cloud', or 'ibm_quantum_platform'")
             if token:
                 account = Account.create_account(
                     channel=channel,
@@ -473,12 +456,8 @@ class QiskitRuntimeService:
                 )
             else:
                 if url:
-                    logger.warning(
-                        "Loading default %s account. Input 'url' is ignored.", channel
-                    )
-                account = AccountManager.get(
-                    filename=filename, name=name, channel=channel
-                )
+                    logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
+                account = AccountManager.get(filename=filename, name=name, channel=channel)
         elif token:
             account = Account.create_account(
                 channel="ibm_quantum_platform",
@@ -527,14 +506,10 @@ class QiskitRuntimeService:
         """Get the crn from the instance service name."""
         if not self._all_instances:
             self._all_instances = account.list_instances()
-        matching_instances = [
-            item for item in self._all_instances if item["name"] == instance
-        ]
+        matching_instances = [item for item in self._all_instances if item["name"] == instance]
         if matching_instances:
             if len(matching_instances) > 1:
-                logger.warning(
-                    "Multiple instances found. Using all matching instances."
-                )
+                logger.warning("Multiple instances found. Using all matching instances.")
                 # If there are multiple instances, save them
                 self._saved_instances = [inst["crn"] for inst in matching_instances]
             return matching_instances[0]["crn"]
@@ -565,9 +540,7 @@ class QiskitRuntimeService:
         else:
             client = self._api_clients.get(instance, None)
             if client is None:
-                raise IBMInputValueError(
-                    f"No API client found for given instance: {instance}"
-                )
+                raise IBMInputValueError(f"No API client found for given instance: {instance}")
             return client
 
     def _get_api_clients(self) -> dict[str, RuntimeClient]:
@@ -692,9 +665,7 @@ class QiskitRuntimeService:
                     ):
                         backends.append(backend)
                 except QiskitBackendNotFoundError as e:
-                    logger.warning(
-                        "Backend %s creation failed: %s", backend_name, str(e)
-                    )
+                    logger.warning("Backend %s creation failed: %s", backend_name, str(e))
         if name:
             kwargs["backend_name"] = name
         if min_num_qubits:
@@ -705,8 +676,7 @@ class QiskitRuntimeService:
             backends = list(
                 filter(
                     lambda b: (
-                        "dynamic_circuits"
-                        in getattr(b.configuration(), "supported_features", [])
+                        "dynamic_circuits" in getattr(b.configuration(), "supported_features", [])
                     )
                     == dynamic_circuits,
                     backends,
@@ -769,9 +739,7 @@ class QiskitRuntimeService:
             ]
             self._filter_instances_by_saved_preferences()
 
-        return [
-            (inst["crn"], inst["backends"]) for inst in self._backend_instance_groups
-        ]
+        return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
     def _get_or_create_cloud_client(self, instance: str) -> None:
         """Find relevant cloud client for a given instance and set active api client."""
@@ -857,24 +825,18 @@ class QiskitRuntimeService:
                 if cache:
                     self._backend_configs[backend_name] = config
         except Exception as ex:
-            logger.warning(
-                "Unable to create configuration for %s. %s ", backend_name, ex
-            )
+            logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             raise QiskitBackendNotFoundError(
                 f"Unable to create configuration for {backend_name}. "
                 "This might happen for example when a backend is retired."
             ) from ex
 
         # Retrieve `physical_qubits` from the stored `/backends` responses.
-        backend_infos_for_instance: list[dict[str, Any]] = (
-            self._backends_info_per_instance.get(instance, [])
+        backend_infos_for_instance: list[dict[str, Any]] = self._backends_info_per_instance.get(
+            instance, []
         )
         backend_info = next(
-            (
-                info
-                for info in backend_infos_for_instance
-                if info["name"] == backend_name
-            ),
+            (info for info in backend_infos_for_instance if info["name"] == backend_name),
             {},
         )
         physical_qubits = backend_info.get("physical_qubits", None)
@@ -1076,9 +1038,7 @@ class QiskitRuntimeService:
                     " Learn more about available backends here "
                     "https://quantum.cloud.ibm.com/docs/guides/qpu-information#view-your-resources"
                 )
-            raise QiskitBackendNotFoundError(
-                "No backend matches the criteria." + cloud_msg_url
-            )
+            raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
 
         if use_fractional_gates:
             basis_gates = backends[0].basis_gates
@@ -1096,9 +1056,7 @@ class QiskitRuntimeService:
         program_id: str,
         inputs: dict,
         options: RuntimeOptions | dict | None = None,
-        result_decoder: type[ResultDecoder]
-        | Sequence[type[ResultDecoder]]
-        | None = None,
+        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         session_id: str | None = None,
         start_session: bool | None = False,
         calibration_id: str | None = None,
@@ -1192,15 +1150,10 @@ class QiskitRuntimeService:
 
         except RequestsApiError as ex:
             if ex.status_code == 404:
-                raise RuntimeProgramNotFound(
-                    f"Program not found: {ex.message}"
-                ) from None
+                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if (
-            response["backend"]
-            and response["backend"] != qrt_options.get_backend_name()
-        ):
+        if response["backend"] and response["backend"] != qrt_options.get_backend_name():
             backend = self.backend(name=response["backend"])
 
         return RuntimeJobV2(
@@ -1237,15 +1190,10 @@ class QiskitRuntimeService:
                 raise IBMRuntimeError(f"Failed to retrieve job: {ex}") from None
             response = None
             for instance, client in self._api_clients.items():
-                if (
-                    instance is not None
-                    and instance != self._active_api_client._instance
-                ):
+                if instance is not None and instance != self._active_api_client._instance:
                     try:
                         self._active_api_client = client
-                        response = self._active_api_client.job_get(
-                            job_id, exclude_params=True
-                        )
+                        response = self._active_api_client.job_get(job_id, exclude_params=True)
                         break
                     except RequestsApiError:
                         continue
@@ -1378,13 +1326,9 @@ class QiskitRuntimeService:
             Dict with usage details.
         """
         usage_dict = self._active_api_client.cloud_usage()
-        if usage_dict.get("usage_limit_seconds") or usage_dict.get(
-            "usage_allocation_seconds"
-        ):
+        if usage_dict.get("usage_limit_seconds") or usage_dict.get("usage_allocation_seconds"):
             usage_remaining = max(
-                usage_dict.get(
-                    "usage_limit_seconds", usage_dict.get("usage_allocation_seconds")
-                )
+                usage_dict.get("usage_limit_seconds", usage_dict.get("usage_allocation_seconds"))
                 - usage_dict.get("usage_consumed_seconds", 0),
                 0,
             )
@@ -1397,10 +1341,7 @@ class QiskitRuntimeService:
 
         if usage_dict.get("usage_limit_reached"):
             active_instance = quote(self.active_instance(), safe="")
-            if (
-                usage_dict.get("usage_limit_seconds")
-                and usage_dict["usage_remaining_seconds"] <= 0
-            ):
+            if usage_dict.get("usage_limit_seconds") and usage_dict["usage_remaining_seconds"] <= 0:
                 warnings.warn(
                     "This instance has met its usage limit. Workloads will not run until time is"
                     "made available. Check "
@@ -1433,9 +1374,7 @@ class QiskitRuntimeService:
                 # Use cached information to attempt to determine if it is a mock device.
                 try:
                     instance_info = next(
-                        info
-                        for info in self._backend_instance_groups
-                        if info["crn"] == instance
+                        info for info in self._backend_instance_groups if info["crn"] == instance
                     )
                     is_mock = next(
                         is_mock
@@ -1542,10 +1481,7 @@ class QiskitRuntimeService:
         if filters or kwargs:
             # filters will still be slow because we need the backend configs
             backends = self.backends(
-                min_num_qubits=min_num_qubits,
-                filters=filters,
-                instance=instance,
-                **kwargs,
+                min_num_qubits=min_num_qubits, filters=filters, instance=instance, **kwargs
             )
             filtered_backend_names = [back.name for back in backends]
             for candidate in candidates.copy():
@@ -1553,18 +1489,14 @@ class QiskitRuntimeService:
                     candidates.remove(candidate)
 
         if min_num_qubits:
-            candidates = list(
-                filter(lambda b: b["qubits"] >= min_num_qubits, candidates)
-            )
+            candidates = list(filter(lambda b: b["qubits"] >= min_num_qubits, candidates))
         if not candidates:
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
         sorted_backends = sorted(candidates, key=lambda b: b["queue_length"])
         for back in sorted_backends:
             # We don't know whether or not the backend has a valid config
             try:
-                return self.backend(
-                    name=back["name"], use_fractional_gates=use_fractional_gates
-                )
+                return self.backend(name=back["name"], use_fractional_gates=use_fractional_gates)
             except Exception:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")

@@ -37,9 +37,7 @@ def populate_jobs(registry):
     pending_status = ["running", "queued"]
     for status, count in status_count.items():
         for i in range(count):
-            registry.add_job(
-                Job(f"my_job_{status}_{i}", "common_backend", status=status), "a"
-            )
+            registry.add_job(Job(f"my_job_{status}_{i}", "common_backend", status=status), "a")
             if status in pending_status:
                 pending_jobs_count += 1
             else:
@@ -64,9 +62,7 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses(expose_responses_mock=True)
     def test_job_status_final_state_no_http_call(self, registry, responses):
         """Test job.status() does not make an HTTP call if retrieved in a final state."""
-        registry.add_job(
-            Job("completed_job", "common_backend", status="completed"), "a"
-        )
+        registry.add_job(Job("completed_job", "common_backend", status="completed"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         job = service.job("completed_job")
@@ -81,12 +77,8 @@ class TestRetrieveJobs(IBMTestCase):
     @mock_responses(expose_responses_mock=True)
     def test_jobs_status_final_state_no_http_call(self, registry, responses):
         """Test job.status() does not make HTTP calls for jobs retrieved via service.jobs()."""
-        registry.add_job(
-            Job("completed_job_1", "common_backend", status="completed"), "a"
-        )
-        registry.add_job(
-            Job("completed_job_2", "common_backend", status="completed"), "a"
-        )
+        registry.add_job(Job("completed_job_1", "common_backend", status="completed"), "a")
+        registry.add_job(Job("completed_job_2", "common_backend", status="completed"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(limit=2)
@@ -296,18 +288,14 @@ class TestRetrieveJobs(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
 
         # Ensure the active api client is the one for the instance that does _not_ contain the job.
-        self.assertEqual(
-            service._active_api_client._instance, registry.instances["b"].crn
-        )
+        self.assertEqual(service._active_api_client._instance, registry.instances["b"].crn)
 
         # Retrieve a job from instance "a" when active instance is "b".
         job = service.job("my_job")
         self.assertIsNotNone(job.backend())
 
     @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_jobs_from_mock_devices(
-        self, registry: OneInstanceNoBackendsRegistry
-    ) -> None:
+    def test_jobs_from_mock_devices(self, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test retrieving jobs from mock devices."""
         registry.add_backend(Backend("ibm_foo"))
         registry.add_backend(Backend("mock_foo", is_mock=True))
@@ -333,9 +321,7 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertTrue(job_2.backend().is_mock)
 
     @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_jobs_from_retired_backend(
-        self, registry: OneInstanceNoBackendsRegistry
-    ) -> None:
+    def test_jobs_from_retired_backend(self, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test retrieving jobs that use a retired backend."""
         registry.add_backend(Backend("ibm_not_retired"))
         registry.add_job(Job("1", "ibm_retired"), "a")
