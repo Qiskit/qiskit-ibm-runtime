@@ -22,79 +22,27 @@ from ..decorators import production_only
 from .case import IBMIntegrationTestCase
 
 
-class TestSerialization(IBMIntegrationTestCase):
-    """Test data serialization."""
+def assert_data(data: dict, good_keys: tuple, good_key_prefixes: tuple | None = None) -> None:
+    """Assert that the input data does not contain serialized objects.
 
-    @production_only
-    def test_backend_configuration(self):
-        """Test deserializing backend configuration."""
-        service = self.service
-        instance = None
-        backends = service.backends(operational=True, simulator=False, instance=instance)
-
-        # Known keys that look like a serialized complex number.
-        good_keys = (
-            "coupling_map",
-            "qubit_lo_range",
-            "meas_lo_range",
-            "rep_times",
-            "gates.coupling_map",
-            "meas_levels",
-            "qubit_channel_mapping",
-            "backend_version",
-            "rep_delay_range",
-            "processor_type.revision",
-            "coords",
-        )
-        good_keys_prefixes = ("channels",)
-
-        for i, backend in enumerate(backends):
-            with self.subTest(msg=f"backend_{i}"):
-                self._verify_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
-
-    def test_backend_properties(self):
-        """Test deserializing backend properties."""
-        service = self.service
-        instance = None
-        backends = service.backends(operational=True, simulator=False, instance=instance)
-
-        # Known keys that look like a serialized object.
-        good_keys = ("gates.qubits", "qubits.name", "backend_version", "general_qlists.qubits")
-
-        for i, backend in enumerate(backends):
-            with self.subTest(msg=f"backend_{i}"):
-                try:
-                    properties = backend.properties()
-                except RequestsApiError as ex:
-                    # Some backends might not be able to fetch properties.
-                    if ex.status_code == 404:
-                        properties = None
-                if properties:
-                    self._verify_data(properties.to_dict(), good_keys)
-
-    def _verify_data(
-        self, data: dict, good_keys: tuple, good_key_prefixes: tuple | None = None
-    ) -> None:
-        """Verify that the input data does not contain serialized objects.
-
-        Args:
-            data: Data to validate.
-            good_keys: A list of known keys that look serialized objects.
-            good_key_prefixes: A list of known prefixes for keys that look like
-                serialized objects.
-        """
-        suspect_keys: set[Any] = set()
-        _find_potential_encoded(data, "", suspect_keys)
-        # Remove known good keys from suspect keys.
-        for gkey in good_keys:
-            try:
-                suspect_keys.remove(gkey)
-            except KeyError:
-                pass
-        if good_key_prefixes:
-            for gkey in good_key_prefixes:
-                suspect_keys = {ckey for ckey in suspect_keys if not ckey.startswith(gkey)}
-        self.assertFalse(suspect_keys)
+    Args:
+        data: Data to validate.
+        good_keys: A list of known keys that look serialized objects.
+        good_key_prefixes: A list of known prefixes for keys that look like
+            serialized objects.
+    """
+    suspect_keys: set[Any] = set()
+    _find_potential_encoded(data, "", suspect_keys)
+    # Remove known good keys from suspect keys.
+    for gkey in good_keys:
+        try:
+            suspect_keys.remove(gkey)
+        except KeyError:
+            pass
+    if good_key_prefixes:
+        for gkey in good_key_prefixes:
+            suspect_keys = {ckey for ckey in suspect_keys if not ckey.startswith(gkey)}
+    assert not suspect_keys
 
 
 def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
@@ -128,3 +76,54 @@ def _check_encoded(data: list | str) -> bool:
         except ValueError:
             pass
     return False
+
+
+class TestSerialization(IBMIntegrationTestCase):
+    """Test data serialization."""
+
+    @production_only
+    def test_backend_configuration(self):
+        """Test deserializing backend configuration."""
+        service = self.service
+        instance = None
+        backends = service.backends(operational=True, simulator=False, instance=instance)
+
+        # Known keys that look like a serialized complex number.
+        good_keys = (
+            "coupling_map",
+            "qubit_lo_range",
+            "meas_lo_range",
+            "rep_times",
+            "gates.coupling_map",
+            "meas_levels",
+            "qubit_channel_mapping",
+            "backend_version",
+            "rep_delay_range",
+            "processor_type.revision",
+            "coords",
+        )
+        good_keys_prefixes = ("channels",)
+
+        for i, backend in enumerate(backends):
+            with self.subTest(msg=f"backend_{i}"):
+                assert_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
+
+    def test_backend_properties(self):
+        """Test deserializing backend properties."""
+        service = self.service
+        instance = None
+        backends = service.backends(operational=True, simulator=False, instance=instance)
+
+        # Known keys that look like a serialized object.
+        good_keys = ("gates.qubits", "qubits.name", "backend_version", "general_qlists.qubits")
+
+        for i, backend in enumerate(backends):
+            with self.subTest(msg=f"backend_{i}"):
+                try:
+                    properties = backend.properties()
+                except RequestsApiError as ex:
+                    # Some backends might not be able to fetch properties.
+                    if ex.status_code == 404:
+                        properties = None
+                if properties:
+                    assert_data(properties.to_dict(), good_keys)

@@ -23,7 +23,6 @@ from qiskit_ibm_runtime.exceptions import (
 )
 
 from ..decorators import production_only
-from ..serialization import SerializableClass
 from ..utils import cancel_job_safe, get_real_device, wait_for_status
 from .case import IBMIntegrationJobTestCase
 
@@ -211,11 +210,3 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         self.assertFalse(hasattr(job, "_params"))
         self.assertTrue(job.inputs)
-
-    def _assert_complex_types_equal(self, expected, received):
-        """Verify the received data in complex types is expected."""
-        if "serializable_class" in received:
-            received["serializable_class"] = SerializableClass.from_json(
-                received["serializable_class"]
-            )
-        self.assertEqual(expected, received)

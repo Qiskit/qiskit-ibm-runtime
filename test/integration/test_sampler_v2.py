@@ -90,6 +90,21 @@ def isa_bell_circuit(backend: IBMBackend) -> QuantumCircuit:
     return pass_manager.run(bell_circuit())
 
 
+def assert_result_type(result, num_pubs, targets=None):
+    """Assert result type."""
+    assert isinstance(result, PrimitiveResult)
+    assert isinstance(result.metadata, dict)
+    assert len(result) == num_pubs
+    for idx, pub_result in enumerate(result):
+        # TODO: We need to update the following test to check `SamplerPubResult`
+        # when the server side is upgraded to Qiskit 1.1.
+        assert isinstance(pub_result, PubResult)
+        assert isinstance(pub_result.data, DataBin)
+        assert isinstance(pub_result.metadata, dict)
+        if targets:
+            assert isinstance(result[idx].data.meas, BitArray)
+
+
 @ddt
 class TestSampler(IBMIntegrationTestCase):
     """Test Sampler."""
@@ -107,27 +122,25 @@ class TestSampler(IBMIntegrationTestCase):
                 sampler = sampler_cls(mode=session, options=OPTIONS)
                 job = sampler.run([isa_bell])
                 result = job.result()
-                self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("single with param"):
                 sampler = sampler_cls(mode=session, options=OPTIONS)
                 job = sampler.run([(isa_bell, ())])
                 result = job.result()
-                self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("single array"):
                 sampler = sampler_cls(mode=session, options=OPTIONS)
                 job = sampler.run([(isa_bell, [()])])
                 result = job.result()
-                self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("multiple"):
                 sampler = sampler_cls(mode=session, options=OPTIONS)
                 job = sampler.run([(isa_bell, [(), (), ()])])
                 result = job.result()
-                self._verify_result_type(
-                    result, num_pubs=1, targets=[np.array([target, target, target])]
-                )
+                assert_result_type(result, num_pubs=1, targets=[np.array([target, target, target])])
 
     @run_configured_sampler_implementations
     def test_sample_run_multiple_circuits(self, sampler_cls):
@@ -139,7 +152,7 @@ class TestSampler(IBMIntegrationTestCase):
         _, _, target = cases[1]
         sampler = sampler_cls(mode=backend, options=OPTIONS)
         result = sampler.run([isa_bell, isa_bell, isa_bell]).result()
-        self._verify_result_type(result, num_pubs=3, targets=[np.array(target)] * 3)
+        assert_result_type(result, num_pubs=3, targets=[np.array(target)] * 3)
 
     def test_sampler_run_with_parameterized_circuits(self):
         """Test Sampler.run() with parameterized circuits."""
@@ -151,7 +164,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         sampler = Sampler(mode=FakeManilaV2(), options=OPTIONS)
         result = sampler.run([(pqc1, param1), (pqc2, param2), (pqc3, param3)]).result()
-        self._verify_result_type(
+        assert_result_type(
             result, num_pubs=3, targets=[np.array(target1), np.array(target2), np.array(target3)]
         )
 
@@ -168,7 +181,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         sampler = sampler_cls(mode=backend, options=OPTIONS)
         result = sampler.run([qc, qc2]).result()
-        self._verify_result_type(result, num_pubs=2)
+        assert_result_type(result, num_pubs=2)
 
     @run_configured_sampler_implementations
     def test_run_2qubit(self, sampler_cls):
@@ -189,7 +202,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         sampler = sampler_cls(mode=backend, options=OPTIONS)
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
-        self._verify_result_type(result, num_pubs=4)
+        assert_result_type(result, num_pubs=4)
 
     @run_configured_sampler_implementations
     def test_run_single_circuit(self, sampler_cls):
@@ -218,7 +231,7 @@ class TestSampler(IBMIntegrationTestCase):
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
                         result = sampler.run([(isa_bell, param)]).result()
-                        self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("One parameter"):
                 circuit = QuantumCircuit(1, 1, name="X gate")
@@ -236,7 +249,7 @@ class TestSampler(IBMIntegrationTestCase):
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
                         result = sampler.run([(pm.run(circuit), param)]).result()
-                        self._verify_result_type(result, num_pubs=1)
+                        assert_result_type(result, num_pubs=1)
 
             with self.subTest("More than one parameter"):
                 circuit, param, target = cases[3]
@@ -251,7 +264,7 @@ class TestSampler(IBMIntegrationTestCase):
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
                         result = sampler.run([(pm.run(circuit), param)]).result()
-                        self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
     @run_configured_sampler_implementations
     def test_run_reverse_meas_order(self, sampler_cls):
@@ -272,7 +285,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         sampler = sampler_cls(mode=backend, options=OPTIONS)
         result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
-        self._verify_result_type(result, num_pubs=2)
+        assert_result_type(result, num_pubs=2)
 
     @run_configured_sampler_implementations
     def test_run_empty_parameter(self, sampler_cls):
@@ -286,11 +299,11 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = sampler_cls(mode=session, options=OPTIONS)
             with self.subTest("one circuit"):
                 result = sampler.run([qc]).result()
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
             with self.subTest("two circuits"):
                 result = sampler.run([qc, qc]).result()
-                self._verify_result_type(result, num_pubs=2)
+                assert_result_type(result, num_pubs=2)
 
     @run_configured_sampler_implementations
     def test_run_numpy_params(self, sampler_cls):
@@ -309,13 +322,11 @@ class TestSampler(IBMIntegrationTestCase):
 
             with self.subTest("ndarray"):
                 result = sampler.run([(qc, params_array)]).result()
-                self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("split a list"):
                 result = sampler.run([(qc, params) for params in params_list]).result()
-                self._verify_result_type(
-                    result, num_pubs=len(params_list), targets=[np.array(target)]
-                )
+                assert_result_type(result, num_pubs=len(params_list), targets=[np.array(target)])
 
     @run_configured_sampler_implementations
     def test_run_with_shots_option(self, sampler_cls):
@@ -332,7 +343,7 @@ class TestSampler(IBMIntegrationTestCase):
                 result = sampler.run([isa_bell]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
             with self.subTest("update option"):
                 sampler = sampler_cls(mode=session)
@@ -340,35 +351,35 @@ class TestSampler(IBMIntegrationTestCase):
                 result = sampler.run([isa_bell]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
             with self.subTest("run arg"):
                 sampler = sampler_cls(mode=session)
                 result = sampler.run(pubs=[isa_bell], shots=shots).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
             with self.subTest("run arg"):
                 sampler = sampler_cls(mode=session)
                 result = sampler.run(pubs=[isa_bell], shots=shots).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
             with self.subTest("pub-like"):
                 sampler = sampler_cls(mode=session)
                 result = sampler.run([(isa_bell, None, shots)]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
             with self.subTest("pub"):
                 sampler = sampler_cls(mode=session)
                 result = sampler.run([SamplerPub(isa_bell, shots=shots)]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
     def test_run_with_shots_option_multiple_pubs(self):
         """Test with per-pub shots option."""
@@ -388,7 +399,7 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots1)
         self.assertEqual(result[1].data.meas.num_shots, shots2)
         self.assertEqual(sum(result[1].data.meas.get_counts().values()), shots2)
-        self._verify_result_type(result, num_pubs=2)
+        assert_result_type(result, num_pubs=2)
 
     @run_configured_sampler_implementations
     def test_run_shots_result_size(self, sampler_cls):
@@ -404,7 +415,7 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([pm.run(qc)]).result()
         self.assertLessEqual(result[0].data.meas.num_shots, SHOTS)
         self.assertEqual(sum(result[0].data.meas.get_counts().values()), SHOTS)
-        self._verify_result_type(result, num_pubs=1)
+        assert_result_type(result, num_pubs=1)
 
     @run_configured_sampler_implementations
     def test_primitive_job_status_done(self, sampler_cls):
@@ -434,7 +445,7 @@ class TestSampler(IBMIntegrationTestCase):
 
                 sampler = sampler_cls(mode=session, options=OPTIONS)
                 result = sampler.run([pm.run(circuit)]).result()
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
             with self.subTest("X"):
                 gate = UnitaryGate([[0, 1], [1, 0]])
@@ -445,7 +456,7 @@ class TestSampler(IBMIntegrationTestCase):
 
                 sampler = sampler_cls(mode=session, options=OPTIONS)
                 result = sampler.run([pm.run(circuit)]).result()
-                self._verify_result_type(result, num_pubs=1)
+                assert_result_type(result, num_pubs=1)
 
     @run_configured_sampler_implementations
     def test_metadata(self, sampler_cls):
@@ -458,7 +469,7 @@ class TestSampler(IBMIntegrationTestCase):
         sampler = sampler_cls(mode=backend, options=OPTIONS)
         result = sampler.run([pm.run(qc)]).result()
         self.assertEqual(result[0].data.meas.num_shots, SHOTS)
-        self._verify_result_type(result, num_pubs=1)
+        assert_result_type(result, num_pubs=1)
 
     @run_configured_sampler_implementations
     def test_circuit_with_multiple_cregs(self, sampler_cls):
@@ -528,7 +539,7 @@ class TestSampler(IBMIntegrationTestCase):
                     result = sampler.run([qc]).result()
                     data = result[0].data
                     self.assertEqual(len(data), 3)
-                    self._verify_result_type(result, num_pubs=1)
+                    assert_result_type(result, num_pubs=1)
 
     @run_configured_sampler_implementations
     def test_sampler_v2_options(self, sampler_cls):
@@ -545,7 +556,7 @@ class TestSampler(IBMIntegrationTestCase):
         _, _, target = cases[1]
         job = sampler.run([isa_bell])
         result = job.result()
-        self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
     @run_configured_sampler_implementations
     def test_sampler_v2_dd(self, sampler_cls):
@@ -567,18 +578,4 @@ class TestSampler(IBMIntegrationTestCase):
         except RuntimeJobFailureError as ex:
             if "Error code 6050" in ex.message:
                 self.skipTest("Backend cannot be used for this test")
-        self._verify_result_type(result, num_pubs=1)
-
-    def _verify_result_type(self, result, num_pubs, targets=None):
-        """Verify result type."""
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertIsInstance(result.metadata, dict)
-        self.assertEqual(len(result), num_pubs)
-        for idx, pub_result in enumerate(result):
-            # TODO: We need to update the following test to check `SamplerPubResult`
-            # when the server side is upgraded to Qiskit 1.1.
-            self.assertIsInstance(pub_result, PubResult)
-            self.assertIsInstance(pub_result.data, DataBin)
-            self.assertIsInstance(pub_result.metadata, dict)
-            if targets:
-                self.assertIsInstance(result[idx].data.meas, BitArray)
+        assert_result_type(result, num_pubs=1)
