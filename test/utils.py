@@ -200,16 +200,6 @@ def get_mocked_backend(
     return mock_backend
 
 
-def get_mocked_session(backend: Any = None) -> mock.MagicMock:
-    """Return a mocked session object."""
-    session = mock.MagicMock(spec=Session)
-    session._instance = None
-    session._backend = backend or get_mocked_backend()
-    session.service = getattr(backend, "service", None) or mock.MagicMock(
-        spec=QiskitRuntimeService, is_local=False
-    )
-    return session
-
 
 def get_mocked_batch(backend: Any = None) -> mock.MagicMock:
     """Return a mocked batch object."""

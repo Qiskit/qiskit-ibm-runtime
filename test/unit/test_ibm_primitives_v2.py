@@ -22,19 +22,19 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Batch, EstimatorV2, SamplerV2, Session
+from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, SamplerV2, Session
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
+from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
     combine,
     create_faulty_backend,
     get_mocked_backend,
     get_mocked_batch,
-    get_mocked_session,
     get_primitive_inputs,
 )
 
@@ -154,27 +154,29 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertEqual(runtime_options["backend"], backend)
 
     @data(EstimatorV2, SamplerV2)
-    def test_init_with_backend_session(self, primitive):
+    @mock_responses
+    def test_init_with_backend_session(self, primitive, registry):
         """Test initializing a primitive with both backend and session."""
-        backend_name = "ibm_gotham"
-        session = get_mocked_session(get_mocked_backend(backend_name))
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
 
-        session.reset_mock()
+        session = Session(backend)
         inst = primitive(mode=session)
         self.assertIsNotNone(inst.mode)
-        inst.run(**get_primitive_inputs(inst))
-        session._run.assert_called_once()
+        job = inst.run(**get_primitive_inputs(inst))
+        self.assertEqual(job.session_id, "session_12345")
 
     @data(EstimatorV2, SamplerV2)
-    def test_default_session_context_manager(self, primitive):
+    @mock_responses
+    def test_default_session_context_manager(self, primitive, registry):
         """Test getting default session within context manager."""
-        backend_name = "ibm_gotham"
-        backend = get_mocked_backend(name=backend_name)
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
 
         with Session(backend=backend) as session:
             inst = primitive()
             self.assertEqual(inst.mode, session)
-            self.assertEqual(inst.mode.backend(), backend_name)
+            self.assertEqual(inst.mode.backend(), "common_backend")
 
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
@@ -213,18 +215,17 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertEqual(runtime_options["backend"], backend)
 
     @data(SamplerV2, EstimatorV2)
-    def test_init_with_mode_as_session(self, primitive):
+    @mock_responses
+    def test_init_with_mode_as_session(self, primitive, registry):
         """Test initializing a primitive with mode as Session."""
-        backend = get_mocked_backend()
-        session = get_mocked_session(backend)
-        session.reset_mock()
-        session._backend = backend
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        session = Session(backend)
 
         inst = primitive(mode=session)
         self.assertIsNotNone(inst.mode)
         inst.run(**get_primitive_inputs(inst, backend=backend))
         self.assertEqual(inst.mode, session)
-        session._run.assert_called_once()
         self.assertEqual(session._backend, backend)
 
     @data(SamplerV2, EstimatorV2)
@@ -428,16 +429,24 @@ class TestPrimitivesV2(IBMTestCase):
         for idx, shots in zip([0, 1], [100, 200]):
             self.assertEqual(kwargs_list[idx][1]["inputs"]["options"]["default_shots"], shots)
 
-    def test_run_same_session(self):
+    @mock_responses
+    def test_run_same_session(self, registry):
         """Test multiple runs within a session."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        session = Session(backend)
+
         num_runs = 5
         primitives = [EstimatorV2, SamplerV2]
-        session = get_mocked_session()
+
+        jobs = []
         for idx in range(num_runs):
             cls = primitives[idx % len(primitives)]
             inst = cls(mode=session)
-            inst.run(**get_primitive_inputs(inst))
-        self.assertEqual(session._run.call_count, num_runs)
+            jobs.append(inst.run(**get_primitive_inputs(inst)))
+
+        self.assertEqual(len(jobs), 5)
+        self.assertTrue(all(job.session_id == "session_12345" for job in jobs))
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -637,14 +646,17 @@ class TestGetModeServiceBackend(IBMTestCase):
         self.assertEqual(result[1], service)
         self.assertEqual(result[2], backend)
 
-    def test_mode_is_session(self):
+    @mock_responses
+    def test_mode_is_session(self, registry):
         """Test ``get_mode_service_backend`` when the input mode is a session."""
-        backend_name = "ibm_hello"
-        session = get_mocked_session(get_mocked_backend(backend_name))
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        session = Session(backend)
+
         result = get_mode_service_backend(mode=session)
         self.assertEqual(result[0], session)
         self.assertEqual(result[1], session.service)
-        self.assertEqual(result[2].name, backend_name)
+        self.assertEqual(result[2].name, "common_backend")
 
     def test_session_context_manager(self):
         """Test ``get_mode_service_backend`` inside a session context manager."""
