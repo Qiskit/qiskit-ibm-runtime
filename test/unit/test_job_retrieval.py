@@ -59,6 +59,66 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertEqual(job.job_id(), "my_job")
         self.assertEqual(job.primitive_id, "sampler")
 
+    @mock_responses(expose_responses_mock=True)
+    def test_job_status_final_state_no_http_call(self, registry, responses):
+        """Test job.status() does not make an HTTP call if retrieved in a final state."""
+        registry.add_job(Job("completed_job", "common_backend", status="completed"), "a")
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+        job = service.job("completed_job")
+
+        calls_after_retrieval = len(responses.calls)
+
+        status = job.status()
+
+        self.assertEqual(status, "DONE")
+        self.assertEqual(len(responses.calls), calls_after_retrieval)
+
+    @mock_responses(expose_responses_mock=True)
+    def test_jobs_status_final_state_no_http_call(self, registry, responses):
+        """Test job.status() does not make HTTP calls for jobs retrieved via service.jobs()."""
+        registry.add_job(Job("completed_job_1", "common_backend", status="completed"), "a")
+        registry.add_job(Job("completed_job_2", "common_backend", status="completed"), "a")
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+        jobs = service.jobs(limit=2)
+
+        calls_after_retrieval = len(responses.calls)
+
+        for job in jobs:
+            self.assertEqual(job.status(), "DONE")
+
+        self.assertEqual(len(responses.calls), calls_after_retrieval)
+
+    @mock_responses(expose_responses_mock=True)
+    def test_job_status_non_final_refreshes_via_http(self, registry, responses):
+        """Test job.status() queries the API for a non-final job."""
+        registry.add_job(Job("running_job", "common_backend", status="running", statuses=["running", "running"],), "a",)
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+        job = service.job("running_job")
+
+        calls_after_retrieval = len(responses.calls)
+
+        status = job.status()
+
+        self.assertEqual(status, "RUNNING")
+        self.assertGreater(len(responses.calls), calls_after_retrieval)
+
+    @mock_responses(expose_responses_mock=True)
+    def test_failed_job_status_and_error_message(self, registry, responses):
+        """Test failed job status makes no HTTP call, but error_message still works."""
+        registry.add_job(Job("failed_job", "common_backend", status="failed",statuses=["failed", "failed"],), "a")
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+        job = service.job("failed_job")
+
+        calls_after_retrieval = len(responses.calls)
+
+        self.assertEqual(job.status(), "ERROR")
+        self.assertEqual(len(responses.calls), calls_after_retrieval)
+
+        self.assertIsNotNone(job.error_message())
     @mock_responses
     def test_jobs_no_limit(self, registry):
         """Test retrieving jobs without limit."""
