@@ -395,9 +395,13 @@ class TestPrepareTwirling(IBMTestCase):
         num_shots = qp.items[0].shape[0] * qp.shots
         self.assertEqual(num_shots, expected_num_shots)
 
+    @data([True, False], [False, True], [True, True])
+    @unpack
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
-    def test_prepare_calls_boxing_pm_with_correct_params(self, mock_boxing_pm, mock_build):
+    def test_prepare_calls_boxing_pm_with_correct_params(
+        self, enable_gates, enable_measure, mock_boxing_pm, mock_build
+    ):
         """Test that prepare() calls boxing pass manager with correct twirling parameters."""
         # Setup mocks
         mock_pm_instance = MagicMock()
@@ -408,33 +412,20 @@ class TestPrepareTwirling(IBMTestCase):
         mock_pm_instance.run.return_value = circuit
         mock_build.return_value = (circuit, MagicMock())
 
-        # Test different twirling configurations
-        test_cases = [
-            (True, False),  # Gates only
-            (False, True),  # Measure only
-            (True, True),  # Both enabled
-        ]
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+        options.twirling.enable_gates = enable_gates
+        options.twirling.enable_measure = enable_measure
 
-        for enable_gates, enable_measure in test_cases:
-            with self.subTest(enable_gates=enable_gates, enable_measure=enable_measure):
-                mock_boxing_pm.reset_mock()
+        prepare([pub], options, shots=1024)
 
-                pub = (circuit, None, 1024)
-                options = SamplerOptions(
-                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
-                )
-                options.twirling.enable_gates = enable_gates
-                options.twirling.enable_measure = enable_measure
+        mock_boxing_pm.assert_called_once()
+        call_kwargs = mock_boxing_pm.call_args[1]
+        self.assertEqual(call_kwargs["enable_gates"], bool(enable_gates))
+        self.assertEqual(call_kwargs["enable_measures"], bool(enable_measure))
 
-                prepare([pub], options, shots=1024)
-
-                # Verify boxing PM was called with correct parameters
-                mock_boxing_pm.assert_called_once()
-                call_kwargs = mock_boxing_pm.call_args[1]
-                self.assertEqual(call_kwargs["enable_gates"], bool(enable_gates))
-                self.assertEqual(call_kwargs["enable_measures"], bool(enable_measure))
-
-    def test_prepare_rejects_measurement_twirling_with_kerneled(self):
+    @data("kerneled", "avg_kerneled")
+    def test_prepare_rejects_measurement_twirling_with_kerneled(self, meas_type):
         """prepare() rejects measurement twirling combined with a kerneled meas_type.
 
         Measurement twirling flips bits and XOR-corrects them in post-processing, which is only
@@ -446,20 +437,13 @@ class TestPrepareTwirling(IBMTestCase):
         pub = (circuit, None, 1024)
 
         # enable_measure + kerneled / avg_kerneled is rejected up front.
-        for meas_type in ("kerneled", "avg_kerneled"):
-            with self.subTest(meas_type=meas_type):
-                options = SamplerOptions(
-                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
-                )
-                options.twirling.enable_measure = True
-                options.execution.meas_type = meas_type
-                with self.assertRaisesRegex(IBMInputValueError, "not compatible"):
-                    prepare([pub], options, shots=1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+        options.execution.meas_type = meas_type
+        with self.assertRaisesRegex(IBMInputValueError, "not compatible"):
+            prepare([pub], options, shots=1024)
 
         # The same kerneled meas_type is allowed when measurement twirling is off.
-        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         options.twirling.enable_measure = False
-        options.execution.meas_type = "kerneled"
         prepare([pub], options, shots=1024)  # must not raise
 
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
@@ -518,9 +502,18 @@ class TestPrepareTwirling(IBMTestCase):
         # Verify SamplexItem shape (should be num_randomizations)
         self.assertEqual(qp.items[0].shape, expected_shape)
 
+    @data(
+        ["active", "active"],
+        ["active-accum", "active_accum"],
+        ["active-circuit", "active_circuit"],
+        ["all", "all"],
+    )
+    @unpack
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
     @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
-    def test_prepare_handles_strategy_option(self, mock_boxing_pm, mock_build):
+    def test_prepare_handles_strategy_option(
+        self, strategy, expected_strategy, mock_boxing_pm, mock_build
+    ):
         """Test that prepare() passes twirling strategy to boxing pass manager."""
         # Setup mocks
         mock_pm_instance = MagicMock()
@@ -531,25 +524,16 @@ class TestPrepareTwirling(IBMTestCase):
         mock_pm_instance.run.return_value = circuit
         mock_build.return_value = (circuit, MagicMock())
 
-        strategies = ["active", "active-accum", "active-circuit", "all"]
-        expected_strategies = ["active", "active_accum", "active_circuit", "all"]
+        pub = (circuit, None, 1024)
+        options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
+        options.twirling.enable_gates = True
+        options.twirling.strategy = strategy  # type: ignore[assignment]
 
-        for strategy, expected in zip(strategies, expected_strategies):
-            with self.subTest(strategy=strategy):
-                mock_boxing_pm.reset_mock()
+        prepare([pub], options, shots=1024)
 
-                pub = (circuit, None, 1024)
-                options = SamplerOptions(
-                    **{"twirling": {"enable_gates": True, "enable_measure": True}}
-                )
-                options.twirling.enable_gates = True
-                options.twirling.strategy = strategy  # type: ignore[assignment]
-
-                prepare([pub], options, shots=1024)
-
-                # Verify strategy was passed (with hyphen replaced by underscore)
-                call_kwargs = mock_boxing_pm.call_args[1]
-                self.assertEqual(call_kwargs["twirling_strategy"], expected)
+        # Verify strategy was passed (with hyphen replaced by underscore)
+        call_kwargs = mock_boxing_pm.call_args[1]
+        self.assertEqual(call_kwargs["twirling_strategy"], expected_strategy)
 
     def test_prepare_handles_parametric_circuits(self):
         """Test that prepare() handles parametric circuits correctly."""
