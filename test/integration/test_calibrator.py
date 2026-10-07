@@ -24,14 +24,11 @@ from .case import IBMIntegrationTestCase
 class TestCalibrator(IBMIntegrationTestCase):
     """Test Calibrator."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = self.service.backend(self.dependencies.qpu)
-
     def test_calibrator(self):
         """Test that a calibration job runs and returns a result."""
-        with Session(backend=self.backend) as session:
+        backend = self.service.backend(self.dependencies.qpu)
+
+        with Session(backend=backend) as session:
             calibrator = Calibrator(session)
             job = calibrator.run()
             result = job.result()

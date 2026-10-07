@@ -26,20 +26,17 @@ from .case import IBMIntegrationTestCase
 class TestNoiseLearnerV3(IBMIntegrationTestCase):
     """Test NLV3."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = (backend := self.service.backend(self.dependencies.qpu))
+    def test_noise_learner_v3(self):
+        """Test NLV3 with basic options."""
+        backend = self.service.backend(self.dependencies.qpu)
 
-        self.boxing_pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
-        self.boxing_pm.post_scheduling = generate_boxing_pass_manager(
+        boxing_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        boxing_pass_manager.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
             inject_noise_site="after",
         )
 
-    def test_noise_learner_v3(self):
-        """Test NLV3 with basic options."""
         circuit = QuantumCircuit(3, name="GHZ with params")
         circuit.h(0)
         circuit.cx(0, 1)
@@ -49,11 +46,11 @@ class TestNoiseLearnerV3(IBMIntegrationTestCase):
         circuit.rz(Parameter("lam"), 2)
         circuit.measure_all()
 
-        boxed_circuit = self.boxing_pm.run(circuit)
+        boxed_circuit = boxing_pass_manager.run(circuit)
         instructions = find_unique_box_instructions(boxed_circuit)
         self.assertEqual(len(instructions), 3)  # 2 with gates, 1 with measurements
 
-        learner = NoiseLearnerV3(self.backend)
+        learner = NoiseLearnerV3(backend)
         learner.options.layer_pair_depths = [0, 2, 4]
         learner.options.num_randomizations = 10
         learner.options.shots_per_randomization = 100

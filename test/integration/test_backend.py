@@ -130,12 +130,13 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
 class TestIBMBackend(IBMIntegrationTestCase):
     """Test ibm_backend module."""
 
+    backend: IBMBackend
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        if cls.dependencies.channel == "ibm_quantum_platform":
-            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
+        cls.backend = cls.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
         """Check if the service property is set."""
