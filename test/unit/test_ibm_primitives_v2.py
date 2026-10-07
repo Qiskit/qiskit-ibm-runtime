@@ -30,13 +30,7 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
-from ..utils import (
-    combine,
-    create_faulty_backend,
-    get_mocked_backend,
-    get_mocked_batch,
-    get_primitive_inputs,
-)
+from ..utils import combine, create_faulty_backend, get_mocked_backend, get_primitive_inputs
 
 
 @ddt
@@ -229,12 +223,12 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertEqual(session._backend, backend)
 
     @data(SamplerV2, EstimatorV2)
-    def test_init_with_mode_as_batch(self, primitive):
+    @mock_responses
+    def test_init_with_mode_as_batch(self, primitive, registry):
         """Test initializing a primitive with mode as a Batch."""
-        backend = get_mocked_backend()
-        batch = get_mocked_batch(backend)
-        batch.reset_mock()
-        batch._backend = backend
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        batch = Batch(backend)
 
         inst = primitive(mode=batch)
         self.assertIsNotNone(inst.mode)
