@@ -29,7 +29,8 @@ from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladEr
 from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
+    from qiskit_ibm_runtime import IBMBackend
+    from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
 
 
 def ecr_circuits() -> list[QuantumCircuit]:
@@ -57,6 +58,36 @@ def default_input_options() -> dict:
     }
 
 
+def assert_job_result(
+    result: NoiseLearnerResult,
+    backend: IBMBackend,
+    expected_input_options: dict,
+    n_results: int,
+) -> None:
+    """Assert that `result` is well formed and matches the expected input options."""
+    assert len(result) >= n_results
+
+    for datum in result.data:
+        circuit = datum.circuit
+        qubits = datum.qubits
+        error = datum.error
+
+        assert isinstance(datum, LayerError)
+        assert isinstance(circuit, QuantumCircuit)
+        assert isinstance(qubits, list)
+        assert isinstance(error, PauliLindbladError)
+
+        assert circuit.num_qubits == len(qubits)
+        assert circuit.num_qubits == error.num_qubits
+
+    metadata = deepcopy(result.metadata)
+    assert metadata.pop("backend", None) == backend.name
+    for key, val in expected_input_options.items():
+        metadatum = metadata["input_options"].pop(key, None)
+        assert val == metadatum
+    assert metadata["input_options"] == {}
+
+
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     """Integration tests for NoiseLearner."""
 
@@ -69,8 +100,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         circuits = pm.run(ecr_circuits())
         job = learner.run(circuits)
+        job.wait_for_final_state()
 
-        self._verify(job, backend, default_input_options(), 3)
+        assert_job_result(job.result(), backend, default_input_options(), 3)
 
     def test_with_non_default_options(self):
         """Test noise learner with non-default options."""
@@ -83,11 +115,12 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         circuits = pm.run(ecr_circuits())
         job = learner.run(circuits)
+        job.wait_for_final_state()
 
         input_options = default_input_options()
         input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
-        self._verify(job, backend, input_options, 1)
+        assert_job_result(job.result(), backend, input_options, 1)
 
     def test_with_no_layers(self):
         """Test noise learner when `max_layers_to_learn` is `0`."""
@@ -99,12 +132,13 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         circuits = pm.run(ecr_circuits())
         job = learner.run(circuits)
+        job.wait_for_final_state()
 
         self.assertEqual(job.result().data, [])
 
         input_options = default_input_options()
         input_options["max_layers_to_learn"] = 0
-        self._verify(job, backend, input_options, 0)
+        assert_job_result(job.result(), backend, input_options, 0)
 
     def test_learner_plus_estimator(self):
         """Test feeding noise learner data to estimator."""
@@ -150,35 +184,3 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                         self.assertEqual(nm0.error.rates.tolist(), nm1.error.rates.tolist())
                         match_found = True
                 self.assertTrue(match_found)
-
-    def _verify(
-        self,
-        job: RuntimeJobV2,
-        backend: IBMBackend,
-        expected_input_options: dict,
-        n_results: int,
-    ) -> None:
-        job.wait_for_final_state()
-
-        result = job.result()
-        self.assertGreaterEqual(len(result), n_results)
-
-        for datum in result.data:
-            circuit = datum.circuit
-            qubits = datum.qubits
-            error = datum.error
-
-            self.assertIsInstance(datum, LayerError)
-            self.assertIsInstance(circuit, QuantumCircuit)
-            self.assertIsInstance(qubits, list)
-            self.assertIsInstance(error, PauliLindbladError)
-
-            self.assertEqual(circuit.num_qubits, len(qubits))
-            self.assertEqual(circuit.num_qubits, error.num_qubits)
-
-        metadata = deepcopy(result.metadata)
-        self.assertEqual(metadata.pop("backend", None), backend.name)
-        for key, val in expected_input_options.items():
-            metadatum = metadata["input_options"].pop(key, None)
-            self.assertEqual(val, metadatum)
-        self.assertEqual(metadata["input_options"], {})

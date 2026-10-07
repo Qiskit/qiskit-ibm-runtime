@@ -16,20 +16,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...results.noise_learner_v3 import NoiseLearnerV3Result
+from ...results.noise_learner_v3 import NoiseLearnerV3Results
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
 
 
 # TODO: use `qiskit_noise_learning.post_process` once available
-def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseLearnerV3Result:
-    """Convert a quantum program result to a noise learner result for NoiseLearnerV3.
+def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseLearnerV3Results:
+    """Convert a quantum program result to noise learner results for NoiseLearnerV3.
 
     Args:
         result: The raw quantum program result.
 
     Returns:
-        A :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result`.
+        A :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Results`.
     """
-    return NoiseLearnerV3Result()
+    return NoiseLearnerV3Results([])
