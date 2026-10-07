@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ..base_primitive import get_mode_service_backend
+from ..mode_service import get_mode_service_backend
 from ..options_models.converters import to_runtime_options
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session

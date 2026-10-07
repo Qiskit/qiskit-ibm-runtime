@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from ..base_primitive import get_mode_service_backend
+from ..mode_service import get_mode_service_backend
 from ..options_models.converters import to_runtime_options
 from ..options_models.executor import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS

@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from .base_primitive import get_mode_service_backend
+from .mode_service import get_mode_service_backend
 from .options_models.calibrator import CalibratorOptions
 from .options_models.converters import to_runtime_options
 from .utils.default_session import get_cm_session
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from .batch import Batch
+    from .ibm_backend import IBMBackend
     from .runtime_job_v2 import RuntimeJobV2
     from .session import Session
 
@@ -60,7 +61,7 @@ class Calibrator:
 
     def __init__(
         self,
-        mode: BackendV2 | Session | Batch | str | None = None,
+        mode: IBMBackend | Session | Batch | None = None,
         options: CalibratorOptions | dict | None = None,
     ):
         # Coerced to `CalibratorOptions` via `__setattr__()`.Expand comment

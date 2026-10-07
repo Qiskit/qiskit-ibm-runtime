@@ -21,8 +21,8 @@ from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
-from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
+from ..mode_service import get_mode_service_backend
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
 from .prepare import choose_task_class, prepare

@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING, Any
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from ..base_primitive import get_mode_service_backend
 from ..ibm_backend import IBMBackend
+from ..mode_service import get_mode_service_backend
 from ..options.estimator_options import EstimatorOptions
 from ..options.noise_learner_options import NoiseLearnerOptions
 from ..options.utils import remove_dict_unset_values, remove_empty_dict
