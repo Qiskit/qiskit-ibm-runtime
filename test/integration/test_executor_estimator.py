@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from ddt import data, ddt
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
@@ -25,48 +27,36 @@ from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 from ..utils import make_mirror_circuit_with_phases
 from .case import IBMIntegrationTestCase
 
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime import IBMBackend
+
+
+def estimator_pubs(backend: IBMBackend) -> list[tuple]:
+    """Return two pubs for `backend`, differing only in how they broadcast.
+
+    PUB 0 - all-to-all broadcasting, with resulting shape (2,2).
+    PUB 1 - one-to-one broadcasting, with resulting shape (2,).
+    """
+    pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+    isa_circuit = pass_manager.run(make_mirror_circuit_with_phases(backend))
+
+    zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
+        isa_circuit.layout
+    )
+    xx_with_offset = SparsePauliOp.from_list([("XX", 1.0), ("II", 3.0)]).apply_layout(
+        isa_circuit.layout
+    )
+    parameter_sets = [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]]
+
+    return [
+        (isa_circuit, [[zz_with_offset], [xx_with_offset]], parameter_sets),
+        (isa_circuit, [zz_with_offset, xx_with_offset], parameter_sets),
+    ]
+
 
 @ddt
 class TestEstimator(IBMIntegrationTestCase):
     """An integration test, testing Estimator implemented through Executor."""
-
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = self.service.backend(self.dependencies.qpu)
-
-        self.preset_pass_manager = generate_preset_pass_manager(
-            optimization_level=1, target=self.backend.target
-        )
-
-        # Cache a list of two pubs:
-        # PUB 0 - all-to-all broadcasting, with resulting shape (2,2)
-        # PUB 1 - one-to-one broadcasting, with resulting shape (2,)
-
-        circuit = make_mirror_circuit_with_phases(self.backend)
-        isa_circuit = self.preset_pass_manager.run(circuit)
-
-        zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
-            isa_circuit.layout
-        )
-        xx_with_offset = SparsePauliOp.from_list([("XX", 1.0), ("II", 3.0)]).apply_layout(
-            isa_circuit.layout
-        )
-
-        self.pubs = [
-            # Map all parameter sets to all observables: pub shape (2, 2)
-            (
-                isa_circuit,
-                [[zz_with_offset], [xx_with_offset]],
-                [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]],
-            ),
-            # Map each parameter set to one observable: pub shape (2,)
-            (
-                isa_circuit,
-                [zz_with_offset, xx_with_offset],
-                [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]],
-            ),
-        ]
 
     def test_vanilla_estimator(self):
         """Test the "vanilla" path (no mitigation) for estimator.
@@ -75,8 +65,11 @@ class TestEstimator(IBMIntegrationTestCase):
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        estimator = Estimator(self.backend)
-        results = estimator.run(self.pubs).result()
+        backend = self.service.backend(self.dependencies.qpu)
+        pubs = estimator_pubs(backend)
+
+        estimator = Estimator(backend)
+        results = estimator.run(pubs).result()
 
         # Expect one result per pub:
         self.assertEqual(len(results), 2)
@@ -94,16 +87,19 @@ class TestEstimator(IBMIntegrationTestCase):
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        estimator = Estimator(self.backend)
+        backend = self.service.backend(self.dependencies.qpu)
+        pubs = estimator_pubs(backend)
+
+        estimator = Estimator(backend)
         estimator.options.resilience.pec_mitigation = True
 
-        layers = estimator.find_unique_layers(self.pubs, types="gates")
+        layers = estimator.find_unique_layers(pubs, types="gates")
         estimator.options.resilience.layer_noise_model = [
             (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)]))
             for layer in layers
         ]
 
-        results = estimator.run(self.pubs).result()
+        results = estimator.run(pubs).result()
 
         # Expect one result per pub:
         self.assertEqual(len(results), 2)
@@ -130,12 +126,15 @@ class TestEstimator(IBMIntegrationTestCase):
         - Correct shape and make-up for all ZNE-specific pub metadata fields:
             * ``extrapolators``: pub shape, only requested extrapolators or `multiple`.
         """
-        estimator = Estimator(self.backend)
+        backend = self.service.backend(self.dependencies.qpu)
+        pubs = estimator_pubs(backend)
+
+        estimator = Estimator(backend)
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.amplifier = amplifier
 
         if amplifier == "pea":
-            layers = estimator.find_unique_layers(self.pubs, types="gates")
+            layers = estimator.find_unique_layers(pubs, types="gates")
             estimator.options.resilience.layer_noise_model = [
                 (layer, PauliLindbladMap.from_list([("X" * layer.operation.num_qubits, 0.001)]))
                 for layer in layers
@@ -146,7 +145,7 @@ class TestEstimator(IBMIntegrationTestCase):
         expected_num_extrapolated = expected_num_noise_factors + 1
         expected_num_extrapolators = len(estimator.options.resilience.zne.extrapolator)
 
-        results = estimator.run(self.pubs).result()
+        results = estimator.run(pubs).result()
 
         # Expect one result per pub:
         self.assertEqual(len(results), 2)
