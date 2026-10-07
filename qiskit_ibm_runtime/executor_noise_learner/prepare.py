@@ -17,16 +17,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from qiskit.transpiler import PassManager
-from qiskit_addon_utils.noise_management.bit_flip_checks.passes import (
-    AddPostCircuitBitFlipChecks,
-    AddPreCircuitBitFlipChecks,
-    AddSpectatorPostCircuitBitFlipChecks,
-    AddSpectatorPreCircuitBitFlipChecks,
-)
 from qiskit_addon_utils.noise_management.constants import DEFAULT_SPECTATOR_CREG_NAME
 from qiskit_addon_utils.noise_management.post_selection.transpiler.passes import (
     AddPostSelectionMeasures,
     AddSpectatorMeasures,
+)
+from qiskit_mitigation.postselection.passes import (
+    AddPostCircuitNonMarkovianErrorChecks,
+    AddPreCircuitNonMarkovianErrorChecks,
+    AddSpectatorPostCircuitNonMarkovianErrorChecks,
+    AddSpectatorPreCircuitNonMarkovianErrorChecks,
 )
 from qiskit_noise_learning.protocols import prepare_learning_program
 
@@ -80,14 +80,14 @@ def prepare(
         post_x_pulse_type = post.x_pulse_type if post.enable else None
         bit_flip_passes = []
         if pre_x_pulse_type is not None:
-            bit_flip_passes.append(AddPreCircuitBitFlipChecks(pre_x_pulse_type))
+            bit_flip_passes.append(AddPreCircuitNonMarkovianErrorChecks(pre_x_pulse_type))
             bit_flip_passes.append(
-                AddSpectatorPreCircuitBitFlipChecks(coupling_map, pre_x_pulse_type)
+                AddSpectatorPreCircuitNonMarkovianErrorChecks(coupling_map, pre_x_pulse_type)
             )
         if post_x_pulse_type is not None:
-            bit_flip_passes.append(AddPostCircuitBitFlipChecks(post_x_pulse_type))
+            bit_flip_passes.append(AddPostCircuitNonMarkovianErrorChecks(post_x_pulse_type))
             bit_flip_passes.append(
-                AddSpectatorPostCircuitBitFlipChecks(coupling_map, post_x_pulse_type)
+                AddSpectatorPostCircuitNonMarkovianErrorChecks(coupling_map, post_x_pulse_type)
             )
             pass_manager = PassManager(bit_flip_passes)
     quantum_program = prepare_learning_program(
