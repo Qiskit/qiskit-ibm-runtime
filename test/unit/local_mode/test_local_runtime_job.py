@@ -14,14 +14,16 @@
 
 from unittest import skipUnless
 
+from ddt import data, ddt
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime import SamplerV2
+from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.fake_provider.local_runtime_job import LocalRuntimeJob
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
+from qiskit_ibm_runtime.utils.converters import utc_to_local
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import get_primitive_inputs
@@ -30,8 +32,27 @@ if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
 
+@ddt
 class TestLocalRuntimeJob(IBMTestCase):
     """Class for testing local mode runtime jobs."""
+
+    @data(SamplerV2, EstimatorV2)
+    def test_metrics_layout(self, primitive_class):
+        """Test that local job metrics have the same layout as metrics of a service job."""
+        primitive = primitive_class(mode=FakeManilaV2())
+        job = primitive.run(**get_primitive_inputs(primitive))
+        job.result()
+        metrics = job.metrics()
+
+        self.assertEqual(metrics["usage"], {"qpu_charge_time_seconds": 0, "status": "complete"})
+        self.assertNotIn("bss", metrics)
+        for name in ("created", "running", "finished"):
+            self.assertIsInstance(metrics["timestamps"][name], str)
+            self.assertTrue(metrics["timestamps"][name].endswith("Z"))
+        # The UTC timestamps convert back to the job's local creation time.
+        self.assertEqual(
+            utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None), job.creation_date
+        )
 
     def test_v2_sampler(self):
         """Test V2 Sampler on a local backend."""

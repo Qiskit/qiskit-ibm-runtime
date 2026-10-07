@@ -279,6 +279,8 @@ class QiskitRuntimeService:
             self._default_instance = True
             self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
             self._active_api_client = self._api_clients[self._account.instance]
+            # Force populating state, providing parity compared to not specifying `instance`.
+            self._resolve_cloud_instances(self._account.instance)
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
@@ -319,8 +321,12 @@ class QiskitRuntimeService:
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
-    def _discover_backends_from_instance(self, instance: str) -> list[str]:
-        """Retrieve all backends from the given instance."""
+    def _discover_backends_from_instance(self, instance: str) -> list[tuple[str, bool]]:
+        """Retrieve all backends from the given instance.
+
+        Returns:
+            A list of tuples with the backend name and if backend is a mock.
+        """
         # TODO refactor this, this is the slowest part
         # ntc 5779 would make things a lot faster - get list of backends
         # from global search API call
@@ -332,8 +338,11 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            self._backends_info_per_instance[instance] = self._active_api_client.list_backends()
-            return [backend["name"] for backend in self._backends_info_per_instance[instance]]
+            self._backends_info_per_instance[instance] = self._active_api_client.list_backends(True)
+            return [
+                (backend["name"], backend.get("class") == "mock")
+                for backend in self._backends_info_per_instance[instance]
+            ]
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:
             logger.warning("Invalid instance %s", instance)
@@ -555,6 +564,7 @@ class QiskitRuntimeService:
         *,
         use_fractional_gates: bool | None = False,
         calibration_id: str | None = None,
+        include_mocks: bool = False,
         **kwargs: Any,
     ) -> list[IBMBackend]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -587,6 +597,7 @@ class QiskitRuntimeService:
             calibration_id: The calibration id used for instantiating the backend. This should only
                 be used when selecting a single backend as the calibration id is defined per
                 backend.
+            include_mocks: If ``True``, include mock backends in the results.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -617,9 +628,10 @@ class QiskitRuntimeService:
         instance_backends = self._resolve_cloud_instances(instance)
         for inst, backends_available in instance_backends:
             if name:
-                if name not in backends_available:
+                match = [b for b in backends_available if b[0] == name]
+                if not match:
                     continue
-                backends_available = [name]
+                backends_available = match
             elif not self._instance_auto:
                 for inst_details in self._backend_instance_groups:
                     if inst == inst_details["crn"]:
@@ -628,7 +640,9 @@ class QiskitRuntimeService:
                             inst_details["name"],
                             inst_details["plan"],
                         )
-            for backend_name in backends_available:
+            for backend_name, is_mock in backends_available:
+                if not include_mocks and is_mock:
+                    continue
                 if backend_name in unique_backends:
                     continue
                 if name and not self._instance_auto:
@@ -647,6 +661,7 @@ class QiskitRuntimeService:
                         instance=inst,
                         use_fractional_gates=use_fractional_gates,
                         calibration_id=calibration_id,
+                        is_mock=is_mock,
                     ):
                         backends.append(backend)
                 except QiskitBackendNotFoundError as e:
@@ -673,7 +688,18 @@ class QiskitRuntimeService:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
 
-    def _resolve_cloud_instances(self, instance: str | None) -> list[tuple[str, list[str]]]:
+    def _resolve_cloud_instances(
+        self, instance: str | None
+    ) -> list[tuple[str, list[tuple[str, bool]]]]:
+        """Resolve the cloud instances to use and the backends available in each.
+
+        Args:
+            instance: An instance name or CRN to resolve. If ``None``, the default instance or all
+                account instances are used instead.
+
+        Returns:
+            A list of ``(crn, [(backend_name, is_mock)])`` tuples, one per resolved instance.
+        """
         if instance:
             if not is_crn(instance):
                 instance = self._get_crn_from_instance_name(self._account, instance)
@@ -731,6 +757,7 @@ class QiskitRuntimeService:
         use_fractional_gates: bool | None,
         calibration_id: str | None = None,
         cache: bool = True,
+        is_mock: bool = False,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
@@ -744,6 +771,7 @@ class QiskitRuntimeService:
                 further details.
             calibration_id: The calibration id to use for the IBM backend.
             cache: If ``False``, do not cache the backend in `self._backend_configs`.
+            is_mock: If ``True``, create the backend as a mock device.
 
         Returns:
             A backend object.
@@ -821,6 +849,7 @@ class QiskitRuntimeService:
                 api_client=self._active_api_client,
                 calibration_id=calibration_id,
                 physical_qubits=physical_qubits,
+                is_mock=is_mock,
             )
 
         raise QiskitBackendNotFoundError(
@@ -999,34 +1028,8 @@ class QiskitRuntimeService:
             instance=instance,
             use_fractional_gates=use_fractional_gates,
             calibration_id=calibration_id,
+            include_mocks=True,
         )
-
-        # `self.backends()` might not include all the backends by default. If no backend was
-        # returned, make a one-time uncached attempt to retrieve the backend based on its name.
-        if not backends:
-            # Use the specified instance crns, or traverse instances in sensible order.
-            instances = [data[0] for data in self._resolve_cloud_instances(instance)]
-
-            for instance_ in instances:
-                try:
-                    self._get_or_create_cloud_client(instance_)
-                    backends = [
-                        self._create_backend_obj(
-                            name, instance_, use_fractional_gates, calibration_id, cache=False
-                        )
-                    ]
-                    # Show a warning only if the instance is guessed.
-                    if not instance and not self._instance_auto:
-                        for inst_details in self._backend_instance_groups:
-                            if instance_ == inst_details["crn"]:
-                                logger.warning(
-                                    "Using instance: %s, plan: %s",
-                                    inst_details["name"],
-                                    inst_details["plan"],
-                                )
-                    break
-                except QiskitBackendNotFoundError:
-                    pass
 
         if not backends:
             cloud_msg_url = ""
@@ -1213,6 +1216,7 @@ class QiskitRuntimeService:
         created_after: datetime | None = None,
         created_before: datetime | None = None,
         descending: bool = True,
+        include_mocks: bool = False,
     ) -> list[RuntimeJobV2]:
         """Retrieve all IBM Quantum Compute jobs, subject to optional filtering.
 
@@ -1237,6 +1241,7 @@ class QiskitRuntimeService:
                 local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
+            include_mocks: If ``True``, include mock backends in the results.
 
         Returns:
             A list of IBM Quantum Compute jobs.
@@ -1270,6 +1275,7 @@ class QiskitRuntimeService:
                 created_after=created_after,
                 created_before=created_before,
                 descending=descending,
+                include_mocks=include_mocks,
             )
             job_page = jobs_response["jobs"]
             # count is the total number of jobs that would be returned if
@@ -1361,11 +1367,28 @@ class QiskitRuntimeService:
             Decoded job data.
         """
         instance = self._active_api_client._instance
+
         # Try to find the right backend
         try:
-            if "backend" in raw_data:
+            if backend_name := raw_data.get("backend"):
+                # Use cached information to attempt to determine if it is a mock device.
+                try:
+                    instance_info = next(
+                        info for info in self._backend_instance_groups if info["crn"] == instance
+                    )
+                    is_mock = next(
+                        is_mock
+                        for name, is_mock in instance_info["backends"]
+                        if name == backend_name
+                    )
+                except StopIteration:
+                    is_mock = False
+
                 backend = self._create_backend_obj(
-                    raw_data["backend"], instance=instance, use_fractional_gates=False
+                    backend_name,
+                    instance=instance,
+                    use_fractional_gates=False,
+                    is_mock=is_mock,
                 )
             else:
                 backend = None

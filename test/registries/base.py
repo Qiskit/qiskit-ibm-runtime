@@ -216,6 +216,15 @@ class BaseRegistry(FirstMatchRegistry):
                 callback=self.callback_sessions_patch,
             ),
         )
+        self.add(
+            CallbackResponse(
+                method=DELETE,
+                url=re.compile(
+                    r"https://my-region.quantum.cloud.ibm.com/api/v1/sessions/\w+/close"
+                ),
+                callback=self.callback_sessions_close,
+            ),
+        )
 
         # Add callbacks for the IBM Quantum Compute `/workloads` endpoints.
         self.add(
@@ -656,11 +665,13 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
         session = self.sessions[instance.name][session_id]
 
-        response_body = {
+        response_body: dict[str, str | list[dict[str, str]]] = {
             "id": "session_12345",
             "backend_name": session.backend_name,
             "mode": session.mode,
         }
+        if session.timestamps is not None:
+            response_body["timestamps"] = session.timestamps
         return (200, {"Content-Type": "application/json"}, json.dumps(response_body))
 
     def callback_sessions_patch(self, request: PreparedRequest) -> CallbackResult:
@@ -677,7 +688,23 @@ class BaseRegistry(FirstMatchRegistry):
         if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
             return (404, {"Content-Type": "application/json"}, "{}")
 
-        return (204, {"Content-Type": "application/json"}, json.dumps({}))
+        return (204, {}, "")
+
+    def callback_sessions_close(self, request: PreparedRequest) -> CallbackResult:
+        """Callback for the IBM Quantum Compute API ``/sessions/{id}/close`` endpoint.
+
+        Close a session (no-op).
+
+        References:
+            https://quantum.cloud.ibm.com/docs/en/api/qiskit-runtime-rest/tags/sessions
+        """
+        # Validate the instance CRN and session id.
+        instance = self.get_crn_from_request(request)
+        session_id = request.path_url.split("/")[-2].split("?")[0]
+        if instance.name not in self.backends or session_id not in self.sessions[instance.name]:
+            return (404, {"Content-Type": "application/json"}, "{}")
+
+        return (204, {}, "")
 
     def callback_workloads_get(self, request: PreparedRequest) -> CallbackResult:
         """Callback for the IBM Quantum Compute API ``/workloads`` endpoint.

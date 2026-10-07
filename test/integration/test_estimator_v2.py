@@ -25,17 +25,25 @@ from qiskit_ibm_runtime.fake_provider import FakeAuckland
 from .case import IBMIntegrationTestCase
 
 
+def assert_result_type(result, num_pubs, shapes):
+    """Assert result type."""
+    assert isinstance(result, PrimitiveResult)
+    assert len(result) == num_pubs
+    for idx, pub_result in enumerate(result):
+        assert isinstance(pub_result, PubResult)
+        assert isinstance(pub_result.data, DataBin)
+        assert pub_result.metadata
+        assert pub_result.data.evs.shape == shapes[idx]
+        assert pub_result.data.stds.shape == shapes[idx]
+
+
 class TestEstimatorV2(IBMIntegrationTestCase):
     """Integration tests for Estimator V2 Primitive."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        self._backend = self.service.backend(self.dependencies.qpu)
-
     def test_estimator_v2_session(self):
         """Verify correct results are returned."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
         psi2 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=3))
@@ -48,29 +56,30 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
         theta3 = [1, 2, 3, 4, 5, 6]
 
-        with Session(self._backend) as session:
+        with Session(backend) as session:
             estimator = EstimatorV2(mode=session)
 
             job = estimator.run([(psi1, H1, [theta1])])
             result = job.result()
-            self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
+            assert_result_type(result, num_pubs=1, shapes=[(1,)])
 
             job2 = estimator.run([(psi1, [H1, H3], [theta1, theta3]), (psi2, H2, theta2)])
             result2 = job2.result()
-            self._verify_result_type(result2, num_pubs=2, shapes=[(2,), ()])
+            assert_result_type(result2, num_pubs=2, shapes=[(2,), ()])
 
             job3 = estimator.run([(psi1, H1, theta1), (psi2, H2, theta2), (psi1, H3, theta3)])
             result3 = job3.result()
-            self._verify_result_type(result3, num_pubs=3, shapes=[(), (), ()])
+            assert_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
     def test_estimator_v2_options(self):
         """Test V2 Estimator with different options."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(mode=self._backend)
+        estimator = EstimatorV2(mode=backend)
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
@@ -98,17 +107,18 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
         job = estimator.run([(circuit, observable)])
         result = job.result()
-        self._verify_result_type(result, num_pubs=1, shapes=[()])
+        assert_result_type(result, num_pubs=1, shapes=[()])
         self.assertEqual(result[0].metadata["shots"], 1600)
 
     @skip("Skip until simulator options are accepted by server.")
     def test_pec(self):
         """Test running with PEC."""
-        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(mode=self._backend)
+        estimator = EstimatorV2(mode=backend)
         estimator.options.resilience_level = 0
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200
@@ -117,16 +127,5 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
         job = estimator.run([(circuit, observables)])
         result = job.result()
-        self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
+        assert_result_type(result, num_pubs=1, shapes=[(1,)])
         self.assertIn("sampling_overhead", result[0].metadata["resilience"])
-
-    def _verify_result_type(self, result, num_pubs, shapes):
-        """Verify result type."""
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertEqual(len(result), num_pubs)
-        for idx, pub_result in enumerate(result):
-            self.assertIsInstance(pub_result, PubResult)
-            self.assertIsInstance(pub_result.data, DataBin)
-            self.assertTrue(pub_result.metadata)
-            self.assertEqual(pub_result.data.evs.shape, shapes[idx])
-            self.assertEqual(pub_result.data.stds.shape, shapes[idx])

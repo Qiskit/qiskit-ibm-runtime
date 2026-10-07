@@ -12,10 +12,13 @@
 
 """Tests for backend functions using real runtime service."""
 
+from __future__ import annotations
+
 import copy
 import re
 from datetime import datetime, timedelta
-from unittest import mock
+from typing import TYPE_CHECKING
+from unittest import SkipTest, mock
 
 from qiskit import QuantumCircuit, transpile
 from qiskit.providers.backend import QubitProperties
@@ -26,9 +29,33 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from ..decorators import production_only, staging_only
+from ..decorators import production_only
 from ..utils import bell
 from .case import IBMIntegrationTestCase
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.ibm_backend import IBMBackend
+
+
+def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IBMBackend]:
+    """Return a pair of backends: real backend, mocked backend.
+
+    Raises:
+        SkiTest: if no backend that has a corresponding mock backend is available.
+    """
+    backends = service.backends(include_mocks=True)
+
+    try:
+        # Find a suitable backend that has a mock backend.
+        dry_run_backend = next(
+            backend
+            for backend in backends
+            if backend.name.startswith("mock_") and backend.status().status_msg == "active"
+        )
+        backend_name = re.sub(r"^[^_]+", "ibm", dry_run_backend.name)
+        return service.backend(backend_name), dry_run_backend
+    except (StopIteration, QiskitBackendNotFoundError):
+        raise SkipTest("No backend with corresponding mock backend available.")
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
@@ -84,16 +111,32 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         for backend in backends:
             self.assertIsInstance(backend.physical_qubits, int)
 
+    def test_backends_include_mocks(self):
+        """`service.backends()` should respect the `include_mocks` flag."""
+        service = self.service
+        # Skip the test if there are no mock backends.
+        get_mock_backend_pair(service)
+
+        backends_no_mocks = service.backends()
+        backends_include_mocks = service.backends(include_mocks=True)
+
+        self.assertGreater(len(backends_include_mocks), len(backends_no_mocks))
+        self.assertFalse(any(backend.name.startswith("mock") for backend in backends_no_mocks))
+        self.assertFalse(any(backend.is_mock for backend in backends_no_mocks))
+        self.assertTrue(any(backend.name.startswith("mock") for backend in backends_include_mocks))
+        self.assertTrue(any(backend.is_mock for backend in backends_include_mocks))
+
 
 class TestIBMBackend(IBMIntegrationTestCase):
     """Test ibm_backend module."""
 
+    backend: IBMBackend
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         """Initial class level setup."""
         super().setUpClass()
-        if cls.dependencies.channel == "ibm_quantum_platform":
-            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
+        cls.backend = cls.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
         """Check if the service property is set."""
@@ -329,27 +372,13 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
         self.assertTrue(any(calibration_id in record for record in log.output))
 
-    @staging_only
-    def test_dry_run(self):
-        """Test using dry_run flag.
+    def test_run_dry_run(self):
+        """Test `run` using the `dry_run` flag.
 
         This test does not use ``dependencies.qpu``, but instead attempts to find a backend that
         can be used for ``dry_run`` mode, skipping if not.
         """
-        service = self.service
-        backends = service.backends()
-
-        try:
-            # Find a suitable backend: has a mock
-            dry_run_backend = next(
-                backend
-                for backend in backends
-                if backend.name.startswith("mock_") and backend.status().status_msg == "active"
-            )
-            backend_name = re.sub(r"^[^_]+", "ibm", dry_run_backend.name)
-            backend = service.backend(backend_name)
-        except (StopIteration, QiskitBackendNotFoundError):
-            self.skipTest("No dry_run backends available.")
+        backend, dry_run_backend = get_mock_backend_pair(self.service)
 
         isa_circuit = transpile(bell(), backend)
         sampler = Sampler(mode=backend)
