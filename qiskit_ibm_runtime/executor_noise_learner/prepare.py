@@ -26,7 +26,6 @@ from qiskit_mitigation.postselection.passes import (
 from qiskit_noise_learning.protocols import prepare_learning_program
 
 from ..options_models.converters import noise_learner_options_to_executor_options
-from ..quantum_program import QuantumProgram
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
+    from ..quantum_program import QuantumProgram
 
 
 def prepare(
@@ -89,19 +89,16 @@ def prepare(
             )
             pass_manager = PassManager(bit_flip_passes)
 
-    if len(list(instructions)) == 0:
-        quantum_program = QuantumProgram(shots=options.shots_per_randomization)
-    else:
-        quantum_program = prepare_learning_program(
-            backend=backend,
-            instructions=instructions,
-            num_randomizations=options.num_randomizations,
-            shots_per_randomization=options.shots_per_randomization,
-            fragment_depths=options.layer_pair_depths,
-            creg_prefix="meas",
-            local_clifford_ref_prefix="c",
-            pass_manager=pass_manager,
-        )
+    quantum_program = prepare_learning_program(
+        backend=backend,
+        instructions=instructions,
+        num_randomizations=options.num_randomizations,
+        shots_per_randomization=options.shots_per_randomization,
+        fragment_depths=options.layer_pair_depths,
+        creg_prefix="meas",
+        local_clifford_ref_prefix="c",
+        pass_manager=pass_manager,
+    )
     quantum_program.passthrough_data["post_processor"] = {  # type: ignore[index]
         "version": "v0.1",
         "options": options.model_dump(),
