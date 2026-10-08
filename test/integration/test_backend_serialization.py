@@ -12,14 +12,33 @@
 
 """Test deserializing server data."""
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import dateutil.parser
+from ddt import ddt, named_data
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from ..decorators import production_only
-from .case import IBMIntegrationTestCase
+from .case import IBMIntegrationTestCase, integration_test_dependencies
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.ibm_backend import IBMBackend
+
+
+def get_backends() -> list[tuple[str, IBMBackend]]:
+    """Return the backends to be tested and the test label."""
+    dependencies = integration_test_dependencies()
+    backends = dependencies.service.backends(
+        operational=True, simulator=False, instance=dependencies.instance
+    )
+
+    return [(f"backend_{i}", backend) for i, backend in enumerate(backends, 1)]
+
+
+BACKENDS = get_backends()
 
 
 def assert_data(data: dict, good_keys: tuple, good_key_prefixes: tuple | None = None) -> None:
@@ -78,16 +97,14 @@ def _check_encoded(data: list | str) -> bool:
     return False
 
 
+@ddt
 class TestSerialization(IBMIntegrationTestCase):
     """Test data serialization."""
 
+    @named_data(*BACKENDS)
     @production_only
-    def test_backend_configuration(self):
+    def test_backend_configuration(self, backend):
         """Test deserializing backend configuration."""
-        service = self.service
-        instance = None
-        backends = service.backends(operational=True, simulator=False, instance=instance)
-
         # Known keys that look like a serialized complex number.
         good_keys = (
             "coupling_map",
@@ -104,26 +121,19 @@ class TestSerialization(IBMIntegrationTestCase):
         )
         good_keys_prefixes = ("channels",)
 
-        for i, backend in enumerate(backends):
-            with self.subTest(msg=f"backend_{i}"):
-                assert_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
+        assert_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
-    def test_backend_properties(self):
+    @named_data(*BACKENDS)
+    def test_backend_properties(self, backend):
         """Test deserializing backend properties."""
-        service = self.service
-        instance = None
-        backends = service.backends(operational=True, simulator=False, instance=instance)
-
         # Known keys that look like a serialized object.
         good_keys = ("gates.qubits", "qubits.name", "backend_version", "general_qlists.qubits")
 
-        for i, backend in enumerate(backends):
-            with self.subTest(msg=f"backend_{i}"):
-                try:
-                    properties = backend.properties()
-                except RequestsApiError as ex:
-                    # Some backends might not be able to fetch properties.
-                    if ex.status_code == 404:
-                        properties = None
-                if properties:
-                    assert_data(properties.to_dict(), good_keys)
+        try:
+            properties = backend.properties()
+        except RequestsApiError as ex:
+            # Some backends might not be able to fetch properties.
+            if ex.status_code == 404:
+                properties = None
+        if properties:
+            assert_data(properties.to_dict(), good_keys)
