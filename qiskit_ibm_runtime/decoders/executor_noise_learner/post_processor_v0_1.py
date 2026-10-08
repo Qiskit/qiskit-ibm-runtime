@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from qiskit.quantum_info import QubitSparsePauliList
 from qiskit_noise_learning.analysis import FlipPostSelect
-from qiskit_noise_learning.protocols import process_learning_results
+from qiskit_noise_learning.protocols import process_learning_result
 
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
@@ -58,7 +58,7 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
         raw_data_stage = FlipPostSelect(
             creg_identifier=None, mode=pre["strategy"]
         ) + FlipPostSelect(creg_identifier=None, mode=post["strategy"])
-    result_fit = process_learning_results(result, raw_data_stage=raw_data_stage)
+    result_fit = process_learning_result(result, raw_data_stage=raw_data_stage)
     maps = result_fit.model.to_pauli_lindblad_maps(
         result_fit.model_data,
         restrict_to_qubit_idxs=True,
