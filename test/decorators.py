@@ -14,13 +14,11 @@
 
 from __future__ import annotations
 
-import os
 from functools import wraps
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest import SkipTest
 from unittest.mock import patch
 
-from ddt import named_data
 from ibm_cloud_sdk_core import IAMTokenManager
 from ibm_cloud_sdk_core.authenticators import NoAuthAuthenticator
 from responses import RequestsMock
@@ -132,25 +130,3 @@ def staging_only(func):
         func(self, *args, **kwargs)
 
     return _wrapper
-
-
-def run_configured_sampler_implementations(
-    test_func: Callable[..., Any],
-) -> Callable[..., Any]:
-    """Parameterize sampler tests based on the configured implementations.
-
-    Set ``QISKIT_IBM_TEST_BOTH_SAMPLER_IMPLEMENTATIONS=1`` to expand the wrapped
-    test over both the legacy sampler and the client-side sampler.
-    Otherwise by default, the wrapped test is expanded only for the legacy sampler.
-
-    The decorated tests receive a new argument that contains the sampler class.
-    """
-    from qiskit_ibm_runtime import SamplerV2 as LegacySampler
-    from qiskit_ibm_runtime.executor_sampler import Sampler as ExecutorSampler
-
-    implementations = (
-        [("legacy", LegacySampler), ("executor", ExecutorSampler)]
-        if os.getenv("QISKIT_IBM_TEST_SAMPLER_V2_IMPLEMENTATIONS") == "1"
-        else [("legacy", LegacySampler)]
-    )
-    return named_data(*implementations)(test_func)
