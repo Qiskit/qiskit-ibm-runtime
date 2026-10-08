@@ -26,7 +26,6 @@ from qiskit_mitigation.postselection.passes import (
 from qiskit_noise_learning.protocols import prepare_learning_program
 
 from ..options_models.converters import noise_learner_options_to_executor_options
-from ..quantum_program import QuantumProgram
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
+    from ..quantum_program import QuantumProgram
 
 
 def prepare(
@@ -58,22 +58,12 @@ def prepare(
         - :class:`~.ExecutorOptions` The finalized executor options.
     """
     executor_options = noise_learner_options_to_executor_options(options)
-    post_selection = options.post_selection
     pre = options.bit_flip_checks.pre_circuit
     post = options.bit_flip_checks.post_circuit
     coupling_map = backend.target.build_coupling_map()
-    pass_manager = None
 
-    if post_selection.enable:
-        post_selection_passes = [
-            AddPostCircuitNonMarkovianErrorChecks(post_selection.x_pulse_type),
-            AddSpectatorPostCircuitNonMarkovianErrorChecks(
-                coupling_map,
-                post_selection.x_pulse_type,
-            ),
-        ]
-        pass_manager = PassManager(post_selection_passes)
-    elif pre.enable or post.enable:
+    pass_manager = None
+    if pre.enable or post.enable:
         pre_x_pulse_type = pre.x_pulse_type if pre.enable else None
         post_x_pulse_type = post.x_pulse_type if post.enable else None
         bit_flip_passes = []
@@ -89,19 +79,16 @@ def prepare(
             )
             pass_manager = PassManager(bit_flip_passes)
 
-    if len(list(instructions)) == 0:
-        quantum_program = QuantumProgram(shots=options.shots_per_randomization)
-    else:
-        quantum_program = prepare_learning_program(
-            backend=backend,
-            instructions=instructions,
-            num_randomizations=options.num_randomizations,
-            shots_per_randomization=options.shots_per_randomization,
-            fragment_depths=options.layer_pair_depths,
-            creg_prefix="meas",
-            local_clifford_ref_prefix="c",
-            pass_manager=pass_manager,
-        )
+    quantum_program = prepare_learning_program(
+        backend=backend,
+        instructions=instructions,
+        num_randomizations=options.num_randomizations,
+        shots_per_randomization=options.shots_per_randomization,
+        fragment_depths=options.layer_pair_depths,
+        creg_prefix="meas",
+        local_clifford_ref_prefix="c",
+        pass_manager=pass_manager,
+    )
     quantum_program.passthrough_data["post_processor"] = {  # type: ignore[index]
         "version": "v0.1",
         "options": options.model_dump(),

@@ -47,14 +47,11 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
     if (options := post_processor_data.get("options", None)) is None:
         raise ValueError("Missing 'options' in passthrough data.")
 
-    post_selection = options["post_selection"]
     pre = options["bit_flip_checks"]["pre_circuit"]
     post = options["bit_flip_checks"]["post_circuit"]
 
     raw_data_stage = None
-    if post_selection["enable"]:  # TODO: creg_identifier
-        raw_data_stage = FlipPostSelect(creg_identifier=None, mode=post_selection["strategy"])
-    elif pre["enable"] or post["enable"]:
+    if pre["enable"] or post["enable"]:  # TODO: creg_identifier
         raw_data_stage = FlipPostSelect(
             creg_identifier=None, mode=pre["strategy"]
         ) + FlipPostSelect(creg_identifier=None, mode=post["strategy"])
