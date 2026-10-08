@@ -15,6 +15,9 @@
 from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit import QuantumCircuit
+from qiskit.transpiler import generate_preset_pass_manager
+from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.executor_noise_learner.noise_learner_v3 import NoiseLearnerV3
@@ -152,8 +155,14 @@ class TestNoiseLearnerRun(IBMTestCase):
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
+        circuit.measure_all()
 
-        job = noise_learner.run([circuit], dry_run=True)
+        pass_manager = generate_preset_pass_manager(optimization_level=0, backend=backend)
+        pass_manager.post_scheduling = generate_boxing_pass_manager()
+        boxed_circuit = pass_manager.run(circuit)
+        layers = find_unique_box_instructions(boxed_circuit.data)
+
+        job = noise_learner.run(layers, dry_run=True)
         self.assertEqual(job.backend().name, "mock_foo")
 
     @data("job", "session", "batch")
@@ -186,6 +195,12 @@ class TestNoiseLearnerRun(IBMTestCase):
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
+        circuit.measure_all()
 
-        job = noise_learner.run([circuit])
+        pass_manager = generate_preset_pass_manager(optimization_level=0, backend=backend)
+        pass_manager.post_scheduling = generate_boxing_pass_manager()
+        boxed_circuit = pass_manager.run(circuit)
+        layers = find_unique_box_instructions(boxed_circuit.data)
+
+        job = noise_learner.run(layers)
         self.assertEqual(job._session_id, expected_session_id)
