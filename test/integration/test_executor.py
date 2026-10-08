@@ -27,27 +27,16 @@ from .case import IBMIntegrationTestCase
 class TestExecutor(IBMIntegrationTestCase):
     """Test Executor."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = (backend := self.service.backend(self.dependencies.qpu))
-
-        self.pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
-
-        self.boxing_pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
-        self.boxing_pm.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True,
-            enable_measures=True,
-        )
-
     def test_executor_with_circuit_item(self):
         """Test sampler with a single circuit item."""
-        circuit = make_mirror_circuit_with_phases(self.backend, num_qubits=3)
+        backend = self.service.backend(self.dependencies.qpu)
+        circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
 
         shape = (2, 3)
         circuit_arguments = np.random.random(shape + (circuit.num_parameters,))
 
-        isa_circuit = self.pm.run(circuit)
+        pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        isa_circuit = pass_manager.run(circuit)
 
         passthrough_data = {
             "str": "ciao",
@@ -62,7 +51,7 @@ class TestExecutor(IBMIntegrationTestCase):
         program = QuantumProgram(shots := 123, passthrough_data=passthrough_data)
         program.append_circuit_item(isa_circuit, circuit_arguments=circuit_arguments)
 
-        executor = Executor(self.backend)
+        executor = Executor(backend)
         job = executor.run(program)
 
         params = job.inputs
@@ -88,18 +77,19 @@ class TestExecutor(IBMIntegrationTestCase):
 
     def test_executor_with_samplex_item(self):
         """Test sampler with a single samplex item."""
-        circuit = make_mirror_circuit_with_phases(self.backend, num_qubits=3)
+        backend = self.service.backend(self.dependencies.qpu)
+        circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
 
         shape = (2, 3)
         parameter_values = np.random.random(shape + (circuit.num_parameters,))
 
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
-        pm.post_scheduling = generate_boxing_pass_manager(
+        boxing_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        boxing_pass_manager.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
             inject_noise_site="after",
         )
-        boxed_isa_circuit = pm.run(circuit)
+        boxed_isa_circuit = boxing_pass_manager.run(circuit)
 
         isa_template, samplex = build(boxed_isa_circuit)
 
@@ -109,7 +99,7 @@ class TestExecutor(IBMIntegrationTestCase):
             isa_template, samplex=samplex, samplex_arguments={"parameter_values": parameter_values}
         )
 
-        executor = Executor(self.backend)
+        executor = Executor(backend)
         job = executor.run(program)
 
         params = job.inputs

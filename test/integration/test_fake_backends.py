@@ -43,6 +43,23 @@ from .case import IBMIntegrationTestCase
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
 
+def flipped_circuit() -> QuantumCircuit:
+    """Return a two-qubit circuit whose only net effect is flipping both qubits.
+
+    The pairs of Hadamard gates cancel out, so the expected outcome is `11`.
+    """
+    circuit = QuantumCircuit(2)
+    circuit.h(0)
+    circuit.h(1)
+    circuit.h(0)
+    circuit.h(1)
+    circuit.x(0)
+    circuit.x(1)
+    circuit.measure_active()
+
+    return circuit
+
+
 @ddt
 class TestFakeBackends(IBMTestCase):
     """Test runnning circuits in fake backends.
@@ -51,19 +68,6 @@ class TestFakeBackends(IBMTestCase):
     they depend on `aer` and are time consuming.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.circuit = QuantumCircuit(2)
-        cls.circuit.h(0)
-        cls.circuit.h(1)
-        cls.circuit.h(0)
-        cls.circuit.h(1)
-        cls.circuit.x(0)
-        cls.circuit.x(1)
-        cls.circuit.measure_active()
-
     @data(*[be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1])
     def test_circuit_on_fake_backend_v2(self, backend):
         """Test running a circuit in fake backends."""
@@ -71,7 +75,7 @@ class TestFakeBackends(IBMTestCase):
             self.skipTest(f"Unable to run fake_backend {backend.backend_name} without qiskit-aer")
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
-        isa_circuit = pm.run(self.circuit)
+        isa_circuit = pm.run(flipped_circuit())
         sampler = Sampler(backend)
         job = sampler.run([isa_circuit])
         pub_result = job.result()[0]
@@ -85,7 +89,7 @@ class TestFakeBackends(IBMTestCase):
         backend = FakeVigoV2()
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
-        isa_circuit = pm.run(self.circuit)
+        isa_circuit = pm.run(flipped_circuit())
         sampler = Sampler(backend)
         job = sampler.run([isa_circuit])
         pub_result = job.result()[0]
