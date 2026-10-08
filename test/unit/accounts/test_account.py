@@ -85,6 +85,12 @@ class TestAccount(IBMTestCase):
         account.resolve_crn()
         self.assertEqual(account.instance, test_account.instance)
 
+    @data(_TEST_IBM_CLOUD_ACCOUNT, _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT)
+    def test_iam_authenticator_with_ntlm_proxy(self, test_account):
+        """Test the IAM authenticator can be created with NTLM proxy credentials."""
+        authenticator = test_account.get_iam_authentificator()
+        self.assertEqual(authenticator.token_manager.proxies, {"https": "127.0.0.1"})
+
     def test_resolve_crn_proxied(self):
         """Account.resolve_crn() should go through proxies if specified."""
         account = Account.create_account(

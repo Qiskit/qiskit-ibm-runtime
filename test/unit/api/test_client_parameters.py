@@ -17,8 +17,6 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Any
 
-from requests_ntlm import HttpNtlmAuth
-
 from qiskit_ibm_runtime.api.auth import CloudAuth
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
@@ -137,7 +135,10 @@ class TestClientParameters(IBMTestCase):
                 self.assertEqual(params.get_runtime_api_base_url(), expected)
 
     def test_proxies_param_with_ntlm(self) -> None:
-        """Test proxies with NTLM credentials."""
+        """Test proxies with NTLM credentials.
+
+        ``auth`` is excluded, as the auth handler is passed separately to ``RetrySession``.
+        """
         proxies_with_ntlm_dict = {
             "urls": MOCK_PROXIES_URLS,
             "username_ntlm": "domain\\username",
@@ -146,21 +147,23 @@ class TestClientParameters(IBMTestCase):
         ntlm_expected_result: dict[str, Any] = {
             "verify": True,
             "proxies": MOCK_PROXIES_URLS,
-            "auth": HttpNtlmAuth("domain\\username", "password"),
         }
         proxies_with_ntlm_credentials = client_params(
             proxies=ProxyConfiguration(**proxies_with_ntlm_dict)  # type: ignore[arg-type]
         )
         result = proxies_with_ntlm_credentials.connection_parameters()
-
-        # Verify the NTLM credentials.
-        self.assertEqual(ntlm_expected_result["auth"].username, result["auth"].username)
-        self.assertEqual(ntlm_expected_result["auth"].password, result["auth"].password)
-
-        # Remove the HttpNtlmAuth objects for direct comparison of the dicts.
-        ntlm_expected_result.pop("auth")
-        result.pop("auth")
         self.assertDictEqual(ntlm_expected_result, result)
+
+    def test_auth_handler_cloud_with_ntlm(self) -> None:
+        """Test the cloud auth handler can be created with NTLM proxy credentials."""
+        params = client_params(
+            proxies=ProxyConfiguration(
+                urls=MOCK_PROXIES_URLS, username_ntlm="domain\\username", password_ntlm="password"
+            ),
+        )
+        handler = params.get_auth_handler()
+        self.assertIsInstance(handler, CloudAuth)
+        self.assertEqual(handler.tm.proxies, MOCK_PROXIES_URLS)
 
     def test_malformed_ntlm_params(self) -> None:
         """Test input with malformed NTLM credentials."""

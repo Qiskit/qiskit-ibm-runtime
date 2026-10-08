@@ -55,8 +55,12 @@ class CloudAuth(AuthBase):
         proxies_kwargs = {}
         if proxies is not None:
             proxies_kwargs = proxies.to_request_params()
+        # IAMTokenManager does not accept 'auth' kwarg (used for NTLM in requests).
+        # Passing it causes: TypeError: unexpected keyword argument 'auth'.
+        # See: https://github.com/Qiskit/qiskit-ibm-runtime/issues/3456
+        iam_kwargs = {k: v for k, v in proxies_kwargs.items() if k != "auth"}
         self.tm = IAMTokenManager(
-            api_key, url=iam_url, disable_ssl_verification=not verify, **proxies_kwargs
+            api_key, url=iam_url, disable_ssl_verification=not verify, **iam_kwargs
         )
 
     def __eq__(self, other: object) -> bool:
