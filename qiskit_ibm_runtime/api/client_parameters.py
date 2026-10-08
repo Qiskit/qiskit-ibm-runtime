@@ -81,11 +81,15 @@ class ClientParameters:
         Returns:
             A dictionary with connection-related parameters in the format
             expected by ``requests``. The following keys can be present:
-            ``proxies``, ``verify``, and ``auth``.
+            ``proxies`` and ``verify``.
         """
         request_kwargs: Any = {"verify": self.verify}
 
         if self.proxies:
             request_kwargs.update(self.proxies.to_request_params())
+        # 'auth' is passed separately to RetrySession via get_auth_handler().
+        # Keeping it here causes: TypeError: got multiple values for keyword argument 'auth'.
+        # See: https://github.com/Qiskit/qiskit-ibm-runtime/issues/3456
+        request_kwargs.pop("auth", None)
 
         return request_kwargs

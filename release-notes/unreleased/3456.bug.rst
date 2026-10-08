@@ -1,0 +1,4 @@
+Fixed a ``TypeError`` raised when initializing :class:`.QiskitRuntimeService` with a
+:class:`.ProxyConfiguration` that includes NTLM credentials (``username_ntlm`` and
+``password_ntlm``). The NTLM ``auth`` parameter is no longer forwarded to the IAM authenticator,
+the IAM token manager, or the session connection parameters, which do not accept it.

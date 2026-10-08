@@ -190,11 +190,15 @@ class Account:
         """Return the configured IAM Authentification service."""
         iam_url = os.environ.get("IAM_URL") or get_iam_api_url(self.url)
         proxies_kwargs = self._get_proxies_kwargs()
+        # IAMAuthenticator does not accept 'auth' kwarg (used for NTLM in requests).
+        # Passing it causes: TypeError: unexpected keyword argument 'auth'.
+        # See: https://github.com/Qiskit/qiskit-ibm-runtime/issues/3456
+        iam_kwargs = {k: v for k, v in proxies_kwargs.items() if k != "auth"}
         return IAMAuthenticator(
             apikey=self.token,
             url=iam_url,
             disable_ssl_verification=not self.verify,
-            **proxies_kwargs,
+            **iam_kwargs,
         )
 
     def resolve_crn(self) -> None:
