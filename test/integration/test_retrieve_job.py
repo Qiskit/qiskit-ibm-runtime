@@ -208,7 +208,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         _, mock_backend = get_mock_backend_pair(service)
 
         # Submit job against the mock device.
-        job = self._run_program(service, backend=mock_backend.name)
+        job = self.submit_bell_job(service, backend_name=mock_backend.name)
         jobs_no_mocks = service.jobs(limit=1)
         jobs_include_mocks = service.jobs(limit=1, include_mocks=True)
 
