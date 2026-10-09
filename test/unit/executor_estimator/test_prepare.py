@@ -18,7 +18,7 @@ import math
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from ddt import data, ddt, named_data, unpack
+from ddt import data, ddt, named_data
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
@@ -1490,10 +1490,9 @@ class TestPrepareZne(IBMTestCase):
         for noise_factor, item in zip(
             zne_options.noise_factors, program.items[: len(zne_options.noise_factors)]
         ):
-            with self.subTest(noise_factor=noise_factor):
-                assert_template_circuit_is_correct(
-                    item, scenario, enable_gates=enable_gates, noise_factor=noise_factor
-                )
+            assert_template_circuit_is_correct(
+                item, scenario, enable_gates=enable_gates, noise_factor=noise_factor
+            )
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""
@@ -1630,8 +1629,7 @@ class TestPrepareZne(IBMTestCase):
         self.assertEqual(
             len(program.items),
             len(noise_factors),
-            msg=f"[{scenario.label}] expected {len(noise_factors)} items, "
-            f"got {len(program.items)}",
+            msg=f"[{scenario.label}] expected {len(noise_factors)} items, got {len(program.items)}",
         )
         for item in program.items:
             self.assertEqual(

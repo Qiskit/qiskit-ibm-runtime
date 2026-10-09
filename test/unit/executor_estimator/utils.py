@@ -124,7 +124,7 @@ class SamplexCircuitScenario:
     """
 
     label: str
-    """Human-readable name used in :meth:`~unittest.TestCase.subTest` labels."""
+    """Human-readable name used in test labels."""
 
     pub: EstimatorPub
     """The estimator PUB to feed into a ``prepare_*`` function."""
@@ -323,7 +323,7 @@ class TwirlingShapeScenario:
     """
 
     label: str
-    """Human-readable name used in :meth:`~unittest.TestCase.subTest` labels."""
+    """Human-readable name used in test labels."""
 
     twirling_options: TwirlingOptions
     """Fully configured twirling options to pass to the prepare function."""
