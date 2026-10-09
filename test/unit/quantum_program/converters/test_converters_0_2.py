@@ -96,44 +96,37 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         params_model = quantum_program_to_0_2(quantum_program, options)
 
-        self.assertEqual(params_model.schema_version, "v0.2")
-        self.assertEqual(params_model.options.init_qubits, False)
-        self.assertEqual(params_model.options.rep_delay, None)
-        self.assertEqual(params_model.options.scheduler_timing, True)
-        self.assertEqual(params_model.options.experimental, experimental_opts)
+        assert params_model.schema_version == "v0.2"
+        assert params_model.options.init_qubits is False
+        assert params_model.options.rep_delay is None
+        assert params_model.options.scheduler_timing is True
+        assert params_model.options.experimental == experimental_opts
 
         quantum_program_model = params_model.quantum_program
-        self.assertEqual(quantum_program_model.shots, shots)
-        self.assertEqual(quantum_program_model.passthrough_data, passthrough_data)
-        self.assertEqual(quantum_program_model.meas_level, meas_level)
+        assert quantum_program_model.shots == shots
+        assert quantum_program_model.passthrough_data == passthrough_data
+        assert quantum_program_model.meas_level == meas_level
 
         circuit_item_model = quantum_program_model.items[0]
-        self.assertEqual(circuit_item_model.item_type, "circuit")
-        self.assertEqual(circuit_item_model.circuit.to_quantum_circuit(), circuit1)
-        self.assertTrue(
-            np.array_equal(circuit_item_model.circuit_arguments.to_numpy(), circuit_arguments)
-        )
-        self.assertEqual(circuit_item_model.chunk_size, 6)
+        assert circuit_item_model.item_type == "circuit"
+        assert circuit_item_model.circuit.to_quantum_circuit() == circuit1
+        assert np.array_equal(circuit_item_model.circuit_arguments.to_numpy(), circuit_arguments)
+        assert circuit_item_model.chunk_size == 6
 
         samplex_item_model = quantum_program_model.items[1]
-        self.assertEqual(samplex_item_model.item_type, "samplex")
-        self.assertEqual(samplex_item_model.circuit.to_quantum_circuit(), template_circuit)
-        self.assertEqual(samplex_item_model.shape, [4, 3, 2])
-        self.assertEqual(samplex_item_model.chunk_size, 7)
+        assert samplex_item_model.item_type == "samplex"
+        assert samplex_item_model.circuit.to_quantum_circuit() == template_circuit
+        assert samplex_item_model.shape == [4, 3, 2]
+        assert samplex_item_model.chunk_size == 7
 
         samplex_decoded = samplex_item_model.samplex.to_samplex()
         samplex_decoded.finalize()
-        self.assertEqual(samplex_decoded, samplex)
+        assert samplex_decoded == samplex
 
         samplex_arguments_model = samplex_item_model.samplex_arguments
-        self.assertTrue(
-            np.array_equal(samplex_arguments_model["parameter_values"].to_numpy(), parameter_values)
-        )
+        assert np.array_equal(samplex_arguments_model["parameter_values"].to_numpy(), parameter_values)
         for i, noise_model in enumerate(noise_models):
-            self.assertEqual(
-                samplex_arguments_model[f"pauli_lindblad_maps.pl{i}"].to_pauli_lindblad_map(),
-                noise_model,
-            )
+            assert samplex_arguments_model[f"pauli_lindblad_maps.pl{i}"].to_pauli_lindblad_map() == noise_model
 
     def test_quantum_program_to_0_2_no_argument(self):
         """Test when there are no circuit arguments, samplex arguments, and chunk size."""
@@ -158,13 +151,13 @@ class TestQuantumProgramConverters(IBMTestCase):
         quantum_program_model = params_model.quantum_program
 
         circuit_item_model = quantum_program_model.items[0]
-        self.assertEqual(circuit_item_model.circuit_arguments.to_numpy().size, 0)
-        self.assertEqual(circuit_item_model.chunk_size, "auto")
+        assert circuit_item_model.circuit_arguments.to_numpy().size == 0
+        assert circuit_item_model.chunk_size == "auto"
 
         samplex_item_model = quantum_program_model.items[1]
-        self.assertEqual(samplex_item_model.shape, [])
-        self.assertEqual(samplex_item_model.chunk_size, "auto")
-        self.assertEqual(samplex_item_model.samplex_arguments, {})
+        assert samplex_item_model.shape == []
+        assert samplex_item_model.chunk_size == "auto"
+        assert samplex_item_model.samplex_arguments == {}
 
     def test_quantum_program_result_from_0_2(self):
         """Test the function ``quantum_program_result_from_0_2``."""
@@ -210,16 +203,16 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         result = quantum_program_result_from_0_2(result_model)
 
-        self.assertTrue(np.array_equal(result[0]["meas"], meas1))
-        self.assertTrue(np.array_equal(result[1]["meas"], meas2))
-        self.assertTrue(np.array_equal(result[1]["measurement_flips.meas"], meas_flips))
-        self.assertTrue(result.passthrough_data, passthrough_data)
-        self.assertEqual(result.metadata.chunk_timing[0].start, chunk_start)
-        self.assertEqual(result.metadata.chunk_timing[0].stop, chunk_stop)
-        self.assertEqual(result.metadata.chunk_timing[0].parts[0].idx_item, 0)
-        self.assertEqual(result.metadata.chunk_timing[0].parts[0].size, 1)
-        self.assertEqual(result.metadata.chunk_timing[0].parts[1].idx_item, 1)
-        self.assertEqual(result.metadata.chunk_timing[0].parts[1].size, 1)
+        assert np.array_equal(result[0]["meas"], meas1)
+        assert np.array_equal(result[1]["meas"], meas2)
+        assert np.array_equal(result[1]["measurement_flips.meas"], meas_flips)
+        assert result.passthrough_data == passthrough_data
+        assert result.metadata.chunk_timing[0].start == chunk_start
+        assert result.metadata.chunk_timing[0].stop == chunk_stop
+        assert result.metadata.chunk_timing[0].parts[0].idx_item == 0
+        assert result.metadata.chunk_timing[0].parts[0].size == 1
+        assert result.metadata.chunk_timing[0].parts[1].idx_item == 1
+        assert result.metadata.chunk_timing[0].parts[1].size == 1
 
     def test_roundtrip(self):
         """Test a roundtrip."""
@@ -259,19 +252,19 @@ class TestQuantumProgramConverters(IBMTestCase):
         params_model = quantum_program_to_0_2(quantum_program, options)
         quantum_program_out, options_out = quantum_program_from_0_2(params_model)
 
-        self.assertEqual(options_out, options)
+        assert options_out == options
 
         items = quantum_program_out.items
-        self.assertEqual(len(items), 2)
-        self.assertIsInstance(items[0], CircuitItem)
-        self.assertEqual(items[0].circuit, quantum_program.items[0].circuit)
-        self.assertIsInstance(items[1], SamplexItem)
-        self.assertEqual(items[1].circuit, quantum_program.items[1].circuit)
+        assert len(items) == 2
+        assert isinstance(items[0], CircuitItem)
+        assert items[0].circuit == quantum_program.items[0].circuit
+        assert isinstance(items[1], SamplexItem)
+        assert items[1].circuit == quantum_program.items[1].circuit
 
-        self.assertEqual(passthrough_data.keys(), quantum_program_out.passthrough_data.keys())
+        assert passthrough_data.keys() == quantum_program_out.passthrough_data.keys()
         for key in ["str", "float", "int", "bool", "none", "list"]:
-            self.assertEqual(passthrough_data[key], quantum_program_out.passthrough_data[key])
-        self.assertIsInstance(quantum_program_out.passthrough_data["array"], np.ndarray)
+            assert passthrough_data[key] == quantum_program_out.passthrough_data[key]
+        assert isinstance(quantum_program_out.passthrough_data["array"], np.ndarray)
         np.testing.assert_array_equal(
             passthrough_data["array"], quantum_program_out.passthrough_data["array"]
         )

@@ -127,14 +127,14 @@ class TestBaseClientSideResultDecoder(IBMTestCase):
         )
 
         # Not applicable if the result has already been processed by a previous decoder.
-        assert BaseClientSideResultDecoder.is_applicable({}) == False
+        assert BaseClientSideResultDecoder.is_applicable({}) is False
 
         # Not applicable if the result does not have semantic role.
-        assert BaseClientSideResultDecoder.is_applicable(result) == False
+        assert BaseClientSideResultDecoder.is_applicable(result) is False
 
         # Not applicable if the result has a different semantic role.
         result._semantic_role = "not_foo"
-        assert MyDecoder.is_applicable(result) == False
+        assert MyDecoder.is_applicable(result) is False
 
     def test_decode_raises(self):
         """A decoder `decode` method should raise depending on the input."""

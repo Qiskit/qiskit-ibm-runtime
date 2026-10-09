@@ -47,11 +47,11 @@ class TestNoiseLearnerV3Result(IBMTestCase):
         rates_std = np.arange(0, 0.15, 0.01)
         metadata = {"learning_protocol": "lindblad"}
         result = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadata)
-        self.assertEqual(generators, result._generators)
-        self.assertTrue(np.array_equal(np.array(rates), result._rates))
-        self.assertTrue(np.array_equal(rates_std, result._rates_std))
-        self.assertEqual(metadata, result.metadata)
-        self.assertEqual(len(result), 15)
+        assert generators == result._generators
+        assert np.array_equal(np.array(rates), result._rates)
+        assert np.array_equal(rates_std, result._rates_std)
+        assert metadata == result.metadata
+        assert len(result) == 15
 
     def test_from_generators_different_lengths(self):
         """Test ``.from_generators`` raises if the generators and rates have different lengths."""
@@ -114,10 +114,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
             0.02,
             0.16,
         ]
-        self.assertEqual(
-            result.to_pauli_lindblad_map().simplify(),
-            PauliLindbladMap.from_components(flatenned_rates, flatenned_generators).simplify(),
-        )
+        assert result.to_pauli_lindblad_map().simplify() == PauliLindbladMap.from_components(flatenned_rates, flatenned_generators).simplify()
 
 
 class TestNoiseLearnerV3Results(IBMTestCase):
@@ -130,9 +127,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         """
         data, _ = results_and_maps()
         results = NoiseLearnerV3Results(data, metadata := {"this is": "metadata"})
-        self.assertEqual(results.data, data, metadata)
-        self.assertEqual(results[1], data[1])
-        self.assertEqual(len(results), 3)
+        assert results.data == data
+        assert results.metadata == metadata
+        assert results[1] == data[1]
+        assert len(results) == 3
 
     def test_to_dict_valid_input_require_refs_true(self):
         """Test ``NoiseLearnerV3Results.to_dict`` when ``require_refs`` is ``True``."""
@@ -145,13 +143,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             circuit.cx(0, 1)
 
         returned_dict = NoiseLearnerV3Results(results[:2]).to_dict(circuit.data, True)
-        self.assertDictEqual(
-            {
+        assert {
                 annotation.ref: pauli_lindblad_map
                 for annotation, pauli_lindblad_map in zip(annotations[:2], pauli_lindblad_maps[:2])
-            },
-            returned_dict,
-        )
+            } == returned_dict
 
     def test_to_dict_valid_input_require_refs_false(self):
         """Test ``NoiseLearnerV3Results.to_dict`` when ``require_refs`` is ``True``."""
@@ -166,16 +161,13 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             circuit.cx(0, 1)
 
         returned_dict = NoiseLearnerV3Results(results).to_dict(circuit.data, False)
-        self.assertDictEqual(
-            {
+        assert {
                 annotation.ref: pauli_lindblad_map
                 for annotation, pauli_lindblad_map in zip(
                     annotations,
                     [pauli_lindblad_maps[0], pauli_lindblad_maps[2]],
                 )
-            },
-            returned_dict,
-        )
+            } == returned_dict
 
     def test_to_dict_wrong_num_of_instructions(self):
         """Test ``.to_dict`` raises if number of instructions does not match number of results."""
@@ -242,4 +234,4 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         """Test ``.to_pauli_lindblad_maps``."""
         results, pauli_lindblad_maps = results_and_maps()
         results = NoiseLearnerV3Results(results)
-        self.assertEqual(results.to_pauli_lindblad_maps(), pauli_lindblad_maps)
+        assert results.to_pauli_lindblad_maps() == pauli_lindblad_maps

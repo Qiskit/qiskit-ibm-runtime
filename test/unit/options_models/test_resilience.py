@@ -30,15 +30,15 @@ class TestResilienceOptionsDefaults(IBMTestCase):
     def test_defaults(self):
         """All fields carry their documented default values."""
         opts = ResilienceOptions()
-        self.assertIsNone(opts.measure_mitigation)
-        self.assertEqual(opts.measure_noise_learning.num_randomizations, "auto")
-        self.assertFalse(opts.pec_mitigation)
-        self.assertEqual(opts.pec.max_overhead, 100)
-        self.assertEqual(opts.pec.noise_gain, "auto")
-        self.assertFalse(opts.zne_mitigation)
-        self.assertEqual(opts.zne.amplifier, "gate_folding")
-        self.assertEqual(opts.zne.noise_factors, "auto")
-        self.assertEqual(opts.layer_noise_model, None)
+        assert opts.measure_mitigation is None
+        assert opts.measure_noise_learning.num_randomizations == "auto"
+        assert not opts.pec_mitigation
+        assert opts.pec.max_overhead == 100
+        assert opts.pec.noise_gain == "auto"
+        assert not opts.zne_mitigation
+        assert opts.zne.amplifier == "gate_folding"
+        assert opts.zne.noise_factors == "auto"
+        assert opts.layer_noise_model is None
 
     def test_set_all_options(self):
         """All fields accept explicit non-default values."""
@@ -55,15 +55,15 @@ class TestResilienceOptionsDefaults(IBMTestCase):
             zne={"amplifier": "gate_folding_front", "noise_factors": [1, 3, 5]},
             layer_noise_model=layer_noise_model,
         )
-        self.assertFalse(opts.measure_mitigation)
-        self.assertEqual(opts.measure_noise_learning.num_randomizations, 64)
-        self.assertTrue(opts.pec_mitigation)
-        self.assertEqual(opts.pec.max_overhead, 50)
-        self.assertEqual(opts.pec.noise_gain, 0.5)
-        self.assertTrue(opts.zne_mitigation)
-        self.assertEqual(opts.zne.amplifier, "gate_folding_front")
-        self.assertEqual(list(opts.zne.noise_factors), [1, 3, 5])
-        self.assertEqual(opts.layer_noise_model, layer_noise_model)
+        assert not opts.measure_mitigation
+        assert opts.measure_noise_learning.num_randomizations == 64
+        assert opts.pec_mitigation
+        assert opts.pec.max_overhead == 50
+        assert opts.pec.noise_gain == 0.5
+        assert opts.zne_mitigation
+        assert opts.zne.amplifier == "gate_folding_front"
+        assert list(opts.zne.noise_factors) == [1, 3, 5]
+        assert opts.layer_noise_model == layer_noise_model
 
     def test_invalid_layer_noise_model(self):
         """Invalid layer_noise_model values raise ValidationError."""
@@ -74,7 +74,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         not_box, box = circuit.data
 
         options = ResilienceOptions(layer_noise_model=[(box, PauliLindbladMap.identity(2))])
-        self.assertEqual(options.layer_noise_model, [(box, PauliLindbladMap.identity(2))])
+        assert options.layer_noise_model == [(box, PauliLindbladMap.identity(2))]
 
         with self.assertRaisesRegex(ValidationError, "does not contain a box"):
             ResilienceOptions(layer_noise_model=[(not_box, PauliLindbladMap.identity(2))])

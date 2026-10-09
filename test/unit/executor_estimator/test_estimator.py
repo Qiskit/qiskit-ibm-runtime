@@ -267,9 +267,9 @@ class TestEstimatorRun(IBMTestCase):
 
         # Verify options content.
         options_data = post_processor_data["options"]
-        assert options_data["twirling"]["enable_gates"] == True
-        assert options_data["dynamical_decoupling"]["enable"] == False
-        assert options_data["resilience"]["measure_mitigation"] == True
+        assert options_data["twirling"]["enable_gates"] is True
+        assert options_data["dynamical_decoupling"]["enable"] is False
+        assert options_data["resilience"]["measure_mitigation"] is True
 
     @mock_responses
     def test_run_passthrough_options_are_finalized_not_raw(self, registry):
@@ -295,9 +295,9 @@ class TestEstimatorRun(IBMTestCase):
 
         # Unset fields must echo their RESOLVED default, never None.
         assert options_metadata["twirling"]["enable_gates"] is not None
-        assert options_metadata["twirling"]["enable_measure"] == True
-        assert options_metadata["twirling"]["enable_gates"] == False
-        assert options_metadata["resilience"]["zne_mitigation"] == False
+        assert options_metadata["twirling"]["enable_measure"] is True
+        assert options_metadata["twirling"]["enable_gates"] is False
+        assert options_metadata["resilience"]["zne_mitigation"] is False
 
     @mock_responses
     def test_run_with_multiple_observables(self, registry):

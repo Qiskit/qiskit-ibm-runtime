@@ -34,15 +34,15 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
         executor_options = sampler_option_to_executor_options(options)
 
         # Check default execution options
-        self.assertEqual(executor_options.execution.init_qubits, True)
-        self.assertIsNone(executor_options.execution.rep_delay)
+        assert executor_options.execution.init_qubits is True
+        assert executor_options.execution.rep_delay is None
 
         # Check default environment options
-        self.assertEqual(executor_options.environment.log_level, "WARNING")
-        self.assertEqual(executor_options.environment.job_tags, [])
-        self.assertEqual(executor_options.environment.private, False)
-        self.assertIsNone(executor_options.max_execution_time)
-        self.assertIsNone(executor_options.environment.image)
+        assert executor_options.environment.log_level == "WARNING"
+        assert executor_options.environment.job_tags == []
+        assert executor_options.environment.private is False
+        assert executor_options.max_execution_time is None
+        assert executor_options.environment.image is None
 
     def test_all_options_mapping(self):
         """Test mapping of all supported options together."""
@@ -56,12 +56,12 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
 
         executor_options = sampler_option_to_executor_options(options)
 
-        self.assertEqual(executor_options.execution.init_qubits, False)
-        self.assertEqual(executor_options.execution.rep_delay, 0.0002)
-        self.assertEqual(executor_options.environment.log_level, "INFO")
-        self.assertEqual(executor_options.environment.job_tags, ["test1", "test2"])
-        self.assertEqual(executor_options.environment.private, True)
-        self.assertEqual(executor_options.max_execution_time, 300)
+        assert executor_options.execution.init_qubits is False
+        assert executor_options.execution.rep_delay == 0.0002
+        assert executor_options.environment.log_level == "INFO"
+        assert executor_options.environment.job_tags == ["test1", "test2"]
+        assert executor_options.environment.private is True
+        assert executor_options.max_execution_time == 300
 
     def test_experimental_image_not_set(self):
         """Test that image is None when experimental is empty."""
@@ -69,7 +69,7 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
         options.experimental = {}
         executor_options = sampler_option_to_executor_options(options)
 
-        self.assertIsNone(executor_options.environment.image)
+        assert executor_options.environment.image is None
 
     def test_experimental_dict_carry_over(self):
         """Test that experimental dict is carried over to executor options."""
@@ -81,11 +81,11 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
         executor_options = sampler_option_to_executor_options(options)
 
         # Experimental dict should be carried over.
-        self.assertEqual(options.experimental, executor_options.experimental)
+        assert options.experimental == executor_options.experimental
 
         # `image` and execution-related entries must map to executor options.
-        self.assertEqual(executor_options.execution.stretch_values, True)
-        self.assertEqual(executor_options.execution.scheduler_timing, True)
+        assert executor_options.execution.stretch_values is True
+        assert executor_options.execution.scheduler_timing is True
 
 
 class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
@@ -100,9 +100,9 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
 
         executor_options = estimator_options_to_executor_options(options)
 
-        self.assertTrue(executor_options.execution.init_qubits)
-        self.assertEqual(executor_options.execution.rep_delay, 0.001)
-        self.assertEqual(executor_options.max_execution_time, 300)
+        assert executor_options.execution.init_qubits
+        assert executor_options.execution.rep_delay == 0.001
+        assert executor_options.max_execution_time == 300
 
     def test_to_executor_options_with_experimental(self):
         """Test conversion with experimental options."""
@@ -110,7 +110,7 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
         options.experimental = {"other": "value"}
 
         executor_options = estimator_options_to_executor_options(options)
-        self.assertEqual(executor_options.experimental, options.experimental)
+        assert executor_options.experimental == options.experimental
 
     def test_to_executor_options_resilience_fallback(self):
         """Test the simulator ``layer_noise_model`` fallback to resilience ``layer_noise_model``."""
@@ -119,10 +119,7 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
 
         executor_options = estimator_options_to_executor_options(options)
 
-        self.assertEqual(
-            executor_options.simulator.layer_noise_model,
-            options.resilience.layer_noise_model,
-        )
+        assert executor_options.simulator.layer_noise_model == options.resilience.layer_noise_model
 
         circuit = QuantumCircuit(2)
         with circuit.box():
@@ -133,7 +130,4 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
 
         executor_options = estimator_options_to_executor_options(options)
 
-        self.assertEqual(
-            executor_options.simulator.layer_noise_model,
-            options.simulator.layer_noise_model,
-        )
+        assert executor_options.simulator.layer_noise_model == options.simulator.layer_noise_model

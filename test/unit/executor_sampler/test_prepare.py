@@ -257,7 +257,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         _, executor_options = prepare([pub], options)
 
-        assert executor_options.execution.init_qubits == False
+        assert executor_options.execution.init_qubits is False
         assert executor_options.execution.rep_delay == 0.0005
 
     def test_prepare_maps_environment_options(self):
@@ -276,7 +276,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         assert executor_options.environment.log_level == "DEBUG"
         assert executor_options.environment.job_tags == ["test", "prepare"]
-        assert executor_options.environment.private == True
+        assert executor_options.environment.private is True
 
     def test_prepare_maps_max_execution_time(self):
         """Test that prepare correctly maps max_execution_time."""
@@ -341,11 +341,11 @@ class TestPrepareOptionsHandling(IBMTestCase):
         assert quantum_program.meas_level == "avg_kerneled"
 
         # Verify ExecutorOptions
-        assert executor_options.execution.init_qubits == False
+        assert executor_options.execution.init_qubits is False
         assert executor_options.execution.rep_delay == 0.0003
         assert executor_options.environment.log_level == "INFO"
         assert executor_options.environment.job_tags == ["comprehensive", "test"]
-        assert executor_options.environment.private == True
+        assert executor_options.environment.private is True
         assert executor_options.max_execution_time == 800
 
 
@@ -623,7 +623,7 @@ class TestPreparePassthroughData(IBMTestCase):
         assert "post_processor" in qp.passthrough_data
         assert "post_processor" in qp.passthrough_data
         assert qp.passthrough_data["post_processor"]["version"] == "v0.1"
-        assert qp.passthrough_data["post_processor"]["twirling"] == True
+        assert qp.passthrough_data["post_processor"]["twirling"] is True
         assert qp.passthrough_data["post_processor"]["meas_type"] == "kerneled"
 
 

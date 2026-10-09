@@ -46,12 +46,12 @@ class TestBaseOptionsModel(IBMTestCase):
         # Updating top-level field.
         options.update(**{"a": "new_a"})
         options_dict.update(**{"a": "new_a"})
-        self.assertEqual(options_dict, options.model_dump())
+        assert options_dict == options.model_dump()
 
         # Updating nested fields.
         options.update(**{"nested": {"n": 42}})
         options_dict["nested"].update(**{"n": 42})
-        self.assertEqual(options_dict, options.model_dump())
+        assert options_dict == options.model_dump()
 
         # Should fail when trying to update a non-existing field.
         with self.assertRaises(ValidationError):
@@ -67,4 +67,4 @@ class TestBaseOptionsModel(IBMTestCase):
         with self.assertWarnsRegex(DeprecationWarning, "is deprecated"):
             options_as_dict = asdict(options)
 
-        self.assertEqual(options_as_dict, options.model_dump())
+        assert options_as_dict == options.model_dump()

@@ -44,38 +44,36 @@ class TestLocalRuntimeJob(IBMTestCase):
         job.result()
         metrics = job.metrics()
 
-        self.assertEqual(metrics["usage"], {"qpu_charge_time_seconds": 0, "status": "complete"})
-        self.assertNotIn("bss", metrics)
+        assert metrics["usage"] == {"qpu_charge_time_seconds": 0, "status": "complete"}
+        assert "bss" not in metrics
         for name in ("created", "running", "finished"):
-            self.assertIsInstance(metrics["timestamps"][name], str)
-            self.assertTrue(metrics["timestamps"][name].endswith("Z"))
+            assert isinstance(metrics["timestamps"][name], str)
+            assert metrics["timestamps"][name].endswith("Z")
         # The UTC timestamps convert back to the job's local creation time.
-        self.assertEqual(
-            utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None), job.creation_date
-        )
+        assert utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None) == job.creation_date
 
     def test_v2_sampler(self):
         """Test V2 Sampler on a local backend."""
         sampler = SamplerV2(mode=FakeManilaV2())
         job = sampler.run(**get_primitive_inputs(sampler))
 
-        self.assertIsInstance(job, LocalRuntimeJob)
-        self.assertTrue(job.metrics())
-        self.assertTrue(job.backend())
-        self.assertTrue(job.inputs)
-        self.assertEqual(job.usage(), 0)
+        assert isinstance(job, LocalRuntimeJob)
+        assert job.metrics()
+        assert job.backend()
+        assert job.inputs
+        assert job.usage() == 0
 
     @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
     def test_executor(self):
         """Test executor on a local backend."""
         executor = Executor(AerSimulator(method="stabilizer"))
         job = executor.run(QuantumProgram(1))
-        self.assertIsInstance(job, LocalRuntimeJob)
-        self.assertTrue(job.metrics())
-        self.assertTrue(job.backend())
-        self.assertTrue(job.inputs)
-        self.assertEqual(job.usage(), 0)
+        assert isinstance(job, LocalRuntimeJob)
+        assert job.metrics()
+        assert job.backend()
+        assert job.inputs
+        assert job.usage() == 0
 
         # Specific to executor jobs.
-        self.assertIsInstance(job.inputs, QuantumProgram)
-        self.assertIsInstance(job.result(), QuantumProgramResult)
+        assert isinstance(job.inputs, QuantumProgram)
+        assert isinstance(job.result(), QuantumProgramResult)
