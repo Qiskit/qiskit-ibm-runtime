@@ -78,11 +78,11 @@ class TestNoiseLearner(IBMTestCase):
         inst.run(tasks)
 
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertEqual(input_params["circuits"], [transpile(c) for c in circuits()])
+        assert input_params["circuits"] == [transpile(c) for c in circuits()]
 
         expected = dict_options
         expected["support_qiskit"] = True
-        self.assertEqual(input_params["options"], expected)
+        assert input_params["options"] == expected
 
     @combine(task_type=["circs", "pubs", "circs_iterator", "pubs_iterator"])
     def test_run_program_inputs_with_default_options(self, task_type):
@@ -112,8 +112,8 @@ class TestNoiseLearner(IBMTestCase):
         inst.run(tasks)
 
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertEqual(input_params["circuits"], [transpile(c) for c in circuits()])
-        self.assertEqual(input_params["options"], {"support_qiskit": True})
+        assert input_params["circuits"] == [transpile(c) for c in circuits()]
+        assert input_params["options"] == {"support_qiskit": True}
 
     def test_run_program_inputs_with_no_learnable_layers(self):
         """Test a circuit with no learnable layers."""
@@ -123,8 +123,8 @@ class TestNoiseLearner(IBMTestCase):
         inst.run([QuantumCircuit(3)])
 
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("circuits", input_params)
-        self.assertEqual(input_params["circuits"], [QuantumCircuit(3)])
+        assert "circuits" in input_params
+        assert input_params["circuits"] == [QuantumCircuit(3)]
 
     def test_irrelevant_options_are_ignored(self):
         """Test that irrelevant estimator options are ignored."""
@@ -139,7 +139,7 @@ class TestNoiseLearner(IBMTestCase):
         expected.num_randomizations = 2
 
         inst = NoiseLearner(backend, options)
-        self.assertEqual(inst.options, expected)
+        assert inst.options == expected
 
     def test_not_supported_in_local_mode(self):
         """Test exception when circuits is not ISA."""
@@ -150,7 +150,7 @@ class TestNoiseLearner(IBMTestCase):
         """Test getting the backend used."""
         backend = get_mocked_backend()
         inst = NoiseLearner(backend)
-        self.assertEqual(inst.backend().name, backend.name)
+        assert inst.backend().name == backend.name
 
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
@@ -159,4 +159,4 @@ class TestNoiseLearner(IBMTestCase):
         backend = service.backend("ibm_foo")
         noise_learner = NoiseLearner(mode=backend)
         job = noise_learner.run([transpile(c) for c in circuits()], dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

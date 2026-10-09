@@ -40,23 +40,21 @@ class TestAPISession(IBMTestCase):
         headers = job_post_mock.calls[-1].request.headers
 
         # The job POST should receive the usual headers.
-        self.assertEqual(
-            RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"], headers["IBM-API-Version"]
-        )
-        self.assertEqual(registry.instances["a"].crn, headers["Service-CRN"])
-        self.assertIn("qiskit_ibm_runtime", headers["X-Qx-Client-Application"])
+        assert RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"] == headers["IBM-API-Version"]
+        assert registry.instances["a"].crn == headers["Service-CRN"]
+        assert "qiskit_ibm_runtime" in headers["X-Qx-Client-Application"]
         # The job POST should not receive the function id header.
-        self.assertNotIn("IBM-API-Function-Id", headers)
+        assert "IBM-API-Function-Id" not in headers
 
         with custom_envs({"QISKIT_FUNCTIONS_IDENTIFIER": "my-cool-id"}):
             service._run("sampler", {}, {"backend": "common_backend"})
             headers = job_post_mock.calls[-1].request.headers
 
             # The job POST should receive the usual headers.
-            self.assertEqual(
-                RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"], headers["IBM-API-Version"]
+            assert (
+                RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"] == headers["IBM-API-Version"]
             )
-            self.assertEqual(registry.instances["a"].crn, headers["Service-CRN"])
-            self.assertIn("qiskit_ibm_runtime", headers["X-Qx-Client-Application"])
+            assert registry.instances["a"].crn == headers["Service-CRN"]
+            assert "qiskit_ibm_runtime" in headers["X-Qx-Client-Application"]
             # The job POST should receive the function id header.
-            self.assertEqual("my-cool-id", headers["IBM-API-Function-Id"])
+            assert "my-cool-id" == headers["IBM-API-Function-Id"]

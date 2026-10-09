@@ -26,6 +26,12 @@ from qiskit_ibm_runtime import EstimatorV2 as Estimator
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options import EstimatorOptions, MeasureNoiseLearningOptions
 
+from ...asserts import (
+    assert_dict_flat_partially_equal,
+    assert_dict_keys_equal,
+    assert_dict_partially_equal,
+    assert_warns_strict,
+)
 from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend, get_primitive_inputs
 
@@ -101,7 +107,7 @@ class TestEstimatorOptions(IBMTestCase):
         self, value, num_appearances
     ):
         """Integer shots_per_randomization warns when set via nested EstimatorOptions init."""
-        with self.assertWarnsStrict(
+        with assert_warns_strict(
             DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             options = EstimatorOptions(
@@ -111,7 +117,7 @@ class TestEstimatorOptions(IBMTestCase):
                 }
             )
 
-        self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, value)
+        assert options.resilience.measure_noise_learning.shots_per_randomization == value
 
     @data(("auto", 0), (20, 1))
     @unpack
@@ -121,12 +127,12 @@ class TestEstimatorOptions(IBMTestCase):
         """Integer shots_per_randomization warns on attribute assignment."""
         options = MeasureNoiseLearningOptions()
 
-        with self.assertWarnsStrict(
+        with assert_warns_strict(
             DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             options.shots_per_randomization = value
 
-        self.assertEqual(options.shots_per_randomization, value)
+        assert options.shots_per_randomization == value
 
     @data(("auto", 0), (20, 1))
     @unpack
@@ -136,14 +142,12 @@ class TestEstimatorOptions(IBMTestCase):
         """Integer shots_per_randomization warns when assigned on an estimator instance."""
         estimator = Estimator(mode=get_mocked_backend())
 
-        with self.assertWarnsStrict(
+        with assert_warns_strict(
             DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             estimator.options.resilience.measure_noise_learning.shots_per_randomization = value
 
-        self.assertEqual(
-            estimator.options.resilience.measure_noise_learning.shots_per_randomization, value
-        )
+        assert estimator.options.resilience.measure_noise_learning.shots_per_randomization == value
 
     @data(("auto", 0), (20, 1))
     @unpack
@@ -151,21 +155,21 @@ class TestEstimatorOptions(IBMTestCase):
         self, value, num_appearances
     ):
         """Auto shots_per_randomization does not warn on option init."""
-        with self.assertWarnsStrict(
+        with assert_warns_strict(
             DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
         ):
             options = MeasureNoiseLearningOptions(shots_per_randomization=value)
 
-        self.assertEqual(options.shots_per_randomization, value)
+        assert options.shots_per_randomization == value
 
     def test_measure_noise_learning_shots_per_randomization_auto_on_assignment_does_not_warn(self):
         """Auto shots_per_randomization does not warn on attribute assignment."""
         options = MeasureNoiseLearningOptions()
 
-        with self.assertWarnsStrict(DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, 0):
+        with assert_warns_strict(DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, 0):
             options.shots_per_randomization = "auto"
 
-        self.assertEqual(options.shots_per_randomization, "auto")
+        assert options.shots_per_randomization == "auto"
 
     @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_program_inputs(self):
@@ -236,7 +240,7 @@ class TestEstimatorOptions(IBMTestCase):
         }
 
         inputs = opt._get_program_inputs(asdict(opt))
-        self.assertDictEqual(inputs, expected)
+        assert inputs == expected
 
     @data(
         {},
@@ -251,10 +255,10 @@ class TestEstimatorOptions(IBMTestCase):
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
         options = asdict(EstimatorOptions(**opts_dict))
-        self.assertDictPartiallyEqual(options, opts_dict)
+        assert_dict_partially_equal(options, opts_dict)
 
         # Make sure the structure didn't change.
-        self.assertDictKeysEqual(asdict(EstimatorOptions()), options)
+        assert_dict_keys_equal(asdict(EstimatorOptions()), options)
 
     @data(
         {"resilience_level": 2},
@@ -273,9 +277,9 @@ class TestEstimatorOptions(IBMTestCase):
         options.update(**new_opts)
 
         # Make sure the values are equal.
-        self.assertDictFlatPartiallyEqual(asdict(options), new_opts)
+        assert_dict_flat_partially_equal(asdict(options), new_opts)
         # Make sure the structure didn't change.
-        self.assertDictKeysEqual(asdict(options), asdict(EstimatorOptions()))
+        assert_dict_keys_equal(asdict(options), asdict(EstimatorOptions()))
 
     @data(
         {"default_shots": 0},
@@ -290,7 +294,7 @@ class TestEstimatorOptions(IBMTestCase):
         estimator = Estimator(mode=backend, options=opt_dict)
         _ = estimator.run(**get_primitive_inputs(estimator))
         options = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictEqual(options, opt_dict)
+        assert options == opt_dict
 
     def test_zero_resilience_level(self):
         """Test resilience_level=0."""
@@ -299,5 +303,5 @@ class TestEstimatorOptions(IBMTestCase):
         estimator = Estimator(mode=backend, options=opt_dict)
         _ = estimator.run(**get_primitive_inputs(estimator))
         options = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("resilience_level", options)
-        self.assertEqual(options["resilience_level"], 0)
+        assert "resilience_level" in options
+        assert options["resilience_level"] == 0

@@ -49,13 +49,13 @@ class TestCircuitSchedule(IBMTestCase):
         data = small_timing()
         loaded_data = CircuitSchedule._load(data)
         expected_loaded_data = small_timing().split("\n")
-        self.assertEqual(loaded_data, expected_loaded_data)
+        assert loaded_data == expected_loaded_data
 
     def test__parse(self):
         """Test circuit schedule data parsing."""
         data = small_timing()
         circuit_schedule = CircuitSchedule(data)
-        self.assertIsNotNone(circuit_schedule.circuit_scheduling)
+        assert circuit_schedule.circuit_scheduling is not None
 
         expected_circuit_scheduling = [
             ["main", "barrier", "Qubit 0", "7", "7", "barrier", "barrier"],
@@ -64,16 +64,16 @@ class TestCircuitSchedule(IBMTestCase):
             ["main", "barrier", "Qubit 3", "7", "7", "barrier", "barrier"],
             ["main", "barrier", "Qubit 4", "7", "7", "barrier", "barrier"],
         ]
-        self.assertTrue(np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling))
+        assert np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling)
 
         circuit_schedule = CircuitSchedule(data)
-        self.assertIsNotNone(circuit_schedule.circuit_scheduling)
-        self.assertTrue(np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling))
+        assert circuit_schedule.circuit_scheduling is not None
+        assert np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling)
 
         # verifies data names and order
         data_names = ["Branch", "Instruction", "Channel", "Start", "Finish", "Pulse", "GateName"]
         for idx, name in enumerate(data_names):
-            self.assertEqual(circuit_schedule.type_to_idx[name], idx)
+            assert circuit_schedule.type_to_idx[name] == idx
 
     @ddt.data(
         (None, False, False, 14, 7, None),
@@ -105,11 +105,11 @@ class TestCircuitSchedule(IBMTestCase):
             filter_awgr=filter_readout_channels,
             filter_barriers=filter_barriers,
         )
-        self.assertEqual(len(circuit_schedule.channels), n_channels)
-        self.assertEqual(len(circuit_schedule.instruction_set), n_instructions)
+        assert len(circuit_schedule.channels) == n_channels
+        assert len(circuit_schedule.instruction_set) == n_instructions
 
         if top_channel is not None:
-            self.assertEqual(circuit_schedule.channels[-1], top_channel)
+            assert circuit_schedule.channels[-1] == top_channel
 
     @ddt.data(
         (False, 6),
@@ -127,7 +127,7 @@ class TestCircuitSchedule(IBMTestCase):
             filter_barriers=False,
             merge_common_instructions=to_merge_instruction,
         )
-        self.assertEqual(len(circuit_schedule.circuit_scheduling), n_instructions)
+        assert len(circuit_schedule.circuit_scheduling) == n_instructions
 
     def test_get_trace_finite_duration_y_shift(self):
         """Test that x, y, and z shifts for finite duration traces are set correctly."""
@@ -135,7 +135,7 @@ class TestCircuitSchedule(IBMTestCase):
         expected_shifts = ((-0.4, 0.4, 0), (0, 0.4, 0.25), (-0.4, 0, -0.25))
         for branch, expected_shift in zip(branches, expected_shifts):
             shifts = CircuitSchedule.get_trace_finite_duration_y_shift(CircuitSchedule, branch)
-            self.assertEqual(shifts, expected_shift)
+            assert shifts == expected_shift
 
         # test error raise
         with self.assertRaises(ValueError):
@@ -148,7 +148,7 @@ class TestCircuitSchedule(IBMTestCase):
         expected_shifts = (0, 0.2, -0.2)
         for branch, expected_shift in zip(branches, expected_shifts):
             shifts = CircuitSchedule.get_trace_zero_duration_y_shift(CircuitSchedule, branch)
-            self.assertEqual(shifts, expected_shift)
+            assert shifts == expected_shift
 
         # test error raise
         with self.assertRaises(ValueError):
@@ -167,8 +167,8 @@ class TestCircuitSchedule(IBMTestCase):
         circuit_schedule.trace_finite_duration_instruction(schedule_row)
 
         # each row schedule results in one trace and one annotation
-        self.assertEqual(len(circuit_schedule.traces), 1)
-        self.assertEqual(len(circuit_schedule.annotations), 1)
+        assert len(circuit_schedule.traces) == 1
+        assert len(circuit_schedule.annotations) == 1
 
     def test_trace_zero_duration_instruction(self):
         """Test that shift phase (zero duration) traces are created correctly."""
@@ -190,8 +190,8 @@ class TestCircuitSchedule(IBMTestCase):
         circuit_schedule.trace_finite_duration_instruction(schedule_row)
 
         # each row schedule results in one trace and one annotation
-        self.assertEqual(len(circuit_schedule.traces), 1)
-        self.assertEqual(len(circuit_schedule.annotations), 1)
+        assert len(circuit_schedule.traces) == 1
+        assert len(circuit_schedule.annotations) == 1
 
     @ddt.data(
         (None, False, False, 104, 7),
@@ -220,5 +220,5 @@ class TestCircuitSchedule(IBMTestCase):
         )
 
         fig = circuit_schedule.populate_figure(go.Figure())
-        self.assertEqual(len(fig.data), n_traces)
-        self.assertEqual(len(circuit_schedule.legend), n_instructions)
+        assert len(fig.data) == n_traces
+        assert len(circuit_schedule.legend) == n_instructions

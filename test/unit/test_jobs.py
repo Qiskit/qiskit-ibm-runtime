@@ -111,11 +111,11 @@ class TestRuntimeJob(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {"param1": "foo"}, {})
 
-        self.assertTrue(job.job_id())
-        self.assertIsInstance(job, RuntimeJobV2)
+        assert job.job_id()
+        assert isinstance(job, RuntimeJobV2)
         job.wait_for_final_state(poll_interval=0.1)
-        self.assertEqual(job.status(), "DONE")
-        self.assertTrue(job.result())
+        assert job.status() == "DONE"
+        assert job.result()
 
     @mock_responses
     def test_run_program_phantom_backend(self, registry):
@@ -131,12 +131,12 @@ class TestRuntimeJob(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {"param1": "foo"}, {"image": image})
 
-        self.assertTrue(job.job_id())
-        self.assertIsInstance(job, RuntimeJobV2)
+        assert job.job_id()
+        assert isinstance(job, RuntimeJobV2)
         job.wait_for_final_state(poll_interval=0.1)
-        self.assertTrue(job.result())
-        self.assertEqual(job.status(), "DONE")
-        self.assertEqual(job.image, image)
+        assert job.result()
+        assert job.status() == "DONE"
+        assert job.image == image
 
     @mock_responses
     def test_run_program_with_custom_log_level(self, registry):
@@ -146,11 +146,11 @@ class TestRuntimeJob(IBMTestCase):
 
         # `log_debug` is not returned by the API, nor present in `RuntimeJobV2`. The assert on
         # this tests just check that the job is valid (and the "log_level" argument was accepted).
-        self.assertTrue(job.job_id())
-        self.assertIsInstance(job, RuntimeJobV2)
+        assert job.job_id()
+        assert isinstance(job, RuntimeJobV2)
         job.wait_for_final_state(poll_interval=0.1)
-        self.assertTrue(job.result())
-        self.assertEqual(job.status(), "DONE")
+        assert job.result()
+        assert job.status() == "DONE"
 
     @mock_responses
     def test_run_program_failed_with_no_reason(self, registry):
@@ -165,15 +165,15 @@ class TestRuntimeJob(IBMTestCase):
 
         job.wait_for_final_state(poll_interval=0.1)
         job_result_raw = service._get_api_client().job_results(job.job_id())
-        self.assertEqual("ERROR", job.status())
-        self.assertEqual(
-            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
-            job.error_message(),
+        assert "ERROR" == job.status()
+        assert (
+            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw)
+            == job.error_message()
         )
 
         # When no reason is present in the job details, the error message is based on the raw
         # response from the results.
-        self.assertIn("Content from results", job.error_message())
+        assert "Content from results" in job.error_message()
         with self.assertRaisesRegex(RuntimeJobFailureError, "Content from results"):
             job.result()
 
@@ -188,10 +188,10 @@ class TestRuntimeJob(IBMTestCase):
         registry_job.statuses_reason = {"failed": (123, "Some reason")}
 
         job.wait_for_final_state(poll_interval=0.1)
-        self.assertEqual("ERROR", job.status())
+        assert "ERROR" == job.status()
 
         # When a reason is present in the job details, the error message is based on that reason.
-        self.assertIn("Some reason", job.error_message())
+        assert "Some reason" in job.error_message()
         with self.assertRaisesRegex(RuntimeJobFailureError, "Some reason"):
             job.result()
 
@@ -208,17 +208,17 @@ class TestRuntimeJob(IBMTestCase):
 
         job.wait_for_final_state(poll_interval=0.1)
         job_result_raw = service._get_api_client().job_results(job.job_id())
-        self.assertEqual("ERROR", job.status())
-        self.assertEqual(
+        assert "ERROR" == job.status()
+        assert (
             API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
                 job.job_id(), job_result_raw
-            ),
-            job.error_message(),
+            )
+            == job.error_message()
         )
 
         # In this specific case, the error message is based on the content from the results, and the
         # exception is based on the reason.
-        self.assertIn("Content from results", job.error_message())
+        assert "Content from results" in job.error_message()
         with self.assertRaisesRegex(RuntimeJobMaxTimeoutError, "RAN TOO LONG"):
             job.result()
 
@@ -228,7 +228,7 @@ class TestRuntimeJob(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {}, backend_name="ibm_foo", dry_run=True)
         job.wait_for_final_state(poll_interval=0.1)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"
 
     @mock_responses
     def test_run_program_dry_run_no_mocked_backend(self, registry):
@@ -249,7 +249,7 @@ class TestRuntimeJob(IBMTestCase):
             service, registry, {}, {}, backend_name="unique_backend_a", dry_run=True, instance="b"
         )
         job.wait_for_final_state(poll_interval=0.1)
-        self.assertEqual(job.backend().name, "mock_backend_a")
+        assert job.backend().name == "mock_backend_a"
 
     @mock_responses
     def test_cancel_job(self, registry):
@@ -261,11 +261,11 @@ class TestRuntimeJob(IBMTestCase):
         registry_job.statuses = ["running", "cancelled"]
 
         job.cancel()
-        self.assertEqual(job.status(), "CANCELLED")
+        assert job.status() == "CANCELLED"
 
         # This automatically advances the job to cancelled.
         remote_job = service.job(job.job_id())
-        self.assertEqual(remote_job.status(), "CANCELLED")
+        assert remote_job.status() == "CANCELLED"
         with self.assertRaisesRegex(RuntimeInvalidStateError, "Job was cancelled"):
             remote_job.result()
 
@@ -276,14 +276,14 @@ class TestRuntimeJob(IBMTestCase):
         job, _ = run_program(service, registry, {}, {})
         job.wait_for_final_state(poll_interval=0.1)
         result = job.result()
-        self.assertTrue(result)
+        assert result
 
     @mock_responses
     def test_job_status(self, registry):
         """Test job status."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {})
-        self.assertTrue(job.status())
+        assert job.status()
 
     @mock_responses
     def test_wait_for_final_state(self, registry):
@@ -291,14 +291,14 @@ class TestRuntimeJob(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {})
         job.wait_for_final_state(poll_interval=0.1)
-        self.assertEqual("DONE", job.status())
+        assert "DONE" == job.status()
 
     @mock_responses
     def test_delete_job(self, registry):
         """Test deleting a job."""
         service = QiskitRuntimeService(token="my_token")
         job, registry_job = run_program(service, registry, {"param1": "foo"}, {})
-        self.assertTrue(job.job_id())
+        assert job.job_id()
 
         service.delete_job(job.job_id())
 
@@ -367,10 +367,10 @@ class TestRuntimeJob(IBMTestCase):
                     # Values lower than the floor: limit to the floor, emit warning.
                     if value < 0.1:
                         expected_interval = 0.1
-                        self.assertIn("Using 0.1 as the poll interval", str(warn_cm[0]))
+                        assert "Using 0.1 as the poll interval" in str(warn_cm[0])
                     # Other values: use them as-is, no warning.
                     else:
-                        self.assertEqual(len(warn_cm), 0)
+                        assert len(warn_cm) == 0
 
                     patched_sleep.assert_called_with(expected_interval)
 
@@ -384,7 +384,7 @@ class TestRuntimeJob(IBMTestCase):
 
         job = service.job("my_job")
         usage = job.usage()
-        self.assertEqual(usage, 0 if status == "pending" else 123)
+        assert usage == (0 if status == "pending" else 123)
 
     @mock_responses
     @data("pending", "complete")
@@ -396,7 +396,7 @@ class TestRuntimeJob(IBMTestCase):
 
         job = service.job("my_job")
         usage = job.usage(partial=True)
-        self.assertEqual(usage, 123)
+        assert usage == 123
 
     @data(None, ToIntDecoder, [ToIntDecoder, MultiplierDecoder])
     @mock_responses
@@ -413,7 +413,7 @@ class TestRuntimeJob(IBMTestCase):
             result_decoder=decoders,
         )
 
-        self.assertIsInstance(job._result_decoders, list)
+        assert isinstance(job._result_decoders, list)
 
     @mock_responses
     def test_result_chains_decoders(self, registry):
@@ -424,5 +424,5 @@ class TestRuntimeJob(IBMTestCase):
 
         job = service.job("my_job")
 
-        self.assertEqual(job.result(decoder=ToIntDecoder), 2)
-        self.assertEqual(job.result(decoder=[ToIntDecoder, MultiplierDecoder]), 2 * 3)
+        assert job.result(decoder=ToIntDecoder) == 2
+        assert job.result(decoder=[ToIntDecoder, MultiplierDecoder]) == 2 * 3

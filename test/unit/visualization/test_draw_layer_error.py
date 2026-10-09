@@ -69,9 +69,9 @@ class TestDrawLayerErrorMap(IBMTestCase):
         fig_d = fig.to_dict()
         data = fig_d["data"]
         layout = fig_d["layout"]
-        self.assertEqual(len(data), 160)
-        self.assertEqual(layout["height"], 1000)
-        self.assertEqual(layout["width"], 1000)
+        assert len(data) == 160
+        assert layout["height"] == 1000
+        assert layout["width"] == 1000
 
         save_plotly_artifact(self.id(), fig)
 
@@ -101,25 +101,22 @@ class TestDrawLayerErrorsSwarm(IBMTestCase):
         data = fig_d["data"]
         layout = fig_d["layout"]
 
-        self.assertEqual(len(data), 3)
-        self.assertEqual(data[0]["name"], "l1")
-        self.assertEqual(data[1]["name"], "l2")
-        self.assertEqual(data[2]["name"], "l3")
+        assert len(data) == 3
+        assert data[0]["name"] == "l1"
+        assert data[1]["name"] == "l2"
+        assert data[2]["name"] == "l3"
 
-        self.assertEqual(
-            layout["xaxis"],
-            {
-                "title": {"text": "layers"},
-                "range": [-1, 3],
-                "ticktext": ["l1", "l2", "l3"],
-                "tickvals": [0, 1, 2],
-                "showgrid": False,
-                "zeroline": False,
-            },
-        )
-        self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 1000)
-        self.assertEqual(layout["height"], 800)
+        assert layout["xaxis"] == {
+            "title": {"text": "layers"},
+            "range": [-1, 3],
+            "ticktext": ["l1", "l2", "l3"],
+            "tickvals": [0, 1, 2],
+            "showgrid": False,
+            "zeroline": False,
+        }
+        assert layout["yaxis"] == {"title": {"text": "rates"}}
+        assert layout["width"] == 1000
+        assert layout["height"] == 800
 
         save_plotly_artifact(self.id(), fig)
 

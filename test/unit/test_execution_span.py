@@ -127,60 +127,60 @@ class TestSliceSpan(IBMTestCase):
         """Test the start and stop properties."""
         span1, span2, _ = slice_spans()
 
-        self.assertEqual(span1.start, datetime(2023, 8, 22, 18, 45, 3))
-        self.assertEqual(span1.stop, datetime(2023, 8, 22, 18, 45, 10))
-        self.assertEqual(span2.start, datetime(2023, 8, 22, 18, 45, 9))
-        self.assertEqual(span2.stop, datetime(2023, 8, 22, 18, 45, 11, 500000))
+        assert span1.start == datetime(2023, 8, 22, 18, 45, 3)
+        assert span1.stop == datetime(2023, 8, 22, 18, 45, 10)
+        assert span2.start == datetime(2023, 8, 22, 18, 45, 9)
+        assert span2.stop == datetime(2023, 8, 22, 18, 45, 11, 500000)
 
     def test_equality(self):
         """Test the equality method."""
         span1, span2, slices1 = slice_spans()
 
-        self.assertEqual(span1, span1)
-        self.assertEqual(span1, SliceSpan(span1.start, span1.stop, slices1))
-        self.assertNotEqual(span1, span2)
-        self.assertNotEqual(span1, "aoeu")
+        assert span1 == span1
+        assert span1 == SliceSpan(span1.start, span1.stop, slices1)
+        assert span1 != span2
+        assert span1 != "aoeu"
 
     def test_comparison(self):
         """Test the comparison method."""
         span1, span2, slices1 = slice_spans()
 
-        self.assertLess(span1, span2)
+        assert span1 < span2
 
         dt = timedelta(seconds=1)
         span1_plus = SliceSpan(span1.start, span1.stop + dt, slices1)
-        self.assertLess(span1, span1_plus)
+        assert span1 < span1_plus
 
         span1_minus = SliceSpan(span1.start, span1.stop - dt, slices1)
-        self.assertGreater(span1, span1_minus)
+        assert span1 > span1_minus
 
     def test_duration(self):
         """Test the duration property."""
         span1, span2, _ = slice_spans()
 
-        self.assertEqual(span1.duration, 7)
-        self.assertEqual(span2.duration, 2.5)
+        assert span1.duration == 7
+        assert span2.duration == 2.5
 
     def test_repr(self):
         """Test the repr method."""
         span1, _, _ = slice_spans()
 
         expect = "start='2023-08-22 18:45:03', stop='2023-08-22 18:45:10', size=7"
-        self.assertEqual(repr(span1), f"SliceSpan(<{expect}>)")
+        assert repr(span1) == f"SliceSpan(<{expect}>)"
 
     def test_size(self):
         """Test the size property."""
         span1, span2, _ = slice_spans()
 
-        self.assertEqual(span1.size, 5 + 2)
-        self.assertEqual(span2.size, 1 + 2)
+        assert span1.size == 5 + 2
+        assert span2.size == 1 + 2
 
     def test_pub_idxs(self):
         """Test the pub_idxs property."""
         span1, span2, _ = slice_spans()
 
-        self.assertEqual(span1.pub_idxs, [0, 1])
-        self.assertEqual(span2.pub_idxs, [0, 2])
+        assert span1.pub_idxs == [0, 1]
+        assert span2.pub_idxs == [0, 2]
 
     def test_mask(self):
         """Test the mask() method."""
@@ -207,27 +207,21 @@ class TestSliceSpan(IBMTestCase):
         """Test the contains_pub method."""
         span1, span2, _ = slice_spans()
 
-        self.assertEqual(span1.contains_pub(idx), span1_expected_res)
-        self.assertEqual(span2.contains_pub(idx), span2_expected_res)
+        assert span1.contains_pub(idx) == span1_expected_res
+        assert span2.contains_pub(idx) == span2_expected_res
 
     def test_filter_by_pub(self):
         """Test the filter_by_pub method."""
         span1, span2, slices1 = slice_spans()
 
-        self.assertEqual(span1.filter_by_pub([]), SliceSpan(span1.start, span1.stop, {}))
-        self.assertEqual(span2.filter_by_pub([]), SliceSpan(span2.start, span2.stop, {}))
+        assert span1.filter_by_pub([]) == SliceSpan(span1.start, span1.stop, {})
+        assert span2.filter_by_pub([]) == SliceSpan(span2.start, span2.stop, {})
 
-        self.assertEqual(
-            span1.filter_by_pub([2, 0]),
-            SliceSpan(span1.start, span1.stop, {0: slices1[0]}),
-        )
-        self.assertEqual(span2.filter_by_pub([2, 0]), span2)
+        assert span1.filter_by_pub([2, 0]) == SliceSpan(span1.start, span1.stop, {0: slices1[0]})
+        assert span2.filter_by_pub([2, 0]) == span2
 
-        self.assertEqual(
-            span1.filter_by_pub(1),
-            SliceSpan(span1.start, span1.stop, {1: slices1[1]}),
-        )
-        self.assertEqual(span2.filter_by_pub(1), SliceSpan(span2.start, span2.stop, {}))
+        assert span1.filter_by_pub(1) == SliceSpan(span1.start, span1.stop, {1: slices1[1]})
+        assert span2.filter_by_pub(1) == SliceSpan(span2.start, span2.stop, {})
 
 
 @ddt.ddt
@@ -238,47 +232,47 @@ class TestDoubleSliceSpan(IBMTestCase):
         """Test the start and stop properties."""
         span1, span2, _ = double_slice_spans()
 
-        self.assertEqual(span1.start, datetime(2024, 10, 11, 4, 31, 30))
-        self.assertEqual(span1.stop, datetime(2024, 10, 11, 4, 31, 34))
-        self.assertEqual(span2.start, datetime(2024, 10, 16, 11, 9, 20))
-        self.assertEqual(span2.stop, datetime(2024, 10, 16, 11, 9, 30))
+        assert span1.start == datetime(2024, 10, 11, 4, 31, 30)
+        assert span1.stop == datetime(2024, 10, 11, 4, 31, 34)
+        assert span2.start == datetime(2024, 10, 16, 11, 9, 20)
+        assert span2.stop == datetime(2024, 10, 16, 11, 9, 30)
 
     def test_equality(self):
         """Test the equality method."""
         span1, span2, slices1 = double_slice_spans()
 
-        self.assertEqual(span1, span1)
-        self.assertEqual(span1, DoubleSliceSpan(span1.start, span1.stop, slices1))
-        self.assertNotEqual(span1, "aoeu")
-        self.assertNotEqual(span1, span2)
+        assert span1 == span1
+        assert span1 == DoubleSliceSpan(span1.start, span1.stop, slices1)
+        assert span1 != "aoeu"
+        assert span1 != span2
 
     def test_duration(self):
         """Test the duration property."""
         span1, span2, _ = double_slice_spans()
 
-        self.assertEqual(span1.duration, 4)
-        self.assertEqual(span2.duration, 10)
+        assert span1.duration == 4
+        assert span2.duration == 10
 
     def test_repr(self):
         """Test the repr method."""
         span1, _, _ = double_slice_spans()
 
         expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=14"
-        self.assertEqual(repr(span1), f"DoubleSliceSpan(<{expect}>)")
+        assert repr(span1) == f"DoubleSliceSpan(<{expect}>)"
 
     def test_size(self):
         """Test the size property."""
         span1, span2, _ = double_slice_spans()
 
-        self.assertEqual(span1.size, 1 * 5 + 3 * 3)
-        self.assertEqual(span2.size, 2 * 20 + 3 * 3)
+        assert span1.size == 1 * 5 + 3 * 3
+        assert span2.size == 2 * 20 + 3 * 3
 
     def test_pub_idxs(self):
         """Test the pub_idxs property."""
         span1, span2, _ = double_slice_spans()
 
-        self.assertEqual(span1.pub_idxs, [0, 2])
-        self.assertEqual(span2.pub_idxs, [0, 1])
+        assert span1.pub_idxs == [0, 2]
+        assert span2.pub_idxs == [0, 1]
 
     def test_mask(self):
         """Test the mask() method."""
@@ -305,25 +299,21 @@ class TestDoubleSliceSpan(IBMTestCase):
         """Test the contains_pub method."""
         span1, span2, _ = double_slice_spans()
 
-        self.assertEqual(span1.contains_pub(idx), span1_expected_res)
-        self.assertEqual(span2.contains_pub(idx), span2_expected_res)
+        assert span1.contains_pub(idx) == span1_expected_res
+        assert span2.contains_pub(idx) == span2_expected_res
 
     def test_filter_by_pub(self):
         """Test the filter_by_pub method."""
         span1, span2, slices1 = double_slice_spans()
 
-        self.assertEqual(span1.filter_by_pub([]), DoubleSliceSpan(span1.start, span1.stop, {}))
-        self.assertEqual(span2.filter_by_pub([]), DoubleSliceSpan(span2.start, span2.stop, {}))
+        assert span1.filter_by_pub([]) == DoubleSliceSpan(span1.start, span1.stop, {})
+        assert span2.filter_by_pub([]) == DoubleSliceSpan(span2.start, span2.stop, {})
 
-        self.assertEqual(
-            span1.filter_by_pub([1, 0]),
-            DoubleSliceSpan(span1.start, span1.stop, {0: slices1[0]}),
+        assert span1.filter_by_pub([1, 0]) == DoubleSliceSpan(
+            span1.start, span1.stop, {0: slices1[0]}
         )
 
-        self.assertEqual(
-            span1.filter_by_pub(2),
-            DoubleSliceSpan(span1.start, span1.stop, {2: slices1[2]}),
-        )
+        assert span1.filter_by_pub(2) == DoubleSliceSpan(span1.start, span1.stop, {2: slices1[2]})
 
     def test_one_dimensional_shape_mask(self):
         """Test that mask doesn't throw with a one-dimensional shape."""
@@ -342,47 +332,47 @@ class TestTwirledSliceSpan(IBMTestCase):
         """Test the start and stop properties."""
         span1, span2, _, _ = twirled_slice_spans()
 
-        self.assertEqual(span1.start, datetime(2024, 10, 11, 4, 31, 30))
-        self.assertEqual(span1.stop, datetime(2024, 10, 11, 4, 31, 34))
-        self.assertEqual(span2.start, datetime(2024, 10, 16, 11, 9, 20))
-        self.assertEqual(span2.stop, datetime(2024, 10, 16, 11, 9, 30))
+        assert span1.start == datetime(2024, 10, 11, 4, 31, 30)
+        assert span1.stop == datetime(2024, 10, 11, 4, 31, 34)
+        assert span2.start == datetime(2024, 10, 16, 11, 9, 20)
+        assert span2.stop == datetime(2024, 10, 16, 11, 9, 30)
 
     def test_equality(self):
         """Test the equality method."""
         span1, span2, _, slices1 = twirled_slice_spans()
 
-        self.assertEqual(span1, span1)
-        self.assertEqual(span1, TwirledSliceSpan(span1.start, span1.stop, slices1))
-        self.assertNotEqual(span1, "aoeu")
-        self.assertNotEqual(span1, span2)
+        assert span1 == span1
+        assert span1 == TwirledSliceSpan(span1.start, span1.stop, slices1)
+        assert span1 != "aoeu"
+        assert span1 != span2
 
     def test_duration(self):
         """Test the duration property."""
         span1, span2, _, _ = twirled_slice_spans()
 
-        self.assertEqual(span1.duration, 4)
-        self.assertEqual(span2.duration, 10)
+        assert span1.duration == 4
+        assert span2.duration == 10
 
     def test_repr(self):
         """Test the repr method."""
         span1, _, _, _ = twirled_slice_spans()
 
         expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=11"
-        self.assertEqual(repr(span1), f"TwirledSliceSpan(<{expect}>)")
+        assert repr(span1) == f"TwirledSliceSpan(<{expect}>)"
 
     def test_size(self):
         """Test the size property."""
         span1, span2, _, _ = twirled_slice_spans()
 
-        self.assertEqual(span1.size, 1 * 2 + 3 * 3)
-        self.assertEqual(span2.size, 2 * 20 + 6 * 2)
+        assert span1.size == 1 * 2 + 3 * 3
+        assert span2.size == 2 * 20 + 6 * 2
 
     def test_pub_idxs(self):
         """Test the pub_idxs property."""
         span1, span2, _, _ = twirled_slice_spans()
 
-        self.assertEqual(span1.pub_idxs, [0, 2])
-        self.assertEqual(span2.pub_idxs, [0, 1])
+        assert span1.pub_idxs == [0, 2]
+        assert span2.pub_idxs == [0, 1]
 
     def test_mask(self):
         """Test the mask() method."""
@@ -427,25 +417,21 @@ class TestTwirledSliceSpan(IBMTestCase):
         """Test the contains_pub method."""
         span1, span2, _, _ = twirled_slice_spans()
 
-        self.assertEqual(span1.contains_pub(idx), span1_expected_res)
-        self.assertEqual(span2.contains_pub(idx), span2_expected_res)
+        assert span1.contains_pub(idx) == span1_expected_res
+        assert span2.contains_pub(idx) == span2_expected_res
 
     def test_filter_by_pub(self):
         """Test the filter_by_pub method."""
         span1, span2, _, slices1 = twirled_slice_spans()
 
-        self.assertEqual(span1.filter_by_pub([]), TwirledSliceSpan(span1.start, span1.stop, {}))
-        self.assertEqual(span2.filter_by_pub([]), TwirledSliceSpan(span2.start, span2.stop, {}))
+        assert span1.filter_by_pub([]) == TwirledSliceSpan(span1.start, span1.stop, {})
+        assert span2.filter_by_pub([]) == TwirledSliceSpan(span2.start, span2.stop, {})
 
-        self.assertEqual(
-            span1.filter_by_pub([1, 0]),
-            TwirledSliceSpan(span1.start, span1.stop, {0: slices1[0]}),
+        assert span1.filter_by_pub([1, 0]) == TwirledSliceSpan(
+            span1.start, span1.stop, {0: slices1[0]}
         )
 
-        self.assertEqual(
-            span1.filter_by_pub(2),
-            TwirledSliceSpan(span1.start, span1.stop, {2: slices1[2]}),
-        )
+        assert span1.filter_by_pub(2) == TwirledSliceSpan(span1.start, span1.stop, {2: slices1[2]})
 
     def test_one_dimensional_shape_mask(self):
         """Test that mask doesn't throw with a one-dimensional shape."""
@@ -465,58 +451,51 @@ class TestExecutionSpans(IBMTestCase):
         """Test the duration property."""
         spans, _, _, _ = execution_spans()
 
-        self.assertEqual(spans.duration, 8.5)
+        assert spans.duration == 8.5
 
     def test_filter_by_pub(self):
         """Test the filter_by_pub method."""
         spans, span1, span2, slices1 = execution_spans()
 
-        self.assertEqual(
-            spans.filter_by_pub([]),
-            ExecutionSpans(
-                [
-                    SliceSpan(span1.start, span1.stop, {}),
-                    SliceSpan(span2.start, span2.stop, {}),
-                ]
-            ),
+        assert spans.filter_by_pub([]) == ExecutionSpans(
+            [
+                SliceSpan(span1.start, span1.stop, {}),
+                SliceSpan(span2.start, span2.stop, {}),
+            ]
         )
 
-        self.assertEqual(
-            spans.filter_by_pub([2, 0]),
-            ExecutionSpans([SliceSpan(span1.start, span1.stop, {0: slices1[0]}), span2]),
+        assert spans.filter_by_pub([2, 0]) == ExecutionSpans(
+            [SliceSpan(span1.start, span1.stop, {0: slices1[0]}), span2]
         )
 
-        self.assertEqual(
-            spans.filter_by_pub(1),
-            ExecutionSpans(
-                [
-                    SliceSpan(span1.start, span1.stop, {1: slices1[1]}),
-                    SliceSpan(span2.start, span2.stop, {}),
-                ]
-            ),
+        assert spans.filter_by_pub(1) == ExecutionSpans(
+            [
+                SliceSpan(span1.start, span1.stop, {1: slices1[1]}),
+                SliceSpan(span2.start, span2.stop, {}),
+            ]
         )
 
     def test_sequence_methods(self):
         """Test __len__ and __get_item__."""
         spans, span1, span2, _ = execution_spans()
 
-        self.assertEqual(len(spans), 2)
-        self.assertEqual(spans[0], span1)
-        self.assertEqual(spans[1], span2)
-        self.assertEqual(spans[1, 0], ExecutionSpans([span2, span1]))
+        assert len(spans) == 2
+        assert spans[0] == span1
+        assert spans[1] == span2
+        assert spans[1, 0] == ExecutionSpans([span2, span1])
 
     def test_sort(self):
         """Test the sort method."""
         _, span1, span2, _ = execution_spans()
 
         spans = ExecutionSpans([span2, span1])
-        self.assertLess(spans[1], spans[0])
+        assert spans[1] < spans[0]
         inplace_sort = spans.sort()
-        self.assertIs(inplace_sort, spans)
-        self.assertLess(spans[0], spans[1])
+        assert inplace_sort is spans
+        assert spans[0] < spans[1]
 
         spans = ExecutionSpans([span2, span1])
         new_sort = spans.sort(inplace=False)
-        self.assertIsNot(inplace_sort, spans)
-        self.assertLess(spans[1], spans[0])
-        self.assertLess(new_sort[0], new_sort[1])
+        assert inplace_sort is not spans
+        assert spans[1] < spans[0]
+        assert new_sort[0] < new_sort[1]
