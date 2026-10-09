@@ -12,6 +12,7 @@
 
 """Tests for MidCircuitMeasure instruction."""
 
+from ddt import data, ddt
 from qiskit import QuantumCircuit, generate_preset_pass_manager
 from qiskit.circuit import Instruction
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -23,6 +24,7 @@ from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 from ...ibm_test_case import IBMTestCase
 
 
+@ddt
 class TestMidCircuitMeasure(IBMTestCase):
     """Test MidCircuitMeasure instruction."""
 
@@ -35,27 +37,20 @@ class TestMidCircuitMeasure(IBMTestCase):
         self.assertEqual(mcm.num_qubits, 1)
         self.assertEqual(mcm.num_clbits, 1)
 
-    def test_instantiation_name(self):
+    @data("measure_3", "measure_reset")
+    def test_instantiation_name(self, name):
         """Test instantiation with custom name."""
-        with self.subTest("measure_3"):
-            mcm = MidCircuitMeasure("measure_3")
-            self.assertIs(mcm.base_class, MidCircuitMeasure)
-            self.assertIsInstance(mcm, Instruction)
-            self.assertEqual(mcm.name, "measure_3")
-            self.assertEqual(mcm.num_qubits, 1)
-            self.assertEqual(mcm.num_clbits, 1)
+        mcm = MidCircuitMeasure(name)
+        self.assertIs(mcm.base_class, MidCircuitMeasure)
+        self.assertIsInstance(mcm, Instruction)
+        self.assertEqual(mcm.name, name)
+        self.assertEqual(mcm.num_qubits, 1)
+        self.assertEqual(mcm.num_clbits, 1)
 
-        with self.subTest("measure_reset"):
-            mcm = MidCircuitMeasure("measure_reset")
-            self.assertIs(mcm.base_class, MidCircuitMeasure)
-            self.assertIsInstance(mcm, Instruction)
-            self.assertEqual(mcm.name, "measure_reset")
-            self.assertEqual(mcm.num_qubits, 1)
-            self.assertEqual(mcm.num_clbits, 1)
-
-        with self.subTest("invalid_name"):
-            with self.assertRaises(ValueError):
-                mcm = MidCircuitMeasure("invalid_name")
+    def test_instantiation_invalid_name(self):
+        """Test instantiation with an invalid name."""
+        with self.assertRaises(ValueError):
+            MidCircuitMeasure("invalid_name")
 
     def test_circuit_integration(self):
         """Test appending to circuit."""
@@ -107,17 +102,17 @@ class TestMidCircuitReset(IBMTestCase):
 
     def test_instantiation_name(self):
         """Test instantiation with custom name."""
-        with self.subTest("reset_3"):
-            mcr = MidCircuitReset("reset_3")
-            self.assertIs(mcr.base_class, MidCircuitReset)
-            self.assertIsInstance(mcr, Instruction)
-            self.assertEqual(mcr.name, "reset_3")
-            self.assertEqual(mcr.num_qubits, 1)
-            self.assertEqual(mcr.num_clbits, 0)
+        mcr = MidCircuitReset("reset_3")
+        self.assertIs(mcr.base_class, MidCircuitReset)
+        self.assertIsInstance(mcr, Instruction)
+        self.assertEqual(mcr.name, "reset_3")
+        self.assertEqual(mcr.num_qubits, 1)
+        self.assertEqual(mcr.num_clbits, 0)
 
-        with self.subTest("invalid_name"):
-            with self.assertRaises(ValueError):
-                MidCircuitReset("invalid_name")
+    def test_instantiation_invalid_name(self):
+        """Test instantiation with an invalid name."""
+        with self.assertRaises(ValueError):
+            MidCircuitReset("invalid_name")
 
     def test_circuit_integration(self):
         """Test appending to circuit."""
@@ -168,17 +163,17 @@ class TestMeasureReset(IBMTestCase):
 
     def test_instantiation_name(self):
         """Test instantiation with custom name."""
-        with self.subTest("measure_reset_2"):
-            mr = MeasureReset("measure_reset_2")
-            self.assertIs(mr.base_class, MeasureReset)
-            self.assertIsInstance(mr, Instruction)
-            self.assertEqual(mr.name, "measure_reset_2")
-            self.assertEqual(mr.num_qubits, 1)
-            self.assertEqual(mr.num_clbits, 1)
+        mr = MeasureReset("measure_reset_2")
+        self.assertIs(mr.base_class, MeasureReset)
+        self.assertIsInstance(mr, Instruction)
+        self.assertEqual(mr.name, "measure_reset_2")
+        self.assertEqual(mr.num_qubits, 1)
+        self.assertEqual(mr.num_clbits, 1)
 
-        with self.subTest("invalid_name"):
-            with self.assertRaises(ValueError):
-                MeasureReset("invalid_name")
+    def test_instantiation_invalid_name(self):
+        """Test instantiation with an invalid name."""
+        with self.assertRaises(ValueError):
+            MeasureReset("invalid_name")
 
     def test_circuit_integration(self):
         """Test appending to circuit."""

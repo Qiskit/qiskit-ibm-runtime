@@ -61,8 +61,8 @@ def prepare(
     pre = options.bit_flip_checks.pre_circuit
     post = options.bit_flip_checks.post_circuit
     coupling_map = backend.target.build_coupling_map()
-
     pass_manager = None
+
     if pre.enable or post.enable:
         pre_x_pulse_type = pre.x_pulse_type if pre.enable else None
         post_x_pulse_type = post.x_pulse_type if post.enable else None

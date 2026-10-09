@@ -23,6 +23,7 @@ from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceDryRunRegistry
 from ..registries import Session as RegistrySession
+from ..utils import combine
 
 
 @ddt
@@ -37,19 +38,20 @@ class TestSession(IBMTestCase):
         session = Session(backend=backend)
         self.assertEqual(session.backend(), "common_backend")
 
-    def test_max_time(self):
+    @data(
+        (42, 42),
+        ("1h", 1 * 60 * 60),
+        ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
+        ("40s 1h", 40 + 1 * 60 * 60),
+    )
+    @unpack
+    def test_max_time(self, max_time, expected_max_time):
         """Test max time."""
         backend = FakeManilaV2()
-        max_times = [
-            (42, 42),
-            ("1h", 1 * 60 * 60),
-            ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
-            ("40s 1h", 40 + 1 * 60 * 60),
-        ]
-        for max_t, expected in max_times:
-            with self.subTest(max_time=max_t):
-                session = Session(backend=backend, max_time=max_t)
-                self.assertEqual(session._max_time, expected)
+
+        session = Session(backend=backend, max_time=max_time)
+
+        self.assertEqual(session._max_time, expected_max_time)
 
     def test_run_after_close(self):
         """Test running after session is closed."""
@@ -107,31 +109,20 @@ class TestSession(IBMTestCase):
         registry.add_session(RegistrySession(session.session_id, "common_backend"), "a")
         self.assertEqual(session.details()["mode"], "dedicated")
 
-    @data(
-        (Session, None, []),
-        (Batch, None, []),
-        (
-            Session,
+    @combine(
+        session_cls=[Session, Batch],
+        timestamps=[
+            None,
             [{"status": "open", "timestamp": "2026-01-01T00:00:00Z"}],
-            [{"status": "open", "timestamp": "2026-01-01T00:00:00Z"}],
-        ),
-        (
-            Batch,
             [
                 {"status": "open", "timestamp": "2026-01-01T00:00:00Z"},
                 {"status": "active", "timestamp": "2026-01-01T00:01:00Z"},
                 {"status": "closed", "timestamp": "2026-01-01T00:02:00Z"},
             ],
-            [
-                {"status": "open", "timestamp": "2026-01-01T00:00:00Z"},
-                {"status": "active", "timestamp": "2026-01-01T00:01:00Z"},
-                {"status": "closed", "timestamp": "2026-01-01T00:02:00Z"},
-            ],
-        ),
+        ],
     )
-    @unpack
     @mock_responses
-    def test_details_timestamps(self, session_cls, timestamps, expected, registry):
+    def test_details_timestamps(self, session_cls, timestamps, registry):
         """Test that the session state transitions are included in the details."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -140,7 +131,8 @@ class TestSession(IBMTestCase):
         registry.add_session(
             RegistrySession(session.session_id, "common_backend", timestamps=timestamps), "a"
         )
-        self.assertEqual(session.details()["timestamps"], expected)
+        # Sessions with no state transitions report an empty list of timestamps.
+        self.assertEqual(session.details()["timestamps"], timestamps or [])
 
     @mock_responses
     def test_cm_session_fractional(self, registry):

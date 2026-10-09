@@ -10,14 +10,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Sampler V2 (legacy and optionally also client-side)."""
+"""Tests for Sampler V2."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 import numpy as np
-from ddt import ddt
+from ddt import data, ddt, named_data
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate, real_amplitudes
@@ -32,7 +32,6 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
-from ..decorators import run_configured_sampler_implementations
 from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
@@ -83,6 +82,57 @@ def sampler_cases() -> list[tuple]:
     ]
 
 
+def multiple_cregs_cases() -> list[tuple]:
+    """Return the title, circuit and expected counts of the multiple classical register cases."""
+    cases = []
+
+    # Use all cregs.
+    a = ClassicalRegister(1, "a")
+    b = ClassicalRegister(2, "b")
+    c = ClassicalRegister(3, "c")
+    circuit = QuantumCircuit(QuantumRegister(3), a, b, c)
+    circuit.h(range(3))
+    circuit.measure([0, 1, 2, 2], [0, 2, 4, 5])
+    target = {"a": {0: 5000, 1: 5000}, "b": {0: 5000, 2: 5000}, "c": {0: 5000, 6: 5000}}
+    cases.append(("use all cregs", circuit, target))
+
+    # Use only a and b, with a wider b.
+    a = ClassicalRegister(1, "a")
+    b = ClassicalRegister(5, "b")
+    c = ClassicalRegister(3, "c")
+    circuit = QuantumCircuit(QuantumRegister(3), a, b, c)
+    circuit.h(range(3))
+    circuit.measure([0, 1, 2, 2], [0, 2, 4, 5])
+    target = {
+        "a": {0: 5000, 1: 5000},
+        "b": {0: 2500, 2: 2500, 24: 2500, 26: 2500},
+        "c": {0: 10000},
+    }
+    cases.append(("use only a and b", circuit, target))
+
+    # Use only c.
+    a = ClassicalRegister(1, "a")
+    b = ClassicalRegister(2, "b")
+    c = ClassicalRegister(3, "c")
+    circuit = QuantumCircuit(QuantumRegister(3), a, b, c)
+    circuit.h(range(3))
+    circuit.measure(1, 5)
+    target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 5000, 4: 5000}}
+    cases.append(("use only c", circuit, target))
+
+    # Use only c, measuring multiple qubits into the same clbit.
+    a = ClassicalRegister(1, "a")
+    b = ClassicalRegister(2, "b")
+    c = ClassicalRegister(3, "c")
+    circuit = QuantumCircuit(QuantumRegister(3), a, b, c)
+    circuit.h(range(3))
+    circuit.measure([0, 1, 2], [5, 5, 5])
+    target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 5000, 4: 5000}}
+    cases.append(("use only c multiple qubits", circuit, target))
+
+    return cases
+
+
 def isa_bell_circuit(backend: IBMBackend) -> QuantumCircuit:
     """Return a bell circuit transpiled for `backend`."""
     pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -109,48 +159,35 @@ def assert_result_type(result, num_pubs, targets=None):
 class TestSampler(IBMIntegrationTestCase):
     """Test Sampler."""
 
-    @run_configured_sampler_implementations
-    def test_sampler_run(self, sampler_cls):
+    @named_data(
+        # The parameter values to be paired with the circuit in the pub, if any.
+        ("single", None),
+        ("single_with_param", ()),
+        ("single_array", [()]),
+        ("multiple", [(), (), ()]),
+    )
+    def test_sampler_run(self, parameter_values):
         """Test Sampler.run()."""
         backend = self.service.backend(self.dependencies.qpu)
-        cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
+        _, _, target = sampler_cases()[1]
+        pub = isa_bell if parameter_values is None else (isa_bell, parameter_values)
 
         with Session(backend) as session:
-            _, _, target = cases[1]
-            with self.subTest("single"):
-                sampler = sampler_cls(mode=session, options=OPTIONS)
-                job = sampler.run([isa_bell])
-                result = job.result()
-                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
+            sampler = Sampler(mode=session, options=OPTIONS)
+            job = sampler.run([pub])
+            result = job.result()
 
-            with self.subTest("single with param"):
-                sampler = sampler_cls(mode=session, options=OPTIONS)
-                job = sampler.run([(isa_bell, ())])
-                result = job.result()
-                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
+        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-            with self.subTest("single array"):
-                sampler = sampler_cls(mode=session, options=OPTIONS)
-                job = sampler.run([(isa_bell, [()])])
-                result = job.result()
-                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
-
-            with self.subTest("multiple"):
-                sampler = sampler_cls(mode=session, options=OPTIONS)
-                job = sampler.run([(isa_bell, [(), (), ()])])
-                result = job.result()
-                assert_result_type(result, num_pubs=1, targets=[np.array([target, target, target])])
-
-    @run_configured_sampler_implementations
-    def test_sample_run_multiple_circuits(self, sampler_cls):
+    def test_sample_run_multiple_circuits(self):
         """Test Sampler.run() with multiple circuits."""
         backend = self.service.backend(self.dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
         _, _, target = cases[1]
-        sampler = sampler_cls(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([isa_bell, isa_bell, isa_bell]).result()
         assert_result_type(result, num_pubs=3, targets=[np.array(target)] * 3)
 
@@ -168,8 +205,7 @@ class TestSampler(IBMIntegrationTestCase):
             result, num_pubs=3, targets=[np.array(target1), np.array(target2), np.array(target3)]
         )
 
-    @run_configured_sampler_implementations
-    def test_run_1qubit(self, sampler_cls):
+    def test_run_1qubit(self):
         """Test for 1-qubit cases."""
         backend = self.service.backend(self.dependencies.qpu)
 
@@ -179,12 +215,11 @@ class TestSampler(IBMIntegrationTestCase):
         qc2.x(0)
         qc2.measure_all()
 
-        sampler = sampler_cls(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([qc, qc2]).result()
         assert_result_type(result, num_pubs=2)
 
-    @run_configured_sampler_implementations
-    def test_run_2qubit(self, sampler_cls):
+    def test_run_2qubit(self):
         """Test for 2-qubit cases."""
         backend = self.service.backend(self.dependencies.qpu)
 
@@ -200,74 +235,81 @@ class TestSampler(IBMIntegrationTestCase):
         qc3.x([0, 1])
         qc3.measure_all()
 
-        sampler = sampler_cls(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         assert_result_type(result, num_pubs=4)
 
-    @run_configured_sampler_implementations
-    def test_run_single_circuit(self, sampler_cls):
-        """Test for single circuit case."""
+    @named_data(
+        # The empty parameter values accepted by a circuit that takes no parameters.
+        ("none", None),
+        ("empty_tuple", ()),
+        ("empty_list", []),
+        ("empty_array", np.array([])),
+        ("tuple_of_empty_tuple", ((),)),
+        ("tuple_of_empty_list", ([],)),
+        ("list_of_empty_list", [[]]),
+        ("list_of_empty_tuple", [()]),
+        ("array_of_empty_array", np.array([[]])),
+    )
+    def test_run_single_circuit_no_parameter(self, parameter_values):
+        """Test for single circuit case, for a circuit without parameters."""
         backend = self.service.backend(self.dependencies.qpu)
-        cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
+        _, _, target = sampler_cases()[1]
 
-        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         with Session(backend) as session:
-            sampler = sampler_cls(mode=session, options=OPTIONS)
+            sampler = Sampler(mode=session, options=OPTIONS)
+            result = sampler.run([(isa_bell, parameter_values)]).result()
 
-            with self.subTest("No parameter"):
-                circuit, _, target = cases[1]
-                param_target = [
-                    (None, np.array(target)),
-                    ((), np.array(target)),
-                    ([], np.array(target)),
-                    (np.array([]), np.array(target)),
-                    (((),), np.array([target])),
-                    (([],), np.array([target])),
-                    ([[]], np.array([target])),
-                    ([()], np.array([target])),
-                    (np.array([[]]), np.array([target])),
-                ]
-                for param, target in param_target:
-                    with self.subTest(f"{circuit.name} w/ {param}"):
-                        result = sampler.run([(isa_bell, param)]).result()
-                        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
+        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-            with self.subTest("One parameter"):
-                circuit = QuantumCircuit(1, 1, name="X gate")
-                param = Parameter("x")
-                circuit.ry(param, 0)
-                circuit.measure(0, 0)
-                param_target = [
-                    ([np.pi], np.array({1: SHOTS})),
-                    ((np.pi,), np.array({1: SHOTS})),
-                    (np.array([np.pi]), np.array({1: SHOTS})),
-                    ([[np.pi]], np.array([{1: SHOTS}])),
-                    (((np.pi,),), np.array([{1: SHOTS}])),
-                    (np.array([[np.pi]]), np.array([{1: SHOTS}])),
-                ]
-                for param, target in param_target:
-                    with self.subTest(f"{circuit.name} w/ {param}"):
-                        result = sampler.run([(pm.run(circuit), param)]).result()
-                        assert_result_type(result, num_pubs=1)
+    @named_data(
+        # The shapes accepted for the values of a circuit that takes a single parameter.
+        ("list", [np.pi]),
+        ("tuple", (np.pi,)),
+        ("array", np.array([np.pi])),
+        ("nested_list", [[np.pi]]),
+        ("nested_tuple", ((np.pi,),)),
+        ("nested_array", np.array([[np.pi]])),
+    )
+    def test_run_single_circuit_one_parameter(self, parameter_values):
+        """Test for single circuit case, for a circuit with a single parameter."""
+        backend = self.service.backend(self.dependencies.qpu)
+        pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
-            with self.subTest("More than one parameter"):
-                circuit, param, target = cases[3]
-                param_target = [
-                    (param, np.array(target)),
-                    (tuple(param), np.array(target)),
-                    (np.array(param), np.array(target)),
-                    ((param,), np.array([target])),
-                    ([param], np.array([target])),
-                    (np.array([param]), np.array([target])),
-                ]
-                for param, target in param_target:
-                    with self.subTest(f"{circuit.name} w/ {param}"):
-                        result = sampler.run([(pm.run(circuit), param)]).result()
-                        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
+        circuit = QuantumCircuit(1, 1, name="X gate")
+        circuit.ry(Parameter("x"), 0)
+        circuit.measure(0, 0)
 
-    @run_configured_sampler_implementations
-    def test_run_reverse_meas_order(self, sampler_cls):
+        with Session(backend) as session:
+            sampler = Sampler(mode=session, options=OPTIONS)
+            result = sampler.run([(pass_manager.run(circuit), parameter_values)]).result()
+
+        assert_result_type(result, num_pubs=1)
+
+    @named_data(
+        # The shapes accepted for the values of a circuit that takes more than one parameter.
+        # The values match the ones of `sampler_cases()[3]`, used by the test.
+        ("list", [1] * 6),
+        ("tuple", (1,) * 6),
+        ("array", np.array([1] * 6)),
+        ("nested_list", [[1] * 6]),
+        ("nested_tuple", ([1] * 6,)),
+        ("nested_array", np.array([[1] * 6])),
+    )
+    def test_run_single_circuit_more_than_one_parameter(self, parameter_values):
+        """Test for single circuit case, for a circuit with more than one parameter."""
+        backend = self.service.backend(self.dependencies.qpu)
+        circuit, _, target = sampler_cases()[3]
+        pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+
+        with Session(backend) as session:
+            sampler = Sampler(mode=session, options=OPTIONS)
+            result = sampler.run([(pass_manager.run(circuit), parameter_values)]).result()
+
+        assert_result_type(result, num_pubs=1, targets=[np.array(target)])
+
+    def test_run_reverse_meas_order(self):
         """Test for sampler with reverse measurement order."""
         backend = self.service.backend(self.dependencies.qpu)
 
@@ -283,103 +325,120 @@ class TestSampler(IBMIntegrationTestCase):
         qc.measure(2, 0)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
-        sampler = sampler_cls(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
         assert_result_type(result, num_pubs=2)
 
-    @run_configured_sampler_implementations
-    def test_run_empty_parameter(self, sampler_cls):
+    @data(1, 2)
+    def test_run_empty_parameter(self, num_circuits):
         """Test for empty parameter."""
         backend = self.service.backend(self.dependencies.qpu)
 
+        n = 5
+        qc = QuantumCircuit(n, n - 1)
+        qc.measure(range(n - 1), range(n - 1))
+
         with Session(backend) as session:
-            n = 5
-            qc = QuantumCircuit(n, n - 1)
-            qc.measure(range(n - 1), range(n - 1))
-            sampler = sampler_cls(mode=session, options=OPTIONS)
-            with self.subTest("one circuit"):
-                result = sampler.run([qc]).result()
-                assert_result_type(result, num_pubs=1)
+            sampler = Sampler(mode=session, options=OPTIONS)
+            result = sampler.run([qc] * num_circuits).result()
 
-            with self.subTest("two circuits"):
-                result = sampler.run([qc, qc]).result()
-                assert_result_type(result, num_pubs=2)
+        assert_result_type(result, num_pubs=num_circuits)
 
-    @run_configured_sampler_implementations
-    def test_run_numpy_params(self, sampler_cls):
+    @data("ndarray", "list")
+    def test_run_numpy_params(self, params_type):
         """Test for numpy array as parameter values."""
         backend = self.service.backend(self.dependencies.qpu)
 
+        qc = real_amplitudes(num_qubits=2, reps=2)
+        qc.measure_all()
+        qc = transpile(circuits=qc, backend=backend)
+        k = 5
+        params_array = np.random.rand(k, qc.num_parameters)
+        params_list = params_array.tolist()
+
         with Session(backend) as session:
-            qc = real_amplitudes(num_qubits=2, reps=2)
-            qc.measure_all()
-            qc = transpile(circuits=qc, backend=backend)
-            k = 5
-            params_array = np.random.rand(k, qc.num_parameters)
-            params_list = params_array.tolist()
-            sampler = sampler_cls(mode=session, options=OPTIONS)
+            sampler = Sampler(mode=session, options=OPTIONS)
             target = sampler.run([(qc, params_list)]).result()
 
-            with self.subTest("ndarray"):
+            if params_type == "ndarray":
                 result = sampler.run([(qc, params_array)]).result()
-                assert_result_type(result, num_pubs=1, targets=[np.array(target)])
-
-            with self.subTest("split a list"):
+                num_pubs = 1
+            else:
                 result = sampler.run([(qc, params) for params in params_list]).result()
-                assert_result_type(result, num_pubs=len(params_list), targets=[np.array(target)])
+                num_pubs = len(params_list)
 
-    @run_configured_sampler_implementations
-    def test_run_with_shots_option(self, sampler_cls):
-        """Test with shots option."""
+        assert_result_type(result, num_pubs=num_pubs, targets=[np.array(target)])
+
+    def test_run_with_shots_option_init_option(self):
+        """Test with the number of shots set in the options the sampler is created with."""
+        shots = 100
         backend = self.service.backend(self.dependencies.qpu)
-        cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
-            _, _, _ = cases[1]
-            shots = 100
-            with self.subTest("init option"):
-                sampler = sampler_cls(mode=session, options={"default_shots": shots})
-                result = sampler.run([isa_bell]).result()
-                self.assertEqual(result[0].data.meas.num_shots, shots)
-                self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                assert_result_type(result, num_pubs=1)
+            sampler = Sampler(mode=session, options={"default_shots": shots})
+            result = sampler.run([isa_bell]).result()
 
-            with self.subTest("update option"):
-                sampler = sampler_cls(mode=session)
-                sampler.options.default_shots = shots
-                result = sampler.run([isa_bell]).result()
-                self.assertEqual(result[0].data.meas.num_shots, shots)
-                self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                assert_result_type(result, num_pubs=1)
+        self.assertEqual(result[0].data.meas.num_shots, shots)
+        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert_result_type(result, num_pubs=1)
 
-            with self.subTest("run arg"):
-                sampler = sampler_cls(mode=session)
-                result = sampler.run(pubs=[isa_bell], shots=shots).result()
-                self.assertEqual(result[0].data.meas.num_shots, shots)
-                self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                assert_result_type(result, num_pubs=1)
+    def test_run_with_shots_option_update_option(self):
+        """Test with the number of shots set in the options of an existing sampler."""
+        shots = 100
+        backend = self.service.backend(self.dependencies.qpu)
+        isa_bell = isa_bell_circuit(backend)
 
-            with self.subTest("run arg"):
-                sampler = sampler_cls(mode=session)
-                result = sampler.run(pubs=[isa_bell], shots=shots).result()
-                self.assertEqual(result[0].data.meas.num_shots, shots)
-                self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                assert_result_type(result, num_pubs=1)
+        with Session(backend) as session:
+            sampler = Sampler(mode=session)
+            sampler.options.default_shots = shots
+            result = sampler.run([isa_bell]).result()
 
-            with self.subTest("pub-like"):
-                sampler = sampler_cls(mode=session)
-                result = sampler.run([(isa_bell, None, shots)]).result()
-                self.assertEqual(result[0].data.meas.num_shots, shots)
-                self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                assert_result_type(result, num_pubs=1)
+        self.assertEqual(result[0].data.meas.num_shots, shots)
+        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert_result_type(result, num_pubs=1)
 
-            with self.subTest("pub"):
-                sampler = sampler_cls(mode=session)
-                result = sampler.run([SamplerPub(isa_bell, shots=shots)]).result()
-                self.assertEqual(result[0].data.meas.num_shots, shots)
-                self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
-                assert_result_type(result, num_pubs=1)
+    def test_run_with_shots_option_run_arg(self):
+        """Test with the number of shots set as an argument of `Sampler.run()`."""
+        shots = 100
+        backend = self.service.backend(self.dependencies.qpu)
+        isa_bell = isa_bell_circuit(backend)
+
+        with Session(backend) as session:
+            sampler = Sampler(mode=session)
+            result = sampler.run(pubs=[isa_bell], shots=shots).result()
+
+        self.assertEqual(result[0].data.meas.num_shots, shots)
+        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert_result_type(result, num_pubs=1)
+
+    def test_run_with_shots_option_pub_like(self):
+        """Test with the number of shots set in a pub-like tuple."""
+        shots = 100
+        backend = self.service.backend(self.dependencies.qpu)
+        isa_bell = isa_bell_circuit(backend)
+
+        with Session(backend) as session:
+            sampler = Sampler(mode=session)
+            result = sampler.run([(isa_bell, None, shots)]).result()
+
+        self.assertEqual(result[0].data.meas.num_shots, shots)
+        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert_result_type(result, num_pubs=1)
+
+    def test_run_with_shots_option_pub(self):
+        """Test with the number of shots set in a `SamplerPub`."""
+        shots = 100
+        backend = self.service.backend(self.dependencies.qpu)
+        isa_bell = isa_bell_circuit(backend)
+
+        with Session(backend) as session:
+            sampler = Sampler(mode=session)
+            result = sampler.run([SamplerPub(isa_bell, shots=shots)]).result()
+
+        self.assertEqual(result[0].data.meas.num_shots, shots)
+        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert_result_type(result, num_pubs=1)
 
     def test_run_with_shots_option_multiple_pubs(self):
         """Test with per-pub shots option."""
@@ -401,8 +460,7 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertEqual(sum(result[1].data.meas.get_counts().values()), shots2)
         assert_result_type(result, num_pubs=2)
 
-    @run_configured_sampler_implementations
-    def test_run_shots_result_size(self, sampler_cls):
+    def test_run_shots_result_size(self):
         """Test with shots option to validate the result size."""
         backend = self.service.backend(self.dependencies.qpu)
 
@@ -411,144 +469,73 @@ class TestSampler(IBMIntegrationTestCase):
         qc.h(range(n))
         qc.measure_all()
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        sampler = sampler_cls(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([pm.run(qc)]).result()
         self.assertLessEqual(result[0].data.meas.num_shots, SHOTS)
         self.assertEqual(sum(result[0].data.meas.get_counts().values()), SHOTS)
         assert_result_type(result, num_pubs=1)
 
-    @run_configured_sampler_implementations
-    def test_primitive_job_status_done(self, sampler_cls):
+    def test_primitive_job_status_done(self):
         """Test primitive job's status."""
         backend = self.service.backend(self.dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
-        sampler = sampler_cls(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=OPTIONS)
         job = sampler.run([isa_bell])
         _ = job.result()
         self.assertEqual(job.status(), "DONE")
 
-    @run_configured_sampler_implementations
-    def test_circuit_with_unitary(self, sampler_cls):
+    @named_data(
+        ("identity", UnitaryGate(np.eye(2))),
+        ("X", UnitaryGate([[0, 1], [1, 0]])),
+    )
+    def test_circuit_with_unitary(self, gate):
         """Test for circuit with unitary gate."""
         backend = self.service.backend(self.dependencies.qpu)
-
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
+        circuit = QuantumCircuit(1)
+        circuit.append(gate, [0])
+        circuit.measure_all()
+
         with Session(backend) as session:
-            with self.subTest("identity"):
-                gate = UnitaryGate(np.eye(2))
+            sampler = Sampler(mode=session, options=OPTIONS)
+            result = sampler.run([pm.run(circuit)]).result()
 
-                circuit = QuantumCircuit(1)
-                circuit.append(gate, [0])
-                circuit.measure_all()
+        assert_result_type(result, num_pubs=1)
 
-                sampler = sampler_cls(mode=session, options=OPTIONS)
-                result = sampler.run([pm.run(circuit)]).result()
-                assert_result_type(result, num_pubs=1)
-
-            with self.subTest("X"):
-                gate = UnitaryGate([[0, 1], [1, 0]])
-
-                circuit = QuantumCircuit(1)
-                circuit.append(gate, [0])
-                circuit.measure_all()
-
-                sampler = sampler_cls(mode=session, options=OPTIONS)
-                result = sampler.run([pm.run(circuit)]).result()
-                assert_result_type(result, num_pubs=1)
-
-    @run_configured_sampler_implementations
-    def test_metadata(self, sampler_cls):
+    def test_metadata(self):
         """Test for metatdata."""
         backend = self.service.backend(self.dependencies.qpu)
         cases = sampler_cases()
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         qc, _, _ = cases[1]
-        sampler = sampler_cls(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([pm.run(qc)]).result()
         self.assertEqual(result[0].data.meas.num_shots, SHOTS)
         assert_result_type(result, num_pubs=1)
 
-    @run_configured_sampler_implementations
-    def test_circuit_with_multiple_cregs(self, sampler_cls):
+    @named_data(*multiple_cregs_cases())
+    def test_circuit_with_multiple_cregs(self, circuit, target):
         """Test for circuit with multiple classical registers."""
         backend = self.service.backend(self.dependencies.qpu)
+        pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(backend) as session:
-            cases = []
-            pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+            sampler = Sampler(mode=session, options=OPTIONS)
+            result = sampler.run([pass_manager.run(circuit)]).result()
 
-            # case 1
-            a = ClassicalRegister(1, "a")
-            b = ClassicalRegister(2, "b")
-            c = ClassicalRegister(3, "c")
+        self.assertEqual(len(result[0].data), len(target))
+        assert_result_type(result, num_pubs=1)
 
-            qc = QuantumCircuit(QuantumRegister(3), a, b, c)
-            qc.h(range(3))
-            qc.measure([0, 1, 2, 2], [0, 2, 4, 5])
-            target = {"a": {0: 5000, 1: 5000}, "b": {0: 5000, 2: 5000}, "c": {0: 5000, 6: 5000}}
-            cases.append(("use all cregs", pm.run(qc), target))
-
-            # case 2
-            a = ClassicalRegister(1, "a")
-            b = ClassicalRegister(5, "b")
-            c = ClassicalRegister(3, "c")
-
-            qc = QuantumCircuit(QuantumRegister(3), a, b, c)
-            qc.h(range(3))
-            qc.measure([0, 1, 2, 2], [0, 2, 4, 5])
-            target = {
-                "a": {0: 5000, 1: 5000},
-                "b": {0: 2500, 2: 2500, 24: 2500, 26: 2500},
-                "c": {0: 10000},
-            }
-            cases.append(("use only a and b", pm.run(qc), target))
-
-            # case 3
-            a = ClassicalRegister(1, "a")
-            b = ClassicalRegister(2, "b")
-            c = ClassicalRegister(3, "c")
-
-            qc = QuantumCircuit(QuantumRegister(3), a, b, c)
-            qc.h(range(3))
-            qc.measure(1, 5)
-            target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 5000, 4: 5000}}
-            cases.append(("use only c", pm.run(qc), target))
-
-            # case 4
-            a = ClassicalRegister(1, "a")
-            b = ClassicalRegister(2, "b")
-            c = ClassicalRegister(3, "c")
-
-            qc = QuantumCircuit(QuantumRegister(3), a, b, c)
-            qc.h(range(3))
-            qc.measure([0, 1, 2], [5, 5, 5])
-            target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 5000, 4: 5000}}
-            cases.append(("use only c multiple qubits", pm.run(qc), target))
-
-            # case 5
-            a = ClassicalRegister(1, "a")
-            b = ClassicalRegister(2, "b")
-            c = ClassicalRegister(3, "c")
-
-            for title, qc, target in cases:
-                with self.subTest(title):
-                    sampler = sampler_cls(mode=session, options=OPTIONS)
-                    result = sampler.run([qc]).result()
-                    data = result[0].data
-                    self.assertEqual(len(data), 3)
-                    assert_result_type(result, num_pubs=1)
-
-    @run_configured_sampler_implementations
-    def test_sampler_v2_options(self, sampler_cls):
+    def test_sampler_v2_options(self):
         """Test SamplerV2 options."""
         backend = self.service.backend(self.dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
-        sampler = sampler_cls(mode=backend)
+        sampler = Sampler(mode=backend)
         sampler.options.default_shots = 4096
         sampler.options.execution.init_qubits = True
         sampler.options.execution.rep_delay = 0.00025
@@ -558,13 +545,12 @@ class TestSampler(IBMIntegrationTestCase):
         result = job.result()
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    @run_configured_sampler_implementations
-    def test_sampler_v2_dd(self, sampler_cls):
+    def test_sampler_v2_dd(self):
         """Test SamplerV2 DD options."""
         backend = self.service.backend(self.dependencies.qpu)
         cases = sampler_cases()
 
-        sampler = sampler_cls(mode=backend)
+        sampler = Sampler(mode=backend)
         sampler.options.dynamical_decoupling.enable = True
         sampler.options.dynamical_decoupling.sequence_type = "XX"
         sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"
