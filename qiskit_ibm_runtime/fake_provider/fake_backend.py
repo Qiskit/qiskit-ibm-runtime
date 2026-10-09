@@ -21,6 +21,8 @@ import tempfile
 import warnings
 from typing import TYPE_CHECKING, Any
 
+from qiskit import QuantumCircuit
+from qiskit.circuit import Measure
 from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
 from qiskit.utils import optionals as _optionals
@@ -36,7 +38,6 @@ from ..utils.backend_decoder import (
 from .backend_encoder import BackendEncoder
 
 if TYPE_CHECKING:
-    from qiskit import QuantumCircuit
     from qiskit.providers import Job, Options
     from qiskit.transpiler import Target
 
@@ -314,7 +315,24 @@ class FakeBackendV2(BackendV2):
         if self.sim is None:
             self._setup_sim()
         self.sim._options = self._options  # type: ignore[attr-defined]
-        job = self.sim.run(run_input, **options)  # type: ignore[attr-defined]
+
+        # Compatibility workaround for qiskit-aer versions that do not support
+        # backend-specific "measure_*" instructions natively.
+        # See https://github.com/Qiskit/qiskit-aer/issues/2456
+
+        circuits = [run_input] if isinstance(run_input, QuantumCircuit) else run_input
+
+        sim_circuits = []
+
+        for circuit in circuits:
+            circuit_copy = circuit.copy()
+            for index, instruction in enumerate(circuit_copy.data):
+                if instruction.operation.name.startswith("measure_"):
+                    circuit_copy.data[index] = instruction.replace(operation=Measure())
+            sim_circuits.append(circuit_copy)
+
+        sim_input = sim_circuits[0] if isinstance(run_input, QuantumCircuit) else sim_circuits
+        job = self.sim.run(sim_input, **options)  # type: ignore[attr-defined]
         return job
 
     def _get_noise_model_from_backend_v2(  # type: ignore
