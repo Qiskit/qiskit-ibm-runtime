@@ -86,45 +86,24 @@ def assert_samplex_arguments_are_correct(
     noise_keys = [k for k in keys if k.startswith("noise_scales.")]
     plm_keys = [k for k in keys if k.startswith("pauli_lindblad_maps.")]
 
-    assert ("parameter_values" in keys) == scenario.has_parameter_values, (
-        f"[{scenario.label}] parameter_values presence mismatch; keys={keys}"
-    )
+    assert ("parameter_values" in keys) == scenario.has_parameter_values
     if scenario.has_parameter_values:
         expected_pv = scenario.pub.parameter_values.as_array(scenario.pub.circuit.parameters)
         actual_pv = np.squeeze(np.asarray(item.samplex_arguments["parameter_values"]))
-        assert np.array_equal(actual_pv, np.squeeze(expected_pv)), (
-            f"[{scenario.label}] parameter_values mismatch; "
-            f"got {actual_pv!r}, expected {np.squeeze(expected_pv)!r}"
-        )
-    assert len(basis_keys) == scenario.num_basis_changes, (
-        f"[{scenario.label}] expected {scenario.num_basis_changes} "
-        f"basis_changes key(s), got {len(basis_keys)}; keys={keys}"
-    )
+        assert np.array_equal(actual_pv, np.squeeze(expected_pv))
+    assert len(basis_keys) == scenario.num_basis_changes
     zero_bc_keys = [k for k in basis_keys if np.all(np.asarray(item.samplex_arguments[k]) == 0)]
     nonzero_bc_keys = [
         k for k in basis_keys if not np.all(np.asarray(item.samplex_arguments[k]) == 0)
     ]
-    assert len(zero_bc_keys) == scenario.num_basis_changes - 1, (
-        f"[{scenario.label}] expected {scenario.num_basis_changes - 1} all-zero "
-        f"basis_changes key(s) (mid-circuit boxes), got {len(zero_bc_keys)}; "
-        f"keys={basis_keys}"
-    )
-    assert len(nonzero_bc_keys) == 1, (
-        f"[{scenario.label}] expected exactly 1 non-zero basis_changes key "
-        f"(final measurement box), got {len(nonzero_bc_keys)}; keys={basis_keys}"
-    )
+    assert len(zero_bc_keys) == scenario.num_basis_changes - 1
+    assert len(nonzero_bc_keys) == 1
     if inject_noise:
-        assert len(noise_keys) == scenario.num_noise_maps, (
-            f"[{scenario.label}] expected {scenario.num_noise_maps} noise_scales "
-            f"key(s), got {len(noise_keys)}; keys={keys}"
-        )
-        assert len(plm_keys) == scenario.num_noise_maps, (
-            f"[{scenario.label}] expected {scenario.num_noise_maps} "
-            f"pauli_lindblad_maps key(s), got {len(plm_keys)}; keys={keys}"
-        )
+        assert len(noise_keys) == scenario.num_noise_maps
+        assert len(plm_keys) == scenario.num_noise_maps
     else:
-        assert noise_keys == [], f"[{scenario.label}] noise_scales must be absent; keys={keys}"
-        assert plm_keys == [], f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}"
+        assert noise_keys == []
+        assert plm_keys == []
 
 
 def assert_template_circuit_is_correct(
@@ -165,15 +144,8 @@ def assert_template_circuit_is_correct(
     else:
         expected_num_params = scenario.num_circuit_parameters_gates_off
 
-    assert circuit.num_clbits == scenario.expected_num_clbits, (
-        f"[{scenario.label}] template num_clbits mismatch; "
-        f"got {circuit.num_clbits}, expected {scenario.expected_num_clbits}"
-    )
-    assert circuit.num_parameters == expected_num_params, (
-        f"[{scenario.label}] template num_parameters mismatch "
-        f"(enable_gates={enable_gates}, noise_factor={noise_factor}); "
-        f"got {circuit.num_parameters}, expected {expected_num_params}"
-    )
+    assert circuit.num_clbits == scenario.expected_num_clbits
+    assert circuit.num_parameters == expected_num_params
 
 
 def assert_trex_item_is_correct(
@@ -202,34 +174,22 @@ def assert_trex_item_is_correct(
             ``trex_item.shape[0]``.
     """
     trex_item = program.items[-1]
-    assert isinstance(trex_item, SamplexItem), "Last item must be a SamplexItem (TREX)"
+    assert isinstance(trex_item, SamplexItem)
 
-    assert trex_item.shape == (expected_num_randomizations,), (
-        f"Expected TREX item shape ({expected_num_randomizations},), got {trex_item.shape}"
-    )
+    assert trex_item.shape == (expected_num_randomizations,)
 
     n = max(pub.circuit.num_qubits for pub in pubs)
-    assert trex_item.circuit.num_qubits == n, (
-        f"Expected TREX circuit width {n}, got {trex_item.circuit.num_qubits}"
-    )
+    assert trex_item.circuit.num_qubits == n
 
     op_counts = trex_item.circuit.count_ops()
-    assert op_counts["measure"] == n, (
-        f"Expected {n} measure operations (one per qubit), got {op_counts['measure']}"
-    )
-    assert op_counts["rz"] == 3 * n, (
-        f"Expected {3 * n} rz operations (3 per qubit), got {op_counts['rz']}"
-    )
-    assert op_counts["sx"] == 2 * n, (
-        f"Expected {2 * n} sx operations (2 per qubit), got {op_counts['sx']}"
-    )
-    assert set(op_counts) - {"barrier"} == {"measure", "rz", "sx"}, (
-        f"Expected exactly gate types {{measure, rz, sx}} (plus barriers),got {dict(op_counts)}"
-    )
+    assert op_counts["measure"] == n
+    assert op_counts["rz"] == 3 * n
+    assert op_counts["sx"] == 2 * n
+    assert set(op_counts) - {"barrier"} == {"measure", "rz", "sx"}
 
     qm_entries = program.passthrough_data.get("qiskit_mitigation", [])  # type: ignore[union-attr]
     has_trex_entry = any(e.get("mitigation") == "trex" for e in qm_entries)
-    assert has_trex_entry, "passthrough_data['qiskit_mitigation'] must contain a 'trex' entry"
+    assert has_trex_entry
 
 
 def prepare_vanilla(

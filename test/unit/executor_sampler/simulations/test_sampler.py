@@ -58,7 +58,7 @@ def assert_pub_result(pub: SamplerPub, pub_result: SamplerPubResult) -> None:
         probabilities = Statevector(bound_circuit).probabilities_dict()
 
         fidelity = hellinger_fidelity(array[index].get_counts(), probabilities)
-        assert abs(fidelity - 1.0) <= tolerance, f"Fidelity: {fidelity}"
+        assert abs(fidelity - 1.0) <= tolerance
 
 
 @ddt
