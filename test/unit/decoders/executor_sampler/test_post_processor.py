@@ -87,15 +87,15 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
         pub_result = quantum_program_item_result_to_sampler_pub_result(item, (num_rands,), 0)
 
         # Verify both registers are present
-        self.assertIn("c1", pub_result.data)
-        self.assertIn("c2", pub_result.data)
+        assert "c1" in pub_result.data
+        assert "c2" in pub_result.data
 
         # Verify DataBin has the supplied PUB shape
-        self.assertEqual(pub_result.data.shape, (num_rands,))
+        assert pub_result.data.shape == (num_rands,)
 
         # Verify BitArrays
-        self.assertEqual(pub_result.data.c1.num_bits, 2)
-        self.assertEqual(pub_result.data.c2.num_bits, 3)
+        assert pub_result.data.c1.num_bits == 2
+        assert pub_result.data.c2.num_bits == 3
 
     @data("circuit_metadata", [None, {"metadata": "val"}])
     def test_metadata_preservation(self, circuit_metadata):
@@ -106,7 +106,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
         )
 
         # Verify metadata is present
-        self.assertEqual(result.metadata["circuit_metadata"], circuit_metadata)
+        assert result.metadata["circuit_metadata"] == circuit_metadata
 
     def test_bit_array_data_integrity(self):
         """Test that BitArray data matches input measurement data."""
@@ -121,12 +121,12 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
         bit_array = result.data.meas
 
         # Verify the BitArray contains the same data
-        self.assertEqual(bit_array.num_shots, num_shots)
-        self.assertEqual(bit_array.num_bits, num_bits)
+        assert bit_array.num_shots == num_shots
+        assert bit_array.num_bits == num_bits
 
         # Convert back to bool array and compare
         reconstructed = bit_array.get_bitstrings()
-        self.assertEqual(len(reconstructed), num_shots)
+        assert len(reconstructed) == num_shots
 
     @data("kerneled", "avg_kerneled")
     def test_data_integrity_kerneled(self, meas_type):
@@ -148,8 +148,8 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
         result = quantum_program_item_result_to_sampler_pub_result(item, (), 0, meas_type=meas_type)
 
         # Verify suffix was removed and data is accessible without suffix
-        self.assertIn("meas", result.data)
-        self.assertNotIn(register_name_with_suffix, result.data)
+        assert "meas" in result.data
+        assert register_name_with_suffix not in result.data
 
         # Verify the result array contains the same data
         np.testing.assert_array_equal(result.data.meas, meas_data)
@@ -176,15 +176,12 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
         ]
 
         # `scheduler_timing` and `stretch_values` should be present and converted in `metadata`.
-        self.assertIn("compilation", result.metadata)
-        self.assertEqual(
-            result.metadata["compilation"]["scheduler_timing"],
-            {
+        assert "compilation" in result.metadata
+        assert result.metadata["compilation"]["scheduler_timing"] == {
                 "timing": scheduler_timing.timing,
                 "circuit_duration": scheduler_timing.circuit_duration,
-            },
-        )
-        self.assertEqual(result.metadata["compilation"]["stretch_values"], expected_stretch_values)
+            }
+        assert result.metadata["compilation"]["stretch_values"] == expected_stretch_values
 
     def test_simulation_info_in_metadata(self):
         """For simulator results (plain dict metadata), metadata is stored under ``executor``."""
@@ -194,9 +191,9 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
 
         result = quantum_program_item_result_to_sampler_pub_result(item, (), 0)
 
-        self.assertIn("executor", result.metadata)
-        self.assertEqual(result.metadata["executor"], sim_metadata)
-        self.assertNotIn("compilation", result.metadata)
+        assert "executor" in result.metadata
+        assert result.metadata["executor"] == sim_metadata
+        assert "compilation" not in result.metadata
 
 
 @ddt
@@ -256,13 +253,13 @@ class TestSamplerPostProcessor(IBMTestCase):
         result = sampler_v2_post_processor_v0_1(qp_result)
 
         # Verify multiple pubs are handled
-        self.assertEqual(len(result), 2)
-        self.assertEqual(result[0].data.shape, ())
-        self.assertEqual(result[1].data.shape, (4,))
+        assert len(result) == 2
+        assert result[0].data.shape == ()
+        assert result[1].data.shape == (4,)
 
         if meas_type == "classified":
-            self.assertEqual(result[0].data.meas.num_bits, 2)
-            self.assertEqual(result[1].data.meas.num_bits, 3)
+            assert result[0].data.meas.num_bits == 2
+            assert result[1].data.meas.num_bits == 3
         else:
             # kerneled / avg_kerneled IQ arrays pass through unchanged (suffix stripped).
             np.testing.assert_array_equal(result[0].data.meas, meas_data_1)
@@ -310,10 +307,10 @@ class TestSamplerPostProcessor(IBMTestCase):
         result = sampler_v2_post_processor_v0_1(qp_result)
 
         # Verify each pub has correct circuit metadata
-        self.assertEqual(len(result), 2)
+        assert len(result) == 2
         for idx, pub_result in enumerate(result):
-            self.assertIn("circuit_metadata", pub_result.metadata)
-            self.assertEqual(pub_result.metadata["circuit_metadata"], circuits_metadata[idx])
+            assert "circuit_metadata" in pub_result.metadata
+            assert pub_result.metadata["circuit_metadata"] == circuits_metadata[idx]
 
     def test_post_processor_circuit_metadata_length_mismatch(self):
         """Test that post-processor raises error when circuit metadata length doesn't match pubs."""
@@ -349,7 +346,7 @@ class TestSamplerPostProcessor(IBMTestCase):
         with self.assertRaises(ValueError) as context:
             sampler_v2_post_processor_v0_1(qp_result)
 
-        self.assertIn("does not match", str(context.exception))
+        assert "does not match" in str(context.exception)
 
     def test_post_processor_applies_bit_flips(self):
         """Test that post-processor applies measurement twirling bit flips via XOR."""
@@ -389,8 +386,8 @@ class TestSamplerPostProcessor(IBMTestCase):
         result = sampler_v2_post_processor_v0_1(qp_result)
 
         # Verify measurement_flips register was removed
-        self.assertNotIn("measurement_flips.meas", result[0].data)
-        self.assertIn("meas", result[0].data)
+        assert "measurement_flips.meas" not in result[0].data
+        assert "meas" in result[0].data
 
         # Verify the data in qp_result was XORed (and flattened)
         expected_data = original_meas ^ bit_flips
@@ -444,10 +441,10 @@ class TestSamplerPostProcessor(IBMTestCase):
         result = sampler_v2_post_processor_v0_1(qp_result)
 
         # Verify flip registers removed
-        self.assertIn("c1", result[0].data)
-        self.assertIn("c2", result[0].data)
-        self.assertNotIn("measurement_flips.c1", result[0].data)
-        self.assertNotIn("measurement_flips.c2", result[0].data)
+        assert "c1" in result[0].data
+        assert "c2" in result[0].data
+        assert "measurement_flips.c1" not in result[0].data
+        assert "measurement_flips.c2" not in result[0].data
 
     def test_post_processor_no_bit_flips(self):
         """Test that post-processor works when no bit flips are present."""
@@ -477,9 +474,9 @@ class TestSamplerPostProcessor(IBMTestCase):
 
         result = sampler_v2_post_processor_v0_1(qp_result)
 
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertEqual(len(result), 1)
-        self.assertIn("meas", result[0].data)
+        assert isinstance(result, PrimitiveResult)
+        assert len(result) == 1
+        assert "meas" in result[0].data
 
     def test_post_processor_empty_result(self):
         """Test that post-processor returns empty PrimitiveResult when input is empty."""
@@ -493,10 +490,10 @@ class TestSamplerPostProcessor(IBMTestCase):
         result = sampler_v2_post_processor_v0_1(qp_result)
 
         # Verify empty result is returned
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertEqual(len(result), 0)
+        assert isinstance(result, PrimitiveResult)
+        assert len(result) == 0
         # Verify metadata is empty
-        self.assertEqual(result.metadata, {})
+        assert result.metadata == {}
 
 
 class TestSamplerPostProcessorFlattening(IBMTestCase):
@@ -518,9 +515,9 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             result_twirling([{"meas": meas_data}], twirling_enabled=True)
         )
         bit_array = result[0].data.meas
-        self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
-        self.assertEqual(bit_array.num_bits, num_bits)
-        self.assertEqual(result[0].data.shape, ())
+        assert bit_array.num_shots == num_rand * shots_per_rand
+        assert bit_array.num_bits == num_bits
+        assert result[0].data.shape == ()
 
     def test_twirled_2d_sweep_flattened(self):
         """Twirled 2-D parametric pub.
@@ -535,9 +532,9 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             result_twirling([{"meas": meas_data}], twirling_enabled=True)
         )
         bit_array = result[0].data.meas
-        self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
-        self.assertEqual(bit_array.num_bits, num_bits)
-        self.assertEqual(result[0].data.shape, (s1, s2))
+        assert bit_array.num_shots == num_rand * shots_per_rand
+        assert bit_array.num_bits == num_bits
+        assert result[0].data.shape == (s1, s2)
 
     def test_twirled_data_values_preserved(self):
         """Flattening must preserve data values (just reshape, not reorder)."""
@@ -561,8 +558,8 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             result_twirling([{"meas": meas_data}], twirling_enabled=False)
         )
         bit_array = result[0].data.meas
-        self.assertEqual(bit_array.num_shots, num_shots)
-        self.assertEqual(bit_array.num_bits, num_bits)
+        assert bit_array.num_shots == num_shots
+        assert bit_array.num_bits == num_bits
 
     def test_error_when_twirling_missing_from_passthrough(self):
         """Verify error is raised when twirling flag is missing from passthrough data."""
@@ -595,7 +592,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
         with self.assertRaises(ValueError) as context:
             sampler_v2_post_processor_v0_1(qp_result)
 
-        self.assertIn("twirling", str(context.exception))
+        assert "twirling" in str(context.exception)
 
     def test_error_when_meas_type_missing_from_passthrough(self):
         """Verify error is raised when meas_type is missing from passthrough data."""
@@ -627,7 +624,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
         with self.assertRaises(ValueError) as context:
             sampler_v2_post_processor_v0_1(qp_result)
 
-        self.assertIn("meas_type", str(context.exception))
+        assert "meas_type" in str(context.exception)
 
     def test_multiple_pubs_mixed_twirled(self):
         """Multiple pubs: each pub is flattened according to its computed pub_shape."""
@@ -641,10 +638,10 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
         result = sampler_v2_post_processor_v0_1(
             result_twirling([{"meas": meas0}, {"meas": meas1}], twirling_enabled=True)
         )
-        self.assertEqual(result[0].data.meas.num_shots, num_rand * shots_per_rand)
-        self.assertEqual(result[0].data.shape, ())
-        self.assertEqual(result[1].data.meas.num_shots, num_rand * shots_per_rand)
-        self.assertEqual(result[1].data.shape, (3,))
+        assert result[0].data.meas.num_shots == num_rand * shots_per_rand
+        assert result[0].data.shape == ()
+        assert result[1].data.meas.num_shots == num_rand * shots_per_rand
+        assert result[1].data.shape == (3,)
 
     def test_twirled_axis_ordering_preserved(self):
         """Test parameter sweep axes are not mixed with randomization axes during flattening."""
@@ -674,7 +671,7 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
         reconstructed = bit_array.to_bool_array()
 
         # Verify shape is correct
-        self.assertEqual(reconstructed.shape, (sweep, num_rand * shots_per_rand, num_bits))
+        assert reconstructed.shape == (sweep, num_rand * shots_per_rand, num_bits)
 
         # Verify that each parameter index contains the correct merged randomizations
         # For param0: should have rand0 shots (all 0s) followed by rand1 shots (all 1s)
@@ -724,8 +721,8 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
         )
 
         # The ``_avg_iq`` suffix is stripped and the array is averaged over axis 0.
-        self.assertIn("meas", result[0].data)
-        self.assertNotIn("meas_avg_iq", result[0].data)
+        assert "meas" in result[0].data
+        assert "meas_avg_iq" not in result[0].data
         np.testing.assert_array_equal(result[0].data.meas, meas_data.mean(axis=0))
 
     def test_twirled_avg_kerneled_not_flattened(self):
@@ -746,4 +743,4 @@ class TestSamplerPostProcessorFlattening(IBMTestCase):
             )
         )
 
-        self.assertEqual(result[0].data.meas.shape, (shots_per_rand, num_components))
+        assert result[0].data.meas.shape == (shots_per_rand, num_components)

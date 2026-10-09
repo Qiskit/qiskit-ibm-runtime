@@ -98,12 +98,9 @@ class TestSampler(IBMTestCase):
         result = job.result()
 
         array = result[0].data.meas
-        self.assertEqual(
-            array.num_shots,
-            num_randomizations * shots_per_randomization
+        assert array.num_shots == (num_randomizations * shots_per_randomization
             if enable_measure or enable_gates
-            else shots,
-        )
+            else shots)
 
         for pub, pub_result in zip(pubs, result):
             assert_pub_result(pub, pub_result)

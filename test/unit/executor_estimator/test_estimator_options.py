@@ -28,15 +28,15 @@ class TestEstimatorUsingOptions(IBMTestCase):
     def test_default_options(self):
         """Test that default options are set when none are provided."""
         estimator = Estimator(mode=FakeBrisbane())
-        self.assertIsInstance(estimator.options, EstimatorOptions)
-        self.assertEqual(estimator.options, EstimatorOptions())
+        assert isinstance(estimator.options, EstimatorOptions)
+        assert estimator.options == EstimatorOptions()
 
     def test_options_from_instance(self):
         """Test constructing with an EstimatorOptions instance."""
         opts = EstimatorOptions(execution=ExecutionOptions(init_qubits=False))
         estimator = Estimator(mode=FakeBrisbane(), options=opts)
-        self.assertIs(estimator.options, opts)
-        self.assertFalse(estimator.options.execution.init_qubits)
+        assert estimator.options is opts
+        assert not estimator.options.execution.init_qubits
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
@@ -45,17 +45,17 @@ class TestEstimatorUsingOptions(IBMTestCase):
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
         }
         estimator = Estimator(mode=FakeBrisbane(), options=opts_dict)
-        self.assertFalse(estimator.options.execution.init_qubits)
-        self.assertEqual(estimator.options.execution.rep_delay, 0.5)
-        self.assertEqual(estimator.options.environment.log_level, "DEBUG")
-        self.assertEqual(estimator.options.environment.job_tags, ["tag1"])
+        assert not estimator.options.execution.init_qubits
+        assert estimator.options.execution.rep_delay == 0.5
+        assert estimator.options.environment.log_level == "DEBUG"
+        assert estimator.options.environment.job_tags == ["tag1"]
 
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
         estimator = Estimator(mode=FakeBrisbane(), options={"execution": {"init_qubits": False}})
-        self.assertFalse(estimator.options.execution.init_qubits)
-        self.assertIsNone(estimator.options.execution.rep_delay)
-        self.assertEqual(estimator.options.environment, EnvironmentOptions())
+        assert not estimator.options.execution.init_qubits
+        assert estimator.options.execution.rep_delay is None
+        assert estimator.options.environment == EnvironmentOptions()
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
@@ -67,14 +67,14 @@ class TestEstimatorUsingOptions(IBMTestCase):
         estimator = Estimator(mode=FakeBrisbane())
         new_opts = EstimatorOptions(execution=ExecutionOptions(init_qubits=False))
         estimator.options = new_opts
-        self.assertIs(estimator.options, new_opts)
+        assert estimator.options is new_opts
 
     def test_setter_with_dict(self):
         """Test setting options via the setter with a dict."""
         estimator = Estimator(mode=FakeBrisbane())
         estimator.options = {"execution": {"init_qubits": False}}
-        self.assertIsInstance(estimator.options, EstimatorOptions)
-        self.assertFalse(estimator.options.execution.init_qubits)
+        assert isinstance(estimator.options, EstimatorOptions)
+        assert not estimator.options.execution.init_qubits
 
     def test_setter_invalid_type(self):
         """Test that setting options with an invalid type raises TypeError."""
@@ -87,31 +87,31 @@ class TestEstimatorUsingOptions(IBMTestCase):
         estimator = Estimator(mode=FakeBrisbane(), options={"environment": {"log_level": "DEBUG"}})
         estimator.options = {"execution": {"init_qubits": False}}
         # environment should be back to defaults since we replaced, not updated
-        self.assertEqual(estimator.options.environment.log_level, "WARNING")
-        self.assertFalse(estimator.options.execution.init_qubits)
+        assert estimator.options.environment.log_level == "WARNING"
+        assert not estimator.options.execution.init_qubits
 
     def test_experimental_options_default_empty(self):
         """Test that experimental options default to empty dict."""
         estimator = Estimator(mode=FakeBrisbane())
-        self.assertEqual(estimator.options.experimental, {})
+        assert estimator.options.experimental == {}
 
     def test_experimental_options_from_dict(self):
         """Test constructing with experimental options in dict."""
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
         estimator = Estimator(mode=FakeBrisbane(), options=opts_dict)
-        self.assertEqual(estimator.options.experimental, {"foo": "bar", "baz": 123})
+        assert estimator.options.experimental == {"foo": "bar", "baz": 123}
 
     def test_experimental_options_from_instance(self):
         """Test constructing with an EstimatorOptions instance with experimental options."""
         opts = EstimatorOptions(experimental={"custom_key": "custom_value"})
         estimator = Estimator(mode=FakeBrisbane(), options=opts)
-        self.assertEqual(estimator.options.experimental, {"custom_key": "custom_value"})
+        assert estimator.options.experimental == {"custom_key": "custom_value"}
 
     def test_experimental_options_setter(self):
         """Test setting experimental options via the setter."""
         estimator = Estimator(mode=FakeBrisbane())
         estimator.options = {"experimental": {"test": "value"}}
-        self.assertEqual(estimator.options.experimental, {"test": "value"})
+        assert estimator.options.experimental == {"test": "value"}
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""

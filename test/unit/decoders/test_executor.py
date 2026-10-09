@@ -81,15 +81,15 @@ class TestDecoder(IBMTestCase):
 
         decoded = ExecutorResultDecoder.decode(encoded_result())
 
-        self.assertTrue(np.array_equal(decoded[0]["meas"], meas1))
-        self.assertTrue(np.array_equal(decoded[1]["meas"], meas2))
-        self.assertTrue(np.array_equal(decoded[1]["measurement_flips.meas"], meas_flips))
-        self.assertEqual(decoded.metadata.chunk_timing[0].start.replace(tzinfo=None), start)
-        self.assertEqual(decoded.metadata.chunk_timing[0].stop.replace(tzinfo=None), stop)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[0].idx_item, 0)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[0].size, 1)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[1].idx_item, 1)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[1].size, 1)
+        assert np.array_equal(decoded[0]["meas"], meas1)
+        assert np.array_equal(decoded[1]["meas"], meas2)
+        assert np.array_equal(decoded[1]["measurement_flips.meas"], meas_flips)
+        assert decoded.metadata.chunk_timing[0].start.replace(tzinfo=None) == start
+        assert decoded.metadata.chunk_timing[0].stop.replace(tzinfo=None) == stop
+        assert decoded.metadata.chunk_timing[0].parts[0].idx_item == 0
+        assert decoded.metadata.chunk_timing[0].parts[0].size == 1
+        assert decoded.metadata.chunk_timing[0].parts[1].idx_item == 1
+        assert decoded.metadata.chunk_timing[0].parts[1].size == 1
 
     def test_no_schema_version(self):
         """Verify an error is raised if the encoded string does not specify any schema version."""
@@ -127,14 +127,14 @@ class TestBaseClientSideResultDecoder(IBMTestCase):
         )
 
         # Not applicable if the result has already been processed by a previous decoder.
-        self.assertEqual(BaseClientSideResultDecoder.is_applicable({}), False)
+        assert BaseClientSideResultDecoder.is_applicable({}) == False
 
         # Not applicable if the result does not have semantic role.
-        self.assertEqual(BaseClientSideResultDecoder.is_applicable(result), False)
+        assert BaseClientSideResultDecoder.is_applicable(result) == False
 
         # Not applicable if the result has a different semantic role.
         result._semantic_role = "not_foo"
-        self.assertEqual(MyDecoder.is_applicable(result), False)
+        assert MyDecoder.is_applicable(result) == False
 
     def test_decode_raises(self):
         """A decoder `decode` method should raise depending on the input."""

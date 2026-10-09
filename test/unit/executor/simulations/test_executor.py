@@ -77,7 +77,7 @@ class TestExecutor(IBMTestCase):
         result = job.result()
 
         array = result[0]["meas"] ^ result[0]["measurement_flips.meas"]
-        self.assertEqual(array.shape, shape + (shots,) + (circuit.num_parameters,))
+        assert array.shape == shape + (shots,) + (circuit.num_parameters,)
 
         circuit.remove_final_measurements()
         for index in np.ndindex(parameter_values.shape[:-1]):
@@ -148,5 +148,5 @@ class TestExecutor(IBMTestCase):
                 )
             )
 
-        self.assertGreater(fidelities[0], fidelities[1])
-        self.assertGreater(fidelities[1], fidelities[2])
+        assert fidelities[0] > fidelities[1]
+        assert fidelities[1] > fidelities[2]

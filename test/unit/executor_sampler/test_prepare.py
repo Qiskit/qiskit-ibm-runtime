@@ -49,7 +49,7 @@ class TestPrepare(IBMTestCase):
         for item in program.items:
             unique_instructions = find_unique_box_instructions(item.circuit)
             for inst in unique_instructions:
-                self.assertIsNotNone(get_annotation(inst.operation, Tag))
+                assert get_annotation(inst.operation, Tag) is not None
 
     def test_multiple_pubs(self):
         """Test conversion of multiple pubs, including parametric circuits."""
@@ -78,22 +78,22 @@ class TestPrepare(IBMTestCase):
         options = SamplerOptions(**{"twirling": {"enable_gates": False, "enable_measure": False}})
         program, executor_options = prepare(pubs, options)
 
-        self.assertEqual(program.shots, 1024)
-        self.assertEqual(len(program.items), 3)
+        assert program.shots == 1024
+        assert len(program.items) == 3
 
         # Verify non-parametric circuit
-        self.assertEqual(program.items[0].circuit, circuit1)
-        self.assertIsInstance(program.items[0], CircuitItem)
+        assert program.items[0].circuit == circuit1
+        assert isinstance(program.items[0], CircuitItem)
 
         # Verify parametric circuit
-        self.assertEqual(program.items[1].circuit, circuit2)
-        self.assertIsInstance(program.items[1], CircuitItem)
+        assert program.items[1].circuit == circuit2
+        assert isinstance(program.items[1], CircuitItem)
         np.testing.assert_array_equal(program.items[1].circuit_arguments, param_values)
 
         # Verify another non-parametric circuit
-        self.assertEqual(program.items[2].circuit, circuit3)
+        assert program.items[2].circuit == circuit3
 
-        self.assertIsNotNone(executor_options)
+        assert executor_options is not None
 
     def test_binding_array_key_order_bound_by_circuit_parameters(self):
         """Parameter values must be ordered by ``circuit.parameters``.
@@ -109,7 +109,7 @@ class TestPrepare(IBMTestCase):
         circuit.rz(b, 0)
         circuit.measure(0, 0)
         # circuit.parameters is canonically sorted -> (a, b).
-        self.assertEqual([p.name for p in circuit.parameters], ["a", "b"])
+        assert [p.name for p in circuit.parameters] == ["a", "b"]
 
         # Key the bindings in the opposite order (b, a); intended a=0.1, b=0.7.
         pub = (circuit, {("b", "a"): [0.7, 0.1]}, 1024)
@@ -119,7 +119,7 @@ class TestPrepare(IBMTestCase):
             **{"twirling": {"enable_gates": False, "enable_measure": False}}
         )
         program, _ = prepare([pub], options, shots=1024)
-        self.assertIsInstance(program.items[0], CircuitItem)
+        assert isinstance(program.items[0], CircuitItem)
         np.testing.assert_array_equal(program.items[0].circuit_arguments, [0.1, 0.7])
 
         # Twirling path -> SamplexItem parameter_values ordered (a, b).
@@ -127,7 +127,7 @@ class TestPrepare(IBMTestCase):
             **{"twirling": {"enable_gates": True, "enable_measure": True}}
         )
         program_tw, _ = prepare([pub], options, shots=1024)
-        self.assertIsInstance(program_tw.items[0], SamplexItem)
+        assert isinstance(program_tw.items[0], SamplexItem)
         np.testing.assert_array_equal(
             np.asarray(program_tw.items[0].samplex_arguments["parameter_values"]).reshape(-1),
             [0.1, 0.7],
@@ -143,8 +143,8 @@ class TestPrepare(IBMTestCase):
         options = SamplerOptions(**{"twirling": {"enable_gates": False, "enable_measure": False}})
         program, executor_options = prepare([pub], options, 123)
 
-        self.assertEqual(program.shots, 123)
-        self.assertIsNotNone(executor_options)
+        assert program.shots == 123
+        assert executor_options is not None
 
     def test_mismatched_shots_raises_error(self):
         """Test that mismatched shots across pubs raises an error."""
@@ -165,7 +165,7 @@ class TestPrepare(IBMTestCase):
         with self.assertRaises(IBMInputValueError) as context:
             prepare(pubs, options)
 
-        self.assertIn("same number of shots", str(context.exception))
+        assert "same number of shots" in str(context.exception)
 
     def test_no_shots_specified_raises_error(self):
         """Test that missing shots raises an error."""
@@ -181,7 +181,7 @@ class TestPrepare(IBMTestCase):
         with self.assertRaises(IBMInputValueError) as context:
             prepare([pub], options, shots=None)
 
-        self.assertIn("Shots must be specified", str(context.exception))
+        assert "Shots must be specified" in str(context.exception)
 
     def test_pub_with_box_raises_error(self):
         """Test that a pub with a BoxOp raises an error."""
@@ -196,8 +196,8 @@ class TestPrepare(IBMTestCase):
         with self.assertRaises(IBMInputValueError) as context:
             prepare([pub], options)
 
-        self.assertIn("BoxOp", str(context.exception))
-        self.assertIn("not supported", str(context.exception))
+        assert "BoxOp" in str(context.exception)
+        assert "not supported" in str(context.exception)
 
     @data("pauli", "balanced_pauli", "local_c1", "local_pauli")
     def test_circuit_with_parametric_rzz_and_twirling(self, group):
@@ -237,12 +237,12 @@ class TestPrepareOptionsHandling(IBMTestCase):
         result = prepare([pub], options)
 
         # Should return a tuple
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
 
         quantum_program, executor_options = result
-        self.assertIsInstance(quantum_program, QuantumProgram)
-        self.assertIsNotNone(executor_options)
+        assert isinstance(quantum_program, QuantumProgram)
+        assert executor_options is not None
 
     def test_prepare_maps_execution_options(self):
         """Test that prepare correctly maps execution options."""
@@ -257,8 +257,8 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         _, executor_options = prepare([pub], options)
 
-        self.assertEqual(executor_options.execution.init_qubits, False)
-        self.assertEqual(executor_options.execution.rep_delay, 0.0005)
+        assert executor_options.execution.init_qubits == False
+        assert executor_options.execution.rep_delay == 0.0005
 
     def test_prepare_maps_environment_options(self):
         """Test that prepare correctly maps environment options."""
@@ -274,9 +274,9 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         _, executor_options = prepare([pub], options)
 
-        self.assertEqual(executor_options.environment.log_level, "DEBUG")
-        self.assertEqual(executor_options.environment.job_tags, ["test", "prepare"])
-        self.assertEqual(executor_options.environment.private, True)
+        assert executor_options.environment.log_level == "DEBUG"
+        assert executor_options.environment.job_tags == ["test", "prepare"]
+        assert executor_options.environment.private == True
 
     def test_prepare_maps_max_execution_time(self):
         """Test that prepare correctly maps max_execution_time."""
@@ -290,7 +290,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         _, executor_options = prepare([pub], options)
 
-        self.assertEqual(executor_options.max_execution_time, 500)
+        assert executor_options.max_execution_time == 500
 
     def test_prepare_extracts_meas_level_from_options(self):
         """Test that prepare extracts meas_level from options."""
@@ -304,7 +304,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
 
         quantum_program, _ = prepare([pub], options)
 
-        self.assertEqual(quantum_program.meas_level, "kerneled")
+        assert quantum_program.meas_level == "kerneled"
 
     def test_prepare_uses_default_meas_level_when_unset(self):
         """Test that prepare uses 'classified' as default when meas_type is not set."""
@@ -316,7 +316,7 @@ class TestPrepareOptionsHandling(IBMTestCase):
         options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})
         quantum_program, _ = prepare([pub], options)
 
-        self.assertEqual(quantum_program.meas_level, "classified")
+        assert quantum_program.meas_level == "classified"
 
     def test_prepare_all_options_together(self):
         """Test that prepare correctly handles all supported options together."""
@@ -337,16 +337,16 @@ class TestPrepareOptionsHandling(IBMTestCase):
         quantum_program, executor_options = prepare([pub], options)
 
         # Verify QuantumProgram
-        self.assertEqual(quantum_program.shots, 2048)
-        self.assertEqual(quantum_program.meas_level, "avg_kerneled")
+        assert quantum_program.shots == 2048
+        assert quantum_program.meas_level == "avg_kerneled"
 
         # Verify ExecutorOptions
-        self.assertEqual(executor_options.execution.init_qubits, False)
-        self.assertEqual(executor_options.execution.rep_delay, 0.0003)
-        self.assertEqual(executor_options.environment.log_level, "INFO")
-        self.assertEqual(executor_options.environment.job_tags, ["comprehensive", "test"])
-        self.assertEqual(executor_options.environment.private, True)
-        self.assertEqual(executor_options.max_execution_time, 800)
+        assert executor_options.execution.init_qubits == False
+        assert executor_options.execution.rep_delay == 0.0003
+        assert executor_options.environment.log_level == "INFO"
+        assert executor_options.environment.job_tags == ["comprehensive", "test"]
+        assert executor_options.environment.private == True
+        assert executor_options.max_execution_time == 800
 
 
 @ddt
@@ -368,8 +368,8 @@ class TestPrepareTwirling(IBMTestCase):
         qp, _ = prepare([pub], options, shots=1024)
 
         # Verify SamplexItem was created
-        self.assertEqual(len(qp.items), 1)
-        self.assertIsInstance(qp.items[0], SamplexItem)
+        assert len(qp.items) == 1
+        assert isinstance(qp.items[0], SamplexItem)
 
     @data([1000, "auto", "auto", 1024], [1000, 5, "auto", 1000], [1000, 5, 3, 15])
     @unpack
@@ -393,7 +393,7 @@ class TestPrepareTwirling(IBMTestCase):
 
         qp, _ = prepare([(circuit,)], options, shots=default_shots)
         num_shots = qp.items[0].shape[0] * qp.shots
-        self.assertEqual(num_shots, expected_num_shots)
+        assert num_shots == expected_num_shots
 
     @data([True, False], [False, True], [True, True])
     @unpack
@@ -421,8 +421,8 @@ class TestPrepareTwirling(IBMTestCase):
 
         mock_boxing_pm.assert_called_once()
         call_kwargs = mock_boxing_pm.call_args[1]
-        self.assertEqual(call_kwargs["enable_gates"], bool(enable_gates))
-        self.assertEqual(call_kwargs["enable_measures"], bool(enable_measure))
+        assert call_kwargs["enable_gates"] == bool(enable_gates)
+        assert call_kwargs["enable_measures"] == bool(enable_measure)
 
     @data("kerneled", "avg_kerneled")
     def test_prepare_rejects_measurement_twirling_with_kerneled(self, meas_type):
@@ -498,9 +498,9 @@ class TestPrepareTwirling(IBMTestCase):
         qp, _ = prepare([pub], options, shots=pub_shots)
 
         # Verify QuantumProgram shots (should be shots_per_randomization)
-        self.assertEqual(qp.shots, expected_qp_shots)
+        assert qp.shots == expected_qp_shots
         # Verify SamplexItem shape (should be num_randomizations)
-        self.assertEqual(qp.items[0].shape, expected_shape)
+        assert qp.items[0].shape == expected_shape
 
     @data(
         ["active", "active"],
@@ -533,7 +533,7 @@ class TestPrepareTwirling(IBMTestCase):
 
         # Verify strategy was passed (with hyphen replaced by underscore)
         call_kwargs = mock_boxing_pm.call_args[1]
-        self.assertEqual(call_kwargs["twirling_strategy"], expected_strategy)
+        assert call_kwargs["twirling_strategy"] == expected_strategy
 
     def test_prepare_handles_parametric_circuits(self):
         """Test that prepare() handles parametric circuits correctly."""
@@ -553,11 +553,11 @@ class TestPrepareTwirling(IBMTestCase):
         # Verify SamplexItem was created with parameter values
 
         item = qp.items[0]
-        self.assertIsInstance(item, SamplexItem)
+        assert isinstance(item, SamplexItem)
         # samplex_arguments is a TensorInterface that acts like a dict
-        self.assertTrue(np.array_equal(item.samplex_arguments["parameter_values"], param_values))
+        assert np.array_equal(item.samplex_arguments["parameter_values"], param_values)
         # Shape should be (num_randomizations, num_parameter_sets) = (16, 3)
-        self.assertEqual(item.shape, (16, 3))
+        assert item.shape == (16, 3)
 
     def test_prepare_handles_multiple_pubs(self):
         """Test that prepare() handles multiple pubs correctly."""
@@ -577,7 +577,7 @@ class TestPrepareTwirling(IBMTestCase):
         qp, _ = prepare([pub1, pub2], options, shots=1024)
 
         # Verify both pubs were processed
-        self.assertEqual(len(qp.items), 2)
+        assert len(qp.items) == 2
 
 
 @ddt
@@ -599,10 +599,10 @@ class TestPreparePassthroughData(IBMTestCase):
         qp, _ = prepare([pub], options, shots=1024)
 
         # Verify passthrough_data contains post-processor info
-        self.assertIn("post_processor", qp.passthrough_data)
-        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
-        self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "classified")
-        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], enable_gates)
+        assert "post_processor" in qp.passthrough_data
+        assert qp.passthrough_data["post_processor"]["version"] == "v0.1"
+        assert qp.passthrough_data["post_processor"]["meas_type"] == "classified"
+        assert qp.passthrough_data["post_processor"]["twirling"] == enable_gates
 
     def test_prepare_includes_options_in_passthrough_data(self):
         """Test that prepare() includes options dictionary in passthrough_data."""
@@ -620,11 +620,11 @@ class TestPreparePassthroughData(IBMTestCase):
         qp, _ = prepare([pub], options, shots=1024)
 
         # Verify options dictionary is present in passthrough_data
-        self.assertIn("post_processor", qp.passthrough_data)
-        self.assertIn("post_processor", qp.passthrough_data)
-        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
-        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
-        self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "kerneled")
+        assert "post_processor" in qp.passthrough_data
+        assert "post_processor" in qp.passthrough_data
+        assert qp.passthrough_data["post_processor"]["version"] == "v0.1"
+        assert qp.passthrough_data["post_processor"]["twirling"] == True
+        assert qp.passthrough_data["post_processor"]["meas_type"] == "kerneled"
 
 
 @ddt
@@ -652,7 +652,7 @@ class TestPrepareDynamicalDecoupling(IBMTestCase):
 
         # DD inserts X gates into idle slots of each circuit item
         for item in program.items:
-            self.assertIn("x", item.circuit.count_ops())
+            assert "x" in item.circuit.count_ops()
 
     def test_dd_rejects_dynamic_circuits(self):
         """Test DD raises an error for circuits with control flow."""
