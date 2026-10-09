@@ -139,7 +139,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected = expected.compose(XGate(), [1])
         expected = expected.compose(Delay(50), [1])
 
-        self.assertEqual(ghz4_dd, expected)
+        assert ghz4_dd == expected
 
     @data(True, False)
     def test_insert_dd_ghz_one_qubit(self, use_topological_ordering):
@@ -192,7 +192,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         expected.measure_all()
 
-        self.assertEqual(ghz4_dd, expected)
+        assert ghz4_dd == expected
 
     def test_insert_dd_ghz_everywhere(self):
         """Test DD gates even on initial idle spots."""
@@ -244,7 +244,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected = expected.compose(YGate(), [3], front=True)
         expected = expected.compose(Delay(212), [3], front=True)
 
-        self.assertEqual(ghz4_dd, expected)
+        assert ghz4_dd == expected
 
     def test_insert_dd_ghz_xy4(self):
         """Test XY4 sequence of DD gates."""
@@ -292,7 +292,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected = expected.compose(YGate(), [1])
         expected = expected.compose(Delay(12), [1])
 
-        self.assertEqual(ghz4_dd, expected)
+        assert ghz4_dd == expected
 
     @data(True, False)
     def test_insert_midmeas_hahn(self, use_topological_ordering):
@@ -344,12 +344,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.cx(0, 1)
         expected.delay(700, 2)
 
-        self.assertEqual(midmeas_dd, expected)
+        assert midmeas_dd == expected
         # check the absorption into U was done correctly
-        self.assertTrue(
-            Operator(XGate()).equiv(
-                Operator(UGate(3 * pi / 4, -pi / 2, pi / 2)) & Operator(RXGate(pi / 4))
-            )
+        assert Operator(XGate()).equiv(
+            Operator(UGate(3 * pi / 4, -pi / 2, pi / 2)) & Operator(RXGate(pi / 4))
         )
 
     def test_insert_ghz_uhrig(self):
@@ -416,7 +414,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         expected = expected.compose(Delay(300), [1])
 
-        self.assertEqual(ghz4_dd, expected)
+        assert ghz4_dd == expected
 
     def test_asymmetric_xy4_in_t2(self):
         """Test insertion of XY4 sequence with unbalanced spacing."""
@@ -458,9 +456,9 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         t2_dd = pm.run(t2)
 
-        self.assertEqual(t2_dd, expected)
+        assert t2_dd == expected
         # check global phase is correct
-        self.assertEqual(Operator(t2), Operator(expected))
+        assert Operator(t2) == Operator(expected)
 
     def test_dd_after_reset(self):
         """Test skip_reset_qubits option works."""
@@ -507,7 +505,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         t2_dd = pm.run(t2)
 
-        self.assertEqual(t2_dd, expected)
+        assert t2_dd == expected
 
     def test_insert_dd_bad_sequence(self):
         """Test DD raises when non-identity sequence is inserted."""
@@ -573,7 +571,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected = expected.compose(YGate(), [1])
         expected = expected.compose(Delay(20), [1])
 
-        self.assertEqual(ghz4_dd, expected)
+        assert ghz4_dd == expected
 
     def test_dd_can_sequentially_called(self):
         """Test if sequentially called DD pass can output the same circuit.
@@ -617,7 +615,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         )
         circ1 = pm1.run(ghz4)
         circ2 = pm2.run(ghz4)
-        self.assertEqual(circ1, circ2)
+        assert circ1 == circ2
 
     def test_back_to_back_if_test(self):
         """Test DD with if_test circuit back to back."""
@@ -675,7 +673,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.x(2)
         expected.delay(225, 2)
 
-        self.assertEqual(expected, qc_dd)
+        assert expected == qc_dd
 
     def test_dd_if_test(self):
         """Test DD with if_test circuit."""
@@ -753,7 +751,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.x(2)
         expected.delay(1712, 2)
 
-        self.assertEqual(expected, qc_dd)
+        assert expected == qc_dd
 
     def test_reproducible(self):
         """Test DD calls are reproducible."""
@@ -793,7 +791,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         qc_dd0 = pm0.run(qc)
         qc_dd1 = pm1.run(qc)
 
-        self.assertEqual(qc_dd0, qc_dd1)
+        assert qc_dd0 == qc_dd1
 
     def test_nested_block_dd(self):
         """Test DD applied within a block."""
@@ -841,7 +839,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
             expected.delay(225, 2)
             expected.delay(1000, 0)
 
-        self.assertEqual(expected, qc_dd)
+        assert expected == qc_dd
 
     def test_multiple_dd_sequences(self):
         """Test multiple DD sequence can be submitted."""
@@ -923,7 +921,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.x(1)
         expected.delay(100, 1)
 
-        self.assertEqual(qc_dd, expected)
+        assert qc_dd == expected
 
     def test_multiple_dd_sequence_cycles(self):
         """Test a single DD sequence can be inserted for multiple cycles in a single delay."""
@@ -966,7 +964,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.delay(450, 0)
         expected.x(0)
         expected.delay(225, 0)
-        self.assertEqual(qc_dd, expected)
+        assert qc_dd == expected
 
     def test_staggered_dd(self):
         """Test that timing on DD can be staggered if coupled with each other."""
@@ -1031,7 +1029,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.delay(14, 0)
         expected.barrier()
 
-        self.assertEqual(qc_dd, expected)
+        assert qc_dd == expected
 
     def test_staggered_dd_multiple_cycles(self):
         """Test staggered DD with multiple cycles in a single delay."""
@@ -1098,7 +1096,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.measure(0, 0)
         expected.delay(14, 0)
         expected.barrier()
-        self.assertEqual(qc_dd, expected)
+        assert qc_dd == expected
 
     def test_insert_dd_bad_spacings(self):
         """Test DD raises when spacings don't add up to 1."""
@@ -1197,10 +1195,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         delay_dict = {q_ind: [] for q_ind in range(5)}
         for delay in delays:
             delay_dict[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
-        self.assertNotEqual(delay_dict[0], delay_dict[1])
-        self.assertNotEqual(delay_dict[1], delay_dict[2])
-        self.assertNotEqual(delay_dict[3], delay_dict[4])
-        self.assertEqual(delay_dict[0], delay_dict[2])
+        assert delay_dict[0] != delay_dict[1]
+        assert delay_dict[1] != delay_dict[2]
+        assert delay_dict[3] != delay_dict[4]
+        assert delay_dict[0] == delay_dict[2]
 
     def test_no_unused_qubits(self):
         """Test DD with if_test circuit that unused qubits are untouched and not scheduled.
@@ -1253,7 +1251,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         qc_dd = pm.run(qc)
         dont_use = qc_dd.qubits[-2:]
         for op in qc_dd.data:
-            self.assertNotIn(dont_use, op.qubits)
+            assert dont_use not in op.qubits
 
     def test_dd_named_barriers(self):
         """Test DD applied on delays ending on named barriers."""
@@ -1285,4 +1283,4 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         qc_dd = pm.run(qc)
         # only 2 X gates are applied in the single delay
         # defined by the 'dd_0' barrier
-        self.assertEqual(len([inst for inst in qc_dd.data if isinstance(inst.operation, XGate)]), 2)
+        assert len([inst for inst in qc_dd.data if isinstance(inst.operation, XGate)]) == 2

@@ -58,15 +58,15 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         # The transpiled circuit will contain measure_2 in the two mid-circ-measurements
         # and regular Measure instances in terminal measurements,
         # similarly it will contain reset_2 in the two mid-circuit resets
-        self.assertIsInstance(transpiled.data[1].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[2].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[3].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[4].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[1].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[2].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[3].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[4].operation, MidCircuitMeasure)
         # [5] is the barrier
-        self.assertNotIsInstance(transpiled.data[6].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[6].operation, Measure)
-        self.assertNotIsInstance(transpiled.data[7].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[7].operation, Measure)
+        assert not isinstance(transpiled.data[6].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[6].operation, Measure)
+        assert not isinstance(transpiled.data[7].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[7].operation, Measure)
 
     def test_convert_raises(self):
         """Test that value error is raised if measure_2 not supported in target."""
@@ -91,19 +91,19 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         pm = PassManager([custom_pass])
         transpiled = pm.run(circuit_with_mid_circuit_instructions())
 
-        self.assertIsInstance(transpiled.data[1].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[2].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[3].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[4].operation, MidCircuitMeasure)
-        self.assertEqual(transpiled.data[1].operation.name, "measure_2")
-        self.assertEqual(transpiled.data[2].operation.name, "reset_2")
-        self.assertEqual(transpiled.data[3].operation.name, "reset_3")
-        self.assertEqual(transpiled.data[4].operation.name, "measure_3")
+        assert isinstance(transpiled.data[1].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[2].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[3].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[4].operation, MidCircuitMeasure)
+        assert transpiled.data[1].operation.name == "measure_2"
+        assert transpiled.data[2].operation.name == "reset_2"
+        assert transpiled.data[3].operation.name == "reset_3"
+        assert transpiled.data[4].operation.name == "measure_3"
         # [5] is the barrier
-        self.assertNotIsInstance(transpiled.data[6].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[6].operation, Measure)
-        self.assertNotIsInstance(transpiled.data[7].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[7].operation, Measure)
+        assert not isinstance(transpiled.data[6].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[6].operation, Measure)
+        assert not isinstance(transpiled.data[7].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[7].operation, Measure)
 
     def test_different_qarg(self):
         """Test correct replacing of measure_2.
@@ -133,10 +133,10 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
             transpiled = pm.run(qc)
 
         # The transpiled circuit will not contain any MidCircuitMeasure instance
-        self.assertNotIsInstance(transpiled.data[0].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[0].operation, Measure)
-        self.assertNotIsInstance(transpiled.data[1].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[1].operation, Reset)
+        assert not isinstance(transpiled.data[0].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[0].operation, Measure)
+        assert not isinstance(transpiled.data[1].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[1].operation, Reset)
         # [4] is a barrier
-        self.assertNotIsInstance(transpiled.data[5].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[5].operation, Measure)
+        assert not isinstance(transpiled.data[5].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[5].operation, Measure)

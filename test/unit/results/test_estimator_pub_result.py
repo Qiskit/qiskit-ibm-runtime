@@ -63,10 +63,10 @@ class TestEstimatorPubResult(IBMTestCase):
         pub_result = zne_pub_result()
 
         fig = pub_result.draw_zne_evs()
-        self.assertIsInstance(fig, go.Figure)
+        assert isinstance(fig, go.Figure)
 
         fig = pub_result.draw_zne_extrapolators()
-        self.assertIsInstance(fig, go.Figure)
+        assert isinstance(fig, go.Figure)
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_plot_zne_raises(self):

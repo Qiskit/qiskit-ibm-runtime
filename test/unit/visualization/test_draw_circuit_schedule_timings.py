@@ -48,7 +48,7 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
             filter_readout_channels=filter_readout_channels,
             filter_barriers=filter_barriers,
         )
-        self.assertEqual(len(fig_1.data), expected_n_traces)
+        assert len(fig_1.data) == expected_n_traces
         save_plotly_artifact(self.id(), fig_1)
 
         # test class input
@@ -59,5 +59,5 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
             filter_readout_channels=filter_readout_channels,
             filter_barriers=filter_barriers,
         )
-        self.assertEqual(len(fig_2.data), expected_n_traces)
+        assert len(fig_2.data) == expected_n_traces
         save_plotly_artifact(self.id(), fig_2)
