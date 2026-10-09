@@ -18,7 +18,7 @@ import math
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from ddt import data, ddt, unpack
+from ddt import data, ddt, named_data, unpack
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
@@ -851,33 +851,33 @@ class TestPrepareVanilla(IBMTestCase):
             program, pubs, expected_num_randomizations=expected_trex_randomizations
         )
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots."""
         qc = QuantumCircuit(2)
         qc.h(0)
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            with self.subTest(twirling=scenario.label):
-                program = prepare_vanilla(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                )
-                item = program.items[0]
-                self.assertEqual(
-                    item.shape[0],
-                    scenario.expected_num_randomizations,
-                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
-                    f"got {item.shape[0]}",
-                )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        program = prepare_vanilla(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+        )
+
+        item = program.items[0]
+        self.assertEqual(
+            item.shape[0],
+            scenario.expected_num_randomizations,
+            msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+            f"got {item.shape[0]}",
+        )
+        self.assertEqual(
+            program.shots,
+            scenario.expected_shots_per_randomization,
+            msg=f"[{scenario.label}] expected program.shots="
+            f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+        )
 
 
 @ddt
@@ -1292,8 +1292,12 @@ class TestPreparePec(IBMTestCase):
             item1.shape[0],
         )
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots."""
+        if not scenario.twirling_options.enable_gates:
+            self.skipTest("PEC requires enable_gates=True.")
+
         pec_options = PecOptions()
         pec_options.noise_gain = 1.0  # no noise removal → gamma=1, no randomization overhead
 
@@ -1302,31 +1306,28 @@ class TestPreparePec(IBMTestCase):
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            if not scenario.twirling_options.enable_gates:
-                continue  # PEC requires enable_gates=True
-            with self.subTest(twirling=scenario.label):
-                noise_model = trivial_noise_model([pub], scenario.twirling_options)
-                program = prepare_pec(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                    pec_options=pec_options,
-                    noise_model=noise_model,
-                )
-                item = program.items[0]
-                self.assertEqual(
-                    item.shape[0],
-                    scenario.expected_num_randomizations,
-                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
-                    f"got {item.shape[0]}",
-                )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        noise_model = trivial_noise_model([pub], scenario.twirling_options)
+        program = prepare_pec(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+            pec_options=pec_options,
+            noise_model=noise_model,
+        )
+
+        item = program.items[0]
+        self.assertEqual(
+            item.shape[0],
+            scenario.expected_num_randomizations,
+            msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+            f"got {item.shape[0]}",
+        )
+        self.assertEqual(
+            program.shots,
+            scenario.expected_shots_per_randomization,
+            msg=f"[{scenario.label}] expected program.shots="
+            f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+        )
 
     def test_shapes_overhead_scaling(self):
         """PEC overhead: num randomizations exceeds baseline when gamma > 1.
@@ -1614,7 +1615,8 @@ class TestPrepareZne(IBMTestCase):
         ):
             prepare_zne([pub], twirling_options, 100, zne_options)
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots."""
         noise_factors = [1.0, 3.0]
         zne_options = ZneOptions()
@@ -1626,34 +1628,33 @@ class TestPrepareZne(IBMTestCase):
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            with self.subTest(twirling=scenario.label):
-                program = prepare_zne(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                    zne_options=zne_options,
-                )
-                self.assertEqual(
-                    len(program.items),
-                    len(noise_factors),
-                    msg=f"[{scenario.label}] expected {len(noise_factors)} items, "
-                    f"got {len(program.items)}",
-                )
-                for item in program.items:
-                    self.assertEqual(
-                        item.shape[0],
-                        scenario.expected_num_randomizations,
-                        msg=f"[{scenario.label}] expected R="
-                        f"{scenario.expected_num_randomizations}, "
-                        f"got {item.shape[0]}",
-                    )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        program = prepare_zne(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+            zne_options=zne_options,
+        )
+
+        self.assertEqual(
+            len(program.items),
+            len(noise_factors),
+            msg=f"[{scenario.label}] expected {len(noise_factors)} items, "
+            f"got {len(program.items)}",
+        )
+        for item in program.items:
+            self.assertEqual(
+                item.shape[0],
+                scenario.expected_num_randomizations,
+                msg=f"[{scenario.label}] expected R="
+                f"{scenario.expected_num_randomizations}, "
+                f"got {item.shape[0]}",
+            )
+        self.assertEqual(
+            program.shots,
+            scenario.expected_shots_per_randomization,
+            msg=f"[{scenario.label}] expected program.shots="
+            f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+        )
 
 
 @ddt
@@ -2015,11 +2016,15 @@ class TestPreparePea(IBMTestCase):
         ):
             prepare_pea([pub], twirling_options, shots=100, zne_options=zne_options, noise_model={})
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots.
 
         PEA shape is (num_noise_factors, num_randomizations, num_basis).
         """
+        if not scenario.twirling_options.enable_gates:
+            self.skipTest("PEA requires enable_gates=True.")
+
         noise_factors = [1.0, 3.0]
         zne_options = ZneOptions()
         zne_options.amplifier = "pea"
@@ -2030,33 +2035,30 @@ class TestPreparePea(IBMTestCase):
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            if not scenario.twirling_options.enable_gates:
-                continue  # PEA requires enable_gates=True
-            with self.subTest(twirling=scenario.label):
-                noise_model = trivial_noise_model([pub], scenario.twirling_options)
-                program = prepare_pea(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                    zne_options=zne_options,
-                    noise_model=noise_model,
-                )
-                item = program.items[0]
-                self.assertEqual(
-                    item.shape[0],
-                    len(noise_factors),
-                    msg=f"[{scenario.label}] expected N={len(noise_factors)}, got {item.shape[0]}",
-                )
-                self.assertEqual(
-                    item.shape[1],
-                    scenario.expected_num_randomizations,
-                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
-                    f"got {item.shape[1]}",
-                )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        noise_model = trivial_noise_model([pub], scenario.twirling_options)
+        program = prepare_pea(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+            zne_options=zne_options,
+            noise_model=noise_model,
+        )
+
+        item = program.items[0]
+        self.assertEqual(
+            item.shape[0],
+            len(noise_factors),
+            msg=f"[{scenario.label}] expected N={len(noise_factors)}, got {item.shape[0]}",
+        )
+        self.assertEqual(
+            item.shape[1],
+            scenario.expected_num_randomizations,
+            msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
+            f"got {item.shape[1]}",
+        )
+        self.assertEqual(
+            program.shots,
+            scenario.expected_shots_per_randomization,
+            msg=f"[{scenario.label}] expected program.shots="
+            f"{scenario.expected_shots_per_randomization}, got {program.shots}",
+        )
