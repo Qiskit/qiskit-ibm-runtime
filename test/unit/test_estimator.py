@@ -122,31 +122,32 @@ class TestEstimatorV2(IBMTestCase):
             inst.run(**get_primitive_inputs(inst))
         self.assertIn("coupling map", str(exc.exception))
 
-    def test_run_default_options(self):
+    @data(
+        (
+            EstimatorOptions(default_shots=1024),
+            {"default_shots": 1024},
+        ),
+        (
+            {
+                "default_precision": 0.1,
+                "dynamical_decoupling": {"enable": True},
+            },
+            {
+                "default_precision": 0.1,
+                "dynamical_decoupling": {"enable": True},
+            },
+        ),
+    )
+    @unpack
+    def test_run_default_options(self, options, expected):
         """Test run using default options."""
         backend = get_mocked_backend()
-        options_vars = [
-            (
-                EstimatorOptions(default_shots=1024),
-                {"default_shots": 1024},
-            ),
-            (
-                {
-                    "default_precision": 0.1,
-                    "dynamical_decoupling": {"enable": True},
-                },
-                {
-                    "default_precision": 0.1,
-                    "dynamical_decoupling": {"enable": True},
-                },
-            ),
-        ]
-        for options, expected in options_vars:
-            with self.subTest(options=options):
-                inst = EstimatorV2(mode=backend, options=options)
-                inst.run(**get_primitive_inputs(inst, backend=backend))
-                options = backend.service._run.call_args.kwargs["inputs"]["options"]
-                self.assertDictPartiallyEqual(options, expected)
+
+        inst = EstimatorV2(mode=backend, options=options)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+
+        run_options = backend.service._run.call_args.kwargs["inputs"]["options"]
+        self.assertDictPartiallyEqual(run_options, expected)
 
     @data(
         {"zne_extrapolator": "bad_extrapolator"},
@@ -162,27 +163,26 @@ class TestEstimatorV2(IBMTestCase):
         if len(res_opt.keys()) > 1:
             self.assertIn(list(res_opt.keys())[1], str(exc.exception))
 
-    def test_observable_types_single_circuit(self):
+    @data(
+        "IX",
+        Pauli("YZ"),
+        SparsePauliOp(["IX", "YZ"]),
+        {"YZ": 1 + 2j},
+        {Pauli("XX"): 1 + 2j},
+        ["XX", "YY"],
+        [Pauli("XX"), Pauli("YY")],
+        [SparsePauliOp(["XX"], [2]), SparsePauliOp(["YY"], [1])],
+        [
+            {"XX": 1},
+            {"YY": 2},
+        ],
+        [
+            {Pauli("XX"): 1},
+            {Pauli("YY"): 2},
+        ],
+    )
+    def test_observable_types_single_circuit(self, observables):
         """Test different observable types for a single circuit."""
-        all_obs = [
-            "IX",
-            Pauli("YZ"),
-            SparsePauliOp(["IX", "YZ"]),
-            {"YZ": 1 + 2j},
-            {Pauli("XX"): 1 + 2j},
-            ["XX", "YY"],
-            [Pauli("XX"), Pauli("YY")],
-            [SparsePauliOp(["XX"], [2]), SparsePauliOp(["YY"], [1])],
-            [
-                {"XX": 1},
-                {"YY": 2},
-            ],
-            [
-                {Pauli("XX"): 1},
-                {Pauli("YY"): 2},
-            ],
-        ]
-
         backend = get_mocked_backend()
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
@@ -190,68 +190,62 @@ class TestEstimatorV2(IBMTestCase):
         isa_circuit = transpile(circuit, backend=backend)
 
         estimator = EstimatorV2(mode=backend)
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                pub = (isa_circuit, remap_observables(obs, isa_circuit))
-                estimator.run([pub])
+        pub = (isa_circuit, remap_observables(observables, isa_circuit))
+        estimator.run([pub])
 
-    def test_observable_types_multi_circuits(self):
+    @data(
+        ["XX", "YYY"],
+        [Pauli("XX"), Pauli("YYY")],
+        [SparsePauliOp(["XX"]), SparsePauliOp(["YYY"])],
+        [
+            {"XX": 1 + 2j},
+            {"YYY": 1 + 2j},
+        ],
+        [
+            {Pauli("XX"): 1 + 2j},
+            {Pauli("YYY"): 1 + 2j},
+        ],
+        [["XX", "YY"], ["ZZZ", "III"]],
+        [[Pauli("XX"), Pauli("YY")], [Pauli("XXX"), Pauli("YYY")]],
+        [
+            [SparsePauliOp(["XX", "YY"], [1, 2]), SparsePauliOp(["YY", "-XX"], [2, 1])],
+            [SparsePauliOp(["XXX"], [1]), SparsePauliOp(["YYY"], [2])],
+        ],
+        [[{"XX": 1}, {"YY": 2}], [{"XXX": 1}, {"YYY": 2}]],
+        [
+            [{Pauli("XX"): 1}, {Pauli("YY"): 2}],
+            [{Pauli("XXX"): 1}, {Pauli("YYY"): 2}],
+        ],
+    )
+    def test_observable_types_multi_circuits(self, observables):
         """Test different observable types for multiple circuits."""
-        all_obs = [
-            ["XX", "YYY"],
-            [Pauli("XX"), Pauli("YYY")],
-            [SparsePauliOp(["XX"]), SparsePauliOp(["YYY"])],
-            [
-                {"XX": 1 + 2j},
-                {"YYY": 1 + 2j},
-            ],
-            [
-                {Pauli("XX"): 1 + 2j},
-                {Pauli("YYY"): 1 + 2j},
-            ],
-            [["XX", "YY"], ["ZZZ", "III"]],
-            [[Pauli("XX"), Pauli("YY")], [Pauli("XXX"), Pauli("YYY")]],
-            [
-                [SparsePauliOp(["XX", "YY"], [1, 2]), SparsePauliOp(["YY", "-XX"], [2, 1])],
-                [SparsePauliOp(["XXX"], [1]), SparsePauliOp(["YYY"], [2])],
-            ],
-            [[{"XX": 1}, {"YY": 2}], [{"XXX": 1}, {"YYY": 2}]],
-            [
-                [{Pauli("XX"): 1}, {Pauli("YY"): 2}],
-                [{Pauli("XXX"): 1}, {Pauli("YYY"): 2}],
-            ],
-        ]
-
         backend = get_mocked_backend()
         circuit1 = get_transpiled_circuit(backend, num_qubits=2, measure=False)
         circuit2 = get_transpiled_circuit(backend, num_qubits=3, measure=False)
+
         estimator = EstimatorV2(mode=backend)
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                obs1 = remap_observables(obs[0], circuit1)
-                obs2 = remap_observables(obs[1], circuit2)
-                estimator.run(pubs=[(circuit1, obs1), (circuit2, obs2)])
+        obs1 = remap_observables(observables[0], circuit1)
+        obs2 = remap_observables(observables[1], circuit2)
+        estimator.run(pubs=[(circuit1, obs1), (circuit2, obs2)])
 
-    def test_invalid_basis(self):
-        """Test observable containing invalid basis."""
-        all_obs = [
-            ["Y0"],
-            {"1X": 2},
-            [["rZ", "YY"]],
+    @data(
+        ["Y0"],
+        {"1X": 2},
+        [["rZ", "YY"]],
+        [
             [
-                [
-                    {"XX": 3},
-                    {"++": 4},
-                ]
-            ],
-        ]
-
+                {"XX": 3},
+                {"++": 4},
+            ]
+        ],
+    )
+    def test_invalid_basis(self, observables):
+        """Test observable containing invalid basis."""
         circuit = QuantumCircuit(2)
         estimator = EstimatorV2(mode=get_mocked_backend())
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                with self.assertRaisesRegex(ValueError, "Observable"):
-                    estimator.run([(circuit, obs)])
+
+        with self.assertRaisesRegex(ValueError, "Observable"):
+            estimator.run([(circuit, observables)])
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
         """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""

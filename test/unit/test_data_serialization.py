@@ -399,46 +399,46 @@ class TestDataSerialization(IBMTestCase):
         self.assertEqual(noise_model.noise_qubits, decoded.noise_qubits)
         self.assertEqual(noise_model.noise_instructions, decoded.noise_instructions)
 
-    def test_encoder_datetime(self):
+    @data(
+        {"datetime": datetime.now()},
+        {"datetime": datetime(2021, 8, 4)},
+        {"datetime": datetime.fromtimestamp(1326244364)},
+    )
+    def test_encoder_datetime(self, object_):
         """Test encoding a datetime."""
-        subtests = (
-            {"datetime": datetime.now()},
-            {"datetime": datetime(2021, 8, 4)},
-            {"datetime": datetime.fromtimestamp(1326244364)},
-        )
-        for obj in subtests:
-            encoded = json.dumps(obj, cls=RuntimeEncoder)
-            self.assertIsInstance(encoded, str)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)
-            self.assertEqual(decoded, obj)
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
 
-    def test_encoder_ndarray(self):
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertEqual(decoded, object_)
+
+    @data(
+        {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]], dtype=object)},
+        {"ndarray": np.array([1, {"obj": 123}], dtype=object)},
+        {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]])},
+        {"ndarray": np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=int)},
+    )
+    def test_encoder_ndarray(self, object_):
         """Test encoding and decoding a numpy ndarray."""
-        subtests = (
-            {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]], dtype=object)},
-            {"ndarray": np.array([1, {"obj": 123}], dtype=object)},
-            {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]])},
-            {"ndarray": np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=int)},
-        )
-        for obj in subtests:
-            encoded = json.dumps(obj, cls=RuntimeEncoder)
-            self.assertIsInstance(encoded, str)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)
-            self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
 
-    def test_encoder_instruction(self):
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertTrue(np.array_equal(decoded["ndarray"], object_["ndarray"]))
+
+    @data(
+        {"instruction": CXGate()},
+        {"instruction": PhaseGate(theta=1)},
+        {"instruction": U2Gate(phi=1, lam=1)},
+        {"instruction": U2Gate(phi=Parameter("phi"), lam=Parameter("lambda"))},
+    )
+    def test_encoder_instruction(self, object_):
         """Test encoding and decoding instructions."""
-        subtests = (
-            {"instruction": CXGate()},
-            {"instruction": PhaseGate(theta=1)},
-            {"instruction": U2Gate(phi=1, lam=1)},
-            {"instruction": U2Gate(phi=Parameter("phi"), lam=Parameter("lambda"))},
-        )
-        for obj in subtests:
-            encoded = json.dumps(obj, cls=RuntimeEncoder)
-            self.assertIsInstance(encoded, str)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)
-            self.assertEqual(decoded, obj)
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
+
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertEqual(decoded, object_)
 
     def test_encoder_np_number(self):
         """Test encoding and decoding instructions."""
