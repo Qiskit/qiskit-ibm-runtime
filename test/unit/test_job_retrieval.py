@@ -260,7 +260,3 @@ class TestRetrieveJobs(IBMTestCase):
         jobs = service.jobs()
         self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
         self.assertIsInstance(jobs[1].backend(), IBMBackend)
-
-
-class TestRetrieveJobsRegistry(IBMTestCase):
-    """Test retrieval of jobs, using a mocked registry."""
