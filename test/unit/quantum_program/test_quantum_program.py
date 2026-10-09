@@ -98,7 +98,10 @@ class TestQuantumProgram(IBMTestCase):
 
         samplex_item_with_new_noise = quantum_program.items[2]
         for i, noise_model in enumerate(new_noise_models):
-            assert samplex_item_with_new_noise.samplex_arguments[f"pauli_lindblad_maps.pl{i}"] == noise_model
+            assert (
+                samplex_item_with_new_noise.samplex_arguments[f"pauli_lindblad_maps.pl{i}"]
+                == noise_model
+            )
 
     def test_subset_of_noise_maps(self):
         """Test handling specific samplex item using only a subset of the program's noise maps.

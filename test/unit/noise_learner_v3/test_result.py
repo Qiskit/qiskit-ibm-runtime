@@ -114,7 +114,10 @@ class TestNoiseLearnerV3Result(IBMTestCase):
             0.02,
             0.16,
         ]
-        assert result.to_pauli_lindblad_map().simplify() == PauliLindbladMap.from_components(flatenned_rates, flatenned_generators).simplify()
+        assert (
+            result.to_pauli_lindblad_map().simplify()
+            == PauliLindbladMap.from_components(flatenned_rates, flatenned_generators).simplify()
+        )
 
 
 class TestNoiseLearnerV3Results(IBMTestCase):
@@ -144,9 +147,9 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
         returned_dict = NoiseLearnerV3Results(results[:2]).to_dict(circuit.data, True)
         assert {
-                annotation.ref: pauli_lindblad_map
-                for annotation, pauli_lindblad_map in zip(annotations[:2], pauli_lindblad_maps[:2])
-            } == returned_dict
+            annotation.ref: pauli_lindblad_map
+            for annotation, pauli_lindblad_map in zip(annotations[:2], pauli_lindblad_maps[:2])
+        } == returned_dict
 
     def test_to_dict_valid_input_require_refs_false(self):
         """Test ``NoiseLearnerV3Results.to_dict`` when ``require_refs`` is ``True``."""
@@ -162,12 +165,12 @@ class TestNoiseLearnerV3Results(IBMTestCase):
 
         returned_dict = NoiseLearnerV3Results(results).to_dict(circuit.data, False)
         assert {
-                annotation.ref: pauli_lindblad_map
-                for annotation, pauli_lindblad_map in zip(
-                    annotations,
-                    [pauli_lindblad_maps[0], pauli_lindblad_maps[2]],
-                )
-            } == returned_dict
+            annotation.ref: pauli_lindblad_map
+            for annotation, pauli_lindblad_map in zip(
+                annotations,
+                [pauli_lindblad_maps[0], pauli_lindblad_maps[2]],
+            )
+        } == returned_dict
 
     def test_to_dict_wrong_num_of_instructions(self):
         """Test ``.to_dict`` raises if number of instructions does not match number of results."""

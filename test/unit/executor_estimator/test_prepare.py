@@ -982,7 +982,10 @@ class TestPreparePec(IBMTestCase):
 
         # Check that samplex_arguments contains pauli_lindblad_maps
         assert f"pauli_lindblad_maps.{noise_layer_ref}" in item.samplex_arguments
-        assert item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"] == noise_model[noise_layer_ref]
+        assert (
+            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"]
+            == noise_model[noise_layer_ref]
+        )
 
         # Check that samplex_arguments contains noise_scales for the layer
         assert f"noise_scales.{noise_layer_ref}" in item.samplex_arguments
@@ -1733,15 +1736,18 @@ class TestPreparePea(IBMTestCase):
 
         # Check that samplex_arguments contains pauli_lindblad_maps
         assert f"pauli_lindblad_maps.{noise_layer_ref}" in item.samplex_arguments
-        assert item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"] == noise_model[noise_layer_ref]
+        assert (
+            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"]
+            == noise_model[noise_layer_ref]
+        )
 
         # Check that samplex_arguments contains noise_scales for the layer
         assert f"noise_scales.{noise_layer_ref}" in item.samplex_arguments
         # noise_scales = noise_factors - 1, shape is (num_noise_factors, 1, 1)
         expected_noise_scales = np.array([[[factor - 1]] for factor in noise_factors])
         assert np.all(
-                item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
-            )
+            item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
+        )
 
     def test_prepare_pea_raises_error_with_empty_noise_model(self):
         """Test that prepare_pea raises error when noise_model is empty."""

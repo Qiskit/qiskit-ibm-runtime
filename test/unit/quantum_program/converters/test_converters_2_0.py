@@ -124,9 +124,14 @@ class TestQuantumProgramConverters(IBMTestCase):
         assert samplex_decoded == samplex
 
         samplex_arguments_model = samplex_item_model.samplex_arguments
-        assert np.array_equal(samplex_arguments_model["parameter_values"].to_numpy(), parameter_values)
+        assert np.array_equal(
+            samplex_arguments_model["parameter_values"].to_numpy(), parameter_values
+        )
         for i, noise_model in enumerate(noise_models):
-            assert samplex_arguments_model[f"pauli_lindblad_maps.pl{i}"].to_pauli_lindblad_map() == noise_model
+            assert (
+                samplex_arguments_model[f"pauli_lindblad_maps.pl{i}"].to_pauli_lindblad_map()
+                == noise_model
+            )
 
         assert quantum_program_model.circuits.to_python() == [circuit1, template_circuit]
 

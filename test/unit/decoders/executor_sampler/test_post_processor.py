@@ -178,9 +178,9 @@ class TestQuantumProgramItemResultToSamplerPubResult(IBMTestCase):
         # `scheduler_timing` and `stretch_values` should be present and converted in `metadata`.
         assert "compilation" in result.metadata
         assert result.metadata["compilation"]["scheduler_timing"] == {
-                "timing": scheduler_timing.timing,
-                "circuit_duration": scheduler_timing.circuit_duration,
-            }
+            "timing": scheduler_timing.timing,
+            "circuit_duration": scheduler_timing.circuit_duration,
+        }
         assert result.metadata["compilation"]["stretch_values"] == expected_stretch_values
 
     def test_simulation_info_in_metadata(self):

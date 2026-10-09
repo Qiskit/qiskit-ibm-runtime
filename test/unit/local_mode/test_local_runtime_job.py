@@ -50,7 +50,9 @@ class TestLocalRuntimeJob(IBMTestCase):
             assert isinstance(metrics["timestamps"][name], str)
             assert metrics["timestamps"][name].endswith("Z")
         # The UTC timestamps convert back to the job's local creation time.
-        assert utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None) == job.creation_date
+        assert (
+            utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None) == job.creation_date
+        )
 
     def test_v2_sampler(self):
         """Test V2 Sampler on a local backend."""
