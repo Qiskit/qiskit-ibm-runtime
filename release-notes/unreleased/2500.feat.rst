@@ -1,0 +1,29 @@
+Fake backends can now run circuits containing the mid-circuit instructions they advertise,
+:class:`.MidCircuitMeasure` (``measure_2``) and :class:`.MidCircuitReset` (``reset_2``).
+Previously, running such circuits in local testing mode failed with
+``AerError: unknown instruction: measure_2``. This applies to the ``run()`` method of fake
+backends, as well as to the legacy and the client-side primitives in local testing mode.
+
+.. code-block:: python
+
+    from qiskit import QuantumCircuit
+    from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+    from qiskit_ibm_runtime.executor_sampler import Sampler
+    from qiskit_ibm_runtime.fake_provider import FakeBoston
+
+    circuit = QuantumCircuit(2, 2)
+    circuit.x(0)
+    circuit.append(MidCircuitMeasure(), [0], [0])
+    with circuit.if_test((circuit.clbits[0], 1)):
+        circuit.x(1)
+    circuit.measure(1, 1)
+
+    sampler = Sampler(FakeBoston())
+    result = sampler.run([circuit]).result()
+
+These instructions are simulated as a standard :class:`~qiskit.circuit.Measure` and
+:class:`~qiskit.circuit.Reset`. As a result, the simulation uses the error rates and durations
+of ``measure`` and ``reset`` from the fake backend's noise model, rather than those of
+``measure_2`` and ``reset_2``, so fake backends cannot be used to compare the noise of
+``measure`` and ``measure_2``. Readout errors are defined per qubit and apply to all
+measurements.

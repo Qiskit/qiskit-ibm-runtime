@@ -31,6 +31,7 @@ from samplomatic.builders.build import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
+from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.executor_sampler.utils import find_box_type
 from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.fake_provider.executor.run_quantum_program import run_quantum_program
@@ -82,6 +83,26 @@ def generate_circuit(
         qc_boxed.noop(active_qubits)
 
     return qc_boxed, active_qubits
+
+
+def mid_circuit_measure_feedforward_circuit() -> QuantumCircuit:
+    """Return a circuit conditioning an ``X`` gate on the outcome of ``measure_2``."""
+    circuit = QuantumCircuit(2, 2)
+    circuit.x(0)
+    circuit.append(MidCircuitMeasure(), [0], [0])
+    with circuit.if_test((circuit.clbits[0], 1)):
+        circuit.x(1)
+    circuit.measure(1, 1)
+    return circuit
+
+
+def mid_circuit_reset_circuit() -> QuantumCircuit:
+    """Return a circuit resetting ``|1>`` with ``reset_2`` and then measuring."""
+    circuit = QuantumCircuit(1, 1)
+    circuit.x(0)
+    circuit.append(MidCircuitReset(), [0])
+    circuit.measure(0, 0)
+    return circuit
 
 
 def assert_correct(
@@ -149,6 +170,22 @@ class TestRunQuantumProgram(IBMTestCase):
         result = run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
         self.assertTrue((result[0]["c"] == [[True]]).all())
+
+    @data(
+        (mid_circuit_measure_feedforward_circuit, [True, True]),
+        (mid_circuit_reset_circuit, [False]),
+    )
+    @unpack
+    def test_circuit_item_with_mid_circuit_instructions(self, circuit_factory, expected):
+        """Test that mid-circuit instructions are simulated as their standard counterparts."""
+        qc = circuit_factory()
+
+        program = QuantumProgram(shots=64)
+        program.append_circuit_item(qc)
+
+        result = run_quantum_program(AerSimulator(), program, SimulatorOptions())
+
+        self.assertTrue((result[0]["c"] == expected).all())
 
     def test_clifford_circuit_item(self):
         """Test using the stabilizer simulation method via a Circuit item."""

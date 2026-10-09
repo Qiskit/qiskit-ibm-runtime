@@ -18,14 +18,17 @@ import tempfile
 import unittest
 from unittest import mock
 
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import CZGate, ECRGate
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2, fake_provider
+from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.fake_provider import (
     FakeAthensV2,
+    FakeBoston,
+    FakeKingston,
     FakeMumbaiV2,
     FakePerth,
     FakePrague,
@@ -38,6 +41,35 @@ from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 from ...ibm_test_case import IBMTestCase
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
+
+
+def mid_circuit_measure_circuit():
+    """Return a circuit measuring ``|1>`` with ``measure_2`` and then ``measure``."""
+    circuit = QuantumCircuit(1, 2)
+    circuit.x(0)
+    circuit.append(MidCircuitMeasure(), [0], [0])
+    circuit.measure(0, 1)
+    return circuit
+
+
+def mid_circuit_reset_circuit():
+    """Return a circuit resetting ``|1>`` with ``reset_2`` and then measuring."""
+    circuit = QuantumCircuit(1, 1)
+    circuit.x(0)
+    circuit.append(MidCircuitReset(), [0])
+    circuit.measure(0, 0)
+    return circuit
+
+
+def mid_circuit_measure_feedforward_circuit():
+    """Return a circuit conditioning an ``X`` gate on the outcome of ``measure_2``."""
+    circuit = QuantumCircuit(2, 2)
+    circuit.x(0)
+    circuit.append(MidCircuitMeasure(), [0], [0])
+    with circuit.if_test((circuit.clbits[0], 1)):
+        circuit.x(1)
+    circuit.measure(1, 1)
+    return circuit
 
 
 def make_refresh_service(backend):
@@ -312,3 +344,31 @@ class TestFakeBackends(IBMTestCase):
             self.assertIsInstance(backend.physical_qubits, int)
         else:
             self.assertIsNone(backend.physical_qubits)
+
+    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
+    @data(
+        (FakeKingston, mid_circuit_measure_circuit, "11"),
+        (FakeBoston, mid_circuit_reset_circuit, "0"),
+        (FakeKingston, mid_circuit_measure_feedforward_circuit, "11"),
+    )
+    @unpack
+    def test_run_mid_circuit_instructions(self, backend_cls, circuit_factory, expected):
+        """Test running circuits with mid-circuit instructions on fake backends."""
+        shots = 100
+        circuit = circuit_factory()
+
+        counts = backend_cls().run(circuit, shots=shots, noise_model=None).result().get_counts()
+
+        self.assertEqual(counts, {expected: shots})
+
+    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
+    def test_sampler_mid_circuit_measure(self):
+        """Test running a circuit with ``measure_2`` through ``SamplerV2`` on a fake backend."""
+        shots = 1000
+        circuit = mid_circuit_measure_circuit()
+
+        sampler = SamplerV2(FakeKingston(), options={"simulator": {"seed_simulator": 42}})
+        counts = sampler.run([circuit], shots=shots).result()[0].data.c.get_counts()
+
+        # Noise from the fake backend makes a small fraction of shots differ from ``11``.
+        self.assertGreater(counts["11"], 0.9 * shots)
