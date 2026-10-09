@@ -111,7 +111,7 @@ class TestEstimatorOptions(IBMTestCase):
                 }
             )
 
-        self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, value)
+        assert options.resilience.measure_noise_learning.shots_per_randomization == value
 
     @data(("auto", 0), (20, 1))
     @unpack
@@ -126,7 +126,7 @@ class TestEstimatorOptions(IBMTestCase):
         ):
             options.shots_per_randomization = value
 
-        self.assertEqual(options.shots_per_randomization, value)
+        assert options.shots_per_randomization == value
 
     @data(("auto", 0), (20, 1))
     @unpack
@@ -141,9 +141,7 @@ class TestEstimatorOptions(IBMTestCase):
         ):
             estimator.options.resilience.measure_noise_learning.shots_per_randomization = value
 
-        self.assertEqual(
-            estimator.options.resilience.measure_noise_learning.shots_per_randomization, value
-        )
+        assert estimator.options.resilience.measure_noise_learning.shots_per_randomization == value
 
     @data(("auto", 0), (20, 1))
     @unpack
@@ -156,7 +154,7 @@ class TestEstimatorOptions(IBMTestCase):
         ):
             options = MeasureNoiseLearningOptions(shots_per_randomization=value)
 
-        self.assertEqual(options.shots_per_randomization, value)
+        assert options.shots_per_randomization == value
 
     def test_measure_noise_learning_shots_per_randomization_auto_on_assignment_does_not_warn(self):
         """Auto shots_per_randomization does not warn on attribute assignment."""
@@ -165,7 +163,7 @@ class TestEstimatorOptions(IBMTestCase):
         with self.assertWarnsStrict(DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, 0):
             options.shots_per_randomization = "auto"
 
-        self.assertEqual(options.shots_per_randomization, "auto")
+        assert options.shots_per_randomization == "auto"
 
     @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_program_inputs(self):
@@ -236,7 +234,7 @@ class TestEstimatorOptions(IBMTestCase):
         }
 
         inputs = opt._get_program_inputs(asdict(opt))
-        self.assertDictEqual(inputs, expected)
+        assert inputs == expected
 
     @data(
         {},
@@ -290,7 +288,7 @@ class TestEstimatorOptions(IBMTestCase):
         estimator = Estimator(mode=backend, options=opt_dict)
         _ = estimator.run(**get_primitive_inputs(estimator))
         options = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictEqual(options, opt_dict)
+        assert options == opt_dict
 
     def test_zero_resilience_level(self):
         """Test resilience_level=0."""
@@ -299,5 +297,5 @@ class TestEstimatorOptions(IBMTestCase):
         estimator = Estimator(mode=backend, options=opt_dict)
         _ = estimator.run(**get_primitive_inputs(estimator))
         options = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("resilience_level", options)
-        self.assertEqual(options["resilience_level"], 0)
+        assert "resilience_level" in options
+        assert options["resilience_level"] == 0

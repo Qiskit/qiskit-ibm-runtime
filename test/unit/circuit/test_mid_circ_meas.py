@@ -31,21 +31,21 @@ class TestMidCircuitMeasure(IBMTestCase):
     def test_instantiation(self):
         """Test default instantiation."""
         mcm = MidCircuitMeasure()
-        self.assertIs(mcm.base_class, MidCircuitMeasure)
-        self.assertIsInstance(mcm, Instruction)
-        self.assertEqual(mcm.name, "measure_2")
-        self.assertEqual(mcm.num_qubits, 1)
-        self.assertEqual(mcm.num_clbits, 1)
+        assert mcm.base_class is MidCircuitMeasure
+        assert isinstance(mcm, Instruction)
+        assert mcm.name == "measure_2"
+        assert mcm.num_qubits == 1
+        assert mcm.num_clbits == 1
 
     @data("measure_3", "measure_reset")
     def test_instantiation_name(self, name):
         """Test instantiation with custom name."""
         mcm = MidCircuitMeasure(name)
-        self.assertIs(mcm.base_class, MidCircuitMeasure)
-        self.assertIsInstance(mcm, Instruction)
-        self.assertEqual(mcm.name, name)
-        self.assertEqual(mcm.num_qubits, 1)
-        self.assertEqual(mcm.num_clbits, 1)
+        assert mcm.base_class is MidCircuitMeasure
+        assert isinstance(mcm, Instruction)
+        assert mcm.name == name
+        assert mcm.num_qubits == 1
+        assert mcm.num_clbits == 1
 
     def test_instantiation_invalid_name(self):
         """Test instantiation with an invalid name."""
@@ -59,8 +59,8 @@ class TestMidCircuitMeasure(IBMTestCase):
         qc.append(mcm, [0], [0])
         qc.append(mcm, [0], [1])
         qc.reset(0)
-        self.assertIs(qc.data[0].operation, mcm)
-        self.assertIs(qc.data[1].operation, mcm)
+        assert qc.data[0].operation is mcm
+        assert qc.data[1].operation is mcm
 
     def test_transpiler_compat_without(self):
         """Test that default pass manager FAILS if measure_2 not in Target."""
@@ -85,7 +85,7 @@ class TestMidCircuitMeasure(IBMTestCase):
         qc = QuantumCircuit(1, 2)
         qc.append(mcm, [0], [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "measure_2")
+        assert transpiled.data[0].operation.name == "measure_2"
 
 
 class TestMidCircuitReset(IBMTestCase):
@@ -94,20 +94,20 @@ class TestMidCircuitReset(IBMTestCase):
     def test_instantiation(self):
         """Test default instantiation."""
         mcr = MidCircuitReset()
-        self.assertIs(mcr.base_class, MidCircuitReset)
-        self.assertIsInstance(mcr, Instruction)
-        self.assertEqual(mcr.name, "reset_2")
-        self.assertEqual(mcr.num_qubits, 1)
-        self.assertEqual(mcr.num_clbits, 0)
+        assert mcr.base_class is MidCircuitReset
+        assert isinstance(mcr, Instruction)
+        assert mcr.name == "reset_2"
+        assert mcr.num_qubits == 1
+        assert mcr.num_clbits == 0
 
     def test_instantiation_name(self):
         """Test instantiation with custom name."""
         mcr = MidCircuitReset("reset_3")
-        self.assertIs(mcr.base_class, MidCircuitReset)
-        self.assertIsInstance(mcr, Instruction)
-        self.assertEqual(mcr.name, "reset_3")
-        self.assertEqual(mcr.num_qubits, 1)
-        self.assertEqual(mcr.num_clbits, 0)
+        assert mcr.base_class is MidCircuitReset
+        assert isinstance(mcr, Instruction)
+        assert mcr.name == "reset_3"
+        assert mcr.num_qubits == 1
+        assert mcr.num_clbits == 0
 
     def test_instantiation_invalid_name(self):
         """Test instantiation with an invalid name."""
@@ -121,8 +121,8 @@ class TestMidCircuitReset(IBMTestCase):
         qc.append(mcr, [0])
         qc.append(mcr, [0])
         qc.reset(0)
-        self.assertIs(qc.data[0].operation, mcr)
-        self.assertIs(qc.data[1].operation, mcr)
+        assert qc.data[0].operation is mcr
+        assert qc.data[1].operation is mcr
 
     def test_transpiler_compat_without(self):
         """Test that default pass manager FAILS if reset_2 is not in Target."""
@@ -146,7 +146,7 @@ class TestMidCircuitReset(IBMTestCase):
         qc = QuantumCircuit(1, 2)
         qc.append(mcr, [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "reset_2")
+        assert transpiled.data[0].operation.name == "reset_2"
 
 
 class TestMeasureReset(IBMTestCase):
@@ -155,20 +155,20 @@ class TestMeasureReset(IBMTestCase):
     def test_instantiation(self):
         """Test default instantiation."""
         mr = MeasureReset()
-        self.assertIs(mr.base_class, MeasureReset)
-        self.assertIsInstance(mr, Instruction)
-        self.assertEqual(mr.name, "measure_reset")
-        self.assertEqual(mr.num_qubits, 1)
-        self.assertEqual(mr.num_clbits, 1)
+        assert mr.base_class is MeasureReset
+        assert isinstance(mr, Instruction)
+        assert mr.name == "measure_reset"
+        assert mr.num_qubits == 1
+        assert mr.num_clbits == 1
 
     def test_instantiation_name(self):
         """Test instantiation with custom name."""
         mr = MeasureReset("measure_reset_2")
-        self.assertIs(mr.base_class, MeasureReset)
-        self.assertIsInstance(mr, Instruction)
-        self.assertEqual(mr.name, "measure_reset_2")
-        self.assertEqual(mr.num_qubits, 1)
-        self.assertEqual(mr.num_clbits, 1)
+        assert mr.base_class is MeasureReset
+        assert isinstance(mr, Instruction)
+        assert mr.name == "measure_reset_2"
+        assert mr.num_qubits == 1
+        assert mr.num_clbits == 1
 
     def test_instantiation_invalid_name(self):
         """Test instantiation with an invalid name."""
@@ -180,7 +180,7 @@ class TestMeasureReset(IBMTestCase):
         mr = MeasureReset()
         qc = QuantumCircuit(1, 1)
         qc.append(mr, [0], [0])
-        self.assertIs(qc.data[0].operation, mr)
+        assert qc.data[0].operation is mr
 
     def test_transpiler_compat_without(self):
         """Test that default pass manager FAILS if measure_reset is not in Target."""
@@ -204,4 +204,4 @@ class TestMeasureReset(IBMTestCase):
         qc = QuantumCircuit(1, 1)
         qc.append(mr, [0], [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "measure_reset")
+        assert transpiled.data[0].operation.name == "measure_reset"

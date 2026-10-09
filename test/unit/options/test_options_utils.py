@@ -85,7 +85,7 @@ class TestOptionsUtils(IBMTestCase):
         new_dict = {"foo": "bar2"}
         expected = {"nested_foo": {"foo": "bar1"}, "foo": "bar2"}
         combined = merge_options_v2(old_dict, new_dict)
-        self.assertDictEqual(combined, expected)
+        assert combined == expected
 
     @data(
         ({"foo": 1, "bar": Unset}, {"foo": 1}),
@@ -97,7 +97,7 @@ class TestOptionsUtils(IBMTestCase):
         """Test removing dictionary with unset values."""
         in_dict, expected = in_vals
         remove_dict_unset_values(in_dict)
-        self.assertDictEqual(in_dict, expected)
+        assert in_dict == expected
 
     @data(
         ({"foo": 1, "bar": {}}, {"foo": 1}),
@@ -109,4 +109,4 @@ class TestOptionsUtils(IBMTestCase):
         """Test removing empty dict."""
         in_dict, expected = in_vals
         remove_empty_dict(in_dict)
-        self.assertDictEqual(in_dict, expected)
+        assert in_dict == expected

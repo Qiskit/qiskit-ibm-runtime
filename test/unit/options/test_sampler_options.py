@@ -43,7 +43,7 @@ class TestSamplerOptions(IBMTestCase):
         """Test invalid inputs."""
         with self.assertRaises(ValidationError) as exc:
             SamplerOptions(**val)
-        self.assertIn(list(val.keys())[0], str(exc.exception))
+        assert list(val.keys())[0] in str(exc.exception)
 
     @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_program_inputs(self):
@@ -90,7 +90,7 @@ class TestSamplerOptions(IBMTestCase):
         expected = {"options": options, "version": 2, "support_qiskit": True}
 
         inputs = opt._get_program_inputs(asdict(opt))
-        self.assertDictEqual(inputs, expected)
+        assert inputs == expected
 
     @data(
         {},
@@ -139,4 +139,4 @@ class TestSamplerOptions(IBMTestCase):
         sampler = Sampler(mode=backend, options=opt_dict)
         _ = sampler.run(**get_primitive_inputs(sampler))
         options = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictEqual(options, opt_dict)
+        assert options == opt_dict

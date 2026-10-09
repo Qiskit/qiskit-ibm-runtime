@@ -65,14 +65,14 @@ class TestClientParameters(IBMTestCase):
         no_params_expected_result = {"verify": True}
         no_params_credentials = client_params()
         result = no_params_credentials.connection_parameters()
-        self.assertDictEqual(no_params_expected_result, result)
+        assert no_params_expected_result == result
 
     def test_verify_param(self) -> None:
         """Test 'verify' arg is acknowledged."""
         false_verify_expected_result = {"verify": False}
         false_verify_credentials = client_params(verify=False)
         result = false_verify_credentials.connection_parameters()
-        self.assertDictEqual(false_verify_expected_result, result)
+        assert false_verify_expected_result == result
 
     def test_proxy_param(self) -> None:
         """Test using only proxy urls (no NTLM credentials)."""
@@ -81,7 +81,7 @@ class TestClientParameters(IBMTestCase):
             proxies=ProxyConfiguration(**{"urls": MOCK_PROXIES_URLS})  # type: ignore[arg-type]
         )
         result = proxies_only_credentials.connection_parameters()
-        self.assertDictEqual(proxies_only_expected_result, result)
+        assert proxies_only_expected_result == result
 
     @named_data(
         (
@@ -140,7 +140,7 @@ class TestClientParameters(IBMTestCase):
             channel=channel, instance=instance, url=url, url_resolver=url_resolver
         )
 
-        self.assertEqual(params.get_runtime_api_base_url(), expected_url)
+        assert params.get_runtime_api_base_url() == expected_url
 
     def test_proxies_param_with_ntlm(self) -> None:
         """Test proxies with NTLM credentials."""
@@ -160,13 +160,13 @@ class TestClientParameters(IBMTestCase):
         result = proxies_with_ntlm_credentials.connection_parameters()
 
         # Verify the NTLM credentials.
-        self.assertEqual(ntlm_expected_result["auth"].username, result["auth"].username)
-        self.assertEqual(ntlm_expected_result["auth"].password, result["auth"].password)
+        assert ntlm_expected_result["auth"].username == result["auth"].username
+        assert ntlm_expected_result["auth"].password == result["auth"].password
 
         # Remove the HttpNtlmAuth objects for direct comparison of the dicts.
         ntlm_expected_result.pop("auth")
         result.pop("auth")
-        self.assertDictEqual(ntlm_expected_result, result)
+        assert ntlm_expected_result == result
 
     def test_malformed_ntlm_params(self) -> None:
         """Test input with malformed NTLM credentials."""
@@ -196,16 +196,16 @@ class TestClientParameters(IBMTestCase):
             verify=False,
         )
         handler = params.get_auth_handler()
-        self.assertIsInstance(handler, CloudAuth)
+        assert isinstance(handler, CloudAuth)
 
         with self.assertWarnsRegex(UserWarning, "Unable to retrieve"):
             headers = handler.get_headers()
-        self.assertIn(f"apikey {token}", headers.values())
+        assert f"apikey {token}" in headers.values()
 
         # Use a new handler, for avoiding delay in second response.
         handler = params.get_auth_handler()
         with self.assertWarnsRegex(UserWarning, "Unable to retrieve"):
             headers = handler.get_headers()
-        self.assertIn(f"apikey {token}", headers.values())
-        self.assertEqual(handler.tm.disable_ssl_verification, not verify)
-        self.assertEqual(handler.tm.proxies, MOCK_PROXIES_URLS)
+        assert f"apikey {token}" in headers.values()
+        assert handler.tm.disable_ssl_verification == (not verify)
+        assert handler.tm.proxies == MOCK_PROXIES_URLS

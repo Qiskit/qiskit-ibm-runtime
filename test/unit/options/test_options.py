@@ -46,17 +46,14 @@ class TestOptionsV2(IBMTestCase):
     def test_runtime_options(self, opt_cls, rt_options_kwargs):
         """Test converting runtime options."""
         rt_options = RuntimeOptions(**rt_options_kwargs)
-        self.assertGreaterEqual(
-            vars(rt_options).items(),
-            opt_cls._get_runtime_options(vars(rt_options)).items(),
-        )
+        assert vars(rt_options).items() >= opt_cls._get_runtime_options(vars(rt_options)).items()
 
     @data(EstimatorOptions, SamplerOptions)
     def test_kwargs_options(self, opt_cls):
         """Test specifying arbitrary options."""
         with self.assertRaises(ValidationError) as exc:
             _ = opt_cls(foo="foo")
-        self.assertIn("foo", str(exc.exception))
+        assert "foo" in str(exc.exception)
 
     @combine(
         opt_cls=[EstimatorOptions, SamplerOptions],
@@ -72,4 +69,4 @@ class TestOptionsV2(IBMTestCase):
         options.simulator.coupling_map = variant
         inputs = opt_cls._get_program_inputs(asdict(options))["options"]
         resulting_cmap = inputs["simulator"]["coupling_map"]
-        self.assertEqual({(1, 0), (2, 1), (0, 1), (1, 2)}, set(map(tuple, resulting_cmap)))
+        assert {(1, 0), (2, 1), (0, 1), (1, 2)} == set(map(tuple, resulting_cmap))

@@ -50,9 +50,9 @@ class StoredJobsTestCase(IBMTestCase):
         result = job.result()
 
         # Job should be an executor job.
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
         # Result should be loaded correctly.
-        self.assertIsInstance(result, QuantumProgramResult)
+        assert isinstance(result, QuantumProgramResult)
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     @data(*ESTIMATOR_JOBS["0.50"])
@@ -73,9 +73,9 @@ class StoredJobsTestCase(IBMTestCase):
         result = job.result()
 
         # Job should be an executor job.
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
         # Result should be loaded correctly.
-        self.assertIsInstance(result, PrimitiveResult)
+        assert isinstance(result, PrimitiveResult)
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     @data(*SAMPLER_JOBS["0.49"])
@@ -96,6 +96,6 @@ class StoredJobsTestCase(IBMTestCase):
         result = job.result()
 
         # Job should be an executor job.
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
         # Result should be loaded correctly.
-        self.assertIsInstance(result, PrimitiveResult)
+        assert isinstance(result, PrimitiveResult)

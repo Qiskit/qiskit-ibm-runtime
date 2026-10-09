@@ -79,7 +79,7 @@ class FakeBackendsTest(IBMTestCase):
         pub_result = job.result()[0]
         counts = pub_result.data.meas.get_counts()
 
-        self.assertEqual(sum(counts.values()), 1024)
+        assert sum(counts.values()) == 1024
 
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_backend_v2_noise_model_always_present(self):
@@ -93,14 +93,14 @@ class FakeBackendsTest(IBMTestCase):
         pub_result = job.result()[0]
         counts = pub_result.data.meas.get_counts()
         # Assert noise was present and result wasn't ideal
-        self.assertNotEqual(counts, {"1": 1000})
+        assert counts != {"1": 1000}
 
     def test_retrieving_single_backend(self):
         """Test retrieving a single backend."""
         provider = FakeProviderForBackendV2()
         backend_name = "fake_jakarta"
         backend = provider.backend(backend_name)
-        self.assertEqual(backend.name, backend_name)
+        assert backend.name == backend_name
 
     def test_all_fake_backends_registered(self):
         """Test that every fake backend class in the module is registered in the provider."""
@@ -112,7 +112,7 @@ class FakeBackendsTest(IBMTestCase):
             and issubclass(getattr(fake_provider, name), FakeBackendV2)
         }
         registered = {type(backend).__name__ for backend in FakeProviderForBackendV2().backends()}
-        self.assertEqual(all_classes, registered)
+        assert all_classes == registered
 
 
 class FakeBackendRefreshTest(IBMTestCase):
@@ -137,23 +137,23 @@ class FakeBackendRefreshTest(IBMTestCase):
             with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                 backend.refresh(service, persist=False)
 
-        self.assertIn("has been updated", "".join(logs.output))
+        assert "has been updated" in "".join(logs.output)
 
         # ``dirname`` is left untouched (still pointing at the bundled files).
         # The refreshed data is written to and read from the temporary directory instead.
-        self.assertEqual(backend.dirname, pkg_dir)
-        self.assertIsNotNone(backend._tmp_data_dir)
+        assert backend.dirname == pkg_dir
+        assert backend._tmp_data_dir is not None
         tmp_dir = backend._tmp_data_dir.name
-        self.assertNotEqual(tmp_dir, pkg_dir)
-        self.assertTrue(os.path.exists(os.path.join(tmp_dir, backend.conf_filename)))
-        self.assertTrue(os.path.exists(os.path.join(tmp_dir, backend.props_filename)))
+        assert tmp_dir != pkg_dir
+        assert os.path.exists(os.path.join(tmp_dir, backend.conf_filename))
+        assert os.path.exists(os.path.join(tmp_dir, backend.props_filename))
 
         # The backend was updated in-session.
-        self.assertEqual(backend._conf_dict["backend_version"], "9.9.9-refreshed")
+        assert backend._conf_dict["backend_version"] == "9.9.9-refreshed"
 
         # The bundled package files must remain untouched.
-        self.assertEqual(os.stat(pkg_conf).st_mtime_ns, pkg_conf_mtime)
-        self.assertEqual(os.stat(pkg_props).st_mtime_ns, pkg_props_mtime)
+        assert os.stat(pkg_conf).st_mtime_ns == pkg_conf_mtime
+        assert os.stat(pkg_props).st_mtime_ns == pkg_props_mtime
 
     def test_refresh_persist_after_no_persist_targets_bundled_files(self):
         """A ``persist=True`` ``refresh()`` after a ``persist=False`` one still targets ``dirname``.
@@ -170,16 +170,16 @@ class FakeBackendRefreshTest(IBMTestCase):
             service, patcher = make_refresh_service(backend)
             with patcher:
                 backend.refresh(service, persist=False)
-                self.assertIsNotNone(backend._tmp_data_dir)
+                assert backend._tmp_data_dir is not None
 
                 backend.refresh(service)
 
             # The in-place refresh writes back into ``dirname`` (the writable copy).
-            self.assertEqual(backend.dirname, data_dir)
+            assert backend.dirname == data_dir
             reloaded = FakeAthensV2()
             reloaded.dirname = data_dir
             reloaded._conf_dict = reloaded._get_conf_dict_from_json()
-            self.assertEqual(reloaded._conf_dict["backend_version"], "9.9.9-refreshed")
+            assert reloaded._conf_dict["backend_version"] == "9.9.9-refreshed"
 
     def test_refresh_default_writes_in_place(self):
         """The default (``persist=True``) writes back into ``dirname`` without a temp dir.
@@ -198,19 +198,19 @@ class FakeBackendRefreshTest(IBMTestCase):
                 with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
                     backend.refresh(service)
 
-            self.assertIn("has been updated", "".join(logs.output))
+            assert "has been updated" in "".join(logs.output)
 
             # No temporary directory is created and ``dirname`` is unchanged.
-            self.assertEqual(backend.dirname, data_dir)
-            self.assertIsNone(backend._tmp_data_dir)
+            assert backend.dirname == data_dir
+            assert backend._tmp_data_dir is None
 
             # The in-place data file was overwritten with the refreshed data, and a freshly
             # constructed backend pointed at the same directory picks up the update.
             reloaded = FakeAthensV2()
             reloaded.dirname = data_dir
             reloaded._conf_dict = reloaded._get_conf_dict_from_json()
-            self.assertEqual(reloaded._conf_dict["backend_version"], "9.9.9-refreshed")
-            self.assertEqual(backend._conf_dict["backend_version"], "9.9.9-refreshed")
+            assert reloaded._conf_dict["backend_version"] == "9.9.9-refreshed"
+            assert backend._conf_dict["backend_version"] == "9.9.9-refreshed"
 
 
 @ddt
@@ -222,50 +222,50 @@ class TestFakeBackends(IBMTestCase):
         """Test converting backend properties to dict."""
         properties = backend.properties()
         if properties:
-            self.assertIsInstance(backend.properties().to_dict(), dict)
+            assert isinstance(backend.properties().to_dict(), dict)
         else:
-            self.assertTrue(backend.configuration().simulator)
+            assert backend.configuration().simulator
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_convert_to_target(self, backend):
         """Test backend target's dt."""
         target = backend.target
         if target.dt is not None:
-            self.assertLess(target.dt, 1e-6)
+            assert target.dt < 1e-6
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_backend_v2_dtm(self, backend):
         """Test backend dtm"."""
         if backend.dtm:
-            self.assertLess(backend.dtm, 1e-6)
+            assert backend.dtm < 1e-6
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_configuration(self, backend):
         """Test backend configuration."""
         configuration = backend.configuration()
         if configuration.open_pulse:
-            self.assertLess(configuration.dt, 1e-6)
-            self.assertLess(configuration.dtm, 1e-6)
+            assert configuration.dt < 1e-6
+            assert configuration.dtm < 1e-6
             for i in configuration.qubit_lo_range:
-                self.assertGreater(i[0], 1e6)
-                self.assertGreater(i[1], 1e6)
-                self.assertLess(i[0], i[1])
+                assert i[0] > 1e6
+                assert i[1] > 1e6
+                assert i[0] < i[1]
 
             for i in configuration.meas_lo_range:
-                self.assertGreater(i[0], 1e6)
-                self.assertGreater(i[0], 1e6)
-                self.assertLess(i[0], i[1])
+                assert i[0] > 1e6
+                assert i[0] > 1e6
+                assert i[0] < i[1]
 
             for i in configuration.rep_times:
-                self.assertGreater(i, 0)
-                self.assertLess(i, 1)
+                assert i > 0
+                assert i < 1
 
-        self.assertIsInstance(configuration.to_dict(), dict)
+        assert isinstance(configuration.to_dict(), dict)
         # test unit/value consistency on roundtrip
         if hasattr(configuration, "rep_times"):
             config_dict = configuration.to_dict()
             roundtrip_config = configuration.from_dict(config_dict)
-            self.assertEqual(configuration.rep_times, roundtrip_config.rep_times)
+            assert configuration.rep_times == roundtrip_config.rep_times
 
     def test_delay_circuit(self):
         """Test transpiling with delay."""
@@ -276,20 +276,20 @@ class TestFakeBackends(IBMTestCase):
         qc.delay(250, 1, unit="ns")
         qc.measure_all()
         res = transpile(qc, backend)
-        self.assertIn("delay", res.count_ops())
+        assert "delay" in res.count_ops()
 
     def test_non_cx_tests(self):
         """Test using non cx gates."""
         backend = FakePrague()
-        self.assertIsInstance(backend.target.operation_from_name("cz"), CZGate)
+        assert isinstance(backend.target.operation_from_name("cz"), CZGate)
         backend = FakeSherbrooke()
-        self.assertIsInstance(backend.target.operation_from_name("ecr"), ECRGate)
+        assert isinstance(backend.target.operation_from_name("ecr"), ECRGate)
 
     def test_backend_configuration_attributes(self):
         """Test specific backend configuration attributes."""
         backend = FakeMumbaiV2()
-        self.assertTrue(backend.dynamic_reprate_enabled)
-        self.assertTrue(backend.rep_delay_range)
+        assert backend.dynamic_reprate_enabled
+        assert backend.rep_delay_range
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_backend_physical_qubits(self, backend):
@@ -309,6 +309,6 @@ class TestFakeBackends(IBMTestCase):
         ]
 
         if backend.name in backends_with_physical_qubits:
-            self.assertIsInstance(backend.physical_qubits, int)
+            assert isinstance(backend.physical_qubits, int)
         else:
-            self.assertIsNone(backend.physical_qubits)
+            assert backend.physical_qubits is None

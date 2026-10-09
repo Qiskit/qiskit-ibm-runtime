@@ -52,7 +52,7 @@ class TestNeatPubResult(IBMTestCase):
         new_result = getattr(result, f"__{op_name}__")(scalar)
         new_vals = getattr(result.vals, f"__{op_name}__")(scalar)
 
-        self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+        assert new_result.vals.tolist() == new_vals.tolist()
 
     @combine(
         idx=[0, 1],
@@ -66,7 +66,7 @@ class TestNeatPubResult(IBMTestCase):
         new_result = getattr(result1, f"__{op_name}__")(result2)
         new_vals = getattr(result1.vals, f"__{op_name}__")(result2.vals)
 
-        self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+        assert new_result.vals.tolist() == new_vals.tolist()
 
     @combine(
         idx=[0, 1],
@@ -80,7 +80,7 @@ class TestNeatPubResult(IBMTestCase):
         new_result = getattr(result, f"__{op_name}__")(databin)
         new_vals = getattr(result.vals, f"__{op_name}__")(databin.evs)
 
-        self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+        assert new_result.vals.tolist() == new_vals.tolist()
 
     @combine(op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"])
     def test_error_for_operations_with_databins(self, op_name):
@@ -103,7 +103,7 @@ class TestNeatPubResult(IBMTestCase):
         new_result = getattr(result, f"__{op_name}__")(pub_result)
         new_vals = getattr(result.vals, f"__{op_name}__")(pub_result.data.evs)
 
-        self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+        assert new_result.vals.tolist() == new_vals.tolist()
 
     def test_abs(self):
         """Test the ``abs`` operator."""
@@ -111,7 +111,7 @@ class TestNeatPubResult(IBMTestCase):
         new_result = abs(result)
         new_vals = abs(result.vals)
 
-        self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+        assert new_result.vals.tolist() == new_vals.tolist()
 
     @ddt.data(2, 4.5)
     def test_pow(self, p):
@@ -120,7 +120,7 @@ class TestNeatPubResult(IBMTestCase):
         new_result = result**p
         new_vals = result.vals**p
 
-        self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+        assert new_result.vals.tolist() == new_vals.tolist()
 
 
 @ddt.ddt
@@ -132,15 +132,15 @@ class TestNeatResult(IBMTestCase):
         results = neat_pub_results()
         r = NeatResult(results)
 
-        self.assertListEqual(r[0].vals.tolist(), results[0].vals.tolist())
-        self.assertListEqual(r[1].vals.tolist(), results[1].vals.tolist())
+        assert r[0].vals.tolist() == results[0].vals.tolist()
+        assert r[1].vals.tolist() == results[1].vals.tolist()
 
     def test_len(self):
         """Test the ``__len__`` method of NeatResult."""
-        self.assertEqual(len(NeatResult(neat_pub_results())), 2)
+        assert len(NeatResult(neat_pub_results())) == 2
 
     def test_iter(self):
         """Test the ``__iter__`` method of NeatResult."""
         results = neat_pub_results()
         for i, j in zip(NeatResult(results), results):
-            self.assertListEqual(i.vals.tolist(), j.vals.tolist())
+            assert i.vals.tolist() == j.vals.tolist()
