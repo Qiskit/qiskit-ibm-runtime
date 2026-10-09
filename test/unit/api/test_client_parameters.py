@@ -134,9 +134,7 @@ class TestClientParameters(IBMTestCase):
             "https://auth.quantum.ibm.com/api:crn:False",
         ),
     )
-    def test_get_runtime_api_base_url(
-        self, channel, instance, url, url_resolver, expected_url
-    ) -> None:
+    def test_get_runtime_api_base_url(self, channel, instance, url, url_resolver, expected_url):
         """Test resolution of runtime API base URL."""
         params = client_params(
             channel=channel, instance=instance, url=url, url_resolver=url_resolver
