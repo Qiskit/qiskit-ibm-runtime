@@ -12,6 +12,7 @@
 
 """Tests the noise learner v3 validation."""
 
+from ddt import data, ddt
 from qiskit import QuantumCircuit
 from samplomatic import Twirl
 
@@ -22,6 +23,7 @@ from qiskit_ibm_runtime.noise_learner_v3.validation import validate_instruction
 from ...ibm_test_case import IBMTestCase
 
 
+@ddt
 class TestValidation(IBMTestCase):
     """Tests the noise learner v3 validation."""
 
@@ -100,4 +102,15 @@ class TestValidation(IBMTestCase):
         with self.assertRaisesRegex(
             IBMInputValueError, "Every qubit must be part of QuantumRegister"
         ):
+            validate_instruction(circuit.data[0], target)
+
+    @data(-1.0, 2.0, float("nan"))
+    def test_validate_instruction_rzz_angle(self, angle):
+        """Test validation raises when an rzz angle is outside the range [0, pi/2]."""
+        target = FakeFractionalBackend().target
+        circuit = QuantumCircuit(target.num_qubits)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rzz(angle, 0, 1)
+
+        with self.assertRaisesRegex(IBMInputValueError, f"angle \\({angle}\\) outside"):
             validate_instruction(circuit.data[0], target)
