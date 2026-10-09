@@ -108,7 +108,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         job = estimator.run([(circuit, observable)])
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[()])
-        self.assertEqual(result[0].metadata["shots"], 1600)
+        assert result[0].metadata["shots"] == 1600
 
     @skip("Skip until simulator options are accepted by server.")
     def test_pec(self):
@@ -128,4 +128,4 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         job = estimator.run([(circuit, observables)])
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[(1,)])
-        self.assertIn("sampling_overhead", result[0].metadata["resilience"])
+        assert "sampling_overhead" in result[0].metadata["resilience"]

@@ -55,24 +55,24 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        self.assertEqual(params["options"], executor.options)
-        self.assertIsInstance(params["quantum_program"], QuantumProgram)
-        self.assertEqual(params["schema_version"], Executor._SCHEMA_VERSION)
+        assert params["options"] == executor.options
+        assert isinstance(params["quantum_program"], QuantumProgram)
+        assert params["schema_version"] == Executor._SCHEMA_VERSION
 
         results = job.result()
-        self.assertIsInstance(results, QuantumProgramResult)
-        self.assertEqual(len(results), 1)
+        assert isinstance(results, QuantumProgramResult)
+        assert len(results) == 1
 
         result = results[0]
-        self.assertIsInstance(result, QuantumProgramItemResult)
-        self.assertEqual(list(result.keys()), ["meas"])
-        self.assertIsInstance(result["meas"], np.ndarray)
-        self.assertEqual(result["meas"].shape, shape + (shots, circuit.num_qubits))
+        assert isinstance(result, QuantumProgramItemResult)
+        assert list(result.keys()) == ["meas"]
+        assert isinstance(result["meas"], np.ndarray)
+        assert result["meas"].shape == shape + (shots, circuit.num_qubits)
 
-        self.assertEqual(passthrough_data.keys(), results.passthrough_data.keys())
+        assert passthrough_data.keys() == results.passthrough_data.keys()
         for key in ["str", "float", "int", "bool", "none", "list"]:
-            self.assertEqual(passthrough_data[key], results.passthrough_data[key])
-        self.assertIsInstance(results.passthrough_data["array"], np.ndarray)
+            assert passthrough_data[key] == results.passthrough_data[key]
+        assert isinstance(results.passthrough_data["array"], np.ndarray)
         np.testing.assert_array_equal(passthrough_data["array"], results.passthrough_data["array"])
 
     def test_executor_with_samplex_item(self):
@@ -103,20 +103,20 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        self.assertEqual(params["options"], executor.options)
-        self.assertIsInstance(params["quantum_program"], QuantumProgram)
-        self.assertEqual(params["schema_version"], Executor._SCHEMA_VERSION)
+        assert params["options"] == executor.options
+        assert isinstance(params["quantum_program"], QuantumProgram)
+        assert params["schema_version"] == Executor._SCHEMA_VERSION
 
         results = job.result()
-        self.assertIsInstance(results, QuantumProgramResult)
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results.passthrough_data, passthrough_data)
+        assert isinstance(results, QuantumProgramResult)
+        assert len(results) == 1
+        assert results.passthrough_data == passthrough_data
 
         result = results[0]
-        self.assertIsInstance(result, QuantumProgramItemResult)
-        self.assertEqual(len(result.keys()), 2)
-        self.assertEqual(set(result.keys()), {"meas", "measurement_flips.meas"})
-        self.assertIsInstance(result["meas"], np.ndarray)
-        self.assertIsInstance(result["measurement_flips.meas"], np.ndarray)
-        self.assertEqual(result["meas"].shape, shape + (shots, circuit.num_qubits))
-        self.assertEqual(result["measurement_flips.meas"].shape, shape + (1, circuit.num_qubits))
+        assert isinstance(result, QuantumProgramItemResult)
+        assert len(result.keys()) == 2
+        assert set(result.keys()) == {"meas", "measurement_flips.meas"}
+        assert isinstance(result["meas"], np.ndarray)
+        assert isinstance(result["measurement_flips.meas"], np.ndarray)
+        assert result["meas"].shape == shape + (shots, circuit.num_qubits)
+        assert result["measurement_flips.meas"].shape == shape + (1, circuit.num_qubits)
