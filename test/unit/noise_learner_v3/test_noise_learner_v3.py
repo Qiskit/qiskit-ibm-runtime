@@ -21,7 +21,6 @@ from qiskit_ibm_runtime.options_models import (
     EnvironmentOptions,
     ExecutionOptions,
     NoiseLearnerV3Options,
-    PostSelectionOptions,
 )
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
@@ -40,15 +39,6 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
         self.assertIsInstance(nlv3.options, NoiseLearnerV3Options)
         self.assertEqual(nlv3.options, NoiseLearnerV3Options())
-
-    def test_post_selection_warns(self):
-        """Test that enabling post-selection issues a deprecation warning."""
-        options = NoiseLearnerV3Options()
-        with self.assertWarnsRegex(DeprecationWarning, "0.49.0"):
-            options.post_selection.enable = True
-
-        with self.assertWarnsRegex(DeprecationWarning, "0.49.0"):
-            NoiseLearnerV3Options(post_selection={"enable": True})
 
     def test_options_from_instance(self):
         """Test constructing with an NoiseLearnerV3Options instance."""
@@ -113,19 +103,12 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         with self.assertRaisesRegex(TypeError, "Expected NoiseLearnerV3Options or dict"):
             NoiseLearnerV3(mode=get_mocked_backend(), options="invalid")
 
-    def test_setter_with_instance(self):
-        """Test setting options via the setter with an NoiseLearnerV3Options instance."""
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
-        new_opts = NoiseLearnerV3Options(post_selection=PostSelectionOptions(strategy="edge"))
-        nlv3.options = new_opts
-        self.assertIs(nlv3.options, new_opts)
-
     def test_setter_with_dict(self):
         """Test setting options via the setter with a dict."""
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
-        nlv3.options = {"post_selection": {"strategy": "edge"}}
+        nlv3.options = {"layer_pair_depths": [1, 2]}
         self.assertIsInstance(nlv3.options, NoiseLearnerV3Options)
-        self.assertEqual(nlv3.options.post_selection.strategy, "edge")
+        self.assertEqual(nlv3.options.layer_pair_depths, [1, 2])
 
     def test_setter_invalid_type(self):
         """Test that setting options with an invalid type raises TypeError."""
@@ -138,10 +121,10 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         nlv3 = NoiseLearnerV3(
             mode=get_mocked_backend(), options={"environment": {"log_level": "DEBUG"}}
         )
-        nlv3.options = {"post_selection": {"strategy": "edge"}}
+        nlv3.options = {"layer_pair_depths": [1, 2]}
         # environment should be back to defaults since we replaced, not updated
         self.assertEqual(nlv3.options.environment.log_level, "WARNING")
-        self.assertEqual(nlv3.options.post_selection.strategy, "edge")
+        self.assertEqual(nlv3.options.layer_pair_depths, [1, 2])
 
     def test_experimental_options_default_empty(self):
         """Test that experimental options default to empty dict."""
