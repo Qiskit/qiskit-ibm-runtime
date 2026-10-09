@@ -31,38 +31,36 @@ from ...ibm_test_case import IBMTestCase
 class TestOptionsUtils(IBMTestCase):
     """Class for testing the options.utils."""
 
-    def test_merge_estimator_options(self):
+    @data(
+        {},
+        {"resilience_level": 9},
+        {"default_shots": 99, "seed_estimator": 42},
+        {"resilience_level": 99, "default_shots": 98},
+        {
+            "environment": {"log_level": "INFO"},
+        },
+        {
+            "resilience": {
+                "measure_noise_learning": {"num_randomizations": 1},
+                "zne": {"extrapolator": "linear"},
+            }
+        },
+        {
+            "resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 1.5, 2]}},
+            "experimental": {
+                "resilience": {"zne": {"extrapolator": ["linear"]}},
+            },
+        },
+    )
+    def test_merge_estimator_options(self, new_ops):
         """Test merging estimator options."""
-        options_vars = [
-            {},
-            {"resilience_level": 9},
-            {"default_shots": 99, "seed_estimator": 42},
-            {"resilience_level": 99, "default_shots": 98},
-            {
-                "environment": {"log_level": "INFO"},
-            },
-            {
-                "resilience": {
-                    "measure_noise_learning": {"num_randomizations": 1},
-                    "zne": {"extrapolator": "linear"},
-                }
-            },
-            {
-                "resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 1.5, 2]}},
-                "experimental": {
-                    "resilience": {"zne": {"extrapolator": ["linear"]}},
-                },
-            },
-        ]
-        for new_ops in options_vars:
-            with self.subTest(new_ops=new_ops):
-                options = EstimatorOptions()
-                combined = merge_options_v2(asdict(options), new_ops)
+        options = EstimatorOptions()
+        combined = merge_options_v2(asdict(options), new_ops)
 
-                # Make sure the values are equal.
-                self.assertDictPartiallyEqual(combined, new_ops)
-                # Make sure the structure didn't change.
-                self.assertDictKeysEqual(combined, asdict(options), exclude_keys=["experimental"])
+        # Make sure the values are equal.
+        self.assertDictPartiallyEqual(combined, new_ops)
+        # Make sure the structure didn't change.
+        self.assertDictKeysEqual(combined, asdict(options), exclude_keys=["experimental"])
 
     @data(
         {},

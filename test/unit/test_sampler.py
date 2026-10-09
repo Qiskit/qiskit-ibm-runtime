@@ -121,11 +121,11 @@ class TestSamplerV2(IBMTestCase):
 
     @data(
         (
-            SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),
+            SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),  # type: ignore[call-arg]
             {"dynamical_decoupling": {"sequence_type": "XX"}},
         ),
         (
-            SamplerOptions(default_shots=1000),
+            SamplerOptions(default_shots=1000),  # type: ignore[call-arg]
             {"default_shots": 1000},
         ),
         (

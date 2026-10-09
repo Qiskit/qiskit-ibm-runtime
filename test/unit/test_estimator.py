@@ -124,7 +124,7 @@ class TestEstimatorV2(IBMTestCase):
 
     @data(
         (
-            EstimatorOptions(default_shots=1024),
+            EstimatorOptions(default_shots=1024),  # type: ignore[call-arg]
             {"default_shots": 1024},
         ),
         (

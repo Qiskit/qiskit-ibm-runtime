@@ -37,19 +37,20 @@ class TestSession(IBMTestCase):
         session = Session(backend=backend)
         self.assertEqual(session.backend(), "common_backend")
 
-    def test_max_time(self):
+    @data(
+        (42, 42),
+        ("1h", 1 * 60 * 60),
+        ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
+        ("40s 1h", 40 + 1 * 60 * 60),
+    )
+    @unpack
+    def test_max_time(self, max_time, expected_max_time):
         """Test max time."""
         backend = FakeManilaV2()
-        max_times = [
-            (42, 42),
-            ("1h", 1 * 60 * 60),
-            ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
-            ("40s 1h", 40 + 1 * 60 * 60),
-        ]
-        for max_t, expected in max_times:
-            with self.subTest(max_time=max_t):
-                session = Session(backend=backend, max_time=max_t)
-                self.assertEqual(session._max_time, expected)
+
+        session = Session(backend=backend, max_time=max_time)
+
+        self.assertEqual(session._max_time, expected_max_time)
 
     def test_run_after_close(self):
         """Test running after session is closed."""
