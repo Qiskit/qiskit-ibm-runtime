@@ -23,6 +23,7 @@ from qiskit_ibm_runtime import EstimatorOptions, EstimatorV2, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..asserts import assert_dict_partially_equal, assert_warns_strict
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import OneInstanceDryRunRegistry
@@ -147,7 +148,7 @@ class TestEstimatorV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst, backend=backend))
 
         run_options = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictPartiallyEqual(run_options, expected)
+        assert_dict_partially_equal(run_options, expected)
 
     @data(
         {"zne_extrapolator": "bad_extrapolator"},
@@ -319,7 +320,7 @@ class TestEstimatorV2(IBMTestCase):
             for precision in pub_precisions
         ]
 
-        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, precision=run_precision)
 
     @mock_responses(OneInstanceDryRunRegistry)

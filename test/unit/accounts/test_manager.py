@@ -262,7 +262,9 @@ class TestAccountManager(IBMTestCase):
         channel = "ibm_quantum_platform"
         AccountManager.save(channel=channel, filename=filename, name=name, token="temp_token")
         assert AccountManager.delete(channel="ibm_quantum_platform", filename=filename, name=name)
-        assert not AccountManager.delete(channel="ibm_quantum_platform", filename=filename, name=name)
+        assert not AccountManager.delete(
+            channel="ibm_quantum_platform", filename=filename, name=name
+        )
 
         assert len(AccountManager.list(channel="ibm_quantum_platform", filename=filename)) == 0
 

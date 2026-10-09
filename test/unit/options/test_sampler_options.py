@@ -22,6 +22,11 @@ from qiskit.utils.optionals import HAS_AER
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
 
+from ...asserts import (
+    assert_dict_flat_partially_equal,
+    assert_dict_keys_equal,
+    assert_dict_partially_equal,
+)
 from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend, get_primitive_inputs
 
@@ -105,9 +110,9 @@ class TestSamplerOptions(IBMTestCase):
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
         options = asdict(SamplerOptions(**opts_dict))
-        self.assertDictPartiallyEqual(options, opts_dict)
+        assert_dict_partially_equal(options, opts_dict)
         # Make sure the structure didn't change.
-        self.assertDictKeysEqual(asdict(SamplerOptions()), options)
+        assert_dict_keys_equal(asdict(SamplerOptions()), options)
 
     @data(
         {"default_shots": 4000},
@@ -125,9 +130,9 @@ class TestSamplerOptions(IBMTestCase):
         options.update(**new_opts)
 
         # Make sure the values are equal.
-        self.assertDictFlatPartiallyEqual(asdict(options), new_opts)
+        assert_dict_flat_partially_equal(asdict(options), new_opts)
         # Make sure the structure didn't change.
-        self.assertDictKeysEqual(asdict(options), asdict(SamplerOptions()))
+        assert_dict_keys_equal(asdict(options), asdict(SamplerOptions()))
 
     @data(
         {"default_shots": 0},

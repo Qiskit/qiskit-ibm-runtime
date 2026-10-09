@@ -28,6 +28,11 @@ from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
+from ..asserts import (
+    assert_dict_flat_partially_equal,
+    assert_dict_keys_equal,
+    assert_dict_partially_equal,
+)
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..utils import combine, create_faulty_backend, get_mocked_backend, get_primitive_inputs
@@ -51,7 +56,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend = get_mocked_backend()
         for options in options_vars:
             inst = primitive(mode=backend, options=options)
-            self.assertDictPartiallyEqual(asdict(inst.options), options)
+            assert_dict_partially_equal(asdict(inst.options), options)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -349,7 +354,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst.options.update(**options)
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictPartiallyEqual(inputs, options)
+        assert_dict_partially_equal(inputs, options)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -368,7 +373,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst))
         runtime_options = primitive._options_class._get_runtime_options(options)
         rt_options = backend.service._run.call_args.kwargs["options"]
-        self.assertDictPartiallyEqual(rt_options, runtime_options)
+        assert_dict_partially_equal(rt_options, runtime_options)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -456,9 +461,9 @@ class TestPrimitivesV2(IBMTestCase):
         inst.options.update(**new_opts)
         # Make sure the values are equal.
         inst_options = asdict(inst.options)
-        self.assertDictFlatPartiallyEqual(inst_options, new_opts)
+        assert_dict_flat_partially_equal(inst_options, new_opts)
         # Make sure the structure didn't change.
-        self.assertDictKeysEqual(inst_options, asdict(opt_cls()))
+        assert_dict_keys_equal(inst_options, asdict(opt_cls()))
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits(self, primitive):

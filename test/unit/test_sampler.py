@@ -29,6 +29,7 @@ from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Se
 from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..asserts import assert_dict_partially_equal, assert_warns_strict
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceDryRunRegistry
@@ -146,7 +147,7 @@ class TestSamplerV2(IBMTestCase):
         inst.run((QuantumCircuit(1, 1),))
 
         run_options = session._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictPartiallyEqual(run_options, expected_options)
+        assert_dict_partially_equal(run_options, expected_options)
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
@@ -535,7 +536,7 @@ class TestSamplerV2(IBMTestCase):
             for shots in pub_shots
         ]
 
-        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, shots=run_shots)
 
     @mock_responses(OneInstanceDryRunRegistry)

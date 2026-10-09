@@ -51,7 +51,9 @@ class TestAPISession(IBMTestCase):
             headers = job_post_mock.calls[-1].request.headers
 
             # The job POST should receive the usual headers.
-            assert RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"] == headers["IBM-API-Version"]
+            assert (
+                RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"] == headers["IBM-API-Version"]
+            )
             assert registry.instances["a"].crn == headers["Service-CRN"]
             assert "qiskit_ibm_runtime" in headers["X-Qx-Client-Application"]
             # The job POST should receive the function id header.
