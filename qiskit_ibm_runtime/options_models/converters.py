@@ -111,5 +111,6 @@ def noise_learner_options_to_executor_options(options: NoiseLearnerV3Options) ->
 
     if options.experimental:
         executor_options.experimental.update(options.experimental)
+        executor_options.simulator = options.experimental.get("simulator", SimulatorOptions())
 
     return executor_options
