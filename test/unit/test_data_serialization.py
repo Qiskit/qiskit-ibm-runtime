@@ -347,42 +347,40 @@ class TestDataSerialization(IBMTestCase):
         self.assertIsInstance(decoded_result, Result)
         self.assertTrue((decoded_array == orig_array).all())
 
-    def test_coder_qc(self):
+    @data(
+        bell(),
+        efficient_su2(num_qubits=4, reps=1, entanglement="linear"),
+        [bell(), efficient_su2(num_qubits=4, reps=1, entanglement="linear")],
+    )
+    def test_coder_qc(self, object_):
         """Test runtime encoder and decoder for circuits."""
-        bell_circuit = bell()
-        unbound = efficient_su2(num_qubits=4, reps=1, entanglement="linear")
-        subtests = (bell_circuit, unbound, [bell_circuit, unbound])
-        for circ in subtests:
-            with self.subTest(circ=circ):
-                encoded = json.dumps(circ, cls=RuntimeEncoder)
-                self.assertIsInstance(encoded, str)
-                decoded = json.loads(encoded, cls=RuntimeDecoder)
-                if not isinstance(circ, list):
-                    decoded = [decoded]
-                self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
 
-    def test_coder_operators(self):
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        if not isinstance(object_, list):
+            decoded = [decoded]
+        self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
+
+    @data(
+        SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
+        SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
+        Pauli("XYZ"),
+    )
+    def test_coder_operators(self, object_):
         """Test runtime encoder and decoder for operators."""
-        subtests = (
-            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
-            Pauli("XYZ"),
-        )
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
 
-        for operator in subtests:
-            with self.subTest(operator=operator):
-                encoded = json.dumps(operator, cls=RuntimeEncoder)
-                self.assertIsInstance(encoded, str)
-
-                with warnings.catch_warnings():
-                    # in L146 of utils/json.py
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=DeprecationWarning,
-                        module=r"qiskit_ibm_runtime\.utils\.json",
-                    )
-                    decoded = json.loads(encoded, cls=RuntimeDecoder)
-                    self.assertEqual(operator, decoded)
+        with warnings.catch_warnings():
+            # in L146 of utils/json.py
+            warnings.filterwarnings(
+                "ignore",
+                category=DeprecationWarning,
+                module=r"qiskit_ibm_runtime\.utils\.json",
+            )
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
+            self.assertEqual(object_, decoded)
 
     @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
     def test_coder_noise_model(self):
@@ -457,7 +455,11 @@ class TestDataSerialization(IBMTestCase):
             self.assertIsNone(decoded["fidelity"])
             self.assertEqual(len(warn_cm), 1)
 
-    def test_decoder_import(self):
+    @data(
+        SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
+        Pauli("XYZX"),
+    )
+    def test_decoder_import(self, object_):
         """Test runtime decoder importing modules."""
         script = """
 import sys
@@ -472,22 +474,17 @@ if __name__ == '__main__':
         temp_fp.write(script)
         temp_fp.close()
 
-        subtests = (
-            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            Pauli("XYZX"),
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
+
+        cmd = [sys.executable, temp_fp.name, encoded]
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
         )
-        for operator in subtests:
-            with self.subTest(operator=operator):
-                encoded = json.dumps(operator, cls=RuntimeEncoder)
-                self.assertIsInstance(encoded, str)
-                cmd = [sys.executable, temp_fp.name, encoded]
-                proc = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                )
-                self.assertIn(operator.__class__.__name__, proc.stdout)
+        self.assertIn(object_.__class__.__name__, proc.stdout)
 
     @mock_responses
     def test_result_decoder(self, registry):
