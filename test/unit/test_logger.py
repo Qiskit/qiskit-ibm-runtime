@@ -17,6 +17,8 @@ import os
 from tempfile import NamedTemporaryFile
 from unittest import skipIf
 
+from ddt import data, ddt, unpack
+
 from qiskit_ibm_runtime.utils.logging import (
     QISKIT_IBM_RUNTIME_LOG_FILE,
     QISKIT_IBM_RUNTIME_LOG_LEVEL,
@@ -27,6 +29,7 @@ from ..account import custom_envs
 from ..ibm_test_case import IBMTestCase
 
 
+@ddt
 class TestLogger(IBMTestCase):
     """Tests related to logger setup via ``setup_logger()``."""
 
@@ -68,7 +71,8 @@ class TestLogger(IBMTestCase):
                 f"{default_level_not_set}.",
             )
 
-    def test_invalid_log_level(self):
+    @data("invalid", "debugs")
+    def test_invalid_log_level(self, invalid_log_level):
         """Test setting up a logger with invalid log levels, should default to `WARNING`.
 
         Note:
@@ -77,39 +81,34 @@ class TestLogger(IBMTestCase):
         logger = logging.getLogger(self.id())
         default_level_invalid = logging.WARNING
 
-        invalid_log_levels = ["invalid", "debugs"]
-        for invalid_log_level in invalid_log_levels:
-            with self.subTest(invalid_log_level=invalid_log_level):
-                with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: invalid_log_level}):
-                    setup_logger(logger)
-                    self.assertEqual(
-                        logger.level,
-                        default_level_invalid,
-                        f"The logger level was set to {logger.level}, but it should be "
-                        f"{default_level_invalid}.",
-                    )
+        with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: invalid_log_level}):
+            setup_logger(logger)
+            self.assertEqual(
+                logger.level,
+                default_level_invalid,
+                f"The logger level was set to {logger.level}, but it should be "
+                f"{default_level_invalid}.",
+            )
 
-    def test_valid_log_levels_mixed_casing(self):
+    @data(
+        ("debug", logging.DEBUG),
+        ("iNFo", logging.INFO),
+        ("WARNING", logging.WARNING),
+        ("error", logging.ERROR),
+        ("CRITICAL", logging.CRITICAL),
+    )
+    @unpack
+    def test_valid_log_levels_mixed_casing(self, level_name, level_value):
         """Test setting up a logger with all valid levels, case insensitive."""
         logger = logging.getLogger(self.id())
-        all_valid_log_levels = {
-            "debug": logging.DEBUG,
-            "iNFo": logging.INFO,
-            "WARNING": logging.WARNING,
-            "error": logging.ERROR,
-            "CRITICAL": logging.CRITICAL,
-        }
 
-        for level_name, level_value in all_valid_log_levels.items():
-            with self.subTest(level_name=level_name):
-                with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
-                    setup_logger(logger)
-                    self.assertEqual(
-                        logger.level,
-                        level_value,
-                        f"The logger level was set to {logger.level}, but it should be "
-                        f"{level_value}.",
-                    )
+        with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
+            setup_logger(logger)
+            self.assertEqual(
+                logger.level,
+                level_value,
+                f"The logger level was set to {logger.level}, but it should be {level_value}.",
+            )
 
     @skipIf(os.name == "nt", "Test not supported in Windows")
     def test_log_file(self):
@@ -163,25 +162,21 @@ class TestLogger(IBMTestCase):
                     content_as_str = file_.read()
 
                     # Check whether the appropriate substrings are in the file.
-                    substrings_to_check = {
-                        "warning message": False,
-                        "error message": True,
-                        "critical message": True,
-                    }
-                    for substring, in_file in substrings_to_check.items():
-                        with self.subTest(substring=substring):
-                            if in_file:
-                                self.assertIn(
-                                    substring,
-                                    content_as_str,
-                                    f'The substring "{substring}" was not found in the file '
-                                    f"{temp_log_file.name}.",
-                                )
-                            else:
-                                self.assertNotIn(
-                                    substring,
-                                    content_as_str,
-                                    'The substring "{}" was found in the file {}.'.format(
-                                        "debug message", temp_log_file.name
-                                    ),
-                                )
+                    self.assertNotIn(
+                        "warning message",
+                        content_as_str,
+                        f'The substring "warning message" was found in the file '
+                        f"{temp_log_file.name}.",
+                    )
+                    self.assertIn(
+                        "error message",
+                        content_as_str,
+                        f'The substring "error message" was not found in the file '
+                        f"{temp_log_file.name}.",
+                    )
+                    self.assertIn(
+                        "critical message",
+                        content_as_str,
+                        f'The substring "critical message" was not found in the file '
+                        f"{temp_log_file.name}.",
+                    )
