@@ -56,7 +56,7 @@ class TestInsertNoisePass(IBMTestCase):
         )
         pm = PassManager([inject_noise])
         result = pm.run(_circuit_with_barrier(2, label=f"{barrier_type}0@tag=r0"))
-        self.assertEqual(len(_noise_error_ops(result)), num_noise_error_ops)
+        assert len(_noise_error_ops(result)) == num_noise_error_ops
 
     def test_noise_scale_multiplies_rates(self):
         """Test the `noise_scale` argument."""
@@ -89,7 +89,7 @@ class TestInsertNoisePass(IBMTestCase):
         """Test that ``noise_dict=None`` is a noop."""
         circuit = _circuit_with_barrier(2, "R0@tag=r0")
         result = PassManager([InsertNoisePass(noise_dict=None)]).run(circuit)
-        self.assertEqual(len(_noise_error_ops(result)), 0)
+        assert len(_noise_error_ops(result)) == 0
 
     def test_missing_tag_leaves_barrier_intact(self):
         """Test that missing tags leave barriers intect."""
@@ -99,8 +99,8 @@ class TestInsertNoisePass(IBMTestCase):
         pm = PassManager([InsertNoisePass(noise_dict=noise_dict, warn_absent=False)])
         result = pm.run(circuit)
 
-        self.assertEqual(len(_noise_error_ops(result)), 0)
-        self.assertEqual(result.count_ops().get("barrier", 0), 1)
+        assert len(_noise_error_ops(result)) == 0
+        assert result.count_ops().get("barrier", 0) == 1
 
     def test_noise_qubits_ordered_by_physical_index(self):
         """Test qubit order."""
@@ -113,10 +113,10 @@ class TestInsertNoisePass(IBMTestCase):
         result = PassManager([InsertNoisePass(noise_dict=noise_dict)]).run(circuit)
 
         noise_instrs = [instr for instr in result.data if instr.operation.name == "quantum_channel"]
-        self.assertEqual(len(noise_instrs), 1)
-        self.assertEqual([result.find_bit(q).index for q in noise_instrs[0].qubits], [0, 2])
+        assert len(noise_instrs) == 1
+        assert [result.find_bit(q).index for q in noise_instrs[0].qubits] == [0, 2]
         # The original barrier should appear exactly once--regression: an earlier fix duplicated it.
-        self.assertEqual(result.count_ops().get("barrier", 0), 1)
+        assert result.count_ops().get("barrier", 0) == 1
 
     @data("order", [[0, 1, 3], [3, 0, 1], [0, 3, 1]])
     def test_noise_simulation_applies_rates_to_correct_physical_qubits(self, order):

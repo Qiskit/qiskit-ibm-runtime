@@ -36,7 +36,7 @@ class TestFlattenTwirlingAxes(IBMTestCase):
 
         # Expected shape: (total_shots, num_bits) where total_shots = num_rand * shots_per_rand
         expected_shape = (num_rand * shots_per_rand, num_bits)
-        self.assertEqual(item["meas"].shape, expected_shape)
+        assert item["meas"].shape == expected_shape
 
         # Verify data integrity: reshape back and compare
         reshaped = item["meas"].reshape(num_rand, shots_per_rand, num_bits)
@@ -59,7 +59,7 @@ class TestFlattenTwirlingAxes(IBMTestCase):
 
         # Expected shape: (param_size, total_shots, num_bits)
         expected_shape = (param_size, num_rand * shots_per_rand, num_bits)
-        self.assertEqual(item["meas"].shape, expected_shape)
+        assert item["meas"].shape == expected_shape
 
         # Verify data integrity: for each parameter value, shots should be concatenated correctly
         for i in range(param_size):
@@ -88,7 +88,7 @@ class TestFlattenTwirlingAxes(IBMTestCase):
 
         # Expected shape: (2, 3, total_shots, num_bits)
         expected_shape = (*pub_shape, num_rand * shots_per_rand, num_bits)
-        self.assertEqual(item["meas"].shape, expected_shape)
+        assert item["meas"].shape == expected_shape
 
         # Verify data integrity
         for i in range(pub_shape[0]):
@@ -120,8 +120,8 @@ class TestFlattenTwirlingAxes(IBMTestCase):
         expected_shape1 = (*pub_shape, num_rand * shots_per_rand, 3)
         expected_shape2 = (*pub_shape, num_rand * shots_per_rand, 5)
 
-        self.assertEqual(item["creg1"].shape, expected_shape1)
-        self.assertEqual(item["creg2"].shape, expected_shape2)
+        assert item["creg1"].shape == expected_shape1
+        assert item["creg2"].shape == expected_shape2
 
     def test_data_ordering_preserved(self):
         """Test that the order of shots is preserved correctly after flattening."""

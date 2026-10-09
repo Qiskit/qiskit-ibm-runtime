@@ -36,15 +36,15 @@ class TestNoiseLearnerUsingOptions(IBMTestCase):
     def test_default_options(self):
         """Test that default options are set when none are provided."""
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane())
-        self.assertIsInstance(noise_learner.options, NoiseLearnerV3Options)
-        self.assertEqual(noise_learner.options, NoiseLearnerV3Options())
+        assert isinstance(noise_learner.options, NoiseLearnerV3Options)
+        assert noise_learner.options == NoiseLearnerV3Options()
 
     def test_options_from_instance(self):
         """Test constructing with an NoiseLearnerV3Options instance."""
         opts = NoiseLearnerV3Options(execution=ExecutionOptions(init_qubits=False))
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane(), options=opts)
-        self.assertIs(noise_learner.options, opts)
-        self.assertFalse(noise_learner.options.execution.init_qubits)
+        assert noise_learner.options is opts
+        assert not noise_learner.options.execution.init_qubits
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
@@ -53,19 +53,19 @@ class TestNoiseLearnerUsingOptions(IBMTestCase):
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
         }
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane(), options=opts_dict)
-        self.assertFalse(noise_learner.options.execution.init_qubits)
-        self.assertEqual(noise_learner.options.execution.rep_delay, 0.5)
-        self.assertEqual(noise_learner.options.environment.log_level, "DEBUG")
-        self.assertEqual(noise_learner.options.environment.job_tags, ["tag1"])
+        assert not noise_learner.options.execution.init_qubits
+        assert noise_learner.options.execution.rep_delay == 0.5
+        assert noise_learner.options.environment.log_level == "DEBUG"
+        assert noise_learner.options.environment.job_tags == ["tag1"]
 
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
         noise_learner = NoiseLearnerV3(
             mode=FakeBrisbane(), options={"execution": {"init_qubits": False}}
         )
-        self.assertFalse(noise_learner.options.execution.init_qubits)
-        self.assertIsNone(noise_learner.options.execution.rep_delay)
-        self.assertEqual(noise_learner.options.environment, EnvironmentOptions())
+        assert not noise_learner.options.execution.init_qubits
+        assert noise_learner.options.execution.rep_delay is None
+        assert noise_learner.options.environment == EnvironmentOptions()
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
@@ -77,14 +77,14 @@ class TestNoiseLearnerUsingOptions(IBMTestCase):
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane())
         new_opts = NoiseLearnerV3Options(execution=ExecutionOptions(init_qubits=False))
         noise_learner.options = new_opts
-        self.assertIs(noise_learner.options, new_opts)
+        assert noise_learner.options is new_opts
 
     def test_setter_with_dict(self):
         """Test setting options via the setter with a dict."""
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane())
         noise_learner.options = {"execution": {"init_qubits": False}}
-        self.assertIsInstance(noise_learner.options, NoiseLearnerV3Options)
-        self.assertFalse(noise_learner.options.execution.init_qubits)
+        assert isinstance(noise_learner.options, NoiseLearnerV3Options)
+        assert not noise_learner.options.execution.init_qubits
 
     def test_setter_invalid_type(self):
         """Test that setting options with an invalid type raises TypeError."""
@@ -99,31 +99,31 @@ class TestNoiseLearnerUsingOptions(IBMTestCase):
         )
         noise_learner.options = {"execution": {"init_qubits": False}}
         # environment should be back to defaults since we replaced, not updated
-        self.assertEqual(noise_learner.options.environment.log_level, "WARNING")
-        self.assertFalse(noise_learner.options.execution.init_qubits)
+        assert noise_learner.options.environment.log_level == "WARNING"
+        assert not noise_learner.options.execution.init_qubits
 
     def test_experimental_options_default_empty(self):
         """Test that experimental options default to empty dict."""
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane())
-        self.assertEqual(noise_learner.options.experimental, {})
+        assert noise_learner.options.experimental == {}
 
     def test_experimental_options_from_dict(self):
         """Test constructing with experimental options in dict."""
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane(), options=opts_dict)
-        self.assertEqual(noise_learner.options.experimental, {"foo": "bar", "baz": 123})
+        assert noise_learner.options.experimental == {"foo": "bar", "baz": 123}
 
     def test_experimental_options_from_instance(self):
         """Test constructing with an NoiseLearnerV3Options instance with experimental options."""
         opts = NoiseLearnerV3Options(experimental={"custom_key": "custom_value"})
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane(), options=opts)
-        self.assertEqual(noise_learner.options.experimental, {"custom_key": "custom_value"})
+        assert noise_learner.options.experimental == {"custom_key": "custom_value"}
 
     def test_experimental_options_setter(self):
         """Test setting experimental options via the setter."""
         noise_learner = NoiseLearnerV3(mode=FakeBrisbane())
         noise_learner.options = {"experimental": {"test": "value"}}
-        self.assertEqual(noise_learner.options.experimental, {"test": "value"})
+        assert noise_learner.options.experimental == {"test": "value"}
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""
@@ -154,7 +154,7 @@ class TestNoiseLearnerRun(IBMTestCase):
         circuit.cx(0, 1)
 
         job = noise_learner.run([circuit], dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"
 
     @data("job", "session", "batch")
     @mock_responses
@@ -179,8 +179,8 @@ class TestNoiseLearnerRun(IBMTestCase):
 
         # Public interfaces should respect `mode`.
         noise_learner = NoiseLearnerV3(mode=mode)
-        self.assertEqual(noise_learner.backend(), backend)
-        self.assertEqual(noise_learner.mode, expected_mode)
+        assert noise_learner.backend() == backend
+        assert noise_learner.mode == expected_mode
 
         # Jobs issued should belong to a session under `session` / `batch`` modes.
         circuit = QuantumCircuit(2)
@@ -188,4 +188,4 @@ class TestNoiseLearnerRun(IBMTestCase):
         circuit.cx(0, 1)
 
         job = noise_learner.run([circuit])
-        self.assertEqual(job._session_id, expected_session_id)
+        assert job._session_id == expected_session_id

@@ -58,7 +58,7 @@ def assert_pub_result(pub: SamplerPub, pub_result: SamplerPubResult) -> None:
         probabilities = Statevector(bound_circuit).probabilities_dict()
 
         fidelity = hellinger_fidelity(array[index].get_counts(), probabilities)
-        assert abs(fidelity - 1.0) <= tolerance, f"Fidelity: {fidelity}"
+        assert abs(fidelity - 1.0) <= tolerance
 
 
 @ddt
@@ -98,11 +98,10 @@ class TestSampler(IBMTestCase):
         result = job.result()
 
         array = result[0].data.meas
-        self.assertEqual(
-            array.num_shots,
+        assert array.num_shots == (
             num_randomizations * shots_per_randomization
             if enable_measure or enable_gates
-            else shots,
+            else shots
         )
 
         for pub, pub_result in zip(pubs, result):
