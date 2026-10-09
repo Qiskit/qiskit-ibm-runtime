@@ -49,7 +49,7 @@ version_scheme = "release-branch-semver"
 fallback_version = "0.46.1"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 packages = ["qiskit_ibm_runtime", "test"]
 namespace_packages = true
 warn_redundant_casts = true
@@ -167,7 +167,6 @@ classifiers=[
     "Operating System :: MacOS",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -176,7 +175,7 @@ classifiers=[
 
 keywords = ["qiskit", "sdk", "quantum", "api", "runtime", "ibm"]
 
-requires-python=">=3.10"
+requires-python=">=3.11"
 
 dependencies = [
     "requests>=2.32.4",
