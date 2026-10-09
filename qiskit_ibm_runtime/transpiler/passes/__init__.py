@@ -29,12 +29,14 @@ transpilation and passes.
    ConvertISAToClifford
    FoldRzzAngle
    ConvertToMidCircuitMeasure
+   ConvertToMeasureReset
 
 See :mod:`qiskit_ibm_runtime.transpiler.passes.scheduling` for a collection of scheduling passes.
 """
 
 from .basis import (
     ConvertIdToDelay,
+    ConvertToMeasureReset,
     ConvertToMidCircuitMeasure,
     ConvertToMidCircuitResetAndMeasure,
     FoldRzzAngle,
