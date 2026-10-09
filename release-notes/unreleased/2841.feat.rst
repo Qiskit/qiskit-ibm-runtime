@@ -1,0 +1,27 @@
+:class:`.ConvertToMidCircuitResetAndMeasure` has a new optional ``mcmr_name`` argument. When
+given, the pass replaces a measurement followed by an ``X`` gate conditioned on its outcome,
+which resets the qubit to :math:`|0\rangle` while keeping the measured value, with a single
+:class:`.MeasureReset` instruction. The replacement is disabled by default, and the instruction
+must be supported by the target.
+
+.. code-block:: python
+
+    from qiskit import QuantumCircuit
+    from qiskit.transpiler import PassManager
+    from qiskit_ibm_runtime.transpiler.passes import ConvertToMidCircuitResetAndMeasure
+
+    circuit = QuantumCircuit(1, 1)
+    circuit.measure(0, 0)
+    with circuit.if_test((circuit.clbits[0], 1)):
+        circuit.x(0)
+
+    target = ...  # a target supporting measure_2, reset_2 and measure_reset
+    pm = PassManager([ConvertToMidCircuitResetAndMeasure(target, mcmr_name="measure_reset")])
+    converted = pm.run(circuit)  # contains a single measure_reset instruction
+
+The pattern is only replaced if the conditional block has no ``else`` branch, contains only an
+``X`` gate on the measured qubit, and is the next operation on that qubit and the next one
+depending on that clbit. The condition must be ``(clbit, 1)``, ``(register, 1)`` for a register
+containing only that clbit, or ``expr.lift(clbit)``. Patterns inside control-flow blocks are not
+replaced. This also applies to the output of Qiskit's
+:class:`~qiskit.transpiler.passes.ResetAfterMeasureSimplification` pass.
