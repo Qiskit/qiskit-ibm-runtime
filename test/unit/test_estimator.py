@@ -54,15 +54,15 @@ class TestEstimatorV2(IBMTestCase):
         inst = EstimatorV2(mode=backend)
         inst.run(t_pubs)
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("pubs", input_params)
+        assert "pubs" in input_params
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
-            self.assertIsInstance(a_pub_param, EstimatorPub)
+            assert isinstance(a_pub_param, EstimatorPub)
             # Check circuit
-            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
+            assert a_pub_param.circuit == an_in_taks[0]
             # Check observables
             for a_pub_obs, an_input_obs in zip(a_pub_param.observables.tolist(), an_in_taks[1]):
-                self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
+                assert list(a_pub_obs.keys())[0] == an_input_obs
             # Check parameter values
             an_input_params = an_in_taks[2] if len(an_in_taks) == 3 else []
             param_values_array = list(a_pub_param.parameter_values.data.values())
@@ -85,7 +85,7 @@ class TestEstimatorV2(IBMTestCase):
                 inst = EstimatorV2(mode=session)
                 with self.assertRaises(ValueError) as exc:
                     inst.options.update(**bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
+                assert list(bad_opt.keys())[0] in str(exc.exception)
 
     def test_invalid_estimator_precision_option(self):
         """Test exception when precision is invalid."""
@@ -95,7 +95,7 @@ class TestEstimatorV2(IBMTestCase):
         estimator = EstimatorV2(mode=backend)
         with self.assertRaises(ValueError) as exc:
             estimator.run(**get_primitive_inputs(estimator), precision=0)
-        self.assertIn("The precision value must be strictly greater than 0", str(exc.exception))
+        assert "The precision value must be strictly greater than 0" in str(exc.exception)
 
     def test_invalid_estimator_pub_precision(self):
         """Test exception when a pub specifies a precision that is not strictly greater than 0."""
@@ -121,7 +121,7 @@ class TestEstimatorV2(IBMTestCase):
         inst = EstimatorV2(mode=backend, options={"resilience": {"pec_mitigation": True}})
         with self.assertRaises(ValueError) as exc:
             inst.run(**get_primitive_inputs(inst))
-        self.assertIn("coupling map", str(exc.exception))
+        assert "coupling map" in str(exc.exception)
 
     @data(
         (
@@ -160,9 +160,9 @@ class TestEstimatorV2(IBMTestCase):
         with self.assertRaises(ValueError) as exc:
             inst = EstimatorV2(mode=backend, options={"resilience": res_opt})
             inst.run(**get_primitive_inputs(inst, backend))
-        self.assertIn(list(res_opt.values())[0], str(exc.exception))
+        assert list(res_opt.values())[0] in str(exc.exception)
         if len(res_opt.keys()) > 1:
-            self.assertIn(list(res_opt.keys())[1], str(exc.exception))
+            assert list(res_opt.keys())[1] in str(exc.exception)
 
     @data(
         "IX",
@@ -330,4 +330,4 @@ class TestEstimatorV2(IBMTestCase):
         backend = service.backend("ibm_foo")
         estimator = EstimatorV2(mode=backend)
         job = estimator.run(**get_primitive_inputs(estimator, backend=backend), dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

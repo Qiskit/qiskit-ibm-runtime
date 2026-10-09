@@ -46,12 +46,7 @@ class TestLogger(IBMTestCase):
             if QISKIT_IBM_RUNTIME_LOG_LEVEL in os.environ:
                 del os.environ[QISKIT_IBM_RUNTIME_LOG_LEVEL]
             setup_logger(logger)
-            self.assertEqual(
-                logger.level,
-                default_level_not_set,
-                f"The logger level was set to {logger.level}, but it should be "
-                f"{default_level_not_set}",
-            )
+            assert logger.level == default_level_not_set
 
     def test_empty_log_level(self):
         """Test setting up a logger with an empty string log level.
@@ -64,12 +59,7 @@ class TestLogger(IBMTestCase):
 
         with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: ""}):
             setup_logger(logger)
-            self.assertEqual(
-                logger.level,
-                default_level_not_set,
-                f"The logger level was set to {logger.level}, but it should be "
-                f"{default_level_not_set}.",
-            )
+            assert logger.level == default_level_not_set
 
     @data("invalid", "debugs")
     def test_invalid_log_level(self, invalid_log_level):
@@ -83,12 +73,7 @@ class TestLogger(IBMTestCase):
 
         with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: invalid_log_level}):
             setup_logger(logger)
-            self.assertEqual(
-                logger.level,
-                default_level_invalid,
-                f"The logger level was set to {logger.level}, but it should be "
-                f"{default_level_invalid}.",
-            )
+            assert logger.level == default_level_invalid
 
     @data(
         ("debug", logging.DEBUG),
@@ -104,11 +89,7 @@ class TestLogger(IBMTestCase):
 
         with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
             setup_logger(logger)
-            self.assertEqual(
-                logger.level,
-                level_value,
-                f"The logger level was set to {logger.level}, but it should be {level_value}.",
-            )
+            assert logger.level == level_value
 
     @skipIf(os.name == "nt", "Test not supported in Windows")
     def test_log_file(self):
@@ -126,24 +107,11 @@ class TestLogger(IBMTestCase):
             ):
                 setup_logger(logger)
 
-                self.assertEqual(
-                    logger.level,
-                    log_level_error[1],
-                    f"The logger level was set to {logger.level}, but it should be "
-                    f"{log_level_error[1]}.",
-                )
+                assert logger.level == log_level_error[1]
 
                 # Assert the file handler was created.
-                self.assertTrue(
-                    logger.handlers,
-                    "A file handler should have been setup, but it was not.",
-                )
-                self.assertEqual(
-                    len(logger.handlers),
-                    1,
-                    f"Many handlers were setup {logger.handlers}, but it should have only "
-                    "been one.",
-                )
+                assert logger.handlers
+                assert len(logger.handlers) == 1
 
                 # Note that only messages >= `ERROR` will be logged.
                 logger.warning("This is a warning message that should not be logged in the file.")
@@ -152,31 +120,13 @@ class TestLogger(IBMTestCase):
 
                 # Assert the file exists.
                 log_file_name = os.environ[QISKIT_IBM_RUNTIME_LOG_FILE]
-                self.assertTrue(
-                    os.path.exists(log_file_name),
-                    f"The file {log_file_name} does not exist.",
-                )
+                assert os.path.exists(log_file_name)
 
                 # Assert the messages were logged.
                 with open(temp_log_file.name, encoding="utf-8") as file_:
                     content_as_str = file_.read()
 
                     # Check whether the appropriate substrings are in the file.
-                    self.assertNotIn(
-                        "warning message",
-                        content_as_str,
-                        f'The substring "warning message" was found in the file '
-                        f"{temp_log_file.name}.",
-                    )
-                    self.assertIn(
-                        "error message",
-                        content_as_str,
-                        f'The substring "error message" was not found in the file '
-                        f"{temp_log_file.name}.",
-                    )
-                    self.assertIn(
-                        "critical message",
-                        content_as_str,
-                        f'The substring "critical message" was not found in the file '
-                        f"{temp_log_file.name}.",
-                    )
+                    assert "warning message" not in content_as_str
+                    assert "error message" in content_as_str
+                    assert "critical message" in content_as_str

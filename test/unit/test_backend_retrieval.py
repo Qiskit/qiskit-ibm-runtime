@@ -38,11 +38,11 @@ class TestBackendFilters(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service.backends()
-        self.assertIn("Loading instance", logs.output[0])
+        assert "Loading instance" in logs.output[0]
 
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service.backend("common_backend")
-        self.assertIn("Using instance", logs.output[0])
+        assert "Using instance" in logs.output[0]
 
     @mock_responses
     def test_instance_auto_suppresses_backends_loading_warning(self, registry):
@@ -82,7 +82,7 @@ class TestBackendFilters(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         # QiskitRuntimeService with DefaultRegistry by default creates 3 backends.
         backend_name = [back.name for back in service.backends()]
-        self.assertEqual(len(backend_name), 3)
+        assert len(backend_name) == 3
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_mock_devices(self, registry):
@@ -93,12 +93,12 @@ class TestBackendFilters(IBMTestCase):
         # By default, backends() should exclude mock devices.
         service = QiskitRuntimeService(token="my_token")
         backends = service.backends()
-        self.assertEqual(len(backends), 1)
+        assert len(backends) == 1
 
         # When passing the flag, backends() should include mock devices.
         service = QiskitRuntimeService(token="my_token")
         backends = service.backends(include_mocks=True)
-        self.assertEqual(len(backends), 2)
+        assert len(backends) == 2
 
     @data("common_backend", "unique_backend_a")
     @mock_responses
@@ -107,7 +107,7 @@ class TestBackendFilters(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
 
         backend_names = [back.name for back in service.backends(name=backend_name)]
-        self.assertEqual(len(backend_names), 1)
+        assert len(backend_names) == 1
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_config_properties(self, registry):
@@ -125,9 +125,9 @@ class TestBackendFilters(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         filtered_backends = service.backends(n_qubits=n_qubits, local=False)
-        self.assertTrue(len(filtered_backends), 1)
-        self.assertEqual(n_qubits, filtered_backends[0].configuration().n_qubits)
-        self.assertFalse(filtered_backends[0].configuration().local)
+        assert len(filtered_backends) == 1
+        assert n_qubits == filtered_backends[0].configuration().n_qubits
+        assert not filtered_backends[0].configuration().local
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_status_dict(self, registry):
@@ -150,10 +150,10 @@ class TestBackendFilters(IBMTestCase):
             operational=True,  # from status
             simulator=True,  # from configuration
         )
-        self.assertTrue(len(filtered_backends), 2)
+        assert len(filtered_backends) == 2
         for backend in filtered_backends:
-            self.assertTrue(backend.status().operational)
-            self.assertTrue(backend.configuration().simulator)
+            assert backend.status().operational
+            assert backend.configuration().simulator
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_config_callable(self, registry):
@@ -171,9 +171,9 @@ class TestBackendFilters(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         filtered_backends = service.backends(filters=lambda x: (x.configuration().n_qubits >= 5))
-        self.assertTrue(len(filtered_backends), 2)
+        assert len(filtered_backends) == 2
         for backend in filtered_backends:
-            self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
+            assert backend.configuration().n_qubits >= n_qubits
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_least_busy_use_fractional_gates_skips_backend_without_rzz(self, registry):
@@ -183,8 +183,8 @@ class TestBackendFilters(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         backend = service.least_busy(use_fractional_gates=True)
-        self.assertEqual(backend.name, "fake_fractional")
-        self.assertIn("rzz", backend.basis_gates)
+        assert backend.name == "fake_fractional"
+        assert "rzz" in backend.basis_gates
 
     @mock_responses
     def test_least_busy_use_fractional_gates_no_qualifying_backend(self, registry):
@@ -201,7 +201,7 @@ class TestBackendFilters(IBMTestCase):
 
         service = QiskitRuntimeService(token="token")
         backend = service.least_busy(use_fractional_gates=False)
-        self.assertEqual(backend.name, "ibm_torino")
+        assert backend.name == "ibm_torino"
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_least_busy_excludes_mock(self, registry):
@@ -213,7 +213,7 @@ class TestBackendFilters(IBMTestCase):
 
         service = QiskitRuntimeService(token="token")
         backend = service.least_busy()
-        self.assertEqual(backend.name, "not_mock_device")
+        assert backend.name == "not_mock_device"
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_least_busy(self, registry):
@@ -225,7 +225,7 @@ class TestBackendFilters(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         backend = service.least_busy()
-        self.assertEqual(backend.name, "backend1")
+        assert backend.name == "backend1"
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_min_num_qubits(self, registry):
@@ -243,9 +243,9 @@ class TestBackendFilters(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         filtered_backends = service.backends(min_num_qubits=n_qubits)
-        self.assertTrue(len(filtered_backends), 2)
+        assert len(filtered_backends) == 2
         for backend in filtered_backends:
-            self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
+            assert backend.configuration().n_qubits >= n_qubits
 
 
 @ddt
@@ -265,9 +265,9 @@ class TestGetBackend(IBMTestCase):
         cz_errors = sorted(backend.target["cz"][p].error for p in backend.target["cz"])
 
         # Check right number of gates/properties loaded
-        self.assertEqual(len(t1s), backend.num_qubits)
-        self.assertEqual(len(sx_errors), backend.num_qubits)
-        self.assertEqual(len(cz_errors), 300)
+        assert len(t1s) == backend.num_qubits
+        assert len(sx_errors) == backend.num_qubits
+        assert len(cz_errors) == 300
         # Check that the right property values were loaded
         self.assertAlmostEqual(t1s[0], 3.163e-6, places=8)
         self.assertAlmostEqual(t1s[-1], 3.077e-4, places=6)
@@ -295,16 +295,10 @@ class TestGetBackend(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
 
         test_backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
-        self.assertEqual(
-            "rx" in test_backend.target,
-            use_fractional or use_fractional is None,
-        )
-        self.assertEqual(
-            "rzz" in test_backend.target,
-            use_fractional or use_fractional is None,
-        )
-        self.assertTrue("if_else" in test_backend.target.operation_names)
-        self.assertTrue("while_loop" in test_backend.target.operation_names)
+        assert ("rx" in test_backend.target) == (use_fractional or use_fractional is None)
+        assert ("rzz" in test_backend.target) == (use_fractional or use_fractional is None)
+        assert "if_else" in test_backend.target.operation_names
+        assert "while_loop" in test_backend.target.operation_names
 
         if use_fractional or use_fractional is None:
             self.assertAlmostEqual(test_backend.target["rx"][(0,)].error, 0.00019, places=5)
@@ -319,13 +313,13 @@ class TestGetBackend(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
 
         backend_with_fg = service.backend("fake_fractional", use_fractional_gates=True)
-        self.assertIn("rx", backend_with_fg.target)
+        assert "rx" in backend_with_fg.target
 
         backend_without_fg = service.backend("fake_fractional", use_fractional_gates=False)
-        self.assertNotIn("rx", backend_without_fg.target)
-        self.assertIn("rx", backend_with_fg.target)
+        assert "rx" not in backend_without_fg.target
+        assert "rx" in backend_with_fg.target
 
-        self.assertIsNot(backend_with_fg, backend_without_fg)
+        assert backend_with_fg is not backend_without_fg
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_backend_with_custom_calibration(self, registry):
@@ -339,12 +333,12 @@ class TestGetBackend(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
 
         backend_with_calibration = service.backends("ibm_torino", calibration_id="abc1234")[0]
-        self.assertEqual(backend_with_calibration.calibration_id, "abc1234")
-        self.assertIn("while_loop", backend_with_calibration.supported_instructions)
+        assert backend_with_calibration.calibration_id == "abc1234"
+        assert "while_loop" in backend_with_calibration.supported_instructions
 
         default_backend = service.backends("ibm_torino")[0]
-        self.assertIsNone(default_backend.calibration_id)
-        self.assertNotIn("while_loop", default_backend.supported_instructions)
+        assert default_backend.calibration_id is None
+        assert "while_loop" not in default_backend.supported_instructions
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_backend_with_invalid_calibration(self, registry):
@@ -377,25 +371,25 @@ class TestGetBackend(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         # Ensure that no backend appears in the backends list by default.
-        self.assertEqual(service.backends(), [])
+        assert service.backends() == []
 
         # Retrieve an existing mocked backend (available in several instances).
         backend = service.backend("common_backend")
-        self.assertEqual(backend.name, "common_backend")
-        self.assertEqual(backend._instance, instance_a.crn)
-        self.assertEqual(backend.is_mock, True)
+        assert backend.name == "common_backend"
+        assert backend._instance == instance_a.crn
+        assert backend.is_mock
 
         # Retrieve an existing mocked backend (available in several instances), passing instance.
         backend = service.backend("common_backend", instance="b")
-        self.assertEqual(backend.name, "common_backend")
-        self.assertEqual(backend._instance, instance_b.crn)
-        self.assertEqual(backend.is_mock, True)
+        assert backend.name == "common_backend"
+        assert backend._instance == instance_b.crn
+        assert backend.is_mock
 
         # Retrieve an existing mocked backend (available in one instance).
         backend = service.backend("unique_backend_a")
-        self.assertEqual(backend.name, "unique_backend_a")
-        self.assertEqual(backend._instance, instance_a.crn)
-        self.assertEqual(backend.is_mock, True)
+        assert backend.name == "unique_backend_a"
+        assert backend._instance == instance_a.crn
+        assert backend.is_mock
 
         # Retrieve an existing mocked backend (available in one instance), with wrong instance.
         with (
@@ -423,10 +417,10 @@ class TestGetBackend(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token", instance="auto")
         # Ensure that no backend appears in the backends list.
-        self.assertEqual(service.backends(), [])
+        assert service.backends() == []
 
         # Retrieve an existing backend (available in one instance).
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
             backend = service.backend("unique_backend_a")
-        self.assertEqual(backend.name, "unique_backend_a")
-        self.assertEqual(backend._instance, instance_a.crn)
+        assert backend.name == "unique_backend_a"
+        assert backend._instance == instance_a.crn

@@ -85,7 +85,7 @@ class TestBackend(IBMTestCase):
         with self.assertRaises(ValueError) as err:
             sampler.run([transpiled])
 
-        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+        assert f"faulty qubit {faulty_qubit}" in str(err.exception)
 
     def test_raise_faulty_qubits_many(self):
         """Test faulty qubits is raised if one circuit uses it."""
@@ -106,7 +106,7 @@ class TestBackend(IBMTestCase):
         with self.assertRaises(ValueError) as err:
             sampler.run(transpiled)
 
-        self.assertIn("faulty", str(err.exception))
+        assert "faulty" in str(err.exception)
 
     def test_raise_faulty_edge(self):
         """Test faulty edge is raised."""
@@ -124,8 +124,8 @@ class TestBackend(IBMTestCase):
         with self.assertRaises(ValueError) as err:
             sampler.run([transpiled])
 
-        self.assertIn("cx", str(err.exception))
-        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+        assert "cx" in str(err.exception)
+        assert f"faulty edge {tuple(edge_qubits)}" in str(err.exception)
 
     @staticmethod
     def test_faulty_qubit_not_used():
@@ -232,7 +232,7 @@ class TestBackend(IBMTestCase):
         """Test that deepcopy of a backend works properly."""
         backend = dynamic_circuits_backend()
         backend_copy = copy.deepcopy(backend)
-        self.assertEqual(backend_copy.name, backend.name)
+        assert backend_copy.name == backend.name
 
     def test_control_flow_converter(self):
         """Test that control flow instructions are properly added to the target."""
@@ -243,14 +243,14 @@ class TestBackend(IBMTestCase):
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),
         )
-        self.assertTrue(target.instruction_supported("if_else", ()))
-        self.assertTrue(target.instruction_supported(operation_class=IfElseOp))
-        self.assertFalse(target.instruction_supported("while_loop", ()))
-        self.assertFalse(target.instruction_supported(operation_class=WhileLoopOp))
-        self.assertTrue(target.instruction_supported("for_loop", ()))
-        self.assertTrue(target.instruction_supported(operation_class=ForLoopOp))
-        self.assertTrue(target.instruction_supported("switch_case", ()))
-        self.assertTrue(target.instruction_supported(operation_class=SwitchCaseOp))
+        assert target.instruction_supported("if_else", ())
+        assert target.instruction_supported(operation_class=IfElseOp)
+        assert not target.instruction_supported("while_loop", ())
+        assert not target.instruction_supported(operation_class=WhileLoopOp)
+        assert target.instruction_supported("for_loop", ())
+        assert target.instruction_supported(operation_class=ForLoopOp)
+        assert target.instruction_supported("switch_case", ())
+        assert target.instruction_supported(operation_class=SwitchCaseOp)
 
     def test_reset(self):
         """Test that reset instruction is properly added to the target."""
@@ -261,16 +261,16 @@ class TestBackend(IBMTestCase):
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),
         )
-        self.assertTrue(target.instruction_supported("reset"))
-        self.assertTrue(target.instruction_supported(operation_class=Reset))
+        assert target.instruction_supported("reset")
+        assert target.instruction_supported(operation_class=Reset)
 
     def test_non_unitary_isa_operations(self):
         """Test handling of non-unitary ISA operations."""
         target = convert_to_target(FakeSherbrooke().configuration())
 
-        self.assertIsInstance(target.get("reset"), dict)
-        self.assertIsInstance(target.get("measure"), dict)
-        self.assertIsNone(target.get("measure_2"))
+        assert isinstance(target.get("reset"), dict)
+        assert isinstance(target.get("measure"), dict)
+        assert target.get("measure_2") is None
 
     def test_convert_to_target_with_filter(self):
         """Test converting legacy data structure to V2 target model with faulty qubits.
@@ -287,8 +287,8 @@ class TestBackend(IBMTestCase):
             configuration=faulty_backend.configuration(),
             properties=faulty_backend.properties(),
         )
-        self.assertFalse(target.instruction_supported(operation_name="measure", qargs=(1,)))
-        self.assertFalse(target.instruction_supported(operation_name="delay", qargs=(1,)))
+        assert not target.instruction_supported(operation_name="measure", qargs=(1,))
+        assert not target.instruction_supported(operation_name="delay", qargs=(1,))
 
     def test_convert_to_target(self):
         """Test converting legacy data structure to V2 target model with missing qubit property."""
@@ -300,15 +300,9 @@ class TestBackend(IBMTestCase):
             properties=faulty_backend.properties(),
         )
 
-        self.assertIsNone(target.qubit_properties[1].t1)
-        self.assertEqual(
-            target.qubit_properties[1].t2,
-            faulty_backend.properties().t2(1),
-        )
-        self.assertEqual(
-            target.qubit_properties[1].frequency,
-            faulty_backend.properties().frequency(1),
-        )
+        assert target.qubit_properties[1].t1 is None
+        assert target.qubit_properties[1].t2 == faulty_backend.properties().t2(1)
+        assert target.qubit_properties[1].frequency == faulty_backend.properties().frequency(1)
 
     @named_data(
         ("with_dynamic_with_fractional", [True, True]),
@@ -331,53 +325,32 @@ class TestBackend(IBMTestCase):
             include_fractional_gates=use_fractional,
         )
 
-        self.assertEqual(
-            "rx" in target,
-            use_fractional,
-        )
-        self.assertEqual(
-            "rzz" in target,
-            use_fractional,
-        )
-        self.assertEqual(
-            "rx" in target.operation_names,
-            use_fractional,
-        )
-        self.assertEqual(
-            "rzz" in target.operation_names,
-            use_fractional,
-        )
-        self.assertEqual(
-            "if_else" in target.operation_names,
-            use_dynamic,
-        )
-        self.assertEqual(
-            "while_loop" in target.operation_names,
-            use_dynamic,
-        )
+        assert ("rx" in target) == use_fractional
+        assert ("rzz" in target) == use_fractional
+        assert ("rx" in target.operation_names) == use_fractional
+        assert ("rzz" in target.operation_names) == use_fractional
+        assert ("if_else" in target.operation_names) == use_dynamic
+        assert ("while_loop" in target.operation_names) == use_dynamic
 
     def test_instruction_signatures(self):
         """Test building a target with alternative instruction signatures in its configuration."""
         backend = FakeMidcircuit()
 
-        self.assertEqual(set(backend.basis_gates), {"id", "rz", "sx", "x", "cx"})
-        self.assertEqual(
-            set(backend.operation_names),
-            {
-                "id",
-                "cx",
-                "sx",
-                "rz",
-                "delay",
-                "measure",
-                "measure_2",
-                "x",
-                "reset",
-                "reset_2",
-                "reset_3",
-                "alternative_rx",
-            },
-        )
+        assert set(backend.basis_gates) == {"id", "rz", "sx", "x", "cx"}
+        assert set(backend.operation_names) == {
+            "id",
+            "cx",
+            "sx",
+            "rz",
+            "delay",
+            "measure",
+            "measure_2",
+            "x",
+            "reset",
+            "reset_2",
+            "reset_3",
+            "alternative_rx",
+        }
         assert_props(backend, "measure_2", 3.142, None)
         assert_props(backend, "reset_2", None, 3.142e-08)
 
@@ -387,4 +360,4 @@ class TestBackend(IBMTestCase):
         qc = QuantumCircuit(1, 2)
         qc.append(mcm, [0], [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "measure_2")
+        assert transpiled.data[0].operation.name == "measure_2"

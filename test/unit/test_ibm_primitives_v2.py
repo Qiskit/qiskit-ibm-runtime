@@ -73,7 +73,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst, backend=backend))
         run_options = backend.service._run.call_args.kwargs["options"]
         for key, val in env_var.items():
-            self.assertEqual(run_options[key], val)
+            assert run_options[key] == val
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -92,10 +92,10 @@ class TestPrimitivesV2(IBMTestCase):
         input_params = backend.service._run.call_args.kwargs["inputs"]
         expected = list(opts.values())[0]
         for key, val in expected.items():
-            self.assertEqual(run_options[key], val)
-            self.assertNotIn(key, input_params)
-            self.assertNotIn(key, input_params["options"])
-            self.assertNotIn(key, input_params["options"].get("experimental", {}))
+            assert run_options[key] == val
+            assert key not in input_params
+            assert key not in input_params["options"]
+            assert key not in input_params["options"].get("experimental", {})
 
     @data(EstimatorV2, SamplerV2)
     def test_options_copied(self, primitive):
@@ -105,7 +105,7 @@ class TestPrimitivesV2(IBMTestCase):
         options.max_execution_time = 100
         inst = primitive(mode=backend, options=options)
         options.max_execution_time = 200
-        self.assertEqual(inst.options.max_execution_time, 100)
+        assert inst.options.max_execution_time == 100
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_str(self, primitive):
@@ -124,19 +124,19 @@ class TestPrimitivesV2(IBMTestCase):
             "qiskit_ibm_runtime.qiskit_runtime_service.QiskitRuntimeService", new=MockQRTService
         ):
             inst = primitive(mode=mock_backend)
-            self.assertIsNone(inst.mode)
+            assert inst.mode is None
             inst.run(**get_primitive_inputs(inst))
             mock_service_inst._run.assert_called_once()
             runtime_options = mock_service_inst._run.call_args.kwargs["options"]
-            self.assertEqual(runtime_options["backend"], mock_backend)
+            assert runtime_options["backend"] == mock_backend
 
             mock_service_inst.reset_mock()
             str_mode_inst = primitive(mode=mock_backend)
-            self.assertIsNone(str_mode_inst.mode)
+            assert str_mode_inst.mode is None
             inst.run(**get_primitive_inputs(str_mode_inst))
             mock_service_inst._run.assert_called_once()
             runtime_options = mock_service_inst._run.call_args.kwargs["options"]
-            self.assertEqual(runtime_options["backend"], mock_backend)
+            assert runtime_options["backend"] == mock_backend
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_instance(self, primitive):
@@ -146,11 +146,11 @@ class TestPrimitivesV2(IBMTestCase):
 
         service.reset_mock()
         inst = primitive(mode=backend)
-        self.assertIsNone(inst.mode)
+        assert inst.mode is None
         inst.run(**get_primitive_inputs(inst))
         service._run.assert_called_once()
         runtime_options = service._run.call_args.kwargs["options"]
-        self.assertEqual(runtime_options["backend"], backend)
+        assert runtime_options["backend"] == backend
 
     @data(EstimatorV2, SamplerV2)
     @mock_responses
@@ -161,9 +161,9 @@ class TestPrimitivesV2(IBMTestCase):
 
         session = Session(backend)
         inst = primitive(mode=session)
-        self.assertIsNotNone(inst.mode)
+        assert inst.mode is not None
         job = inst.run(**get_primitive_inputs(inst))
-        self.assertEqual(job.session_id, "session_12345")
+        assert job.session_id == "session_12345"
 
     @data(EstimatorV2, SamplerV2)
     @mock_responses
@@ -174,8 +174,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         with Session(backend=backend) as session:
             inst = primitive()
-            self.assertEqual(inst.mode, session)
-            self.assertEqual(inst.mode.backend(), "common_backend")
+            assert inst.mode == session
+            assert inst.mode.backend() == "common_backend"
 
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
@@ -194,11 +194,11 @@ class TestPrimitivesV2(IBMTestCase):
         service = backend.service
         inst = primitive(backend)
         inst.run(**get_primitive_inputs(inst))
-        self.assertIsNone(inst.mode)
+        assert inst.mode is None
         service._run.assert_called_once()
         kwargs_list = service._run.call_args.kwargs
-        self.assertNotIn("session_id", kwargs_list)
-        self.assertNotIn("start_session", kwargs_list)
+        assert "session_id" not in kwargs_list
+        assert "start_session" not in kwargs_list
 
     @data(SamplerV2, EstimatorV2)
     def test_init_with_mode_as_backend(self, primitive):
@@ -207,11 +207,11 @@ class TestPrimitivesV2(IBMTestCase):
         service = backend.service
 
         inst = primitive(mode=backend)
-        self.assertIsNotNone(inst)
+        assert inst is not None
         inst.run(**get_primitive_inputs(inst))
         service._run.assert_called_once()
         runtime_options = service._run.call_args.kwargs["options"]
-        self.assertEqual(runtime_options["backend"], backend)
+        assert runtime_options["backend"] == backend
 
     @data(SamplerV2, EstimatorV2)
     @mock_responses
@@ -222,10 +222,10 @@ class TestPrimitivesV2(IBMTestCase):
         session = Session(backend)
 
         inst = primitive(mode=session)
-        self.assertIsNotNone(inst.mode)
+        assert inst.mode is not None
         inst.run(**get_primitive_inputs(inst, backend=backend))
-        self.assertEqual(inst.mode, session)
-        self.assertEqual(session._backend, backend)
+        assert inst.mode == session
+        assert session._backend == backend
 
     @data(SamplerV2, EstimatorV2)
     @mock_responses
@@ -236,9 +236,9 @@ class TestPrimitivesV2(IBMTestCase):
         batch = Batch(backend)
 
         inst = primitive(mode=batch)
-        self.assertIsNotNone(inst.mode)
+        assert inst.mode is not None
         inst.run(**get_primitive_inputs(inst, backend=backend))
-        self.assertEqual(batch._backend, backend)
+        assert batch._backend == backend
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
@@ -386,9 +386,9 @@ class TestPrimitivesV2(IBMTestCase):
         inst.options.experimental = exp_opt
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictEqual(inputs["experimental"], {"foo": "bar"})
-        self.assertDictEqual(inputs["execution"], {"extra_key": "bar"})
-        self.assertNotIn("extra_key", inputs)
+        assert inputs["experimental"] == {"foo": "bar"}
+        assert inputs["execution"] == {"extra_key": "bar"}
+        assert "extra_key" not in inputs
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -400,9 +400,9 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(mode=backend, options={"experimental": exp_opt})
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictEqual(inputs["experimental"], {"foo": "bar"})
-        self.assertDictEqual(inputs["execution"], {"extra_key": "bar"})
-        self.assertNotIn("extra_key", inputs)
+        assert inputs["experimental"] == {"foo": "bar"}
+        assert inputs["execution"] == {"extra_key": "bar"}
+        assert "extra_key" not in inputs
 
     @data(EstimatorV2, SamplerV2)
     def test_run_unset_options(self, primitive):
@@ -411,7 +411,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(mode=backend)
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertFalse(inputs)
+        assert not inputs
 
     @data(EstimatorV2, SamplerV2)
     def test_run_multiple_different_options(self, primitive):
@@ -423,7 +423,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst))
         kwargs_list = backend.service._run.call_args_list
         for idx, shots in zip([0, 1], [100, 200]):
-            self.assertEqual(kwargs_list[idx][1]["inputs"]["options"]["default_shots"], shots)
+            assert kwargs_list[idx][1]["inputs"]["options"]["default_shots"] == shots
 
     @mock_responses
     def test_run_same_session(self, registry):
@@ -441,8 +441,8 @@ class TestPrimitivesV2(IBMTestCase):
             inst = cls(mode=session)
             jobs.append(inst.run(**get_primitive_inputs(inst)))
 
-        self.assertEqual(len(jobs), 5)
-        self.assertTrue(all(job.session_id == "session_12345" for job in jobs))
+        assert len(jobs) == 5
+        assert all(job.session_id == "session_12345" for job in jobs)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -488,7 +488,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         with self.assertRaises(ValueError) as err:
             inst.run(pubs=[pub])
-        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+        assert f"faulty qubit {faulty_qubit}" in str(err.exception)
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits_many(self, primitive):
@@ -517,7 +517,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         with self.assertRaises(ValueError) as err:
             inst.run(pubs=pubs)
-        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+        assert f"faulty qubit {faulty_qubit}" in str(err.exception)
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_edge(self, primitive):
@@ -542,8 +542,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         with self.assertRaises(ValueError) as err:
             inst.run(pubs=[pub])
-        self.assertIn("cx", str(err.exception))
-        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+        assert "cx" in str(err.exception)
+        assert f"faulty edge {tuple(edge_qubits)}" in str(err.exception)
 
     @data(EstimatorV2, SamplerV2)
     def test_faulty_qubit_not_used(self, primitive):
@@ -619,7 +619,7 @@ class TestPrimitivesV2(IBMTestCase):
         """Test getting the backend used in the primitive."""
         backend = get_mocked_backend()
         inst = primitive(mode=backend)
-        self.assertEqual(inst.backend().name, backend.name)
+        assert inst.backend().name == backend.name
 
     @combine(primitive=[EstimatorV2, SamplerV2], session=[Session, Batch])
     def test_get_backend_session(self, primitive, session):
@@ -627,7 +627,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend = FakeManilaV2()
         with session(backend=backend):
             inst = primitive()
-            self.assertEqual(inst.backend().name, backend.name)
+            assert inst.backend().name == backend.name
 
 
 class TestGetModeServiceBackend(IBMTestCase):
@@ -638,9 +638,9 @@ class TestGetModeServiceBackend(IBMTestCase):
         backend = get_mocked_backend()
         service = backend.service
         result = get_mode_service_backend(mode=backend)
-        self.assertEqual(result[0], None)
-        self.assertEqual(result[1], service)
-        self.assertEqual(result[2], backend)
+        assert result[0] is None
+        assert result[1] == service
+        assert result[2] == backend
 
     @mock_responses
     def test_mode_is_session(self, registry):
@@ -650,9 +650,9 @@ class TestGetModeServiceBackend(IBMTestCase):
         session = Session(backend)
 
         result = get_mode_service_backend(mode=session)
-        self.assertEqual(result[0], session)
-        self.assertEqual(result[1], session.service)
-        self.assertEqual(result[2].name, "common_backend")
+        assert result[0] == session
+        assert result[1] == session.service
+        assert result[2].name == "common_backend"
 
     def test_session_context_manager(self):
         """Test ``get_mode_service_backend`` inside a session context manager."""
@@ -660,9 +660,9 @@ class TestGetModeServiceBackend(IBMTestCase):
         service = backend.service
         with Session(backend=backend) as session:
             result = get_mode_service_backend()
-            self.assertEqual(result[0], session)
-            self.assertEqual(result[1], service)
-            self.assertEqual(result[2], backend)
+            assert result[0] == session
+            assert result[1] == service
+            assert result[2] == backend
 
     def test_mode_is_backend_inside_session_context_manager(self):
         """Test ``get_mode_service_backend`` inside a session context manager (IBMBackend mode).
@@ -674,6 +674,6 @@ class TestGetModeServiceBackend(IBMTestCase):
         service = backend.service
         with Session(backend=backend) as session:
             result = get_mode_service_backend(mode=backend)
-            self.assertEqual(result[0], session)
-            self.assertEqual(result[1], service)
-            self.assertEqual(result[2], backend)
+            assert result[0] == session
+            assert result[1] == service
+            assert result[2] == backend
