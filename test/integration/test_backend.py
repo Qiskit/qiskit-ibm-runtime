@@ -67,7 +67,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         # test passing an instance
         instance = self.dependencies.instance
         backend = service.least_busy(instance=instance)
-        self.assertEqual(instance, backend._instance)
+        assert instance == backend._instance
 
         # test when there is no instance
         service_with_no_default_instance = QiskitRuntimeService(
@@ -76,32 +76,28 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
             url=self.dependencies.url,
         )
         backend = service_with_no_default_instance.least_busy()
-        self.assertTrue(backend)
+        assert backend
 
     def test_backends(self):
         """Test getting all backends."""
         service = self.service
         backends = service.backends()
-        self.assertTrue(backends)
+        assert backends
         backend_names = [back.name for back in backends]
-        self.assertEqual(
-            len(backend_names),
-            len(set(backend_names)),
-            f"backend_names={backend_names}",
-        )
+        assert len(backend_names) == len(set(backend_names))
 
     def test_get_backend(self):
         """Test getting a backend."""
         service = self.service
         backends = service.backends()
         backend = service.backend(backends[0].name)
-        self.assertTrue(backend)
+        assert backend
 
     def test_target_reset(self):
         """Test confirming target contains reset."""
         service = self.service
         backend = service.backend(self.dependencies.qpu)
-        self.assertIn("reset", backend.target)
+        assert "reset" in backend.target
 
     def test_backends_physical_qubits(self):
         """All backends should have a `physical_qubits` property."""
@@ -109,7 +105,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         backends = service.backends()
 
         for backend in backends:
-            self.assertIsInstance(backend.physical_qubits, int)
+            assert isinstance(backend.physical_qubits, int)
 
     def test_backends_include_mocks(self):
         """`service.backends()` should respect the `include_mocks` flag."""
@@ -120,11 +116,11 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         backends_no_mocks = service.backends()
         backends_include_mocks = service.backends(include_mocks=True)
 
-        self.assertGreater(len(backends_include_mocks), len(backends_no_mocks))
-        self.assertFalse(any(backend.name.startswith("mock") for backend in backends_no_mocks))
-        self.assertFalse(any(backend.is_mock for backend in backends_no_mocks))
-        self.assertTrue(any(backend.name.startswith("mock") for backend in backends_include_mocks))
-        self.assertTrue(any(backend.is_mock for backend in backends_include_mocks))
+        assert len(backends_include_mocks) > len(backends_no_mocks)
+        assert not any(backend.name.startswith("mock") for backend in backends_no_mocks)
+        assert not any(backend.is_mock for backend in backends_no_mocks)
+        assert any(backend.name.startswith("mock") for backend in backends_include_mocks)
+        assert any(backend.is_mock for backend in backends_include_mocks)
 
 
 class TestIBMBackend(IBMIntegrationTestCase):
@@ -141,21 +137,21 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_service(self):
         """Check if the service property is set."""
         backend = self.backend
-        self.assertIsInstance(backend.service, QiskitRuntimeService)
+        assert isinstance(backend.service, QiskitRuntimeService)
 
     @production_only
     def test_backend_target(self):
         """Check if the target property is set."""
         backend = self.backend
-        self.assertIsNotNone(backend.target)
-        self.assertIsInstance(backend.target, Target)
+        assert backend.target is not None
+        assert isinstance(backend.target, Target)
 
     @production_only
     def test_backend_target_history(self):
         """Check retrieving backend target_history."""
         backend = self.backend
-        self.assertIsNotNone(backend.target_history())
-        self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
+        assert backend.target_history() is not None
+        assert backend.target_history(datetime=datetime.now() - timedelta(30)) is not None
 
     @production_only
     def test_properties_not_cached_target_history(self):
@@ -163,7 +159,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend = self.backend
         properties = backend.properties()
         backend.target_history(datetime=datetime.now() - timedelta(60))
-        self.assertEqual(properties, backend.properties())
+        assert properties == backend.properties()
 
     def test_backend_target_refresh(self):
         """Test refreshing the backend target."""
@@ -173,39 +169,39 @@ class TestIBMBackend(IBMIntegrationTestCase):
         old_properties = backend.properties()
         backend.refresh()
         new_target = backend.target
-        self.assertNotEqual(old_target, new_target)
-        self.assertIsNot(old_configuration, backend.configuration())
-        self.assertIsNot(old_properties, backend.properties())
+        assert old_target != new_target
+        assert old_configuration is not backend.configuration()
+        assert old_properties is not backend.properties()
 
     def test_backend_qubit_properties(self):
         """Check if the qubit properties are set."""
         backend = self.backend
-        self.assertIsNotNone(backend.qubit_properties(0))
+        assert backend.qubit_properties(0) is not None
 
     def test_backend_simulator(self):
         """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
         backend = self.backend
-        self.assertIsNotNone(backend.simulator)
-        self.assertEqual(backend.simulator, backend.configuration().simulator)
+        assert backend.simulator is not None
+        assert backend.simulator == backend.configuration().simulator
 
     def test_backend_status(self):
         """Check the status of a real chip."""
         backend = self.backend
-        self.assertTrue(backend.status().operational)
+        assert backend.status().operational
 
     def test_backend_properties(self):
         """Check the properties of calibration of a real chip."""
         backend = self.backend
         properties = backend.properties()
         properties_today = backend.properties(datetime=datetime.today())
-        self.assertIsNotNone(properties)
-        self.assertIsNotNone(properties_today)
-        self.assertEqual(properties.backend_version, properties_today.backend_version)
+        assert properties is not None
+        assert properties_today is not None
+        assert properties.backend_version == properties_today.backend_version
 
     def test_backend_configuration(self):
         """Check the backend configuration of each backend."""
         backend = self.backend
-        self.assertIsNotNone(backend.configuration())
+        assert backend.configuration() is not None
 
     @production_only
     def test_backend_invalid_attribute(self):
@@ -218,36 +214,29 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Test that deepcopy on IBMBackend works correctly."""
         backend = self.backend
         backend_copy = copy.deepcopy(backend)
-        self.assertEqual(backend_copy.name, backend.name)
-        self.assertEqual(
-            backend_copy.configuration().basis_gates,
-            backend.configuration().basis_gates,
-        )
+        assert backend_copy.name == backend.name
+        assert backend_copy.configuration().basis_gates == backend.configuration().basis_gates
         if backend.properties():
-            self.assertEqual(
-                backend_copy.properties().last_update_date,
-                backend.properties().last_update_date,
+            assert (
+                backend_copy.properties().last_update_date == backend.properties().last_update_date
             )
-        self.assertEqual(backend_copy._instance, backend._instance)
-        self.assertEqual(
-            backend_copy._api_client._session.base_url,
-            backend._api_client._session.base_url,
-        )
+        assert backend_copy._instance == backend._instance
+        assert backend_copy._api_client._session.base_url == backend._api_client._session.base_url
 
     def test_backend_pending_jobs(self):
         """Test pending jobs are returned."""
         service = self.service
         backends = service.backends()
-        self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
+        assert any(backend.status().pending_jobs >= 0 for backend in backends)
 
     def test_backend_fetch_all_qubit_properties(self):
         """Check retrieving properties of all qubits."""
         num_qubits = self.backend.num_qubits
         qubits = list(range(num_qubits))
         qubit_properties = self.backend.qubit_properties(qubits)
-        self.assertEqual(len(qubit_properties), num_qubits)
+        assert len(qubit_properties) == num_qubits
         for i in qubits:
-            self.assertIsInstance(qubit_properties[i], QubitProperties)
+            assert isinstance(qubit_properties[i], QubitProperties)
 
     def test_sim_backend_options(self):
         """Test simulator backend options."""
@@ -257,7 +246,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         sampler = Sampler(mode=backend)
         isa_circuit = transpile(bell(), backend)
         inputs = sampler.run([isa_circuit], shots=1).inputs
-        self.assertEqual(inputs["pubs"][0][2], 1)
+        assert inputs["pubs"][0][2] == 1
 
     @production_only
     def test_paused_backend_warning(self):
@@ -286,9 +275,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
             sampler = Sampler(mode=self.backend)
             job = sampler.run([circuit])
             job.cancel()
-        self.assertIn(
-            f"circuit has {num_qubits} qubits but the target system requires {num}",
-            str(err.exception),
+        assert f"circuit has {num_qubits} qubits but the target system requires {num}" in str(
+            err.exception
         )
 
     def test_use_fractional_gates_flag(self):
@@ -300,8 +288,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
             real_device_fg = service.backend(real_device_name, use_fractional_gates=True)
         except QiskitBackendNotFoundError:
             self.skipTest("Real backend not available.")
-        self.assertIn("rzz", real_device_fg.basis_gates)
-        self.assertNotIn("rzz", real_device_no_fg.basis_gates)
+        assert "rzz" in real_device_fg.basis_gates
+        assert "rzz" not in real_device_no_fg.basis_gates
 
     def test_backend_fractional_gates_error(self):
         """Test that use_fractional_gates = True raises error for unsupported backends."""
@@ -331,23 +319,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
         except QiskitBackendNotFoundError:
             self.skipTest("Real backend not available.")
 
-        self.assertIs(
-            backend_fg, backend_fg2, "Cache was not used for repeated use_fractional_gates=True"
-        )
-
-        self.assertIsNot(
-            backend_fg,
-            backend_no_fg,
-            "Configuration was not refreshed when use_fractional_gates changed",
-        )
-
-        self.assertIs(backend_no_fg, backend_no_fg2, "Cache was not used to create backend object")
-
-        self.assertIsNot(
-            backend_no_fg2,
-            backend_fg3,
-            "Configuration was not refreshed when use_fractional_gates changed",
-        )
+        # The cache is used for repeated use_fractional_gates=True
+        assert backend_fg is backend_fg2
+        # The configuration is refreshed when use_fractional_gates changes
+        assert backend_fg is not backend_no_fg
+        # The cache is used to create the backend object
+        assert backend_no_fg is backend_no_fg2
+        # The configuration is refreshed when use_fractional_gates changes
+        assert backend_no_fg2 is not backend_fg3
 
     def test_renew_backend_properties(self):
         """Test renewed backend property."""
@@ -359,7 +338,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend.basis_gates.remove(basis_gates[0])
         # renew backend
         backend = service.backend(name)
-        self.assertEqual(backend.basis_gates, basis_gates)
+        assert backend.basis_gates == basis_gates
 
     def test_backend_calibration_id(self):
         """Test calibration_id is used when fetching the configuration."""
@@ -370,7 +349,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             with self.assertRaises(QiskitBackendNotFoundError):
                 service.backend(name, calibration_id=calibration_id)
 
-        self.assertTrue(any(calibration_id in record for record in log.output))
+        assert any(calibration_id in record for record in log.output)
 
     def test_run_dry_run(self):
         """Test `run` using the `dry_run` flag.
@@ -383,4 +362,4 @@ class TestIBMBackend(IBMIntegrationTestCase):
         isa_circuit = transpile(bell(), backend)
         sampler = Sampler(mode=backend)
         job = sampler.run([isa_circuit], dry_run=True)
-        self.assertEqual(job.backend().name, dry_run_backend.name)
+        assert job.backend().name == dry_run_backend.name

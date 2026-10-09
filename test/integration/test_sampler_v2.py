@@ -379,8 +379,8 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = Sampler(mode=session, options={"default_shots": shots})
             result = sampler.run([isa_bell]).result()
 
-        self.assertEqual(result[0].data.meas.num_shots, shots)
-        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert result[0].data.meas.num_shots == shots
+        assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
     def test_run_with_shots_option_update_option(self):
@@ -394,8 +394,8 @@ class TestSampler(IBMIntegrationTestCase):
             sampler.options.default_shots = shots
             result = sampler.run([isa_bell]).result()
 
-        self.assertEqual(result[0].data.meas.num_shots, shots)
-        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert result[0].data.meas.num_shots == shots
+        assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
     def test_run_with_shots_option_run_arg(self):
@@ -408,8 +408,8 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = Sampler(mode=session)
             result = sampler.run(pubs=[isa_bell], shots=shots).result()
 
-        self.assertEqual(result[0].data.meas.num_shots, shots)
-        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert result[0].data.meas.num_shots == shots
+        assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
     def test_run_with_shots_option_pub_like(self):
@@ -422,8 +422,8 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = Sampler(mode=session)
             result = sampler.run([(isa_bell, None, shots)]).result()
 
-        self.assertEqual(result[0].data.meas.num_shots, shots)
-        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert result[0].data.meas.num_shots == shots
+        assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
     def test_run_with_shots_option_pub(self):
@@ -436,8 +436,8 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = Sampler(mode=session)
             result = sampler.run([SamplerPub(isa_bell, shots=shots)]).result()
 
-        self.assertEqual(result[0].data.meas.num_shots, shots)
-        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+        assert result[0].data.meas.num_shots == shots
+        assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
     def test_run_with_shots_option_multiple_pubs(self):
@@ -454,10 +454,10 @@ class TestSampler(IBMIntegrationTestCase):
                 SamplerPub(isa_bell, shots=shots2),
             ]
         ).result()
-        self.assertEqual(result[0].data.meas.num_shots, shots1)
-        self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots1)
-        self.assertEqual(result[1].data.meas.num_shots, shots2)
-        self.assertEqual(sum(result[1].data.meas.get_counts().values()), shots2)
+        assert result[0].data.meas.num_shots == shots1
+        assert sum(result[0].data.meas.get_counts().values()) == shots1
+        assert result[1].data.meas.num_shots == shots2
+        assert sum(result[1].data.meas.get_counts().values()) == shots2
         assert_result_type(result, num_pubs=2)
 
     def test_run_shots_result_size(self):
@@ -471,8 +471,8 @@ class TestSampler(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([pm.run(qc)]).result()
-        self.assertLessEqual(result[0].data.meas.num_shots, SHOTS)
-        self.assertEqual(sum(result[0].data.meas.get_counts().values()), SHOTS)
+        assert result[0].data.meas.num_shots <= SHOTS
+        assert sum(result[0].data.meas.get_counts().values()) == SHOTS
         assert_result_type(result, num_pubs=1)
 
     def test_primitive_job_status_done(self):
@@ -483,7 +483,7 @@ class TestSampler(IBMIntegrationTestCase):
         sampler = Sampler(mode=backend, options=OPTIONS)
         job = sampler.run([isa_bell])
         _ = job.result()
-        self.assertEqual(job.status(), "DONE")
+        assert job.status() == "DONE"
 
     @named_data(
         ("identity", UnitaryGate(np.eye(2))),
@@ -513,7 +513,7 @@ class TestSampler(IBMIntegrationTestCase):
         qc, _, _ = cases[1]
         sampler = Sampler(mode=backend, options=OPTIONS)
         result = sampler.run([pm.run(qc)]).result()
-        self.assertEqual(result[0].data.meas.num_shots, SHOTS)
+        assert result[0].data.meas.num_shots == SHOTS
         assert_result_type(result, num_pubs=1)
 
     @named_data(*multiple_cregs_cases())
@@ -526,7 +526,7 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = Sampler(mode=session, options=OPTIONS)
             result = sampler.run([pass_manager.run(circuit)]).result()
 
-        self.assertEqual(len(result[0].data), len(target))
+        assert len(result[0].data) == len(target)
         assert_result_type(result, num_pubs=1)
 
     def test_sampler_v2_options(self):

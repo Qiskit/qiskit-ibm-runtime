@@ -33,5 +33,5 @@ class TestAuthClient(IBMTestCase):
             instance=dependencies.instance,
         )
         cloud_auth = params.get_auth_handler()
-        self.assertTrue(cloud_auth.tm)
-        self.assertTrue(cloud_auth.tm.get_token())
+        assert cloud_auth.tm
+        assert cloud_auth.tm.get_token()

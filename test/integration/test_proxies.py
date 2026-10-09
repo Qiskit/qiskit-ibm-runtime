@@ -99,7 +99,7 @@ class TestProxies(IBMTestCase):
             process.terminate()  # kill to be able of reading the output
             proxy_output = process.stdout.read().decode("utf-8")
 
-        self.assertIn(api_line, proxy_output)
+        assert api_line in proxy_output
 
     def test_proxies_qiskit_runtime_service(self) -> None:
         """Should reach the proxy using QiskitRuntimeService."""
@@ -120,7 +120,7 @@ class TestProxies(IBMTestCase):
             process.terminate()  # kill to be able of reading the output
             proxy_output = process.stdout.read().decode("utf-8")
 
-        self.assertIn(api_line, proxy_output)
+        assert api_line in proxy_output
 
     def test_no_proxy_raises_exception(self) -> None:
         """Should raise an exception when no proxy is specified."""
