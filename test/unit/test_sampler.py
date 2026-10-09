@@ -119,33 +119,34 @@ class TestSamplerV2(IBMTestCase):
         ):
             inst.run(in_pubs)
 
-    def test_run_default_options(self):
+    @data(
+        (
+            SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),  # type: ignore[call-arg]
+            {"dynamical_decoupling": {"sequence_type": "XX"}},
+        ),
+        (
+            SamplerOptions(default_shots=1000),  # type: ignore[call-arg]
+            {"default_shots": 1000},
+        ),
+        (
+            {
+                "execution": {"init_qubits": True, "rep_delay": 0.01},
+            },
+            {
+                "execution": {"init_qubits": True, "rep_delay": 0.01},
+            },
+        ),
+    )
+    @unpack
+    def test_run_default_options(self, options, expected_options):
         """Test run using default options."""
         session = MagicMock(spec=MockSession, _backend="common_backend")
-        options_vars = [
-            (
-                SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),
-                {"dynamical_decoupling": {"sequence_type": "XX"}},
-            ),
-            (
-                SamplerOptions(default_shots=1000),
-                {"default_shots": 1000},
-            ),
-            (
-                {
-                    "execution": {"init_qubits": True, "rep_delay": 0.01},
-                },
-                {
-                    "execution": {"init_qubits": True, "rep_delay": 0.01},
-                },
-            ),
-        ]
-        for options, expected in options_vars:
-            with self.subTest(options=options):
-                inst = SamplerV2(mode=session, options=options)
-                inst.run((QuantumCircuit(1, 1),))
-                inputs = session._run.call_args.kwargs["inputs"]["options"]
-                self.assertDictPartiallyEqual(inputs, expected)
+
+        inst = SamplerV2(mode=session, options=options)
+        inst.run((QuantumCircuit(1, 1),))
+
+        run_options = session._run.call_args.kwargs["inputs"]["options"]
+        self.assertDictPartiallyEqual(run_options, expected_options)
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from unittest import mock
 
-from ddt import ddt, named_data
+from ddt import data, ddt, named_data
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime.accounts import Account
@@ -28,6 +28,7 @@ from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceNoBackendsRegistry
 
 
+@ddt
 class TestBackendFilters(IBMTestCase):
     """Qiskit Backend Filtering Tests."""
 
@@ -99,17 +100,14 @@ class TestBackendFilters(IBMTestCase):
         backends = service.backends(include_mocks=True)
         self.assertEqual(len(backends), 2)
 
+    @data("common_backend", "unique_backend_a")
     @mock_responses
-    def test_filter_by_name(self, registry):
+    def test_filter_by_name(self, backend_name, registry):
         """Test filtering by name."""
         service = QiskitRuntimeService(token="my_token")
-        for name in [
-            "common_backend",
-            "unique_backend_a",
-        ]:
-            with self.subTest(name=name):
-                backend_name = [back.name for back in service.backends(name=name)]
-                self.assertEqual(len(backend_name), 1)
+
+        backend_names = [back.name for back in service.backends(name=backend_name)]
+        self.assertEqual(len(backend_names), 1)
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     def test_filter_config_properties(self, registry):

@@ -107,29 +107,28 @@ class TestAccount(IBMTestCase):
             ).validate()
         self.assertIn("Invalid `channel` value.", str(err.exception))
 
-    def test_invalid_token(self):
+    @data(1, None, "")
+    def test_invalid_token(self, token):
         """Test invalid values for token parameter."""
-        invalid_tokens = [1, None, ""]
-        for token in invalid_tokens:
-            with self.subTest(token=token):
-                with self.assertRaises(InvalidAccountError) as err:
-                    Account.create_account(
-                        channel="ibm_cloud",
-                        token=token,
-                        url=DUMMY_IBM_CLOUD_URL,
-                    ).validate()
-                self.assertIn("Invalid `token` value.", str(err.exception))
+        with self.assertRaises(InvalidAccountError) as err:
+            Account.create_account(
+                channel="ibm_cloud",
+                token=token,
+                url=DUMMY_IBM_CLOUD_URL,
+            ).validate()
+        self.assertIn("Invalid `token` value.", str(err.exception))
 
     def test_invalid_url(self):
         """Test invalid values for url parameter."""
-        subtests = [
-            {"channel": "ibm_cloud", "url": 123},
-        ]
-        for params in subtests:
-            with self.subTest(params=params):
-                with self.assertRaises(InvalidAccountError) as err:
-                    Account.create_account(**params, token=DUMMY_TOKEN).validate()
-                self.assertIn("Invalid `url` value.", str(err.exception))
+        invalid_url: Any = 123
+
+        with self.assertRaises(InvalidAccountError) as err:
+            Account.create_account(
+                channel="ibm_cloud",
+                token=DUMMY_TOKEN,
+                url=invalid_url,
+            ).validate()
+        self.assertIn("Invalid `url` value.", str(err.exception))
 
     def test_invalid_account_prefs(self):
         """Test invalid values for account preferences."""
