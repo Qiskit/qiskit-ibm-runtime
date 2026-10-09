@@ -58,22 +58,12 @@ def prepare(
         - :class:`~.ExecutorOptions` The finalized executor options.
     """
     executor_options = noise_learner_options_to_executor_options(options)
-    post_selection = options.post_selection
     pre = options.bit_flip_checks.pre_circuit
     post = options.bit_flip_checks.post_circuit
     coupling_map = backend.target.build_coupling_map()
     pass_manager = None
 
-    if post_selection.enable:
-        post_selection_passes = [
-            AddPostCircuitNonMarkovianErrorChecks(post_selection.x_pulse_type),
-            AddSpectatorPostCircuitNonMarkovianErrorChecks(
-                coupling_map,
-                post_selection.x_pulse_type,
-            ),
-        ]
-        pass_manager = PassManager(post_selection_passes)
-    elif pre.enable or post.enable:
+    if pre.enable or post.enable:
         pre_x_pulse_type = pre.x_pulse_type if pre.enable else None
         post_x_pulse_type = post.x_pulse_type if post.enable else None
         bit_flip_passes = []
