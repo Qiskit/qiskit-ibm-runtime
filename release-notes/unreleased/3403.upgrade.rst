@@ -1,0 +1,2 @@
+:meth:`.Executor.run` now accepts :class:`samplomatic.quantum_program.QuantumProgram` as a valid
+input. The class is automatically promoted to :class:`.quantum_program.QuantumProgram` when run.

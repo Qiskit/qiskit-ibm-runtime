@@ -20,17 +20,18 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from qiskit.quantum_info import PauliLindbladMap
+    from typing_extensions import Self
 
 from samplomatic.quantum_program import (  # noqa: F401,TC002
     CircuitItem,
     QuantumProgramItem,
     SamplexItem,
 )
-from samplomatic.quantum_program import QuantumProgram as BaseQuantumProgram
+from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 from samplomatic.quantum_program.datatree import DataTree  # noqa: TC002
 
 
-class QuantumProgram(BaseQuantumProgram):
+class QuantumProgram(SamplomaticQuantumProgram):
     """A quantum runtime executable.
 
     A quantum program consists of a list of ordered elements, each of which contains a single
@@ -58,6 +59,32 @@ class QuantumProgram(BaseQuantumProgram):
 
         passthrough_data: Arbitrary nested data passed through execution without modification.
     """
+
+    @classmethod
+    def from_(cls, program: SamplomaticQuantumProgram) -> Self:
+        """Promote a samplomatic ``QuantumProgram`` to a runtime :class:`~.QuantumProgram`.
+
+        If ``program`` is already an instance of :class:`~.QuantumProgram`, it is returned
+        unchanged. Otherwise, a new :class:`~.QuantumProgram` is constructed sharing the data of
+        the input program.
+
+        Args:
+            program: A :class:`~samplomatic.quantum_program.QuantumProgram` to promote.
+
+        Returns:
+            The original program if it is already a :class:`~.QuantumProgram`, or a new
+            :class:`~.QuantumProgram` instance sharing the data of ``program``.
+        """
+        if isinstance(program, cls):
+            return program
+
+        return cls(
+            shots=program.shots,
+            items=program.items,
+            noise_maps=program.noise_maps,
+            meas_level=program.meas_level,
+            passthrough_data=program.passthrough_data,
+        )
 
     def __init__(
         self,
