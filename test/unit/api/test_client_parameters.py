@@ -17,6 +17,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Any
 
+from ddt import ddt, named_data
 from requests_ntlm import HttpNtlmAuth
 
 from qiskit_ibm_runtime.api.auth import CloudAuth
@@ -55,6 +56,7 @@ def client_params(
     )
 
 
+@ddt
 class TestClientParameters(IBMTestCase):
     """Test for ``ClientParameters``."""
 
@@ -81,60 +83,64 @@ class TestClientParameters(IBMTestCase):
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
 
-    def test_get_runtime_api_base_url(self) -> None:
+    @named_data(
+        (
+            "default_region",
+            "ibm_cloud",
+            "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
+            "https://cloud.ibm.com",
+            None,
+            "https://quantum.cloud.ibm.com/api/v1",
+        ),
+        (
+            "other_region",
+            "ibm_cloud",
+            "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+            "https://cloud.ibm.com",
+            None,
+            "https://my-region.quantum.cloud.ibm.com/api/v1",
+        ),
+        (
+            "custom_url",
+            "ibm_cloud",
+            "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+            None,
+            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+        ),
+        (
+            "instance_without_region",
+            "ibm_cloud",
+            "crn",
+            "https://auth.quantum.ibm.com/api",
+            None,
+            "https://auth.quantum.ibm.com/api",
+        ),
+        (
+            "url_resolver",
+            "ibm_cloud",
+            "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+            lambda a, b, c, _: f"{a}:{b}:{c}",
+            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud:"
+            + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
+        ),
+        (
+            "url_resolver_with_instance_without_region",
+            "ibm_cloud",
+            "crn",
+            "https://auth.quantum.ibm.com/api",
+            lambda a, b, c, _: f"{a}:{b}:{c}",
+            "https://auth.quantum.ibm.com/api:crn:False",
+        ),
+    )
+    def test_get_runtime_api_base_url(self, channel, instance, url, url_resolver, expected_url):
         """Test resolution of runtime API base URL."""
-        test_specs = [
-            (
-                "ibm_cloud",
-                "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
-                "https://cloud.ibm.com",
-                None,
-                "https://quantum.cloud.ibm.com/api/v1",
-            ),
-            (
-                "ibm_cloud",
-                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-                "https://cloud.ibm.com",
-                None,
-                "https://my-region.quantum.cloud.ibm.com/api/v1",
-            ),
-            (
-                "ibm_cloud",
-                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
-                None,
-                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
-            ),
-            (
-                "ibm_cloud",
-                "crn",
-                "https://auth.quantum.ibm.com/api",
-                None,
-                "https://auth.quantum.ibm.com/api",
-            ),
-            (
-                "ibm_cloud",
-                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
-                lambda a, b, c, _: f"{a}:{b}:{c}",
-                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud:"
-                + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
-            ),
-            (
-                "ibm_cloud",
-                "crn",
-                "https://auth.quantum.ibm.com/api",
-                lambda a, b, c, _: f"{a}:{b}:{c}",
-                "https://auth.quantum.ibm.com/api:crn:False",
-            ),
-        ]
-        for spec in test_specs:
-            channel, instance, url, url_resolver, expected = spec
-            with self.subTest(instance=instance, url=url):
-                params = client_params(
-                    channel=channel, instance=instance, url=url, url_resolver=url_resolver
-                )
-                self.assertEqual(params.get_runtime_api_base_url(), expected)
+        params = client_params(
+            channel=channel, instance=instance, url=url, url_resolver=url_resolver
+        )
+
+        self.assertEqual(params.get_runtime_api_base_url(), expected_url)
 
     def test_proxies_param_with_ntlm(self) -> None:
         """Test proxies with NTLM credentials."""
