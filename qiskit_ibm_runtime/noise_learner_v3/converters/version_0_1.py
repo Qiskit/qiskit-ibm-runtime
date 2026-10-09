@@ -61,7 +61,11 @@ def noise_learner_v3_inputs_from_0_1(
     """Convert a V0.1 model to noise learner V3 inputs."""
     instructions = list(model.instructions.to_quantum_circuit())
     options = NoiseLearnerV3Options(
-        **{key: val for key, val in model.options.model_dump().items() if val is not None}
+        **{
+            key: val
+            for key, val in model.options.model_dump(exclude="post_selection").items()
+            if val is not None
+        }
     )
     return instructions, options
 
