@@ -40,7 +40,7 @@ class TestConvertIdToDelay(IBMTestCase):
         expected = QuantumCircuit(1, 0)
         expected.delay(160, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed
 
     def test_id_gate_unit(self):
         """Test if Id gate is converted a delay with correct units."""
@@ -53,7 +53,7 @@ class TestConvertIdToDelay(IBMTestCase):
         expected = QuantumCircuit(1, 0)
         expected.delay(200, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed
 
     def test_if_test_gate(self):
         """Test if if_test gate is converted."""
@@ -69,7 +69,7 @@ class TestConvertIdToDelay(IBMTestCase):
         with expected.if_test((0, 1)):
             expected.delay(160, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed
 
     def test_if_test_id_gate(self):
         """Test if if_test Id gate is converted a if_test delay."""
@@ -88,4 +88,4 @@ class TestConvertIdToDelay(IBMTestCase):
         with else_:
             expected.delay(160, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed

@@ -18,7 +18,7 @@ import math
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from ddt import data, ddt, unpack
+from ddt import data, ddt, named_data
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
@@ -86,45 +86,24 @@ def assert_samplex_arguments_are_correct(
     noise_keys = [k for k in keys if k.startswith("noise_scales.")]
     plm_keys = [k for k in keys if k.startswith("pauli_lindblad_maps.")]
 
-    assert ("parameter_values" in keys) == scenario.has_parameter_values, (
-        f"[{scenario.label}] parameter_values presence mismatch; keys={keys}"
-    )
+    assert ("parameter_values" in keys) == scenario.has_parameter_values
     if scenario.has_parameter_values:
         expected_pv = scenario.pub.parameter_values.as_array(scenario.pub.circuit.parameters)
         actual_pv = np.squeeze(np.asarray(item.samplex_arguments["parameter_values"]))
-        assert np.array_equal(actual_pv, np.squeeze(expected_pv)), (
-            f"[{scenario.label}] parameter_values mismatch; "
-            f"got {actual_pv!r}, expected {np.squeeze(expected_pv)!r}"
-        )
-    assert len(basis_keys) == scenario.num_basis_changes, (
-        f"[{scenario.label}] expected {scenario.num_basis_changes} "
-        f"basis_changes key(s), got {len(basis_keys)}; keys={keys}"
-    )
+        assert np.array_equal(actual_pv, np.squeeze(expected_pv))
+    assert len(basis_keys) == scenario.num_basis_changes
     zero_bc_keys = [k for k in basis_keys if np.all(np.asarray(item.samplex_arguments[k]) == 0)]
     nonzero_bc_keys = [
         k for k in basis_keys if not np.all(np.asarray(item.samplex_arguments[k]) == 0)
     ]
-    assert len(zero_bc_keys) == scenario.num_basis_changes - 1, (
-        f"[{scenario.label}] expected {scenario.num_basis_changes - 1} all-zero "
-        f"basis_changes key(s) (mid-circuit boxes), got {len(zero_bc_keys)}; "
-        f"keys={basis_keys}"
-    )
-    assert len(nonzero_bc_keys) == 1, (
-        f"[{scenario.label}] expected exactly 1 non-zero basis_changes key "
-        f"(final measurement box), got {len(nonzero_bc_keys)}; keys={basis_keys}"
-    )
+    assert len(zero_bc_keys) == scenario.num_basis_changes - 1
+    assert len(nonzero_bc_keys) == 1
     if inject_noise:
-        assert len(noise_keys) == scenario.num_noise_maps, (
-            f"[{scenario.label}] expected {scenario.num_noise_maps} noise_scales "
-            f"key(s), got {len(noise_keys)}; keys={keys}"
-        )
-        assert len(plm_keys) == scenario.num_noise_maps, (
-            f"[{scenario.label}] expected {scenario.num_noise_maps} "
-            f"pauli_lindblad_maps key(s), got {len(plm_keys)}; keys={keys}"
-        )
+        assert len(noise_keys) == scenario.num_noise_maps
+        assert len(plm_keys) == scenario.num_noise_maps
     else:
-        assert noise_keys == [], f"[{scenario.label}] noise_scales must be absent; keys={keys}"
-        assert plm_keys == [], f"[{scenario.label}] pauli_lindblad_maps must be absent; keys={keys}"
+        assert noise_keys == []
+        assert plm_keys == []
 
 
 def assert_template_circuit_is_correct(
@@ -165,15 +144,8 @@ def assert_template_circuit_is_correct(
     else:
         expected_num_params = scenario.num_circuit_parameters_gates_off
 
-    assert circuit.num_clbits == scenario.expected_num_clbits, (
-        f"[{scenario.label}] template num_clbits mismatch; "
-        f"got {circuit.num_clbits}, expected {scenario.expected_num_clbits}"
-    )
-    assert circuit.num_parameters == expected_num_params, (
-        f"[{scenario.label}] template num_parameters mismatch "
-        f"(enable_gates={enable_gates}, noise_factor={noise_factor}); "
-        f"got {circuit.num_parameters}, expected {expected_num_params}"
-    )
+    assert circuit.num_clbits == scenario.expected_num_clbits
+    assert circuit.num_parameters == expected_num_params
 
 
 def assert_trex_item_is_correct(
@@ -202,34 +174,22 @@ def assert_trex_item_is_correct(
             ``trex_item.shape[0]``.
     """
     trex_item = program.items[-1]
-    assert isinstance(trex_item, SamplexItem), "Last item must be a SamplexItem (TREX)"
+    assert isinstance(trex_item, SamplexItem)
 
-    assert trex_item.shape == (expected_num_randomizations,), (
-        f"Expected TREX item shape ({expected_num_randomizations},), got {trex_item.shape}"
-    )
+    assert trex_item.shape == (expected_num_randomizations,)
 
     n = max(pub.circuit.num_qubits for pub in pubs)
-    assert trex_item.circuit.num_qubits == n, (
-        f"Expected TREX circuit width {n}, got {trex_item.circuit.num_qubits}"
-    )
+    assert trex_item.circuit.num_qubits == n
 
     op_counts = trex_item.circuit.count_ops()
-    assert op_counts["measure"] == n, (
-        f"Expected {n} measure operations (one per qubit), got {op_counts['measure']}"
-    )
-    assert op_counts["rz"] == 3 * n, (
-        f"Expected {3 * n} rz operations (3 per qubit), got {op_counts['rz']}"
-    )
-    assert op_counts["sx"] == 2 * n, (
-        f"Expected {2 * n} sx operations (2 per qubit), got {op_counts['sx']}"
-    )
-    assert set(op_counts) - {"barrier"} == {"measure", "rz", "sx"}, (
-        f"Expected exactly gate types {{measure, rz, sx}} (plus barriers),got {dict(op_counts)}"
-    )
+    assert op_counts["measure"] == n
+    assert op_counts["rz"] == 3 * n
+    assert op_counts["sx"] == 2 * n
+    assert set(op_counts) - {"barrier"} == {"measure", "rz", "sx"}
 
     qm_entries = program.passthrough_data.get("qiskit_mitigation", [])  # type: ignore[union-attr]
     has_trex_entry = any(e.get("mitigation") == "trex" for e in qm_entries)
-    assert has_trex_entry, "passthrough_data['qiskit_mitigation'] must contain a 'trex' entry"
+    assert has_trex_entry
 
 
 def prepare_vanilla(
@@ -416,7 +376,7 @@ class TestPrepare(IBMTestCase):
         for item in program.items:
             unique_instructions = find_unique_box_instructions(item.circuit)
             for inst in unique_instructions:
-                self.assertIsNotNone(get_annotation(inst.operation, Tag))
+                assert get_annotation(inst.operation, Tag) is not None
 
     def test_vanilla_path(self):
         """Test the ``prepare`` function when no mitigation is requested."""
@@ -432,13 +392,13 @@ class TestPrepare(IBMTestCase):
 
         program, executor_options = prepare(pubs, options, precision=0.1)
 
-        self.assertIsInstance(program, QuantumProgram)
-        self.assertIsInstance(executor_options, ExecutorOptions)
+        assert isinstance(program, QuantumProgram)
+        assert isinstance(executor_options, ExecutorOptions)
         # Vanilla path: qiskit_mitigation passthrough contains MitigationTask entries.
         # The "mitigation" key no longer lives in post_processor; task type is encoded
         # in the qiskit_mitigation passthrough block instead.
-        self.assertIn("qiskit_mitigation", program.passthrough_data)
-        self.assertIn("post_processor", program.passthrough_data)
+        assert "qiskit_mitigation" in program.passthrough_data
+        assert "post_processor" in program.passthrough_data
 
     def test_pec_path(self):
         """Test the ``prepare`` function when PEC is requested."""
@@ -463,12 +423,12 @@ class TestPrepare(IBMTestCase):
 
         program, executor_options = prepare(pubs, options, precision=0.1)
 
-        self.assertIsInstance(program, QuantumProgram)
-        self.assertIsInstance(executor_options, ExecutorOptions)
+        assert isinstance(program, QuantumProgram)
+        assert isinstance(executor_options, ExecutorOptions)
         # PEC path: confirm passthrough has both namespaces and the qp has 2 items
         # (1 PEC data item + 1 TREX calibration item, since measure_mitigation is on by default).
-        self.assertIn("qiskit_mitigation", program.passthrough_data)
-        self.assertIn("post_processor", program.passthrough_data)
+        assert "qiskit_mitigation" in program.passthrough_data
+        assert "post_processor" in program.passthrough_data
 
     def test_zne_path(self):
         """Test the ``prepare`` function when PEC is requested."""
@@ -484,10 +444,10 @@ class TestPrepare(IBMTestCase):
 
         program, executor_options = prepare(pubs, options, precision=0.1)
 
-        self.assertIsInstance(program, QuantumProgram)
-        self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertIn("qiskit_mitigation", program.passthrough_data)
-        self.assertIn("post_processor", program.passthrough_data)
+        assert isinstance(program, QuantumProgram)
+        assert isinstance(executor_options, ExecutorOptions)
+        assert "qiskit_mitigation" in program.passthrough_data
+        assert "post_processor" in program.passthrough_data
 
     def test_pea_path(self):
         """Test the ``prepare`` function when PEA is requested."""
@@ -505,10 +465,10 @@ class TestPrepare(IBMTestCase):
 
         program, executor_options = prepare(pubs, options, precision=0.1)
 
-        self.assertIsInstance(program, QuantumProgram)
-        self.assertIsInstance(executor_options, ExecutorOptions)
-        self.assertIn("qiskit_mitigation", program.passthrough_data)
-        self.assertIn("post_processor", program.passthrough_data)
+        assert isinstance(program, QuantumProgram)
+        assert isinstance(executor_options, ExecutorOptions)
+        assert "qiskit_mitigation" in program.passthrough_data
+        assert "post_processor" in program.passthrough_data
 
     def test_pub_with_boxes_raises(self):
         """Test that a when a PUB contains a box, the estimator raises."""
@@ -548,7 +508,7 @@ class TestPrepare(IBMTestCase):
 
         # DD inserts X gates into idle slots of each circuit item
         for item in program.items:
-            self.assertIn("x", item.circuit.count_ops())
+            assert "x" in item.circuit.count_ops()
 
     def test_dd_rejects_dynamic_circuits(self):
         """Test DD raises an error for circuits with control flow."""
@@ -626,12 +586,13 @@ class TestPrepare(IBMTestCase):
 class TestPrepareVanilla(IBMTestCase):
     """Tests for the vanilla prepare path (no mitigation)."""
 
-    @data([True, True, True], [False, True, True], [False, False, False])
-    @unpack
-    def test_param_basis_expansion_3q(
-        self, enable_gates, enable_measure, enable_measure_noise_learning
-    ):
+    @combine(
+        flags=[(True, True, True), (False, True, True), (False, False, False)],
+        scenario=PARAM_BASIS_3Q_SCENARIOS.scenarios,
+    )
+    def test_param_basis_expansion_3q(self, flags, scenario):
         """Test parameter-basis expansion with three-qubit observables."""
+        enable_gates, enable_measure, enable_measure_noise_learning = flags
         # TREX (measure_mitigation=True) rejects projection operators — use pure-Pauli
         # observables when measure_noise_learning is enabled.
         observables = (
@@ -652,50 +613,47 @@ class TestPrepareVanilla(IBMTestCase):
             MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
         )
 
-        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
-            parameter_shape = scenario.parameter_shape
-            observables_shape = scenario.observables_shape
-            expected_pairs = scenario.expected_pairs
+        parameter_shape = scenario.parameter_shape
+        observables_shape = scenario.observables_shape
+        expected_pairs = scenario.expected_pairs
 
-            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
-                pub_like = (
-                    circuit,
-                    observables.reshape(observables_shape),
-                    np.random.random(parameter_shape + (circuit.num_parameters,)),
-                )
-                pubs = [EstimatorPub.coerce(pub_like)]
+        pub_like = (
+            circuit,
+            observables.reshape(observables_shape),
+            np.random.random(parameter_shape + (circuit.num_parameters,)),
+        )
+        pubs = [EstimatorPub.coerce(pub_like)]
 
-                program = prepare_vanilla(
-                    pubs=pubs,
-                    twirling_options=twirling_options,
-                    shots=10,
-                    measure_noise_learning=measure_noise_learning,
-                )
+        program = prepare_vanilla(
+            pubs=pubs,
+            twirling_options=twirling_options,
+            shots=10,
+            measure_noise_learning=measure_noise_learning,
+        )
 
-                # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
-                param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0][
-                    "param_basis_pairs"
-                ]
+        # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
+        param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0]["param_basis_pairs"]
 
-                # Check that the param-basis pairs are the correct ones
-                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+        # Check that the param-basis pairs are the correct ones
+        assert param_basis_pairs == expected_pairs
 
-                # Check that the quantum program has one element per param-basis pair
-                self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+        # Check that the quantum program has one element per param-basis pair
+        assert program.items[0].shape == (1, len(expected_pairs))
 
-    @data(
-        [True, True, True],
-        [False, True, True],
-        [False, False, False],
-        [True, False, False],
-        [False, True, False],
-        [True, True, False],
+    @combine(
+        flags=[
+            (True, True, True),
+            (False, True, True),
+            (False, False, False),
+            (True, False, False),
+            (False, True, False),
+            (True, True, False),
+        ],
+        scenario=SAMPLEX_CIRCUIT_SCENARIOS,
     )
-    @unpack
-    def test_samplex_arguments_structure(
-        self, enable_gates, enable_measure, enable_measure_noise_learning
-    ):
+    def test_samplex_arguments_structure(self, flags, scenario):
         """Test that samplex arguments have the expected structure for each circuit type."""
+        enable_gates, enable_measure, enable_measure_noise_learning = flags
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
@@ -704,15 +662,13 @@ class TestPrepareVanilla(IBMTestCase):
             MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
         )
 
-        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
-            with self.subTest(circuit=scenario.label):
-                program = prepare_vanilla(
-                    pubs=[scenario.pub],
-                    twirling_options=twirling_options,
-                    shots=10,
-                    measure_noise_learning=measure_noise_learning,
-                )
-                assert_samplex_arguments_are_correct(program.items[0], scenario, inject_noise=False)
+        program = prepare_vanilla(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+            measure_noise_learning=measure_noise_learning,
+        )
+        assert_samplex_arguments_are_correct(program.items[0], scenario, inject_noise=False)
 
     @combine(enable_gates=[True, False], enable_measure=[True, False])
     def test_template_circuit(self, enable_gates, enable_measure):
@@ -757,19 +713,19 @@ class TestPrepareVanilla(IBMTestCase):
         twirling_options.strategy = "all"
         program = prepare_vanilla(pubs=[pub], twirling_options=twirling_options, shots=1024)
 
-        self.assertEqual(len(program.items), 1)
-        self.assertIsInstance(program.items[0], SamplexItem)
-        self.assertEqual(len(program.items[0].samplex.inputs().specs), 2)
+        assert len(program.items) == 1
+        assert isinstance(program.items[0], SamplexItem)
+        assert len(program.items[0].samplex.inputs().specs) == 2
 
         # 7 randomizations, 3 basis
-        self.assertEqual(program.items[0].shape, (7 if enable_gates or enable_measure else 1, 3))
+        assert program.items[0].shape == (7 if enable_gates or enable_measure else 1, 3)
 
         # We expect two `basis_changes` specs, but can't be sure how they'll be ordered.
         # So we verify that we have exactly one of each expected specs.
         specs = program.items[0].samplex.inputs().specs
         for spec in specs:
-            self.assertTrue(spec.name.startswith("basis_changes"))
-            self.assertEqual(spec.shape, (3,))
+            assert spec.name.startswith("basis_changes")
+            assert spec.shape == (3,)
 
         samplex_args = program.items[0].samplex_arguments
         mid_circuit_names = [
@@ -780,16 +736,8 @@ class TestPrepareVanilla(IBMTestCase):
             for name in samplex_args
             if np.array_equal(samplex_args[name], np.array([[2, 2, 2], [3, 3, 3], [1, 1, 1]]))
         ]
-        self.assertEqual(
-            len(mid_circuit_names),
-            1,
-            msg=f"Expected 1 mid-circuit spec with zeros, got: {samplex_args}",
-        )
-        self.assertEqual(
-            len(final_meas_names),
-            1,
-            msg=f"Expected 1 final-meas spec with change_basis, got: {samplex_args}",
-        )
+        assert len(mid_circuit_names) == 1
+        assert len(final_meas_names) == 1
 
     def test_prepare_with_reserved_classical_register_name_raises(self):
         """Test that prepare raises error when circuit uses reserved classical register name."""
@@ -810,8 +758,8 @@ class TestPrepareVanilla(IBMTestCase):
         with self.assertRaises(ValueError) as context:
             prepare_vanilla([pub], twirling_options, 1024)
 
-        self.assertIn("_meas", str(context.exception))
-        self.assertIn("reserved", str(context.exception))
+        assert "_meas" in str(context.exception)
+        assert "reserved" in str(context.exception)
 
     @data(32, "auto")
     def test_prepare_with_measure_noise_learning(self, num_randomizations):
@@ -841,7 +789,7 @@ class TestPrepareVanilla(IBMTestCase):
         )
 
         # Two estimation items (one per pub) + one TREX calibration item.
-        self.assertEqual(len(program.items), 3)
+        assert len(program.items) == 3
         expected_trex_randomizations = (
             twirling_options.num_randomizations
             if num_randomizations == "auto"
@@ -851,43 +799,36 @@ class TestPrepareVanilla(IBMTestCase):
             program, pubs, expected_num_randomizations=expected_trex_randomizations
         )
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots."""
         qc = QuantumCircuit(2)
         qc.h(0)
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            with self.subTest(twirling=scenario.label):
-                program = prepare_vanilla(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                )
-                item = program.items[0]
-                self.assertEqual(
-                    item.shape[0],
-                    scenario.expected_num_randomizations,
-                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
-                    f"got {item.shape[0]}",
-                )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        program = prepare_vanilla(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+        )
+
+        item = program.items[0]
+        assert item.shape[0] == scenario.expected_num_randomizations
+        assert program.shots == scenario.expected_shots_per_randomization
 
 
 @ddt
 class TestPreparePec(IBMTestCase):
     """Tests for the PEC prepare path."""
 
-    @data([True, True], [True, False])
-    @unpack
-    def test_param_basis_expansion_3q(self, enable_measure, enable_measure_noise_learning):
+    @combine(
+        flags=[(True, True), (True, False)],
+        scenario=PARAM_BASIS_3Q_SCENARIOS.scenarios,
+    )
+    def test_param_basis_expansion_3q(self, flags, scenario):
         """Test parameter-basis expansion with three-qubit observables."""
+        enable_measure, enable_measure_noise_learning = flags
         # TREX (measure_mitigation=True) rejects projection operators — use pure-Pauli
         # observables when measure_noise_learning is enabled.
         observables = (
@@ -908,43 +849,42 @@ class TestPreparePec(IBMTestCase):
             MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
         )
 
-        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
-            parameter_shape = scenario.parameter_shape
-            observables_shape = scenario.observables_shape
-            expected_pairs = scenario.expected_pairs
+        parameter_shape = scenario.parameter_shape
+        observables_shape = scenario.observables_shape
+        expected_pairs = scenario.expected_pairs
 
-            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
-                pub_like = (
-                    circuit,
-                    observables.reshape(observables_shape),
-                    np.random.random(parameter_shape + (circuit.num_parameters,)),
-                )
-                pubs = [EstimatorPub.coerce(pub_like)]
+        pub_like = (
+            circuit,
+            observables.reshape(observables_shape),
+            np.random.random(parameter_shape + (circuit.num_parameters,)),
+        )
+        pubs = [EstimatorPub.coerce(pub_like)]
 
-                program = prepare_pec(
-                    pubs=pubs,
-                    twirling_options=twirling_options,
-                    shots=10,
-                    pec_options=PecOptions(),
-                    noise_model={},
-                    measure_noise_learning=measure_noise_learning,
-                )
+        program = prepare_pec(
+            pubs=pubs,
+            twirling_options=twirling_options,
+            shots=10,
+            pec_options=PecOptions(),
+            noise_model={},
+            measure_noise_learning=measure_noise_learning,
+        )
 
-                # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
-                param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0][
-                    "param_basis_pairs"
-                ]
+        # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
+        param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0]["param_basis_pairs"]
 
-                # Check that the param-basis pairs are the correct ones
-                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+        # Check that the param-basis pairs are the correct ones
+        assert param_basis_pairs == expected_pairs
 
-                # Check that the quantum program has one element per param-basis pair
-                self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+        # Check that the quantum program has one element per param-basis pair
+        assert program.items[0].shape == (1, len(expected_pairs))
 
-    @data([True, False], [True, True])
-    @unpack
-    def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
+    @combine(
+        flags=[(True, False), (True, True)],
+        scenario=SAMPLEX_CIRCUIT_SCENARIOS,
+    )
+    def test_samplex_arguments_structure(self, flags, scenario):
         """Test that samplex arguments have the expected structure for each circuit type."""
+        enable_measure, enable_measure_noise_learning = flags
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
         twirling_options.enable_measure = enable_measure
@@ -965,18 +905,16 @@ class TestPreparePec(IBMTestCase):
             if (annot := get_annotation(layer.operation, InjectNoise))
         }
 
-        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
-            with self.subTest(circuit=scenario.label):
-                program = prepare_pec(
-                    pubs=[scenario.pub],
-                    twirling_options=twirling_options,
-                    shots=10,
-                    pec_options=PecOptions(),
-                    noise_model=noise_model,
-                    measure_noise_learning=measure_noise_learning,
-                )
-                # PEC always requires enable_gates=True
-                assert_samplex_arguments_are_correct(program.items[0], scenario, inject_noise=True)
+        program = prepare_pec(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+            pec_options=PecOptions(),
+            noise_model=noise_model,
+            measure_noise_learning=measure_noise_learning,
+        )
+        # PEC always requires enable_gates=True
+        assert_samplex_arguments_are_correct(program.items[0], scenario, inject_noise=True)
 
     def test_template_circuit(self):
         """Test that the template circuit has the expected clbits and parameter count."""
@@ -1035,33 +973,31 @@ class TestPreparePec(IBMTestCase):
         shots = 1024
         quantum_program = prepare_pec([pub], twirling_options, shots, pec_options, noise_model)
 
-        self.assertIsInstance(quantum_program, QuantumProgram)
-        self.assertEqual(quantum_program.shots, 64)
-        self.assertEqual(len(quantum_program.items), 1)
+        assert isinstance(quantum_program, QuantumProgram)
+        assert quantum_program.shots == 64
+        assert len(quantum_program.items) == 1
 
         item = cast("SamplexItem", quantum_program.items[0])
-        self.assertIsInstance(item, SamplexItem)
+        assert isinstance(item, SamplexItem)
 
         # Check that samplex_arguments contains pauli_lindblad_maps
-        self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
-        self.assertEqual(
-            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
-            noise_model[noise_layer_ref],
+        assert f"pauli_lindblad_maps.{noise_layer_ref}" in item.samplex_arguments
+        assert (
+            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"]
+            == noise_model[noise_layer_ref]
         )
 
         # Check that samplex_arguments contains noise_scales for the layer
-        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
+        assert f"noise_scales.{noise_layer_ref}" in item.samplex_arguments
         # noise_gain = 0.5, so noise_scale = noise_gain - 1 = -0.5
         expected_noise_factor = pec_options.noise_gain - 1
-        self.assertEqual(
-            item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], expected_noise_factor
-        )
+        assert item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_factor
 
         # check number of randomizations
         expected_gamma = float(np.exp(2 * pec_options.noise_gain * (0.1 + 0.05)))
         overhead = expected_gamma**2
         expected_num_rands = math.ceil(overhead * (shots / 64))
-        self.assertEqual(item.shape[0], expected_num_rands)
+        assert item.shape[0] == expected_num_rands
 
     def test_prepare_pec_with_auto_noise_gain(self):
         """Test prepare_pec with auto noise_gain (defaults to 0)."""
@@ -1096,12 +1032,10 @@ class TestPreparePec(IBMTestCase):
 
         item = cast("SamplexItem", quantum_program.items[0])
 
-        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
+        assert f"noise_scales.{noise_layer_ref}" in item.samplex_arguments
         scaleless_gamma = float(np.exp(2 * err_rate))
         expected_noise_gain = -np.log(max_overhead) / np.log(scaleless_gamma**2)
-        self.assertEqual(
-            item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], expected_noise_gain
-        )
+        assert item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_gain
 
     def test_prepare_pec_raises_error_with_empty_noise_model(self):
         """Test that prepare_pec raises error when noise_model is empty."""
@@ -1216,7 +1150,7 @@ class TestPreparePec(IBMTestCase):
         )
 
         # 2 pubs + 1 TREX calibration item.
-        self.assertEqual(len(program.items), 3)
+        assert len(program.items) == 3
         expected_trex_randomizations = (
             twirling_options.num_randomizations
             if num_randomizations == "auto"
@@ -1251,7 +1185,7 @@ class TestPreparePec(IBMTestCase):
         shots = 1024
         quantum_program = prepare_pec([pub], twirling_options, shots, pec_options, noise_model)
         item = cast("SamplexItem", quantum_program.items[0])
-        self.assertEqual(item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], 0)
+        assert item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == 0
 
     def test_prepare_pec_identical_pubs_have_same_num_randomizations(self):
         """Test that identical pubs produce the same number of randomizations.
@@ -1287,13 +1221,14 @@ class TestPreparePec(IBMTestCase):
 
         item0 = cast("SamplexItem", quantum_program.items[0])
         item1 = cast("SamplexItem", quantum_program.items[1])
-        self.assertEqual(
-            item0.shape[0],
-            item1.shape[0],
-        )
+        assert item0.shape[0] == item1.shape[0]
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots."""
+        if not scenario.twirling_options.enable_gates:
+            self.skipTest("PEC requires enable_gates=True.")
+
         pec_options = PecOptions()
         pec_options.noise_gain = 1.0  # no noise removal → gamma=1, no randomization overhead
 
@@ -1302,31 +1237,18 @@ class TestPreparePec(IBMTestCase):
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            if not scenario.twirling_options.enable_gates:
-                continue  # PEC requires enable_gates=True
-            with self.subTest(twirling=scenario.label):
-                noise_model = trivial_noise_model([pub], scenario.twirling_options)
-                program = prepare_pec(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                    pec_options=pec_options,
-                    noise_model=noise_model,
-                )
-                item = program.items[0]
-                self.assertEqual(
-                    item.shape[0],
-                    scenario.expected_num_randomizations,
-                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
-                    f"got {item.shape[0]}",
-                )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        noise_model = trivial_noise_model([pub], scenario.twirling_options)
+        program = prepare_pec(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+            pec_options=pec_options,
+            noise_model=noise_model,
+        )
+
+        item = program.items[0]
+        assert item.shape[0] == scenario.expected_num_randomizations
+        assert program.shots == scenario.expected_shots_per_randomization
 
     def test_shapes_overhead_scaling(self):
         """PEC overhead: num randomizations exceeds baseline when gamma > 1.
@@ -1368,23 +1290,20 @@ class TestPreparePec(IBMTestCase):
 
         baseline_num_rand, _ = calculate_twirling_shots(shots, "auto", "auto")
         item = program.items[0]
-        self.assertGreater(
-            item.shape[0],
-            baseline_num_rand,
-            msg=f"Expected overhead-scaled R > baseline R={baseline_num_rand}, got {item.shape[0]}",
-        )
+        assert item.shape[0] > baseline_num_rand
 
 
 @ddt
 class TestPrepareZne(IBMTestCase):
     """Tests for the ZNE prepare path."""
 
-    @data([True, True, True], [False, True, True], [False, False, False])
-    @unpack
-    def test_param_basis_expansion_3q(
-        self, enable_gates, enable_measure, enable_measure_noise_learning
-    ):
+    @combine(
+        flags=[(True, True, True), (False, True, True), (False, False, False)],
+        scenario=PARAM_BASIS_3Q_SCENARIOS.scenarios,
+    )
+    def test_param_basis_expansion_3q(self, flags, scenario):
         """Test parameter-basis expansion with three-qubit observables."""
+        enable_gates, enable_measure, enable_measure_noise_learning = flags
         # TREX (measure_mitigation=True) rejects projection operators — use pure-Pauli
         # observables when measure_noise_learning is enabled.
         observables = (
@@ -1405,51 +1324,48 @@ class TestPrepareZne(IBMTestCase):
             MeasureNoiseLearningOptions() if enable_measure_noise_learning else None
         )
 
-        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
-            parameter_shape = scenario.parameter_shape
-            observables_shape = scenario.observables_shape
-            expected_pairs = scenario.expected_pairs
+        parameter_shape = scenario.parameter_shape
+        observables_shape = scenario.observables_shape
+        expected_pairs = scenario.expected_pairs
 
-            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
-                pub_like = (
-                    circuit,
-                    observables.reshape(observables_shape),
-                    np.random.random(parameter_shape + (circuit.num_parameters,)),
-                )
-                pubs = [EstimatorPub.coerce(pub_like)]
+        pub_like = (
+            circuit,
+            observables.reshape(observables_shape),
+            np.random.random(parameter_shape + (circuit.num_parameters,)),
+        )
+        pubs = [EstimatorPub.coerce(pub_like)]
 
-                program = prepare_zne(
-                    pubs=pubs,
-                    twirling_options=twirling_options,
-                    shots=10,
-                    zne_options=ZneOptions(),
-                    measure_noise_learning=measure_noise_learning,
-                )
+        program = prepare_zne(
+            pubs=pubs,
+            twirling_options=twirling_options,
+            shots=10,
+            zne_options=ZneOptions(),
+            measure_noise_learning=measure_noise_learning,
+        )
 
-                # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
-                param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0][
-                    "param_basis_pairs"
-                ]
+        # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
+        param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0]["param_basis_pairs"]
 
-                # Check that the param-basis pairs are the correct ones
-                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+        # Check that the param-basis pairs are the correct ones
+        assert param_basis_pairs == expected_pairs
 
-                # Check that the quantum program has one element per param-basis pair
-                self.assertEqual(program.items[0].shape, (1, len(expected_pairs)))
+        # Check that the quantum program has one element per param-basis pair
+        assert program.items[0].shape == (1, len(expected_pairs))
 
-    @data(
-        [True, True, True],
-        [False, True, True],
-        [False, False, False],
-        [True, False, False],
-        [False, True, False],
-        [True, True, False],
+    @combine(
+        flags=[
+            (True, True, True),
+            (False, True, True),
+            (False, False, False),
+            (True, False, False),
+            (False, True, False),
+            (True, True, False),
+        ],
+        scenario=SAMPLEX_CIRCUIT_SCENARIOS,
     )
-    @unpack
-    def test_samplex_arguments_structure(
-        self, enable_gates, enable_measure, enable_measure_noise_learning
-    ):
+    def test_samplex_arguments_structure(self, flags, scenario):
         """Test that samplex arguments have the expected structure for each circuit type."""
+        enable_gates, enable_measure, enable_measure_noise_learning = flags
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
@@ -1462,18 +1378,16 @@ class TestPrepareZne(IBMTestCase):
         zne_options.amplifier = "gate_folding"
         zne_options.noise_factors = [1, 3, 5]
 
-        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
-            with self.subTest(circuit=scenario.label):
-                program = prepare_zne(
-                    pubs=[scenario.pub],
-                    twirling_options=twirling_options,
-                    shots=10,
-                    zne_options=zne_options,
-                    measure_noise_learning=measure_noise_learning,
-                )
-                # One item per noise factor; skip any trailing TREX item.
-                for item in program.items[: len(zne_options.noise_factors)]:
-                    assert_samplex_arguments_are_correct(item, scenario, inject_noise=False)
+        program = prepare_zne(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+            zne_options=zne_options,
+            measure_noise_learning=measure_noise_learning,
+        )
+        # One item per noise factor; skip any trailing TREX item.
+        for item in program.items[: len(zne_options.noise_factors)]:
+            assert_samplex_arguments_are_correct(item, scenario, inject_noise=False)
 
     @combine(enable_gates=[True, False], enable_measure=[True, False])
     def test_template_circuit(self, enable_gates, enable_measure):
@@ -1497,10 +1411,9 @@ class TestPrepareZne(IBMTestCase):
         for noise_factor, item in zip(
             zne_options.noise_factors, program.items[: len(zne_options.noise_factors)]
         ):
-            with self.subTest(noise_factor=noise_factor):
-                assert_template_circuit_is_correct(
-                    item, scenario, enable_gates=enable_gates, noise_factor=noise_factor
-                )
+            assert_template_circuit_is_correct(
+                item, scenario, enable_gates=enable_gates, noise_factor=noise_factor
+            )
 
     def test_prepare_zne_basic(self):
         """Test prepare_zne with basic ZNE options."""
@@ -1518,12 +1431,12 @@ class TestPrepareZne(IBMTestCase):
         shots = 1024
         quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
 
-        self.assertIsInstance(quantum_program, QuantumProgram)
+        assert isinstance(quantum_program, QuantumProgram)
         # Should have len(noise_factors) items for the single pub
-        self.assertEqual(len(quantum_program.items), len(noise_factors))
+        assert len(quantum_program.items) == len(noise_factors)
 
         for item in quantum_program.items:
-            self.assertIsInstance(item, SamplexItem)
+            assert isinstance(item, SamplexItem)
 
     @data("gate_folding", "gate_folding_front", "gate_folding_back")
     def test_prepare_zne_with_different_folding_methods(self, folding_method):
@@ -1542,8 +1455,8 @@ class TestPrepareZne(IBMTestCase):
         shots = 1024
         quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
 
-        self.assertIsInstance(quantum_program, QuantumProgram)
-        self.assertEqual(len(quantum_program.items), len(noise_factors))
+        assert isinstance(quantum_program, QuantumProgram)
+        assert len(quantum_program.items) == len(noise_factors)
 
     @data(32, "auto")
     def test_prepare_zne_with_measure_noise_learning(self, num_randomizations):
@@ -1578,7 +1491,7 @@ class TestPrepareZne(IBMTestCase):
         )
 
         # 2 pubs * 2 noise_factors + 1 TREX calibration item.
-        self.assertEqual(len(program.items), len(pubs) * len(noise_factors) + 1)
+        assert len(program.items) == len(pubs) * len(noise_factors) + 1
         expected_trex_randomizations = (
             twirling_options.num_randomizations
             if num_randomizations == "auto"
@@ -1614,7 +1527,8 @@ class TestPrepareZne(IBMTestCase):
         ):
             prepare_zne([pub], twirling_options, 100, zne_options)
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots."""
         noise_factors = [1.0, 3.0]
         zne_options = ZneOptions()
@@ -1626,44 +1540,30 @@ class TestPrepareZne(IBMTestCase):
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            with self.subTest(twirling=scenario.label):
-                program = prepare_zne(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                    zne_options=zne_options,
-                )
-                self.assertEqual(
-                    len(program.items),
-                    len(noise_factors),
-                    msg=f"[{scenario.label}] expected {len(noise_factors)} items, "
-                    f"got {len(program.items)}",
-                )
-                for item in program.items:
-                    self.assertEqual(
-                        item.shape[0],
-                        scenario.expected_num_randomizations,
-                        msg=f"[{scenario.label}] expected R="
-                        f"{scenario.expected_num_randomizations}, "
-                        f"got {item.shape[0]}",
-                    )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        program = prepare_zne(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+            zne_options=zne_options,
+        )
+
+        assert len(program.items) == len(noise_factors)
+        for item in program.items:
+            assert item.shape[0] == scenario.expected_num_randomizations
+        assert program.shots == scenario.expected_shots_per_randomization
 
 
 @ddt
 class TestPreparePea(IBMTestCase):
     """Tests for the PEA prepare path."""
 
-    @data([True, True], [True, False])
-    @unpack
-    def test_param_basis_expansion_3q(self, enable_measure, enable_measure_noise_learning):
+    @combine(
+        flags=[(True, True), (True, False)],
+        scenario=PARAM_BASIS_3Q_SCENARIOS.scenarios,
+    )
+    def test_param_basis_expansion_3q(self, flags, scenario):
         """Test parameter-basis expansion with three-qubit observables."""
+        enable_measure, enable_measure_noise_learning = flags
         # TREX (measure_mitigation=True) rejects projection operators — use pure-Pauli
         # observables when measure_noise_learning is enabled.
         observables = (
@@ -1688,46 +1588,42 @@ class TestPreparePea(IBMTestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = [1, 2, 3, 4]
 
-        for scenario in PARAM_BASIS_3Q_SCENARIOS.scenarios:
-            parameter_shape = scenario.parameter_shape
-            observables_shape = scenario.observables_shape
-            expected_pairs = scenario.expected_pairs
+        parameter_shape = scenario.parameter_shape
+        observables_shape = scenario.observables_shape
+        expected_pairs = scenario.expected_pairs
 
-            with self.subTest(value=(parameter_shape, observables_shape, expected_pairs)):
-                pub_like = (
-                    circuit,
-                    observables.reshape(observables_shape),
-                    np.random.random(parameter_shape + (circuit.num_parameters,)),
-                )
-                pubs = [EstimatorPub.coerce(pub_like)]
+        pub_like = (
+            circuit,
+            observables.reshape(observables_shape),
+            np.random.random(parameter_shape + (circuit.num_parameters,)),
+        )
+        pubs = [EstimatorPub.coerce(pub_like)]
 
-                program = prepare_pea(
-                    pubs=pubs,
-                    twirling_options=twirling_options,
-                    shots=10,
-                    zne_options=zne_options,
-                    noise_model={},
-                    measure_noise_learning=measure_noise_learning,
-                )
+        program = prepare_pea(
+            pubs=pubs,
+            twirling_options=twirling_options,
+            shots=10,
+            zne_options=zne_options,
+            noise_model={},
+            measure_noise_learning=measure_noise_learning,
+        )
 
-                # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
-                param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0][
-                    "param_basis_pairs"
-                ]
+        # param_basis_pairs now lives in the qiskit_mitigation passthrough block.
+        param_basis_pairs = program.passthrough_data["qiskit_mitigation"][0]["param_basis_pairs"]
 
-                # Check that the param-basis pairs are the correct ones
-                self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
+        # Check that the param-basis pairs are the correct ones
+        assert param_basis_pairs == expected_pairs
 
-                # Check that the quantum program has one element per param-basis pair
-                self.assertEqual(
-                    program.items[0].shape,
-                    (len(zne_options.noise_factors), 1, len(expected_pairs)),
-                )
+        # Check that the quantum program has one element per param-basis pair
+        assert program.items[0].shape == (len(zne_options.noise_factors), 1, len(expected_pairs))
 
-    @data([True, False], [True, True])
-    @unpack
-    def test_samplex_arguments_structure(self, enable_measure, enable_measure_noise_learning):
+    @combine(
+        flags=[(True, False), (True, True)],
+        scenario=SAMPLEX_CIRCUIT_SCENARIOS,
+    )
+    def test_samplex_arguments_structure(self, flags, scenario):
         """Test that samplex arguments have the expected structure for each circuit type."""
+        enable_measure, enable_measure_noise_learning = flags
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = True
         twirling_options.enable_measure = enable_measure
@@ -1752,18 +1648,16 @@ class TestPreparePea(IBMTestCase):
             if (annot := get_annotation(layer.operation, InjectNoise))
         }
 
-        for scenario in SAMPLEX_CIRCUIT_SCENARIOS:
-            with self.subTest(circuit=scenario.label):
-                program = prepare_pea(
-                    pubs=[scenario.pub],
-                    twirling_options=twirling_options,
-                    shots=10,
-                    zne_options=zne_options,
-                    noise_model=noise_model,
-                    measure_noise_learning=measure_noise_learning,
-                )
-                # PEA always requires enable_gates=True
-                assert_samplex_arguments_are_correct(program.items[0], scenario, inject_noise=True)
+        program = prepare_pea(
+            pubs=[scenario.pub],
+            twirling_options=twirling_options,
+            shots=10,
+            zne_options=zne_options,
+            noise_model=noise_model,
+            measure_noise_learning=measure_noise_learning,
+        )
+        # PEA always requires enable_gates=True
+        assert_samplex_arguments_are_correct(program.items[0], scenario, inject_noise=True)
 
     def test_template_circuit(self):
         """Test that the template circuit has the expected clbits and parameter count."""
@@ -1828,33 +1722,31 @@ class TestPreparePea(IBMTestCase):
         shots = 1024
         quantum_program = prepare_pea([pub], twirling_options, shots, zne_options, noise_model)
 
-        self.assertIsInstance(quantum_program, QuantumProgram)
-        self.assertEqual(quantum_program.shots, 64)
-        self.assertEqual(len(quantum_program.items), 1)
+        assert isinstance(quantum_program, QuantumProgram)
+        assert quantum_program.shots == 64
+        assert len(quantum_program.items) == 1
 
         item = cast("SamplexItem", quantum_program.items[0])
-        self.assertIsInstance(item, SamplexItem)
+        assert isinstance(item, SamplexItem)
         # Check samplex shape
         auto_num_rand = math.ceil(shots / (max(64, math.ceil(shots / 32))))
         # The expected shape is (num_noise_factors, num_randomizations, bases * num_param_sets)
         expected_shape = (len(noise_factors), auto_num_rand, 1)
-        self.assertEqual(item.shape, expected_shape)
+        assert item.shape == expected_shape
 
         # Check that samplex_arguments contains pauli_lindblad_maps
-        self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
-        self.assertEqual(
-            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
-            noise_model[noise_layer_ref],
+        assert f"pauli_lindblad_maps.{noise_layer_ref}" in item.samplex_arguments
+        assert (
+            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"]
+            == noise_model[noise_layer_ref]
         )
 
         # Check that samplex_arguments contains noise_scales for the layer
-        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
+        assert f"noise_scales.{noise_layer_ref}" in item.samplex_arguments
         # noise_scales = noise_factors - 1, shape is (num_noise_factors, 1, 1)
         expected_noise_scales = np.array([[[factor - 1]] for factor in noise_factors])
-        self.assertTrue(
-            np.all(
-                item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
-            )
+        assert np.all(
+            item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
         )
 
     def test_prepare_pea_raises_error_with_empty_noise_model(self):
@@ -1978,7 +1870,7 @@ class TestPreparePea(IBMTestCase):
         )
 
         # 2 pubs + 1 TREX calibration item.
-        self.assertEqual(len(program.items), 3)
+        assert len(program.items) == 3
         expected_trex_randomizations = (
             twirling_options.num_randomizations
             if num_randomizations == "auto"
@@ -2015,11 +1907,15 @@ class TestPreparePea(IBMTestCase):
         ):
             prepare_pea([pub], twirling_options, shots=100, zne_options=zne_options, noise_model={})
 
-    def test_shapes_twirling_configs(self):
+    @named_data(*[(scenario.label, scenario) for scenario in TWIRLING_SHAPE_SCENARIOS])
+    def test_shapes_twirling_configs(self, scenario):
         """Verify the number of randomizations and program.shots.
 
         PEA shape is (num_noise_factors, num_randomizations, num_basis).
         """
+        if not scenario.twirling_options.enable_gates:
+            self.skipTest("PEA requires enable_gates=True.")
+
         noise_factors = [1.0, 3.0]
         zne_options = ZneOptions()
         zne_options.amplifier = "pea"
@@ -2030,33 +1926,16 @@ class TestPreparePea(IBMTestCase):
         qc.cx(0, 1)
         pub = EstimatorPub.coerce((qc, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        for scenario in TWIRLING_SHAPE_SCENARIOS:
-            if not scenario.twirling_options.enable_gates:
-                continue  # PEA requires enable_gates=True
-            with self.subTest(twirling=scenario.label):
-                noise_model = trivial_noise_model([pub], scenario.twirling_options)
-                program = prepare_pea(
-                    pubs=[pub],
-                    twirling_options=scenario.twirling_options,
-                    shots=scenario.shots,
-                    zne_options=zne_options,
-                    noise_model=noise_model,
-                )
-                item = program.items[0]
-                self.assertEqual(
-                    item.shape[0],
-                    len(noise_factors),
-                    msg=f"[{scenario.label}] expected N={len(noise_factors)}, got {item.shape[0]}",
-                )
-                self.assertEqual(
-                    item.shape[1],
-                    scenario.expected_num_randomizations,
-                    msg=f"[{scenario.label}] expected R={scenario.expected_num_randomizations}, "
-                    f"got {item.shape[1]}",
-                )
-                self.assertEqual(
-                    program.shots,
-                    scenario.expected_shots_per_randomization,
-                    msg=f"[{scenario.label}] expected program.shots="
-                    f"{scenario.expected_shots_per_randomization}, got {program.shots}",
-                )
+        noise_model = trivial_noise_model([pub], scenario.twirling_options)
+        program = prepare_pea(
+            pubs=[pub],
+            twirling_options=scenario.twirling_options,
+            shots=scenario.shots,
+            zne_options=zne_options,
+            noise_model=noise_model,
+        )
+
+        item = program.items[0]
+        assert item.shape[0] == len(noise_factors)
+        assert item.shape[1] == scenario.expected_num_randomizations
+        assert program.shots == scenario.expected_shots_per_randomization

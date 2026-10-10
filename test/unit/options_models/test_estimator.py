@@ -26,11 +26,11 @@ class TestEstimatorOptions(IBMTestCase):
     def test_default_values(self):
         """Test default values."""
         options = EstimatorOptions()
-        self.assertEqual(options.default_precision, 0.015625)
-        self.assertIsInstance(options.dynamical_decoupling, DynamicalDecouplingOptions)
-        self.assertIsInstance(options.execution, ExecutionOptions)
-        self.assertEqual(options.experimental, {})
-        self.assertIsNone(options.max_execution_time)
-        self.assertIsInstance(options.environment, EnvironmentOptions)
-        self.assertIsNone(options.resilience.measure_mitigation)
-        self.assertEqual(options.resilience.measure_noise_learning.num_randomizations, "auto")
+        assert options.default_precision == 0.015625
+        assert isinstance(options.dynamical_decoupling, DynamicalDecouplingOptions)
+        assert isinstance(options.execution, ExecutionOptions)
+        assert options.experimental == {}
+        assert options.max_execution_time is None
+        assert isinstance(options.environment, EnvironmentOptions)
+        assert options.resilience.measure_mitigation is None
+        assert options.resilience.measure_noise_learning.num_randomizations == "auto"

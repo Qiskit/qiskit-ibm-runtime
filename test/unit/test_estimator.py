@@ -23,6 +23,7 @@ from qiskit_ibm_runtime import EstimatorOptions, EstimatorV2, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..asserts import assert_dict_partially_equal, assert_warns_strict
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import OneInstanceDryRunRegistry
@@ -53,15 +54,15 @@ class TestEstimatorV2(IBMTestCase):
         inst = EstimatorV2(mode=backend)
         inst.run(t_pubs)
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("pubs", input_params)
+        assert "pubs" in input_params
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
-            self.assertIsInstance(a_pub_param, EstimatorPub)
+            assert isinstance(a_pub_param, EstimatorPub)
             # Check circuit
-            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
+            assert a_pub_param.circuit == an_in_taks[0]
             # Check observables
             for a_pub_obs, an_input_obs in zip(a_pub_param.observables.tolist(), an_in_taks[1]):
-                self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
+                assert list(a_pub_obs.keys())[0] == an_input_obs
             # Check parameter values
             an_input_params = an_in_taks[2] if len(an_in_taks) == 3 else []
             param_values_array = list(a_pub_param.parameter_values.data.values())
@@ -84,7 +85,7 @@ class TestEstimatorV2(IBMTestCase):
                 inst = EstimatorV2(mode=session)
                 with self.assertRaises(ValueError) as exc:
                     inst.options.update(**bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
+                assert list(bad_opt.keys())[0] in str(exc.exception)
 
     def test_invalid_estimator_precision_option(self):
         """Test exception when precision is invalid."""
@@ -94,7 +95,7 @@ class TestEstimatorV2(IBMTestCase):
         estimator = EstimatorV2(mode=backend)
         with self.assertRaises(ValueError) as exc:
             estimator.run(**get_primitive_inputs(estimator), precision=0)
-        self.assertIn("The precision value must be strictly greater than 0", str(exc.exception))
+        assert "The precision value must be strictly greater than 0" in str(exc.exception)
 
     def test_invalid_estimator_pub_precision(self):
         """Test exception when a pub specifies a precision that is not strictly greater than 0."""
@@ -120,33 +121,34 @@ class TestEstimatorV2(IBMTestCase):
         inst = EstimatorV2(mode=backend, options={"resilience": {"pec_mitigation": True}})
         with self.assertRaises(ValueError) as exc:
             inst.run(**get_primitive_inputs(inst))
-        self.assertIn("coupling map", str(exc.exception))
+        assert "coupling map" in str(exc.exception)
 
-    def test_run_default_options(self):
+    @data(
+        (
+            EstimatorOptions(default_shots=1024),  # type: ignore[call-arg]
+            {"default_shots": 1024},
+        ),
+        (
+            {
+                "default_precision": 0.1,
+                "dynamical_decoupling": {"enable": True},
+            },
+            {
+                "default_precision": 0.1,
+                "dynamical_decoupling": {"enable": True},
+            },
+        ),
+    )
+    @unpack
+    def test_run_default_options(self, options, expected):
         """Test run using default options."""
         backend = get_mocked_backend()
-        options_vars = [
-            (
-                EstimatorOptions(default_shots=1024),
-                {"default_shots": 1024},
-            ),
-            (
-                {
-                    "default_precision": 0.1,
-                    "dynamical_decoupling": {"enable": True},
-                },
-                {
-                    "default_precision": 0.1,
-                    "dynamical_decoupling": {"enable": True},
-                },
-            ),
-        ]
-        for options, expected in options_vars:
-            with self.subTest(options=options):
-                inst = EstimatorV2(mode=backend, options=options)
-                inst.run(**get_primitive_inputs(inst, backend=backend))
-                options = backend.service._run.call_args.kwargs["inputs"]["options"]
-                self.assertDictPartiallyEqual(options, expected)
+
+        inst = EstimatorV2(mode=backend, options=options)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+
+        run_options = backend.service._run.call_args.kwargs["inputs"]["options"]
+        assert_dict_partially_equal(run_options, expected)
 
     @data(
         {"zne_extrapolator": "bad_extrapolator"},
@@ -158,31 +160,30 @@ class TestEstimatorV2(IBMTestCase):
         with self.assertRaises(ValueError) as exc:
             inst = EstimatorV2(mode=backend, options={"resilience": res_opt})
             inst.run(**get_primitive_inputs(inst, backend))
-        self.assertIn(list(res_opt.values())[0], str(exc.exception))
+        assert list(res_opt.values())[0] in str(exc.exception)
         if len(res_opt.keys()) > 1:
-            self.assertIn(list(res_opt.keys())[1], str(exc.exception))
+            assert list(res_opt.keys())[1] in str(exc.exception)
 
-    def test_observable_types_single_circuit(self):
+    @data(
+        "IX",
+        Pauli("YZ"),
+        SparsePauliOp(["IX", "YZ"]),
+        {"YZ": 1 + 2j},
+        {Pauli("XX"): 1 + 2j},
+        ["XX", "YY"],
+        [Pauli("XX"), Pauli("YY")],
+        [SparsePauliOp(["XX"], [2]), SparsePauliOp(["YY"], [1])],
+        [
+            {"XX": 1},
+            {"YY": 2},
+        ],
+        [
+            {Pauli("XX"): 1},
+            {Pauli("YY"): 2},
+        ],
+    )
+    def test_observable_types_single_circuit(self, observables):
         """Test different observable types for a single circuit."""
-        all_obs = [
-            "IX",
-            Pauli("YZ"),
-            SparsePauliOp(["IX", "YZ"]),
-            {"YZ": 1 + 2j},
-            {Pauli("XX"): 1 + 2j},
-            ["XX", "YY"],
-            [Pauli("XX"), Pauli("YY")],
-            [SparsePauliOp(["XX"], [2]), SparsePauliOp(["YY"], [1])],
-            [
-                {"XX": 1},
-                {"YY": 2},
-            ],
-            [
-                {Pauli("XX"): 1},
-                {Pauli("YY"): 2},
-            ],
-        ]
-
         backend = get_mocked_backend()
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
@@ -190,68 +191,62 @@ class TestEstimatorV2(IBMTestCase):
         isa_circuit = transpile(circuit, backend=backend)
 
         estimator = EstimatorV2(mode=backend)
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                pub = (isa_circuit, remap_observables(obs, isa_circuit))
-                estimator.run([pub])
+        pub = (isa_circuit, remap_observables(observables, isa_circuit))
+        estimator.run([pub])
 
-    def test_observable_types_multi_circuits(self):
+    @data(
+        ["XX", "YYY"],
+        [Pauli("XX"), Pauli("YYY")],
+        [SparsePauliOp(["XX"]), SparsePauliOp(["YYY"])],
+        [
+            {"XX": 1 + 2j},
+            {"YYY": 1 + 2j},
+        ],
+        [
+            {Pauli("XX"): 1 + 2j},
+            {Pauli("YYY"): 1 + 2j},
+        ],
+        [["XX", "YY"], ["ZZZ", "III"]],
+        [[Pauli("XX"), Pauli("YY")], [Pauli("XXX"), Pauli("YYY")]],
+        [
+            [SparsePauliOp(["XX", "YY"], [1, 2]), SparsePauliOp(["YY", "-XX"], [2, 1])],
+            [SparsePauliOp(["XXX"], [1]), SparsePauliOp(["YYY"], [2])],
+        ],
+        [[{"XX": 1}, {"YY": 2}], [{"XXX": 1}, {"YYY": 2}]],
+        [
+            [{Pauli("XX"): 1}, {Pauli("YY"): 2}],
+            [{Pauli("XXX"): 1}, {Pauli("YYY"): 2}],
+        ],
+    )
+    def test_observable_types_multi_circuits(self, observables):
         """Test different observable types for multiple circuits."""
-        all_obs = [
-            ["XX", "YYY"],
-            [Pauli("XX"), Pauli("YYY")],
-            [SparsePauliOp(["XX"]), SparsePauliOp(["YYY"])],
-            [
-                {"XX": 1 + 2j},
-                {"YYY": 1 + 2j},
-            ],
-            [
-                {Pauli("XX"): 1 + 2j},
-                {Pauli("YYY"): 1 + 2j},
-            ],
-            [["XX", "YY"], ["ZZZ", "III"]],
-            [[Pauli("XX"), Pauli("YY")], [Pauli("XXX"), Pauli("YYY")]],
-            [
-                [SparsePauliOp(["XX", "YY"], [1, 2]), SparsePauliOp(["YY", "-XX"], [2, 1])],
-                [SparsePauliOp(["XXX"], [1]), SparsePauliOp(["YYY"], [2])],
-            ],
-            [[{"XX": 1}, {"YY": 2}], [{"XXX": 1}, {"YYY": 2}]],
-            [
-                [{Pauli("XX"): 1}, {Pauli("YY"): 2}],
-                [{Pauli("XXX"): 1}, {Pauli("YYY"): 2}],
-            ],
-        ]
-
         backend = get_mocked_backend()
         circuit1 = get_transpiled_circuit(backend, num_qubits=2, measure=False)
         circuit2 = get_transpiled_circuit(backend, num_qubits=3, measure=False)
+
         estimator = EstimatorV2(mode=backend)
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                obs1 = remap_observables(obs[0], circuit1)
-                obs2 = remap_observables(obs[1], circuit2)
-                estimator.run(pubs=[(circuit1, obs1), (circuit2, obs2)])
+        obs1 = remap_observables(observables[0], circuit1)
+        obs2 = remap_observables(observables[1], circuit2)
+        estimator.run(pubs=[(circuit1, obs1), (circuit2, obs2)])
 
-    def test_invalid_basis(self):
-        """Test observable containing invalid basis."""
-        all_obs = [
-            ["Y0"],
-            {"1X": 2},
-            [["rZ", "YY"]],
+    @data(
+        ["Y0"],
+        {"1X": 2},
+        [["rZ", "YY"]],
+        [
             [
-                [
-                    {"XX": 3},
-                    {"++": 4},
-                ]
-            ],
-        ]
-
+                {"XX": 3},
+                {"++": 4},
+            ]
+        ],
+    )
+    def test_invalid_basis(self, observables):
+        """Test observable containing invalid basis."""
         circuit = QuantumCircuit(2)
         estimator = EstimatorV2(mode=get_mocked_backend())
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                with self.assertRaisesRegex(ValueError, "Observable"):
-                    estimator.run([(circuit, obs)])
+
+        with self.assertRaisesRegex(ValueError, "Observable"):
+            estimator.run([(circuit, observables)])
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
         """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
@@ -325,7 +320,7 @@ class TestEstimatorV2(IBMTestCase):
             for precision in pub_precisions
         ]
 
-        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, precision=run_precision)
 
     @mock_responses(OneInstanceDryRunRegistry)
@@ -335,4 +330,4 @@ class TestEstimatorV2(IBMTestCase):
         backend = service.backend("ibm_foo")
         estimator = EstimatorV2(mode=backend)
         job = estimator.run(**get_primitive_inputs(estimator, backend=backend), dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

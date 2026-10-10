@@ -67,21 +67,21 @@ class TestNeat(IBMTestCase):
         analyzer = Neat(backend)
 
         r1 = analyzer.ideal_sim([(c1, obs1_xx)])
-        self.assertIsInstance(r1, NeatResult)
-        self.assertEqual(r1[0].vals, 1)
+        assert isinstance(r1, NeatResult)
+        assert r1[0].vals == 1
 
         r2 = analyzer.ideal_sim([(c1, [obs1_xx, obs1_zi])])
-        self.assertIsInstance(r2, NeatResult)
-        self.assertListEqual(r2[0].vals.tolist(), [1, 0])
+        assert isinstance(r2, NeatResult)
+        assert r2[0].vals.tolist() == [1, 0]
 
         pubs3 = [
             (c1, [obs1_xx, obs1_zi]),
             (c2, [obs2_xxx, obs2_zzz, obs2_ziz]),
         ]
         r3 = analyzer.ideal_sim(pubs3)
-        self.assertIsInstance(r3, NeatResult)
-        self.assertListEqual(r3[0].vals.tolist(), [1, 0])
-        self.assertListEqual(r3[1].vals.tolist(), [1, 0, 1])
+        assert isinstance(r3, NeatResult)
+        assert r3[0].vals.tolist() == [1, 0]
+        assert r3[1].vals.tolist() == [1, 0, 1]
 
     def test_noisy_sim(self):
         """Test the ``noisy_sim`` method."""
@@ -94,21 +94,21 @@ class TestNeat(IBMTestCase):
         analyzer = Neat(backend, noise_model)
 
         r1 = analyzer.noisy_sim([(c1, obs1_xx)])
-        self.assertIsInstance(r1, NeatResult)
-        self.assertListEqual(list(r1[0].vals.shape), [])
+        assert isinstance(r1, NeatResult)
+        assert list(r1[0].vals.shape) == []
 
         r2 = analyzer.noisy_sim([(c1, [obs1_xx, obs1_zi])])
-        self.assertIsInstance(r2, NeatResult)
-        self.assertListEqual(list(r2[0].vals.shape), [2])
+        assert isinstance(r2, NeatResult)
+        assert list(r2[0].vals.shape) == [2]
 
         pubs3 = [
             (c1, [obs1_xx, obs1_zi]),
             (c2, [obs2_xxx, obs2_zzz, obs2_ziz]),
         ]
         r3 = analyzer.noisy_sim(pubs3)
-        self.assertIsInstance(r3, NeatResult)
-        self.assertListEqual(list(r3[0].vals.shape), [2])
-        self.assertListEqual(list(r3[1].vals.shape), [3])
+        assert isinstance(r3, NeatResult)
+        assert list(r3[0].vals.shape) == [2]
+        assert list(r3[1].vals.shape) == [3]
 
     def test_non_clifford_error(self):
         """Tests ``_simulate`` erroring when pubs are not Clifford if not ``cliffordize`."""
@@ -125,12 +125,12 @@ class TestNeat(IBMTestCase):
             analyzer.noisy_sim(pubs)
 
         r1 = analyzer.ideal_sim(pubs, cliffordize=True)
-        self.assertIsInstance(r1, NeatResult)
-        self.assertEqual(r1[0].vals, 1)
+        assert isinstance(r1, NeatResult)
+        assert r1[0].vals == 1
 
         r2 = analyzer.noisy_sim(pubs, cliffordize=True)
-        self.assertIsInstance(r2, NeatResult)
-        self.assertEqual(r2[0].vals, 1)
+        assert isinstance(r2, NeatResult)
+        assert r2[0].vals == 1
 
     def test_to_clifford(self):
         """Tests the ``to_clifford`` method."""
@@ -157,4 +157,4 @@ class TestNeat(IBMTestCase):
         expected.rz(3 * np.pi / 2, 1)
         expected.cx(0, 1)
 
-        self.assertEqual(transformed.circuit, expected)
+        assert transformed.circuit == expected

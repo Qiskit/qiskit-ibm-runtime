@@ -60,8 +60,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self.submit_bell_job(service)
         wait_for_status(job, "QUEUED")
         rjob = service.job(job.job_id())
-        self.assertEqual(job.job_id(), rjob.job_id())
-        self.assertEqual("sampler", rjob.primitive_id)
+        assert job.job_id() == rjob.job_id()
+        assert "sampler" == rjob.primitive_id
 
     def test_retrieve_job_running(self):
         """Test retrieving a running job."""
@@ -69,8 +69,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self.submit_bell_job(service)
         wait_for_status(job, "RUNNING")
         rjob = service.job(job.job_id())
-        self.assertEqual(job.job_id(), rjob.job_id())
-        self.assertEqual("sampler", rjob.primitive_id)
+        assert job.job_id() == rjob.job_id()
+        assert "sampler" == rjob.primitive_id
 
     def test_retrieve_job_done(self):
         """Test retrieving a finished job."""
@@ -78,8 +78,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self.submit_bell_job(service)
         job.wait_for_final_state()
         rjob = service.job(job.job_id())
-        self.assertEqual(job.job_id(), rjob.job_id())
-        self.assertEqual("sampler", rjob.primitive_id)
+        assert job.job_id() == rjob.job_id()
+        assert "sampler" == rjob.primitive_id
 
     def test_retrieve_all_jobs(self):
         """Test retrieving all jobs."""
@@ -89,10 +89,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         found = False
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
-                self.assertEqual(job.primitive_id, rjob.primitive_id)
+                assert job.primitive_id == rjob.primitive_id
                 found = True
                 break
-        self.assertTrue(found, f"Job {job.job_id()} not returned.")
+        assert found
 
     def test_retrieve_jobs_limit(self):
         """Test retrieving jobs with limit."""
@@ -102,7 +102,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             jobs.append(self.submit_bell_job(service))
 
         rjobs = service.jobs(limit=2, program_id="sampler")
-        self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
+        assert len(rjobs) == 2
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
@@ -114,14 +114,11 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         found = False
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
-                self.assertEqual(job.primitive_id, rjob.primitive_id)
+                assert job.primitive_id == rjob.primitive_id
                 found = True
                 break
 
-        self.assertTrue(
-            found or after_status == JobStatus.RUNNING,
-            f"Pending job {job.job_id()} not retrieved.",
-        )
+        assert found or after_status == JobStatus.RUNNING
 
     def test_retrieve_returned_jobs(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
@@ -132,10 +129,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         found = False
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
-                self.assertEqual(job.primitive_id, rjob.primitive_id)
+                assert job.primitive_id == rjob.primitive_id
                 found = True
                 break
-        self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
+        assert found
 
     def test_retrieve_jobs_by_program_id(self):
         """Test retrieving jobs by Program ID."""
@@ -143,7 +140,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         program_id = "sampler"
         jobs = service.jobs(program_id=program_id)
         for job in jobs:
-            self.assertEqual(program_id, job.primitive_id)
+            assert program_id == job.primitive_id
 
     def test_retrieve_jobs_by_job_tags(self):
         """Test retrieving jobs by job_tags."""
@@ -152,9 +149,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self.submit_bell_job(service, job_tags=job_tags)
         job.wait_for_final_state()
         rjobs = service.jobs(job_tags=job_tags)
-        self.assertIn(job.job_id(), [j.job_id() for j in rjobs])
+        assert job.job_id() in [j.job_id() for j in rjobs]
         rjobs = service.jobs(job_tags=["no_test_tag"])
-        self.assertFalse(rjobs)
+        assert not rjobs
 
     def test_retrieve_jobs_by_instance(self):
         """Test retrieving jobs by instance."""
@@ -162,7 +159,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         instance = self.dependencies.instance
         rjobs = service.jobs(instance=instance)
         for job in rjobs:
-            self.assertEqual(instance, job.instance)
+            assert instance == job.instance
 
     def test_jobs_filter_by_date(self):
         """Test retrieving jobs by creation date."""
@@ -174,10 +171,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         rjobs = service.jobs(
             created_before=time_after_job, created_after=current_time, pending=False, limit=20
         )
-        self.assertTrue(job.job_id() in [j.job_id() for j in rjobs])
+        assert job.job_id() in [j.job_id() for j in rjobs]
         for job in rjobs:
-            self.assertTrue(job.creation_date <= time_after_job)
-            self.assertTrue(job.creation_date >= current_time)
+            assert job.creation_date <= time_after_job
+            assert job.creation_date >= current_time
 
     def test_retrieve_jobs_sorted_by_date(self):
         """Test retrieving jobs sorted by the date."""
@@ -188,10 +185,11 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job_2.wait_for_final_state()
         rjobs = service.jobs()
         rjobs_desc = service.jobs(descending=True)
-        rjobs_asc = service.jobs(descending=False)
-        self.assertTrue(rjobs[0], rjobs_asc[1])
-        self.assertTrue(rjobs[1], rjobs_asc[0])
-        self.assertEqual([job.job_id() for job in rjobs], [job.job_id() for job in rjobs_desc])
+
+        # The two jobs just submitted are returned newest first
+        assert rjobs[0].job_id() == job_2.job_id()
+        assert rjobs[1].job_id() == job.job_id()
+        assert [job.job_id() for job in rjobs] == [job.job_id() for job in rjobs_desc]
 
     def test_retrieve_jobs_backend(self):
         """Test retrieving jobs with backend filter."""
@@ -199,7 +197,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         backend_name = self.test_backend.name
         jobs = service.jobs(backend_name=backend_name)
         for job in jobs:
-            self.assertEqual(backend_name, job.backend().name)
+            assert backend_name == job.backend().name
 
     def test_retrieve_jobs_include_mocks(self):
         """`service.jobs()` should respect the `include_mocks` flag."""
@@ -208,9 +206,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         _, mock_backend = get_mock_backend_pair(service)
 
         # Submit job against the mock device.
-        job = self._run_program(service, backend=mock_backend.name)
+        job = self.submit_bell_job(service, backend_name=mock_backend.name)
         jobs_no_mocks = service.jobs(limit=1)
         jobs_include_mocks = service.jobs(limit=1, include_mocks=True)
 
-        self.assertEqual(jobs_include_mocks[0].job_id(), job.job_id())
-        self.assertNotEqual(jobs_no_mocks[0].job_id(), job.job_id())
+        assert jobs_include_mocks[0].job_id() == job.job_id()
+        assert jobs_no_mocks[0].job_id() != job.job_id()

@@ -28,20 +28,6 @@ if TYPE_CHECKING:
     from qiskit.circuit import CircuitInstruction
     from qiskit.transpiler import Target
 
-    from ..models.backend_configuration import BackendConfiguration
-    from ..options_models import NoiseLearnerV3Options
-
-
-def validate_options(options: NoiseLearnerV3Options, configuration: BackendConfiguration) -> None:
-    """Validates the options of a noise learner job."""
-    if options.post_selection.enable is True:
-        x_pulse_type = options.post_selection.x_pulse_type
-        if options.post_selection.x_pulse_type not in (basis_gates := configuration.basis_gates):
-            raise ValueError(
-                f"Cannot apply Post Selection with X-pulse type '{x_pulse_type}' on a backend with "
-                f"basis gates {basis_gates}."
-            )
-
 
 def validate_instruction(instruction: CircuitInstruction, target: Target) -> None:
     """Validates that an instruction is valid for the noise learner.

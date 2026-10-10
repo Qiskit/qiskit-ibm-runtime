@@ -23,6 +23,7 @@ from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceDryRunRegistry
 from ..registries import Session as RegistrySession
+from ..utils import combine
 
 
 @ddt
@@ -35,21 +36,22 @@ class TestSession(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         session = Session(backend=backend)
-        self.assertEqual(session.backend(), "common_backend")
+        assert session.backend() == "common_backend"
 
-    def test_max_time(self):
+    @data(
+        (42, 42),
+        ("1h", 1 * 60 * 60),
+        ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
+        ("40s 1h", 40 + 1 * 60 * 60),
+    )
+    @unpack
+    def test_max_time(self, max_time, expected_max_time):
         """Test max time."""
         backend = FakeManilaV2()
-        max_times = [
-            (42, 42),
-            ("1h", 1 * 60 * 60),
-            ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
-            ("40s 1h", 40 + 1 * 60 * 60),
-        ]
-        for max_t, expected in max_times:
-            with self.subTest(max_time=max_t):
-                session = Session(backend=backend, max_time=max_t)
-                self.assertEqual(session._max_time, expected)
+
+        session = Session(backend=backend, max_time=max_time)
+
+        assert session._max_time == expected_max_time
 
     def test_run_after_close(self):
         """Test running after session is closed."""
@@ -67,8 +69,8 @@ class TestSession(IBMTestCase):
         max_time = 42
         session = Session(backend=backend, max_time=max_time)
         job = session._run(program_id="foo", inputs={})
-        self.assertEqual(job.backend().name, "common_backend")
-        self.assertEqual(job.session_id, "session_12345")
+        assert job.backend().name == "common_backend"
+        assert job.session_id == "session_12345"
 
     @mock_responses
     def test_context_manager(self, registry):
@@ -79,7 +81,7 @@ class TestSession(IBMTestCase):
         with Session(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
-        self.assertFalse(session._active)
+        assert not session._active
 
     @data(None, "my_id")
     @mock_responses
@@ -95,7 +97,7 @@ class TestSession(IBMTestCase):
             session_id=session_id, service=service, calibration_id=calibration_id
         )
         session._run(program_id="foo", inputs={})
-        self.assertEqual(session.session_id, session_id)
+        assert session.session_id == session_id
 
     @mock_responses
     def test_correct_execution_mode(self, registry):
@@ -105,33 +107,22 @@ class TestSession(IBMTestCase):
         session = Session(backend=backend)
 
         registry.add_session(RegistrySession(session.session_id, "common_backend"), "a")
-        self.assertEqual(session.details()["mode"], "dedicated")
+        assert session.details()["mode"] == "dedicated"
 
-    @data(
-        (Session, None, []),
-        (Batch, None, []),
-        (
-            Session,
+    @combine(
+        session_cls=[Session, Batch],
+        timestamps=[
+            None,
             [{"status": "open", "timestamp": "2026-01-01T00:00:00Z"}],
-            [{"status": "open", "timestamp": "2026-01-01T00:00:00Z"}],
-        ),
-        (
-            Batch,
             [
                 {"status": "open", "timestamp": "2026-01-01T00:00:00Z"},
                 {"status": "active", "timestamp": "2026-01-01T00:01:00Z"},
                 {"status": "closed", "timestamp": "2026-01-01T00:02:00Z"},
             ],
-            [
-                {"status": "open", "timestamp": "2026-01-01T00:00:00Z"},
-                {"status": "active", "timestamp": "2026-01-01T00:01:00Z"},
-                {"status": "closed", "timestamp": "2026-01-01T00:02:00Z"},
-            ],
-        ),
+        ],
     )
-    @unpack
     @mock_responses
-    def test_details_timestamps(self, session_cls, timestamps, expected, registry):
+    def test_details_timestamps(self, session_cls, timestamps, registry):
         """Test that the session state transitions are included in the details."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -140,7 +131,8 @@ class TestSession(IBMTestCase):
         registry.add_session(
             RegistrySession(session.session_id, "common_backend", timestamps=timestamps), "a"
         )
-        self.assertEqual(session.details()["timestamps"], expected)
+        # Sessions with no state transitions report an empty list of timestamps.
+        assert session.details()["timestamps"] == (timestamps or [])
 
     @mock_responses
     def test_cm_session_fractional(self, registry):
@@ -151,7 +143,7 @@ class TestSession(IBMTestCase):
         backend = service.backend("fake_fractional", use_fractional_gates=True)
         with Session(backend=backend) as _:
             primitive = SamplerV2()
-            self.assertTrue(primitive._backend.options.use_fractional_gates)
+            assert primitive._backend.options.use_fractional_gates
 
     @mock_responses
     def test_backend_instance_warnings(self, registry):
@@ -169,4 +161,4 @@ class TestSession(IBMTestCase):
         with Session(backend=backend) as session:
             job = session._run(program_id="foo", inputs={}, dry_run=True)
 
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

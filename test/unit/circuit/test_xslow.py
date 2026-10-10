@@ -29,11 +29,11 @@ class TestXSlowGate(IBMTestCase):
     def test_instantiation(self):
         """Test default instantiation."""
         gate = XSlowGate()
-        self.assertIs(gate.base_class, XSlowGate)
-        self.assertIsInstance(gate, Gate)
-        self.assertEqual(gate.name, "xslow")
-        self.assertEqual(gate.num_qubits, 1)
-        self.assertEqual(gate.num_clbits, 0)
+        assert gate.base_class is XSlowGate
+        assert isinstance(gate, Gate)
+        assert gate.name == "xslow"
+        assert gate.num_qubits == 1
+        assert gate.num_clbits == 0
 
     def test_circuit_integration(self):
         """Test appending XSlowGate to a circuit."""
@@ -41,8 +41,8 @@ class TestXSlowGate(IBMTestCase):
         qc = QuantumCircuit(2)
         qc.append(gate, [0])
         qc.append(gate, [1])
-        self.assertIs(qc.data[0].operation, gate)
-        self.assertIs(qc.data[1].operation, gate)
+        assert qc.data[0].operation is gate
+        assert qc.data[1].operation is gate
 
     def test_transpiler_compat_without(self):
         """Test that the default pass manager fails if xslow is not inthe target."""
@@ -66,4 +66,4 @@ class TestXSlowGate(IBMTestCase):
         qc = QuantumCircuit(1)
         qc.append(gate, [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "xslow")
+        assert transpiled.data[0].operation.name == "xslow"

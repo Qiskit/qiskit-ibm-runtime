@@ -38,5 +38,5 @@ class TestParamsConverters(IBMTestCase):
         encoded = converters.encoder(program, options).model_dump()
         decoded = converters.decoder(converters.model(**encoded))
 
-        self.assertIsInstance(decoded[0], QuantumProgram)
-        self.assertEqual(decoded[1], options)
+        assert isinstance(decoded[0], QuantumProgram)
+        assert decoded[1] == options

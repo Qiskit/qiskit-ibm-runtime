@@ -41,7 +41,7 @@ class TestResolvePrecision(IBMTestCase):
         pub3 = EstimatorPub.coerce((circuit, observable), precision=0.01)
 
         result = resolve_precision([pub1, pub2, pub3])
-        self.assertEqual(result, 0.01)
+        assert result == 0.01
 
     def test_all_pubs_without_precision_with_run_precision(self):
         """Test when no pubs have precision but run_precision is provided."""
@@ -51,7 +51,7 @@ class TestResolvePrecision(IBMTestCase):
         pub3 = EstimatorPub.coerce((circuit, observable))
 
         result = resolve_precision([pub1, pub2, pub3], run_precision=0.02)
-        self.assertEqual(result, 0.02)
+        assert result == 0.02
 
     def test_all_pubs_without_precision_no_run_precision(self):
         """Test when no pubs have precision and no run_precision is provided."""
@@ -60,7 +60,7 @@ class TestResolvePrecision(IBMTestCase):
         pub2 = EstimatorPub.coerce((circuit, observable))
 
         result = resolve_precision([pub1, pub2])
-        self.assertIsNone(result)
+        assert result is None
 
     def test_mixture_some_with_precision_some_without_matching_run_precision(self):
         """Test mixture where all pubs resolve to same value."""
@@ -74,7 +74,7 @@ class TestResolvePrecision(IBMTestCase):
 
         # run_precision matches the explicit precision
         result = resolve_precision([pub1, pub2, pub3], run_precision=0.01)
-        self.assertEqual(result, 0.01)
+        assert result == 0.01
 
     def test_mixture_some_with_precision_some_without_mismatched_run_precision(self):
         """Test mixture where pubs have different precision values (explicit vs run_precision)."""
@@ -90,7 +90,7 @@ class TestResolvePrecision(IBMTestCase):
         with self.assertRaises(IBMInputValueError) as context:
             resolve_precision([pub1, pub2, pub3], run_precision=0.02)
 
-        self.assertIn("same precision", str(context.exception))
+        assert "same precision" in str(context.exception)
 
     def test_mixture_multiple_different_explicit_precisions(self):
         """Test mixture where pubs have different explicit precision values."""
@@ -102,7 +102,7 @@ class TestResolvePrecision(IBMTestCase):
         with self.assertRaises(IBMInputValueError) as context:
             resolve_precision([pub1, pub2, pub3])
 
-        self.assertIn("same precision", str(context.exception))
+        assert "same precision" in str(context.exception)
 
     def test_pub_level_zero_precision_raises(self):
         """Test that a pub-level precision of 0 is rejected."""

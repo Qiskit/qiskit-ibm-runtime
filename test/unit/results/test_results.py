@@ -63,4 +63,4 @@ class TestRunner(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         job = service.job("my_job")
         result = job.result()
-        self.assertIsInstance(result, RunnerResult)
+        assert isinstance(result, RunnerResult)

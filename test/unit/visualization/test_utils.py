@@ -24,8 +24,8 @@ class TestUtils(IBMTestCase):
 
     def test_get_plotly_module(self):
         """Test that getting a module works."""
-        self.assertIsInstance(plotly_module(), ModuleType)
-        self.assertIsInstance(plotly_module(".graph_objects"), ModuleType)
+        assert isinstance(plotly_module(), ModuleType)
+        assert isinstance(plotly_module(".graph_objects"), ModuleType)
 
     def test_plotly_module_raises(self):
         """Test that correct error is raised."""

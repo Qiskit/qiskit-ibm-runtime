@@ -45,15 +45,15 @@ class TestExecutorOptions(IBMTestCase):
     def test_default_options(self):
         """Test that default options are set when none are provided."""
         executor = Executor(mode=get_mocked_backend())
-        self.assertIsInstance(executor.options, ExecutorOptions)
-        self.assertEqual(executor.options, ExecutorOptions())
+        assert isinstance(executor.options, ExecutorOptions)
+        assert executor.options == ExecutorOptions()
 
     def test_options_from_instance(self):
         """Test constructing with an ExecutorOptions instance."""
         opts = ExecutorOptions(execution=ExecutionOptions(init_qubits=False))
         executor = Executor(mode=get_mocked_backend(), options=opts)
-        self.assertIs(executor.options, opts)
-        self.assertFalse(executor.options.execution.init_qubits)
+        assert executor.options is opts
+        assert not executor.options.execution.init_qubits
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
@@ -62,19 +62,19 @@ class TestExecutorOptions(IBMTestCase):
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
         }
         executor = Executor(mode=get_mocked_backend(), options=opts_dict)
-        self.assertFalse(executor.options.execution.init_qubits)
-        self.assertEqual(executor.options.execution.rep_delay, 0.5)
-        self.assertEqual(executor.options.environment.log_level, "DEBUG")
-        self.assertEqual(executor.options.environment.job_tags, ["tag1"])
+        assert not executor.options.execution.init_qubits
+        assert executor.options.execution.rep_delay == 0.5
+        assert executor.options.environment.log_level == "DEBUG"
+        assert executor.options.environment.job_tags == ["tag1"]
 
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
         executor = Executor(
             mode=get_mocked_backend(), options={"execution": {"init_qubits": False}}
         )
-        self.assertFalse(executor.options.execution.init_qubits)
-        self.assertIsNone(executor.options.execution.rep_delay)
-        self.assertEqual(executor.options.environment, EnvironmentOptions())
+        assert not executor.options.execution.init_qubits
+        assert executor.options.execution.rep_delay is None
+        assert executor.options.environment == EnvironmentOptions()
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
@@ -86,14 +86,14 @@ class TestExecutorOptions(IBMTestCase):
         executor = Executor(mode=get_mocked_backend())
         new_opts = ExecutorOptions(execution=ExecutionOptions(init_qubits=False))
         executor.options = new_opts
-        self.assertIs(executor.options, new_opts)
+        assert executor.options is new_opts
 
     def test_setter_with_dict(self):
         """Test setting options via the setter with a dict."""
         executor = Executor(mode=get_mocked_backend())
         executor.options = {"execution": {"init_qubits": False}}
-        self.assertIsInstance(executor.options, ExecutorOptions)
-        self.assertFalse(executor.options.execution.init_qubits)
+        assert isinstance(executor.options, ExecutorOptions)
+        assert not executor.options.execution.init_qubits
 
     def test_setter_invalid_type(self):
         """Test that setting options with an invalid type raises TypeError."""
@@ -108,31 +108,31 @@ class TestExecutorOptions(IBMTestCase):
         )
         executor.options = {"execution": {"init_qubits": False}}
         # environment should be back to defaults since we replaced, not updated
-        self.assertEqual(executor.options.environment.log_level, "WARNING")
-        self.assertFalse(executor.options.execution.init_qubits)
+        assert executor.options.environment.log_level == "WARNING"
+        assert not executor.options.execution.init_qubits
 
     def test_experimental_options_default_empty(self):
         """Test that experimental options default to empty dict."""
         executor = Executor(mode=get_mocked_backend())
-        self.assertEqual(executor.options.experimental, {})
+        assert executor.options.experimental == {}
 
     def test_experimental_options_from_dict(self):
         """Test constructing with experimental options in dict."""
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
         executor = Executor(mode=get_mocked_backend(), options=opts_dict)
-        self.assertEqual(executor.options.experimental, {"foo": "bar", "baz": 123})
+        assert executor.options.experimental == {"foo": "bar", "baz": 123}
 
     def test_experimental_options_from_instance(self):
         """Test constructing with an ExecutorOptions instance with experimental options."""
         opts = ExecutorOptions(experimental={"custom_key": "custom_value"})
         executor = Executor(mode=get_mocked_backend(), options=opts)
-        self.assertEqual(executor.options.experimental, {"custom_key": "custom_value"})
+        assert executor.options.experimental == {"custom_key": "custom_value"}
 
     def test_experimental_options_setter(self):
         """Test setting experimental options via the setter."""
         executor = Executor(mode=get_mocked_backend())
         executor.options = {"experimental": {"test": "value"}}
-        self.assertEqual(executor.options.experimental, {"test": "value"})
+        assert executor.options.experimental == {"test": "value"}
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""
@@ -160,7 +160,7 @@ class TestExecutor(IBMTestCase):
         backend = service.backend("ibm_foo")
         executor = Executor(mode=backend)
         job = executor.run(program, dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"
 
     @data("job", "session", "batch")
     @mock_responses
@@ -187,9 +187,9 @@ class TestExecutor(IBMTestCase):
 
         # Public interfaces should respect `mode`.
         executor = Executor(mode=mode)
-        self.assertEqual(executor.backend(), backend)
-        self.assertEqual(executor.mode, expected_mode)
+        assert executor.backend() == backend
+        assert executor.mode == expected_mode
 
         # Jobs issued should belong to a session under `session` / `batch`` modes.
         job = executor.run(program)
-        self.assertEqual(job._session_id, expected_session_id)
+        assert job._session_id == expected_session_id

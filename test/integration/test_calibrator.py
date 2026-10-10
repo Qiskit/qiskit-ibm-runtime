@@ -32,4 +32,4 @@ class TestCalibrator(IBMIntegrationTestCase):
             calibrator = Calibrator(session)
             job = calibrator.run()
             result = job.result()
-            self.assertIn("calibration_result", result)
+            assert "calibration_result" in result

@@ -16,30 +16,14 @@ from qiskit import QuantumCircuit
 from samplomatic import Twirl
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers, FakeFractionalBackend
-from qiskit_ibm_runtime.noise_learner_v3.validation import validate_instruction, validate_options
-from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
+from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers
+from qiskit_ibm_runtime.noise_learner_v3.validation import validate_instruction
 
 from ...ibm_test_case import IBMTestCase
 
 
 class TestValidation(IBMTestCase):
     """Tests the noise learner v3 validation."""
-
-    def test_validate_options(self):
-        """Test the validation of NLV3 options."""
-        configuration = FakeFractionalBackend().configuration()
-
-        options = NoiseLearnerV3Options()
-        options.post_selection = {"enable": True, "x_pulse_type": "rx"}
-        validate_options(options=options, configuration=configuration)
-
-        options.post_selection = {"enable": False, "x_pulse_type": "xslow"}
-        validate_options(options=options, configuration=configuration)
-
-        options.post_selection = {"enable": True, "x_pulse_type": "xslow"}
-        with self.assertRaisesRegex(ValueError, "xslow"):
-            validate_options(options=options, configuration=configuration)
 
     def test_validate_valid_instructions(self):
         """Test instruction validation for valid instructions."""
