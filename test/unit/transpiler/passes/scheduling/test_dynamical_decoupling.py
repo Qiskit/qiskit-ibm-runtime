@@ -32,7 +32,7 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import ASAPSchedu
 from .....ibm_test_case import IBMTestCase
 
 
-def ghz4_circuit():
+def ghz4_circuit() -> QuantumCircuit:
     """Return a four-qubit GHZ circuit."""
     circuit = QuantumCircuit(4)
     circuit.h(0)
@@ -42,7 +42,7 @@ def ghz4_circuit():
     return circuit
 
 
-def midmeas_circuit():
+def midmeas_circuit() -> QuantumCircuit:
     """Return a three-qubit circuit with a measurement in the middle."""
     circuit = QuantumCircuit(3, 1)
     circuit.cx(0, 1)
@@ -54,7 +54,7 @@ def midmeas_circuit():
     return circuit
 
 
-def five_qubit_target():
+def five_qubit_target() -> Target:
     """Return a five-qubit target with durations for the gates used by the tests."""
     target = Target(num_qubits=5, dt=1)
     target.add_instruction(

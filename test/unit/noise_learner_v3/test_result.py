@@ -22,7 +22,7 @@ from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, No
 from ...ibm_test_case import IBMTestCase
 
 
-def results_and_maps():
+def results_and_maps() -> tuple[list[NoiseLearnerV3Result], list[PauliLindbladMap]]:
     """Return three results over every two-qubit generator, and their Pauli-Lindblad maps."""
     generators = [
         QubitSparsePauliList.from_label(pauli1 + pauli0) for pauli1 in "IXYZ" for pauli0 in "IXYZ"

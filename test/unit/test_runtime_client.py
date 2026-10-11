@@ -23,7 +23,7 @@ from ..account import custom_envs, no_envs
 from ..ibm_test_case import IBMTestCase
 
 
-def runtime_client():
+def runtime_client() -> RuntimeClient:
     """Helper for instantiating an RuntimeClient."""
     return RuntimeClient(
         ClientParameters(

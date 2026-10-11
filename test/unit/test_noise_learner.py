@@ -26,7 +26,7 @@ from ..registries import OneInstanceDryRunRegistry
 from ..utils import combine, get_mocked_backend
 
 
-def circuits():
+def circuits() -> list[QuantumCircuit]:
     """Return a set of circuits, acting on two and three qubits."""
     c1 = QuantumCircuit(2)
     c1.cx(0, 1)
@@ -38,13 +38,13 @@ def circuits():
     return [c1, c2]
 
 
-def equivalent_options():
+def equivalent_options() -> tuple[NoiseLearnerOptions, EstimatorOptions, dict[str, list[int]]]:
     """Return a set of non-trivial and equivalent learner, estimator, and dictionary options."""
     nl_options = NoiseLearnerOptions()
     nl_options.layer_pair_depths = [0, 2, 4]
 
     est_options = EstimatorOptions()
-    est_options.resilience.layer_noise_learning.layer_pair_depths = [0, 2, 4]
+    est_options.resilience.layer_noise_learning.layer_pair_depths = [0, 2, 4]  # type: ignore[union-attr]
     est_options.resilience_level = 2
 
     dict_options = {"layer_pair_depths": [0, 2, 4]}

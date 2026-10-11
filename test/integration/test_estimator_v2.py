@@ -25,7 +25,7 @@ from qiskit_ibm_runtime.fake_provider import FakeAuckland
 from .case import IBMIntegrationTestCase
 
 
-def assert_result_type(result, num_pubs, shapes):
+def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> None:
     """Assert result type."""
     assert isinstance(result, PrimitiveResult)
     assert len(result) == num_pubs

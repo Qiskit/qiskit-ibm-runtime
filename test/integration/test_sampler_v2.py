@@ -140,7 +140,7 @@ def isa_bell_circuit(backend: IBMBackend) -> QuantumCircuit:
     return pass_manager.run(bell_circuit())
 
 
-def assert_result_type(result, num_pubs, targets=None):
+def assert_result_type(result: PrimitiveResult, num_pubs: int, targets: list | None = None) -> None:
     """Assert result type."""
     assert isinstance(result, PrimitiveResult)
     assert isinstance(result.metadata, dict)

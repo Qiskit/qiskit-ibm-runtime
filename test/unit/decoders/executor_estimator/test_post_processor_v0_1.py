@@ -12,6 +12,8 @@
 
 """Unit tests for Estimator post-processor."""
 
+from typing import Literal
+
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit.circuit import QuantumCircuit
@@ -44,7 +46,11 @@ def _make_circuit(num_qubits: int = 2) -> QuantumCircuit:
     return qc
 
 
-def _make_pub(circuit=None, observable="ZZ", num_qubits=2):
+def _make_pub(
+    circuit: QuantumCircuit | None = None,
+    observable: str = "ZZ",
+    num_qubits: int = 2,
+) -> EstimatorPub:
     """Return a coerced EstimatorPub for a simple circuit and observable."""
     if circuit is None:
         circuit = _make_circuit(num_qubits)
@@ -52,7 +58,13 @@ def _make_pub(circuit=None, observable="ZZ", num_qubits=2):
     return EstimatorPub.coerce((circuit, obs), precision=None)
 
 
-def _prepare_result(pubs, options, meas_data_list, *, precision=None):
+def _prepare_result(
+    pubs: list,
+    options: EstimatorOptions,
+    meas_data_list: list,
+    *,
+    precision: float | None = None,
+) -> QuantumProgramResult:
     """Run prepare() and inject fake measurement data into the items.
 
     Returns a ``QuantumProgramResult`` ready for the post-processor.
@@ -82,7 +94,7 @@ def _prepare_result(pubs, options, meas_data_list, *, precision=None):
     return result
 
 
-def _options(resilience_level=0, **kwargs):
+def _options(resilience_level: Literal[0, 1, 2] = 0, **kwargs: object) -> EstimatorOptions:
     opts = EstimatorOptions()
     opts.resilience_level = resilience_level
     for k, v in kwargs.items():

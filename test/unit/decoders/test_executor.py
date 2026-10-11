@@ -12,8 +12,11 @@
 
 """Tests the decoder for the quantum program result model."""
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import numpy as np
 from ibm_quantum_schemas.common import TensorModel
@@ -25,6 +28,9 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
 )
 
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
 from qiskit_ibm_runtime.decoders.executor.decoder import (
     BaseClientSideResultDecoder,
     ExecutorResultDecoder,
@@ -34,7 +40,9 @@ from qiskit_ibm_runtime.results.quantum_program import Metadata, QuantumProgramR
 from ...ibm_test_case import IBMTestCase
 
 
-def measurements():
+def measurements() -> tuple[
+    NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], datetime, datetime
+]:
     """Return the measurements and flips of two items, and the limits of the chunk they run in."""
     meas1 = np.array([[False], [True], [True]])
     meas2 = np.array([[True, True], [True, False], [False, False]])
@@ -45,7 +53,7 @@ def measurements():
     return meas1, meas2, meas_flips, start, stop
 
 
-def encoded_result():
+def encoded_result() -> str:
     """Return the encoding of a result holding the measurements of two items."""
     meas1, meas2, meas_flips, start, stop = measurements()
 

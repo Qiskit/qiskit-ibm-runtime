@@ -12,6 +12,10 @@
 
 """Tests for runtime job retrieval."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
+
 from ddt import data, ddt
 
 from qiskit_ibm_runtime.ibm_backend import IBMBackend, IBMRetiredBackend
@@ -21,8 +25,12 @@ from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, Job, OneInstanceNoBackendsRegistry
 
+if TYPE_CHECKING:
+    from ..registries.base import BaseRegistry
+    from ..registries.entities import JobStatus
 
-def populate_jobs(registry):
+
+def populate_jobs(registry: BaseRegistry) -> tuple[int, int]:
     """Populate the registry with jobs of all statuses."""
     pending_jobs_count = 0
     returned_jobs_count = 0
@@ -37,7 +45,9 @@ def populate_jobs(registry):
     pending_status = ["running", "queued"]
     for status, count in status_count.items():
         for i in range(count):
-            registry.add_job(Job(f"my_job_{status}_{i}", "common_backend", status=status), "a")
+            registry.add_job(
+                Job(f"my_job_{status}_{i}", "common_backend", status=cast("JobStatus", status)), "a"
+            )
             if status in pending_status:
                 pending_jobs_count += 1
             else:

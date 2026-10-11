@@ -29,7 +29,7 @@ if HAS_AER:
     from qiskit_aer import AerSimulator
 
 
-def layer_errors():
+def layer_errors() -> list[LayerError]:
     """Return three layer errors, acting on two, three, and four qubits."""
     circuits = [QuantumCircuit(2), QuantumCircuit(3), QuantumCircuit(4)]
 

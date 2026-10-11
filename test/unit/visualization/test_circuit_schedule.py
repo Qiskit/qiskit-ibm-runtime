@@ -22,19 +22,19 @@ from ...ibm_test_case import IBMTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 
 
-def large_timing():
+def large_timing() -> str:
     """Return the whole scheduler timing of the fake sampler pub results."""
     pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
     return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
 
 
-def small_timing():
+def small_timing() -> str:
     """Return a small constant portion of the scheduler timing."""
     pub_result = FakeCircuitScheduleInputData.sampler_pub_result_small
     return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
 
 
-def merge_timing():
+def merge_timing() -> str:
     """Return the scheduler timing of a merge use case."""
     pub_result = FakeCircuitScheduleInputData.sampler_pub_result_merge
     return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]

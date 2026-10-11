@@ -12,6 +12,9 @@
 
 """Tests for Neat class."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import skipUnless
 
 import numpy as np
@@ -25,11 +28,24 @@ from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
 from ...ibm_test_case import IBMTestCase
 
+if TYPE_CHECKING:
+    from qiskit.providers import BackendV2
+
 if HAS_AER:
     from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 
-def transpiled_circuits(backend):
+def transpiled_circuits(
+    backend: BackendV2,
+) -> tuple[
+    QuantumCircuit,
+    SparsePauliOp,
+    SparsePauliOp,
+    QuantumCircuit,
+    SparsePauliOp,
+    SparsePauliOp,
+    SparsePauliOp,
+]:
     """Return two GHZ circuits transpiled for `backend`, and observables laid out for them.
 
     The first circuit acts on two qubits, the second one on three.
