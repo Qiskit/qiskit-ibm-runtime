@@ -28,13 +28,19 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
-from .case import IBMIntegrationJobTestCase
+from .case import IBMIntegrationJobTestCase, get_test_backend
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import RuntimeJobV2
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
     from .case import IntegrationTestDependencies
+
+
+@pytest.fixture(scope="class")
+def backend_test(dependencies: IntegrationTestDependencies) -> IBMBackend | None:
+    """Return the test backend used by the tests in the class, from the environment config."""
+    return get_test_backend(dependencies.service)
 
 
 @pytest.fixture(scope="class")
