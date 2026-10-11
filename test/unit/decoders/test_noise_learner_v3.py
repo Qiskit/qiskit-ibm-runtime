@@ -26,7 +26,7 @@ from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, No
 from ...ibm_test_case import IBMTestCase
 
 
-def results_and_encoding():
+def results_and_encoding() -> tuple[NoiseLearnerV3Results, str]:
     """Return a set of results, one learnt with trex and one with lindblad, and their encoding."""
     generators = [
         QubitSparsePauliList.from_list(["IX", "XX"]),
@@ -35,13 +35,13 @@ def results_and_encoding():
     rates = [0.1, 0.2]
     rates_std = [0.01, 0.02]
 
-    metadatum0 = {
+    metadatum0: dict = {
         "learning_protocol": "trex",
         "post_selection": {"fraction_kept": 1},
     }
     result0 = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadatum0)
 
-    metadatum1 = {
+    metadatum1: dict = {
         "learning_protocol": "lindblad",
         "post_selection": {"fraction_kept": {0: 1, 4: 1}},
     }

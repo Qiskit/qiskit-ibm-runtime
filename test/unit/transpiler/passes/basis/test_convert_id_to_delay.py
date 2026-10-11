@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import Conve
 from .....ibm_test_case import IBMTestCase
 
 
-def durations():
+def durations() -> InstructionDurations:
     """Return the durations of a 160dt `sx` gate and a 200dt `x` gate."""
     return InstructionDurations([("sx", None, 160), ("x", None, 200)])
 

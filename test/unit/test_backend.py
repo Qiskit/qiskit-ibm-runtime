@@ -32,7 +32,7 @@ from ..utils import create_faulty_backend
 from .mock.fake_backends import FakeMidcircuit
 
 
-def dynamic_circuits_backend():
+def dynamic_circuits_backend() -> IBMBackend:
     """Create a test backend with an IfElseOp enables."""
     model_backend = FakeManilaV2()
     properties = model_backend.properties()
@@ -44,19 +44,21 @@ def dynamic_circuits_backend():
         instance=None,
     )
 
-    out_backend.status = lambda: BackendStatus(
+    out_backend.status = lambda: BackendStatus(  # type: ignore[method-assign]
         backend_name="foo",
         backend_version="1.0",
         operational=True,
         pending_jobs=0,
         status_msg="",
     )
-    out_backend.properties = lambda: properties
+    out_backend.properties = lambda: properties  # type: ignore[method-assign, misc, assignment]
 
     return out_backend
 
 
-def assert_props(backend, name, ref_error, ref_duration):
+def assert_props(
+    backend: IBMBackend, name: str, ref_error: float | None, ref_duration: float | None
+) -> None:
     """Assert that all instruction properties for ``name`` have the given error and duration."""
     for _, props in backend.target[name].items():
         error = props.error if props else None

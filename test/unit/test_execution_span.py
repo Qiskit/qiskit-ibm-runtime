@@ -12,6 +12,8 @@
 
 """Tests SliceSpan and ExecutionSpans classes."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import ddt
@@ -21,6 +23,7 @@ import numpy.testing as npt
 from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
     ExecutionSpans,
+    ShapeType,
     SliceSpan,
     TwirledSliceSpan,
     TwirledSliceSpanV2,
@@ -28,8 +31,12 @@ from qiskit_ibm_runtime.execution_span import (
 
 from ..ibm_test_case import IBMTestCase
 
+SliceData = dict[int, tuple[ShapeType, slice]]
+DoubleSliceData = dict[int, tuple[ShapeType, slice, slice]]
+TwirledSliceData = dict[int, tuple[ShapeType, bool, slice, slice]]
 
-def slice_spans():
+
+def slice_spans() -> tuple[SliceSpan, SliceSpan, SliceData]:
     """Return two slice spans, and the data slices of the first one."""
     slices1 = {1: ((100,), slice(4, 9)), 0: ((5, 2), slice(5, 7))}
 
@@ -47,7 +54,7 @@ def slice_spans():
     return span1, span2, slices1
 
 
-def double_slice_spans():
+def double_slice_spans() -> tuple[DoubleSliceSpan, DoubleSliceSpan, DoubleSliceData]:
     """Return two double slice spans, and the data slices of the first one."""
     slices1 = {
         2: ((1, 100), slice(1), slice(4, 9)),
@@ -71,7 +78,9 @@ def double_slice_spans():
     return span1, span2, slices1
 
 
-def twirled_slice_spans():
+def twirled_slice_spans() -> tuple[
+    TwirledSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2, TwirledSliceData
+]:
     """Return two twirled slice spans, a version 2 one, and the data slices of the first one."""
     slices1 = {
         2: ((3, 1, 5), True, slice(1), slice(2, 4)),
@@ -101,7 +110,7 @@ def twirled_slice_spans():
     return span1, span2, span3, slices1
 
 
-def execution_spans():
+def execution_spans() -> tuple[ExecutionSpans, SliceSpan, SliceSpan, SliceData]:
     """Return a set of two slice spans, the spans themselves, and the slices of the first one."""
     slices1 = {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))}
 

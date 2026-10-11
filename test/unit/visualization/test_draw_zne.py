@@ -22,7 +22,7 @@ from ...ibm_test_case import IBMTestCase
 from .utils import save_plotly_artifact
 
 
-def zne_results():
+def zne_results() -> tuple[EstimatorPubResult, list[EstimatorPubResult]]:
     """Return a pub result holding ZNE data, and pub results missing that data."""
     data = DataBin(
         shape=(1,),

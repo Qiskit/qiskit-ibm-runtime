@@ -12,10 +12,17 @@
 
 """Test the conversion of terminal Measure to MidCircuitMeasure."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import Measure, Reset
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import PassManager
+
+if TYPE_CHECKING:
+    from qiskit.transpiler import Target
 
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
@@ -26,7 +33,9 @@ from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
 from .....ibm_test_case import IBMTestCase
 
 
-def target_with_mid_circuit_instructions(measure_name="measure_2", reset_name="reset_2"):
+def target_with_mid_circuit_instructions(
+    measure_name: str = "measure_2", reset_name: str = "reset_2"
+) -> Target:
     """Return a target supporting a mid-circuit measure and reset on every qubit."""
     target = GenericBackendV2(num_qubits=5, seed=0).target
     target.add_instruction(MidCircuitMeasure(measure_name), {(i,): None for i in range(5)})
@@ -34,7 +43,7 @@ def target_with_mid_circuit_instructions(measure_name="measure_2", reset_name="r
     return target
 
 
-def circuit_with_mid_circuit_instructions():
+def circuit_with_mid_circuit_instructions() -> QuantumCircuit:
     """Return a circuit with mid-circuit measures and resets, plus terminal measures."""
     circuit = QuantumCircuit(2, 2)
     circuit.x(0)

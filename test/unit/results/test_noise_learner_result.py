@@ -35,7 +35,7 @@ if HAS_AER:
     from qiskit_aer import AerSimulator
 
 
-def generators_and_rates():
+def generators_and_rates() -> tuple[list[PauliList], list[list[float]]]:
     """Return a set of generators and their rates, for one and for two qubits."""
     generators = [PauliList(["X", "Z"]), PauliList(["XX", "ZZ", "IY"])]
     rates = [[0.1, 0.2], [0.3, 0.4, 0.5]]
@@ -92,7 +92,9 @@ class TestPauliLindbladError(IBMTestCase):
         assert error.restrict_num_bodies(2).rates.tolist() == error2.rates.tolist()
 
 
-def circuits_qubits_and_errors():
+def circuits_qubits_and_errors() -> tuple[
+    list[QuantumCircuit], list[list[int]], list[PauliLindbladError | None]
+]:
     """Return a set of circuits, the qubits they act on, and their errors.
 
     The last error is `None`, to cover layer errors without one.
@@ -117,7 +119,7 @@ def circuits_qubits_and_errors():
     return circuits, qubits, errors
 
 
-def layer_error_to_draw():
+def layer_error_to_draw() -> LayerError:
     """Return a four-qubit layer error, with both one-body and two-body generators."""
     circuit = QuantumCircuit(4)
     qubits = [1, 2, 3, 4]

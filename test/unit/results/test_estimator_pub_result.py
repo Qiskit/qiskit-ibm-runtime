@@ -29,7 +29,7 @@ except ImportError:
     PLOTLY_INSTALLED = False
 
 
-def zne_pub_result():
+def zne_pub_result() -> EstimatorPubResult:
     """Return a pub result holding ZNE data for two noise factors and one extrapolator."""
     nfs = np.zeros((2, 2))
     extrapolated = np.zeros((2, 2, 3))
