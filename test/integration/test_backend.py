@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import copy
+import logging
 import re
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -196,7 +197,7 @@ class TestIBMBackend:
     @pytest.mark.production
     def test_backend_invalid_attribute(self, backend):
         """Check if AttributeError is raised when an invalid backend attribute is accessed."""
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             backend.foobar
 
     def test_backend_deepcopy(self, backend):
@@ -242,14 +243,14 @@ class TestIBMBackend:
         paused_status.status_msg = "internal"
         backend.status = mock.MagicMock(return_value=paused_status)
         isa_circuit = transpile(bell(), backend)
-        with self.assertWarns(Warning):
+        with pytest.warns(Warning):
             sampler = Sampler(mode=backend)
             sampler.run([isa_circuit])
 
     def test_retrieve_backend_not_exist(self, dependencies):
         """Test that an error is raised when retrieving a backend that does not exist."""
         service = dependencies.service
-        with self.assertRaises(QiskitBackendNotFoundError):
+        with pytest.raises(QiskitBackendNotFoundError):
             service.backend("nonexistent_backend")
 
     def test_too_many_qubits_in_circuit(self, backend):
@@ -257,12 +258,12 @@ class TestIBMBackend:
         num = len(backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
-        with self.assertRaises(IBMInputValueError) as err:
+        with pytest.raises(IBMInputValueError) as err:
             sampler = Sampler(mode=backend)
             job = sampler.run([circuit])
             job.cancel()
         assert f"circuit has {num_qubits} qubits but the target system requires {num}" in str(
-            err.exception
+            err.value
         )
 
     def test_use_fractional_gates_flag(self, dependencies):
@@ -273,7 +274,7 @@ class TestIBMBackend:
             real_device_no_fg = service.backend(real_device_name, use_fractional_gates=False)
             real_device_fg = service.backend(real_device_name, use_fractional_gates=True)
         except QiskitBackendNotFoundError:
-            self.skipTest("Real backend not available.")
+            pytest.skip("Real backend not available.")
         assert "rzz" in real_device_fg.basis_gates
         assert "rzz" not in real_device_no_fg.basis_gates
 
@@ -281,10 +282,10 @@ class TestIBMBackend:
         """Test that use_fractional_gates = True raises error for unsupported backends."""
         service = dependencies.service
         if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
-            self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
-        with self.assertRaises(
+            pytest.skip(f"Backend {backend.name} supports fractional gates, no error.")
+        with pytest.raises(
             IBMInputValueError,
-            msg=(
+            match=(
                 f"Backend '{backend.name}' does not support fractional gates, "
                 "but use_fractional_gates was set to True."
             ),
@@ -302,7 +303,7 @@ class TestIBMBackend:
             backend_no_fg2 = service.backend(real_device_name, use_fractional_gates=False)
             backend_fg3 = service.backend(real_device_name, use_fractional_gates=True)
         except QiskitBackendNotFoundError:
-            self.skipTest("Real backend not available.")
+            pytest.skip("Real backend not available.")
 
         # The cache is used for repeated use_fractional_gates=True
         assert backend_fg is backend_fg2
@@ -325,16 +326,16 @@ class TestIBMBackend:
         renewed_backend = service.backend(name)
         assert renewed_backend.basis_gates == basis_gates
 
-    def test_backend_calibration_id(self, backend, dependencies):
+    def test_backend_calibration_id(self, backend, dependencies, caplog):
         """Test calibration_id is used when fetching the configuration."""
         service = dependencies.service
         name = backend.name
         calibration_id = "invalid_id"
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as log:
-            with self.assertRaises(QiskitBackendNotFoundError):
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
+            with pytest.raises(QiskitBackendNotFoundError):
                 service.backend(name, calibration_id=calibration_id)
 
-        assert any(calibration_id in record for record in log.output)
+        assert calibration_id in caplog.text
 
     def test_run_dry_run(self, dependencies):
         """Test `run` using the `dry_run` flag.
