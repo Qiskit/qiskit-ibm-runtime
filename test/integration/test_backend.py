@@ -30,7 +30,6 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from ..decorators import production_only
 from ..utils import bell
 from .case import IBMIntegrationTestCase
 
@@ -139,19 +138,19 @@ class TestIBMBackend:
         """Check if the service property is set."""
         assert isinstance(backend.service, QiskitRuntimeService)
 
-    @production_only
+    @pytest.mark.production
     def test_backend_target(self, backend):
         """Check if the target property is set."""
         assert backend.target is not None
         assert isinstance(backend.target, Target)
 
-    @production_only
+    @pytest.mark.production
     def test_backend_target_history(self, backend):
         """Check retrieving backend target_history."""
         assert backend.target_history() is not None
         assert backend.target_history(datetime=datetime.now() - timedelta(30)) is not None
 
-    @production_only
+    @pytest.mark.production
     def test_properties_not_cached_target_history(self, backend):
         """Check backend properties is not cached in target_history()."""
         properties = backend.properties()
@@ -194,7 +193,7 @@ class TestIBMBackend:
         """Check the backend configuration of each backend."""
         assert backend.configuration() is not None
 
-    @production_only
+    @pytest.mark.production
     def test_backend_invalid_attribute(self, backend):
         """Check if AttributeError is raised when an invalid backend attribute is accessed."""
         with self.assertRaises(AttributeError):
@@ -236,7 +235,7 @@ class TestIBMBackend:
         inputs = sampler.run([isa_circuit], shots=1).inputs
         assert inputs["pubs"][0][2] == 1
 
-    @production_only
+    @pytest.mark.production
     def test_paused_backend_warning(self, backend):
         """Test that a warning is given when running jobs on a paused backend."""
         paused_status = backend.status()

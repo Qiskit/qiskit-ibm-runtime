@@ -28,3 +28,18 @@ if TYPE_CHECKING:
 def dependencies() -> IntegrationTestDependencies:
     """Return the dependencies of an integration test, from the environment configuration."""
     return integration_test_dependencies()
+
+
+@pytest.fixture(autouse=True)
+def skip_if_not_production(request: pytest.FixtureRequest) -> None:
+    """Skip a test marked with `production` when the service is not a production one.
+
+    The dependencies are resolved lazily, so that the tests without the marker do not require
+    the environment configuration.
+    """
+    if request.node.get_closest_marker("production") is None:
+        return
+
+    dependencies = request.getfixturevalue("dependencies")
+    if "dev" in dependencies.url or "test" in dependencies.url:
+        pytest.skip("Skipping integration test. Not supported on staging.")
