@@ -135,30 +135,30 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
 class TestIBMBackend:
     """Test ibm_backend module."""
 
-    def test_backend_service(self, backend):
+    def test_backend_service(self, backend: IBMBackend) -> None:
         """Check if the service property is set."""
         assert isinstance(backend.service, QiskitRuntimeService)
 
     @pytest.mark.production
-    def test_backend_target(self, backend):
+    def test_backend_target(self, backend: IBMBackend) -> None:
         """Check if the target property is set."""
         assert backend.target is not None
         assert isinstance(backend.target, Target)
 
     @pytest.mark.production
-    def test_backend_target_history(self, backend):
+    def test_backend_target_history(self, backend: IBMBackend) -> None:
         """Check retrieving backend target_history."""
         assert backend.target_history() is not None
         assert backend.target_history(datetime=datetime.now() - timedelta(30)) is not None
 
     @pytest.mark.production
-    def test_properties_not_cached_target_history(self, backend):
+    def test_properties_not_cached_target_history(self, backend: IBMBackend) -> None:
         """Check backend properties is not cached in target_history()."""
         properties = backend.properties()
         backend.target_history(datetime=datetime.now() - timedelta(60))
         assert properties == backend.properties()
 
-    def test_backend_target_refresh(self, backend):
+    def test_backend_target_refresh(self, backend: IBMBackend) -> None:
         """Test refreshing the backend target."""
         old_target = backend.target
         old_configuration = backend.configuration()
@@ -169,20 +169,20 @@ class TestIBMBackend:
         assert old_configuration is not backend.configuration()
         assert old_properties is not backend.properties()
 
-    def test_backend_qubit_properties(self, backend):
+    def test_backend_qubit_properties(self, backend: IBMBackend) -> None:
         """Check if the qubit properties are set."""
         assert backend.qubit_properties(0) is not None
 
-    def test_backend_simulator(self, backend):
+    def test_backend_simulator(self, backend: IBMBackend) -> None:
         """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
         assert backend.simulator is not None
         assert backend.simulator == backend.configuration().simulator
 
-    def test_backend_status(self, backend):
+    def test_backend_status(self, backend: IBMBackend) -> None:
         """Check the status of a real chip."""
         assert backend.status().operational
 
-    def test_backend_properties(self, backend):
+    def test_backend_properties(self, backend: IBMBackend) -> None:
         """Check the properties of calibration of a real chip."""
         properties = backend.properties()
         properties_today = backend.properties(datetime=datetime.today())
@@ -190,17 +190,17 @@ class TestIBMBackend:
         assert properties_today is not None
         assert properties.backend_version == properties_today.backend_version
 
-    def test_backend_configuration(self, backend):
+    def test_backend_configuration(self, backend: IBMBackend) -> None:
         """Check the backend configuration of each backend."""
         assert backend.configuration() is not None
 
     @pytest.mark.production
-    def test_backend_invalid_attribute(self, backend):
+    def test_backend_invalid_attribute(self, backend: IBMBackend) -> None:
         """Check if AttributeError is raised when an invalid backend attribute is accessed."""
         with pytest.raises(AttributeError):
             backend.foobar
 
-    def test_backend_deepcopy(self, backend):
+    def test_backend_deepcopy(self, backend: IBMBackend) -> None:
         """Test that deepcopy on IBMBackend works correctly."""
         backend_copy = copy.deepcopy(backend)
         assert backend_copy.name == backend.name
@@ -212,13 +212,13 @@ class TestIBMBackend:
         assert backend_copy._instance == backend._instance
         assert backend_copy._api_client._session.base_url == backend._api_client._session.base_url
 
-    def test_backend_pending_jobs(self, dependencies):
+    def test_backend_pending_jobs(self, dependencies: IntegrationTestDependencies) -> None:
         """Test pending jobs are returned."""
         service = dependencies.service
         backends = service.backends()
         assert any(backend.status().pending_jobs >= 0 for backend in backends)
 
-    def test_backend_fetch_all_qubit_properties(self, backend):
+    def test_backend_fetch_all_qubit_properties(self, backend: IBMBackend) -> None:
         """Check retrieving properties of all qubits."""
         num_qubits = backend.num_qubits
         qubits = list(range(num_qubits))
@@ -227,7 +227,7 @@ class TestIBMBackend:
         for i in qubits:
             assert isinstance(qubit_properties[i], QubitProperties)
 
-    def test_sim_backend_options(self, backend):
+    def test_sim_backend_options(self, backend: IBMBackend) -> None:
         """Test simulator backend options."""
         backend.options.shots = 2048
         backend.set_options(memory=True)
@@ -237,23 +237,23 @@ class TestIBMBackend:
         assert inputs["pubs"][0][2] == 1
 
     @pytest.mark.production
-    def test_paused_backend_warning(self, backend):
+    def test_paused_backend_warning(self, backend: IBMBackend) -> None:
         """Test that a warning is given when running jobs on a paused backend."""
         paused_status = backend.status()
         paused_status.status_msg = "internal"
-        backend.status = mock.MagicMock(return_value=paused_status)
+        backend.status = mock.MagicMock(return_value=paused_status)  # type: ignore[method-assign]
         isa_circuit = transpile(bell(), backend)
         with pytest.warns(Warning):
             sampler = Sampler(mode=backend)
             sampler.run([isa_circuit])
 
-    def test_retrieve_backend_not_exist(self, dependencies):
+    def test_retrieve_backend_not_exist(self, dependencies: IntegrationTestDependencies) -> None:
         """Test that an error is raised when retrieving a backend that does not exist."""
         service = dependencies.service
         with pytest.raises(QiskitBackendNotFoundError):
             service.backend("nonexistent_backend")
 
-    def test_too_many_qubits_in_circuit(self, backend):
+    def test_too_many_qubits_in_circuit(self, backend: IBMBackend) -> None:
         """Check error message if circuit contains more qubits than supported on the backend."""
         num = len(backend.properties().qubits)
         num_qubits = num + 1
@@ -266,7 +266,7 @@ class TestIBMBackend:
             err.value
         )
 
-    def test_use_fractional_gates_flag(self, dependencies):
+    def test_use_fractional_gates_flag(self, dependencies: IntegrationTestDependencies) -> None:
         """Test use_fractional_gates returns correct backend config."""
         service = dependencies.service
         try:
@@ -278,7 +278,9 @@ class TestIBMBackend:
         assert "rzz" in real_device_fg.basis_gates
         assert "rzz" not in real_device_no_fg.basis_gates
 
-    def test_backend_fractional_gates_error(self, backend, dependencies):
+    def test_backend_fractional_gates_error(
+        self, backend: IBMBackend, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test that use_fractional_gates = True raises error for unsupported backends."""
         service = dependencies.service
         if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
@@ -292,7 +294,9 @@ class TestIBMBackend:
         ):
             service.backend(backend.name, use_fractional_gates=True)
 
-    def test_backend_fractional_gates_cache_behavior(self, dependencies):
+    def test_backend_fractional_gates_cache_behavior(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test backend config cache/refresh logic for use_fractional_gates."""
         service = dependencies.service
         try:
@@ -314,7 +318,9 @@ class TestIBMBackend:
         # The configuration is refreshed when use_fractional_gates changes.
         assert backend_no_fg2 is not backend_fg3
 
-    def test_renew_backend_properties(self, backend, dependencies):
+    def test_renew_backend_properties(
+        self, backend: IBMBackend, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test renewed backend property."""
         service = dependencies.service
         name = backend.name
@@ -326,7 +332,12 @@ class TestIBMBackend:
         renewed_backend = service.backend(name)
         assert renewed_backend.basis_gates == basis_gates
 
-    def test_backend_calibration_id(self, backend, dependencies, caplog):
+    def test_backend_calibration_id(
+        self,
+        backend: IBMBackend,
+        dependencies: IntegrationTestDependencies,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
         """Test calibration_id is used when fetching the configuration."""
         service = dependencies.service
         name = backend.name
@@ -337,7 +348,7 @@ class TestIBMBackend:
 
         assert calibration_id in caplog.text
 
-    def test_run_dry_run(self, dependencies):
+    def test_run_dry_run(self, dependencies: IntegrationTestDependencies) -> None:
         """Test `run` using the `dry_run` flag.
 
         This test does not use ``dependencies.qpu``, but instead attempts to find a backend that
