@@ -50,7 +50,7 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
     """Return a pair of backends: real backend, mocked backend.
 
     Raises:
-        SkiTest: if no backend that has a corresponding mock backend is available.
+        SkipTest: if no backend that has a corresponding mock backend is available.
     """
     backends = service.backends(include_mocks=True)
 
@@ -305,13 +305,13 @@ class TestIBMBackend:
         except QiskitBackendNotFoundError:
             pytest.skip("Real backend not available.")
 
-        # The cache is used for repeated use_fractional_gates=True
+        # The cache is used for repeated use_fractional_gates=True.
         assert backend_fg is backend_fg2
-        # The configuration is refreshed when use_fractional_gates changes
+        # The configuration is refreshed when use_fractional_gates changes.
         assert backend_fg is not backend_no_fg
-        # The cache is used to create the backend object
+        # The cache is used to create the backend object.
         assert backend_no_fg is backend_no_fg2
-        # The configuration is refreshed when use_fractional_gates changes
+        # The configuration is refreshed when use_fractional_gates changes.
         assert backend_no_fg2 is not backend_fg3
 
     def test_renew_backend_properties(self, backend, dependencies):
@@ -320,9 +320,9 @@ class TestIBMBackend:
         name = backend.name
         fetched_backend = service.backend(name)
         basis_gates = copy.copy(fetched_backend.basis_gates)
-        # modify a property
+        # Modify a property.
         fetched_backend.basis_gates.remove(basis_gates[0])
-        # renew backend
+        # Renew backend.
         renewed_backend = service.backend(name)
         assert renewed_backend.basis_gates == basis_gates
 
