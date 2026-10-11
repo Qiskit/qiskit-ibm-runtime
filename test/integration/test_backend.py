@@ -19,7 +19,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest import SkipTest, mock
+from unittest import SkipTest
 
 import pytest
 from qiskit import QuantumCircuit, transpile
@@ -237,11 +237,13 @@ class TestIBMBackend:
         assert inputs["pubs"][0][2] == 1
 
     @pytest.mark.production
-    def test_paused_backend_warning(self, backend: IBMBackend) -> None:
+    def test_paused_backend_warning(
+        self, backend: IBMBackend, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that a warning is given when running jobs on a paused backend."""
         paused_status = backend.status()
         paused_status.status_msg = "internal"
-        backend.status = mock.MagicMock(return_value=paused_status)  # type: ignore[method-assign]
+        monkeypatch.setattr(backend, "status", lambda: paused_status)
         isa_circuit = transpile(bell(), backend)
         with pytest.warns(Warning):
             sampler = Sampler(mode=backend)
