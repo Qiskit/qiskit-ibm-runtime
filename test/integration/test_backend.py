@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest import SkipTest, mock
 
+import pytest
 from qiskit import QuantumCircuit, transpile
 from qiskit.providers.backend import QubitProperties
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -35,6 +36,14 @@ from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
+
+    from .case import IntegrationTestDependencies
+
+
+@pytest.fixture(scope="class")
+def backend(dependencies: IntegrationTestDependencies) -> IBMBackend:
+    """Return the backend used by the tests in the class, from the environment configuration."""
+    return dependencies.service.backend(dependencies.qpu)
 
 
 def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IBMBackend]:
