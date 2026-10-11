@@ -19,6 +19,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
+import pytest
 from dateutil import tz
 from pydantic import ValidationError
 from qiskit.compiler import transpile
@@ -31,35 +32,40 @@ from .case import IBMIntegrationJobTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import RuntimeJobV2
+    from qiskit_ibm_runtime.ibm_backend import IBMBackend
+
+    from .case import IntegrationTestDependencies
 
 
-class TestIBMJobAttributes(IBMIntegrationJobTestCase):
+@pytest.fixture(scope="class")
+def job_test_backend(backend_test: IBMBackend | None) -> RuntimeJobV2:
+    """Return the job used by the tests in the class, submitted to the test backend."""
+    return Sampler(mode=backend_test).run([transpile(bell(), backend_test)])
+
+
+class TestIBMJobAttributes:
     """Test the attributes of a submitted IBMJob."""
 
-    test_job: RuntimeJobV2
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.test_job = Sampler(mode=cls.test_backend).run([transpile(bell(), cls.test_backend)])
-
-    def test_job_id(self):
+    def test_job_id(self, job_test_backend: RuntimeJobV2) -> None:
         """Test getting a job ID."""
-        assert self.test_job.job_id() is not None
+        assert job_test_backend.job_id() is not None
 
-    def test_job_instance(self):
+    def test_job_instance(
+        self, job_test_backend: RuntimeJobV2, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test getting job instance."""
-        assert self.dependencies.instance == self.test_job.instance
+        assert dependencies.instance == job_test_backend.instance
 
-    def test_get_backend_name(self):
+    def test_get_backend_name(
+        self, job_test_backend: RuntimeJobV2, backend_test: IBMBackend | None
+    ) -> None:
         """Test getting a backend name."""
-        assert self.test_job.backend().name == self.test_backend.name
+        assert job_test_backend.backend().name == backend_test.name
 
-    def test_cost_estimation(self):
+    def test_cost_estimation(self, job_test_backend: RuntimeJobV2) -> None:
         """Test cost estimation is returned correctly."""
-        assert self.test_job.usage_estimation
-        assert "quantum_seconds" in self.test_job.usage_estimation
+        assert job_test_backend.usage_estimation
+        assert "quantum_seconds" in job_test_backend.usage_estimation
 
 
 class TestIBMJobSubmission(IBMIntegrationJobTestCase):

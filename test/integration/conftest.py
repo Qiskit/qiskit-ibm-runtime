@@ -18,9 +18,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .case import integration_test_dependencies
+from .case import get_test_backend, integration_test_dependencies
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.ibm_backend import IBMBackend
+
     from .case import IntegrationTestDependencies
 
 
@@ -28,6 +30,12 @@ if TYPE_CHECKING:
 def dependencies() -> IntegrationTestDependencies:
     """Return the dependencies of an integration test, from the environment configuration."""
     return integration_test_dependencies()
+
+
+@pytest.fixture(scope="class")
+def backend_test(dependencies: IntegrationTestDependencies) -> IBMBackend | None:
+    """Return the backend used by the tests in the class, from the environment configuration."""
+    return get_test_backend(dependencies.service)
 
 
 @pytest.fixture(autouse=True)
