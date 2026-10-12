@@ -14,10 +14,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from ddt import data, ddt
+from qiskit.primitives import PrimitiveResult
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -112,7 +113,9 @@ class TestEstimator:
         assert results[1].data.evs.shape == (2,)
 
     @data("gate_folding", "pea")
-    def test_zne_estimator(self, amplifier: str, dependencies: IntegrationTestDependencies) -> None:
+    def test_zne_estimator(
+        self, amplifier: Literal["gate_folding", "pea"], dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test the ZNE path for estimator, parameterized over the noise amplifier.
 
         Tests
@@ -149,6 +152,7 @@ class TestEstimator:
         results = estimator.run(pubs).result()
 
         # Expect one result per pub:
+        assert isinstance(results, PrimitiveResult)
         assert len(results) == 2
 
         for pub_idx, expected_pub_shape in enumerate([(2, 2), (2,)]):

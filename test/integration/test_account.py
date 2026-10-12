@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 def _get_service_instance_name_for_crn(
     dependencies: IntegrationTestDependencies,
-) -> dict[str, str]:
+) -> str:
     """Retrieves the service instance name and account id for a given CRN.
 
     Note: production code computes the inverse mapping. This function is needed for integration test
@@ -54,7 +54,7 @@ def _get_service_instance_name_for_crn(
 
 def _get_instance_tags(
     dependencies: IntegrationTestDependencies,
-) -> dict[str, str]:
+) -> list[str] | None:
     """Retrieves the service instance tags for a given crn."""
     authenticator = IAMAuthenticator(dependencies.token, url=get_iam_api_url(dependencies.url))
     client = GlobalSearchV2(authenticator=authenticator)
@@ -323,10 +323,10 @@ class TestIntegrationAccount:
 
     def test_local_channel(self, dependencies: IntegrationTestDependencies) -> None:
         """Test local channel mode."""
-        local_service = QiskitRuntimeService(
+        local_service: object = QiskitRuntimeService(
             channel="local",
         )
-        local_service1 = QiskitRuntimeService(
+        local_service1: object = QiskitRuntimeService(
             channel="local",
             url=dependencies.url,
             token=dependencies.token,

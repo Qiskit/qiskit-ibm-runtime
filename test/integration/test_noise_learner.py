@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from qiskit.circuit import QuantumCircuit
@@ -29,6 +29,11 @@ from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladEr
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
+    from qiskit_ibm_runtime.options import (
+        LayerNoiseLearningOptions,
+        ResilienceOptionsV2,
+        ZneOptions,
+    )
     from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
 
     from .case import IntegrationTestDependencies
@@ -145,9 +150,12 @@ class TestIntegrationNoiseLearner:
         """Test feeding noise learner data to estimator."""
         backend = dependencies.service.backend(dependencies.qpu)
         options = EstimatorOptions()
-        options.resilience.zne_mitigation = True
-        options.resilience.zne.amplifier = "pea"
-        options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
+        resilience = cast("ResilienceOptionsV2", options.resilience)
+        zne = cast("ZneOptions", resilience.zne)
+        layer_noise_learning = cast("LayerNoiseLearningOptions", resilience.layer_noise_learning)
+        resilience.zne_mitigation = True
+        zne.amplifier = "pea"
+        layer_noise_learning.layer_pair_depths = [0, 1]
 
         circuit = QuantumCircuit(3)
         circuit.ecr(0, 1)
@@ -170,7 +178,8 @@ class TestIntegrationNoiseLearner:
             assert len(noise_model) == 3
 
             estimator = EstimatorV2(mode=session, options=options)
-            estimator.options.resilience.layer_noise_model = noise_model.data
+            estimator_resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
+            estimator_resilience.layer_noise_model = noise_model.data
 
             estimator_job = estimator.run(pubs)
             result = estimator_job.result()

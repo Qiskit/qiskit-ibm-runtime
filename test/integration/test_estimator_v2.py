@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest import skip
 
 from qiskit.circuit.library import IQP, real_amplitudes
@@ -27,6 +27,18 @@ from qiskit_ibm_runtime.fake_provider import FakeAuckland
 
 if TYPE_CHECKING:
     import pytest
+
+    from qiskit_ibm_runtime.options import (
+        EnvironmentOptions,
+        ExecutionOptionsV2,
+        LayerNoiseLearningOptions,
+        MeasureNoiseLearningOptions,
+        PecOptions,
+        ResilienceOptionsV2,
+        SimulatorOptions,
+        TwirlingOptions,
+        ZneOptions,
+    )
 
     from .case import IntegrationTestDependencies
 
@@ -92,28 +104,35 @@ class TestEstimatorV2:
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
         estimator.options.seed_estimator = 42
-        estimator.options.resilience.measure_mitigation = True
-        estimator.options.resilience.zne_mitigation = True
-        estimator.options.resilience.zne.amplifier = "gate_folding_back"
-        estimator.options.resilience.zne.noise_factors = [3, 5]
-        estimator.options.resilience.zne.extrapolator = "linear"
-        estimator.options.resilience.pec_mitigation = False
-        estimator.options.resilience.layer_noise_learning.max_layers_to_learn = 10
-        estimator.options.resilience.layer_noise_learning.shots_per_randomization = 64
-        estimator.options.resilience.layer_noise_learning.num_randomizations = 16
-        estimator.options.resilience.layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
-        estimator.options.resilience.measure_noise_learning.num_randomizations = 32
-        estimator.options.resilience.measure_noise_learning.shots_per_randomization = 100
-        estimator.options.execution.init_qubits = True
-        estimator.options.execution.rep_delay = 0.00025
-        estimator.options.twirling.enable_gates = True
-        estimator.options.twirling.enable_measure = True
-        estimator.options.twirling.strategy = "active"
-        estimator.options.twirling.num_randomizations = 16
-        estimator.options.twirling.shots_per_randomization = 100
-        estimator.options.environment = {
-            "job_tags": [".".join(request.node.nodeid.split("::")[-2:])]
-        }
+        resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
+        zne = cast("ZneOptions", resilience.zne)
+        layer_noise_learning = cast("LayerNoiseLearningOptions", resilience.layer_noise_learning)
+        measure_noise_learning = cast(
+            "MeasureNoiseLearningOptions", resilience.measure_noise_learning
+        )
+        execution = cast("ExecutionOptionsV2", estimator.options.execution)
+        twirling = cast("TwirlingOptions", estimator.options.twirling)
+        resilience.measure_mitigation = True
+        resilience.zne_mitigation = True
+        zne.amplifier = "gate_folding_back"
+        zne.noise_factors = [3, 5]
+        zne.extrapolator = "linear"
+        resilience.pec_mitigation = False
+        layer_noise_learning.max_layers_to_learn = 10
+        layer_noise_learning.shots_per_randomization = 64
+        layer_noise_learning.num_randomizations = 16
+        layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
+        measure_noise_learning.num_randomizations = 32
+        measure_noise_learning.shots_per_randomization = 100
+        execution.init_qubits = True
+        execution.rep_delay = 0.00025
+        twirling.enable_gates = True
+        twirling.enable_measure = True
+        twirling.strategy = "active"
+        twirling.num_randomizations = 16
+        twirling.shots_per_randomization = 100
+        environment = cast("EnvironmentOptions", estimator.options.environment)
+        environment.job_tags = [".".join(request.node.nodeid.split("::")[-2:])]
 
         job = estimator.run([(circuit, observable)])
         result = job.result()
@@ -132,12 +151,14 @@ class TestEstimatorV2:
 
         estimator = EstimatorV2(mode=backend)
         estimator.options.resilience_level = 0
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.resilience.pec_max_overhead = 200
-        estimator.options.simulator.set_backend(FakeAuckland())
-        estimator.options.environment = {
-            "job_tags": [".".join(request.node.nodeid.split("::")[-2:])]
-        }
+        resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
+        pec = cast("PecOptions", resilience.pec)
+        simulator = cast("SimulatorOptions", estimator.options.simulator)
+        environment = cast("EnvironmentOptions", estimator.options.environment)
+        resilience.pec_mitigation = True
+        pec.max_overhead = 200
+        simulator.set_backend(FakeAuckland())
+        environment.job_tags = [".".join(request.node.nodeid.split("::")[-2:])]
 
         job = estimator.run([(circuit, observables)])
         result = job.result()
