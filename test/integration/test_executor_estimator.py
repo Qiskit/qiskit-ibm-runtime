@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 
 from ..utils import make_mirror_circuit_with_phases
-from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
@@ -55,7 +54,7 @@ def estimator_pubs(backend: IBMBackend) -> list[tuple]:
 
 
 @ddt
-class TestEstimator(IBMIntegrationTestCase):
+class TestEstimator:
     """An integration test, testing Estimator implemented through Executor."""
 
     def test_vanilla_estimator(self):

@@ -26,8 +26,6 @@ from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
-from .case import IBMIntegrationTestCase
-
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
     from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
@@ -88,7 +86,7 @@ def assert_job_result(
     assert metadata["input_options"] == {}
 
 
-class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
+class TestIntegrationNoiseLearner:
     """Integration tests for NoiseLearner."""
 
     def test_with_default_options(self):

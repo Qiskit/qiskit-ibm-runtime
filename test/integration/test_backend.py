@@ -32,7 +32,6 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
-from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -67,7 +66,7 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
         raise SkipTest("No backend with corresponding mock backend available.")
 
 
-class TestIntegrationBackend(IBMIntegrationTestCase):
+class TestIntegrationBackend:
     """Integration tests for backend functions."""
 
     def test_least_busy(self):
