@@ -62,22 +62,16 @@ class QuantumProgram(SamplomaticQuantumProgram):
 
     @classmethod
     def from_(cls, program: SamplomaticQuantumProgram) -> Self:
-        """Promote a samplomatic ``QuantumProgram`` to a runtime :class:`~.QuantumProgram`.
+        """Convert a samplomatic ``QuantumProgram`` to a runtime :class:`~.QuantumProgram`.
 
-        If ``program`` is already an instance of :class:`~.QuantumProgram`, it is returned
-        unchanged. Otherwise, a new :class:`~.QuantumProgram` is constructed sharing the data of
-        the input program.
+        A new :class:`~.QuantumProgram` is constructed sharing the data of the input program.
 
         Args:
-            program: A :class:`~samplomatic.quantum_program.QuantumProgram` to promote.
+            program: A :class:`~samplomatic.quantum_program.QuantumProgram` to convert.
 
         Returns:
-            The original program if it is already a :class:`~.QuantumProgram`, or a new
-            :class:`~.QuantumProgram` instance sharing the data of ``program``.
+            A new :class:`~.QuantumProgram` instance sharing the data of ``program``.
         """
-        if isinstance(program, cls):
-            return program
-
         return cls(
             shots=program.shots,
             items=program.items,

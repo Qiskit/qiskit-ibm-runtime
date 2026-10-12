@@ -129,8 +129,8 @@ class Executor:
         """Run a quantum program.
 
         Args:
-            program: The program to run. Will be automatically coerced to a
-                :class:`~.QuantumProgram`.
+            program: The program to run. If a :class:`samplomatic.quantum_program.QuantumProgram`
+                is passed, it will be automatically converted to a :class:`~.QuantumProgram`.
             dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
                 can be used to validate the job, estimate usage consumption, and retrieve circuit
                 timing metadata. Returned results preserve the expected schema but contain

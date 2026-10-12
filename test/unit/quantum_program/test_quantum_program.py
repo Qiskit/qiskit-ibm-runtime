@@ -152,12 +152,3 @@ class TestQuantumProgram(IBMTestCase):
         self.assertIsInstance(result, QuantumProgram)
         self.assertEqual(result.shots, 50)
         self.assertEqual(result.items, samplomatic_program.items)
-
-    def test_from_runtime_program(self):
-        """Test that a runtime QuantumProgram is returned unchanged (identity)."""
-        program = QuantumProgram(shots=100)
-        program._semantic_role = "sampler-v2"
-
-        result = QuantumProgram.from_(program)
-
-        self.assertIs(result, program)
