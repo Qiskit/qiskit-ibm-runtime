@@ -110,7 +110,7 @@ class TestAccountManager:
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
     def test_save_without_overwrite_cloud(self, account_filename):
         """Test to overwrite an existing account without setting overwrite=True."""
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
                 name="conflict",
                 token=_TEST_IBM_CLOUD_ACCOUNT.token,
@@ -128,7 +128,7 @@ class TestAccountManager:
             channel="ibm_cloud",
             overwrite=True,
         )
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
                 filename=account_filename,
                 name="conflict",
@@ -142,7 +142,7 @@ class TestAccountManager:
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT})
     def test_save_without_overwrite_iqp(self, account_filename):
         """Test to overwrite an existing account without setting overwrite=True."""
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
                 name="conflict",
                 token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
@@ -160,7 +160,7 @@ class TestAccountManager:
             channel="ibm_cloud",
             overwrite=True,
         )
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
                 filename=account_filename,
                 name="conflict",
@@ -174,7 +174,7 @@ class TestAccountManager:
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
     def test_get_none(self):
         """Test to get an account with an invalid name."""
-        with self.assertRaises(AccountNotFoundError):
+        with pytest.raises(AccountNotFoundError):
             AccountManager.get(name="bla")
 
     @temporary_account_config_file(contents={})
