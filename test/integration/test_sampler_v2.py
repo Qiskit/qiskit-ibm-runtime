@@ -170,7 +170,7 @@ class TestSampler:
         self, parameter_values: tuple | list | None, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test Sampler.run()."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
         _, _, target = sampler_cases()[1]
         pub = isa_bell if parameter_values is None else (isa_bell, parameter_values)
@@ -184,7 +184,7 @@ class TestSampler:
 
     def test_sample_run_multiple_circuits(self, dependencies: IntegrationTestDependencies) -> None:
         """Test Sampler.run() with multiple circuits."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
@@ -209,7 +209,7 @@ class TestSampler:
 
     def test_run_1qubit(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for 1-qubit cases."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         qc = QuantumCircuit(1)
         qc.measure_all()
@@ -223,7 +223,7 @@ class TestSampler:
 
     def test_run_2qubit(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for 2-qubit cases."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         qc0 = QuantumCircuit(2)
         qc0.measure_all()
@@ -259,7 +259,7 @@ class TestSampler:
         dependencies: IntegrationTestDependencies,
     ) -> None:
         """Test for single circuit case, for a circuit without parameters."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
         _, _, target = sampler_cases()[1]
 
@@ -282,7 +282,7 @@ class TestSampler:
         self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test for single circuit case, for a circuit with a single parameter."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         circuit = QuantumCircuit(1, 1, name="X gate")
@@ -309,7 +309,7 @@ class TestSampler:
         self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test for single circuit case, for a circuit with more than one parameter."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         circuit, _, target = sampler_cases()[3]
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
@@ -321,7 +321,7 @@ class TestSampler:
 
     def test_run_reverse_meas_order(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for sampler with reverse measurement order."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         x = Parameter("x")
         y = Parameter("y")
@@ -344,7 +344,7 @@ class TestSampler:
         self, num_circuits: int, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test for empty parameter."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         n = 5
         qc = QuantumCircuit(n, n - 1)
@@ -361,7 +361,7 @@ class TestSampler:
         self, params_type: str, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test for numpy array as parameter values."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         qc = real_amplitudes(num_qubits=2, reps=2)
         qc.measure_all()
@@ -388,7 +388,7 @@ class TestSampler:
     ) -> None:
         """Test with the number of shots set in the options the sampler is created with."""
         shots = 100
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -404,7 +404,7 @@ class TestSampler:
     ) -> None:
         """Test with the number of shots set in the options of an existing sampler."""
         shots = 100
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -419,7 +419,7 @@ class TestSampler:
     def test_run_with_shots_option_run_arg(self, dependencies: IntegrationTestDependencies) -> None:
         """Test with the number of shots set as an argument of `Sampler.run()`."""
         shots = 100
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -435,7 +435,7 @@ class TestSampler:
     ) -> None:
         """Test with the number of shots set in a pub-like tuple."""
         shots = 100
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -449,7 +449,7 @@ class TestSampler:
     def test_run_with_shots_option_pub(self, dependencies: IntegrationTestDependencies) -> None:
         """Test with the number of shots set in a `SamplerPub`."""
         shots = 100
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -464,7 +464,7 @@ class TestSampler:
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test with per-pub shots option."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         shots1 = 100
@@ -484,7 +484,7 @@ class TestSampler:
 
     def test_run_shots_result_size(self, dependencies: IntegrationTestDependencies) -> None:
         """Test with shots option to validate the result size."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         n = 10
         qc = QuantumCircuit(n)
@@ -499,7 +499,7 @@ class TestSampler:
 
     def test_primitive_job_status_done(self, dependencies: IntegrationTestDependencies) -> None:
         """Test primitive job's status."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         sampler = Sampler(mode=backend, options=OPTIONS)
@@ -515,7 +515,7 @@ class TestSampler:
         self, gate: UnitaryGate, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test for circuit with unitary gate."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         circuit = QuantumCircuit(1)
@@ -530,7 +530,7 @@ class TestSampler:
 
     def test_metadata(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for metatdata."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -545,7 +545,7 @@ class TestSampler:
         self, circuit: QuantumCircuit, target: dict, dependencies: IntegrationTestDependencies
     ) -> None:
         """Test for circuit with multiple classical registers."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(backend) as session:
@@ -557,7 +557,7 @@ class TestSampler:
 
     def test_sampler_v2_options(self, dependencies: IntegrationTestDependencies) -> None:
         """Test SamplerV2 options."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
@@ -573,7 +573,7 @@ class TestSampler:
 
     def test_sampler_v2_dd(self, dependencies: IntegrationTestDependencies) -> None:
         """Test SamplerV2 DD options."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
 
         sampler = Sampler(mode=backend)

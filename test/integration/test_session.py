@@ -39,7 +39,7 @@ class TestIntegrationSession:
 
     def test_estimator_sampler(self, dependencies: IntegrationTestDependencies) -> None:
         """Test calling both estimator and sampler."""
-        service = self.service
+        service = dependencies.service
         backend = service.backend(dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -67,7 +67,7 @@ class TestIntegrationSession:
 
     def test_session_from_id(self, dependencies: IntegrationTestDependencies) -> None:
         """Test creating a session from a given id."""
-        service = self.service
+        service = dependencies.service
         backend = service.backend(dependencies.qpu)
         if backend.configuration().simulator:
             raise SkipTest("No proper backends available")
@@ -92,7 +92,7 @@ class TestIntegrationSession:
 
     def test_session_from_id_no_backend(self, dependencies: IntegrationTestDependencies) -> None:
         """Test error is raised if session has no backend."""
-        service = self.service
+        service = dependencies.service
         backend = service.backend(dependencies.qpu)
         if backend.configuration().simulator:
             raise SkipTest("No proper backends available")
@@ -106,7 +106,7 @@ class TestIntegrationSession:
 
     def test_session_backend(self, dependencies: IntegrationTestDependencies) -> None:
         """Test session backend is the correct backend."""
-        service = self.service
+        service = dependencies.service
         backend = service.backend(dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)

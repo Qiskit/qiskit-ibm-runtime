@@ -46,7 +46,7 @@ class TestEstimatorV2:
 
     def test_estimator_v2_session(self, dependencies: IntegrationTestDependencies) -> None:
         """Verify correct results are returned."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
@@ -77,7 +77,7 @@ class TestEstimatorV2:
 
     def test_estimator_v2_options(self, dependencies: IntegrationTestDependencies) -> None:
         """Test V2 Estimator with different options."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
@@ -117,7 +117,7 @@ class TestEstimatorV2:
     @skip("Skip until simulator options are accepted by server.")
     def test_pec(self, dependencies: IntegrationTestDependencies) -> None:
         """Test running with PEC."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)

@@ -30,7 +30,7 @@ class TestCalibrator:
 
     def test_calibrator(self, dependencies: IntegrationTestDependencies) -> None:
         """Test that a calibration job runs and returns a result."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         with Session(backend=backend) as session:
             calibrator = Calibrator(session)

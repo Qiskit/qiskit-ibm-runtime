@@ -35,7 +35,7 @@ class TestExecutor:
 
     def test_executor_with_circuit_item(self, dependencies: IntegrationTestDependencies) -> None:
         """Test sampler with a single circuit item."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
 
         shape = (2, 3)
@@ -83,7 +83,7 @@ class TestExecutor:
 
     def test_executor_with_samplex_item(self, dependencies: IntegrationTestDependencies) -> None:
         """Test sampler with a single samplex item."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
 
         shape = (2, 3)

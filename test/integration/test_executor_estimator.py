@@ -66,7 +66,7 @@ class TestEstimator:
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
@@ -88,7 +88,7 @@ class TestEstimator:
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
@@ -127,7 +127,7 @@ class TestEstimator:
         - Correct shape and make-up for all ZNE-specific pub metadata fields:
             * ``extrapolators``: pub shape, only requested extrapolators or `multiple`.
         """
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)

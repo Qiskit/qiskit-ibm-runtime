@@ -93,7 +93,7 @@ class TestIntegrationNoiseLearner:
 
     def test_with_default_options(self, dependencies: IntegrationTestDependencies) -> None:
         """Test noise learner with default options."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=backend, options=options)
 
@@ -106,7 +106,7 @@ class TestIntegrationNoiseLearner:
 
     def test_with_non_default_options(self, dependencies: IntegrationTestDependencies) -> None:
         """Test noise learner with non-default options."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
@@ -124,7 +124,7 @@ class TestIntegrationNoiseLearner:
 
     def test_with_no_layers(self, dependencies: IntegrationTestDependencies) -> None:
         """Test noise learner when `max_layers_to_learn` is `0`."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
         learner = NoiseLearner(mode=backend, options=options)
@@ -142,7 +142,7 @@ class TestIntegrationNoiseLearner:
 
     def test_learner_plus_estimator(self, dependencies: IntegrationTestDependencies) -> None:
         """Test feeding noise learner data to estimator."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = EstimatorOptions()
         options.resilience.zne_mitigation = True
         options.resilience.zne.amplifier = "pea"

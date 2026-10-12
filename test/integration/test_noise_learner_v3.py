@@ -33,7 +33,7 @@ class TestNoiseLearnerV3:
 
     def test_noise_learner_v3(self, dependencies: IntegrationTestDependencies) -> None:
         """Test NLV3 with basic options."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         boxing_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
         boxing_pass_manager.post_scheduling = generate_boxing_pass_manager(

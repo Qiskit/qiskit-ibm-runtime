@@ -37,7 +37,7 @@ class TestSampler:
     @data(True, False)
     def test_sampler(self, twirling: bool, dependencies: IntegrationTestDependencies) -> None:
         """Test sampler by submitting a couple of parametric circuits."""
-        backend = self.service.backend(dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         circuit = make_mirror_circuit_with_phases(backend)

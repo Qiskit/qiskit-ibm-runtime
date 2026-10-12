@@ -71,7 +71,7 @@ class TestIntegrationBackend:
 
     def test_least_busy(self, dependencies: IntegrationTestDependencies) -> None:
         """Test the least busy method."""
-        service = self.service
+        service = dependencies.service
         # test passing an instance
         instance = dependencies.instance
         backend = service.least_busy(instance=instance)
@@ -86,38 +86,38 @@ class TestIntegrationBackend:
         backend = service_with_no_default_instance.least_busy()
         assert backend
 
-    def test_backends(self):
+    def test_backends(self, dependencies: IntegrationTestDependencies) -> None:
         """Test getting all backends."""
-        service = self.service
+        service = dependencies.service
         backends = service.backends()
         assert backends
         backend_names = [back.name for back in backends]
         assert len(backend_names) == len(set(backend_names))
 
-    def test_get_backend(self):
+    def test_get_backend(self, dependencies: IntegrationTestDependencies) -> None:
         """Test getting a backend."""
-        service = self.service
+        service = dependencies.service
         backends = service.backends()
         backend = service.backend(backends[0].name)
         assert backend
 
     def test_target_reset(self, dependencies: IntegrationTestDependencies) -> None:
         """Test confirming target contains reset."""
-        service = self.service
+        service = dependencies.service
         backend = service.backend(dependencies.qpu)
         assert "reset" in backend.target
 
-    def test_backends_physical_qubits(self):
+    def test_backends_physical_qubits(self, dependencies: IntegrationTestDependencies) -> None:
         """All backends should have a `physical_qubits` property."""
-        service = self.service
+        service = dependencies.service
         backends = service.backends()
 
         for backend in backends:
             assert isinstance(backend.physical_qubits, int)
 
-    def test_backends_include_mocks(self):
+    def test_backends_include_mocks(self, dependencies: IntegrationTestDependencies) -> None:
         """`service.backends()` should respect the `include_mocks` flag."""
-        service = self.service
+        service = dependencies.service
         # Skip the test if there are no mock backends.
         get_mock_backend_pair(service)
 
