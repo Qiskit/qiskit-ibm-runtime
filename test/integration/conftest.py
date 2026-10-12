@@ -24,7 +24,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import SamplerV2
 
 from ..utils import bell
-from .case import get_test_backend, integration_test_dependencies
+from .case import integration_test_dependencies
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -46,7 +46,11 @@ def dependencies() -> IntegrationTestDependencies:
 @pytest.fixture(scope="class")
 def backend_test(dependencies: IntegrationTestDependencies) -> IBMBackend | None:
     """Return the test backend used by the tests in the class, from the environment config."""
-    return get_test_backend(dependencies.service)
+    for backend in dependencies.service.backends():
+        if backend.name.startswith("test_eagle"):
+            return backend
+
+    return None
 
 
 @pytest.fixture
