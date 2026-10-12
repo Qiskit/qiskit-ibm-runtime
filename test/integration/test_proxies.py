@@ -30,7 +30,6 @@ from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
-from ..ibm_test_case import IBMTestCase
 from .case import integration_test_dependencies
 
 if TYPE_CHECKING:
@@ -78,7 +77,7 @@ def proxy_server() -> Iterator[subprocess.Popen]:
             process.wait()
 
 
-class TestProxies(IBMTestCase):
+class TestProxies:
     """Tests for proxy capabilities."""
 
     def test_proxies_cloud_runtime_client(self) -> None:
