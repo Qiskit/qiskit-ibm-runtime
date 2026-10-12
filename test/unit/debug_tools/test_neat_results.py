@@ -21,17 +21,17 @@ from ...ibm_test_case import IBMTestCase
 from ...utils import combine
 
 
-def neat_pub_results():
+def neat_pub_results() -> list[NeatPubResult]:
     """Return a one-dimensional and a two-dimensional `NeatPubResult`."""
     return [NeatPubResult([1, 2, 3]), NeatPubResult([[1, 2], [3, 4]])]
 
 
-def databins():
+def databins() -> list[DataBin]:
     """Return a one-dimensional and a two-dimensional `DataBin`."""
     return [DataBin(evs=[4, 5, 6]), DataBin(evs=[[5, 6], [7, 8]])]
 
 
-def pub_results():
+def pub_results() -> list[PubResult]:
     """Return a `PubResult` for each of the databins."""
     return [PubResult(databin) for databin in databins()]
 

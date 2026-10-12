@@ -37,7 +37,12 @@ from qiskit_ibm_runtime.results.quantum_program import (
 from ....ibm_test_case import IBMTestCase
 
 
-def result_twirling(data, twirling_enabled=False, meas_type="classified", shots=128):
+def result_twirling(
+    data: list,
+    twirling_enabled: bool = False,
+    meas_type: str = "classified",
+    shots: int = 128,
+) -> QuantumProgramResult:
     """Helper to build a QuantumProgramResult with twirling flag.
 
     Args:

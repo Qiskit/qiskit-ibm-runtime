@@ -49,7 +49,7 @@ def execution_spans(seed: int = 100) -> tuple[ExecutionSpans, ExecutionSpans]:
     return ExecutionSpans(spans0), ExecutionSpans(spans1)
 
 
-def spans_to_draw():
+def spans_to_draw() -> ExecutionSpans:
     """Return a set of two spans, the second one starting before the first one ends."""
     span1 = SliceSpan(
         datetime(2023, 8, 22, 18, 45, 3),

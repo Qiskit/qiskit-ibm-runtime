@@ -31,11 +31,11 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
 from .....ibm_test_case import IBMTestCase
 
 
-def delay_dict(circ):
+def delay_dict(circ: QuantumCircuit) -> dict[int, list[int]]:
     """Return a dictionary with a list of delays for each qubit."""
     dag = circuit_to_dag(circ)
     delays = dag.op_nodes(Delay)
-    delays_per_qubit = {q_ind: [] for q_ind in range(len(circ.qubits))}
+    delays_per_qubit: dict[int, list[int]] = {q_ind: [] for q_ind in range(len(circ.qubits))}
     for delay in delays:
         delays_per_qubit[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
     return delays_per_qubit

@@ -22,7 +22,7 @@ from qiskit_ibm_runtime.executor_estimator.utils import resolve_precision
 from ...ibm_test_case import IBMTestCase
 
 
-def circuit_and_observable():
+def circuit_and_observable() -> tuple[QuantumCircuit, SparsePauliOp]:
     """Return a two-qubit circuit and an observable acting on it."""
     circuit = QuantumCircuit(2)
     circuit.h(0)

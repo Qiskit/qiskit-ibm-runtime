@@ -12,11 +12,17 @@
 
 """Test of generated fake backends."""
 
+from __future__ import annotations
+
 import os
 import shutil
 import tempfile
 import unittest
+from typing import TYPE_CHECKING
 from unittest import mock
+
+if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
 
 from ddt import data, ddt
 from qiskit import QuantumCircuit, transpile
@@ -40,7 +46,7 @@ from ...ibm_test_case import IBMTestCase
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
 
-def make_refresh_service(backend):
+def make_refresh_service(backend: FakeBackendV2) -> tuple[mock.MagicMock, AbstractContextManager]:
     """Build a mocked service that returns ``backend``'s own bundled data as the real data.
 
     This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is

@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from qiskit.primitives.containers import BitArray
 from qiskit.quantum_info import PauliLindbladMap, Statevector, hellinger_fidelity
@@ -23,13 +25,17 @@ from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
+    from qiskit.providers import BackendV2
+
 from qiskit_ibm_runtime import Executor, QuantumProgram
 
 from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
 
 
-def boxed_mirror_circuit(backend):
+def boxed_mirror_circuit(backend: BackendV2) -> tuple[QuantumCircuit, QuantumCircuit]:
     """Return a mirror circuit, and the boxed and ISA-compliant version of it for `backend`."""
     circuit = make_mirror_circuit_with_phases(backend)
 

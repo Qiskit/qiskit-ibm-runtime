@@ -64,7 +64,7 @@ DUMMY_TOKEN = "123"
 DUMMY_IBM_CLOUD_URL = "https://quantum.cloud.ibm.com"
 
 
-def assert_preferences(prefs, account):
+def assert_preferences(prefs: dict, account: Account) -> None:
     """Assert that the preferences set in `prefs` match the ones of `account`."""
     if "proxies" in prefs:
         assert account.proxies == ProxyConfiguration(**prefs["proxies"])

@@ -29,10 +29,17 @@ from ....utils import make_mirror_circuit_with_phases
 if TYPE_CHECKING:
     from typing import Any
 
+    from qiskit.circuit.instruction import CircuitInstruction
+    from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
     from qiskit.providers import BackendV2
+    from qiskit.transpiler.passmanager import StagedPassManager
 
 
-def create_estimator_test_data(backend, preset_pass_manager, include_projectors):
+def create_estimator_test_data(
+    backend: BackendV2,
+    preset_pass_manager: StagedPassManager,
+    include_projectors: bool,
+) -> tuple[EstimatorPubLike, list[float]]:
     """Create a pub and ideal expectation values for it.
 
     The circuit will use 3 qubits and only a subset of observable combinations.
@@ -72,7 +79,11 @@ def create_estimator_test_data(backend, preset_pass_manager, include_projectors)
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
 
-def create_estimator_test_data_extended(backend, preset_pass_manager, include_projectors):
+def create_estimator_test_data_extended(
+    backend: BackendV2,
+    preset_pass_manager: StagedPassManager,
+    include_projectors: bool,
+) -> tuple[EstimatorPubLike, list[float]]:
     """Create a pub and ideal expectation values for it.
 
     The circuit will use 4 qubits and try to use an extensive list of observables to provide
@@ -134,7 +145,9 @@ def create_estimator_test_data_extended(backend, preset_pass_manager, include_pr
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
 
-def create_noise_model_without_noise(estimator, pub):
+def create_noise_model_without_noise(
+    estimator: Estimator, pub: EstimatorPubLike
+) -> list[tuple[CircuitInstruction, PauliLindbladMap]]:
     """Creates a noise-model, mapping each layer to the identity (no noise)."""
     layers = estimator.find_unique_layers([pub], types="all")
 
