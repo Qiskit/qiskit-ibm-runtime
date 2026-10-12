@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pytest
@@ -35,6 +35,7 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
+    from qiskit_ibm_runtime.options import DynamicalDecouplingOptions, SamplerExecutionOptionsV2
 
     from .case import IntegrationTestDependencies
 
@@ -564,8 +565,9 @@ class TestSampler:
 
         sampler = Sampler(mode=backend)
         sampler.options.default_shots = 4096
-        sampler.options.execution.init_qubits = True
-        sampler.options.execution.rep_delay = 0.00025
+        execution = cast("SamplerExecutionOptionsV2", sampler.options.execution)
+        execution.init_qubits = True
+        execution.rep_delay = 0.00025
 
         _, _, target = cases[1]
         job = sampler.run([isa_bell])
@@ -578,11 +580,14 @@ class TestSampler:
         cases = sampler_cases()
 
         sampler = Sampler(mode=backend)
-        sampler.options.dynamical_decoupling.enable = True
-        sampler.options.dynamical_decoupling.sequence_type = "XX"
-        sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"
-        sampler.options.dynamical_decoupling.scheduling_method = "asap"
-        sampler.options.dynamical_decoupling.skip_reset_qubits = True
+        dynamical_decoupling = cast(
+            "DynamicalDecouplingOptions", sampler.options.dynamical_decoupling
+        )
+        dynamical_decoupling.enable = True
+        dynamical_decoupling.sequence_type = "XX"
+        dynamical_decoupling.extra_slack_distribution = "middle"
+        dynamical_decoupling.scheduling_method = "asap"
+        dynamical_decoupling.skip_reset_qubits = True
         bell, _, _ = cases[1]
         bell = transpile(bell, backend)
         job = sampler.run([bell])

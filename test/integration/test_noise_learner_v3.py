@@ -71,14 +71,20 @@ class TestNoiseLearnerV3:
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)
-        assert all(isinstance(datum, NoiseLearnerV3Result) for datum in result)
+        assert all(isinstance(datum, NoiseLearnerV3Result) for datum in result.data)
 
-        assert result[0].metadata["learning_protocol"] == "lindblad"
+        metadata = result[0].metadata
+        assert isinstance(metadata, dict)
+        assert metadata["learning_protocol"] == "lindblad"
         assert result[0].to_pauli_lindblad_map().num_qubits == len(instructions[0].qubits)
 
-        assert result[1].metadata["learning_protocol"] == "lindblad"
+        metadata = result[1].metadata
+        assert isinstance(metadata, dict)
+        assert metadata["learning_protocol"] == "lindblad"
         assert result[1].to_pauli_lindblad_map().num_qubits == len(instructions[1].qubits)
 
-        assert result[2].metadata["learning_protocol"] == "trex"
+        metadata = result[2].metadata
+        assert isinstance(metadata, dict)
+        assert metadata["learning_protocol"] == "trex"
         assert result[2].to_pauli_lindblad_map().num_qubits == len(instructions[2].qubits)
         assert result[2].to_pauli_lindblad_map().num_terms == len(instructions[2].qubits)
