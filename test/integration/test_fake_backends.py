@@ -12,9 +12,13 @@
 
 """Tests for fake backends."""
 
+from __future__ import annotations
+
+import logging
 import operator
 import unittest
 from dataclasses import asdict
+from typing import TYPE_CHECKING
 
 from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
@@ -38,6 +42,9 @@ from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from ..decorators import production_only
 from ..ibm_test_case import IBMTestCase
 from ..utils import combine
+
+if TYPE_CHECKING:
+    import pytest
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
@@ -157,7 +164,7 @@ class TestRefreshFakeBackends:
     """Test case for refreshing fake backends."""
 
     @production_only
-    def test_refresh_method(self):
+    def test_refresh_method(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test refresh method."""
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
@@ -176,14 +183,15 @@ class TestRefreshFakeBackends:
         except QiskitBackendNotFoundError:
             self.skipTest("Credentials do not have access to ibm_sherbrooke")
 
-        with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+        with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
             old_backend.refresh(service)
-        assert "The backend fake_sherbrooke has been updated" in logs.output[1]
+        assert "The backend fake_sherbrooke has been updated" in caplog.text
 
         # to verify the refresh can't be done
         wrong_backend = FakeSherbrooke()
         # set a non-existent backend name
         wrong_backend.backend_name = "wrong_fake_sherbrooke"
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             wrong_backend.refresh(service)
-        assert "The refreshing of wrong_fake_sherbrooke has failed" in logs.output[0]
+        assert "The refreshing of wrong_fake_sherbrooke has failed" in caplog.text

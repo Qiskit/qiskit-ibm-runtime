@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -31,6 +32,8 @@ from qiskit_ibm_runtime.accounts.utils import (
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 
 if TYPE_CHECKING:
+    import pytest
+
     from .case import IntegrationTestDependencies
 
 
@@ -69,42 +72,41 @@ def _get_instance_tags(
 class TestQuantumPlatform:
     """Integration tests for account management."""
 
-    def test_initializing_service_no_instance(self):
+    def test_initializing_service_no_instance(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test initializing without an instance."""
         # no default instance and no filters
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             QiskitRuntimeService(
                 token=self.dependencies.token,
                 channel="ibm_quantum_platform",
                 url=self.dependencies.url,
             )
-            message = logs.output[1]
-            assert "Free and trial" in message
+            assert "Free and trial" in caplog.text
 
         # no default instance and plans_preference
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             QiskitRuntimeService(
                 token=self.dependencies.token,
                 channel="ibm_quantum_platform",
                 url=self.dependencies.url,
                 plans_preference=["internal"],
             )
-            message = logs.output[1]
-            assert "Free and trial" not in message
-            assert "available account instances are" in message
+            assert "Free and trial" not in caplog.text
+            assert "available account instances are" in caplog.text
 
         # no default instance and region
         region = "us-east"
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             QiskitRuntimeService(
                 token=self.dependencies.token,
                 channel="ibm_quantum_platform",
                 url=self.dependencies.url,
                 region=region,
             )
-            message = logs.output[1]
-            assert "Free and trial" in message
-            assert f"region: {region}" in message
+            assert "Free and trial" in caplog.text
+            assert f"region: {region}" in caplog.text
 
     def test_backends_default_instance(self):
         """Test that default instance returns the correct backends."""
