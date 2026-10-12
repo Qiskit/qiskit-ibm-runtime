@@ -12,9 +12,13 @@
 
 """Tests for the account manager functionality."""
 
+from __future__ import annotations
+
 import os
 import uuid
-from unittest import skipIf
+from typing import TYPE_CHECKING
+
+import pytest
 
 from qiskit_ibm_runtime.accounts import (
     Account,
@@ -30,7 +34,9 @@ from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from test.account import custom_envs, no_envs, temporary_account_config_file
 from test.decorators import mock_responses
-from test.ibm_test_case import IBMTestCase
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",
@@ -91,9 +97,17 @@ _TEST_ACCOUNTS_WITH_DEFAULTS = {
 }
 
 
+@pytest.fixture(autouse=True)
+def _remove_test_account_file() -> Iterator[None]:
+    """Remove the account file used by the tests, after each test."""
+    yield
+    if os.path.exists(_TEST_FILENAME):
+        os.remove(_TEST_FILENAME)
+
+
 # NamedTemporaryFiles not supported in Windows
-@skipIf(os.name == "nt", "Test not supported in Windows")
-class TestAccountManager(IBMTestCase):
+@pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+class TestAccountManager:
     """Tests for AccountManager class."""
 
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
@@ -466,9 +480,3 @@ class TestAccountManager(IBMTestCase):
         with temporary_account_config_file(contents=contents), no_envs("QISKIT_IBM_CHANNEL"):
             service = QiskitRuntimeService()
             assert service.channel == "ibm_quantum_platform"
-
-    def tearDown(self) -> None:
-        """Test level tear down."""
-        super().tearDown()
-        if os.path.exists(_TEST_FILENAME):
-            os.remove(_TEST_FILENAME)
