@@ -33,7 +33,6 @@ from qiskit_ibm_runtime.accounts.management import (
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from test.account import custom_envs, no_envs, temporary_account_config_file
-from test.decorators import mock_responses
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -300,7 +299,6 @@ class TestAccountManager:
         )
         assert account.token == dummy_token
 
-    @mock_responses
     @temporary_account_config_file()
     def test_default_env_channel(self, registry: BaseRegistry) -> None:
         """Test that if QISKIT_IBM_CHANNEL is set in the environment, this channel will be used."""
@@ -353,7 +351,6 @@ class TestAccountManager:
         assert account.channel == "ibm_quantum_platform"
         assert account.token == _TEST_IBM_CLOUD_ACCOUNT.token
 
-    @mock_responses
     @temporary_account_config_file()
     def test_set_channel_precedence(self, registry: BaseRegistry) -> None:
         """Test the precedence of the various methods to set the account.
