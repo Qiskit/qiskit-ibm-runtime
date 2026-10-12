@@ -21,7 +21,6 @@ from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 import pytest
-from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.transpiler import generate_preset_pass_manager
@@ -39,8 +38,6 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeVigoV2,
 )
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
-
-from ..utils import combine
 
 if TYPE_CHECKING:
     from .case import IntegrationTestDependencies
@@ -65,7 +62,6 @@ def flipped_circuit() -> QuantumCircuit:
     return circuit
 
 
-@ddt
 class TestFakeBackends:
     """Test runnning circuits in fake backends.
 
@@ -73,7 +69,11 @@ class TestFakeBackends:
     they depend on `aer` and are time consuming.
     """
 
-    @data(*[be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1])
+    @pytest.mark.parametrize(
+        "backend",
+        [be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1],
+        ids=lambda be: be.name,
+    )
     def test_circuit_on_fake_backend_v2(self, backend):
         """Test running a circuit in fake backends."""
         if not optionals.HAS_AER and backend.num_qubits > 20:
@@ -88,7 +88,7 @@ class TestFakeBackends:
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
         assert max_count == "11"
 
-    @data(0, 1, 2, 3)
+    @pytest.mark.parametrize("optimization_level", [0, 1, 2, 3])
     def test_circuit_on_fake_backend_v2_with_optimization_level(self, optimization_level):
         """Test running a circuit in a fake backend with different optimization level."""
         backend = FakeVigoV2()
@@ -132,8 +132,11 @@ class TestFakeBackends:
         assert job.done()
         assert result is not None
 
-    @combine(
-        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManilaV2(), FakeNairobiV2()]
+    @pytest.mark.parametrize(
+        "opt_cls", [EstimatorOptions, SamplerOptions], ids=lambda cls: cls.__name__
+    )
+    @pytest.mark.parametrize(
+        "fake_backend", [FakeManilaV2(), FakeNairobiV2()], ids=lambda be: be.name
     )
     def test_simulator_set_backend(self, opt_cls, fake_backend):
         """Test Options.simulator.set_backend method."""
