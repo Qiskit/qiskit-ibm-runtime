@@ -12,6 +12,9 @@
 
 """Integration tests for Estimator V2."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import skip
 
 from qiskit.circuit.library import IQP, real_amplitudes
@@ -21,6 +24,9 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
+
+if TYPE_CHECKING:
+    from .case import IntegrationTestDependencies
 
 
 def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> None:
@@ -38,9 +44,9 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> 
 class TestEstimatorV2:
     """Integration tests for Estimator V2 Primitive."""
 
-    def test_estimator_v2_session(self):
+    def test_estimator_v2_session(self, dependencies: IntegrationTestDependencies) -> None:
         """Verify correct results are returned."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
@@ -69,9 +75,9 @@ class TestEstimatorV2:
             result3 = job3.result()
             assert_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
-    def test_estimator_v2_options(self):
+    def test_estimator_v2_options(self, dependencies: IntegrationTestDependencies) -> None:
         """Test V2 Estimator with different options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
@@ -109,9 +115,9 @@ class TestEstimatorV2:
         assert result[0].metadata["shots"] == 1600
 
     @skip("Skip until simulator options are accepted by server.")
-    def test_pec(self):
+    def test_pec(self, dependencies: IntegrationTestDependencies) -> None:
         """Test running with PEC."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)

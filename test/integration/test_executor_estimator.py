@@ -29,6 +29,8 @@ from ..utils import make_mirror_circuit_with_phases
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
 
+    from .case import IntegrationTestDependencies
+
 
 def estimator_pubs(backend: IBMBackend) -> list[tuple]:
     """Return two pubs for `backend`, differing only in how they broadcast.
@@ -57,14 +59,14 @@ def estimator_pubs(backend: IBMBackend) -> list[tuple]:
 class TestEstimator:
     """An integration test, testing Estimator implemented through Executor."""
 
-    def test_vanilla_estimator(self):
+    def test_vanilla_estimator(self, dependencies: IntegrationTestDependencies) -> None:
         """Test the "vanilla" path (no mitigation) for estimator.
 
         Tests
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
@@ -79,14 +81,14 @@ class TestEstimator:
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
-    def test_pec_estimator(self):
+    def test_pec_estimator(self, dependencies: IntegrationTestDependencies) -> None:
         """Test the PEC path for estimator.
 
         Tests
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
@@ -110,7 +112,7 @@ class TestEstimator:
         assert results[1].data.evs.shape == (2,)
 
     @data("gate_folding", "pea")
-    def test_zne_estimator(self, amplifier):
+    def test_zne_estimator(self, amplifier: str, dependencies: IntegrationTestDependencies) -> None:
         """Test the ZNE path for estimator, parameterized over the noise amplifier.
 
         Tests
@@ -125,7 +127,7 @@ class TestEstimator:
         - Correct shape and make-up for all ZNE-specific pub metadata fields:
             * ``extrapolators``: pub shape, only requested extrapolators or `multiple`.
         """
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)

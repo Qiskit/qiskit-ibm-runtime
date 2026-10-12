@@ -20,6 +20,7 @@ import unittest
 from dataclasses import asdict
 from typing import TYPE_CHECKING
 
+import pytest
 from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -39,12 +40,11 @@ from qiskit_ibm_runtime.fake_provider import (
 )
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
-from ..decorators import production_only
 from ..ibm_test_case import IBMTestCase
 from ..utils import combine
 
 if TYPE_CHECKING:
-    import pytest
+    from .case import IntegrationTestDependencies
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
@@ -163,8 +163,10 @@ class TestFakeBackends(IBMTestCase):
 class TestRefreshFakeBackends:
     """Test case for refreshing fake backends."""
 
-    @production_only
-    def test_refresh_method(self, caplog: pytest.LogCaptureFixture) -> None:
+    @pytest.mark.production
+    def test_refresh_method(
+        self, caplog: pytest.LogCaptureFixture, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test refresh method."""
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
@@ -172,9 +174,9 @@ class TestRefreshFakeBackends:
         old_backend.backend_version = "fake_version"
 
         service = QiskitRuntimeService(
-            token=self.dependencies.token,
-            channel=self.dependencies.channel,
-            url=self.dependencies.url,
+            token=dependencies.token,
+            channel=dependencies.channel,
+            url=dependencies.url,
         )
 
         # This tests needs access to the real device, and it might not be available.

@@ -12,6 +12,10 @@
 
 """Tests for client-side Sampler."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from ddt import data, ddt
 from qiskit.primitives import PrimitiveResult
@@ -22,15 +26,18 @@ from qiskit_ibm_runtime.options_models import SamplerOptions
 
 from ..utils import make_mirror_circuit_with_phases
 
+if TYPE_CHECKING:
+    from .case import IntegrationTestDependencies
+
 
 @ddt
 class TestSampler:
     """Test client-side Sampler."""
 
     @data(True, False)
-    def test_sampler(self, twirling):
+    def test_sampler(self, twirling: bool, dependencies: IntegrationTestDependencies) -> None:
         """Test sampler by submitting a couple of parametric circuits."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         circuit = make_mirror_circuit_with_phases(backend)

@@ -17,11 +17,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import dateutil.parser
+import pytest
 from ddt import ddt, named_data
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
-from ..decorators import production_only
 from .case import integration_test_dependencies
 
 if TYPE_CHECKING:
@@ -102,7 +102,7 @@ class TestSerialization:
     """Test data serialization."""
 
     @named_data(*BACKENDS)
-    @production_only
+    @pytest.mark.production
     def test_backend_configuration(self, backend):
         """Test deserializing backend configuration."""
         # Known keys that look like a serialized complex number.

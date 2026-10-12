@@ -12,6 +12,10 @@
 
 """Tests for Executor."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic import build
@@ -22,13 +26,16 @@ from qiskit_ibm_runtime.results import QuantumProgramItemResult, QuantumProgramR
 
 from ..utils import make_mirror_circuit_with_phases
 
+if TYPE_CHECKING:
+    from .case import IntegrationTestDependencies
+
 
 class TestExecutor:
     """Test Executor."""
 
-    def test_executor_with_circuit_item(self):
+    def test_executor_with_circuit_item(self, dependencies: IntegrationTestDependencies) -> None:
         """Test sampler with a single circuit item."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
 
         shape = (2, 3)
@@ -74,9 +81,9 @@ class TestExecutor:
         assert isinstance(results.passthrough_data["array"], np.ndarray)
         np.testing.assert_array_equal(passthrough_data["array"], results.passthrough_data["array"])
 
-    def test_executor_with_samplex_item(self):
+    def test_executor_with_samplex_item(self, dependencies: IntegrationTestDependencies) -> None:
         """Test sampler with a single samplex item."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
         circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
 
         shape = (2, 3)
