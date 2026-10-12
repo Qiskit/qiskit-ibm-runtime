@@ -22,7 +22,7 @@ from ddt import ddt, named_data
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from ..decorators import production_only
-from .case import IBMIntegrationTestCase, integration_test_dependencies
+from .case import integration_test_dependencies
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -98,7 +98,7 @@ def _check_encoded(data: list | str) -> bool:
 
 
 @ddt
-class TestSerialization(IBMIntegrationTestCase):
+class TestSerialization:
     """Test data serialization."""
 
     @named_data(*BACKENDS)

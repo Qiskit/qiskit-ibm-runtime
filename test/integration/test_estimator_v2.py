@@ -22,8 +22,6 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
 
-from .case import IBMIntegrationTestCase
-
 
 def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> None:
     """Assert result type."""
@@ -37,7 +35,7 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> 
         assert pub_result.data.stds.shape == shapes[idx]
 
 
-class TestEstimatorV2(IBMIntegrationTestCase):
+class TestEstimatorV2:
     """Integration tests for Estimator V2 Primitive."""
 
     def test_estimator_v2_session(self):

@@ -21,11 +21,10 @@ from qiskit_ibm_runtime.executor_sampler import Sampler
 from qiskit_ibm_runtime.options_models import SamplerOptions
 
 from ..utils import make_mirror_circuit_with_phases
-from .case import IBMIntegrationTestCase
 
 
 @ddt
-class TestSampler(IBMIntegrationTestCase):
+class TestSampler:
     """Test client-side Sampler."""
 
     @data(True, False)

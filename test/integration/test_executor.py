@@ -21,10 +21,9 @@ from qiskit_ibm_runtime import Executor, QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramItemResult, QuantumProgramResult
 
 from ..utils import make_mirror_circuit_with_phases
-from .case import IBMIntegrationTestCase
 
 
-class TestExecutor(IBMIntegrationTestCase):
+class TestExecutor:
     """Test Executor."""
 
     def test_executor_with_circuit_item(self):

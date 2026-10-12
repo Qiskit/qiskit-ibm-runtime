@@ -30,8 +30,6 @@ from qiskit_ibm_runtime.accounts.utils import (
 )
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 
-from .case import IBMIntegrationTestCase
-
 if TYPE_CHECKING:
     from .case import IntegrationTestDependencies
 
@@ -68,7 +66,7 @@ def _get_instance_tags(
     return None
 
 
-class TestQuantumPlatform(IBMIntegrationTestCase):
+class TestQuantumPlatform:
     """Integration tests for account management."""
 
     def test_initializing_service_no_instance(self):
@@ -317,7 +315,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             )
 
 
-class TestIntegrationAccount(IBMIntegrationTestCase):
+class TestIntegrationAccount:
     """Integration tests for account management."""
 
     def test_local_channel(self):

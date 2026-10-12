@@ -32,8 +32,6 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
-from .case import IBMIntegrationTestCase
-
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
 
@@ -156,7 +154,7 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, targets: list | N
 
 
 @ddt
-class TestSampler(IBMIntegrationTestCase):
+class TestSampler:
     """Test Sampler."""
 
     @named_data(
