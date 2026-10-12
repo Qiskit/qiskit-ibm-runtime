@@ -67,30 +67,36 @@ class ZneOptions(BaseOptionsModel):
         ``shape=np.broadcast_shapes(obs_shape, par_shape)``. Then the result data fields are:
 
         1. ``pub_result.data.evs``: Zero-noise extrapolated expectation values evaluated at
-           :math:`\lambda = 0`. For multi-term observables, this is evaluated via a *heterogeneous fit*
-           by selecting the best-fitting model independently for each distinct Pauli term.
+           :math:`\lambda = 0`. For multi-term observables, this is evaluated via a
+           *heterogeneous fit* by selecting the best-fitting model independently for each distinct
+           Pauli term.
            Shape: ``shape``.
         2. ``pub_result.data.stds``: Propagated standard error corresponding to ``evs``.
            Shape: ``shape``.
         3. ``pub_result.data.evs_noise_factors``: Raw (non-extrapolated) expectation values measured
-           at each noise amplification scale factor, averaged over all shots and twirling randomizations.
+           at each noise amplification scale factor, averaged over all shots and twirling
+           randomizations.
            Shape: ``(*shape, num_noise_factors)``, where ``num_noise_factors`` is the length of
            ``options.resilience.zne.noise_factors``.
-        4. ``pub_result.data.stds_noise_factors``: Empirical standard error of the mean across twirling
-           randomizations at each noise factor. When twirling is enabled, this reflects hardware drift
-           and noise variations between randomized circuits in addition to shot noise.
+        4. ``pub_result.data.stds_noise_factors``: Empirical standard error of the mean across
+           twirling randomizations at each noise factor. When twirling is enabled, this reflects
+           hardware drift and noise variations between randomized circuits in addition to
+           shot noise.
            Shape: ``(*shape, num_noise_factors)``.
         5. ``pub_result.data.ensemble_stds_noise_factors``: Theoretical shot-noise standard error at
-           each noise factor under the i.i.d. shot-noise assumption (pooling all shots as one ensemble).
+           each noise factor under the i.i.d. shot-noise assumption (pooling all shots as one
+           ensemble).
            Shape: ``(*shape, num_noise_factors)``.
         6. ``pub_result.data.evs_extrapolated``: Expectation values from each candidate extrapolator
            model, evaluated at every noise factor point in
-           ``options.resilience.zne.extrapolated_noise_factors`` (defaulting to ``[0, *noise_factors]``).
-           These are forced *homogeneous fits*—one fit per candidate extrapolator applied to all terms—allowing
-           direct comparison of candidate models.
-           Shape: ``(*shape, num_extrapolators, num_evaluation_points)``, where ``num_extrapolators``
-           is the length of ``options.resilience.zne.extrapolator`` and ``num_evaluation_points`` is
-           the length of ``options.resilience.zne.extrapolated_noise_factors``.
+           ``options.resilience.zne.extrapolated_noise_factors`` (defaulting to
+           ``[0, *noise_factors]``).
+           These are forced *homogeneous fits*—one fit per candidate extrapolator applied to
+           all terms—allowing direct comparison of candidate models.
+           Shape: ``(*shape, num_extrapolators, num_evaluation_points)``, where
+           ``num_extrapolators`` is the length of ``options.resilience.zne.extrapolator`` and
+           ``num_evaluation_points`` is the length of
+           ``options.resilience.zne.extrapolated_noise_factors``.
         7. ``pub_result.data.stds_extrapolated``: Propagated standard errors corresponding to
            ``evs_extrapolated``, evaluated at each point in ``extrapolated_noise_factors``.
            Shape: ``(*shape, num_extrapolators, num_evaluation_points)``.
@@ -100,14 +106,15 @@ class ZneOptions(BaseOptionsModel):
         * If a candidate model fails to fit (e.g. non-convergence or singular covariance),
           the heuristic advances to the next candidate model in the ordered ``extrapolator`` list.
         * If ``"fallback"`` is included in ``extrapolator`` and all prior models fail, the
-          estimator returns the raw data from the lowest evaluated noise factor without extrapolation.
-        * In ``evs_extrapolated`` and ``stds_extrapolated``, candidate models that fail to fit evaluate
-          to ``NaN`` (``numpy.nan``).
-        * If all candidate models fail and ``"fallback"`` is not specified, the candidate with the smallest
-          standard error is chosen (evaluating to ``inf`` if all models failed).
+          estimator returns the raw data from the lowest evaluated noise factor without
+          extrapolation.
+        * In ``evs_extrapolated`` and ``stds_extrapolated``, candidate models that fail to fit
+          evaluate to ``NaN`` (``numpy.nan``).
+        * If all candidate models fail and ``"fallback"`` is not specified, the candidate with the
+          smallest standard error is chosen (evaluating to ``inf`` if all models failed).
         * The raw measurement fields (``evs_noise_factors``, ``stds_noise_factors``, and
-          ``ensemble_stds_noise_factors``) are **always** populated and returned regardless of whether
-          extrapolation succeeds.
+          ``ensemble_stds_noise_factors``) are **always** populated and returned regardless of
+          whether extrapolation succeeds.
 
         For in-depth explanations, statistical formulas, and workflow diagrams, see
         :mod:`qiskit_ibm_runtime.executor_estimator`.

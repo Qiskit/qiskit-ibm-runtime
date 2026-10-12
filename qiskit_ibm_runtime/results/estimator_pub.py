@@ -43,16 +43,17 @@ class EstimatorPubResult(PubResult):
     Error Mitigation Result Data
     ----------------------------
     When Zero Noise Extrapolation (ZNE) or Pauli Error Amplification (PEA) is enabled, :attr:`data`
-    additionally contains noise-amplified measurements (``evs_noise_factors``, ``stds_noise_factors``,
-    ``ensemble_stds_noise_factors``) and candidate extrapolation curve evaluations (``evs_extrapolated``,
-    ``stds_extrapolated``). Corresponding execution details are stored in
-    ``pub_result.metadata["resilience"]["zne"]``.
+    additionally contains noise-amplified measurements (``evs_noise_factors``,
+    ``stds_noise_factors``, ``ensemble_stds_noise_factors``) and candidate extrapolation curve
+    evaluations (``evs_extrapolated``, ``stds_extrapolated``). Corresponding execution details are
+    stored in ``pub_result.metadata["resilience"]["zne"]``.
 
     For comprehensive details on how these fields are computed, their standard error definitions,
     and extrapolation failure handling, see :mod:`qiskit_ibm_runtime.executor_estimator` and
     :class:`~qiskit_ibm_runtime.options.ZneOptions`.
 
-    ZNE results can be visualized directly using :meth:`draw_zne_evs` and :meth:`draw_zne_extrapolators`.
+    ZNE results can be visualized directly using :meth:`draw_zne_evs` and
+    :meth:`draw_zne_extrapolators`.
     """
 
     def draw_zne_evs(
