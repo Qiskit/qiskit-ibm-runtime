@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 from ddt import data, ddt, named_data
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
@@ -589,5 +590,5 @@ class TestSampler:
             result = job.result()
         except RuntimeJobFailureError as ex:
             if "Error code 6050" in ex.message:
-                self.skipTest("Backend cannot be used for this test")
+                pytest.skip("Backend cannot be used for this test")
         assert_result_type(result, num_pubs=1)

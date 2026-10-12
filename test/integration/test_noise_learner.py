@@ -17,6 +17,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING
 
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
 
@@ -164,7 +165,7 @@ class TestIntegrationNoiseLearner:
                 learner_job = learner.run(ecr_circuits())
             except IBMInputValueError as ex:
                 if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
-                    self.skipTest("Backend does not meet requirements")
+                    pytest.skip("Backend does not meet requirements")
             noise_model = learner_job.result()
             assert len(noise_model) == 3
 

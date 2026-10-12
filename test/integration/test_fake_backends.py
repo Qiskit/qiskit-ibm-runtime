@@ -40,7 +40,6 @@ from qiskit_ibm_runtime.fake_provider import (
 )
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
-from ..ibm_test_case import IBMTestCase
 from ..utils import combine
 
 if TYPE_CHECKING:
@@ -67,7 +66,7 @@ def flipped_circuit() -> QuantumCircuit:
 
 
 @ddt
-class TestFakeBackends(IBMTestCase):
+class TestFakeBackends:
     """Test runnning circuits in fake backends.
 
     These tests are considered integration tests, even if they do not require network access, as
@@ -78,7 +77,7 @@ class TestFakeBackends(IBMTestCase):
     def test_circuit_on_fake_backend_v2(self, backend):
         """Test running a circuit in fake backends."""
         if not optionals.HAS_AER and backend.num_qubits > 20:
-            self.skipTest(f"Unable to run fake_backend {backend.backend_name} without qiskit-aer")
+            pytest.skip(f"Unable to run fake_backend {backend.backend_name} without qiskit-aer")
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
         isa_circuit = pm.run(flipped_circuit())
@@ -183,7 +182,7 @@ class TestRefreshFakeBackends:
         try:
             service.backend("ibm_sherbrooke")
         except QiskitBackendNotFoundError:
-            self.skipTest("Credentials do not have access to ibm_sherbrooke")
+            pytest.skip("Credentials do not have access to ibm_sherbrooke")
 
         with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
             old_backend.refresh(service)
