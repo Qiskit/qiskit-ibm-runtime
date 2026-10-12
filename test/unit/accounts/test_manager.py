@@ -36,7 +36,7 @@ from test.account import custom_envs, no_envs, temporary_account_config_file
 from test.decorators import mock_responses
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from pathlib import Path
 
 _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",
@@ -60,7 +60,6 @@ _DEFAULT_CRN = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
 
 _TEST_IBM_CLOUD_ACCOUNT_DICT = _TEST_IBM_CLOUD_ACCOUNT.to_saved_format()
 _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT = _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format()
-_TEST_FILENAME = "/tmp/temp_qiskit_account.json"
 
 # An account on the legacy `ibm_quantum` channel, which is no longer listed.
 _TEST_IBM_QUANTUM_CLASSIC_ACCOUNT_DICT = {
@@ -97,12 +96,10 @@ _TEST_ACCOUNTS_WITH_DEFAULTS = {
 }
 
 
-@pytest.fixture(autouse=True)
-def _remove_test_account_file() -> Iterator[None]:
-    """Remove the account file used by the tests, after each test."""
-    yield
-    if os.path.exists(_TEST_FILENAME):
-        os.remove(_TEST_FILENAME)
+@pytest.fixture
+def account_filename(tmp_path: Path) -> str:
+    """Return the path of an account file, unique to the test and not yet existing."""
+    return str(tmp_path / "account.json")
 
 
 # NamedTemporaryFiles not supported in Windows
@@ -111,7 +108,7 @@ class TestAccountManager:
     """Tests for AccountManager class."""
 
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
-    def test_save_without_overwrite_cloud(self):
+    def test_save_without_overwrite_cloud(self, account_filename):
         """Test to overwrite an existing account without setting overwrite=True."""
         with self.assertRaises(AccountAlreadyExistsError):
             AccountManager.save(
@@ -123,7 +120,7 @@ class TestAccountManager:
                 overwrite=False,
             )
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name="conflict",
             token=_TEST_IBM_CLOUD_ACCOUNT.token,
             url=_TEST_IBM_CLOUD_ACCOUNT.url,
@@ -133,7 +130,7 @@ class TestAccountManager:
         )
         with self.assertRaises(AccountAlreadyExistsError):
             AccountManager.save(
-                filename=_TEST_FILENAME,
+                filename=account_filename,
                 name="conflict",
                 token=_TEST_IBM_CLOUD_ACCOUNT.token,
                 url=_TEST_IBM_CLOUD_ACCOUNT.url,
@@ -143,7 +140,7 @@ class TestAccountManager:
             )
 
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT})
-    def test_save_without_overwrite_iqp(self):
+    def test_save_without_overwrite_iqp(self, account_filename):
         """Test to overwrite an existing account without setting overwrite=True."""
         with self.assertRaises(AccountAlreadyExistsError):
             AccountManager.save(
@@ -155,7 +152,7 @@ class TestAccountManager:
                 overwrite=False,
             )
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name="conflict",
             token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
             url=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.url,
@@ -165,7 +162,7 @@ class TestAccountManager:
         )
         with self.assertRaises(AccountAlreadyExistsError):
             AccountManager.save(
-                filename=_TEST_FILENAME,
+                filename=account_filename,
                 name="conflict",
                 token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
                 url=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.url,
@@ -182,14 +179,14 @@ class TestAccountManager:
 
     @temporary_account_config_file(contents={})
     @no_envs(["QISKIT_IBM_TOKEN"])
-    def test_save_get(self):
+    def test_save_get(self, account_filename):
         """Test save and get."""
         # Each tuple contains the
         # - account to save
         # - the name passed to AccountManager.save
         # - the name passed to AccountManager.get
         # Every case is run against the default account file and against a custom one.
-        for file_name in (None, _TEST_FILENAME):
+        for file_name in (None, account_filename):
             for account, name_save, name_get in (
                 # verify accounts can be saved and retrieved via custom names
                 (_TEST_IBM_CLOUD_ACCOUNT, "acct-2", "acct-2"),
@@ -269,9 +266,9 @@ class TestAccountManager:
         # Only the default `ibm_quantum_platform` account is deleted.
         assert len(AccountManager.list()) == 2
 
-    def test_delete_filename(self):
+    def test_delete_filename(self, account_filename):
         """Test delete accounts with filename parameter."""
-        filename = _TEST_FILENAME
+        filename = account_filename
         name = "key1"
         channel = "ibm_quantum_platform"
         AccountManager.save(channel=channel, filename=filename, name=name, token="temp_token")
@@ -282,9 +279,9 @@ class TestAccountManager:
 
         assert len(AccountManager.list(channel="ibm_quantum_platform", filename=filename)) == 0
 
-    def test_account_with_filename(self):
+    def test_account_with_filename(self, account_filename):
         """Test saving an account to a given filename and retrieving it."""
-        user_filename = _TEST_FILENAME
+        user_filename = account_filename
         account_name = "my_account"
         dummy_token = "dummy_token"
         AccountManager.save(
@@ -318,10 +315,10 @@ class TestAccountManager:
             service = QiskitRuntimeService()
             assert service.channel == channel
 
-    def test_save_private_endpoint(self):
+    def test_save_private_endpoint(self, account_filename):
         """Test private endpoint parameter."""
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
             token=_TEST_IBM_CLOUD_ACCOUNT.token,
             instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
@@ -331,13 +328,13 @@ class TestAccountManager:
             private_endpoint=True,
         )
 
-        account = AccountManager.get(filename=_TEST_FILENAME)
+        account = AccountManager.get(filename=account_filename)
         assert account.private_endpoint
 
-    def test_save_default_account(self):
+    def test_save_default_account(self, account_filename):
         """Test default_account defined in the qiskit-ibm.json file is used."""
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
             token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
             url=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.url,
@@ -348,7 +345,7 @@ class TestAccountManager:
         )
 
         with no_envs("QISKIT_IBM_CHANNEL"), no_envs("QISKIT_IBM_TOKEN"):
-            account = AccountManager.get(filename=_TEST_FILENAME)
+            account = AccountManager.get(filename=account_filename)
         assert account.channel == "ibm_quantum_platform"
         assert account.token == _TEST_IBM_CLOUD_ACCOUNT.token
 
