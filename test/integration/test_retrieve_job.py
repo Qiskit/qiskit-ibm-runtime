@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import re
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 from unittest import SkipTest
@@ -222,17 +223,19 @@ class TestIntegrationRetrieveJob:
     ) -> None:
         """Test retrieving jobs sorted by the date."""
         service = dependencies.service
-        job = submit_bell_job()
+        # Use a unique tag, so that only the jobs submitted by this test are retrieved.
+        job_tags = [uuid.uuid4().hex[:16]]
+        job = submit_bell_job(job_tags=job_tags)
         job.wait_for_final_state()
-        job_2 = submit_bell_job()
+        job_2 = submit_bell_job(job_tags=job_tags)
         job_2.wait_for_final_state()
-        rjobs = service.jobs()
-        rjobs_desc = service.jobs(descending=True)
 
-        # The two jobs just submitted are returned newest first
-        assert rjobs[0].job_id() == job_2.job_id()
-        assert rjobs[1].job_id() == job.job_id()
-        assert [job.job_id() for job in rjobs] == [job.job_id() for job in rjobs_desc]
+        rjobs = service.jobs(job_tags=job_tags)
+        rjobs_ascending = service.jobs(job_tags=job_tags, descending=False)
+
+        # The jobs are returned newest first by default, oldest first when requested.
+        assert [rjob.job_id() for rjob in rjobs] == [job_2.job_id(), job.job_id()]
+        assert [rjob.job_id() for rjob in rjobs_ascending] == [job.job_id(), job_2.job_id()]
 
     def test_retrieve_jobs_backend(
         self, backend_test: IBMBackend | None, dependencies: IntegrationTestDependencies
