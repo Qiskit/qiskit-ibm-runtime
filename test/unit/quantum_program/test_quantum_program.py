@@ -149,6 +149,6 @@ class TestQuantumProgram(IBMTestCase):
 
         result = QuantumProgram.from_(samplomatic_program)
 
-        self.assertIsInstance(result, QuantumProgram)
-        self.assertEqual(result.shots, 50)
-        self.assertEqual(result.items, samplomatic_program.items)
+        assert isinstance(result, QuantumProgram)
+        assert result.shots == 50
+        assert result.items == samplomatic_program.items
