@@ -25,7 +25,6 @@ import numpy as np
 from ddt import data, unpack
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
-from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
 from qiskit_ibm_runtime import EstimatorV2, QiskitRuntimeService, SamplerV2
@@ -96,14 +95,6 @@ def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out
         time_out -= wait_time
     if job.status() != status:
         raise unittest.SkipTest(f"Job {job.job_id()} unable to reach status {status}.")
-
-
-def get_real_device(service):
-    """Get a real device for the service."""
-    try:
-        return service.least_busy(simulator=False).name
-    except QiskitBackendNotFoundError:
-        raise unittest.SkipTest("No real device")  # cloud has no real device
 
 
 def create_faulty_backend(
