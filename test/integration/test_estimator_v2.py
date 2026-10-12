@@ -26,6 +26,8 @@ from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
 
 if TYPE_CHECKING:
+    import pytest
+
     from .case import IntegrationTestDependencies
 
 
@@ -75,7 +77,9 @@ class TestEstimatorV2:
             result3 = job3.result()
             assert_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
-    def test_estimator_v2_options(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_estimator_v2_options(
+        self, dependencies: IntegrationTestDependencies, request: pytest.FixtureRequest
+    ) -> None:
         """Test V2 Estimator with different options."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
@@ -107,7 +111,9 @@ class TestEstimatorV2:
         estimator.options.twirling.strategy = "active"
         estimator.options.twirling.num_randomizations = 16
         estimator.options.twirling.shots_per_randomization = 100
-        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
+        estimator.options.environment = {
+            "job_tags": [".".join(request.node.nodeid.split("::")[-2:])]
+        }
 
         job = estimator.run([(circuit, observable)])
         result = job.result()
@@ -115,7 +121,9 @@ class TestEstimatorV2:
         assert result[0].metadata["shots"] == 1600
 
     @skip("Skip until simulator options are accepted by server.")
-    def test_pec(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_pec(
+        self, dependencies: IntegrationTestDependencies, request: pytest.FixtureRequest
+    ) -> None:
         """Test running with PEC."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
@@ -127,7 +135,9 @@ class TestEstimatorV2:
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200
         estimator.options.simulator.set_backend(FakeAuckland())
-        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
+        estimator.options.environment = {
+            "job_tags": [".".join(request.node.nodeid.split("::")[-2:])]
+        }
 
         job = estimator.run([(circuit, observables)])
         result = job.result()
