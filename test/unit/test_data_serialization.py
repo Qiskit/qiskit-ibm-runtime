@@ -14,13 +14,13 @@
 
 import base64
 import json
-import os
 import subprocess
 import sys
 import tempfile
 import warnings
 import zlib
 from datetime import datetime
+from pathlib import Path
 from unittest import skipUnless
 
 import numpy as np
@@ -475,22 +475,21 @@ if __name__ == '__main__':
     obj = json.loads(sys.argv[1], cls=RuntimeDecoder)
     print(obj.__class__.__name__)
 """
-        temp_fp = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        self.addCleanup(os.remove, temp_fp.name)
-        temp_fp.write(script)
-        temp_fp.close()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            script_path = Path(temp_dir) / "decoder_script.py"
+            script_path.write_text(script, encoding="utf-8")
 
-        encoded = json.dumps(object_, cls=RuntimeEncoder)
-        assert isinstance(encoded, str)
+            encoded = json.dumps(object_, cls=RuntimeEncoder)
+            assert isinstance(encoded, str)
 
-        cmd = [sys.executable, temp_fp.name, encoded]
-        proc = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        assert object_.__class__.__name__ in proc.stdout
+            cmd = [sys.executable, str(script_path), encoded]
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            assert object_.__class__.__name__ in proc.stdout
 
     @mock_responses
     def test_result_decoder(self, registry):
