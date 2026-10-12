@@ -26,8 +26,10 @@ from qiskit_ibm_runtime.options import NoiseLearnerOptions
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
 
+from ..integration.case import IBMIntegrationTestCase
 
-class TestSmokePrimitives:
+
+class TestSmokePrimitives(IBMIntegrationTestCase):
     """Smoke tests."""
 
     def setUp(self):

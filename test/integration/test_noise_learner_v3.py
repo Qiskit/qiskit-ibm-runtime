@@ -12,6 +12,10 @@
 
 """Tests for NoiseLearner V3."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic.transpiler import generate_boxing_pass_manager
@@ -20,13 +24,16 @@ from samplomatic.utils import find_unique_box_instructions
 from qiskit_ibm_runtime import NoiseLearnerV3
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 
+if TYPE_CHECKING:
+    from .case import IntegrationTestDependencies
+
 
 class TestNoiseLearnerV3:
     """Test NLV3."""
 
-    def test_noise_learner_v3(self):
+    def test_noise_learner_v3(self, dependencies: IntegrationTestDependencies) -> None:
         """Test NLV3 with basic options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
 
         boxing_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
         boxing_pass_manager.post_scheduling = generate_boxing_pass_manager(

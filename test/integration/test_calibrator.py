@@ -12,19 +12,25 @@
 
 """Tests for Calibrator."""
 
+from __future__ import annotations
+
 import unittest
+from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
+
+if TYPE_CHECKING:
+    from .case import IntegrationTestDependencies
 
 
 @unittest.skip("This feature is not yet supported.")
 class TestCalibrator:
     """Test Calibrator."""
 
-    def test_calibrator(self):
+    def test_calibrator(self, dependencies: IntegrationTestDependencies) -> None:
         """Test that a calibration job runs and returns a result."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = self.service.backend(dependencies.qpu)
 
         with Session(backend=backend) as session:
             calibrator = Calibrator(session)

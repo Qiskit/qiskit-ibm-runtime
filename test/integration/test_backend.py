@@ -69,19 +69,19 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
 class TestIntegrationBackend:
     """Integration tests for backend functions."""
 
-    def test_least_busy(self):
+    def test_least_busy(self, dependencies: IntegrationTestDependencies) -> None:
         """Test the least busy method."""
         service = self.service
         # test passing an instance
-        instance = self.dependencies.instance
+        instance = dependencies.instance
         backend = service.least_busy(instance=instance)
         assert instance == backend._instance
 
         # test when there is no instance
         service_with_no_default_instance = QiskitRuntimeService(
-            token=self.dependencies.token,
+            token=dependencies.token,
             channel="ibm_quantum_platform",
-            url=self.dependencies.url,
+            url=dependencies.url,
         )
         backend = service_with_no_default_instance.least_busy()
         assert backend
@@ -101,10 +101,10 @@ class TestIntegrationBackend:
         backend = service.backend(backends[0].name)
         assert backend
 
-    def test_target_reset(self):
+    def test_target_reset(self, dependencies: IntegrationTestDependencies) -> None:
         """Test confirming target contains reset."""
         service = self.service
-        backend = service.backend(self.dependencies.qpu)
+        backend = service.backend(dependencies.qpu)
         assert "reset" in backend.target
 
     def test_backends_physical_qubits(self):
