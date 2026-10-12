@@ -19,6 +19,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
+import pytest
 from dateutil import tz
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JobStatus
@@ -28,12 +29,13 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound, RuntimeJobTimeoutError
 
 from ..utils import bell, cancel_job_safe, most_busy_backend, submit_and_cancel
-from .case import IBMIntegrationJobTestCase
 
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit
 
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
+
+    from .case import IntegrationTestDependencies
 
 logger = logging.getLogger(__name__)
 
@@ -51,20 +53,21 @@ def last_month() -> datetime:
     return datetime.now() - timedelta(days=30)
 
 
-class TestIBMJob(IBMIntegrationJobTestCase):
+class TestIBMJob:
     """Test ibm_job module."""
 
-    def test_cancel(self):
+    def test_cancel(self, dependencies: IntegrationTestDependencies) -> None:
         """Test job cancellation."""
-        service = self.service
+        service = dependencies.service
         # Find the most busy backend
         backend = most_busy_backend(service)
         submit_and_cancel(backend, logger)
 
-    def test_retrieve_jobs(self):
+    def test_retrieve_jobs(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs."""
-        backend = self.service.backend(self.dependencies.qpu)
-        job_list = self.service.jobs(
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
+        job_list = service.jobs(
             backend_name=backend.name,
             limit=5,
             skip=0,
@@ -74,10 +77,11 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         for job in job_list:
             assert isinstance(job.job_id(), str)
 
-    def test_retrieve_completed_jobs(self):
+    def test_retrieve_completed_jobs(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs with the completed filter."""
-        backend = self.service.backend(self.dependencies.qpu)
-        completed_job_list = self.service.jobs(backend_name=backend.name, limit=3, pending=False)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
+        completed_job_list = service.jobs(backend_name=backend.name, limit=3, pending=False)
         for job in completed_job_list:
             assert (
                 job.status()
@@ -92,9 +96,9 @@ class TestIBMJob(IBMIntegrationJobTestCase):
                 ]
             )
 
-    def test_retrieve_pending_jobs(self):
+    def test_retrieve_pending_jobs(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs with the pending filter."""
-        service = self.service
+        service = dependencies.service
         yesterday = datetime.now() - timedelta(days=1)
         pending_job_list = service.jobs(
             program_id="sampler",
@@ -106,24 +110,27 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         for job in pending_job_list:
             assert job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.RUNNING]
 
-    def test_retrieve_job(self):
+    def test_retrieve_job(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving a single job."""
-        backend = self.service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         _, sim_job = run_bell_job(backend)
 
-        retrieved_job = self.service.job(sim_job.job_id())
+        retrieved_job = service.job(sim_job.job_id())
         assert sim_job.job_id() == retrieved_job.job_id()
         assert sim_job.result().metadata == retrieved_job.result().metadata
 
-    def test_retrieve_job_error(self):
+    def test_retrieve_job_error(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving an invalid job."""
-        service = self.service
-        self.assertRaises(RuntimeJobNotFound, service.job, "BAD_JOB_ID")
+        service = dependencies.service
+        with pytest.raises(RuntimeJobNotFound):
+            service.job("BAD_JOB_ID")
 
-    def test_retrieve_jobs_status(self):
+    def test_retrieve_jobs_status(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs filtered by status."""
-        backend = self.service.backend(self.dependencies.qpu)
-        backend_jobs = self.service.jobs(
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
+        backend_jobs = service.jobs(
             backend_name=backend.name,
             limit=5,
             skip=5,
@@ -146,14 +153,15 @@ class TestIBMJob(IBMIntegrationJobTestCase):
                 ]
             )
 
-    def test_retrieve_jobs_created_after(self):
+    def test_retrieve_jobs_created_after(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs created after a specified datetime."""
-        backend = self.service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         past_month = datetime.now() - timedelta(days=30)
         # Add local tz in order to compare to `creation_date` which is tz aware.
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
 
-        job_list = self.service.jobs(
+        job_list = service.jobs(
             backend_name=backend.name,
             limit=2,
             created_after=past_month,
@@ -162,14 +170,15 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         for job in job_list:
             assert job.creation_date >= past_month_tz_aware
 
-    def test_retrieve_jobs_created_before(self):
+    def test_retrieve_jobs_created_before(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs created before a specified datetime."""
-        backend = self.service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         past_month = datetime.now() - timedelta(days=30)
         # Add local tz in order to compare to `creation_date` which is tz aware.
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
 
-        job_list = self.service.jobs(
+        job_list = service.jobs(
             backend_name=backend.name,
             limit=2,
             created_before=past_month,
@@ -178,9 +187,12 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         for job in job_list:
             assert job.creation_date <= past_month_tz_aware
 
-    def test_retrieve_jobs_between_datetime(self):
+    def test_retrieve_jobs_between_datetime(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test retrieving jobs created between two specified datetime."""
-        backend = self.service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         date_today = datetime.now()
         past_one_month = date_today - timedelta(30)
 
@@ -188,7 +200,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         today_tz_aware = date_today.replace(tzinfo=tz.tzlocal())
         past_one_month_tz_aware = past_one_month.replace(tzinfo=tz.tzlocal())
 
-        job_list = self.service.jobs(
+        job_list = service.jobs(
             backend_name=backend.name,
             limit=2,
             created_after=past_one_month,
@@ -198,13 +210,14 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         for job in job_list:
             assert past_one_month_tz_aware <= job.creation_date <= today_tz_aware
 
-    def test_retrieve_jobs_order(self):
+    def test_retrieve_jobs_order(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs with different orders."""
-        backend = self.service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         _, job = run_bell_job(backend)
         job.wait_for_final_state()
 
-        newest_jobs = self.service.jobs(
+        newest_jobs = service.jobs(
             limit=20,
             pending=False,
             descending=True,
@@ -212,7 +225,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         )
         assert job.job_id() in [rjob.job_id() for rjob in newest_jobs]
 
-        oldest_jobs = self.service.jobs(
+        oldest_jobs = service.jobs(
             limit=10,
             pending=False,
             descending=False,
@@ -220,9 +233,10 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         )
         assert job.job_id() not in [rjob.job_id() for rjob in oldest_jobs]
 
-    def test_refresh_job_result(self):
+    def test_refresh_job_result(self, dependencies: IntegrationTestDependencies) -> None:
         """Test re-retrieving job result."""
-        backend = self.service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         _, sim_job = run_bell_job(backend)
         result = sim_job.result()
 
@@ -240,16 +254,19 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         assert cached_result == result.metadata
         assert "test" not in result.metadata
 
-    def test_wait_for_final_state_timeout(self):
+    def test_wait_for_final_state_timeout(self, dependencies: IntegrationTestDependencies) -> None:
         """Test waiting for job to reach final state times out."""
-        backend = most_busy_backend(TestIBMJob.service)
+        service = dependencies.service
+        backend = most_busy_backend(service)
         sampler = Sampler(mode=backend)
         job = sampler.run([transpile(bell(), backend=backend)])
-        self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
+        with pytest.raises(RuntimeJobTimeoutError):
+            job.wait_for_final_state(timeout=0.1)
         cancel_job_safe(job, logger)
 
-    def test_job_circuits(self):
+    def test_job_circuits(self, dependencies: IntegrationTestDependencies) -> None:
         """Test job circuits."""
-        backend = self.service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         circuit, sim_job = run_bell_job(backend)
         assert circuit == sim_job.inputs["pubs"][0][0]
