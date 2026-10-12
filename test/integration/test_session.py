@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest import SkipTest, mock
 
+import pytest
 from qiskit.circuit import IfElseOp
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives import PrimitiveResult
@@ -86,7 +87,7 @@ class TestIntegrationSession:
         assert not new_session._active
         assert not new_session.details()["accepting_jobs"]
 
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
 
     def test_session_from_id_no_backend(self, dependencies: IntegrationTestDependencies) -> None:
@@ -100,7 +101,7 @@ class TestIntegrationSession:
             _ = SamplerV2(mode=session)
 
         if session.details().get("backend_name") == "":
-            with self.assertRaises(IBMRuntimeError):
+            with pytest.raises(IBMRuntimeError):
                 Session.from_id(session_id=session._session_id, service=service)
 
     def test_session_backend(self, dependencies: IntegrationTestDependencies) -> None:

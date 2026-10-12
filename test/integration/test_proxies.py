@@ -22,6 +22,8 @@ from time import sleep
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
+import pytest
+
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
 from qiskit_ibm_runtime.api.client import RuntimeClient
@@ -126,7 +128,7 @@ class TestProxies(IBMTestCase):
         """Should raise an exception when no proxy is specified."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server(), self.assertRaises(InvalidAccountError):
+        with proxy_server(), pytest.raises(InvalidAccountError):
             service = QiskitRuntimeService(
                 instance=dependencies.instance,
                 token=dependencies.token,
