@@ -33,15 +33,15 @@ class TestCalibratorOptions(IBMTestCase):
     def test_default_options(self):
         """Test that default options are set when none are provided."""
         calibrator = Calibrator(mode=get_mocked_backend())
-        self.assertIsInstance(calibrator.options, CalibratorOptions)
-        self.assertEqual(calibrator.options, CalibratorOptions())
+        assert isinstance(calibrator.options, CalibratorOptions)
+        assert calibrator.options == CalibratorOptions()
 
     def test_options_from_instance(self):
         """Test constructing with a CalibratorOptions instance."""
         opts = CalibratorOptions(readout_angle=ReadoutAngleOptions(enable=False))
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts)
-        self.assertIs(calibrator.options, opts)
-        self.assertFalse(calibrator.options.readout_angle.enable)
+        assert calibrator.options is opts
+        assert not calibrator.options.readout_angle.enable
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
@@ -50,16 +50,16 @@ class TestCalibratorOptions(IBMTestCase):
             "environment": {"log_level": "DEBUG"},
         }
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts_dict)
-        self.assertFalse(calibrator.options.readout_angle.enable)
-        self.assertEqual(calibrator.options.environment.log_level, "DEBUG")
+        assert not calibrator.options.readout_angle.enable
+        assert calibrator.options.environment.log_level == "DEBUG"
 
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
         calibrator = Calibrator(
             mode=get_mocked_backend(), options={"readout_angle": {"enable": False}}
         )
-        self.assertFalse(calibrator.options.readout_angle.enable)
-        self.assertEqual(calibrator.options.environment, EnvironmentOptions())
+        assert not calibrator.options.readout_angle.enable
+        assert calibrator.options.environment == EnvironmentOptions()
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
@@ -71,14 +71,14 @@ class TestCalibratorOptions(IBMTestCase):
         calibrator = Calibrator(mode=get_mocked_backend())
         new_opts = CalibratorOptions(readout_angle=ReadoutAngleOptions(enable=False))
         calibrator.options = new_opts
-        self.assertIs(calibrator.options, new_opts)
+        assert calibrator.options is new_opts
 
     def test_setter_with_dict(self):
         """Test setting options via the setter with a dict."""
         calibrator = Calibrator(mode=get_mocked_backend())
         calibrator.options = {"readout_angle": {"enable": False}}
-        self.assertIsInstance(calibrator.options, CalibratorOptions)
-        self.assertFalse(calibrator.options.readout_angle.enable)
+        assert isinstance(calibrator.options, CalibratorOptions)
+        assert not calibrator.options.readout_angle.enable
 
     def test_setter_invalid_type(self):
         """Test that setting options with an invalid type raises TypeError."""
@@ -93,31 +93,31 @@ class TestCalibratorOptions(IBMTestCase):
         )
         calibrator.options = {"readout_angle": {"enable": False}}
         # environment should be back to defaults since we replaced, not updated
-        self.assertEqual(calibrator.options.environment.log_level, "WARNING")
-        self.assertFalse(calibrator.options.readout_angle.enable)
+        assert calibrator.options.environment.log_level == "WARNING"
+        assert not calibrator.options.readout_angle.enable
 
     def test_experimental_options_default_empty(self):
         """Test that experimental options default to empty dict."""
         calibrator = Calibrator(mode=get_mocked_backend())
-        self.assertEqual(calibrator.options.experimental, {})
+        assert calibrator.options.experimental == {}
 
     def test_experimental_options_from_dict(self):
         """Test constructing with experimental options in dict."""
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts_dict)
-        self.assertEqual(calibrator.options.experimental, {"foo": "bar", "baz": 123})
+        assert calibrator.options.experimental == {"foo": "bar", "baz": 123}
 
     def test_experimental_options_from_instance(self):
         """Test constructing with a CalibratorOptions instance with experimental options."""
         opts = CalibratorOptions(experimental={"custom_key": "custom_value"})
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts)
-        self.assertEqual(calibrator.options.experimental, {"custom_key": "custom_value"})
+        assert calibrator.options.experimental == {"custom_key": "custom_value"}
 
     def test_experimental_options_setter(self):
         """Test setting experimental options via the setter."""
         calibrator = Calibrator(mode=get_mocked_backend())
         calibrator.options = {"experimental": {"test": "value"}}
-        self.assertEqual(calibrator.options.experimental, {"test": "value"})
+        assert calibrator.options.experimental == {"test": "value"}
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""
@@ -159,9 +159,9 @@ class TestCalibrator(IBMTestCase):
 
         # Public interfaces should respect `mode`.
         calibrator = Calibrator(mode=mode)
-        self.assertEqual(calibrator.backend(), backend)
-        self.assertEqual(calibrator.mode, expected_mode)
+        assert calibrator.backend() == backend
+        assert calibrator.mode == expected_mode
 
         # Jobs issued should belong to a session under `session` / `batch` modes.
         job = calibrator.run()
-        self.assertEqual(job._session_id, expected_session_id)
+        assert job._session_id == expected_session_id

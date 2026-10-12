@@ -79,8 +79,8 @@ class TestEmbedding(IBMTestCase):
         e = Embedding.from_backend(vigo)
 
         coo = [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
-        self.assertEqual(e.coordinates, coo)
-        self.assertEqual(e.coupling_map, vigo.coupling_map)
+        assert e.coordinates == coo
+        assert e.coupling_map == vigo.coupling_map
 
     def test_init_error(self):
         """Test the errors raised `by the constructor."""
@@ -106,7 +106,7 @@ class TestCoordinates(IBMTestCase):
         """Test for 5-qubit lattices."""
         embedding = Embedding.from_backend(FakeManilaV2())
         exp = [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_7(self):
         """Test for 7-qubit lattices."""
@@ -118,7 +118,7 @@ class TestCoordinates(IBMTestCase):
         xxx
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_15(self):
         """Test for 15-qubit lattices."""
@@ -140,7 +140,7 @@ class TestCoordinates(IBMTestCase):
             (1, 1),
             (1, 0),
         ]
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_16(self):
         """Test for 16-qubit lattices."""
@@ -155,7 +155,7 @@ class TestCoordinates(IBMTestCase):
             """,
             col_major=True,
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_20(self):
         """Test for 20-qubit lattices."""
@@ -168,7 +168,7 @@ class TestCoordinates(IBMTestCase):
         xxxxx
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_27(self):
         """Test for 27-qubit lattices."""
@@ -183,7 +183,7 @@ class TestCoordinates(IBMTestCase):
             """,
             col_major=True,
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_28(self):
         """Test for 28-qubit lattices."""
@@ -197,7 +197,7 @@ class TestCoordinates(IBMTestCase):
         xxxxxxxxx
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_53(self):
         """Test for 53-qubit lattices."""
@@ -216,7 +216,7 @@ class TestCoordinates(IBMTestCase):
           x   x
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_65(self):
         """Test for 65-qubit lattices."""
@@ -234,7 +234,7 @@ class TestCoordinates(IBMTestCase):
          xxxxxxxxxx
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_120(self):
         """Test for 120-qubit lattices."""
@@ -255,7 +255,7 @@ class TestCoordinates(IBMTestCase):
         xxxxxxxxxx
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_127(self):
         """Test for 127-qubit lattices."""
@@ -277,7 +277,7 @@ class TestCoordinates(IBMTestCase):
          xxxxxxxxxxxxxx
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_133(self):
         """Test for 133-qubit lattices."""
@@ -300,7 +300,7 @@ class TestCoordinates(IBMTestCase):
         x   x   x   x
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_156(self):
         """Test for 156-qubit lattices."""
@@ -324,7 +324,7 @@ class TestCoordinates(IBMTestCase):
         xxxxxxxxxxxxxxxx
         """
         )
-        self.assertListEqual(embedding.coordinates, exp)
+        assert embedding.coordinates == exp
 
     def test_error(self):
         """Test that an error is raised when the coordinates are unknown."""

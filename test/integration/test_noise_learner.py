@@ -134,7 +134,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         job = learner.run(circuits)
         job.wait_for_final_state()
 
-        self.assertEqual(job.result().data, [])
+        assert job.result().data == []
 
         input_options = default_input_options()
         input_options["max_layers_to_learn"] = 0
@@ -166,7 +166,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                 if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
                     self.skipTest("Backend does not meet requirements")
             noise_model = learner_job.result()
-            self.assertEqual(len(noise_model), 3)
+            assert len(noise_model) == 3
 
             estimator = EstimatorV2(mode=session, options=options)
             estimator.options.resilience.layer_noise_model = noise_model.data
@@ -179,8 +179,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                 match_found = False
                 for nm1 in noise_model_metadata:
                     if nm0.circuit == nm1.circuit:
-                        self.assertEqual(nm0.qubits, nm1.qubits)
-                        self.assertEqual(nm0.error.generators, nm1.error.generators)
-                        self.assertEqual(nm0.error.rates.tolist(), nm1.error.rates.tolist())
+                        assert nm0.qubits == nm1.qubits
+                        assert nm0.error.generators == nm1.error.generators
+                        assert nm0.error.rates.tolist() == nm1.error.rates.tolist()
                         match_found = True
-                self.assertTrue(match_found)
+                assert match_found

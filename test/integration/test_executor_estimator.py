@@ -72,13 +72,13 @@ class TestEstimator(IBMIntegrationTestCase):
         results = estimator.run(pubs).result()
 
         # Expect one result per pub:
-        self.assertEqual(len(results), 2)
+        assert len(results) == 2
 
         # 4 Expectation values should have been calculated for full broadcasting:
-        self.assertEqual(results[0].data.evs.shape, (2, 2))
+        assert results[0].data.evs.shape == (2, 2)
 
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
-        self.assertEqual(results[1].data.evs.shape, (2,))
+        assert results[1].data.evs.shape == (2,)
 
     def test_pec_estimator(self):
         """Test the PEC path for estimator.
@@ -102,13 +102,13 @@ class TestEstimator(IBMIntegrationTestCase):
         results = estimator.run(pubs).result()
 
         # Expect one result per pub:
-        self.assertEqual(len(results), 2)
+        assert len(results) == 2
 
         # 4 Expectation values should have been calculated for full broadcasting:
-        self.assertEqual(results[0].data.evs.shape, (2, 2))
+        assert results[0].data.evs.shape == (2, 2)
 
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
-        self.assertEqual(results[1].data.evs.shape, (2,))
+        assert results[1].data.evs.shape == (2,)
 
     @data("gate_folding", "pea")
     def test_zne_estimator(self, amplifier):
@@ -148,35 +148,31 @@ class TestEstimator(IBMIntegrationTestCase):
         results = estimator.run(pubs).result()
 
         # Expect one result per pub:
-        self.assertEqual(len(results), 2)
+        assert len(results) == 2
 
         for pub_idx, expected_pub_shape in enumerate([(2, 2), (2,)]):
             data_bin = results[pub_idx].data
             metadata = results[pub_idx].metadata
 
             # evs, stds and selected extrapolators metadata: pub shape only
-            self.assertEqual(data_bin.evs.shape, expected_pub_shape)
-            self.assertEqual(data_bin.stds.shape, expected_pub_shape)
-            self.assertEqual(
-                metadata["resilience"]["zne"]["extrapolators"].shape, expected_pub_shape
-            )
+            assert data_bin.evs.shape == expected_pub_shape
+            assert data_bin.stds.shape == expected_pub_shape
+            assert metadata["resilience"]["zne"]["extrapolators"].shape == expected_pub_shape
 
             # noise-factor arrays: (*pub_shape, num_noise_factors)
             expected_nf_shape = expected_pub_shape + (expected_num_noise_factors,)
-            self.assertEqual(data_bin.evs_noise_factors.shape, expected_nf_shape)
-            self.assertEqual(data_bin.stds_noise_factors.shape, expected_nf_shape)
-            self.assertEqual(data_bin.ensemble_stds_noise_factors.shape, expected_nf_shape)
+            assert data_bin.evs_noise_factors.shape == expected_nf_shape
+            assert data_bin.stds_noise_factors.shape == expected_nf_shape
+            assert data_bin.ensemble_stds_noise_factors.shape == expected_nf_shape
 
             # extrapolated arrays: (*pub_shape, num_extrapolators, num_extrapolated_noise_factors)
             expected_extrap_shape = expected_pub_shape + (
                 expected_num_extrapolators,
                 expected_num_extrapolated,
             )
-            self.assertEqual(data_bin.evs_extrapolated.shape, expected_extrap_shape)
-            self.assertEqual(data_bin.stds_extrapolated.shape, expected_extrap_shape)
+            assert data_bin.evs_extrapolated.shape == expected_extrap_shape
+            assert data_bin.stds_extrapolated.shape == expected_extrap_shape
 
             # Selected extrapolators must be one the requested extrapolators or `multiple`
             allowed = {*estimator.options.resilience.zne.extrapolator, "multiple"}
-            self.assertTrue(
-                set(metadata["resilience"]["zne"]["extrapolators"].flatten()).issubset(allowed)
-            )
+            assert set(metadata["resilience"]["zne"]["extrapolators"].flatten()).issubset(allowed)

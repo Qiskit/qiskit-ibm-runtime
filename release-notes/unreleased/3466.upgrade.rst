@@ -1,0 +1,2 @@
+- The ``post_selection`` field of :class:`.NoiseLearnerV3Options`, which was previously deprecated, has been
+removed.

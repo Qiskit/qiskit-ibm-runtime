@@ -45,18 +45,18 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         with Session(backend=backend) as session:
             estimator = EstimatorV2(mode=session)
             result = estimator.run([(psi1, H1, [theta1])]).result()
-            self.assertIsInstance(result, PrimitiveResult)
+            assert isinstance(result, PrimitiveResult)
 
             sampler = SamplerV2(mode=session)
             result = sampler.run([pm.run(bell())]).result()
-            self.assertIsInstance(result, PrimitiveResult)
+            assert isinstance(result, PrimitiveResult)
 
             result = estimator.run([(psi1, H1, [theta1])]).result()
-            self.assertIsInstance(result, PrimitiveResult)
-            self.assertEqual(result[0].metadata["shots"], 4096)
+            assert isinstance(result, PrimitiveResult)
+            assert result[0].metadata["shots"] == 4096
 
             result = sampler.run([pm.run(bell())]).result()
-            self.assertIsInstance(result, PrimitiveResult)
+            assert isinstance(result, PrimitiveResult)
             session.close()
 
     def test_session_from_id(self):
@@ -76,10 +76,10 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             new_session = Session.from_id(session_id=session._session_id, service=service)
             mock_create_session.assert_not_called()
 
-        self.assertEqual(session._session_id, new_session._session_id)
+        assert session._session_id == new_session._session_id
         new_session.close()
-        self.assertFalse(new_session._active)
-        self.assertFalse(new_session.details()["accepting_jobs"])
+        assert not new_session._active
+        assert not new_session.details()["accepting_jobs"]
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
@@ -110,11 +110,11 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         with Session(backend=backend) as session:
             sampler = SamplerV2(mode=session)
             job = sampler.run([pm.run(bell())])
-            self.assertIn(instruction_name, job.backend().target.operation_names)
+            assert instruction_name in job.backend().target.operation_names
 
             sampler2 = SamplerV2()
             job2 = sampler2.run([pm.run(bell())])
-            self.assertIn(instruction_name, job2.backend().target.operation_names)
+            assert instruction_name in job2.backend().target.operation_names
 
     def test_session_instance_logic(self):
         """Test creating a session with different service configurations."""
@@ -127,7 +127,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
         backend = service_no_instance.backend(self.dependencies.qpu)
         session = Session(backend=backend)
-        self.assertTrue(session)
+        assert session
         session.close()
 
         # test when instance name is used at service init
@@ -141,5 +141,5 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
         backend = service_with_instance_name.backend(self.dependencies.qpu)
         session = Session(backend=backend)
-        self.assertTrue(session)
+        assert session
         session.close()

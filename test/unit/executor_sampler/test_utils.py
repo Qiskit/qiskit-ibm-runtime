@@ -71,7 +71,7 @@ def assert_circuits_annotations_are_equal(
         for ann1 in annotations_1:
             # Look up the matching annotation in circuit_2 by type (order-independent).
             ann2 = get_annotation(instr2.operation, type(ann1))
-            assert ann2 is not None, f"circuit_2 box is missing a {type(ann1).__name__} annotation"
+            assert ann2 is not None
             if isinstance(ann1, (ChangeBasis, InjectNoise)):
                 # ref is a runtime-unique identifier; normalise ann2's ref to ann1's before
                 # comparing so only the semantically meaningful fields are checked.
@@ -99,7 +99,7 @@ class TestExtractShotsFromPubs(IBMTestCase):
         pub = SamplerPub.coerce(circuit, shots=1024)
         shots = extract_shots_from_pubs([pub])
 
-        self.assertEqual(shots, 1024)
+        assert shots == 1024
 
     def test_single_pub_with_default_shots(self):
         """Test extracting shots using default_shots when pub doesn't specify."""
@@ -110,7 +110,7 @@ class TestExtractShotsFromPubs(IBMTestCase):
         pub = SamplerPub.coerce(circuit)  # No shots specified
         shots = extract_shots_from_pubs([pub], default_shots=2048)
 
-        self.assertEqual(shots, 2048)
+        assert shots == 2048
 
     def test_multiple_pubs_same_shots(self):
         """Test extracting shots from multiple pubs with same shots value."""
@@ -128,7 +128,7 @@ class TestExtractShotsFromPubs(IBMTestCase):
         ]
         shots = extract_shots_from_pubs(pubs)
 
-        self.assertEqual(shots, 1024)
+        assert shots == 1024
 
     def test_multiple_pubs_mixed_shots_sources(self):
         """Test multiple pubs where some use default_shots and some specify shots."""
@@ -146,7 +146,7 @@ class TestExtractShotsFromPubs(IBMTestCase):
         ]
         shots = extract_shots_from_pubs(pubs, default_shots=512)
 
-        self.assertEqual(shots, 512)
+        assert shots == 512
 
     def test_mismatched_shots_raises_error(self):
         """Test that mismatched shots across pubs raises an error."""
@@ -166,9 +166,9 @@ class TestExtractShotsFromPubs(IBMTestCase):
         with self.assertRaises(IBMInputValueError) as context:
             extract_shots_from_pubs(pubs)
 
-        self.assertIn("same number of shots", str(context.exception))
-        self.assertIn("1024", str(context.exception))
-        self.assertIn("2048", str(context.exception))
+        assert "same number of shots" in str(context.exception)
+        assert "1024" in str(context.exception)
+        assert "2048" in str(context.exception)
 
     def test_no_shots_specified_raises_error(self):
         """Test that missing shots raises an error."""
@@ -181,7 +181,7 @@ class TestExtractShotsFromPubs(IBMTestCase):
         with self.assertRaises(IBMInputValueError) as context:
             extract_shots_from_pubs([pub], default_shots=None)
 
-        self.assertIn("Shots must be specified", str(context.exception))
+        assert "Shots must be specified" in str(context.exception)
 
     def test_pub_shots_overrides_default(self):
         """Test that pub.shots takes precedence over default_shots."""
@@ -193,13 +193,13 @@ class TestExtractShotsFromPubs(IBMTestCase):
         shots = extract_shots_from_pubs([pub], default_shots=2048)
 
         # Should use pub.shots (1024), not default_shots (2048)
-        self.assertEqual(shots, 1024)
+        assert shots == 1024
 
     def test_empty_pubs_returns_default_shots(self):
         """Test that empty pubs list returns default_shots."""
         shots = extract_shots_from_pubs([], default_shots=4096)
 
-        self.assertEqual(shots, 4096)
+        assert shots == 4096
 
 
 @ddt
@@ -391,15 +391,6 @@ class TestBoxCircuit(IBMTestCase):
             instr for instr in box_instructions if get_annotation(instr.operation, Tag) is not None
         ]
         if add_tags in ("none", "noise_ref"):
-            self.assertEqual(
-                len(tagged_boxes),
-                0,
-                msg=f"Expected no tagged boxes for add_tags={add_tags!r} (without inject_noise), "
-                f"but found {len(tagged_boxes)}.",
-            )
+            assert len(tagged_boxes) == 0
         else:
-            self.assertGreater(
-                len(tagged_boxes),
-                0,
-                msg=f"Expected at least one tagged box for add_tags={add_tags!r}, but found none.",
-            )
+            assert len(tagged_boxes) > 0

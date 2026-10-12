@@ -70,16 +70,16 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             skip=0,
             created_after=last_month(),
         )
-        self.assertLessEqual(len(job_list), 5)
+        assert len(job_list) <= 5
         for job in job_list:
-            self.assertTrue(isinstance(job.job_id(), str))
+            assert isinstance(job.job_id(), str)
 
     def test_retrieve_completed_jobs(self):
         """Test retrieving jobs with the completed filter."""
         backend = self.service.backend(self.dependencies.qpu)
         completed_job_list = self.service.jobs(backend_name=backend.name, limit=3, pending=False)
         for job in completed_job_list:
-            self.assertTrue(
+            assert (
                 job.status()
                 # Update when RuntimeJob is removed in favor of RuntimeJobV2
                 in [
@@ -104,9 +104,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             created_before=yesterday,
         )
         for job in pending_job_list:
-            self.assertTrue(
-                job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.RUNNING]
-            )
+            assert job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.RUNNING]
 
     def test_retrieve_job(self):
         """Test retrieving a single job."""
@@ -114,8 +112,8 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         _, sim_job = run_bell_job(backend)
 
         retrieved_job = self.service.job(sim_job.job_id())
-        self.assertEqual(sim_job.job_id(), retrieved_job.job_id())
-        self.assertEqual(sim_job.result().metadata, retrieved_job.result().metadata)
+        assert sim_job.job_id() == retrieved_job.job_id()
+        assert sim_job.result().metadata == retrieved_job.result().metadata
 
     def test_retrieve_job_error(self):
         """Test retrieving an invalid job."""
@@ -132,10 +130,10 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             pending=False,
             created_after=last_month(),
         )
-        self.assertTrue(backend_jobs)
+        assert backend_jobs
 
         for job in backend_jobs:
-            self.assertTrue(
+            assert (
                 job.status()
                 # Update when RuntimeJob is removed in favor of RuntimeJobV2
                 in [
@@ -145,9 +143,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
                     JobStatus.DONE,
                     JobStatus.CANCELLED,
                     JobStatus.ERROR,
-                ],
-                f"Job {job.job_id()} has status {job.status()} when it should be DONE, CANCELLED, "
-                "or ERROR",
+                ]
             )
 
     def test_retrieve_jobs_created_after(self):
@@ -162,13 +158,9 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             limit=2,
             created_after=past_month,
         )
-        self.assertTrue(job_list)
+        assert job_list
         for job in job_list:
-            self.assertGreaterEqual(
-                job.creation_date,
-                past_month_tz_aware,
-                f"job {job.job_id()} creation date {job.creation_date} not within range",
-            )
+            assert job.creation_date >= past_month_tz_aware
 
     def test_retrieve_jobs_created_before(self):
         """Test retrieving jobs created before a specified datetime."""
@@ -182,13 +174,9 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             limit=2,
             created_before=past_month,
         )
-        self.assertIsInstance(job_list, list)
+        assert isinstance(job_list, list)
         for job in job_list:
-            self.assertLessEqual(
-                job.creation_date,
-                past_month_tz_aware,
-                f"job {job.job_id()} creation date {job.creation_date} not within range",
-            )
+            assert job.creation_date <= past_month_tz_aware
 
     def test_retrieve_jobs_between_datetime(self):
         """Test retrieving jobs created between two specified datetime."""
@@ -206,12 +194,9 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             created_after=past_one_month,
             created_before=date_today,
         )
-        self.assertTrue(job_list)
+        assert job_list
         for job in job_list:
-            self.assertTrue(
-                (past_one_month_tz_aware <= job.creation_date <= today_tz_aware),
-                f"job {job.job_id()} creation date {job.creation_date} not within range",
-            )
+            assert past_one_month_tz_aware <= job.creation_date <= today_tz_aware
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
@@ -225,7 +210,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             descending=True,
             created_after=last_month(),
         )
-        self.assertIn(job.job_id(), [rjob.job_id() for rjob in newest_jobs])
+        assert job.job_id() in [rjob.job_id() for rjob in newest_jobs]
 
         oldest_jobs = self.service.jobs(
             limit=10,
@@ -233,7 +218,7 @@ class TestIBMJob(IBMIntegrationJobTestCase):
             descending=False,
             created_after=last_month(),
         )
-        self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in oldest_jobs])
+        assert job.job_id() not in [rjob.job_id() for rjob in oldest_jobs]
 
     def test_refresh_job_result(self):
         """Test re-retrieving job result."""
@@ -243,17 +228,17 @@ class TestIBMJob(IBMIntegrationJobTestCase):
 
         # Save original cached results.
         cached_result = copy.deepcopy(result.metadata)
-        self.assertTrue(cached_result)
+        assert cached_result
 
         # Modify cached results.
         result.metadata["test"] = "modified_result"
-        self.assertNotEqual(cached_result, result.metadata)
-        self.assertEqual(result.metadata["test"], "modified_result")
+        assert cached_result != result.metadata
+        assert result.metadata["test"] == "modified_result"
 
         # Re-retrieve result.
         result = sim_job.result()
-        self.assertDictEqual(cached_result, result.metadata)
-        self.assertFalse("test" in result.metadata)
+        assert cached_result == result.metadata
+        assert "test" not in result.metadata
 
     def test_wait_for_final_state_timeout(self):
         """Test waiting for job to reach final state times out."""
@@ -267,4 +252,4 @@ class TestIBMJob(IBMIntegrationJobTestCase):
         """Test job circuits."""
         backend = self.service.backend(self.dependencies.qpu)
         circuit, sim_job = run_bell_job(backend)
-        self.assertEqual(circuit, sim_job.inputs["pubs"][0][0])
+        assert circuit == sim_job.inputs["pubs"][0][0]

@@ -50,7 +50,7 @@ class TestSamplerSimpleCircuits(IBMTestCase):
         circuit.measure_all()
 
         job = sampler.run([circuit], dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"
 
     @data("job", "session", "batch")
     @mock_responses
@@ -75,15 +75,15 @@ class TestSamplerSimpleCircuits(IBMTestCase):
 
         # Public interfaces should respect `mode`.
         sampler = Sampler(mode=mode)
-        self.assertEqual(sampler.backend(), backend)
-        self.assertEqual(sampler.mode, expected_mode)
+        assert sampler.backend() == backend
+        assert sampler.mode == expected_mode
 
         # Jobs issued should belong to a session under `session` / `batch`` modes.
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
         job = sampler.run([circuit])
-        self.assertEqual(job._session_id, expected_session_id)
+        assert job._session_id == expected_session_id
 
 
 class TestSamplerCircuitValidation(IBMTestCase):
@@ -131,16 +131,16 @@ class TestSamplerSimulatorMode(IBMTestCase):
         result = job.result()
 
         # Verify we got results
-        self.assertEqual(len(result), 1)
-        self.assertIsNotNone(result[0].data)
+        assert len(result) == 1
+        assert result[0].data is not None
 
         # Verify the results are valid Bell state measurements
         counts = result[0].data.c.get_counts()
         # Should only have |00> and |11> states
         for bitstring in counts.keys():
-            self.assertIn(bitstring, ["00", "11"])
+            assert bitstring in ["00", "11"]
         # Total counts should equal shots
-        self.assertEqual(sum(counts.values()), 100)
+        assert sum(counts.values()) == 100
 
     def test_simulator_options_seed(self):
         """Test that simulator seed option produces deterministic results."""
@@ -173,7 +173,7 @@ class TestSamplerSimulatorMode(IBMTestCase):
         counts2 = result2[0].data.meas.get_counts()
 
         # Results should be identical with same seed
-        self.assertEqual(counts1, counts2)
+        assert counts1 == counts2
 
         # Third sampler with different seed should give different results
         sampler3 = Sampler(mode=backend)
@@ -185,7 +185,7 @@ class TestSamplerSimulatorMode(IBMTestCase):
         counts3 = result3[0].data.meas.get_counts()
 
         # Results should be different with different seed
-        self.assertNotEqual(counts1, counts3)
+        assert counts1 != counts3
 
     def test_simulator_with_general_test_case(self):
         """Test simulator mode with comprehensive simulator options.
@@ -229,15 +229,15 @@ class TestSamplerSimulatorMode(IBMTestCase):
         result = job.result()
 
         # Verify results structure
-        self.assertEqual(len(result), 1)
-        self.assertIsNotNone(result[0].data)
+        assert len(result) == 1
+        assert result[0].data is not None
 
         # Verify we got results for all parameter sets
         pub_result = result[0]
-        self.assertIsNotNone(pub_result.data.meas)
+        assert pub_result.data.meas is not None
 
         # Get counts and verify basic properties
         counts = pub_result.data.meas.get_counts()
 
         # Total counts should equal shots × number of parameter sets
-        self.assertEqual(sum(counts.values()), 3000)
+        assert sum(counts.values()) == 3000

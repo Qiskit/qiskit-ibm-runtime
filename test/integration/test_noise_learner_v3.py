@@ -48,7 +48,7 @@ class TestNoiseLearnerV3(IBMIntegrationTestCase):
 
         boxed_circuit = boxing_pass_manager.run(circuit)
         instructions = find_unique_box_instructions(boxed_circuit)
-        self.assertEqual(len(instructions), 3)  # 2 with gates, 1 with measurements
+        assert len(instructions) == 3  # 2 with gates, 1 with measurements
 
         learner = NoiseLearnerV3(backend)
         learner.options.layer_pair_depths = [0, 2, 4]
@@ -61,19 +61,19 @@ class TestNoiseLearnerV3(IBMIntegrationTestCase):
         # default option of experimental is Unset, and is then converted to {}
         params["options"].experimental = {}
 
-        self.assertEqual(params["instructions"], instructions)
-        self.assertEqual(params["options"], learner.options)
+        assert params["instructions"] == instructions
+        assert params["options"] == learner.options
 
         result = job.result()
-        self.assertIsInstance(result, NoiseLearnerV3Results)
-        self.assertTrue(all(isinstance(datum, NoiseLearnerV3Result) for datum in result))
+        assert isinstance(result, NoiseLearnerV3Results)
+        assert all(isinstance(datum, NoiseLearnerV3Result) for datum in result)
 
-        self.assertEqual(result[0].metadata["learning_protocol"], "lindblad")
-        self.assertEqual(result[0].to_pauli_lindblad_map().num_qubits, len(instructions[0].qubits))
+        assert result[0].metadata["learning_protocol"] == "lindblad"
+        assert result[0].to_pauli_lindblad_map().num_qubits == len(instructions[0].qubits)
 
-        self.assertEqual(result[1].metadata["learning_protocol"], "lindblad")
-        self.assertEqual(result[1].to_pauli_lindblad_map().num_qubits, len(instructions[1].qubits))
+        assert result[1].metadata["learning_protocol"] == "lindblad"
+        assert result[1].to_pauli_lindblad_map().num_qubits == len(instructions[1].qubits)
 
-        self.assertEqual(result[2].metadata["learning_protocol"], "trex")
-        self.assertEqual(result[2].to_pauli_lindblad_map().num_qubits, len(instructions[2].qubits))
-        self.assertEqual(result[2].to_pauli_lindblad_map().num_terms, len(instructions[2].qubits))
+        assert result[2].metadata["learning_protocol"] == "trex"
+        assert result[2].to_pauli_lindblad_map().num_qubits == len(instructions[2].qubits)
+        assert result[2].to_pauli_lindblad_map().num_terms == len(instructions[2].qubits)

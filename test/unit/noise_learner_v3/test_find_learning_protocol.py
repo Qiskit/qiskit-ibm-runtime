@@ -44,7 +44,7 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.cz(0, 1)
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, ["pauli_lindblad"] * 2 + [None] * 3)
+        assert protocols == ["pauli_lindblad"] * 2 + [None] * 3
 
     def test_measure_instructions(self):
         """Test measure instructions."""
@@ -61,7 +61,7 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.measure(range(2), range(2))
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, ["trex"] * 2 + [None] * 2)
+        assert protocols == ["trex"] * 2 + [None] * 2
 
     def test_empty_instructions(self):
         """Test empty instructions."""
@@ -72,7 +72,7 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.noop(2)
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, ["pauli_lindblad"] * 2)
+        assert protocols == ["pauli_lindblad"] * 2
 
     def test_mixed_instructions(self):
         """Test instructions with gates and measurements."""
@@ -82,4 +82,4 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.measure([2, 3], [0, 1])
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, [None])
+        assert protocols == [None]

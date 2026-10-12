@@ -25,7 +25,7 @@ from qiskit_ibm_runtime.fake_provider import FakeAuckland
 from .case import IBMIntegrationTestCase
 
 
-def assert_result_type(result, num_pubs, shapes):
+def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> None:
     """Assert result type."""
     assert isinstance(result, PrimitiveResult)
     assert len(result) == num_pubs
@@ -108,7 +108,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         job = estimator.run([(circuit, observable)])
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[()])
-        self.assertEqual(result[0].metadata["shots"], 1600)
+        assert result[0].metadata["shots"] == 1600
 
     @skip("Skip until simulator options are accepted by server.")
     def test_pec(self):
@@ -128,4 +128,4 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         job = estimator.run([(circuit, observables)])
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[(1,)])
-        self.assertIn("sampling_overhead", result[0].metadata["resilience"])
+        assert "sampling_overhead" in result[0].metadata["resilience"]

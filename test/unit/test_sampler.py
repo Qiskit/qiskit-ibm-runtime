@@ -29,6 +29,7 @@ from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Se
 from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..asserts import assert_dict_partially_equal, assert_warns_strict
 from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceDryRunRegistry
@@ -72,12 +73,12 @@ class TestSamplerV2(IBMTestCase):
         inst = SamplerV2(mode=backend)
         inst.run(t_pubs)
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("pubs", input_params)
+        assert "pubs" in input_params
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
-            self.assertIsInstance(a_pub_param, SamplerPub)
+            assert isinstance(a_pub_param, SamplerPub)
             # Check circuit
-            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
+            assert a_pub_param.circuit == an_in_taks[0]
             # Check parameter values
             an_input_params = an_in_taks[1] if len(an_in_taks) == 2 else []
             param_values_array = list(a_pub_param.parameter_values.data.values())
@@ -98,7 +99,7 @@ class TestSamplerV2(IBMTestCase):
             inst = SamplerV2(mode=session)
             with self.assertRaises(ValueError) as exc:
                 inst.options.update(**opt)
-            self.assertIn(list(opt.keys())[0], str(exc.exception))
+            assert list(opt.keys())[0] in str(exc.exception)
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
         """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
@@ -119,33 +120,34 @@ class TestSamplerV2(IBMTestCase):
         ):
             inst.run(in_pubs)
 
-    def test_run_default_options(self):
+    @data(
+        (
+            SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),  # type: ignore[call-arg]
+            {"dynamical_decoupling": {"sequence_type": "XX"}},
+        ),
+        (
+            SamplerOptions(default_shots=1000),  # type: ignore[call-arg]
+            {"default_shots": 1000},
+        ),
+        (
+            {
+                "execution": {"init_qubits": True, "rep_delay": 0.01},
+            },
+            {
+                "execution": {"init_qubits": True, "rep_delay": 0.01},
+            },
+        ),
+    )
+    @unpack
+    def test_run_default_options(self, options, expected_options):
         """Test run using default options."""
         session = MagicMock(spec=MockSession, _backend="common_backend")
-        options_vars = [
-            (
-                SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),
-                {"dynamical_decoupling": {"sequence_type": "XX"}},
-            ),
-            (
-                SamplerOptions(default_shots=1000),
-                {"default_shots": 1000},
-            ),
-            (
-                {
-                    "execution": {"init_qubits": True, "rep_delay": 0.01},
-                },
-                {
-                    "execution": {"init_qubits": True, "rep_delay": 0.01},
-                },
-            ),
-        ]
-        for options, expected in options_vars:
-            with self.subTest(options=options):
-                inst = SamplerV2(mode=session, options=options)
-                inst.run((QuantumCircuit(1, 1),))
-                inputs = session._run.call_args.kwargs["inputs"]["options"]
-                self.assertDictPartiallyEqual(inputs, expected)
+
+        inst = SamplerV2(mode=session, options=options)
+        inst.run((QuantumCircuit(1, 1),))
+
+        run_options = session._run.call_args.kwargs["inputs"]["options"]
+        assert_dict_partially_equal(run_options, expected_options)
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
@@ -497,19 +499,19 @@ class TestSamplerV2(IBMTestCase):
         result = job.result()
 
         used_run_options = DummyBackend.used_run_options
-        self.assertDictEqual(used_run_options["noise_model"], {"name": "some_model"})
+        assert used_run_options["noise_model"] == {"name": "some_model"}
 
         if meas_type == "classified":
-            self.assertEqual(used_run_options["meas_level"], 2)
-            self.assertDictEqual(result[0].data.c.get_counts(), {"0": 100})
+            assert used_run_options["meas_level"] == 2
+            assert result[0].data.c.get_counts() == {"0": 100}
         elif meas_type == "kerneled":
-            self.assertEqual(used_run_options["meas_level"], 1)
-            self.assertEqual(used_run_options["meas_return"], "single")
-            self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1, 100))))
+            assert used_run_options["meas_level"] == 1
+            assert used_run_options["meas_return"] == "single"
+            assert np.array_equal(result[0].data.c, np.zeros((1, 100)))
         else:  # meas_type == "avg_kerneled"
-            self.assertEqual(used_run_options["meas_level"], 1)
-            self.assertEqual(used_run_options["meas_return"], "avg")
-            self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
+            assert used_run_options["meas_level"] == 1
+            assert used_run_options["meas_return"] == "avg"
+            assert np.array_equal(result[0].data.c, np.zeros((1,)))
 
     @data(
         ([None, None], 100, 0),
@@ -534,7 +536,7 @@ class TestSamplerV2(IBMTestCase):
             for shots in pub_shots
         ]
 
-        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, shots=run_shots)
 
     @mock_responses(OneInstanceDryRunRegistry)
@@ -544,4 +546,4 @@ class TestSamplerV2(IBMTestCase):
         backend = service.backend("ibm_foo")
         sampler = SamplerV2(mode=backend)
         job = sampler.run((QuantumCircuit(1, 1),), dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

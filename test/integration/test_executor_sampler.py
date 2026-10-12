@@ -55,12 +55,12 @@ class TestSampler(IBMIntegrationTestCase):
 
         results = job.result()
 
-        self.assertIsInstance(results, PrimitiveResult)
-        self.assertIsInstance(results.metadata, dict)
-        self.assertEqual(len(results), 2)
+        assert isinstance(results, PrimitiveResult)
+        assert isinstance(results.metadata, dict)
+        assert len(results) == 2
 
         for result, shape in zip(results, shapes):
-            self.assertEqual(result.data.meas.shape, shape)
+            assert result.data.meas.shape == shape
 
-        self.assertEqual(results[0].metadata["circuit_metadata"], {"list": [1, 2, 3]})
-        self.assertEqual(results[1].metadata["circuit_metadata"], {"tuple": [1, 2, 3]})
+        assert results[0].metadata["circuit_metadata"] == {"list": [1, 2, 3]}
+        assert results[1].metadata["circuit_metadata"] == {"tuple": [1, 2, 3]}

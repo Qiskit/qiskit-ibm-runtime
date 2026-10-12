@@ -57,5 +57,5 @@ class TestParamsConverters(IBMTestCase):
         encoded = converters.encoder(instructions, options).model_dump()
         decoded = converters.decoder(converters.model(**encoded))
 
-        self.assertEqual(decoded[0], instructions)
-        self.assertEqual(decoded[1], options)
+        assert decoded[0] == instructions
+        assert decoded[1] == options
