@@ -12,6 +12,8 @@
 
 """Tests for runtime data serialization."""
 
+from __future__ import annotations
+
 import base64
 import json
 import subprocess
@@ -21,9 +23,10 @@ import warnings
 import zlib
 from datetime import datetime
 from pathlib import Path
-from unittest import skipUnless
+from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 import qiskit.quantum_info as qi
 from ddt import data, ddt
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
@@ -69,10 +72,14 @@ from qiskit_ibm_runtime.results.noise_learner import (
     PauliLindbladError,
 )
 
-from ..decorators import mock_responses
 from ..ibm_test_case import IBMTestCase
 from ..registries import Job
 from ..serialization import SerializableClass, SerializableClassDecoder, get_complex_types
+
+if TYPE_CHECKING:
+    from qiskit.circuit import Gate
+
+    from ..registries import BaseRegistry
 from ..utils import bell
 
 if HAS_AER:
@@ -316,11 +323,45 @@ def noise_learner_results(unknown_err: bool = False) -> list[NoiseLearnerResult]
     return [NoiseLearnerResult([layer_error])]
 
 
-@ddt
-class TestDataSerialization(IBMTestCase):
+def spans_to_serialize() -> tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2]:
+    """Return a slice span, a double slice span, and a twirled slice span of each version."""
+    slice_span = SliceSpan(
+        datetime(2022, 1, 1),
+        datetime(2023, 1, 1),
+        {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
+    )
+
+    double_span = DoubleSliceSpan(
+        datetime(2024, 8, 20),
+        datetime(2024, 8, 21),
+        {0: ((14,), slice(2, 3), slice(1, 9))},
+    )
+
+    twirl1 = TwirledSliceSpan(
+        datetime(2024, 9, 20),
+        datetime(2024, 3, 21),
+        {
+            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
+            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
+        },
+    )
+
+    twirl2 = TwirledSliceSpanV2(
+        datetime(2024, 9, 20),
+        datetime(2024, 3, 21),
+        {
+            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
+            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
+        },
+    )
+
+    return slice_span, double_span, twirl1, twirl2
+
+
+class TestDataSerialization:
     """Class for testing runtime data serialization."""
 
-    def test_coder(self):
+    def test_coder(self) -> None:
         """Test runtime encoder and decoder."""
         result = Result(
             backend_name="ibmqx2",
@@ -353,12 +394,15 @@ class TestDataSerialization(IBMTestCase):
         assert isinstance(decoded_result, Result)
         assert (decoded_array == orig_array).all()
 
-    @data(
-        bell(),
-        efficient_su2(num_qubits=4, reps=1, entanglement="linear"),
-        [bell(), efficient_su2(num_qubits=4, reps=1, entanglement="linear")],
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            bell(),
+            efficient_su2(num_qubits=4, reps=1, entanglement="linear"),
+            [bell(), efficient_su2(num_qubits=4, reps=1, entanglement="linear")],
+        ],
     )
-    def test_coder_qc(self, object_):
+    def test_coder_qc(self, object_: QuantumCircuit | list[QuantumCircuit]) -> None:
         """Test runtime encoder and decoder for circuits."""
         encoded = json.dumps(object_, cls=RuntimeEncoder)
         assert isinstance(encoded, str)
@@ -368,12 +412,15 @@ class TestDataSerialization(IBMTestCase):
             decoded = [decoded]
         assert all(isinstance(item, QuantumCircuit) for item in decoded)
 
-    @data(
-        SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-        SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
-        Pauli("XYZ"),
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
+            Pauli("XYZ"),
+        ],
     )
-    def test_coder_operators(self, object_):
+    def test_coder_operators(self, object_: SparsePauliOp | Pauli) -> None:
         """Test runtime encoder and decoder for operators."""
         encoded = json.dumps(object_, cls=RuntimeEncoder)
         assert isinstance(encoded, str)
@@ -388,8 +435,8 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             assert object_ == decoded
 
-    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-    def test_coder_noise_model(self):
+    @pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_coder_noise_model(self) -> None:
         """Test encoding and decoding a noise model."""
         noise_model = NoiseModel.from_backend(FakeNairobiV2())
         assert isinstance(noise_model, NoiseModel)
@@ -405,12 +452,15 @@ class TestDataSerialization(IBMTestCase):
         assert noise_model.noise_qubits == decoded.noise_qubits
         assert noise_model.noise_instructions == decoded.noise_instructions
 
-    @data(
-        {"datetime": datetime.now()},
-        {"datetime": datetime(2021, 8, 4)},
-        {"datetime": datetime.fromtimestamp(1326244364)},
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            {"datetime": datetime.now()},
+            {"datetime": datetime(2021, 8, 4)},
+            {"datetime": datetime.fromtimestamp(1326244364)},
+        ],
     )
-    def test_encoder_datetime(self, object_):
+    def test_encoder_datetime(self, object_: dict[str, datetime]) -> None:
         """Test encoding a datetime."""
         encoded = json.dumps(object_, cls=RuntimeEncoder)
         assert isinstance(encoded, str)
@@ -418,13 +468,16 @@ class TestDataSerialization(IBMTestCase):
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         assert decoded == object_
 
-    @data(
-        {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]], dtype=object)},
-        {"ndarray": np.array([1, {"obj": 123}], dtype=object)},
-        {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]])},
-        {"ndarray": np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=int)},
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]], dtype=object)},
+            {"ndarray": np.array([1, {"obj": 123}], dtype=object)},
+            {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]])},
+            {"ndarray": np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=int)},
+        ],
     )
-    def test_encoder_ndarray(self, object_):
+    def test_encoder_ndarray(self, object_: dict[str, np.ndarray]) -> None:
         """Test encoding and decoding a numpy ndarray."""
         encoded = json.dumps(object_, cls=RuntimeEncoder)
         assert isinstance(encoded, str)
@@ -432,13 +485,16 @@ class TestDataSerialization(IBMTestCase):
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         assert np.array_equal(decoded["ndarray"], object_["ndarray"])
 
-    @data(
-        {"instruction": CXGate()},
-        {"instruction": PhaseGate(theta=1)},
-        {"instruction": U2Gate(phi=1, lam=1)},
-        {"instruction": U2Gate(phi=Parameter("phi"), lam=Parameter("lambda"))},
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            {"instruction": CXGate()},
+            {"instruction": PhaseGate(theta=1)},
+            {"instruction": U2Gate(phi=1, lam=1)},
+            {"instruction": U2Gate(phi=Parameter("phi"), lam=Parameter("lambda"))},
+        ],
     )
-    def test_encoder_instruction(self, object_):
+    def test_encoder_instruction(self, object_: dict[str, Gate]) -> None:
         """Test encoding and decoding instructions."""
         encoded = json.dumps(object_, cls=RuntimeEncoder)
         assert isinstance(encoded, str)
@@ -446,14 +502,14 @@ class TestDataSerialization(IBMTestCase):
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         assert decoded == object_
 
-    def test_encoder_np_number(self):
+    def test_encoder_np_number(self) -> None:
         """Test encoding and decoding instructions."""
         encoded = json.dumps(np.int64(100), cls=RuntimeEncoder)
         assert isinstance(encoded, str)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         assert decoded == 100
 
-    def test_encoder_callable(self):
+    def test_encoder_callable(self) -> None:
         """Test encoding a callable."""
         with warnings.catch_warnings(record=True) as warn_cm:
             encoded = json.dumps({"fidelity": lambda x: x}, cls=RuntimeEncoder)
@@ -461,11 +517,14 @@ class TestDataSerialization(IBMTestCase):
             assert decoded["fidelity"] is None
             assert len(warn_cm) == 1
 
-    @data(
-        SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-        Pauli("XYZX"),
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
+            Pauli("XYZX"),
+        ],
     )
-    def test_decoder_import(self, object_):
+    def test_decoder_import(self, object_: SparsePauliOp | Pauli) -> None:
         """Test runtime decoder importing modules."""
         script = """
 import sys
@@ -491,8 +550,7 @@ if __name__ == '__main__':
             )
             assert object_.__class__.__name__ in proc.stdout
 
-    @mock_responses
-    def test_result_decoder(self, registry):
+    def test_result_decoder(self, registry: BaseRegistry) -> None:
         """Test result decoder."""
         registry.add_job(
             Job(
@@ -508,7 +566,7 @@ if __name__ == '__main__':
         result = job.result(decoder=SerializableClassDecoder)
         assert isinstance(result["serializable_class"], SerializableClass)
 
-    def test_circuit_metadata(self):
+    def test_circuit_metadata(self) -> None:
         """Test serializing circuit metadata."""
         circ = QuantumCircuit(1)
         circ.metadata = {"test": np.arange(0, 10)}
@@ -688,41 +746,6 @@ class TestContainerSerialization(IBMTestCase):
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         assert isinstance(decoded, dict)
         assert decoded == random_settings
-
-
-def spans_to_serialize() -> tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2]:
-    """Return a slice span, a double slice span, and a twirled slice span of each version."""
-    slice_span = SliceSpan(
-        datetime(2022, 1, 1),
-        datetime(2023, 1, 1),
-        {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
-    )
-
-    double_span = DoubleSliceSpan(
-        datetime(2024, 8, 20),
-        datetime(2024, 8, 21),
-        {0: ((14,), slice(2, 3), slice(1, 9))},
-    )
-
-    twirl1 = TwirledSliceSpan(
-        datetime(2024, 9, 20),
-        datetime(2024, 3, 21),
-        {
-            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
-            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
-        },
-    )
-
-    twirl2 = TwirledSliceSpanV2(
-        datetime(2024, 9, 20),
-        datetime(2024, 3, 21),
-        {
-            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
-            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
-        },
-    )
-
-    return slice_span, double_span, twirl1, twirl2
 
 
 class TestExecutionSpansSerialization(IBMTestCase):
