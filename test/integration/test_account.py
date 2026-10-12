@@ -18,6 +18,7 @@ import logging
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
+import pytest
 import requests
 from ibm_cloud_sdk_core import ApiException
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -32,8 +33,6 @@ from qiskit_ibm_runtime.accounts.utils import (
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 
 if TYPE_CHECKING:
-    import pytest
-
     from .case import IntegrationTestDependencies
 
 
@@ -135,7 +134,7 @@ class TestQuantumPlatform:
 
     def test_passing_name_as_instance(self, dependencies: IntegrationTestDependencies) -> None:
         """Test passing in a name as the instance."""
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             QiskitRuntimeService(
                 token=dependencies.token,
                 instance="test_name",
@@ -185,7 +184,7 @@ class TestQuantumPlatform:
         first_instance = service._backend_instance_groups[0]
         assert plans_preference_one_invalid[0] == first_instance.get("plan")
 
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             service = QiskitRuntimeService(
                 token=dependencies.token,
                 url=dependencies.url,
@@ -207,7 +206,7 @@ class TestQuantumPlatform:
         first_instance = service._backend_instance_groups[0]
         assert region in first_instance.get("crn")
 
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             service = QiskitRuntimeService(
                 token=dependencies.token,
                 url=dependencies.url,
@@ -232,7 +231,7 @@ class TestQuantumPlatform:
                     assert instance["tags"] == tags
 
         invalid_tags = ["invalid_tags"]
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             service = QiskitRuntimeService(
                 token=dependencies.token,
                 url=dependencies.url,
@@ -354,7 +353,7 @@ class TestIntegrationAccount:
     ) -> None:
         """Verify if CRN resolution fails for non-existing service instance name."""
         service_instance_name = "-non-existing-service-name-"
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             QiskitRuntimeService(
                 channel="ibm_cloud",
                 url=dependencies.url,
