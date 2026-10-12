@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from ddt import data, ddt
+import pytest
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -30,11 +30,10 @@ if TYPE_CHECKING:
     from .case import IntegrationTestDependencies
 
 
-@ddt
 class TestSampler:
     """Test client-side Sampler."""
 
-    @data(True, False)
+    @pytest.mark.parametrize("twirling", [True, False])
     def test_sampler(self, twirling: bool, dependencies: IntegrationTestDependencies) -> None:
         """Test sampler by submitting a couple of parametric circuits."""
         backend = dependencies.service.backend(dependencies.qpu)

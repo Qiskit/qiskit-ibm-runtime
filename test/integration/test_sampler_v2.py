@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pytest
-from ddt import data, ddt, named_data
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate, real_amplitudes
@@ -157,16 +156,18 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, targets: list | N
             assert isinstance(result[idx].data.meas, BitArray)
 
 
-@ddt
 class TestSampler:
     """Test Sampler."""
 
-    @named_data(
-        # The parameter values to be paired with the circuit in the pub, if any.
-        ("single", None),
-        ("single_with_param", ()),
-        ("single_array", [()]),
-        ("multiple", [(), (), ()]),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The parameter values to be paired with the circuit in the pub, if any.
+            pytest.param(None, id="single"),
+            pytest.param((), id="single_with_param"),
+            pytest.param([()], id="single_array"),
+            pytest.param([(), (), ()], id="multiple"),
+        ],
     )
     def test_sampler_run(
         self, parameter_values: tuple | list | None, dependencies: IntegrationTestDependencies
@@ -243,17 +244,20 @@ class TestSampler:
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         assert_result_type(result, num_pubs=4)
 
-    @named_data(
-        # The empty parameter values accepted by a circuit that takes no parameters.
-        ("none", None),
-        ("empty_tuple", ()),
-        ("empty_list", []),
-        ("empty_array", np.array([])),
-        ("tuple_of_empty_tuple", ((),)),
-        ("tuple_of_empty_list", ([],)),
-        ("list_of_empty_list", [[]]),
-        ("list_of_empty_tuple", [()]),
-        ("array_of_empty_array", np.array([[]])),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The empty parameter values accepted by a circuit that takes no parameters.
+            pytest.param(None, id="none"),
+            pytest.param((), id="empty_tuple"),
+            pytest.param([], id="empty_list"),
+            pytest.param(np.array([]), id="empty_array"),
+            pytest.param(((),), id="tuple_of_empty_tuple"),
+            pytest.param(([],), id="tuple_of_empty_list"),
+            pytest.param([[]], id="list_of_empty_list"),
+            pytest.param([()], id="list_of_empty_tuple"),
+            pytest.param(np.array([[]]), id="array_of_empty_array"),
+        ],
     )
     def test_run_single_circuit_no_parameter(
         self,
@@ -271,14 +275,17 @@ class TestSampler:
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    @named_data(
-        # The shapes accepted for the values of a circuit that takes a single parameter.
-        ("list", [np.pi]),
-        ("tuple", (np.pi,)),
-        ("array", np.array([np.pi])),
-        ("nested_list", [[np.pi]]),
-        ("nested_tuple", ((np.pi,),)),
-        ("nested_array", np.array([[np.pi]])),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The shapes accepted for the values of a circuit that takes a single parameter.
+            pytest.param([np.pi], id="list"),
+            pytest.param((np.pi,), id="tuple"),
+            pytest.param(np.array([np.pi]), id="array"),
+            pytest.param([[np.pi]], id="nested_list"),
+            pytest.param(((np.pi,),), id="nested_tuple"),
+            pytest.param(np.array([[np.pi]]), id="nested_array"),
+        ],
     )
     def test_run_single_circuit_one_parameter(
         self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
@@ -297,15 +304,18 @@ class TestSampler:
 
         assert_result_type(result, num_pubs=1)
 
-    @named_data(
-        # The shapes accepted for the values of a circuit that takes more than one parameter.
-        # The values match the ones of `sampler_cases()[3]`, used by the test.
-        ("list", [1] * 6),
-        ("tuple", (1,) * 6),
-        ("array", np.array([1] * 6)),
-        ("nested_list", [[1] * 6]),
-        ("nested_tuple", ([1] * 6,)),
-        ("nested_array", np.array([[1] * 6])),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The shapes accepted for the values of a circuit that takes more than one parameter.
+            # The values match the ones of `sampler_cases()[3]`, used by the test.
+            pytest.param([1] * 6, id="list"),
+            pytest.param((1,) * 6, id="tuple"),
+            pytest.param(np.array([1] * 6), id="array"),
+            pytest.param([[1] * 6], id="nested_list"),
+            pytest.param(([1] * 6,), id="nested_tuple"),
+            pytest.param(np.array([[1] * 6]), id="nested_array"),
+        ],
     )
     def test_run_single_circuit_more_than_one_parameter(
         self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
@@ -341,7 +351,7 @@ class TestSampler:
         result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
         assert_result_type(result, num_pubs=2)
 
-    @data(1, 2)
+    @pytest.mark.parametrize("num_circuits", [1, 2])
     def test_run_empty_parameter(
         self, num_circuits: int, dependencies: IntegrationTestDependencies
     ) -> None:
@@ -358,7 +368,7 @@ class TestSampler:
 
         assert_result_type(result, num_pubs=num_circuits)
 
-    @data("ndarray", "list")
+    @pytest.mark.parametrize("params_type", ["ndarray", "list"])
     def test_run_numpy_params(
         self, params_type: str, dependencies: IntegrationTestDependencies
     ) -> None:
@@ -509,9 +519,12 @@ class TestSampler:
         _ = job.result()
         assert job.status() == "DONE"
 
-    @named_data(
-        ("identity", UnitaryGate(np.eye(2))),
-        ("X", UnitaryGate([[0, 1], [1, 0]])),
+    @pytest.mark.parametrize(
+        "gate",
+        [
+            pytest.param(UnitaryGate(np.eye(2)), id="identity"),
+            pytest.param(UnitaryGate([[0, 1], [1, 0]]), id="X"),
+        ],
     )
     def test_circuit_with_unitary(
         self, gate: UnitaryGate, dependencies: IntegrationTestDependencies
@@ -542,7 +555,13 @@ class TestSampler:
         assert result[0].data.meas.num_shots == SHOTS
         assert_result_type(result, num_pubs=1)
 
-    @named_data(*multiple_cregs_cases())
+    @pytest.mark.parametrize(
+        ("circuit", "target"),
+        [
+            pytest.param(circuit, target, id=title)
+            for title, circuit, target in multiple_cregs_cases()
+        ],
+    )
     def test_circuit_with_multiple_cregs(
         self, circuit: QuantumCircuit, target: dict, dependencies: IntegrationTestDependencies
     ) -> None:

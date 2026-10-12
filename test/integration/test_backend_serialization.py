@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 
 import dateutil.parser
 import pytest
-from ddt import ddt, named_data
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
@@ -97,11 +96,13 @@ def _check_encoded(data: list | str) -> bool:
     return False
 
 
-@ddt
+BACKEND_PARAMS = [pytest.param(backend, id=label) for label, backend in BACKENDS]
+
+
 class TestSerialization:
     """Test data serialization."""
 
-    @named_data(*BACKENDS)
+    @pytest.mark.parametrize("backend", BACKEND_PARAMS)
     @pytest.mark.production
     def test_backend_configuration(self, backend):
         """Test deserializing backend configuration."""
@@ -123,7 +124,7 @@ class TestSerialization:
 
         assert_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
-    @named_data(*BACKENDS)
+    @pytest.mark.parametrize("backend", BACKEND_PARAMS)
     def test_backend_properties(self, backend):
         """Test deserializing backend properties."""
         # Known keys that look like a serialized object.

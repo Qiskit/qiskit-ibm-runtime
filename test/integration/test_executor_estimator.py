@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-from ddt import data, ddt
+import pytest
 from qiskit.primitives import PrimitiveResult
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -56,7 +56,6 @@ def estimator_pubs(backend: IBMBackend) -> list[tuple]:
     ]
 
 
-@ddt
 class TestEstimator:
     """An integration test, testing Estimator implemented through Executor."""
 
@@ -112,7 +111,7 @@ class TestEstimator:
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
-    @data("gate_folding", "pea")
+    @pytest.mark.parametrize("amplifier", ["gate_folding", "pea"])
     def test_zne_estimator(
         self, amplifier: Literal["gate_folding", "pea"], dependencies: IntegrationTestDependencies
     ) -> None:
