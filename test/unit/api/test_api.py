@@ -31,12 +31,12 @@ class TestAPISession:
     """Class for testing API sessions."""
 
     def test_functions_identifier_header(
-        self, registry: BaseRegistry, responses_mock: RequestsMock
+        self, registry: BaseRegistry, responses: RequestsMock
     ) -> None:
         """Test for appending the HTTP header for functions identifier."""
         job_post_mock = next(
             mock
-            for mock in responses_mock.registered()
+            for mock in responses.registered()
             if mock.url == "https://my-region.quantum.cloud.ibm.com/api/v1/jobs"
         )
 
