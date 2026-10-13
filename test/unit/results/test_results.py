@@ -12,25 +12,29 @@
 
 """Tests for the results module."""
 
-import json
+from __future__ import annotations
 
-from ddt import data, ddt
+import json
+from typing import TYPE_CHECKING, Literal
+
+import pytest
 
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.results.runner import RunnerResult
 
-from ...decorators import mock_responses
-from ...ibm_test_case import IBMTestCase
 from ...registries import Job
 
+if TYPE_CHECKING:
+    from ...registries import BaseRegistry
 
-@ddt
-class TestRunner(IBMTestCase):
+
+class TestRunner:
     """Test Runner results."""
 
-    @data("circuit-runner", "qasm3-runner")
-    @mock_responses
-    def test_job_results(self, program, registry):
+    @pytest.mark.parametrize("program", ["circuit-runner", "qasm3-runner"])
+    def test_job_results(
+        self, program: Literal["sampler", "estimator", "executor"], registry: BaseRegistry
+    ) -> None:
         """Results for a Runner job should be a RunnerResult."""
         # Excerpt from running a job in aer, and extracting the `results` key (without `metadata`)
         # of `job.results().to_dict()`

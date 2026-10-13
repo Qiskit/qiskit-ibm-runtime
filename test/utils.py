@@ -338,7 +338,9 @@ def get_transpiled_circuit(backend, num_qubits=2, measure=False):
     return transpile(circ, backend=backend)
 
 
-def get_primitive_inputs(primitive, backend=None, num_sets=1):
+def get_primitive_inputs(
+    primitive: type, backend: BackendV2 | None = None, num_sets: int = 1
+) -> dict:
     """Return primitive specific inputs."""
     backend = backend or FakeManilaV2()
     theta = Parameter("θ")

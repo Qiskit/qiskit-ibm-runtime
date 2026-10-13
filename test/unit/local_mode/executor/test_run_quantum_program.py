@@ -16,11 +16,10 @@ from __future__ import annotations
 
 from itertools import islice, product
 from typing import TYPE_CHECKING, Any
-from unittest import skipUnless
 from unittest.mock import MagicMock
 
 import numpy as np
-from ddt import data, ddt, unpack
+import pytest
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.bit_array import BitArray
 from qiskit.quantum_info import PauliLindbladMap
@@ -37,8 +36,6 @@ from qiskit_ibm_runtime.fake_provider.executor.run_quantum_program import run_qu
 from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramItemResult
-
-from ....ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
@@ -118,12 +115,11 @@ def assert_correct(
         assert (corrected == expected_bits).all()
 
 
-@ddt
-@skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
-class TestRunQuantumProgram(IBMTestCase):
+@pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+class TestRunQuantumProgram:
     """Test for running quantum programs."""
 
-    def test_angle_rounding_snaps_near_clifford(self):
+    def test_angle_rounding_snaps_near_clifford(self) -> None:
         """RZ(π + ε) with a tiny ε should round to π, yielding |1⟩ deterministically.
 
         H → RZ(π) → H maps |0⟩ → |1⟩. Without rounding, ε would make the angle non-Clifford
@@ -144,7 +140,7 @@ class TestRunQuantumProgram(IBMTestCase):
 
         assert (result[0]["c"] == [[True]]).all()
 
-    def test_clifford_circuit_item(self):
+    def test_clifford_circuit_item(self) -> None:
         """Test using the stabilizer simulation method via a Circuit item."""
         # Build a simple 3-qubit Clifford circuit (GHZ state preparation + measurement)
         qc = QuantumCircuit(3, 3)
@@ -184,7 +180,7 @@ class TestRunQuantumProgram(IBMTestCase):
             for shot in arr:
                 assert all(shot == 0) or all(shot == 1)
 
-    def test_clifford_samplex_item(self):
+    def test_clifford_samplex_item(self) -> None:
         """Test using the stabilizer simulation method via a Samplex item."""
         num_randomizations = 8
         shots = 256
@@ -220,7 +216,7 @@ class TestRunQuantumProgram(IBMTestCase):
         # CX|00⟩ = |00⟩
         assert_correct({"c": np.array([False, False])}, item_data)
 
-    def test_circuit_item_with_circuit_arguments(self):
+    def test_circuit_item_with_circuit_arguments(self) -> None:
         """Run a parameterized Circuit item by supplying circuit arguments directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
@@ -270,9 +266,8 @@ class TestRunQuantumProgram(IBMTestCase):
         # phi=π, theta=π → |11⟩
         assert (item_data["c"][3] == [True, True]).all()
 
-    @data(*product([True, False], [2, 156]))
-    @unpack
-    def test_noisy_simulation(self, noise, num_qubits):
+    @pytest.mark.parametrize(("noise", "num_qubits"), list(product([True, False], [2, 156])))
+    def test_noisy_simulation(self, noise: bool, num_qubits: int) -> None:
         """Test noisy simulation."""
         fez_backend = FakeFez()
         coupling_map = fez_backend.coupling_map
@@ -332,7 +327,7 @@ class TestRunQuantumProgram(IBMTestCase):
         else:
             assert num_shots_tot == cts.get("0" * len(active_qubits), 0)
 
-    def test_samplex_item_with_parameter_sweep(self):
+    def test_samplex_item_with_parameter_sweep(self) -> None:
         """Run a parameterized Samplex item by supplying parameter values directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
@@ -389,7 +384,7 @@ class TestRunQuantumProgram(IBMTestCase):
         # phi=π, theta=π → |11⟩
         assert (corrected_data[3] == [True, True]).all()
 
-    def test_samplex_item_with_broadcast_sweep(self):
+    def test_samplex_item_with_broadcast_sweep(self) -> None:
         """Run a Pauli-twirled circuit with a parameter sweep over input bitflips.
 
         This test verifies that broadcast dimensions in samplex arguments are handled correctly.
@@ -454,7 +449,7 @@ class TestRunQuantumProgram(IBMTestCase):
 
         # Check correctness per sweep value.
         # Collapse the two randomization axes (r0, r1) into one for assert_correct.
-        def sweep_slice(i, j):
+        def sweep_slice(i: int, j: int) -> dict:
             return {
                 key: arr[:, i, j, :].reshape(r0 * r1, *arr.shape[4:])
                 for key, arr in item_data.items()
@@ -472,7 +467,7 @@ class TestRunQuantumProgram(IBMTestCase):
         # theta=π, phi=π: CX|10⟩ = |11⟩, X on q1 → |10⟩
         assert_correct({"c": np.array([True, False])}, sweep_slice(1, 1))
 
-    def test_unsupported_item_type_raises_type_error(self):
+    def test_unsupported_item_type_raises_type_error(self) -> None:
         """Test unsupported types."""
         fake_item = MagicMock()
         fake_item.circuit = QuantumCircuit(1)
@@ -482,14 +477,14 @@ class TestRunQuantumProgram(IBMTestCase):
         program.shots = 64
         program.passthrough_data = None
 
-        with self.assertRaisesRegex(TypeError, "Unsupported QuantumProgramItem type"):
+        with pytest.raises(TypeError, match="Unsupported QuantumProgramItem type"):
             run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
 
-class TestFindBoxType(IBMTestCase):
+class TestFindBoxType:
     """Tests for ``find_box_type``."""
 
-    def test_gates(self):
+    def test_gates(self) -> None:
         """Test that ``find_box_type`` returns "gates" as the type."""
         circuit = QuantumCircuit(2)
         with circuit.box():
@@ -499,7 +494,7 @@ class TestFindBoxType(IBMTestCase):
 
         assert find_box_type(circuit.data[0]) == "gates"
 
-    def test_measurement(self):
+    def test_measurement(self) -> None:
         """Test that ``find_box_type`` returns "measurement" as the type."""
         circuit = QuantumCircuit(2, 2)
         with circuit.box():
@@ -509,7 +504,7 @@ class TestFindBoxType(IBMTestCase):
 
         assert find_box_type(circuit.data[0]) == "measurement"
 
-    def test_unknown(self):
+    def test_unknown(self) -> None:
         """Test that ``find_box_type`` returns "unknown" as the type."""
         circuit = QuantumCircuit(2, 1)
         with circuit.box():
