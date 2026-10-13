@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 import operator
-import unittest
 from dataclasses import asdict
 from typing import TYPE_CHECKING
 
@@ -102,7 +101,7 @@ class TestFakeBackends:
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
         assert max_count == "11"
 
-    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
+    @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
     def test_fake_nighthawk(self):
         """Test that submitting a simple circuit with FakeNighthawk works."""
         # Initialize fake_nighthawk

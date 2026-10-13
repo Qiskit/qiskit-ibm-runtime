@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
-from unittest.mock import patch
 
 import pytest
 import requests
@@ -299,23 +298,29 @@ class TestQuantumPlatform:
         assert isinstance(usage["usage_remaining_seconds"], int)
         assert isinstance(usage, dict)
 
-    def test_instances_archived(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_instances_archived(
+        self, dependencies: IntegrationTestDependencies, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that archived instances are available to the user."""
-        with patch(
-            "ibm_platform_services.GlobalCatalogV1.get_catalog_entry"
-        ) as get_catalog_entry_mock:
-            get_catalog_entry_mock.side_effect = ApiException(403)
-            service = QiskitRuntimeService(
-                token=dependencies.token,
-                channel="ibm_quantum_platform",
-                url=dependencies.url,
-            )
-            instances = service.instances()
-            assert instances
-            assert all(
-                instance["plan"] == "unknown" and instance["pricing_type"] == "unknown"
-                for instance in instances
-            )
+
+        def mock_get_catalog_entry(*args, **kwargs):
+            raise ApiException(403)
+
+        monkeypatch.setattr(
+            "ibm_platform_services.GlobalCatalogV1.get_catalog_entry",
+            mock_get_catalog_entry,
+        )
+        service = QiskitRuntimeService(
+            token=dependencies.token,
+            channel="ibm_quantum_platform",
+            url=dependencies.url,
+        )
+        instances = service.instances()
+        assert instances
+        assert all(
+            instance["plan"] == "unknown" and instance["pricing_type"] == "unknown"
+            for instance in instances
+        )
 
 
 class TestIntegrationAccount:

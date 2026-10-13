@@ -20,7 +20,6 @@ import urllib
 from contextlib import contextmanager
 from time import sleep
 from typing import TYPE_CHECKING
-from unittest.mock import patch
 
 import pytest
 
@@ -52,7 +51,8 @@ def blocked_network() -> Iterator[None]:
             raise RuntimeError(f"Blocked network access to {address}")
         return original_connect(sock, address)
 
-    with patch.object(socket.socket, "connect", blocking_connect):
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(socket.socket, "connect", blocking_connect)
         yield
 
 

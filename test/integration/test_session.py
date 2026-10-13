@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest import SkipTest, mock
 
 import pytest
 from qiskit.circuit import IfElseOp
@@ -65,12 +64,14 @@ class TestIntegrationSession:
             assert isinstance(result, PrimitiveResult)
             session.close()
 
-    def test_session_from_id(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_session_from_id(
+        self, dependencies: IntegrationTestDependencies, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test creating a session from a given id."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
         if backend.configuration().simulator:
-            raise SkipTest("No proper backends available")
+            pytest.skip("No proper backends available")
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run([bell()])
         with Session(backend=backend) as session:
@@ -78,9 +79,15 @@ class TestIntegrationSession:
             job = sampler.run(isa_circuit)
             job.result()
 
-        with mock.patch.object(service._get_api_client(), "create_session") as mock_create_session:
-            new_session = Session.from_id(session_id=session._session_id, service=service)
-            mock_create_session.assert_not_called()
+        create_session_called = False
+
+        def mock_create_session(*args, **kwargs):
+            nonlocal create_session_called
+            create_session_called = True
+
+        monkeypatch.setattr(service._get_api_client(), "create_session", mock_create_session)
+        new_session = Session.from_id(session_id=session._session_id, service=service)
+        assert not create_session_called
 
         assert session._session_id == new_session._session_id
         new_session.close()
@@ -95,7 +102,7 @@ class TestIntegrationSession:
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
         if backend.configuration().simulator:
-            raise SkipTest("No proper backends available")
+            pytest.skip("No proper backends available")
 
         with Session(backend=backend) as session:
             _ = SamplerV2(mode=session)

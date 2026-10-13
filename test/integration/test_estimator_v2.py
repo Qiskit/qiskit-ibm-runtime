@@ -15,8 +15,8 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
-from unittest import skip
 
+import pytest
 from qiskit.circuit.library import IQP, real_amplitudes
 from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
 from qiskit.quantum_info import SparsePauliOp
@@ -26,8 +26,6 @@ from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
 
 if TYPE_CHECKING:
-    import pytest
-
     from qiskit_ibm_runtime.options import (
         EnvironmentOptions,
         ExecutionOptionsV2,
@@ -139,7 +137,7 @@ class TestEstimatorV2:
         assert_result_type(result, num_pubs=1, shapes=[()])
         assert result[0].metadata["shots"] == 1600
 
-    @skip("Skip until simulator options are accepted by server.")
+    @pytest.mark.skip(reason="Skip until simulator options are accepted by server.")
     def test_pec(
         self, dependencies: IntegrationTestDependencies, request: pytest.FixtureRequest
     ) -> None:

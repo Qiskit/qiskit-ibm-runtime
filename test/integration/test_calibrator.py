@@ -14,8 +14,9 @@
 
 from __future__ import annotations
 
-import unittest
 from typing import TYPE_CHECKING
+
+import pytest
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
     from .case import IntegrationTestDependencies
 
 
-@unittest.skip("This feature is not yet supported.")
+@pytest.mark.skip(reason="This feature is not yet supported.")
 class TestCalibrator:
     """Test Calibrator."""
 
