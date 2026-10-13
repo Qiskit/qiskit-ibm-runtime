@@ -1398,7 +1398,7 @@ class QiskitRuntimeService:
                 api=None,
             )
 
-        return RuntimeJobV2(
+        job = RuntimeJobV2(
             backend=backend,
             api_client=self._active_api_client,
             service=self,
@@ -1410,6 +1410,16 @@ class QiskitRuntimeService:
             tags=raw_data.get("tags"),
             private=raw_data.get("private", False),
         )
+
+        if (
+            "state" in raw_data
+            and isinstance(raw_data["state"], dict)
+            and "status" in raw_data["state"]
+        ):
+            job._set_status(raw_data)
+        elif "status" in raw_data and isinstance(raw_data["status"], str):
+            job._set_status({"state": {"status": raw_data["status"]}})
+        return job
 
     def least_busy(
         self,
