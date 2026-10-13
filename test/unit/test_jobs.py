@@ -19,7 +19,7 @@ import warnings
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from ddt import data, ddt
+import pytest
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import RuntimeJobV2
@@ -33,8 +33,6 @@ from qiskit_ibm_runtime.exceptions import (
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.runtime_job_v2 import API_TO_JOB_ERROR_MESSAGE
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, Job, OneInstanceDryRunRegistry
 
 if TYPE_CHECKING:
@@ -101,12 +99,10 @@ def run_program(
     return job, registry_job
 
 
-@ddt
-class TestRuntimeJob(IBMTestCase):
+class TestRuntimeJob:
     """Class for testing runtime jobs."""
 
-    @mock_responses
-    def test_run_program(self, registry):
+    def test_run_program(self, registry: BaseRegistry) -> None:
         """Test running program."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {"param1": "foo"}, {})
@@ -117,15 +113,13 @@ class TestRuntimeJob(IBMTestCase):
         assert job.status() == "DONE"
         assert job.result()
 
-    @mock_responses
-    def test_run_program_phantom_backend(self, registry):
+    def test_run_program_phantom_backend(self, registry: BaseRegistry) -> None:
         """Test running on a phantom backend."""
         service = QiskitRuntimeService(token="my_token")
-        with self.assertRaises(QiskitBackendNotFoundError):
+        with pytest.raises(QiskitBackendNotFoundError):
             run_program(service, registry, {}, {}, backend_name="phantom_backend")
 
-    @mock_responses
-    def test_run_program_with_custom_runtime_image(self, registry):
+    def test_run_program_with_custom_runtime_image(self, registry: BaseRegistry) -> None:
         """Test running program with a custom image."""
         image = "name:tag"
         service = QiskitRuntimeService(token="my_token")
@@ -138,8 +132,7 @@ class TestRuntimeJob(IBMTestCase):
         assert job.status() == "DONE"
         assert job.image == image
 
-    @mock_responses
-    def test_run_program_with_custom_log_level(self, registry):
+    def test_run_program_with_custom_log_level(self, registry: BaseRegistry) -> None:
         """Test running program with a custom log level."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {"param1": "foo"}, {"log_level": "DEBUG"})
@@ -152,8 +145,7 @@ class TestRuntimeJob(IBMTestCase):
         assert job.result()
         assert job.status() == "DONE"
 
-    @mock_responses
-    def test_run_program_failed_with_no_reason(self, registry):
+    def test_run_program_failed_with_no_reason(self, registry: BaseRegistry) -> None:
         """Test a failed program execution, when no reason is present in the job details."""
         service = QiskitRuntimeService(token="my_token")
         job, registry_job = run_program(service, registry, {}, {})
@@ -174,11 +166,10 @@ class TestRuntimeJob(IBMTestCase):
         # When no reason is present in the job details, the error message is based on the raw
         # response from the results.
         assert "Content from results" in job.error_message()
-        with self.assertRaisesRegex(RuntimeJobFailureError, "Content from results"):
+        with pytest.raises(RuntimeJobFailureError, match="Content from results"):
             job.result()
 
-    @mock_responses
-    def test_run_program_failed_with_reason(self, registry):
+    def test_run_program_failed_with_reason(self, registry: BaseRegistry) -> None:
         """Test a failed program execution, when reason is present in the job details."""
         service = QiskitRuntimeService(token="my_token")
         job, registry_job = run_program(service, registry, {}, {})
@@ -192,11 +183,10 @@ class TestRuntimeJob(IBMTestCase):
 
         # When a reason is present in the job details, the error message is based on that reason.
         assert "Some reason" in job.error_message()
-        with self.assertRaisesRegex(RuntimeJobFailureError, "Some reason"):
+        with pytest.raises(RuntimeJobFailureError, match="Some reason"):
             job.result()
 
-    @mock_responses
-    def test_run_program_failed_ran_too_long(self, registry):
+    def test_run_program_failed_ran_too_long(self, registry: BaseRegistry) -> None:
         """Test a program that failed since it ran longer than maximum execution time."""
         service = QiskitRuntimeService(token="my_token")
         job, registry_job = run_program(service, registry, {}, {})
@@ -219,27 +209,25 @@ class TestRuntimeJob(IBMTestCase):
         # In this specific case, the error message is based on the content from the results, and the
         # exception is based on the reason.
         assert "Content from results" in job.error_message()
-        with self.assertRaisesRegex(RuntimeJobMaxTimeoutError, "RAN TOO LONG"):
+        with pytest.raises(RuntimeJobMaxTimeoutError, match="RAN TOO LONG"):
             job.result()
 
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_program_dry_run(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
+    def test_run_program_dry_run(self, registry: BaseRegistry) -> None:
         """Running a program with `dry_run` should execute against the mock backend."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {}, backend_name="ibm_foo", dry_run=True)
         job.wait_for_final_state(poll_interval=0.1)
         assert job.backend().name == "mock_foo"
 
-    @mock_responses
-    def test_run_program_dry_run_no_mocked_backend(self, registry):
+    def test_run_program_dry_run_no_mocked_backend(self, registry: BaseRegistry) -> None:
         """Running a program with `dry_run` should fail if the mock backend cannot be found."""
         service = QiskitRuntimeService(token="my_token")
         # Registry has `common_backend`, but no `common_backend`.
-        with self.assertRaisesRegex(QiskitBackendNotFoundError, "'mock_backend' was not found"):
+        with pytest.raises(QiskitBackendNotFoundError, match="'mock_backend' was not found"):
             run_program(service, registry, {}, {}, dry_run=True)
 
-    @mock_responses
-    def test_run_program_dry_run_mock_in_other_instance(self, registry):
+    def test_run_program_dry_run_mock_in_other_instance(self, registry: BaseRegistry) -> None:
         """Running a program with `dry_run` should pick up mock backends in other instances."""
         # Add "mock_backend_a" to instance "b", while "unique_backend_a" is in instance "a".
         registry.add_backend(Backend("mock_backend_a"), "b")
@@ -251,8 +239,7 @@ class TestRuntimeJob(IBMTestCase):
         job.wait_for_final_state(poll_interval=0.1)
         assert job.backend().name == "mock_backend_a"
 
-    @mock_responses
-    def test_cancel_job(self, registry):
+    def test_cancel_job(self, registry: BaseRegistry) -> None:
         """Test canceling a job."""
         service = QiskitRuntimeService(token="my_token")
         job, registry_job = run_program(service, registry, {}, {})
@@ -266,11 +253,10 @@ class TestRuntimeJob(IBMTestCase):
         # This automatically advances the job to cancelled.
         remote_job = service.job(job.job_id())
         assert remote_job.status() == "CANCELLED"
-        with self.assertRaisesRegex(RuntimeInvalidStateError, "Job was cancelled"):
+        with pytest.raises(RuntimeInvalidStateError, match="Job was cancelled"):
             remote_job.result()
 
-    @mock_responses
-    def test_final_result(self, registry):
+    def test_final_result(self, registry: BaseRegistry) -> None:
         """Test getting final result."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {})
@@ -278,23 +264,20 @@ class TestRuntimeJob(IBMTestCase):
         result = job.result()
         assert result
 
-    @mock_responses
-    def test_job_status(self, registry):
+    def test_job_status(self, registry: BaseRegistry) -> None:
         """Test job status."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {})
         assert job.status()
 
-    @mock_responses
-    def test_wait_for_final_state(self, registry):
+    def test_wait_for_final_state(self, registry: BaseRegistry) -> None:
         """Test wait for final state."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {})
         job.wait_for_final_state(poll_interval=0.1)
         assert "DONE" == job.status()
 
-    @mock_responses
-    def test_delete_job(self, registry):
+    def test_delete_job(self, registry: BaseRegistry) -> None:
         """Test deleting a job."""
         service = QiskitRuntimeService(token="my_token")
         job, registry_job = run_program(service, registry, {"param1": "foo"}, {})
@@ -303,11 +286,10 @@ class TestRuntimeJob(IBMTestCase):
         service.delete_job(job.job_id())
 
         del registry.jobs["a"][registry_job.id]
-        with self.assertRaises(RuntimeJobNotFound):
+        with pytest.raises(RuntimeJobNotFound):
             service.job(job.job_id())
 
-    @mock_responses
-    def test_instance_limit_warning(self, registry):
+    def test_instance_limit_warning(self, registry: BaseRegistry) -> None:
         """Test emitting a warning if instance usage has been reached."""
         service = QiskitRuntimeService(token="my_token")
 
@@ -317,7 +299,7 @@ class TestRuntimeJob(IBMTestCase):
             "usage_limit_seconds": 2,
             "usage_limit_reached": True,
         }
-        with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
+        with pytest.warns(UserWarning, match=r"There is currently no more time available"):
             service._run(program_id="sampler", options={"backend": "common_backend"}, inputs={})
 
         # All relevant fields present, instance limit reached.
@@ -326,7 +308,7 @@ class TestRuntimeJob(IBMTestCase):
             "usage_limit_seconds": 2,
             "usage_limit_reached": True,
         }
-        with self.assertWarnsRegex(UserWarning, r"This instance has met its usage limit"):
+        with pytest.warns(UserWarning, match=r"This instance has met its usage limit"):
             service._run(program_id="sampler", options={"backend": "common_backend"}, inputs={})
 
         # Missing `usage_limit_seconds`, account limit reached.
@@ -334,12 +316,13 @@ class TestRuntimeJob(IBMTestCase):
             "usage_consumed_seconds": 1,
             "usage_limit_reached": True,
         }
-        with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
+        with pytest.warns(UserWarning, match=r"There is currently no more time available"):
             service._run(program_id="sampler", options={"backend": "common_backend"}, inputs={})
 
-    @data((None, 0.5), ("some_session_id", 0.1))
-    @mock_responses
-    def test_wait_for_final_state_poll_interval_defaults(self, id_and_default, registry):
+    @pytest.mark.parametrize("id_and_default", [(None, 0.5), ("some_session_id", 0.1)])
+    def test_wait_for_final_state_poll_interval_defaults(
+        self, id_and_default: tuple[str, float], registry: BaseRegistry
+    ) -> None:
         """wait_for_final_state should use default values if `None` provided."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {})
@@ -351,9 +334,10 @@ class TestRuntimeJob(IBMTestCase):
                 job.wait_for_final_state()
                 patched_sleep.assert_called_with(default)
 
-    @data(0.99, 0.1, 1.23)
-    @mock_responses
-    def test_wait_for_final_state_poll_inverval_custom(self, value, registry):
+    @pytest.mark.parametrize("value", [0.99, 0.1, 1.23])
+    def test_wait_for_final_state_poll_inverval_custom(
+        self, value: float, registry: BaseRegistry
+    ) -> None:
         """Test wait_for_final_state when passing a custom poll interval."""
         service = QiskitRuntimeService(token="my_token")
         job, _ = run_program(service, registry, {}, {})
@@ -374,33 +358,32 @@ class TestRuntimeJob(IBMTestCase):
 
                     patched_sleep.assert_called_with(expected_interval)
 
-    @mock_responses
-    @data("pending", "complete")
-    def test_usage_no_partial(self, status, registry):
+    @pytest.mark.parametrize("status", ["pending", "complete"])
+    def test_usage_no_partial(self, status: str, registry: BaseRegistry) -> None:
         """usage() should return 0 if the status is not `completed`."""
         usage = {"qpu_charge_time_seconds": 123, "status": status}
         registry.add_job(Job("my_job", "common_backend", usage=usage), "a")
         service = QiskitRuntimeService(token="my_token")
 
         job = service.job("my_job")
-        usage = job.usage()
-        assert usage == (0 if status == "pending" else 123)
+        float_usage = job.usage()
+        assert float_usage == (0 if status == "pending" else 123)
 
-    @mock_responses
-    @data("pending", "complete")
-    def test_usage_partial(self, status, registry):
+    @pytest.mark.parametrize("status", ["pending", "complete"])
+    def test_usage_partial(self, status: str, registry: BaseRegistry) -> None:
         """usage() should always return `qpu_charge_time_seconds` regardless of status."""
         usage = {"qpu_charge_time_seconds": 123, "status": status}
         registry.add_job(Job("my_job", "common_backend", usage=usage), "a")
         service = QiskitRuntimeService(token="my_token")
 
         job = service.job("my_job")
-        usage = job.usage(partial=True)
-        assert usage == 123
+        float_usage = job.usage(partial=True)
+        assert float_usage == 123
 
-    @data(None, ToIntDecoder, [ToIntDecoder, MultiplierDecoder])
-    @mock_responses
-    def test_result_decoders_is_always_sequence(self, decoders, registry):
+    @pytest.mark.parametrize("decoders", [None, ToIntDecoder, [ToIntDecoder, MultiplierDecoder]])
+    def test_result_decoders_is_always_sequence(
+        self, decoders: None | ResultDecoder | list[ResultDecoder], registry: BaseRegistry
+    ) -> None:
         """`job._result_decoders` should always be a list after instantiating."""
         service = QiskitRuntimeService(token="my_token")
 
@@ -410,13 +393,12 @@ class TestRuntimeJob(IBMTestCase):
             job_id="123",
             program_id="blah",
             service=service,
-            result_decoder=decoders,
+            result_decoder=decoders,  # type: ignore[arg-type]
         )
 
         assert isinstance(job._result_decoders, list)
 
-    @mock_responses
-    def test_result_chains_decoders(self, registry):
+    def test_result_chains_decoders(self, registry: BaseRegistry) -> None:
         """When passing a list of decoders to `result()`, they are chained."""
         results = json.dumps({"some": "response"})
         registry.add_job(Job("my_job", "common_backend", raw_results=results), "a")

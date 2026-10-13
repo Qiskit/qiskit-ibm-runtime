@@ -16,9 +16,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-import ddt
 import numpy as np
 import numpy.testing as npt
+import pytest
 
 from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
@@ -29,13 +29,12 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpanV2,
 )
 
-from ..ibm_test_case import IBMTestCase
-
 SliceData = dict[int, tuple[ShapeType, slice]]
 DoubleSliceData = dict[int, tuple[ShapeType, slice, slice]]
 TwirledSliceData = dict[int, tuple[ShapeType, bool, slice, slice]]
 
 
+@pytest.fixture
 def slice_spans() -> tuple[SliceSpan, SliceSpan, SliceData]:
     """Return two slice spans, and the data slices of the first one."""
     slices1 = {1: ((100,), slice(4, 9)), 0: ((5, 2), slice(5, 7))}
@@ -54,6 +53,7 @@ def slice_spans() -> tuple[SliceSpan, SliceSpan, SliceData]:
     return span1, span2, slices1
 
 
+@pytest.fixture
 def double_slice_spans() -> tuple[DoubleSliceSpan, DoubleSliceSpan, DoubleSliceData]:
     """Return two double slice spans, and the data slices of the first one."""
     slices1 = {
@@ -78,6 +78,7 @@ def double_slice_spans() -> tuple[DoubleSliceSpan, DoubleSliceSpan, DoubleSliceD
     return span1, span2, slices1
 
 
+@pytest.fixture
 def twirled_slice_spans() -> tuple[
     TwirledSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2, TwirledSliceData
 ]:
@@ -110,6 +111,7 @@ def twirled_slice_spans() -> tuple[
     return span1, span2, span3, slices1
 
 
+@pytest.fixture
 def execution_spans() -> tuple[ExecutionSpans, SliceSpan, SliceSpan, SliceData]:
     """Return a set of two slice spans, the spans themselves, and the slices of the first one."""
     slices1 = {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))}
@@ -128,31 +130,30 @@ def execution_spans() -> tuple[ExecutionSpans, SliceSpan, SliceSpan, SliceData]:
     return ExecutionSpans([span1, span2]), span1, span2, slices1
 
 
-@ddt.ddt
-class TestSliceSpan(IBMTestCase):
+class TestSliceSpan:
     """Class for testing SliceSpan."""
 
-    def test_limits(self):
+    def test_limits(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the start and stop properties."""
-        span1, span2, _ = slice_spans()
+        span1, span2, _ = slice_spans
 
         assert span1.start == datetime(2023, 8, 22, 18, 45, 3)
         assert span1.stop == datetime(2023, 8, 22, 18, 45, 10)
         assert span2.start == datetime(2023, 8, 22, 18, 45, 9)
         assert span2.stop == datetime(2023, 8, 22, 18, 45, 11, 500000)
 
-    def test_equality(self):
+    def test_equality(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the equality method."""
-        span1, span2, slices1 = slice_spans()
+        span1, span2, slices1 = slice_spans
 
         assert span1 == span1
         assert span1 == SliceSpan(span1.start, span1.stop, slices1)
         assert span1 != span2
         assert span1 != "aoeu"
 
-    def test_comparison(self):
+    def test_comparison(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the comparison method."""
-        span1, span2, slices1 = slice_spans()
+        span1, span2, slices1 = slice_spans
 
         assert span1 < span2
 
@@ -163,37 +164,37 @@ class TestSliceSpan(IBMTestCase):
         span1_minus = SliceSpan(span1.start, span1.stop - dt, slices1)
         assert span1 > span1_minus
 
-    def test_duration(self):
+    def test_duration(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the duration property."""
-        span1, span2, _ = slice_spans()
+        span1, span2, _ = slice_spans
 
         assert span1.duration == 7
         assert span2.duration == 2.5
 
-    def test_repr(self):
+    def test_repr(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the repr method."""
-        span1, _, _ = slice_spans()
+        span1, _, _ = slice_spans
 
         expect = "start='2023-08-22 18:45:03', stop='2023-08-22 18:45:10', size=7"
         assert repr(span1) == f"SliceSpan(<{expect}>)"
 
-    def test_size(self):
+    def test_size(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the size property."""
-        span1, span2, _ = slice_spans()
+        span1, span2, _ = slice_spans
 
         assert span1.size == 5 + 2
         assert span2.size == 1 + 2
 
-    def test_pub_idxs(self):
+    def test_pub_idxs(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the pub_idxs property."""
-        span1, span2, _ = slice_spans()
+        span1, span2, _ = slice_spans
 
         assert span1.pub_idxs == [0, 1]
         assert span2.pub_idxs == [0, 2]
 
-    def test_mask(self):
+    def test_mask(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the mask() method."""
-        span1, _, _ = slice_spans()
+        span1, _, _ = slice_spans
 
         mask1 = np.zeros((100,), dtype=bool)
         mask1[4:9] = True
@@ -202,26 +203,34 @@ class TestSliceSpan(IBMTestCase):
         mask2 = [[0, 0], [0, 0], [0, 1], [1, 0], [0, 0]]
         npt.assert_array_equal(span1.mask(0), np.array(mask2, dtype=bool))
 
-    @ddt.data(
-        (0, True, True),
-        ([0, 1], True, True),
-        ([0, 1, 2], True, True),
-        ([1, 2], True, True),
-        ([1], True, False),
-        (2, False, True),
-        ([0, 2], True, True),
+    @pytest.mark.parametrize(
+        ("idx", "span1_expected_res", "span2_expected_res"),
+        [
+            (0, True, True),
+            ([0, 1], True, True),
+            ([0, 1, 2], True, True),
+            ([1, 2], True, True),
+            ([1], True, False),
+            (2, False, True),
+            ([0, 2], True, True),
+        ],
     )
-    @ddt.unpack
-    def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
+    def test_contains_pub(
+        self,
+        idx: int,
+        span1_expected_res: bool,
+        span2_expected_res: bool,
+        slice_spans: tuple[SliceSpan, SliceSpan, dict],
+    ) -> None:
         """Test the contains_pub method."""
-        span1, span2, _ = slice_spans()
+        span1, span2, _ = slice_spans
 
         assert span1.contains_pub(idx) == span1_expected_res
         assert span2.contains_pub(idx) == span2_expected_res
 
-    def test_filter_by_pub(self):
+    def test_filter_by_pub(self, slice_spans: tuple[SliceSpan, SliceSpan, dict]) -> None:
         """Test the filter_by_pub method."""
-        span1, span2, slices1 = slice_spans()
+        span1, span2, slices1 = slice_spans
 
         assert span1.filter_by_pub([]) == SliceSpan(span1.start, span1.stop, {})
         assert span2.filter_by_pub([]) == SliceSpan(span2.start, span2.stop, {})
@@ -233,59 +242,66 @@ class TestSliceSpan(IBMTestCase):
         assert span2.filter_by_pub(1) == SliceSpan(span2.start, span2.stop, {})
 
 
-@ddt.ddt
-class TestDoubleSliceSpan(IBMTestCase):
+class TestDoubleSliceSpan:
     """Class for testing DoubleSliceSpan."""
 
-    def test_limits(self):
+    def test_limits(
+        self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]
+    ) -> None:
         """Test the start and stop properties."""
-        span1, span2, _ = double_slice_spans()
+        span1, span2, _ = double_slice_spans
 
         assert span1.start == datetime(2024, 10, 11, 4, 31, 30)
         assert span1.stop == datetime(2024, 10, 11, 4, 31, 34)
         assert span2.start == datetime(2024, 10, 16, 11, 9, 20)
         assert span2.stop == datetime(2024, 10, 16, 11, 9, 30)
 
-    def test_equality(self):
+    def test_equality(
+        self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]
+    ) -> None:
         """Test the equality method."""
-        span1, span2, slices1 = double_slice_spans()
+        span1, span2, slices1 = double_slice_spans
 
         assert span1 == span1
         assert span1 == DoubleSliceSpan(span1.start, span1.stop, slices1)
         assert span1 != "aoeu"
         assert span1 != span2
 
-    def test_duration(self):
+    def test_duration(
+        self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]
+    ) -> None:
         """Test the duration property."""
-        span1, span2, _ = double_slice_spans()
+        span1, span2, _ = double_slice_spans
 
         assert span1.duration == 4
         assert span2.duration == 10
 
-    def test_repr(self):
+    def test_repr(self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]) -> None:
         """Test the repr method."""
-        span1, _, _ = double_slice_spans()
+        span1, _, _ = double_slice_spans
 
         expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=14"
         assert repr(span1) == f"DoubleSliceSpan(<{expect}>)"
 
-    def test_size(self):
+    def test_size(self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]) -> None:
         """Test the size property."""
-        span1, span2, _ = double_slice_spans()
+        span1, span2, _ = double_slice_spans
 
         assert span1.size == 1 * 5 + 3 * 3
         assert span2.size == 2 * 20 + 3 * 3
 
-    def test_pub_idxs(self):
+    def test_pub_idxs(
+        self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]
+    ) -> None:
         """Test the pub_idxs property."""
-        span1, span2, _ = double_slice_spans()
+        span1, span2, _ = double_slice_spans
 
         assert span1.pub_idxs == [0, 2]
         assert span2.pub_idxs == [0, 1]
 
-    def test_mask(self):
+    def test_mask(self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]) -> None:
         """Test the mask() method."""
-        span1, span2, _ = double_slice_spans()
+        span1, span2, _ = double_slice_spans
 
         mask1 = np.zeros((1, 100), dtype=bool)
         mask1[0][4:9] = True
@@ -294,26 +310,36 @@ class TestDoubleSliceSpan(IBMTestCase):
         mask2 = [[[0, 0, 0], [0, 0, 0], [1, 1, 1], [1, 1, 1], [1, 1, 1]]]
         npt.assert_array_equal(span2.mask(1), mask2)
 
-    @ddt.data(
-        (0, True, True),
-        ([0, 1], True, True),
-        ([0, 1, 2], True, True),
-        ([1, 2], True, True),
-        ([1], False, True),
-        (2, True, False),
-        ([0, 2], True, True),
+    @pytest.mark.parametrize(
+        ("idx", "span1_expected_res", "span2_expected_res"),
+        [
+            (0, True, True),
+            ([0, 1], True, True),
+            ([0, 1, 2], True, True),
+            ([1, 2], True, True),
+            ([1], False, True),
+            (2, True, False),
+            ([0, 2], True, True),
+        ],
     )
-    @ddt.unpack
-    def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
+    def test_contains_pub(
+        self,
+        idx: int,
+        span1_expected_res: bool,
+        span2_expected_res: bool,
+        double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict],
+    ) -> None:
         """Test the contains_pub method."""
-        span1, span2, _ = double_slice_spans()
+        span1, span2, _ = double_slice_spans
 
         assert span1.contains_pub(idx) == span1_expected_res
         assert span2.contains_pub(idx) == span2_expected_res
 
-    def test_filter_by_pub(self):
+    def test_filter_by_pub(
+        self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]
+    ) -> None:
         """Test the filter_by_pub method."""
-        span1, span2, slices1 = double_slice_spans()
+        span1, span2, slices1 = double_slice_spans
 
         assert span1.filter_by_pub([]) == DoubleSliceSpan(span1.start, span1.stop, {})
         assert span2.filter_by_pub([]) == DoubleSliceSpan(span2.start, span2.stop, {})
@@ -324,68 +350,83 @@ class TestDoubleSliceSpan(IBMTestCase):
 
         assert span1.filter_by_pub(2) == DoubleSliceSpan(span1.start, span1.stop, {2: slices1[2]})
 
-    def test_one_dimensional_shape_mask(self):
+    def test_one_dimensional_shape_mask(
+        self, double_slice_spans: tuple[DoubleSliceSpan, DoubleSliceSpan, dict]
+    ) -> None:
         """Test that mask doesn't throw with a one-dimensional shape."""
-        span1, _, _ = double_slice_spans()
+        span1, _, _ = double_slice_spans
 
         span = DoubleSliceSpan(span1.start, span1.stop, {0: ((7,), slice(0, 1), slice(0, 7))})
 
         span.mask(0)
 
 
-@ddt.ddt
-class TestTwirledSliceSpan(IBMTestCase):
+class TestTwirledSliceSpan:
     """Class for testing TwirledSliceSpan."""
 
-    def test_limits(self):
+    def test_limits(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the start and stop properties."""
-        span1, span2, _, _ = twirled_slice_spans()
+        span1, span2, _, _ = twirled_slice_spans
 
         assert span1.start == datetime(2024, 10, 11, 4, 31, 30)
         assert span1.stop == datetime(2024, 10, 11, 4, 31, 34)
         assert span2.start == datetime(2024, 10, 16, 11, 9, 20)
         assert span2.stop == datetime(2024, 10, 16, 11, 9, 30)
 
-    def test_equality(self):
+    def test_equality(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the equality method."""
-        span1, span2, _, slices1 = twirled_slice_spans()
+        span1, span2, _, slices1 = twirled_slice_spans
 
         assert span1 == span1
         assert span1 == TwirledSliceSpan(span1.start, span1.stop, slices1)
         assert span1 != "aoeu"
         assert span1 != span2
 
-    def test_duration(self):
+    def test_duration(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the duration property."""
-        span1, span2, _, _ = twirled_slice_spans()
+        span1, span2, _, _ = twirled_slice_spans
 
         assert span1.duration == 4
         assert span2.duration == 10
 
-    def test_repr(self):
+    def test_repr(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the repr method."""
-        span1, _, _, _ = twirled_slice_spans()
+        span1, _, _, _ = twirled_slice_spans
 
         expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=11"
         assert repr(span1) == f"TwirledSliceSpan(<{expect}>)"
 
-    def test_size(self):
+    def test_size(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the size property."""
-        span1, span2, _, _ = twirled_slice_spans()
+        span1, span2, _, _ = twirled_slice_spans
 
         assert span1.size == 1 * 2 + 3 * 3
         assert span2.size == 2 * 20 + 6 * 2
 
-    def test_pub_idxs(self):
+    def test_pub_idxs(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the pub_idxs property."""
-        span1, span2, _, _ = twirled_slice_spans()
+        span1, span2, _, _ = twirled_slice_spans
 
         assert span1.pub_idxs == [0, 2]
         assert span2.pub_idxs == [0, 1]
 
-    def test_mask(self):
+    def test_mask(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the mask() method."""
-        span1, span2, span3, _ = twirled_slice_spans()
+        span1, span2, span3, _ = twirled_slice_spans
 
         # reminder: ((3, 1, 5), True, slice(1), slice(2, 4))
         mask1 = np.zeros((3, 1, 5), dtype=bool)
@@ -403,35 +444,45 @@ class TestTwirledSliceSpan(IBMTestCase):
                 [[[0, 1, 1], [0, 0, 0]]],
             ]
         ]
-        mask2 = np.array(mask2, dtype=bool).reshape((1, 5, 6))
+        mask2 = np.array(mask2, dtype=bool).reshape((1, 5, 6))  # type: ignore[assignment]
         npt.assert_array_equal(span2.mask(1), mask2)
 
         mask3 = [[False, False, True, True]]
-        npt.assert_array_equal(span3.mask(2), mask3)
+        npt.assert_array_equal(span3.mask(2), mask3)  # type: ignore[attr-defined]
 
-        with self.assertRaisesRegex(KeyError, "Pub 1 is not included in the span."):
+        with pytest.raises(KeyError, match="Pub 1 is not included in the span."):
             span1.mask(1)
 
-    @ddt.data(
-        (0, True, True),
-        ([0, 1], True, True),
-        ([0, 1, 2], True, True),
-        ([1, 2], True, True),
-        ([1], False, True),
-        (2, True, False),
-        ([0, 2], True, True),
+    @pytest.mark.parametrize(
+        ("idx", "span1_expected_res", "span2_expected_res"),
+        [
+            (0, True, True),
+            ([0, 1], True, True),
+            ([0, 1, 2], True, True),
+            ([1, 2], True, True),
+            ([1], False, True),
+            (2, True, False),
+            ([0, 2], True, True),
+        ],
     )
-    @ddt.unpack
-    def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
+    def test_contains_pub(
+        self,
+        idx: int,
+        span1_expected_res: bool,
+        span2_expected_res: bool,
+        twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict],
+    ) -> None:
         """Test the contains_pub method."""
-        span1, span2, _, _ = twirled_slice_spans()
+        span1, span2, _, _ = twirled_slice_spans
 
         assert span1.contains_pub(idx) == span1_expected_res
         assert span2.contains_pub(idx) == span2_expected_res
 
-    def test_filter_by_pub(self):
+    def test_filter_by_pub(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test the filter_by_pub method."""
-        span1, span2, _, slices1 = twirled_slice_spans()
+        span1, span2, _, slices1 = twirled_slice_spans
 
         assert span1.filter_by_pub([]) == TwirledSliceSpan(span1.start, span1.stop, {})
         assert span2.filter_by_pub([]) == TwirledSliceSpan(span2.start, span2.stop, {})
@@ -442,9 +493,11 @@ class TestTwirledSliceSpan(IBMTestCase):
 
         assert span1.filter_by_pub(2) == TwirledSliceSpan(span1.start, span1.stop, {2: slices1[2]})
 
-    def test_one_dimensional_shape_mask(self):
+    def test_one_dimensional_shape_mask(
+        self, twirled_slice_spans: tuple[TwirledSliceSpan, TwirledSliceSpan, dict, dict]
+    ) -> None:
         """Test that mask doesn't throw with a one-dimensional shape."""
-        span1, _, _, _ = twirled_slice_spans()
+        span1, _, _, _ = twirled_slice_spans
 
         span = TwirledSliceSpan(
             span1.start, span1.stop, {0: ((7,), False, slice(0, 1), slice(0, 7))}
@@ -452,19 +505,22 @@ class TestTwirledSliceSpan(IBMTestCase):
         span.mask(0)
 
 
-@ddt.ddt
-class TestExecutionSpans(IBMTestCase):
+class TestExecutionSpans:
     """Class for testing ExecutionSpans."""
 
-    def test_duration(self):
+    def test_duration(
+        self, execution_spans: tuple[ExecutionSpans, SliceSpan, SliceSpan, dict]
+    ) -> None:
         """Test the duration property."""
-        spans, _, _, _ = execution_spans()
+        spans, _, _, _ = execution_spans
 
         assert spans.duration == 8.5
 
-    def test_filter_by_pub(self):
+    def test_filter_by_pub(
+        self, execution_spans: tuple[ExecutionSpans, SliceSpan, SliceSpan, dict]
+    ) -> None:
         """Test the filter_by_pub method."""
-        spans, span1, span2, slices1 = execution_spans()
+        spans, span1, span2, slices1 = execution_spans
 
         assert spans.filter_by_pub([]) == ExecutionSpans(
             [
@@ -484,18 +540,20 @@ class TestExecutionSpans(IBMTestCase):
             ]
         )
 
-    def test_sequence_methods(self):
+    def test_sequence_methods(
+        self, execution_spans: tuple[ExecutionSpans, SliceSpan, SliceSpan, dict]
+    ) -> None:
         """Test __len__ and __get_item__."""
-        spans, span1, span2, _ = execution_spans()
+        spans, span1, span2, _ = execution_spans
 
         assert len(spans) == 2
         assert spans[0] == span1
         assert spans[1] == span2
-        assert spans[1, 0] == ExecutionSpans([span2, span1])
+        assert spans[1, 0] == ExecutionSpans([span2, span1])  # type: ignore[call-overload]
 
-    def test_sort(self):
+    def test_sort(self, execution_spans: tuple[ExecutionSpans, SliceSpan, SliceSpan, dict]) -> None:
         """Test the sort method."""
-        _, span1, span2, _ = execution_spans()
+        _, span1, span2, _ = execution_spans
 
         spans = ExecutionSpans([span2, span1])
         assert spans[1] < spans[0]
