@@ -91,7 +91,7 @@ source = ["qiskit_ibm_runtime"]
 addopts = "--strict-markers"
 markers = [
     "production: only run the test when the service is a production one.",
-    "registry: the `responses` registry to use for the patched HTTP responses.",
+    "registry: the `responses` registry class to use, as `registry_class=...`.",
 ]
 
 [tool.ruff]
@@ -237,7 +237,7 @@ style_local = [
 
 test = [
     "ddt>=1.7.2",
-    "pytest>=8.1",
+    "pytest>=9.1",
     "pproxy==2.7.8",
     "coverage>=7.13.5",
     "pytest-benchmark==5.2.3",

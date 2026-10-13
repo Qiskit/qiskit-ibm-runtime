@@ -15,9 +15,9 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest import skipUnless
 
 import numpy as np
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -25,8 +25,6 @@ from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.debug_tools import Neat, NeatResult
 from qiskit_ibm_runtime.fake_provider import FakeVigoV2
-
-from ...ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
@@ -71,11 +69,11 @@ def transpiled_circuits(
     return c1, obs1_xx, obs1_zi, c2, obs2_xxx, obs2_zzz, obs2_ziz
 
 
-@skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-class TestNeat(IBMTestCase):
+@pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+class TestNeat:
     """Class for testing the Neat class."""
 
-    def test_ideal_sim(self):
+    def test_ideal_sim(self) -> None:
         """Test the ``ideal_sim`` method."""
         backend = FakeVigoV2()
         c1, obs1_xx, obs1_zi, c2, obs2_xxx, obs2_zzz, obs2_ziz = transpiled_circuits(backend)
@@ -99,7 +97,7 @@ class TestNeat(IBMTestCase):
         assert r3[0].vals.tolist() == [1, 0]
         assert r3[1].vals.tolist() == [1, 0, 1]
 
-    def test_noisy_sim(self):
+    def test_noisy_sim(self) -> None:
         """Test the ``noisy_sim`` method."""
         backend = FakeVigoV2()
         c1, obs1_xx, obs1_zi, c2, obs2_xxx, obs2_zzz, obs2_ziz = transpiled_circuits(backend)
@@ -126,7 +124,7 @@ class TestNeat(IBMTestCase):
         assert list(r3[0].vals.shape) == [2]
         assert list(r3[1].vals.shape) == [3]
 
-    def test_non_clifford_error(self):
+    def test_non_clifford_error(self) -> None:
         """Tests ``_simulate`` erroring when pubs are not Clifford if not ``cliffordize`."""
         analyzer = Neat(FakeVigoV2())
 
@@ -134,10 +132,10 @@ class TestNeat(IBMTestCase):
         qc.rz(0.02, 0)
         pubs = [(qc, "ZZZ")]
 
-        with self.assertRaisesRegex(ValueError, "Couldn't run"):
+        with pytest.raises(ValueError, match="Couldn't run"):
             analyzer.ideal_sim(pubs)
 
-        with self.assertRaisesRegex(ValueError, "Couldn't run."):
+        with pytest.raises(ValueError, match="Couldn't run."):
             analyzer.noisy_sim(pubs)
 
         r1 = analyzer.ideal_sim(pubs, cliffordize=True)
@@ -148,7 +146,7 @@ class TestNeat(IBMTestCase):
         assert isinstance(r2, NeatResult)
         assert r2[0].vals == 1
 
-    def test_to_clifford(self):
+    def test_to_clifford(self) -> None:
         """Tests the ``to_clifford`` method."""
         qc = QuantumCircuit(2, 2)
         qc.id(0)
