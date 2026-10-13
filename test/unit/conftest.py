@@ -80,3 +80,13 @@ def registry(responses: RequestsMock) -> BaseRegistry:
             assert len(responses.calls) == 1
     """
     return cast("BaseRegistry", responses.get_registry())
+
+
+@pytest.fixture
+def test_id(request: pytest.FixtureRequest) -> str:
+    """Return the dotted id of the test, as `package.module.Class.method`.
+
+    This replaces `unittest`'s `TestCase.id()`, which tests use both to name per-test loggers
+    and to derive nested directories for saved artifacts.
+    """
+    return f"{request.node.module.__name__}.{request.node.cls.__name__}.{request.node.name}"
