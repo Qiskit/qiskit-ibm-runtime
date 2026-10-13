@@ -327,7 +327,9 @@ def make_mirror_circuit_with_phases(
     return circuit
 
 
-def get_transpiled_circuit(backend, num_qubits=2, measure=False):
+def get_transpiled_circuit(
+    backend: IBMBackend, num_qubits: int = 2, measure: bool = False
+) -> QuantumCircuit:
     """Return a transpiled circuit."""
     circ = QuantumCircuit(num_qubits)
     circ.h(0)
@@ -338,7 +340,9 @@ def get_transpiled_circuit(backend, num_qubits=2, measure=False):
     return transpile(circ, backend=backend)
 
 
-def get_primitive_inputs(primitive, backend=None, num_sets=1):
+def get_primitive_inputs(
+    primitive: type, backend: BackendV2 | None = None, num_sets: int = 1
+) -> dict:
     """Return primitive specific inputs."""
     backend = backend or FakeManilaV2()
     theta = Parameter("θ")

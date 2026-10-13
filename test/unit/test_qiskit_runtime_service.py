@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from ddt import data, ddt
+import pytest
 from qiskit import QuantumCircuit
 
 from qiskit_ibm_runtime import SamplerV2
@@ -25,8 +25,6 @@ from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..account import custom_envs
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, Instance, Job, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
 
@@ -34,11 +32,10 @@ if TYPE_CHECKING:
     from ..registries import BaseRegistry
 
 
-@ddt
-class TestQiskitRuntimeService(IBMTestCase):
+class TestQiskitRuntimeService:
     """Class for testing the `QiskitRuntimeService` class."""
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     def test_run_active_client(self, registry: BaseRegistry) -> None:
         """`_run()` should use the backend/instance api client rather than the active client."""
         # Create several instances, with one instance per backend, so they use different clients.
@@ -90,16 +87,15 @@ class TestQiskitRuntimeService(IBMTestCase):
 
             # Run a job with the client and instance not active in the service.
             sampler = SamplerV2(mode=backend_c)
-            with self.assertRaises(IBMRuntimeError) as ex:
+            with pytest.raises(IBMRuntimeError) as ex:
                 _ = sampler.run(pubs)
-                assert "not among" in str(ex.msg)
+            assert "not among" in str(ex.value)
 
             api_client_a_run.assert_not_called()
             api_client_b_run.assert_not_called()
             api_client_c_run.assert_not_called()
             assert service._active_api_client == backend_b._api_client
 
-    @mock_responses
     def test_initialization_state(self, registry: BaseRegistry) -> None:
         """Test `__init__` state variables, with default arguments."""
         crns_in_registry = {instance.crn for instance in registry.instances.values()}
@@ -128,8 +124,8 @@ class TestQiskitRuntimeService(IBMTestCase):
             for info in service._backend_instance_groups
         } == backends_in_registry
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    @data(True, False)
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    @pytest.mark.parametrize("with_env_var", [True, False])
     def test_initialization_state_passing_instance(
         self, with_env_var: bool, registry: BaseRegistry
     ) -> None:
@@ -164,7 +160,6 @@ class TestQiskitRuntimeService(IBMTestCase):
         # `_backend_instance_groups` is empty.
         assert service._backend_instance_groups == []
 
-    @mock_responses
     def test_experimental_workload_endpoint(self, registry: BaseRegistry) -> None:
         """Test the experimental usage of the `/workloads` endpoint.
 

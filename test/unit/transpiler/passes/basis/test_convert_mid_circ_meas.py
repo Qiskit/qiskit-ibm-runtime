@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import Measure, Reset
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -29,8 +30,6 @@ from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
     ConvertToMidCircuitMeasure,
     ConvertToMidCircuitResetAndMeasure,
 )
-
-from .....ibm_test_case import IBMTestCase
 
 
 def target_with_mid_circuit_instructions(
@@ -55,10 +54,10 @@ def circuit_with_mid_circuit_instructions() -> QuantumCircuit:
     return circuit
 
 
-class TestConvertToMidCircuitMeasure(IBMTestCase):
+class TestConvertToMidCircuitMeasure:
     """Tests the ConvertToMidCircuitMeasure pass."""
 
-    def test_convert_default(self):
+    def test_convert_default(self) -> None:
         """Test basic conversion to measure_2 and reset_2."""
         custom_pass = ConvertToMidCircuitResetAndMeasure(target_with_mid_circuit_instructions())
         pm = PassManager([custom_pass])
@@ -77,17 +76,17 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         assert not isinstance(transpiled.data[7].operation, MidCircuitMeasure)
         assert isinstance(transpiled.data[7].operation, Measure)
 
-    def test_convert_raises(self):
+    def test_convert_raises(self) -> None:
         """Test that value error is raised if measure_2 not supported in target."""
-        with self.assertRaisesRegex(
+        with pytest.raises(
             ValueError,
-            r"measure_2 is not supported by the given target\. "
+            match=r"measure_2 is not supported by the given target\. "
             r"Supported operations are: dict_keys\(\['cx', 'id', 'rz', "
             r"'sx', 'x', 'reset', 'delay', 'measure'\]\)",
         ):
             ConvertToMidCircuitMeasure(GenericBackendV2(num_qubits=5, seed=0).target)
 
-    def test_convert_measure_3(self):
+    def test_convert_measure_3(self) -> None:
         """Test conversion with non-default alternative measure and reset.
 
         The pass is only expected to convert the non-terminal measure into measure_3, the existing
@@ -114,7 +113,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         assert not isinstance(transpiled.data[7].operation, MidCircuitMeasure)
         assert isinstance(transpiled.data[7].operation, Measure)
 
-    def test_different_qarg(self):
+    def test_different_qarg(self) -> None:
         """Test correct replacing of measure_2.
 
         Test that non-terminal measure is only replaced if measure_2 is defined
@@ -138,7 +137,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
 
         custom_pass = ConvertToMidCircuitMeasure(target)
         pm = PassManager([custom_pass])
-        with self.assertWarnsRegex(UserWarning, "'measure_2'"):
+        with pytest.warns(UserWarning, match="'measure_2'"):
             transpiled = pm.run(qc)
 
         # The transpiled circuit will not contain any MidCircuitMeasure instance

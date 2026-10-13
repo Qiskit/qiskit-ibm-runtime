@@ -38,7 +38,7 @@ def responses(request: pytest.FixtureRequest) -> Iterator[RequestsMock]:
     See the ``registry`` fixture for more details.
     """
     marker = request.node.get_closest_marker("registry")
-    registry_class = marker.args[0] if marker else DefaultRegistry
+    registry_class = marker.kwargs["registry_class"] if marker else DefaultRegistry
 
     with (
         # Patch authentication, in order to simplify flow.
@@ -57,9 +57,8 @@ def registry(responses: RequestsMock) -> BaseRegistry:
     This fixture:
     * intercepts HTTP requests and returns mocked HTTP responses, based on a ``Registry``.
     * patches low-level method related to IAM authentication, to simplify the authentication flow.
-    * the registry used for the HTTP responses is the one given by the `registry` marker of the
-      test, defaulting to `DefaultRegistry`.
-
+    * the registry used for the HTTP responses is the one given by the `registry` marker of
+      the test, as `registry_class=...`, defaulting to `DefaultRegistry`.
 
     This fixture is meant to be used with the items in the ``registries`` module:
     * ``DefaultRegistry`` and its subclasses.
@@ -72,12 +71,22 @@ def registry(responses: RequestsMock) -> BaseRegistry:
             registry.add_backend(Backend("some_new_backend"))
             ...
 
-        @pytest.mark.registry(OneInstanceNoBackendsRegistry)
-        def test_with_a_specific_registrysomething(self, registry):
+        @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+        def test_with_a_specific_registry(self, registry):
             ...
 
         def test_something(self, registry, responses):
             ...
-            self.assertEqual(len(responses_mock.calls), 1)
+            assert len(responses.calls) == 1
     """
     return cast("BaseRegistry", responses.get_registry())
+
+
+@pytest.fixture
+def test_id(request: pytest.FixtureRequest) -> str:
+    """Return the dotted id of the test, as `package.module.Class.method`.
+
+    This replaces `unittest`'s `TestCase.id()`, which tests use both to name per-test loggers
+    and to derive nested directories for saved artifacts.
+    """
+    return f"{request.node.module.__name__}.{request.node.cls.__name__}.{request.node.name}"
