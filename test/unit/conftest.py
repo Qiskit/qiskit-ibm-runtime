@@ -76,8 +76,6 @@ def registry(responses: RequestsMock) -> BaseRegistry:
         def test_with_a_specific_registrysomething(self, registry):
             ...
 
-
-
         def test_something(self, registry, responses):
             ...
             self.assertEqual(len(responses_mock.calls), 1)
