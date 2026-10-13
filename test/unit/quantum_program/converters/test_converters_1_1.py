@@ -39,13 +39,11 @@ from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_to_1_1,
 )
 
-from ....ibm_test_case import IBMTestCase
 
-
-class TestQuantumProgramConverters(IBMTestCase):
+class TestQuantumProgramConverters:
     """Tests the quantum program converters."""
 
-    def test_quantum_program_to_1_1(self):
+    def test_quantum_program_to_1_1(self) -> None:
         """Test the function ``quantum_program_to_1_1``."""
         shots = 100
 
@@ -59,7 +57,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         quantum_program = QuantumProgram(
             shots=shots,
             noise_maps={f"pl{i}": noise_model for i, noise_model in enumerate(noise_models)},
-            meas_level=meas_level,
+            meas_level=meas_level,  # type: ignore[arg-type]
             passthrough_data=passthrough_data,
         )
         quantum_program._semantic_role = (semantic_role := "sampler-v2")
@@ -135,7 +133,7 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         assert quantum_program_model.circuits.to_python() == [circuit1, template_circuit]
 
-    def test_quantum_program_to_1_1_no_argument(self):
+    def test_quantum_program_to_1_1_no_argument(self) -> None:
         """Test when there are no circuit arguments, samplex arguments, and chunk size."""
         quantum_program = QuantumProgram(100)
 
@@ -166,7 +164,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         assert samplex_item_model.chunk_size == "auto"
         assert samplex_item_model.samplex_arguments == {}
 
-    def test_quantum_program_result_from_1_1(self):
+    def test_quantum_program_result_from_1_1(self) -> None:
         """Test the function ``quantum_program_result_from_1_1``."""
         meas1 = np.array([[False], [True], [True]])
         meas2 = np.array([[True, True], [True, False], [False, False]])
@@ -224,7 +222,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         assert result.metadata.chunk_timing[0].parts[1].idx_item == 1
         assert result.metadata.chunk_timing[0].parts[1].size == 1
 
-    def test_roundtrip(self):
+    def test_roundtrip(self) -> None:
         """Test a roundtrip."""
         quantum_program = QuantumProgram(100)
 
