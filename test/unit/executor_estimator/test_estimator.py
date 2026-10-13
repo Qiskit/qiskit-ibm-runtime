@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from unittest.mock import patch
 
 import numpy as np
@@ -36,7 +36,10 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.session import Session
 
-from ...registries import BaseRegistry, OneInstanceDryRunRegistry
+from ...registries import OneInstanceDryRunRegistry
+
+if TYPE_CHECKING:
+    from ...registries import BaseRegistry
 
 
 class TestEstimatorRun:

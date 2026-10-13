@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pytest
 from qiskit import QuantumCircuit
@@ -29,7 +31,10 @@ from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
 
-from ...registries import BaseRegistry, OneInstanceDryRunRegistry
+from ...registries import OneInstanceDryRunRegistry
+
+if TYPE_CHECKING:
+    from ...registries import BaseRegistry
 
 
 class TestSamplerSimpleCircuits:
