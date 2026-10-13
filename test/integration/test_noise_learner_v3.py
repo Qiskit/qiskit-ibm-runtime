@@ -12,6 +12,10 @@
 
 """Tests for NoiseLearner V3."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic.transpiler import generate_boxing_pass_manager
@@ -20,15 +24,16 @@ from samplomatic.utils import find_unique_box_instructions
 from qiskit_ibm_runtime import NoiseLearnerV3
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 
-from .case import IBMIntegrationTestCase
+if TYPE_CHECKING:
+    from .case import IntegrationTestDependencies
 
 
-class TestNoiseLearnerV3(IBMIntegrationTestCase):
+class TestNoiseLearnerV3:
     """Test NLV3."""
 
-    def test_noise_learner_v3(self):
+    def test_noise_learner_v3(self, dependencies: IntegrationTestDependencies) -> None:
         """Test NLV3 with basic options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         boxing_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
         boxing_pass_manager.post_scheduling = generate_boxing_pass_manager(
@@ -66,14 +71,20 @@ class TestNoiseLearnerV3(IBMIntegrationTestCase):
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)
-        assert all(isinstance(datum, NoiseLearnerV3Result) for datum in result)
+        assert all(isinstance(datum, NoiseLearnerV3Result) for datum in result.data)
 
-        assert result[0].metadata["learning_protocol"] == "lindblad"
+        metadata = result[0].metadata
+        assert isinstance(metadata, dict)
+        assert metadata["learning_protocol"] == "lindblad"
         assert result[0].to_pauli_lindblad_map().num_qubits == len(instructions[0].qubits)
 
-        assert result[1].metadata["learning_protocol"] == "lindblad"
+        metadata = result[1].metadata
+        assert isinstance(metadata, dict)
+        assert metadata["learning_protocol"] == "lindblad"
         assert result[1].to_pauli_lindblad_map().num_qubits == len(instructions[1].qubits)
 
-        assert result[2].metadata["learning_protocol"] == "trex"
+        metadata = result[2].metadata
+        assert isinstance(metadata, dict)
+        assert metadata["learning_protocol"] == "trex"
         assert result[2].to_pauli_lindblad_map().num_qubits == len(instructions[2].qubits)
         assert result[2].to_pauli_lindblad_map().num_terms == len(instructions[2].qubits)

@@ -15,6 +15,7 @@
 from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
+from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.executor import Executor
@@ -193,3 +194,17 @@ class TestExecutor(IBMTestCase):
         # Jobs issued should belong to a session under `session` / `batch`` modes.
         job = executor.run(program)
         assert job._session_id == expected_session_id
+
+    @mock_responses
+    def test_run_samplomatic_quantum_program(self, registry):
+        """Executor.run() accepts a samplomatic QuantumProgram and converts it automatically."""
+        circuit = QuantumCircuit(1)
+        samplomatic_program = SamplomaticQuantumProgram(shots=10)
+        samplomatic_program.append_circuit_item(circuit)
+
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        executor = Executor(mode=backend)
+        job = executor.run(samplomatic_program)
+
+        assert job is not None

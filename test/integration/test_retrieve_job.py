@@ -18,8 +18,8 @@ import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
-from unittest import SkipTest
 
+import pytest
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
@@ -34,11 +34,7 @@ if TYPE_CHECKING:
 
 
 def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IBMBackend]:
-    """Return a pair of backends: real backend, mocked backend.
-
-    Raises:
-        SkiTest: if no backend that has a corresponding mock backend is available.
-    """
+    """Return a pair of backends: real backend, mocked backend."""
     backends = service.backends(include_mocks=True)
 
     try:
@@ -51,7 +47,7 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
         backend_name = re.sub(r"^[^_]+", "ibm", dry_run_backend.name)
         return service.backend(backend_name), dry_run_backend
     except (StopIteration, QiskitBackendNotFoundError):
-        raise SkipTest("No backend with corresponding mock backend available.")
+        pytest.skip("No backend with corresponding mock backend available.")
 
 
 class TestIntegrationRetrieveJob:
