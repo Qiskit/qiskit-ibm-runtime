@@ -16,6 +16,7 @@ import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
+from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
@@ -139,3 +140,15 @@ class TestQuantumProgram(IBMTestCase):
         assert samplex_item.chunk_size == 7
         assert samplex_item.shape == (4, 3, 2)
         assert samplex_item.samplex_arguments["pauli_lindblad_maps.pl1"] == noise_models[1]
+
+    def test_from_samplomatic(self):
+        """Test that a samplomatic QuantumProgram is converted to a runtime QuantumProgram."""
+        circuit = QuantumCircuit(1)
+        samplomatic_program = SamplomaticQuantumProgram(shots=50)
+        samplomatic_program.append_circuit_item(circuit)
+
+        result = QuantumProgram.from_(samplomatic_program)
+
+        assert isinstance(result, QuantumProgram)
+        assert result.shots == 50
+        assert result.items == samplomatic_program.items
