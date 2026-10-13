@@ -60,7 +60,7 @@ class TestAccountClient:
 
         client = runtime_client()
         with pytest.raises(RequestsApiError) as err_cm:
-            with pytest.warns(UserWarning, match="Provided API key could not be found."):
+            with pytest.warns(UserWarning, match="Unable to retrieve"):
                 client.backend_status("ibmq_qasm_simulator")
         if response:
             assert "Bad client input" in str(err_cm.value)
