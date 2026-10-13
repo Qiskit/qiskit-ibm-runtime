@@ -327,7 +327,9 @@ def make_mirror_circuit_with_phases(
     return circuit
 
 
-def get_transpiled_circuit(backend, num_qubits=2, measure=False):
+def get_transpiled_circuit(
+    backend: IBMBackend, num_qubits: int = 2, measure: bool = False
+) -> QuantumCircuit:
     """Return a transpiled circuit."""
     circ = QuantumCircuit(num_qubits)
     circ.h(0)

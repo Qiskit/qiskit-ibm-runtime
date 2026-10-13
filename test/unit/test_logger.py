@@ -15,9 +15,8 @@
 import logging
 import os
 from tempfile import NamedTemporaryFile
-from unittest import skipIf
 
-from ddt import data, ddt, unpack
+import pytest
 
 from qiskit_ibm_runtime.utils.logging import (
     QISKIT_IBM_RUNTIME_LOG_FILE,
@@ -26,20 +25,18 @@ from qiskit_ibm_runtime.utils.logging import (
 )
 
 from ..account import custom_envs
-from ..ibm_test_case import IBMTestCase
 
 
-@ddt
-class TestLogger(IBMTestCase):
+class TestLogger:
     """Tests related to logger setup via ``setup_logger()``."""
 
-    def test_no_log_level(self):
+    def test_no_log_level(self, test_id: str) -> None:
         """Test setting up a logger without a log level.
 
         Note:
             The log level should default to `NOTSET` when no level is specified.
         """
-        logger = logging.getLogger(self.id())
+        logger = logging.getLogger(test_id)
         default_level_not_set = logging.NOTSET
 
         with custom_envs({}):
@@ -48,53 +45,57 @@ class TestLogger(IBMTestCase):
             setup_logger(logger)
             assert logger.level == default_level_not_set
 
-    def test_empty_log_level(self):
+    def test_empty_log_level(self, test_id: str) -> None:
         """Test setting up a logger with an empty string log level.
 
         Note:
             The log level should default to `NOTSET` when an empty string is specified.
         """
-        logger = logging.getLogger(self.id())
+        logger = logging.getLogger(test_id)
         default_level_not_set = logging.NOTSET
 
         with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: ""}):
             setup_logger(logger)
             assert logger.level == default_level_not_set
 
-    @data("invalid", "debugs")
-    def test_invalid_log_level(self, invalid_log_level):
+    @pytest.mark.parametrize("invalid_log_level", ["invalid", "debugs"])
+    def test_invalid_log_level(self, invalid_log_level: str, test_id: str) -> None:
         """Test setting up a logger with invalid log levels, should default to `WARNING`.
 
         Note:
               The log level should default to `WARNING` when an invalid level is specified.
         """
-        logger = logging.getLogger(self.id())
+        logger = logging.getLogger(test_id)
         default_level_invalid = logging.WARNING
 
         with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: invalid_log_level}):
             setup_logger(logger)
             assert logger.level == default_level_invalid
 
-    @data(
-        ("debug", logging.DEBUG),
-        ("iNFo", logging.INFO),
-        ("WARNING", logging.WARNING),
-        ("error", logging.ERROR),
-        ("CRITICAL", logging.CRITICAL),
+    @pytest.mark.parametrize(
+        ("level_name", "level_value"),
+        [
+            ("debug", logging.DEBUG),
+            ("iNFo", logging.INFO),
+            ("WARNING", logging.WARNING),
+            ("error", logging.ERROR),
+            ("CRITICAL", logging.CRITICAL),
+        ],
     )
-    @unpack
-    def test_valid_log_levels_mixed_casing(self, level_name, level_value):
+    def test_valid_log_levels_mixed_casing(
+        self, level_name: str, level_value: int, test_id: str
+    ) -> None:
         """Test setting up a logger with all valid levels, case insensitive."""
-        logger = logging.getLogger(self.id())
+        logger = logging.getLogger(test_id)
 
         with custom_envs({QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
             setup_logger(logger)
             assert logger.level == level_value
 
-    @skipIf(os.name == "nt", "Test not supported in Windows")
-    def test_log_file(self):
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+    def test_log_file(self, test_id: str) -> None:
         """Test setting up a logger by specifying a file and log level."""
-        logger = logging.getLogger(self.id())
+        logger = logging.getLogger(test_id)
         log_level_error = ("ERROR", logging.ERROR)
 
         with NamedTemporaryFile() as temp_log_file:
