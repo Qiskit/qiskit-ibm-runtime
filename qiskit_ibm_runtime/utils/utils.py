@@ -96,7 +96,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: d
         if (
             name == "rzz"
             and not isinstance((param := instruction.operation.params[0]), ParameterExpression)
-            and (param < 0.0 or param > np.pi / 2 + 1e-10)
+            and not 0.0 <= param <= np.pi / 2 + 1e-10
         ):
             return (
                 f"The instruction {name} on qubits {qargs} is supported only for angles in the "
@@ -167,7 +167,7 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
             angle = instruction.operation.params[0]
             if isinstance(angle, ParameterExpression):
                 angle_params.add(angle)
-            elif angle < 0.0 or angle > np.pi / 2 + 1e-10:
+            elif not 0.0 <= angle <= np.pi / 2 + 1e-10:
                 return (
                     "The instruction rzz is supported only for angles in the "
                     f"range [0, pi/2], but an angle ({angle}) outside of this "
@@ -220,8 +220,12 @@ def is_valid_rzz_pub(pub: EstimatorPub | SamplerPub) -> str:
         projected_arr = arr[:, col_indices]
 
         for row in projected_arr:
-            angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
-            if angle < 0.0 or angle > np.pi / 2 + 1e-10:
+            if np.all(np.isfinite(row)):
+                angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
+            else:
+                # ``bind`` rejects non-finite values, which can't lead to a valid angle anyway
+                angle = float("nan")
+            if not 0.0 <= angle <= np.pi / 2 + 1e-10:
                 vals_msg = ", ".join(
                     [f"{param_name}={param_val}" for param_name, param_val in zip(param_names, row)]
                 )
