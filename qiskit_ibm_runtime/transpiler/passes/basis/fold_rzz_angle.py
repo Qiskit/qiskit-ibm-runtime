@@ -35,7 +35,7 @@ from qiskit.transpiler.basepasses import TransformationPass
 
 from ....estimator import EstimatorV2
 from ....sampler import SamplerV2
-from ....utils.rzz import fold_rzz_angle
+from .utils import fold_rzz_angle
 
 if TYPE_CHECKING:
     from qiskit.dagcircuit import DAGCircuit

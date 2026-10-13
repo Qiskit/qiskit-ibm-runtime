@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# Modified from the original implementation to share RZZ folding utilities.
 
 """Utilities for folding Rzz gate angles into the calibrated range."""
 
@@ -61,7 +62,15 @@ def fold_rzz_angle(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
 
 
 def build_rzz_quadrant_1(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
-    """Build the Rzz circuit for an angle in [0, pi/2]."""
+    """Build the RZZ circuit for an angle in [0, pi/2].
+
+    Args:
+        angle: The RZZ rotation angle.
+        qubits: The two qubits on which to apply the RZZ gate.
+
+    Returns:
+        A DAG circuit implementing the RZZ rotation.
+    """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
     new_dag.apply_operation_back(
@@ -73,7 +82,15 @@ def build_rzz_quadrant_1(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
 
 
 def build_rzz_quadrant_2(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
-    """Build the Rzz circuit for an angle in (pi/2, pi]."""
+    """Build the RZZ circuit for an angle in (pi/2, pi].
+
+    Args:
+        angle: The RZZ rotation angle.
+        qubits: The two qubits on which to apply the RZZ gate.
+
+    Returns:
+        A DAG circuit implementing the RZZ rotation.
+    """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
     new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
@@ -109,7 +126,15 @@ def build_rzz_quadrant_2(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
 
 
 def build_rzz_quadrant_3(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
-    """Build the Rzz circuit for an angle in [-pi, -pi/2]."""
+    """Build the RZZ circuit for an angle in [-pi, -pi/2].
+
+    Args:
+        angle: The RZZ rotation angle.
+        qubits: The two qubits on which to apply the RZZ gate.
+
+    Returns:
+        A DAG circuit implementing the RZZ rotation.
+    """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
     new_dag.apply_operation_back(GlobalPhaseGate(-pi / 2))
@@ -135,7 +160,15 @@ def build_rzz_quadrant_3(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
 
 
 def build_rzz_quadrant_4(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
-    """Build the Rzz circuit for an angle in (-pi/2, 0)."""
+    """Build the RZZ circuit for an angle in (-pi/2, 0).
+
+    Args:
+        angle: The RZZ rotation angle.
+        qubits: The two qubits on which to apply the RZZ gate.
+
+    Returns:
+        A DAG circuit implementing the RZZ rotation.
+    """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
     new_dag.apply_operation_back(

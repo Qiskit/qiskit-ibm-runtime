@@ -35,6 +35,7 @@ from qiskit.transpiler.passes.utils.wrap_angles import WrapAngles
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from ..models.exceptions import BackendPropertyError
+from ..transpiler.passes.basis.utils import fold_rzz_angle
 from ..utils.utils import is_fractional_gate
 
 if TYPE_CHECKING:
@@ -55,8 +56,6 @@ are supported by a given backend, one can inspect ``backend.supported_operations
 
 def rzz_wrapper(angles: list[float], qubits: list[Qubit]) -> DAGCircuit:
     """A wrapper to instruct the transpiler how to fold out-of-bounds Rzz angles."""
-    from ..utils.rzz import fold_rzz_angle
-
     angle = float(angles[0])
     fresh_qubits = (Qubit(), Qubit())
     return fold_rzz_angle(angle, fresh_qubits)
