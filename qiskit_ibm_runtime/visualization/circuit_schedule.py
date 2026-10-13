@@ -211,7 +211,7 @@ class CircuitSchedule:
             :, [self.type_to_idx[col_type] for col_type in ["Branch", "Instruction", "Channel"]]
         ]
         _, group_indices = np.unique(keys, axis=0, return_inverse=True)
-        group_indices = group_indices.reshape(-1)
+        group_indices = group_indices.reshape(-1)  # NumPy 2.0 compatibility
 
         for g in np.unique(group_indices):
             merged_group = []
