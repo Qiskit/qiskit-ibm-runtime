@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 from ibm_quantum_schemas.common import TensorModel
 from ibm_quantum_schemas.executor.version_0_1 import (
     ChunkPart,
@@ -36,8 +37,6 @@ from qiskit_ibm_runtime.decoders.executor.decoder import (
     ExecutorResultDecoder,
 )
 from qiskit_ibm_runtime.results.quantum_program import Metadata, QuantumProgramResult
-
-from ...ibm_test_case import IBMTestCase
 
 
 def measurements() -> tuple[
@@ -80,39 +79,39 @@ def encoded_result() -> str:
     return result_model.model_dump_json()
 
 
-class TestDecoder(IBMTestCase):
+class TestDecoder:
     """Tests the decoder for the quantum program result model."""
 
-    def test_decoder(self):
+    def test_decoder(self) -> None:
         """Tests the decoder."""
         meas1, meas2, meas_flips, start, stop = measurements()
 
         decoded = ExecutorResultDecoder.decode(encoded_result())
 
-        assert np.array_equal(decoded[0]["meas"], meas1)
-        assert np.array_equal(decoded[1]["meas"], meas2)
-        assert np.array_equal(decoded[1]["measurement_flips.meas"], meas_flips)
-        assert decoded.metadata.chunk_timing[0].start.replace(tzinfo=None) == start
-        assert decoded.metadata.chunk_timing[0].stop.replace(tzinfo=None) == stop
-        assert decoded.metadata.chunk_timing[0].parts[0].idx_item == 0
-        assert decoded.metadata.chunk_timing[0].parts[0].size == 1
-        assert decoded.metadata.chunk_timing[0].parts[1].idx_item == 1
-        assert decoded.metadata.chunk_timing[0].parts[1].size == 1
+        assert np.array_equal(decoded[0]["meas"], meas1)  # type: ignore[index]
+        assert np.array_equal(decoded[1]["meas"], meas2)  # type: ignore[index]
+        assert np.array_equal(decoded[1]["measurement_flips.meas"], meas_flips)  # type: ignore[index]
+        assert decoded.metadata.chunk_timing[0].start.replace(tzinfo=None) == start  # type: ignore[union-attr]
+        assert decoded.metadata.chunk_timing[0].stop.replace(tzinfo=None) == stop  # type: ignore[union-attr]
+        assert decoded.metadata.chunk_timing[0].parts[0].idx_item == 0  # type: ignore[union-attr]
+        assert decoded.metadata.chunk_timing[0].parts[0].size == 1  # type: ignore[union-attr]
+        assert decoded.metadata.chunk_timing[0].parts[1].idx_item == 1  # type: ignore[union-attr]
+        assert decoded.metadata.chunk_timing[0].parts[1].size == 1  # type: ignore[union-attr]
 
-    def test_no_schema_version(self):
+    def test_no_schema_version(self) -> None:
         """Verify an error is raised if the encoded string does not specify any schema version."""
         encoded_as_json = json.loads(encoded_result())
         del encoded_as_json["schema_version"]
         encoded_as_str = json.dumps(encoded_as_json)
-        with self.assertRaisesRegex(ValueError, "Missing schema version."):
+        with pytest.raises(ValueError, match="Missing schema version."):
             ExecutorResultDecoder.decode(encoded_as_str)
 
-    def test_unknown_schema_version(self):
+    def test_unknown_schema_version(self) -> None:
         """Verify an error is raised if the schema version specified does not exist."""
         encoded_as_json = json.loads(encoded_result())
         encoded_as_json["schema_version"] = "unknown"
         encoded_as_str = json.dumps(encoded_as_json)
-        with self.assertRaisesRegex(ValueError, "No decoder found for schema version unknown."):
+        with pytest.raises(ValueError, match="No decoder found for schema version unknown."):
             ExecutorResultDecoder.decode(encoded_as_str)
 
 
@@ -123,10 +122,10 @@ class MyDecoder(BaseClientSideResultDecoder):
     SUPPORTED_POST_PROCESSORS = {"v0.1": lambda x: x}
 
 
-class TestBaseClientSideResultDecoder(IBMTestCase):
+class TestBaseClientSideResultDecoder:
     """Test BaseClientSideResultDecoder decoder."""
 
-    def test_is_applicable(self):
+    def test_is_applicable(self) -> None:
         """A decoder should not be applicable depending on input."""
         result = QuantumProgramResult(
             data=[{"dummy": np.array([1, 2, 3])}],
@@ -144,7 +143,7 @@ class TestBaseClientSideResultDecoder(IBMTestCase):
         result._semantic_role = "not_foo"
         assert MyDecoder.is_applicable(result) is False
 
-    def test_decode_raises(self):
+    def test_decode_raises(self) -> None:
         """A decoder `decode` method should raise depending on the input."""
         result = QuantumProgramResult(
             data=[{"dummy": np.array([1, 2, 3])}],
@@ -155,10 +154,10 @@ class TestBaseClientSideResultDecoder(IBMTestCase):
 
         # Raises if version is not present.
         result.passthrough_data = {"post_processor": {}}
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             MyDecoder.decode(result)
 
         # Raises if version is unsupported.
         result.passthrough_data = {"post_processor": {"version": "9.8"}}
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             MyDecoder.decode(result)
