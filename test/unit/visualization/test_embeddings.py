@@ -13,8 +13,8 @@
 """Tests for the ``Embedding`` class."""
 
 import textwrap
-from unittest import skipUnless
 
+import pytest
 from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.fake_provider import (
@@ -35,8 +35,6 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeVigoV2,
 )
 from qiskit_ibm_runtime.visualization.embeddings import Embedding
-
-from ...ibm_test_case import IBMTestCase
 
 if HAS_AER:
     from qiskit_aer import AerSimulator
@@ -69,11 +67,11 @@ def ascii_to_coords(image: str, col_major: bool = False) -> list[tuple[int, int]
     return coords
 
 
-@skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-class TestEmbedding(IBMTestCase):
+@pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+class TestEmbedding:
     """Class for testing the Embedding class."""
 
-    def test_from_backend(self):
+    def test_from_backend(self) -> None:
         """Test the constructor from backend."""
         vigo = FakeVigoV2()
         e = Embedding.from_backend(vigo)
@@ -82,33 +80,33 @@ class TestEmbedding(IBMTestCase):
         assert e.coordinates == coo
         assert e.coupling_map == vigo.coupling_map
 
-    def test_init_error(self):
+    def test_init_error(self) -> None:
         """Test the errors raised `by the constructor."""
         e_vigo = Embedding.from_backend(FakeVigoV2())
         e_kyiv = Embedding.from_backend(FakeKyiv())
 
-        with self.assertRaisesRegex(
-            ValueError, "Coupling map for backend 'aer_simulator' is unknown."
+        with pytest.raises(
+            ValueError, match="Coupling map for backend 'aer_simulator' is unknown."
         ):
             Embedding.from_backend(AerSimulator())
 
-        with self.assertRaisesRegex(ValueError, "Invalid coupling map."):
+        with pytest.raises(ValueError, match="Invalid coupling map."):
             Embedding(e_vigo.coordinates, e_kyiv.coupling_map)
 
-        with self.assertRaisesRegex(ValueError, "Failed to fetch coordinates for backend"):
+        with pytest.raises(ValueError, match="Failed to fetch coordinates for backend"):
             Embedding.from_backend(FakeArmonkV2())
 
 
-class TestCoordinates(IBMTestCase):
+class TestCoordinates:
     """Class for testing the coordinates of backends."""
 
-    def test_5(self):
+    def test_5(self) -> None:
         """Test for 5-qubit lattices."""
         embedding = Embedding.from_backend(FakeManilaV2())
         exp = [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
         assert embedding.coordinates == exp
 
-    def test_7(self):
+    def test_7(self) -> None:
         """Test for 7-qubit lattices."""
         embedding = Embedding.from_backend(FakePerth())
         exp = ascii_to_coords(
@@ -120,7 +118,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_15(self):
+    def test_15(self) -> None:
         """Test for 15-qubit lattices."""
         embedding = Embedding.from_backend(FakeMelbourneV2())
         exp = [
@@ -142,7 +140,7 @@ class TestCoordinates(IBMTestCase):
         ]
         assert embedding.coordinates == exp
 
-    def test_16(self):
+    def test_16(self) -> None:
         """Test for 16-qubit lattices."""
         embedding = Embedding.from_backend(FakeGuadalupeV2())
         exp = ascii_to_coords(
@@ -157,7 +155,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_20(self):
+    def test_20(self) -> None:
         """Test for 20-qubit lattices."""
         embedding = Embedding.from_backend(FakeAlmadenV2())
         exp = ascii_to_coords(
@@ -170,7 +168,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_27(self):
+    def test_27(self) -> None:
         """Test for 27-qubit lattices."""
         embedding = Embedding.from_backend(FakeAlgiers())
         exp = ascii_to_coords(
@@ -185,7 +183,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_28(self):
+    def test_28(self) -> None:
         """Test for 28-qubit lattices."""
         embedding = Embedding.from_backend(FakeCambridgeV2())
         exp = ascii_to_coords(
@@ -199,7 +197,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_53(self):
+    def test_53(self) -> None:
         """Test for 53-qubit lattices."""
         embedding = Embedding.from_backend(FakeRochesterV2())
         exp = ascii_to_coords(
@@ -218,7 +216,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_65(self):
+    def test_65(self) -> None:
         """Test for 65-qubit lattices."""
         embedding = Embedding.from_backend(FakeBrooklynV2())
         exp = ascii_to_coords(
@@ -236,7 +234,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_120(self):
+    def test_120(self) -> None:
         """Test for 120-qubit lattices."""
         embedding = Embedding.from_backend(FakeNighthawk())
         exp = ascii_to_coords(
@@ -257,7 +255,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_127(self):
+    def test_127(self) -> None:
         """Test for 127-qubit lattices."""
         embedding = Embedding.from_backend(FakeKyiv())
         exp = ascii_to_coords(
@@ -279,7 +277,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_133(self):
+    def test_133(self) -> None:
         """Test for 133-qubit lattices."""
         embedding = Embedding.from_backend(FakeTorino())
         exp = ascii_to_coords(
@@ -302,7 +300,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_156(self):
+    def test_156(self) -> None:
         """Test for 156-qubit lattices."""
         embedding = Embedding.from_backend(FakeMarrakesh())
         exp = ascii_to_coords(
@@ -326,7 +324,7 @@ class TestCoordinates(IBMTestCase):
         )
         assert embedding.coordinates == exp
 
-    def test_error(self):
+    def test_error(self) -> None:
         """Test that an error is raised when the coordinates are unknown."""
-        with self.assertRaisesRegex(ValueError, "Failed to fetch coordinates for backend"):
+        with pytest.raises(ValueError, match="Failed to fetch coordinates for backend"):
             Embedding.from_backend(FakeArmonkV2())

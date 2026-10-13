@@ -28,7 +28,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 import qiskit.quantum_info as qi
-from ddt import data, ddt
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
 from qiskit.exceptions import QiskitError
@@ -72,7 +71,6 @@ from qiskit_ibm_runtime.results.noise_learner import (
     PauliLindbladError,
 )
 
-from ..ibm_test_case import IBMTestCase
 from ..registries import Job
 from ..serialization import SerializableClass, SerializableClassDecoder, get_complex_types
 
@@ -95,7 +93,7 @@ def assert_binding_arrays_equal(barr1: BindingsArray, barr2: BindingsArray) -> N
     """Assert that two BindingArray objects are equal."""
 
     def _to_str_keyed(_in_dict: dict) -> dict[tuple, np.ndarray]:
-        _out_dict = {}
+        _out_dict: dict[tuple, np.ndarray] = {}
         for a_key_tuple, val in _in_dict.items():
             str_key = tuple(
                 a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple
@@ -323,6 +321,7 @@ def noise_learner_results(unknown_err: bool = False) -> list[NoiseLearnerResult]
     return [NoiseLearnerResult([layer_error])]
 
 
+@pytest.fixture
 def spans_to_serialize() -> tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2]:
     """Return a slice span, a double slice span, and a twirled slice span of each version."""
     slice_span = SliceSpan(
@@ -575,24 +574,26 @@ if __name__ == '__main__':
         assert json.dumps(payload, cls=RuntimeEncoder)
 
 
-@ddt
-class TestContainerSerialization(IBMTestCase):
+class TestContainerSerialization:
     """Class for testing primitive containers serialization."""
 
     # Tests
-    @data(
-        ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
-        ObservablesArray(qi.pauli_basis(2)),
-        ObservablesArray([qi.random_pauli_list(2, 3, phase=False) for _ in range(5)]),
-        ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
-        ObservablesArray(
-            [
-                [SparsePauliOp(qi.random_pauli_list(2, 3, phase=False)) for _ in range(3)]
-                for _ in range(5)
-            ]
-        ),
+    @pytest.mark.parametrize(
+        "oarray",
+        [
+            ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
+            ObservablesArray(qi.pauli_basis(2)),
+            ObservablesArray([qi.random_pauli_list(2, 3, phase=False) for _ in range(5)]),
+            ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
+            ObservablesArray(
+                [
+                    [SparsePauliOp(qi.random_pauli_list(2, 3, phase=False)) for _ in range(3)]
+                    for _ in range(5)
+                ]
+            ),
+        ],
     )
-    def test_obs_array(self, oarray):
+    def test_obs_array(self, oarray: ObservablesArray) -> None:
         """Test encoding and decoding ObservablesArray."""
         payload = {"array": oarray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -600,28 +601,31 @@ class TestContainerSerialization(IBMTestCase):
         assert isinstance(decoded, ObservablesArray)
         assert_observable_arrays_equal(decoded, oarray)
 
-    @data(
-        BindingsArray({"a": [1, 2, 3.4]}),
-        BindingsArray({("a", "b", "c"): [4.0, 5.0, 6.0]}, shape=()),
-        BindingsArray({Parameter("a"): np.random.uniform(size=(5,))}),
-        BindingsArray({ParameterVector("a", 5): np.linspace(0, 1, 30).reshape((2, 3, 5))}),
-        BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
-        BindingsArray(
-            data={
-                (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
-                Parameter("c"): np.random.random((4, 3)),
-            }
-        ),
-        BindingsArray(
-            data={
-                (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
-                Parameter("c"): np.random.random((2, 3)),
-            },
-        ),
-        BindingsArray(data={Parameter("c"): [3.0, 3.1]}),
-        BindingsArray(data={"param1": [1, 2, 3], "param2": [3, 4, 5]}),
+    @pytest.mark.parametrize(
+        "barray",
+        [
+            BindingsArray({"a": [1, 2, 3.4]}),
+            BindingsArray({("a", "b", "c"): [4.0, 5.0, 6.0]}, shape=()),
+            BindingsArray({Parameter("a"): np.random.uniform(size=(5,))}),
+            BindingsArray({ParameterVector("a", 5): np.linspace(0, 1, 30).reshape((2, 3, 5))}),
+            BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
+            BindingsArray(
+                data={
+                    (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
+                    Parameter("c"): np.random.random((4, 3)),
+                }
+            ),
+            BindingsArray(
+                data={
+                    (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
+                    Parameter("c"): np.random.random((2, 3)),
+                },
+            ),
+            BindingsArray(data={Parameter("c"): [3.0, 3.1]}),
+            BindingsArray(data={"param1": [1, 2, 3], "param2": [3, 4, 5]}),
+        ],
     )
-    def test_bindings_array(self, barray):
+    def test_bindings_array(self, barray: BindingsArray | BitArray) -> None:
         """Test encoding and decoding BindingsArray."""
         payload = {"array": barray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -629,15 +633,18 @@ class TestContainerSerialization(IBMTestCase):
         assert isinstance(decoded, BindingsArray)
         assert_binding_arrays_equal(decoded, barray)
 
-    @data(
-        BitArray(
-            np.array([[[3, 5], [3, 5], [234, 100]], [[0, 1], [1, 0], [1, 0]]], dtype=np.uint8),
-            num_bits=15,
-        ),
-        BitArray.from_bool_array([[1, 0, 0], [1, 1, 0]]),
-        BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4})),
+    @pytest.mark.parametrize(
+        "barray",
+        [
+            BitArray(
+                np.array([[[3, 5], [3, 5], [234, 100]], [[0, 1], [1, 0], [1, 0]]], dtype=np.uint8),
+                num_bits=15,
+            ),
+            BitArray.from_bool_array([[1, 0, 0], [1, 1, 0]]),
+            BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4})),
+        ],
     )
-    def test_bit_array(self, barray):
+    def test_bit_array(self, barray: BindingsArray | BitArray) -> None:
         """Test encoding and decoding BitArray."""
         payload = {"array": barray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -645,7 +652,7 @@ class TestContainerSerialization(IBMTestCase):
         assert isinstance(decoded, BitArray)
         assert barray == decoded
 
-    def test_data_bin(self):
+    def test_data_bin(self) -> None:
         """Test encoding and decoding DataBin."""
         for dbin in data_bins():
             payload = {"bin": dbin}
@@ -654,7 +661,7 @@ class TestContainerSerialization(IBMTestCase):
             assert isinstance(decoded, DataBin)
             assert_data_bins_equal(dbin, decoded)
 
-    def test_estimator_pub(self):
+    def test_estimator_pub(self) -> None:
         """Test encoding and decoding EstimatorPub."""
         for pub in estimator_pubs():
             payload = {"pub": pub}
@@ -665,7 +672,7 @@ class TestContainerSerialization(IBMTestCase):
             decoded_pub = EstimatorPub.coerce(decoded)
             assert_estimator_pubs_equal(pub, decoded_pub)
 
-    def test_sampler_pub(self):
+    def test_sampler_pub(self) -> None:
         """Test encoding and decoding SamplerPub."""
         for pub in sampler_pubs():
             payload = {"pub": pub}
@@ -676,7 +683,7 @@ class TestContainerSerialization(IBMTestCase):
             decoded_pub = SamplerPub.coerce(decoded)
             assert_sampler_pubs_equal(pub, decoded_pub)
 
-    def test_pub_result(self):
+    def test_pub_result(self) -> None:
         """Test encoding and decoding PubResult."""
         for pub_result in pub_results():
             payload = {"pub_result": pub_result}
@@ -685,7 +692,7 @@ class TestContainerSerialization(IBMTestCase):
             assert isinstance(decoded, PubResult)
             assert_pub_results_equal(pub_result, decoded)
 
-    def test_estimator_pub_result(self):
+    def test_estimator_pub_result(self) -> None:
         """Test encoding and decoding EstimatorPubResult."""
         for pub_result in estimator_pub_results():
             payload = {"estimator_pub_result": pub_result}
@@ -694,7 +701,7 @@ class TestContainerSerialization(IBMTestCase):
             assert isinstance(decoded, EstimatorPubResult)
             assert_pub_results_equal(pub_result, decoded)
 
-    def test_sampler_pub_result(self):
+    def test_sampler_pub_result(self) -> None:
         """Test encoding and decoding SamplerPubResult."""
         for pub_result in sampler_pub_results():
             payload = {"sampler_pub_result": pub_result}
@@ -703,7 +710,7 @@ class TestContainerSerialization(IBMTestCase):
             assert isinstance(decoded, SamplerPubResult)
             assert_pub_results_equal(pub_result, decoded)
 
-    def test_primitive_result(self):
+    def test_primitive_result(self) -> None:
         """Test encoding and decoding PubResult."""
         for primitive_result in primitive_results():
             payload = {"primitive_result": primitive_result}
@@ -712,8 +719,8 @@ class TestContainerSerialization(IBMTestCase):
             assert isinstance(decoded, PrimitiveResult)
             assert_primitive_results_equal(primitive_result, decoded)
 
-    @data(True, False)
-    def test_noise_learner_result(self, unknown_err):
+    @pytest.mark.parametrize("unknown_err", [True, False])
+    def test_noise_learner_result(self, unknown_err: bool) -> None:
         """Test encoding and decoding NoiseLearnerResult."""
         for noise_learner_result in noise_learner_results(unknown_err):
             payload = {"noise_learner_result": noise_learner_result}
@@ -722,11 +729,14 @@ class TestContainerSerialization(IBMTestCase):
             assert isinstance(decoded, NoiseLearnerResult)
             assert_noise_learner_results_equal(noise_learner_result, decoded)
 
-    @data(
-        PauliLindbladMap.from_sparse_list([("XX", (0, 1), 0.5)], num_qubits=5),
-        PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)]),
+    @pytest.mark.parametrize(
+        "noise_map",
+        [
+            PauliLindbladMap.from_sparse_list([("XX", (0, 1), 0.5)], num_qubits=5),
+            PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)]),
+        ],
     )
-    def test_pauli_lindblad_map(self, noise_map):
+    def test_pauli_lindblad_map(self, noise_map: PauliLindbladMap) -> None:
         """Test enconding and decoding for PauliLindbladMap."""
         payload = {"map": noise_map}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -734,7 +744,7 @@ class TestContainerSerialization(IBMTestCase):
         assert isinstance(decoded, PauliLindbladMap)
         assert noise_map == decoded
 
-    def test_unknown_settings(self):
+    def test_unknown_settings(self) -> None:
         """Test settings not on whitelisted path."""
         random_settings = {
             "__type__": "settings",
@@ -748,20 +758,23 @@ class TestContainerSerialization(IBMTestCase):
         assert decoded == random_settings
 
 
-class TestExecutionSpansSerialization(IBMTestCase):
+class TestExecutionSpansSerialization:
     """Class for testing execution spans serialization, with a focus on backward compatibility.
 
     The deserialization may be done with an old version of qiskit-ibm-runtime, which does not
     support twirled slice spans with data slice version 2.
     """
 
-    def test_new_runtime_encodes_and_decodes(self):
+    def test_new_runtime_encodes_and_decodes(
+        self,
+        spans_to_serialize: tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2],
+    ) -> None:
         """Test both encoding and decoding supporting `TwirledSliceSpanV2`.
 
         Test the case where both encoding and decoding are done with a
         qiskit-ibm-runtime version that supports `TwirledSliceSpanV2`.
         """
-        slice_span, double_span, twirl1, twirl2 = spans_to_serialize()
+        slice_span, double_span, twirl1, twirl2 = spans_to_serialize
 
         spans = ExecutionSpans([slice_span, twirl1, twirl2, double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
@@ -769,13 +782,16 @@ class TestExecutionSpansSerialization(IBMTestCase):
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         assert spans == decoded
 
-    def test_new_runtime_encodes_but_old_runtime_decodes(self):
+    def test_new_runtime_encodes_but_old_runtime_decodes(
+        self,
+        spans_to_serialize: tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2],
+    ) -> None:
         """Test encoding supporting `TwirledSliceSpanV2`.
 
         Test the case where deserialization is done with an old qiskit-ibm-runtime version that
         does not support `TwirledSliceSpanV2`.
         """
-        slice_span, double_span, twirl1, twirl2 = spans_to_serialize()
+        slice_span, double_span, twirl1, twirl2 = spans_to_serialize
 
         spans = ExecutionSpans([slice_span, twirl1, twirl2, double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
@@ -794,13 +810,16 @@ class TestExecutionSpansSerialization(IBMTestCase):
         assert decoded_spans[3] == double_span
         assert decoded_spans[2]["__value__"]["start"] == twirl2.start
 
-    def test_old_runtime_encodes_but_new_runtime_decodes(self):
+    def test_old_runtime_encodes_but_new_runtime_decodes(
+        self,
+        spans_to_serialize: tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2],
+    ) -> None:
         """Test and decoding supporting `TwirledSliceSpanV2.
 
         Test the case where deserialization is done with a new qiskit-ibm-runtime version that
         supports `TwirledSliceSpanV2`.
         """
-        slice_span, double_span, twirl1, _ = spans_to_serialize()
+        slice_span, double_span, twirl1, _ = spans_to_serialize
 
         spans = ExecutionSpans([slice_span, twirl1, double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
@@ -810,12 +829,11 @@ class TestExecutionSpansSerialization(IBMTestCase):
         assert spans == decoded
 
 
-@ddt
-class TestRuntimeDecoder(IBMTestCase):
+class TestRuntimeDecoder:
     """Tests for RuntimeDecoder class."""
 
-    @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
-    def test_decoding_executor_params(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS)])
+    def test_decoding_executor_params(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of executor jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in the correct format,
@@ -839,8 +857,8 @@ class TestRuntimeDecoder(IBMTestCase):
         assert isinstance(decoded["params"]["quantum_program"], QuantumProgram)
         assert decoded["params"]["options"] == ExecutorOptions()
 
-    @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
-    def test_decoding_incorrect_executor_params_warns(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS)])
+    def test_decoding_incorrect_executor_params_warns(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of executor jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in an incorrect format,
@@ -857,14 +875,14 @@ class TestRuntimeDecoder(IBMTestCase):
         }
         encoded = json.dumps(params, cls=RuntimeEncoder)
 
-        with self.assertWarnsRegex(Warning, "Unable to convert"):
+        with pytest.warns(Warning, match="Unable to convert"):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
 
         assert decoded["params"]["quantum_program"] == "foo"
         assert decoded["params"]["options"] == "bar"
 
-    @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
-    def test_decoding_noise_learner_v3_params(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS)])
+    def test_decoding_noise_learner_v3_params(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of NLV3 jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in the correct format,
@@ -907,8 +925,8 @@ class TestRuntimeDecoder(IBMTestCase):
         assert decoded["params"]["instructions"] == instructions
         assert decoded["params"]["options"] == options
 
-    @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
-    def test_decoding_incorrect_noise_learner_v3_params_warns(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS)])
+    def test_decoding_incorrect_noise_learner_v3_params_warns(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of NLV3 jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in an incorrect format,
@@ -922,17 +940,17 @@ class TestRuntimeDecoder(IBMTestCase):
         }
         encoded = json.dumps(params, cls=RuntimeEncoder)
 
-        with self.assertWarnsRegex(Warning, "Unable to convert"):
+        with pytest.warns(Warning, match="Unable to convert"):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
 
         assert decoded["params"]["instructions"] == "foo"
         assert decoded["params"]["options"] == "bar"
 
 
-class TestQpyQiskitVersionValidation(IBMTestCase):
+class TestQpyQiskitVersionValidation:
     """Tests for QPY version warnings during deserialization."""
 
-    def test_newer_qpy_format_version_warns_before_load_fails(self):
+    def test_newer_qpy_format_version_warns_before_load_fails(self) -> None:
         """A newer QPY format version emits a clear warning before load fails."""
         circuit = QuantumCircuit(1)
         encoded = json.dumps(circuit, cls=RuntimeEncoder)
@@ -945,7 +963,7 @@ class TestQpyQiskitVersionValidation(IBMTestCase):
 
         with warnings.catch_warnings(record=True) as caught_warnings:
             warnings.simplefilter("always")
-            with self.assertRaises(QiskitError):
+            with pytest.raises(QiskitError):
                 json.loads(json.dumps(payload), cls=RuntimeDecoder)
 
         clear_warnings = [

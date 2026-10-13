@@ -13,7 +13,7 @@
 """Test dynamical decoupling insertion pass."""
 
 import numpy as np
-from ddt import data, ddt
+import pytest
 from numpy import pi
 from qiskit.circuit import Delay, Parameter, QuantumCircuit
 from qiskit.circuit.library import CXGate, HGate, Measure, Reset, RXGate, UGate, XGate, YGate
@@ -28,8 +28,6 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.dynamical_decoupling import
     PadDynamicalDecoupling,
 )
 from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import ASAPScheduleAnalysis
-
-from .....ibm_test_case import IBMTestCase
 
 
 def ghz4_circuit() -> QuantumCircuit:
@@ -96,11 +94,10 @@ def five_qubit_target() -> Target:
     return target
 
 
-@ddt
-class TestPadDynamicalDecoupling(IBMTestCase):
+class TestPadDynamicalDecoupling:
     """Tests PadDynamicalDecoupling pass."""
 
-    def test_insert_dd_ghz(self):
+    def test_insert_dd_ghz(self) -> None:
         """Test DD gates are inserted in correct spots."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -113,7 +110,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[1.0],
+                    sequence_min_length_ratios=[1.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -141,8 +138,8 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert ghz4_dd == expected
 
-    @data(True, False)
-    def test_insert_dd_ghz_one_qubit(self, use_topological_ordering):
+    @pytest.mark.parametrize("use_topological_ordering", [True, False])
+    def test_insert_dd_ghz_one_qubit(self, use_topological_ordering: bool) -> None:
         """Test DD gates are inserted on only one qubit."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -194,7 +191,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert ghz4_dd == expected
 
-    def test_insert_dd_ghz_everywhere(self):
+    def test_insert_dd_ghz_everywhere(self) -> None:
         """Test DD gates even on initial idle spots."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -208,7 +205,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     dd_sequences=dd_sequence,
                     skip_reset_qubits=False,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[0.0],
+                    sequence_min_length_ratios=[0.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -246,7 +243,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert ghz4_dd == expected
 
-    def test_insert_dd_ghz_xy4(self):
+    def test_insert_dd_ghz_xy4(self) -> None:
         """Test XY4 sequence of DD gates."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -258,7 +255,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[1.0],
+                    sequence_min_length_ratios=[1.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -294,8 +291,8 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert ghz4_dd == expected
 
-    @data(True, False)
-    def test_insert_midmeas_hahn(self, use_topological_ordering):
+    @pytest.mark.parametrize("use_topological_ordering", [True, False])
+    def test_insert_midmeas_hahn(self, use_topological_ordering: bool) -> None:
         """Test a single X gate as Hahn echo can absorb in the upstream circuit."""
         midmeas = midmeas_circuit()
         target = five_qubit_target()
@@ -350,7 +347,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
             Operator(UGate(3 * pi / 4, -pi / 2, pi / 2)) & Operator(RXGate(pi / 4))
         )
 
-    def test_insert_ghz_uhrig(self):
+    def test_insert_ghz_uhrig(self) -> None:
         """Test custom spacing (following Uhrig DD [1]).
 
         [1] Uhrig, G. "Keeping a quantum bit alive by optimized π-pulse sequences."
@@ -363,11 +360,11 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         dd_sequence = [XGate()] * n
 
         # uhrig specifies the location of the k'th pulse
-        def uhrig(k):
+        def uhrig(k: int) -> float:
             return np.sin(np.pi * (k + 1) / (2 * n + 2)) ** 2
 
         # convert that to spacing between pulses (whatever finite duration pulses have)
-        spacing = []
+        spacing: list[float] = []
         for k in range(n):
             spacing.append(uhrig(k) - sum(spacing))
         spacing.append(1 - sum(spacing))
@@ -379,7 +376,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     dd_sequences=dd_sequence,
                     qubits=[0],
                     spacings=spacing,
-                    sequence_min_length_ratios=[0.0],
+                    sequence_min_length_ratios=[0.0],  # type: ignore[list-item]
                     pulse_alignment=1,
                     schedule_idle_qubits=True,
                     target=target,
@@ -416,7 +413,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert ghz4_dd == expected
 
-    def test_asymmetric_xy4_in_t2(self):
+    def test_asymmetric_xy4_in_t2(self) -> None:
         """Test insertion of XY4 sequence with unbalanced spacing."""
         target = five_qubit_target()
 
@@ -460,7 +457,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         # check global phase is correct
         assert Operator(t2) == Operator(expected)
 
-    def test_dd_after_reset(self):
+    def test_dd_after_reset(self) -> None:
         """Test skip_reset_qubits option works."""
         target = five_qubit_target()
 
@@ -475,7 +472,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     spacings=spacing,
                     skip_reset_qubits=True,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[0.0],
+                    sequence_min_length_ratios=[0.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -507,7 +504,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert t2_dd == expected
 
-    def test_insert_dd_bad_sequence(self):
+    def test_insert_dd_bad_sequence(self) -> None:
         """Test DD raises when non-identity sequence is inserted."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -521,10 +518,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 ),
             ]
         )
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             pm.run(ghz4)
 
-    def test_insert_dd_ghz_xy4_with_alignment(self):
+    def test_insert_dd_ghz_xy4_with_alignment(self) -> None:
         """Test DD with pulse alignment constraints."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -537,7 +534,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     dd_sequences=dd_sequence,
                     pulse_alignment=10,
                     extra_slack_distribution="edges",
-                    sequence_min_length_ratios=[1.0],
+                    sequence_min_length_ratios=[1.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -573,7 +570,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert ghz4_dd == expected
 
-    def test_dd_can_sequentially_called(self):
+    def test_dd_can_sequentially_called(self) -> None:
         """Test if sequentially called DD pass can output the same circuit.
 
         This test verifies:
@@ -617,7 +614,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         circ2 = pm2.run(ghz4)
         assert circ1 == circ2
 
-    def test_back_to_back_if_test(self):
+    def test_back_to_back_if_test(self) -> None:
         """Test DD with if_test circuit back to back."""
         target = five_qubit_target()
 
@@ -628,7 +625,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[0.0],
+                    sequence_min_length_ratios=[0.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -675,7 +672,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert expected == qc_dd
 
-    def test_dd_if_test(self):
+    def test_dd_if_test(self) -> None:
         """Test DD with if_test circuit."""
         target = five_qubit_target()
 
@@ -687,7 +684,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[0.0],
+                    sequence_min_length_ratios=[0.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -753,7 +750,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert expected == qc_dd
 
-    def test_reproducible(self):
+    def test_reproducible(self) -> None:
         """Test DD calls are reproducible."""
         target = five_qubit_target()
 
@@ -793,7 +790,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert qc_dd0 == qc_dd1
 
-    def test_nested_block_dd(self):
+    def test_nested_block_dd(self) -> None:
         """Test DD applied within a block."""
         target = five_qubit_target()
 
@@ -805,7 +802,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[0.0],
+                    sequence_min_length_ratios=[0.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -841,7 +838,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert expected == qc_dd
 
-    def test_multiple_dd_sequences(self):
+    def test_multiple_dd_sequences(self) -> None:
         """Test multiple DD sequence can be submitted."""
         target = five_qubit_target()
 
@@ -863,7 +860,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[1.5, 0.0],
+                    sequence_min_length_ratios=[1.5, 0.0],  # type: ignore[list-item]
                     schedule_idle_qubits=True,
                     target=target,
                 ),
@@ -923,7 +920,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert qc_dd == expected
 
-    def test_multiple_dd_sequence_cycles(self):
+    def test_multiple_dd_sequence_cycles(self) -> None:
         """Test a single DD sequence can be inserted for multiple cycles in a single delay."""
         target = five_qubit_target()
 
@@ -942,7 +939,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     dd_sequences=dd_sequence,
                     extra_slack_distribution="edges",
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[10.0],
+                    sequence_min_length_ratios=[10.0],  # type: ignore[list-item]
                     insert_multiple_cycles=True,
                     schedule_idle_qubits=True,
                     target=target,
@@ -966,7 +963,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.delay(225, 0)
         assert qc_dd == expected
 
-    def test_staggered_dd(self):
+    def test_staggered_dd(self) -> None:
         """Test that timing on DD can be staggered if coupled with each other."""
         target = five_qubit_target()
         coupling_map = CouplingMap([[0, 1], [1, 2], [2, 3]])
@@ -1031,7 +1028,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         assert qc_dd == expected
 
-    def test_staggered_dd_multiple_cycles(self):
+    def test_staggered_dd_multiple_cycles(self) -> None:
         """Test staggered DD with multiple cycles in a single delay."""
         target = five_qubit_target()
         coupling_map = CouplingMap([[0, 1], [1, 2], [2, 3]])
@@ -1045,7 +1042,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                     dd_sequences=dd_sequence,
                     coupling_map=coupling_map,
                     alt_spacings=[0.1, 0.8, 0.1],
-                    sequence_min_length_ratios=[4.0],
+                    sequence_min_length_ratios=[4.0],  # type: ignore[list-item]
                     insert_multiple_cycles=True,
                     schedule_idle_qubits=True,
                     target=target,
@@ -1098,7 +1095,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected.barrier()
         assert qc_dd == expected
 
-    def test_insert_dd_bad_spacings(self):
+    def test_insert_dd_bad_spacings(self) -> None:
         """Test DD raises when spacings don't add up to 1."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -1118,10 +1115,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
             ]
         )
 
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             pm.run(ghz4)
 
-    def test_insert_dd_bad_alt_spacings(self):
+    def test_insert_dd_bad_alt_spacings(self) -> None:
         """Test DD raises when alt_spacings don't add up to 1."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -1140,10 +1137,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
             ]
         )
 
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             pm.run(ghz4)
 
-    def test_unsupported_coupling_map(self):
+    def test_unsupported_coupling_map(self) -> None:
         """Test DD raises if coupling map is not supported."""
         ghz4 = ghz4_circuit()
         target = five_qubit_target()
@@ -1160,10 +1157,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
             ]
         )
 
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             pm.run(ghz4)
 
-    def test_disjoint_coupling_map(self):
+    def test_disjoint_coupling_map(self) -> None:
         """Test staggered DD with disjoint coupling map."""
         target = five_qubit_target()
 
@@ -1192,7 +1189,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         # ensure that delays for nearest neighbors are staggered
         dag = circuit_to_dag(dd_qc)
         delays = dag.op_nodes(Delay)
-        delay_dict = {q_ind: [] for q_ind in range(5)}
+        delay_dict: dict[int, list[int]] = {q_ind: [] for q_ind in range(5)}
         for delay in delays:
             delay_dict[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
         assert delay_dict[0] != delay_dict[1]
@@ -1200,7 +1197,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         assert delay_dict[3] != delay_dict[4]
         assert delay_dict[0] == delay_dict[2]
 
-    def test_no_unused_qubits(self):
+    def test_no_unused_qubits(self) -> None:
         """Test DD with if_test circuit that unused qubits are untouched and not scheduled.
 
         Unused qubits may also have missing durations when not operational.
@@ -1236,7 +1233,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
                 PadDynamicalDecoupling(
                     dd_sequences=dd_sequence,
                     pulse_alignment=1,
-                    sequence_min_length_ratios=[0.0],
+                    sequence_min_length_ratios=[0.0],  # type: ignore[list-item]
                     target=five_qubit_target(),
                 ),
             ]
@@ -1253,7 +1250,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         for op in qc_dd.data:
             assert dont_use not in op.qubits
 
-    def test_dd_named_barriers(self):
+    def test_dd_named_barriers(self) -> None:
         """Test DD applied on delays ending on named barriers."""
         target = five_qubit_target()
 

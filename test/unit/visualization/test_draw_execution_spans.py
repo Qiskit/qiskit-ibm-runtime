@@ -15,12 +15,11 @@
 import random
 from datetime import datetime, timedelta
 
-import ddt
+import pytest
 
 from qiskit_ibm_runtime.execution_span import ExecutionSpans, SliceSpan
 from qiskit_ibm_runtime.visualization import draw_execution_spans
 
-from ...ibm_test_case import IBMTestCase
 from .utils import save_plotly_artifact
 
 
@@ -49,6 +48,7 @@ def execution_spans(seed: int = 100) -> tuple[ExecutionSpans, ExecutionSpans]:
     return ExecutionSpans(spans0), ExecutionSpans(spans1)
 
 
+@pytest.fixture
 def spans_to_draw() -> ExecutionSpans:
     """Return a set of two spans, the second one starting before the first one ends."""
     span1 = SliceSpan(
@@ -64,36 +64,48 @@ def spans_to_draw() -> ExecutionSpans:
     return ExecutionSpans([span2, span1])
 
 
-@ddt.ddt
-class TestExecutionSpans(IBMTestCase):
+class TestExecutionSpans:
     """Class for testing the draw method of ExecutionSpans."""
 
-    @ddt.data((False, 4, None), (True, 6, "alpha"))
-    @ddt.unpack
-    def test_draw(self, normalize_y, width, name):
+    @pytest.mark.parametrize(
+        ("normalize_y", "width", "name"), [(False, 4, None), (True, 6, "alpha")]
+    )
+    def test_draw(
+        self,
+        normalize_y: bool,
+        width: int,
+        name: str | None,
+        spans_to_draw: ExecutionSpans,
+        test_id: str,
+    ) -> None:
         """Test the draw method."""
-        spans = spans_to_draw()
         save_plotly_artifact(
-            self.id(), spans.draw(normalize_y=normalize_y, line_width=width, name=name)
+            test_id, spans_to_draw.draw(normalize_y=normalize_y, line_width=width, name=name)
         )
 
 
-@ddt.ddt
-class TestDrawExecutionSpans(IBMTestCase):
+class TestDrawExecutionSpans:
     """Tests for the ``draw_execution_spans`` function."""
 
-    @ddt.data(False, True)
-    def test_one_spans(self, normalize_y):
+    @pytest.mark.parametrize("normalize_y", [False, True])
+    def test_one_spans(self, normalize_y: bool, test_id: str) -> None:
         """Test with one set of spans."""
         spans0, _ = execution_spans()
         fig = draw_execution_spans(spans0, normalize_y=normalize_y)
-        save_plotly_artifact(self.id(), fig)
+        save_plotly_artifact(test_id, fig)
 
-    @ddt.data(
-        (False, False, 4, None), (True, True, 8, "alpha"), (True, False, 4, ["alpha", "beta"])
+    @pytest.mark.parametrize(
+        ("normalize_y", "common_start", "width", "names"),
+        [(False, False, 4, None), (True, True, 8, "alpha"), (True, False, 4, ["alpha", "beta"])],
     )
-    @ddt.unpack
-    def test_two_spans(self, normalize_y, common_start, width, names):
+    def test_two_spans(
+        self,
+        normalize_y: bool,
+        common_start: bool,
+        width: int,
+        names: str | list[str] | None,
+        test_id: str,
+    ) -> None:
         """Test with two sets of spans."""
         spans0, spans1 = execution_spans()
         fig = draw_execution_spans(
@@ -104,4 +116,4 @@ class TestDrawExecutionSpans(IBMTestCase):
             line_width=width,
             names=names,
         )
-        save_plotly_artifact(self.id(), fig)
+        save_plotly_artifact(test_id, fig)
