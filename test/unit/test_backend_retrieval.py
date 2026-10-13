@@ -14,54 +14,66 @@
 
 from __future__ import annotations
 
+import logging
+from typing import TYPE_CHECKING
 from unittest import mock
 
-from ddt import data, ddt, named_data
+import pytest
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeTorino
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceNoBackendsRegistry
 
+if TYPE_CHECKING:
+    from ..registries import BaseRegistry
 
-@ddt
-class TestBackendFilters(IBMTestCase):
+
+class TestBackendFilters:
     """Qiskit Backend Filtering Tests."""
 
-    @mock_responses
-    def test_backend_instance_warnings(self, registry):
+    def test_backend_instance_warnings(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test backend instance warnings."""
         service = QiskitRuntimeService(token="my_token")
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.backends()
-        assert "Loading instance" in logs.output[0]
+        assert "Loading instance" in caplog.messages[0]
 
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.backend("common_backend")
-        assert "Using instance" in logs.output[0]
+        assert "Using instance" in caplog.messages[0]
 
-    @mock_responses
-    def test_instance_auto_suppresses_backends_loading_warning(self, registry):
+    def test_instance_auto_suppresses_backends_loading_warning(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """instance='auto' must suppress 'Loading instance' warnings in backends()."""
         # Create service outside the log capture so init's "Loading account" doesn't interfere.
         service = QiskitRuntimeService(token="my_token", instance="auto")
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.backends()
+        assert not caplog.records
 
-    @mock_responses
-    def test_instance_auto_suppresses_backend_using_warning(self, registry):
+    def test_instance_auto_suppresses_backend_using_warning(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """instance='auto' must suppress 'Using instance' warning when looking up by name."""
         # Create service outside the log capture so init's "Loading account" doesn't interfere.
         service = QiskitRuntimeService(token="my_token", instance="auto")
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.backend("common_backend")
+        assert not caplog.records
 
-    @mock_responses
-    def test_saved_account_instance_auto_suppresses_warnings(self, registry):
+    def test_saved_account_instance_auto_suppresses_warnings(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """A saved account with instance='auto' must suppress backend instance warnings."""
         saved_account = Account.create_account(
             channel="ibm_quantum_platform", token="my_token", instance="auto"
@@ -71,21 +83,24 @@ class TestBackendFilters(IBMTestCase):
         ):
             service = QiskitRuntimeService(channel="ibm_quantum_platform", token="my_token")
 
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.backends()
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        assert not caplog.records
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.backend("common_backend")
+        assert not caplog.records
 
-    @mock_responses
-    def test_no_filter(self, registry):
+    def test_no_filter(self, registry: BaseRegistry) -> None:
         """Test no filtering."""
         service = QiskitRuntimeService(token="my_token")
         # QiskitRuntimeService with DefaultRegistry by default creates 3 backends.
         backend_name = [back.name for back in service.backends()]
         assert len(backend_name) == 3
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_filter_mock_devices(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_filter_mock_devices(self, registry: BaseRegistry) -> None:
         """Test filtering by configuration properties."""
         registry.add_backend(Backend("ibm_foo"))
         registry.add_backend(Backend("mock_foo", is_mock=True))
@@ -100,17 +115,16 @@ class TestBackendFilters(IBMTestCase):
         backends = service.backends(include_mocks=True)
         assert len(backends) == 2
 
-    @data("common_backend", "unique_backend_a")
-    @mock_responses
-    def test_filter_by_name(self, backend_name, registry):
+    @pytest.mark.parametrize("backend_name", ["common_backend", "unique_backend_a"])
+    def test_filter_by_name(self, backend_name: str, registry: BaseRegistry) -> None:
         """Test filtering by name."""
         service = QiskitRuntimeService(token="my_token")
 
         backend_names = [back.name for back in service.backends(name=backend_name)]
         assert len(backend_names) == 1
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_filter_config_properties(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_filter_config_properties(self, registry: BaseRegistry) -> None:
         """Test filtering by configuration properties."""
         n_qubits = 5
         backend_5q = Backend("5q")
@@ -129,8 +143,8 @@ class TestBackendFilters(IBMTestCase):
         assert n_qubits == filtered_backends[0].configuration().n_qubits
         assert not filtered_backends[0].configuration().local
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_filter_status_dict(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_filter_status_dict(self, registry: BaseRegistry) -> None:
         """Test filtering by dictionary of mixed status/configuration properties."""
         backend_1 = Backend("backend_1")
         backend_1.configuration.update({"simulator": True})
@@ -155,8 +169,8 @@ class TestBackendFilters(IBMTestCase):
             assert backend.status().operational
             assert backend.configuration().simulator
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_filter_config_callable(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_filter_config_callable(self, registry: BaseRegistry) -> None:
         """Test filtering by lambda function on configuration properties."""
         n_qubits = 5
         backend_5q = Backend("5q")
@@ -175,8 +189,10 @@ class TestBackendFilters(IBMTestCase):
         for backend in filtered_backends:
             assert backend.configuration().n_qubits >= n_qubits
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_least_busy_use_fractional_gates_skips_backend_without_rzz(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_least_busy_use_fractional_gates_skips_backend_without_rzz(
+        self, registry: BaseRegistry
+    ) -> None:
         """When use_fractional_gates=True, least_busy skips backends missing rzz."""
         registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
         registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
@@ -186,15 +202,18 @@ class TestBackendFilters(IBMTestCase):
         assert backend.name == "fake_fractional"
         assert "rzz" in backend.basis_gates
 
-    @mock_responses
-    def test_least_busy_use_fractional_gates_no_qualifying_backend(self, registry):
+    def test_least_busy_use_fractional_gates_no_qualifying_backend(
+        self, registry: BaseRegistry
+    ) -> None:
         """When use_fractional_gates=True and no backend has rzz, raise an error."""
         service = QiskitRuntimeService(token="my_token")
-        with self.assertRaises(QiskitBackendNotFoundError):
+        with pytest.raises(QiskitBackendNotFoundError):
             service.least_busy(use_fractional_gates=True)
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_least_busy_use_fractional_gates_false_ignores_rzz(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_least_busy_use_fractional_gates_false_ignores_rzz(
+        self, registry: BaseRegistry
+    ) -> None:
         """When use_fractional_gates=False (default), least_busy returns the least busy backend."""
         registry.add_backend(Backend.from_(FakeTorino, queue_length=5))
         registry.add_backend(Backend.from_(FakeFractionalBackend, queue_length=10))
@@ -203,8 +222,8 @@ class TestBackendFilters(IBMTestCase):
         backend = service.least_busy(use_fractional_gates=False)
         assert backend.name == "ibm_torino"
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_least_busy_excludes_mock(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_least_busy_excludes_mock(self, registry: BaseRegistry) -> None:
         """least_busy must not include mock devices."""
         registry.add_backend(Backend.from_(FakeTorino, name="not_mock_device", queue_length=10))
         registry.add_backend(
@@ -215,8 +234,8 @@ class TestBackendFilters(IBMTestCase):
         backend = service.least_busy()
         assert backend.name == "not_mock_device"
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_filter_least_busy(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_filter_least_busy(self, registry: BaseRegistry) -> None:
         """Test filtering by least busy function."""
         registry.add_backend(Backend("backend1", queue_length=10))
         registry.add_backend(Backend("backend2", queue_length=20))
@@ -227,8 +246,8 @@ class TestBackendFilters(IBMTestCase):
         backend = service.least_busy()
         assert backend.name == "backend1"
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_filter_min_num_qubits(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_filter_min_num_qubits(self, registry: BaseRegistry) -> None:
         """Test filtering by minimum number of qubits."""
         n_qubits = 5
         backend_5q = Backend("5q")
@@ -248,12 +267,11 @@ class TestBackendFilters(IBMTestCase):
             assert backend.configuration().n_qubits >= n_qubits
 
 
-@ddt
-class TestGetBackend(IBMTestCase):
+class TestGetBackend:
     """Test getting a backend."""
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_get_backend_properties(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_get_backend_properties(self, registry: BaseRegistry) -> None:
         """Test that a backend's properties are loaded into its target."""
         registry.add_backend(Backend.from_(FakeTorino))
 
@@ -269,20 +287,22 @@ class TestGetBackend(IBMTestCase):
         assert len(sx_errors) == backend.num_qubits
         assert len(cz_errors) == 300
         # Check that the right property values were loaded
-        self.assertAlmostEqual(t1s[0], 3.163e-6, places=8)
-        self.assertAlmostEqual(t1s[-1], 3.077e-4, places=6)
-        self.assertAlmostEqual(sx_errors[0], 1.1358e-4, places=7)
-        self.assertAlmostEqual(sx_errors[-1], 0.01738, places=5)
-        self.assertAlmostEqual(cz_errors[0], 0.001495, places=5)
-        self.assertAlmostEqual(cz_errors[-1], 1.0, places=5)
+        assert t1s[0] == pytest.approx(3.163e-6, abs=0.5e-8)
+        assert t1s[-1] == pytest.approx(3.077e-4, abs=0.5e-6)
+        assert sx_errors[0] == pytest.approx(1.1358e-4, abs=0.5e-7)
+        assert sx_errors[-1] == pytest.approx(0.01738, abs=0.5e-5)
+        assert cz_errors[0] == pytest.approx(0.001495, abs=0.5e-5)
+        assert cz_errors[-1] == pytest.approx(1.0, abs=0.5e-5)
 
-    @named_data(
-        ("with_fractional", True),
-        ("without_fractional", False),
-        ("without_filtering", None),
+    @pytest.mark.parametrize(
+        "use_fractional",
+        [True, False, None],
+        ids=["with_fractional", "without_fractional", "without_filtering"],
     )
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_get_backend_with_fractional_optin(self, use_fractional, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_get_backend_with_fractional_optin(
+        self, use_fractional: bool | None, registry: BaseRegistry
+    ) -> None:
         """Test getting backend with fractional gate opt-in.
 
         This test can be modified when the IBM backend architecture changes in future.
@@ -301,10 +321,12 @@ class TestGetBackend(IBMTestCase):
         assert "while_loop" in test_backend.target.operation_names
 
         if use_fractional or use_fractional is None:
-            self.assertAlmostEqual(test_backend.target["rx"][(0,)].error, 0.00019, places=5)
+            assert test_backend.target["rx"][(0,)].error == pytest.approx(0.00019, abs=0.5e-5)
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_backend_with_and_without_fractional_from_same_service(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_backend_with_and_without_fractional_from_same_service(
+        self, registry: BaseRegistry
+    ) -> None:
         """Test getting backend with and without fractional gates from the same service.
 
         Backend with and without opt-in must be different object.
@@ -321,8 +343,8 @@ class TestGetBackend(IBMTestCase):
 
         assert backend_with_fg is not backend_without_fg
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_backend_with_custom_calibration(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_backend_with_custom_calibration(self, registry: BaseRegistry) -> None:
         """Test listing a backend with a custom calibration and reverting to default."""
         registry.add_backend(
             Backend(
@@ -340,8 +362,8 @@ class TestGetBackend(IBMTestCase):
         assert default_backend.calibration_id is None
         assert "while_loop" not in default_backend.supported_instructions
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    def test_backend_with_invalid_calibration(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_backend_with_invalid_calibration(self, registry: BaseRegistry) -> None:
         """Test that retrieving a backend with an invalid calibration fails."""
         registry.add_backend(
             Backend(
@@ -351,11 +373,12 @@ class TestGetBackend(IBMTestCase):
         )
         service = QiskitRuntimeService(token="my_token")
 
-        with self.assertRaises(QiskitBackendNotFoundError):
+        with pytest.raises(QiskitBackendNotFoundError):
             service.backend("ibm_torino", calibration_id="invalid")
 
-    @mock_responses
-    def test_retrieve_mock_backend(self, registry):
+    def test_retrieve_mock_backend(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test retrieving a backend that is not in the default list of backends.
 
         This test exercises the case where a backend is retrieved via `backend()`, and that backend
@@ -392,14 +415,17 @@ class TestGetBackend(IBMTestCase):
         assert backend.is_mock
 
         # Retrieve an existing mocked backend (available in one instance), with wrong instance.
+        caplog.clear()
         with (
-            self.assertRaises(QiskitBackendNotFoundError),
-            self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"),
+            pytest.raises(QiskitBackendNotFoundError),
+            caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"),
         ):
             backend = service.backend("unique_backend_a", instance="b")
+        assert not caplog.records
 
-    @mock_responses
-    def test_retrieve_mock_backend_instance_auto(self, registry):
+    def test_retrieve_mock_backend_instance_auto(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test retrieving a backend not in default the list of backends, with instance `auto`.
 
         This test exercises the case where a backend is retrieved via `backend()`, and that backend
@@ -420,7 +446,9 @@ class TestGetBackend(IBMTestCase):
         assert service.backends() == []
 
         # Retrieve an existing backend (available in one instance).
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             backend = service.backend("unique_backend_a")
+        assert not caplog.records
         assert backend.name == "unique_backend_a"
         assert backend._instance == instance_a.crn
