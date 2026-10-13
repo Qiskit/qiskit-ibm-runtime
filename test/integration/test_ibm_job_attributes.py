@@ -28,19 +28,12 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
-from .case import IBMIntegrationJobTestCase, get_test_backend
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import RuntimeJobV2
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
     from .case import IntegrationTestDependencies
-
-
-@pytest.fixture(scope="class")
-def backend_test(dependencies: IntegrationTestDependencies) -> IBMBackend | None:
-    """Return the test backend used by the tests in the class, from the environment config."""
-    return get_test_backend(dependencies.service)
 
 
 @pytest.fixture(scope="class")
@@ -74,24 +67,26 @@ class TestIBMJobAttributes:
         assert "quantum_seconds" in job_test_backend.usage_estimation
 
 
-class TestIBMJobSubmission(IBMIntegrationJobTestCase):
+class TestIBMJobSubmission:
     """Test the attributes of jobs submitted with different options."""
 
-    def test_job_creation_date(self):
+    def test_job_creation_date(self, backend_test: IBMBackend | None) -> None:
         """Test retrieving creation date, while ensuring it is in local time."""
         # datetime, before running the job, in local time.
         start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(minutes=1)
-        sampler = Sampler(mode=self.test_backend)
-        job = sampler.run([transpile(bell(), self.test_backend)])
+        sampler = Sampler(mode=backend_test)
+        job = sampler.run([transpile(bell(), backend_test)])
         job.result()
         # datetime, after the job is done running, in local time.
         end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(minutes=1)
 
         assert start_datetime <= job.creation_date <= end_datetime
 
-    def test_job_tags(self):
+    def test_job_tags(
+        self, backend_test: IBMBackend | None, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test using job tags."""
-        service = self.service
+        service = dependencies.service
         last_week = datetime.now() - timedelta(days=7)
         # Use a unique tag.
         job_tags = [
@@ -99,9 +94,9 @@ class TestIBMJobSubmission(IBMIntegrationJobTestCase):
             uuid.uuid4().hex[0:16],
             uuid.uuid4().hex[0:16],
         ]
-        sampler = Sampler(mode=self.test_backend)
-        sampler.options.environment.job_tags = job_tags
-        job = sampler.run([transpile(bell(), self.test_backend)])
+        sampler = Sampler(mode=backend_test)
+        sampler.options.environment.job_tags = job_tags  # type: ignore[union-attr]
+        job = sampler.run([transpile(bell(), backend_test)])
         assert job.tags
 
         non_matching_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
@@ -116,12 +111,12 @@ class TestIBMJobSubmission(IBMIntegrationJobTestCase):
             assert found_jobs[0].job_id() == job.job_id()
             assert set(found_jobs[0].tags) == set(job_tags)
 
-    def test_job_tags_replace(self):
+    def test_job_tags_replace(self, backend_test: IBMBackend | None) -> None:
         """Test updating job tags by replacing a job's existing tags."""
         initial_job_tags = [uuid.uuid4().hex[:16]]
-        sampler = Sampler(mode=self.test_backend)
-        sampler.options.environment.job_tags = initial_job_tags
-        job = sampler.run([transpile(bell(), self.test_backend)])
+        sampler = Sampler(mode=backend_test)
+        sampler.options.environment.job_tags = initial_job_tags  # type: ignore[union-attr]
+        job = sampler.run([transpile(bell(), backend_test)])
 
         new_tags_cases = [
             [],  # empty tags.
@@ -136,25 +131,24 @@ class TestIBMJobSubmission(IBMIntegrationJobTestCase):
             time.sleep(2)
             assert set(new_tags) == set(job.tags)
 
-    def test_invalid_job_tags(self):
+    def test_invalid_job_tags(
+        self, backend_test: IBMBackend | None, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test using job tags with an and operator."""
-        service = self.service
-        with self.assertRaises(ValidationError):
-            sampler = Sampler(mode=self.test_backend)
-            sampler.options.environment.job_tags = "foo"
+        service = dependencies.service
+        with pytest.raises(ValidationError):
+            sampler = Sampler(mode=backend_test)
+            sampler.options.environment.job_tags = "foo"  # type: ignore[union-attr]
 
-        self.assertRaises(
-            IBMInputValueError,
-            service.jobs,
-            job_tags=[1, 2, 3],
-        )
+        with pytest.raises(IBMInputValueError):
+            service.jobs(job_tags=[1, 2, 3])  # type: ignore[list-item]
 
-    def test_private_option(self):
+    def test_private_option(self, dependencies: IntegrationTestDependencies) -> None:
         """Test private option."""
-        backend = self.dependencies.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         sampler = Sampler(mode=backend)
-        sampler.options.environment.private = True
+        sampler.options.environment.private = True  # type: ignore[union-attr]
         bell_circuit = transpile(bell(), backend)
         job = sampler.run([bell_circuit])
         assert not job.inputs

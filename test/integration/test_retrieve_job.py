@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import re
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 from unittest import SkipTest
@@ -23,10 +24,13 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
 from ..utils import wait_for_status
-from .case import IBMIntegrationJobTestCase
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import IBMBackend, QiskitRuntimeService
+    from collections.abc import Callable
+
+    from qiskit_ibm_runtime import IBMBackend, QiskitRuntimeService, RuntimeJobV2
+
+    from .case import IntegrationTestDependencies
 
 
 def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IBMBackend]:
@@ -50,41 +54,57 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
         raise SkipTest("No backend with corresponding mock backend available.")
 
 
-class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
+class TestIntegrationRetrieveJob:
     """Integration tests for job retrieval functions."""
 
-    def test_retrieve_job_queued(self):
+    def test_retrieve_job_queued(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving a queued job."""
-        service = self.service
-        _ = self.submit_bell_job(service)
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        _ = submit_bell_job()
+        job = submit_bell_job()
         wait_for_status(job, "QUEUED")
         rjob = service.job(job.job_id())
         assert job.job_id() == rjob.job_id()
         assert "sampler" == rjob.primitive_id
 
-    def test_retrieve_job_running(self):
+    def test_retrieve_job_running(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving a running job."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        job = submit_bell_job()
         wait_for_status(job, "RUNNING")
         rjob = service.job(job.job_id())
         assert job.job_id() == rjob.job_id()
         assert "sampler" == rjob.primitive_id
 
-    def test_retrieve_job_done(self):
+    def test_retrieve_job_done(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving a finished job."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        job = submit_bell_job()
         job.wait_for_final_state()
         rjob = service.job(job.job_id())
         assert job.job_id() == rjob.job_id()
         assert "sampler" == rjob.primitive_id
 
-    def test_retrieve_all_jobs(self):
+    def test_retrieve_all_jobs(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving all jobs."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        job = submit_bell_job()
         rjobs = service.jobs()
         found = False
         for rjob in rjobs:
@@ -94,20 +114,28 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         assert found
 
-    def test_retrieve_jobs_limit(self):
+    def test_retrieve_jobs_limit(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving jobs with limit."""
-        service = self.service
+        service = dependencies.service
         jobs = []
         for _ in range(3):
-            jobs.append(self.submit_bell_job(service))
+            jobs.append(submit_bell_job())
 
         rjobs = service.jobs(limit=2, program_id="sampler")
         assert len(rjobs) == 2
 
-    def test_retrieve_pending_jobs(self):
+    def test_retrieve_pending_jobs(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        job = submit_bell_job()
         wait_for_status(job, "RUNNING")
         rjobs = service.jobs(pending=True)
         after_status = job.status()
@@ -120,10 +148,14 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
 
         assert found or after_status == JobStatus.RUNNING
 
-    def test_retrieve_returned_jobs(self):
+    def test_retrieve_returned_jobs(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        job = submit_bell_job()
         job.wait_for_final_state()
         rjobs = service.jobs(pending=False)
         found = False
@@ -134,38 +166,46 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         assert found
 
-    def test_retrieve_jobs_by_program_id(self):
+    def test_retrieve_jobs_by_program_id(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs by Program ID."""
-        service = self.service
+        service = dependencies.service
         program_id = "sampler"
         jobs = service.jobs(program_id=program_id)
         for job in jobs:
             assert program_id == job.primitive_id
 
-    def test_retrieve_jobs_by_job_tags(self):
+    def test_retrieve_jobs_by_job_tags(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving jobs by job_tags."""
-        service = self.service
+        service = dependencies.service
         job_tags = ["job_tag_test"]
-        job = self.submit_bell_job(service, job_tags=job_tags)
+        job = submit_bell_job(job_tags=job_tags)
         job.wait_for_final_state()
         rjobs = service.jobs(job_tags=job_tags)
         assert job.job_id() in [j.job_id() for j in rjobs]
         rjobs = service.jobs(job_tags=["no_test_tag"])
         assert not rjobs
 
-    def test_retrieve_jobs_by_instance(self):
+    def test_retrieve_jobs_by_instance(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs by instance."""
-        service = self.service
-        instance = self.dependencies.instance
+        service = dependencies.service
+        instance = dependencies.instance
         rjobs = service.jobs(instance=instance)
         for job in rjobs:
             assert instance == job.instance
 
-    def test_jobs_filter_by_date(self):
+    def test_jobs_filter_by_date(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving jobs by creation date."""
-        service = self.service
+        service = dependencies.service
         current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
         time_after_job = datetime.now(timezone.utc) + timedelta(minutes=1)
         rjobs = service.jobs(
@@ -176,37 +216,49 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             assert job.creation_date <= time_after_job
             assert job.creation_date >= current_time
 
-    def test_retrieve_jobs_sorted_by_date(self):
+    def test_retrieve_jobs_sorted_by_date(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test retrieving jobs sorted by the date."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        # Use a unique tag, so that only the jobs submitted by this test are retrieved.
+        job_tags = [uuid.uuid4().hex[:16]]
+        job = submit_bell_job(job_tags=job_tags)
         job.wait_for_final_state()
-        job_2 = self.submit_bell_job(service)
+        job_2 = submit_bell_job(job_tags=job_tags)
         job_2.wait_for_final_state()
-        rjobs = service.jobs()
-        rjobs_desc = service.jobs(descending=True)
 
-        # The two jobs just submitted are returned newest first
-        assert rjobs[0].job_id() == job_2.job_id()
-        assert rjobs[1].job_id() == job.job_id()
-        assert [job.job_id() for job in rjobs] == [job.job_id() for job in rjobs_desc]
+        rjobs = service.jobs(job_tags=job_tags)
+        rjobs_ascending = service.jobs(job_tags=job_tags, descending=False)
 
-    def test_retrieve_jobs_backend(self):
+        # The jobs are returned newest first by default, oldest first when requested.
+        assert [rjob.job_id() for rjob in rjobs] == [job_2.job_id(), job.job_id()]
+        assert [rjob.job_id() for rjob in rjobs_ascending] == [job.job_id(), job_2.job_id()]
+
+    def test_retrieve_jobs_backend(
+        self, backend_test: IBMBackend | None, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test retrieving jobs with backend filter."""
-        service = self.service
-        backend_name = self.test_backend.name
+        service = dependencies.service
+        backend_name = backend_test.name
         jobs = service.jobs(backend_name=backend_name)
         for job in jobs:
             assert backend_name == job.backend().name
 
-    def test_retrieve_jobs_include_mocks(self):
+    def test_retrieve_jobs_include_mocks(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """`service.jobs()` should respect the `include_mocks` flag."""
-        service = self.service
+        service = dependencies.service
         # Skip the test if there are no mock backends.
         _, mock_backend = get_mock_backend_pair(service)
 
         # Submit job against the mock device.
-        job = self.submit_bell_job(service, backend_name=mock_backend.name)
+        job = submit_bell_job(backend_name=mock_backend.name)
         jobs_no_mocks = service.jobs(limit=1)
         jobs_include_mocks = service.jobs(limit=1, include_mocks=True)
 
