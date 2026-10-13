@@ -431,7 +431,7 @@ class TestTwirledSliceSpan:
         # reminder: ((3, 1, 5), True, slice(1), slice(2, 4))
         mask1 = np.zeros((3, 1, 5), dtype=bool)
         mask1.reshape((3, 5))[:1, 2:4] = True
-        mask1 = mask1.transpose((1, 0, 2)).reshape((1, 15))
+        mask1 = mask1.transpose((1, 0, 2)).reshape((1, 15))  # type: ignore[assignment]
         npt.assert_array_equal(span1.mask(2), mask1)
 
         # reminder: ((1, 5, 2, 3), False, slice(3,9), slice(1, 3)),
