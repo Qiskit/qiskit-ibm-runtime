@@ -14,10 +14,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-from ddt import data, ddt
+import pytest
+from qiskit.primitives import PrimitiveResult
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -25,10 +26,11 @@ from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 
 from ..utils import make_mirror_circuit_with_phases
-from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
+
+    from .case import IntegrationTestDependencies
 
 
 def estimator_pubs(backend: IBMBackend) -> list[tuple]:
@@ -54,18 +56,17 @@ def estimator_pubs(backend: IBMBackend) -> list[tuple]:
     ]
 
 
-@ddt
-class TestEstimator(IBMIntegrationTestCase):
+class TestEstimator:
     """An integration test, testing Estimator implemented through Executor."""
 
-    def test_vanilla_estimator(self):
+    def test_vanilla_estimator(self, dependencies: IntegrationTestDependencies) -> None:
         """Test the "vanilla" path (no mitigation) for estimator.
 
         Tests
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
@@ -80,14 +81,14 @@ class TestEstimator(IBMIntegrationTestCase):
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
-    def test_pec_estimator(self):
+    def test_pec_estimator(self, dependencies: IntegrationTestDependencies) -> None:
         """Test the PEC path for estimator.
 
         Tests
         - Job completes without exceptions
         - Correct expectation value shapes
         """
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
@@ -110,8 +111,10 @@ class TestEstimator(IBMIntegrationTestCase):
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
-    @data("gate_folding", "pea")
-    def test_zne_estimator(self, amplifier):
+    @pytest.mark.parametrize("amplifier", ["gate_folding", "pea"])
+    def test_zne_estimator(
+        self, amplifier: Literal["gate_folding", "pea"], dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test the ZNE path for estimator, parameterized over the noise amplifier.
 
         Tests
@@ -126,7 +129,7 @@ class TestEstimator(IBMIntegrationTestCase):
         - Correct shape and make-up for all ZNE-specific pub metadata fields:
             * ``extrapolators``: pub shape, only requested extrapolators or `multiple`.
         """
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
@@ -148,6 +151,7 @@ class TestEstimator(IBMIntegrationTestCase):
         results = estimator.run(pubs).result()
 
         # Expect one result per pub:
+        assert isinstance(results, PrimitiveResult)
         assert len(results) == 2
 
         for pub_idx, expected_pub_shape in enumerate([(2, 2), (2,)]):

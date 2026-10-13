@@ -17,7 +17,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-from unittest import SkipTest
+
+import pytest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from test.ibm_test_case import IBMTestCase
@@ -48,8 +49,6 @@ def integration_test_dependencies(init_service: bool = True) -> IntegrationTestD
     Returns:
         The dependencies of an integration test.
 
-    Raises:
-        SkipTest: if the environment does not provide a token and a url.
     """
     channel: ChannelType = "ibm_quantum_platform"
     token = os.getenv("QISKIT_IBM_TOKEN")
@@ -57,7 +56,7 @@ def integration_test_dependencies(init_service: bool = True) -> IntegrationTestD
     instance = os.getenv("QISKIT_IBM_INSTANCE")
 
     if not token or not url:
-        raise SkipTest("No integration test credentials available.")
+        pytest.skip("No integration test credentials available.")
 
     service = (
         QiskitRuntimeService(channel=channel, token=token, url=url, instance=instance)

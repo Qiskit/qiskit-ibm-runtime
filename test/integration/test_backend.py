@@ -19,7 +19,6 @@ import logging
 import re
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest import SkipTest
 
 import pytest
 from qiskit import QuantumCircuit, transpile
@@ -32,7 +31,6 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
-from .case import IBMIntegrationTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -47,11 +45,7 @@ def backend(dependencies: IntegrationTestDependencies) -> IBMBackend:
 
 
 def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IBMBackend]:
-    """Return a pair of backends: real backend, mocked backend.
-
-    Raises:
-        SkipTest: if no backend that has a corresponding mock backend is available.
-    """
+    """Return a pair of backends: real backend, mocked backend."""
     backends = service.backends(include_mocks=True)
 
     try:
@@ -64,61 +58,61 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
         backend_name = re.sub(r"^[^_]+", "ibm", dry_run_backend.name)
         return service.backend(backend_name), dry_run_backend
     except (StopIteration, QiskitBackendNotFoundError):
-        raise SkipTest("No backend with corresponding mock backend available.")
+        pytest.skip("No backend with corresponding mock backend available.")
 
 
-class TestIntegrationBackend(IBMIntegrationTestCase):
+class TestIntegrationBackend:
     """Integration tests for backend functions."""
 
-    def test_least_busy(self):
+    def test_least_busy(self, dependencies: IntegrationTestDependencies) -> None:
         """Test the least busy method."""
-        service = self.service
+        service = dependencies.service
         # test passing an instance
-        instance = self.dependencies.instance
+        instance = dependencies.instance
         backend = service.least_busy(instance=instance)
         assert instance == backend._instance
 
         # test when there is no instance
         service_with_no_default_instance = QiskitRuntimeService(
-            token=self.dependencies.token,
+            token=dependencies.token,
             channel="ibm_quantum_platform",
-            url=self.dependencies.url,
+            url=dependencies.url,
         )
         backend = service_with_no_default_instance.least_busy()
         assert backend
 
-    def test_backends(self):
+    def test_backends(self, dependencies: IntegrationTestDependencies) -> None:
         """Test getting all backends."""
-        service = self.service
+        service = dependencies.service
         backends = service.backends()
         assert backends
         backend_names = [back.name for back in backends]
         assert len(backend_names) == len(set(backend_names))
 
-    def test_get_backend(self):
+    def test_get_backend(self, dependencies: IntegrationTestDependencies) -> None:
         """Test getting a backend."""
-        service = self.service
+        service = dependencies.service
         backends = service.backends()
         backend = service.backend(backends[0].name)
         assert backend
 
-    def test_target_reset(self):
+    def test_target_reset(self, dependencies: IntegrationTestDependencies) -> None:
         """Test confirming target contains reset."""
-        service = self.service
-        backend = service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         assert "reset" in backend.target
 
-    def test_backends_physical_qubits(self):
+    def test_backends_physical_qubits(self, dependencies: IntegrationTestDependencies) -> None:
         """All backends should have a `physical_qubits` property."""
-        service = self.service
+        service = dependencies.service
         backends = service.backends()
 
         for backend in backends:
             assert isinstance(backend.physical_qubits, int)
 
-    def test_backends_include_mocks(self):
+    def test_backends_include_mocks(self, dependencies: IntegrationTestDependencies) -> None:
         """`service.backends()` should respect the `include_mocks` flag."""
-        service = self.service
+        service = dependencies.service
         # Skip the test if there are no mock backends.
         get_mock_backend_pair(service)
 
