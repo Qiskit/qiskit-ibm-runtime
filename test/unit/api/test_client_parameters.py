@@ -17,14 +17,12 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Any
 
-from ddt import ddt, named_data
+import pytest
 from requests_ntlm import HttpNtlmAuth
 
 from qiskit_ibm_runtime.api.auth import CloudAuth
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
-
-from ...ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -56,8 +54,7 @@ def client_params(
     )
 
 
-@ddt
-class TestClientParameters(IBMTestCase):
+class TestClientParameters:
     """Test for ``ClientParameters``."""
 
     def test_no_proxy_params(self) -> None:
@@ -83,58 +80,70 @@ class TestClientParameters(IBMTestCase):
         result = proxies_only_credentials.connection_parameters()
         assert proxies_only_expected_result == result
 
-    @named_data(
-        (
+    @pytest.mark.parametrize(
+        ("channel", "instance", "url", "url_resolver", "expected_url"),
+        [
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
+                "https://cloud.ibm.com",
+                None,
+                "https://quantum.cloud.ibm.com/api/v1",
+            ),
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://cloud.ibm.com",
+                None,
+                "https://my-region.quantum.cloud.ibm.com/api/v1",
+            ),
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+                None,
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+            ),
+            (
+                "ibm_cloud",
+                "crn",
+                "https://auth.quantum.ibm.com/api",
+                None,
+                "https://auth.quantum.ibm.com/api",
+            ),
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+                lambda a, b, c, _: f"{a}:{b}:{c}",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud:"
+                + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
+            ),
+            (
+                "ibm_cloud",
+                "crn",
+                "https://auth.quantum.ibm.com/api",
+                lambda a, b, c, _: f"{a}:{b}:{c}",
+                "https://auth.quantum.ibm.com/api:crn:False",
+            ),
+        ],
+        ids=[
             "default_region",
-            "ibm_cloud",
-            "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
-            "https://cloud.ibm.com",
-            None,
-            "https://quantum.cloud.ibm.com/api/v1",
-        ),
-        (
             "other_region",
-            "ibm_cloud",
-            "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-            "https://cloud.ibm.com",
-            None,
-            "https://my-region.quantum.cloud.ibm.com/api/v1",
-        ),
-        (
             "custom_url",
-            "ibm_cloud",
-            "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
-            None,
-            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
-        ),
-        (
             "instance_without_region",
-            "ibm_cloud",
-            "crn",
-            "https://auth.quantum.ibm.com/api",
-            None,
-            "https://auth.quantum.ibm.com/api",
-        ),
-        (
             "url_resolver",
-            "ibm_cloud",
-            "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
-            lambda a, b, c, _: f"{a}:{b}:{c}",
-            "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud:"
-            + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
-        ),
-        (
             "url_resolver_with_instance_without_region",
-            "ibm_cloud",
-            "crn",
-            "https://auth.quantum.ibm.com/api",
-            lambda a, b, c, _: f"{a}:{b}:{c}",
-            "https://auth.quantum.ibm.com/api:crn:False",
-        ),
+        ],
     )
-    def test_get_runtime_api_base_url(self, channel, instance, url, url_resolver, expected_url):
+    def test_get_runtime_api_base_url(
+        self,
+        channel: str,
+        instance: str,
+        url: str,
+        url_resolver: Callable | None,
+        expected_url: str,
+    ) -> None:
         """Test resolution of runtime API base URL."""
         params = client_params(
             channel=channel, instance=instance, url=url, url_resolver=url_resolver
@@ -180,10 +189,10 @@ class TestClientParameters(IBMTestCase):
         )
         # Should raise when trying to do username.split('\\', <int>)
         # in NTLM credentials due to int not facilitating 'split'.
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             _ = malformed_ntlm_credentials.connection_parameters()
 
-    def test_auth_handler_cloud(self):
+    def test_auth_handler_cloud(self) -> None:
         """Test getting cloud auth handler."""
         token = uuid.uuid4().hex
         instance = uuid.uuid4().hex
@@ -192,19 +201,19 @@ class TestClientParameters(IBMTestCase):
             channel="ibm_quantum_platform",
             token=token,
             instance=instance,
-            proxies=ProxyConfiguration(**{"urls": MOCK_PROXIES_URLS}),
+            proxies=ProxyConfiguration(urls=MOCK_PROXIES_URLS),
             verify=False,
         )
         handler = params.get_auth_handler()
         assert isinstance(handler, CloudAuth)
 
-        with self.assertWarnsRegex(UserWarning, "Unable to retrieve"):
+        with pytest.warns(UserWarning, match="Unable to retrieve"):
             headers = handler.get_headers()
         assert f"apikey {token}" in headers.values()
 
         # Use a new handler, for avoiding delay in second response.
         handler = params.get_auth_handler()
-        with self.assertWarnsRegex(UserWarning, "Unable to retrieve"):
+        with pytest.warns(UserWarning, match="Unable to retrieve"):
             headers = handler.get_headers()
         assert f"apikey {token}" in headers.values()
         assert handler.tm.disable_ssl_verification == (not verify)
