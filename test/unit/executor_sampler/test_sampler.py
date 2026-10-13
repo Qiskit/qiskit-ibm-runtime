@@ -12,10 +12,10 @@
 
 """Tests for client-side Sampler."""
 
-from unittest import skipUnless
+from __future__ import annotations
 
 import numpy as np
-from ddt import data, ddt
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -29,17 +29,14 @@ from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
 
-from ...decorators import mock_responses
-from ...ibm_test_case import IBMTestCase
-from ...registries import OneInstanceDryRunRegistry
+from ...registries import BaseRegistry, OneInstanceDryRunRegistry
 
 
-@ddt
-class TestSamplerSimpleCircuits(IBMTestCase):
+class TestSamplerSimpleCircuits:
     """Tests for Sampler with simple (non-parametric) circuits."""
 
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_dry_run(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry: BaseRegistry) -> None:
         """Sampler can run in `dry-run` mode."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
@@ -52,9 +49,8 @@ class TestSamplerSimpleCircuits(IBMTestCase):
         job = sampler.run([circuit], dry_run=True)
         assert job.backend().name == "mock_foo"
 
-    @data("job", "session", "batch")
-    @mock_responses
-    def test_mode_handling(self, mode_id, registry):
+    @pytest.mark.parametrize("mode_id", ["job", "session", "batch"])
+    def test_mode_handling(self, mode_id: str, registry: BaseRegistry) -> None:
         """Sampler `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -86,10 +82,10 @@ class TestSamplerSimpleCircuits(IBMTestCase):
         assert job._session_id == expected_session_id
 
 
-class TestSamplerCircuitValidation(IBMTestCase):
+class TestSamplerCircuitValidation:
     """Tests for circuit validation in Sampler."""
 
-    def test_multiple_circuits_one_with_box_raises_error(self):
+    def test_multiple_circuits_one_with_box_raises_error(self) -> None:
         """Test that BoxOp in any circuit raises an error."""
         circuit1 = QuantumCircuit(1, 1)
         circuit1.h(0)
@@ -104,15 +100,15 @@ class TestSamplerCircuitValidation(IBMTestCase):
 
         sampler = Sampler(mode=FakeVigoV2())
 
-        with self.assertRaisesRegex(IBMInputValueError, "BoxOp"):
+        with pytest.raises(IBMInputValueError, match="BoxOp"):
             sampler.run([circuit1, circuit2], shots=1024)
 
 
-@skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-class TestSamplerSimulatorMode(IBMTestCase):
+@pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+class TestSamplerSimulatorMode:
     """Tests for Sampler with simulator backends (local mode)."""
 
-    def test_simulator_mode_uses_backend_sampler(self):
+    def test_simulator_mode_uses_backend_sampler(self) -> None:
         """Test that simulator mode uses BackendSampler instead of Executor."""
         backend = GenericBackendV2(num_qubits=5)
 
@@ -142,7 +138,7 @@ class TestSamplerSimulatorMode(IBMTestCase):
         # Total counts should equal shots
         assert sum(counts.values()) == 100
 
-    def test_simulator_options_seed(self):
+    def test_simulator_options_seed(self) -> None:
         """Test that simulator seed option produces deterministic results."""
         backend = GenericBackendV2(num_qubits=5)
 
@@ -187,7 +183,7 @@ class TestSamplerSimulatorMode(IBMTestCase):
         # Results should be different with different seed
         assert counts1 != counts3
 
-    def test_simulator_with_general_test_case(self):
+    def test_simulator_with_general_test_case(self) -> None:
         """Test simulator mode with comprehensive simulator options.
 
         This test exercises all available simulator options:

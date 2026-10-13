@@ -12,9 +12,12 @@
 
 """Tests for dynamical decoupling utilities."""
 
+from __future__ import annotations
+
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
 from qiskit.circuit import Delay, Parameter, QuantumCircuit
 from qiskit.circuit.library import Measure, RZGate, XGate
 from qiskit.transpiler import PassManager
@@ -37,13 +40,11 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.dynamical_decoupling import DynamicalDecouplingOptions
 from qiskit_ibm_runtime.quantum_program.quantum_program import QuantumProgram
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestMakeDDSequence(IBMTestCase):
+class TestMakeDDSequence:
     """Tests for make_dd_sequence function."""
 
-    def test_xx_sequence(self):
+    def test_xx_sequence(self) -> None:
         """Test XX sequence generation."""
         dd_sequence, spacing = make_dd_sequence("XX")
 
@@ -54,12 +55,12 @@ class TestMakeDDSequence(IBMTestCase):
 
         # Check spacing
         assert len(spacing) == 3  # len(dd_sequence) + 1
-        self.assertAlmostEqual(sum(spacing), 1.0)
-        self.assertAlmostEqual(spacing[0], 0.25)  # delay/2
-        self.assertAlmostEqual(spacing[1], 0.5)  # delay
-        self.assertAlmostEqual(spacing[2], 0.25)  # delay/2
+        assert sum(spacing) == pytest.approx(1.0)
+        assert spacing[0] == pytest.approx(0.25)  # delay/2
+        assert spacing[1] == pytest.approx(0.5)  # delay
+        assert spacing[2] == pytest.approx(0.25)  # delay/2
 
-    def test_xpxm_sequence(self):
+    def test_xpxm_sequence(self) -> None:
         """Test XpXm sequence generation."""
         dd_sequence, spacing = make_dd_sequence("XpXm")
 
@@ -71,21 +72,21 @@ class TestMakeDDSequence(IBMTestCase):
         assert isinstance(dd_sequence[3], RZGate)
 
         # Check RZ angles
-        self.assertAlmostEqual(dd_sequence[1].params[0], np.pi)
-        self.assertAlmostEqual(dd_sequence[3].params[0], -np.pi)
+        assert dd_sequence[1].params[0] == pytest.approx(np.pi)
+        assert dd_sequence[3].params[0] == pytest.approx(-np.pi)
 
         # Check spacing: [0.25, 0.5, 0, 0, 0.25]
         # First sequence (_xp) gets 0.25, second sequence (_xm) gets 0.5 then 2 zeros for its
         # extra gates
         assert len(spacing) == 5  # 2 sequences + 1
-        self.assertAlmostEqual(sum(spacing), 1.0)
-        self.assertAlmostEqual(spacing[0], 0.25)  # delay/2 before first sequence
-        self.assertAlmostEqual(spacing[1], 0.5)  # delay before second sequence
-        self.assertAlmostEqual(spacing[2], 0)  # zero for multi-gate sequence (_xm)
-        self.assertAlmostEqual(spacing[3], 0)  # zero for multi-gate sequence (_xm)
-        self.assertAlmostEqual(spacing[4], 0.25)  # delay/2 after last sequence
+        assert sum(spacing) == pytest.approx(1.0)
+        assert spacing[0] == pytest.approx(0.25)  # delay/2 before first sequence
+        assert spacing[1] == pytest.approx(0.5)  # delay before second sequence
+        assert spacing[2] == pytest.approx(0)  # zero for multi-gate sequence (_xm)
+        assert spacing[3] == pytest.approx(0)  # zero for multi-gate sequence (_xm)
+        assert spacing[4] == pytest.approx(0.25)  # delay/2 after last sequence
 
-    def test_xy4_sequence(self):
+    def test_xy4_sequence(self) -> None:
         """Test XY4 sequence generation."""
         dd_sequence, spacing = make_dd_sequence("XY4")
 
@@ -97,34 +98,34 @@ class TestMakeDDSequence(IBMTestCase):
         # Check spacing: [0.125, 0.25, 0, 0, 0.25, 0, 0, 0.25, 0, 0, 0.125]
         # Spacing has: initial + (4 sequences with delays) + (0+2+2+2 zeros for multi-gate) + final
         assert len(spacing) == 11  # 1 + 4 + 6 + 1 - 1 = 11
-        self.assertAlmostEqual(sum(spacing), 1.0)
+        assert sum(spacing) == pytest.approx(1.0)
 
         # Check spacing values for 4 sequences
-        self.assertAlmostEqual(spacing[0], 0.125)  # delay/2 for 4 sequences
-        self.assertAlmostEqual(spacing[1], 0.25)  # delay for sequence 2
-        self.assertAlmostEqual(spacing[4], 0.25)  # delay for sequence 3
-        self.assertAlmostEqual(spacing[7], 0.25)  # delay for sequence 4
-        self.assertAlmostEqual(spacing[10], 0.125)  # delay/2 at end
+        assert spacing[0] == pytest.approx(0.125)  # delay/2 for 4 sequences
+        assert spacing[1] == pytest.approx(0.25)  # delay for sequence 2
+        assert spacing[4] == pytest.approx(0.25)  # delay for sequence 3
+        assert spacing[7] == pytest.approx(0.25)  # delay for sequence 4
+        assert spacing[10] == pytest.approx(0.125)  # delay/2 at end
 
-    def test_invalid_sequence_type(self):
+    def test_invalid_sequence_type(self) -> None:
         """Test that invalid sequence type raises ValueError."""
-        with self.assertRaises(ValueError) as context:
-            make_dd_sequence("INVALID")
+        with pytest.raises(ValueError) as context:
+            make_dd_sequence("INVALID")  # type: ignore[arg-type]
 
-        assert "Unknown sequence" in str(context.exception)
+        assert "Unknown sequence" in str(context.value)
 
 
-class TestGenerateDDPassManager(IBMTestCase):
+class TestGenerateDDPassManager:
     """Tests for generate_dd_pass_manager function."""
 
-    def test_returns_pass_manager(self):
+    def test_returns_pass_manager(self) -> None:
         """Test that function returns a PassManager."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
         pm = generate_dd_pass_manager(backend=backend, options=options)
         assert isinstance(pm, PassManager)
 
-    def test_pass_manager_has_correct_number_of_passes(self):
+    def test_pass_manager_has_correct_number_of_passes(self) -> None:
         """Test that pass manager contains exactly 4 passes."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
@@ -136,7 +137,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         # Should have: TimeUnitConversion, Scheduling, PadDynamicalDecoupling, PadDelay
         assert len(passes) == 4
 
-    def test_alap_scheduling_pass_is_used(self):
+    def test_alap_scheduling_pass_is_used(self) -> None:
         """Test that ALAP scheduling pass is used when specified."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
@@ -150,7 +151,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         # Second pass should be ALAPScheduleAnalysis
         assert isinstance(passes[1], ALAPScheduleAnalysis)
 
-    def test_asap_scheduling_pass_is_used(self):
+    def test_asap_scheduling_pass_is_used(self) -> None:
         """Test that ASAP scheduling pass is used when specified."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
@@ -164,7 +165,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         # Second pass should be ASAPScheduleAnalysis
         assert isinstance(passes[1], ASAPScheduleAnalysis)
 
-    def test_time_unit_conversion_pass_is_first(self):
+    def test_time_unit_conversion_pass_is_first(self) -> None:
         """Test that TimeUnitConversion is the first pass."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
@@ -175,7 +176,7 @@ class TestGenerateDDPassManager(IBMTestCase):
 
         assert isinstance(passes[0], TimeUnitConversion)
 
-    def test_pad_dynamical_decoupling_pass_has_correct_target(self):
+    def test_pad_dynamical_decoupling_pass_has_correct_target(self) -> None:
         """Test that PadDynamicalDecoupling pass has correct target."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
@@ -189,7 +190,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         assert isinstance(dd_pass, PadDynamicalDecoupling)
         assert dd_pass.target == backend.target
 
-    def test_pad_dynamical_decoupling_pass_has_xx_sequence(self):
+    def test_pad_dynamical_decoupling_pass_has_xx_sequence(self) -> None:
         """Test that PadDynamicalDecoupling has correct XX sequence."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
@@ -203,7 +204,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         assert isinstance(dd_pass._dd_sequence[0], XGate)
         assert isinstance(dd_pass._dd_sequence[1], XGate)
 
-    def test_pad_dynamical_decoupling_pass_has_xpxm_sequence(self):
+    def test_pad_dynamical_decoupling_pass_has_xpxm_sequence(self) -> None:
         """Test that PadDynamicalDecoupling has correct XpXm sequence."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XpXm")
@@ -219,7 +220,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         assert isinstance(dd_pass._dd_sequence[2], XGate)
         assert isinstance(dd_pass._dd_sequence[3], RZGate)
 
-    def test_pad_dynamical_decoupling_pass_has_xy4_sequence(self):
+    def test_pad_dynamical_decoupling_pass_has_xy4_sequence(self) -> None:
         """Test that PadDynamicalDecoupling has correct XY4 sequence."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XY4")
@@ -231,7 +232,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         # XY4 sequence should have 10 gates total
         assert len(dd_pass._dd_sequence) == 10
 
-    def test_pad_dynamical_decoupling_pass_extra_slack_distribution_is_propagated(self):
+    def test_pad_dynamical_decoupling_pass_extra_slack_distribution_is_propagated(self) -> None:
         """Test that extra_slack_distribution is propagated."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
@@ -246,7 +247,7 @@ class TestGenerateDDPassManager(IBMTestCase):
 
         assert dd_pass._extra_slack_distribution == "edges"
 
-    def test_pad_dynamical_decoupling_pass_skip_reset_qubits_is_propagated(self):
+    def test_pad_dynamical_decoupling_pass_skip_reset_qubits_is_propagated(self) -> None:
         """Test that skip_reset_qubits is propagated."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(
@@ -259,7 +260,7 @@ class TestGenerateDDPassManager(IBMTestCase):
 
         assert not dd_pass._skip_reset_qubits
 
-    def test_pad_delay_pass_is_last(self):
+    def test_pad_delay_pass_is_last(self) -> None:
         """Test that PadDelay is the last pass."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
@@ -272,7 +273,7 @@ class TestGenerateDDPassManager(IBMTestCase):
         assert isinstance(passes[3], PadDelay)
         assert passes[3].target == backend.target
 
-    def test_backend_without_target_raises_error(self):
+    def test_backend_without_target_raises_error(self) -> None:
         """Test that backend without target raises ValueError."""
 
         # Create a mock backend without target
@@ -283,12 +284,12 @@ class TestGenerateDDPassManager(IBMTestCase):
 
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
 
-        with self.assertRaises(ValueError) as context:
-            generate_dd_pass_manager(backend=MockBackend(), options=options)  # type: ignore
+        with pytest.raises(ValueError) as context:
+            generate_dd_pass_manager(backend=MockBackend(), options=options)  # type: ignore[arg-type]
 
-        assert "must have a target" in str(context.exception)
+        assert "must have a target" in str(context.value)
 
-    def test_pass_manager_applies_xx_sequence_correctly(self):
+    def test_pass_manager_applies_xx_sequence_correctly(self) -> None:
         """Test that XX DD sequence is applied correctly to circuit."""
         backend = FakeManilaV2()
         options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
@@ -332,19 +333,16 @@ class TestGenerateDDPassManager(IBMTestCase):
 
         # For XX sequence, spacing is [0.25, 0.5, 0.25] of total delay time, but granularity is
         # enforced.
-        self.assertAlmostEqual(
-            delays_q2[0], np.floor(total_delay * 0.25 / granualrity) * granualrity
-        )
-        self.assertAlmostEqual(
-            delays_q2[2], np.floor(total_delay * 0.25 / granualrity) * granualrity
-        )
+        expected_delay = np.floor(total_delay * 0.25 / granualrity) * granualrity
+        assert delays_q2[0] == pytest.approx(expected_delay)
+        assert delays_q2[2] == pytest.approx(expected_delay)
 
 
-class TestApplyDynamicalDecoupling(IBMTestCase):
+class TestApplyDynamicalDecoupling:
     """Tests for apply_dynamical_decoupling function."""
 
     @patch("qiskit_ibm_runtime.executor.dynamical_decoupling.generate_dd_pass_manager")
-    def test_pass_manager_called_once_per_item(self, mock_generate_pm):
+    def test_pass_manager_called_once_per_item(self, mock_generate_pm: MagicMock) -> None:
         """Test that pass manager is called once per item with mixed CircuitItem and SamplexItem."""
         backend = FakeManilaV2()
         # Create a mock pass manager
