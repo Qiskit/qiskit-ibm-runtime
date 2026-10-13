@@ -13,8 +13,9 @@
 """Tests for options.utils."""
 
 from dataclasses import asdict
+from typing import Any
 
-from ddt import data, ddt
+import pytest
 
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.options.utils import (
@@ -25,35 +26,36 @@ from qiskit_ibm_runtime.options.utils import (
 )
 
 from ...asserts import assert_dict_keys_equal, assert_dict_partially_equal
-from ...ibm_test_case import IBMTestCase
 
 
-@ddt
-class TestOptionsUtils(IBMTestCase):
+class TestOptionsUtils:
     """Class for testing the options.utils."""
 
-    @data(
-        {},
-        {"resilience_level": 9},
-        {"default_shots": 99, "seed_estimator": 42},
-        {"resilience_level": 99, "default_shots": 98},
-        {
-            "environment": {"log_level": "INFO"},
-        },
-        {
-            "resilience": {
-                "measure_noise_learning": {"num_randomizations": 1},
-                "zne": {"extrapolator": "linear"},
-            }
-        },
-        {
-            "resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 1.5, 2]}},
-            "experimental": {
-                "resilience": {"zne": {"extrapolator": ["linear"]}},
+    @pytest.mark.parametrize(
+        "new_ops",
+        [
+            {},
+            {"resilience_level": 9},
+            {"default_shots": 99, "seed_estimator": 42},
+            {"resilience_level": 99, "default_shots": 98},
+            {
+                "environment": {"log_level": "INFO"},
             },
-        },
+            {
+                "resilience": {
+                    "measure_noise_learning": {"num_randomizations": 1},
+                    "zne": {"extrapolator": "linear"},
+                }
+            },
+            {
+                "resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 1.5, 2]}},
+                "experimental": {
+                    "resilience": {"zne": {"extrapolator": ["linear"]}},
+                },
+            },
+        ],
     )
-    def test_merge_estimator_options(self, new_ops):
+    def test_merge_estimator_options(self, new_ops: dict[str, Any]) -> None:
         """Test merging estimator options."""
         options = EstimatorOptions()
         combined = merge_options_v2(asdict(options), new_ops)
@@ -63,14 +65,17 @@ class TestOptionsUtils(IBMTestCase):
         # Make sure the structure didn't change.
         assert_dict_keys_equal(combined, asdict(options), exclude_keys=["experimental"])
 
-    @data(
-        {},
-        {"default_shots": 1000},
-        {"environment": {"log_level": "INFO"}, "dynamical_decoupling": {"enable": True}},
-        {"execution": {"init_qubits": False}},
-        {"twirling": {"enable_gates": True}, "experimental": {"twirling": {"foo": "bar"}}},
+    @pytest.mark.parametrize(
+        "new_ops",
+        [
+            {},
+            {"default_shots": 1000},
+            {"environment": {"log_level": "INFO"}, "dynamical_decoupling": {"enable": True}},
+            {"execution": {"init_qubits": False}},
+            {"twirling": {"enable_gates": True}, "experimental": {"twirling": {"foo": "bar"}}},
+        ],
     )
-    def test_merge_sampler_options(self, new_ops):
+    def test_merge_sampler_options(self, new_ops: dict[str, Any]) -> None:
         """Test merging sampler options."""
         options = SamplerOptions()
         combined = merge_options_v2(asdict(options), new_ops)
@@ -80,7 +85,7 @@ class TestOptionsUtils(IBMTestCase):
         # Make sure the structure didn't change.
         assert_dict_keys_equal(combined, asdict(options), exclude_keys=["experimental"])
 
-    def test_merge_options_v2_no_flat(self):
+    def test_merge_options_v2_no_flat(self) -> None:
         """Test merge_options_v2 does not combine keys at different level."""
         old_dict = {"nested_foo": {"foo": "bar1"}}
         new_dict = {"foo": "bar2"}
@@ -88,25 +93,31 @@ class TestOptionsUtils(IBMTestCase):
         combined = merge_options_v2(old_dict, new_dict)
         assert combined == expected
 
-    @data(
-        ({"foo": 1, "bar": Unset}, {"foo": 1}),
-        ({"foo": 1, "bar": 2}, {"foo": 1, "bar": 2}),
-        ({"foo": {"bar": Unset}}, {"foo": {}}),
-        ({"foo": False}, {"foo": False}),
+    @pytest.mark.parametrize(
+        "in_vals",
+        [
+            ({"foo": 1, "bar": Unset}, {"foo": 1}),
+            ({"foo": 1, "bar": 2}, {"foo": 1, "bar": 2}),
+            ({"foo": {"bar": Unset}}, {"foo": {}}),
+            ({"foo": False}, {"foo": False}),
+        ],
     )
-    def test_remove_dict_unset_values(self, in_vals):
+    def test_remove_dict_unset_values(self, in_vals: tuple[dict[str, Any], dict[str, Any]]) -> None:
         """Test removing dictionary with unset values."""
         in_dict, expected = in_vals
         remove_dict_unset_values(in_dict)
         assert in_dict == expected
 
-    @data(
-        ({"foo": 1, "bar": {}}, {"foo": 1}),
-        ({"foo": 1, "bar": 2}, {"foo": 1, "bar": 2}),
-        ({"foo": {"bar": {}}}, {}),
-        ({"foo": {"bar": {"foobar": {}}}}, {}),
+    @pytest.mark.parametrize(
+        "in_vals",
+        [
+            ({"foo": 1, "bar": {}}, {"foo": 1}),
+            ({"foo": 1, "bar": 2}, {"foo": 1, "bar": 2}),
+            ({"foo": {"bar": {}}}, {}),
+            ({"foo": {"bar": {"foobar": {}}}}, {}),
+        ],
     )
-    def test_remove_empty_dict(self, in_vals):
+    def test_remove_empty_dict(self, in_vals: tuple[dict[str, Any], dict[str, Any]]) -> None:
         """Test removing empty dict."""
         in_dict, expected = in_vals
         remove_empty_dict(in_dict)

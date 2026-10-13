@@ -13,9 +13,9 @@
 """Tests for SamplerOptions class."""
 
 from dataclasses import asdict
-from unittest import skipUnless
+from typing import Any
 
-from ddt import data, ddt
+import pytest
 from pydantic import ValidationError
 from qiskit.utils.optionals import HAS_AER
 
@@ -27,31 +27,32 @@ from ...asserts import (
     assert_dict_keys_equal,
     assert_dict_partially_equal,
 )
-from ...ibm_test_case import IBMTestCase
 from ...utils import get_mocked_backend, get_primitive_inputs
 
 if HAS_AER:
     from qiskit_aer.noise import NoiseModel
 
 
-@ddt
-class TestSamplerOptions(IBMTestCase):
+class TestSamplerOptions:
     """Class for testing the SamplerOptions class."""
 
-    @data(
-        {"optimization_level": 1},
-        {"default_shots": 0.1},
-        {"dynamical_decoupling": {"sequence_type": "foo"}},
-        {"execution": {"init_qubits": 2}},
+    @pytest.mark.parametrize(
+        "val",
+        [
+            {"optimization_level": 1},
+            {"default_shots": 0.1},
+            {"dynamical_decoupling": {"sequence_type": "foo"}},
+            {"execution": {"init_qubits": 2}},
+        ],
     )
-    def test_bad_inputs(self, val):
+    def test_bad_inputs(self, val: dict[str, Any]) -> None:
         """Test invalid inputs."""
-        with self.assertRaises(ValidationError) as exc:
+        with pytest.raises(ValidationError) as exc:
             SamplerOptions(**val)
-        assert list(val.keys())[0] in str(exc.exception)
+        assert list(val.keys())[0] in str(exc)
 
-    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-    def test_program_inputs(self):
+    @pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_program_inputs(self) -> None:
         """Test converting to program inputs from sampler options."""
         noise_model = NoiseModel()
         simulator = {
@@ -74,7 +75,7 @@ class TestSamplerOptions(IBMTestCase):
             twirling=twirling,
             execution=execution,
             experimental={"foo": "bar", "execution": {"secret": 88}},
-        )
+        )  # type: ignore[call-arg]
         execution.update(
             {
                 "secret": 88,
@@ -97,34 +98,40 @@ class TestSamplerOptions(IBMTestCase):
         inputs = opt._get_program_inputs(asdict(opt))
         assert inputs == expected
 
-    @data(
-        {},
-        {"default_shots": 1000},
-        {"simulator": {"seed_simulator": 42}},
-        {"default_shots": 1, "environment": {"log_level": "WARNING"}},
-        {"execution": {"init_qubits": True, "meas_type": "avg_kerneled"}},
-        {"dynamical_decoupling": {"enable": True, "sequence_type": "XX"}},
-        {"environment": {"log_level": "ERROR"}},
-        {"twirling": {"enable_gates": True, "strategy": "active"}},
+    @pytest.mark.parametrize(
+        "opts_dict",
+        [
+            {},
+            {"default_shots": 1000},
+            {"simulator": {"seed_simulator": 42}},
+            {"default_shots": 1, "environment": {"log_level": "WARNING"}},
+            {"execution": {"init_qubits": True, "meas_type": "avg_kerneled"}},
+            {"dynamical_decoupling": {"enable": True, "sequence_type": "XX"}},
+            {"environment": {"log_level": "ERROR"}},
+            {"twirling": {"enable_gates": True, "strategy": "active"}},
+        ],
     )
-    def test_init_options_with_dictionary(self, opts_dict):
+    def test_init_options_with_dictionary(self, opts_dict: dict[str, Any]) -> None:
         """Test initializing options with dictionaries."""
         options = asdict(SamplerOptions(**opts_dict))
         assert_dict_partially_equal(options, opts_dict)
         # Make sure the structure didn't change.
         assert_dict_keys_equal(asdict(SamplerOptions()), options)
 
-    @data(
-        {"default_shots": 4000},
-        {"max_execution_time": 200},
-        {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
-        {
-            "dynamical_decoupling": {"sequence_type": "XX"},
-            "environment": {"log_level": "INFO"},
-        },
-        {"twirling": {"enable_gates": True, "strategy": "active"}},
+    @pytest.mark.parametrize(
+        "new_opts",
+        [
+            {"default_shots": 4000},
+            {"max_execution_time": 200},
+            {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
+            {
+                "dynamical_decoupling": {"sequence_type": "XX"},
+                "environment": {"log_level": "INFO"},
+            },
+            {"twirling": {"enable_gates": True, "strategy": "active"}},
+        ],
     )
-    def test_update_options(self, new_opts):
+    def test_update_options(self, new_opts: dict[str, Any]) -> None:
         """Test update method."""
         options = SamplerOptions()
         options.update(**new_opts)
@@ -134,14 +141,17 @@ class TestSamplerOptions(IBMTestCase):
         # Make sure the structure didn't change.
         assert_dict_keys_equal(asdict(options), asdict(SamplerOptions()))
 
-    @data(
-        {"default_shots": 0},
-        {"execution": {"rep_delay": 0.0}},
+    @pytest.mark.parametrize(
+        "opt_dict",
+        [
+            {"default_shots": 0},
+            {"execution": {"rep_delay": 0.0}},
+        ],
     )
-    def test_zero_values(self, opt_dict):
+    def test_zero_values(self, opt_dict: dict[str, Any]) -> None:
         """Test options with values of 0."""
         backend = get_mocked_backend()
         sampler = Sampler(mode=backend, options=opt_dict)
         _ = sampler.run(**get_primitive_inputs(sampler))
-        options = backend.service._run.call_args.kwargs["inputs"]["options"]
+        options = backend.service._run.call_args.kwargs["inputs"]["options"]  # type: ignore[attr-defined]
         assert options == opt_dict
