@@ -12,9 +12,13 @@
 
 """Tests for the account manager functionality."""
 
+from __future__ import annotations
+
 import os
 import uuid
-from unittest import skipIf
+from typing import TYPE_CHECKING, Any
+
+import pytest
 
 from qiskit_ibm_runtime.accounts import (
     Account,
@@ -29,8 +33,11 @@ from qiskit_ibm_runtime.accounts.management import (
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from test.account import custom_envs, no_envs, temporary_account_config_file
-from test.decorators import mock_responses
-from test.ibm_test_case import IBMTestCase
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from test.registries import BaseRegistry
 
 _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",
@@ -54,7 +61,6 @@ _DEFAULT_CRN = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
 
 _TEST_IBM_CLOUD_ACCOUNT_DICT = _TEST_IBM_CLOUD_ACCOUNT.to_saved_format()
 _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT = _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format()
-_TEST_FILENAME = "/tmp/temp_qiskit_account.json"
 
 # An account on the legacy `ibm_quantum` channel, which is no longer listed.
 _TEST_IBM_QUANTUM_CLASSIC_ACCOUNT_DICT = {
@@ -91,15 +97,21 @@ _TEST_ACCOUNTS_WITH_DEFAULTS = {
 }
 
 
+@pytest.fixture
+def account_filename(tmp_path: Path) -> str:
+    """Return the path of an account file, unique to the test and not yet existing."""
+    return str(tmp_path / "account.json")
+
+
 # NamedTemporaryFiles not supported in Windows
-@skipIf(os.name == "nt", "Test not supported in Windows")
-class TestAccountManager(IBMTestCase):
+@pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+class TestAccountManager:
     """Tests for AccountManager class."""
 
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
-    def test_save_without_overwrite_cloud(self):
+    def test_save_without_overwrite_cloud(self, account_filename: str) -> None:
         """Test to overwrite an existing account without setting overwrite=True."""
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
                 name="conflict",
                 token=_TEST_IBM_CLOUD_ACCOUNT.token,
@@ -109,7 +121,7 @@ class TestAccountManager(IBMTestCase):
                 overwrite=False,
             )
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name="conflict",
             token=_TEST_IBM_CLOUD_ACCOUNT.token,
             url=_TEST_IBM_CLOUD_ACCOUNT.url,
@@ -117,9 +129,9 @@ class TestAccountManager(IBMTestCase):
             channel="ibm_cloud",
             overwrite=True,
         )
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
-                filename=_TEST_FILENAME,
+                filename=account_filename,
                 name="conflict",
                 token=_TEST_IBM_CLOUD_ACCOUNT.token,
                 url=_TEST_IBM_CLOUD_ACCOUNT.url,
@@ -129,9 +141,9 @@ class TestAccountManager(IBMTestCase):
             )
 
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT})
-    def test_save_without_overwrite_iqp(self):
+    def test_save_without_overwrite_iqp(self, account_filename: str) -> None:
         """Test to overwrite an existing account without setting overwrite=True."""
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
                 name="conflict",
                 token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
@@ -141,7 +153,7 @@ class TestAccountManager(IBMTestCase):
                 overwrite=False,
             )
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name="conflict",
             token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
             url=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.url,
@@ -149,9 +161,9 @@ class TestAccountManager(IBMTestCase):
             channel="ibm_cloud",
             overwrite=True,
         )
-        with self.assertRaises(AccountAlreadyExistsError):
+        with pytest.raises(AccountAlreadyExistsError):
             AccountManager.save(
-                filename=_TEST_FILENAME,
+                filename=account_filename,
                 name="conflict",
                 token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
                 url=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.url,
@@ -161,21 +173,21 @@ class TestAccountManager(IBMTestCase):
             )
 
     @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
-    def test_get_none(self):
+    def test_get_none(self) -> None:
         """Test to get an account with an invalid name."""
-        with self.assertRaises(AccountNotFoundError):
+        with pytest.raises(AccountNotFoundError):
             AccountManager.get(name="bla")
 
     @temporary_account_config_file(contents={})
     @no_envs(["QISKIT_IBM_TOKEN"])
-    def test_save_get(self):
+    def test_save_get(self, account_filename: str) -> None:
         """Test save and get."""
         # Each tuple contains the
         # - account to save
         # - the name passed to AccountManager.save
         # - the name passed to AccountManager.get
         # Every case is run against the default account file and against a custom one.
-        for file_name in (None, _TEST_FILENAME):
+        for file_name in (None, account_filename):
             for account, name_save, name_get in (
                 # verify accounts can be saved and retrieved via custom names
                 (_TEST_IBM_CLOUD_ACCOUNT, "acct-2", "acct-2"),
@@ -195,14 +207,15 @@ class TestAccountManager(IBMTestCase):
                     token=account.token,
                     url=account.url,
                     instance=account.instance,
-                    channel=account.channel,
+                    # `Account.channel` is a `str`, while `save` expects a literal.
+                    channel=account.channel,  # type: ignore[arg-type]
                     proxies=account.proxies,
                     verify=account.verify,
                     filename=file_name,
                     name=name_save,
                     overwrite=True,
                 )
-                self.assertEqual(account, AccountManager.get(filename=file_name, name=name_get))
+                assert account == AccountManager.get(filename=file_name, name=name_get)
 
     @temporary_account_config_file(
         contents={
@@ -211,70 +224,67 @@ class TestAccountManager(IBMTestCase):
             "key3": _TEST_IBM_QUANTUM_CLASSIC_ACCOUNT_DICT,
         }
     )
-    def test_list_skips_legacy_channel(self):
+    def test_list_skips_legacy_channel(self) -> None:
         """Test that listing accounts skips the ones on the legacy channel."""
         accounts = AccountManager.list()
 
-        self.assertEqual(len(accounts), 2)
-        self.assertEqual(accounts["key1"], _TEST_IBM_CLOUD_ACCOUNT)
-        self.assertEqual(accounts["key2"], _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT)
+        assert len(accounts) == 2
+        assert accounts["key1"] == _TEST_IBM_CLOUD_ACCOUNT
+        assert accounts["key2"] == _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT
 
     @temporary_account_config_file(contents=_TEST_ACCOUNTS_WITH_DEFAULTS)
-    def test_list_filtered(self):
+    def test_list_filtered(self) -> None:
         """Test listing accounts filtered by channel, by default, and by name."""
         accounts = list(AccountManager.list(channel="ibm_quantum_platform").keys())
-        self.assertEqual(len(accounts), 2)
-        self.assertListEqual(accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM])
+        assert len(accounts) == 2
+        assert accounts == ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM]
 
         accounts = list(AccountManager.list(channel="ibm_quantum_platform", default=False).keys())
-        self.assertEqual(len(accounts), 1)
-        self.assertListEqual(accounts, ["key2"])
+        assert len(accounts) == 1
+        assert accounts == ["key2"]
 
         accounts = list(AccountManager.list(name="key1").keys())
-        self.assertEqual(len(accounts), 1)
-        self.assertListEqual(accounts, ["key1"])
+        assert len(accounts) == 1
+        assert accounts == ["key1"]
 
     @temporary_account_config_file(contents=_TEST_NAMED_AND_DEFAULT_ACCOUNTS)
-    def test_delete_named_account(self):
+    def test_delete_named_account(self) -> None:
         """Test deleting an account by name."""
-        self.assertTrue(AccountManager.delete(name="key1"))
+        assert AccountManager.delete(name="key1")
         # Deleting the account a second time is a no-op.
-        self.assertFalse(AccountManager.delete(name="key1"))
+        assert not AccountManager.delete(name="key1")
 
     @temporary_account_config_file(contents=_TEST_NAMED_AND_DEFAULT_ACCOUNTS)
-    def test_delete_default_ibm_cloud_account(self):
+    def test_delete_default_ibm_cloud_account(self) -> None:
         """Test deleting the default `ibm_cloud` account."""
-        self.assertTrue(AccountManager.delete(channel="ibm_cloud"))
+        assert AccountManager.delete(channel="ibm_cloud")
         # Only the default `ibm_cloud` account is deleted.
-        self.assertEqual(len(AccountManager.list()), 2)
+        assert len(AccountManager.list()) == 2
 
     @temporary_account_config_file(contents=_TEST_NAMED_AND_DEFAULT_ACCOUNTS)
-    def test_delete_default_ibm_quantum_platform_account(self):
+    def test_delete_default_ibm_quantum_platform_account(self) -> None:
         """Test deleting the default `ibm_quantum_platform` account."""
-        self.assertTrue(AccountManager.delete())
+        assert AccountManager.delete()
         # Only the default `ibm_quantum_platform` account is deleted.
-        self.assertEqual(len(AccountManager.list()), 2)
+        assert len(AccountManager.list()) == 2
 
-    def test_delete_filename(self):
+    def test_delete_filename(self, account_filename: str) -> None:
         """Test delete accounts with filename parameter."""
-        filename = _TEST_FILENAME
+        filename = account_filename
         name = "key1"
-        channel = "ibm_quantum_platform"
-        AccountManager.save(channel=channel, filename=filename, name=name, token="temp_token")
-        self.assertTrue(
-            AccountManager.delete(channel="ibm_quantum_platform", filename=filename, name=name)
+        AccountManager.save(
+            channel="ibm_quantum_platform", filename=filename, name=name, token="temp_token"
         )
-        self.assertFalse(
-            AccountManager.delete(channel="ibm_quantum_platform", filename=filename, name=name)
-        )
-
-        self.assertTrue(
-            len(AccountManager.list(channel="ibm_quantum_platform", filename=filename)) == 0
+        assert AccountManager.delete(channel="ibm_quantum_platform", filename=filename, name=name)
+        assert not AccountManager.delete(
+            channel="ibm_quantum_platform", filename=filename, name=name
         )
 
-    def test_account_with_filename(self):
+        assert len(AccountManager.list(channel="ibm_quantum_platform", filename=filename)) == 0
+
+    def test_account_with_filename(self, account_filename: str) -> None:
         """Test saving an account to a given filename and retrieving it."""
-        user_filename = _TEST_FILENAME
+        user_filename = account_filename
         account_name = "my_account"
         dummy_token = "dummy_token"
         AccountManager.save(
@@ -287,17 +297,16 @@ class TestAccountManager(IBMTestCase):
         account = AccountManager.get(
             channel="ibm_quantum_platform", filename=user_filename, name=account_name
         )
-        self.assertEqual(account.token, dummy_token)
+        assert account.token == dummy_token
 
-    @mock_responses
     @temporary_account_config_file()
-    def test_default_env_channel(self, registry):
+    def test_default_env_channel(self, registry: BaseRegistry) -> None:
         """Test that if QISKIT_IBM_CHANNEL is set in the environment, this channel will be used."""
         token = uuid.uuid4().hex
         # unset default_channel in the environment
-        with temporary_account_config_file(token=token), no_envs("QISKIT_IBM_CHANNEL"):
+        with temporary_account_config_file(token=token), no_envs(["QISKIT_IBM_CHANNEL"]):
             service = QiskitRuntimeService()
-            self.assertEqual(service.channel, "ibm_quantum_platform")
+            assert service.channel == "ibm_quantum_platform"
 
         # set channel to default channel in the environment
         channel = "ibm_quantum_platform"
@@ -306,12 +315,12 @@ class TestAccountManager(IBMTestCase):
             custom_envs({"QISKIT_IBM_CHANNEL": channel}),
         ):
             service = QiskitRuntimeService()
-            self.assertEqual(service.channel, channel)
+            assert service.channel == channel
 
-    def test_save_private_endpoint(self):
+    def test_save_private_endpoint(self, account_filename: str) -> None:
         """Test private endpoint parameter."""
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
             token=_TEST_IBM_CLOUD_ACCOUNT.token,
             instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
@@ -321,13 +330,13 @@ class TestAccountManager(IBMTestCase):
             private_endpoint=True,
         )
 
-        account = AccountManager.get(filename=_TEST_FILENAME)
-        self.assertTrue(account.private_endpoint)
+        account = AccountManager.get(filename=account_filename)
+        assert account.private_endpoint
 
-    def test_save_default_account(self):
+    def test_save_default_account(self, account_filename: str) -> None:
         """Test default_account defined in the qiskit-ibm.json file is used."""
         AccountManager.save(
-            filename=_TEST_FILENAME,
+            filename=account_filename,
             name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
             token=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.token,
             url=_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.url,
@@ -337,14 +346,13 @@ class TestAccountManager(IBMTestCase):
             set_as_default=True,
         )
 
-        with no_envs("QISKIT_IBM_CHANNEL"), no_envs("QISKIT_IBM_TOKEN"):
-            account = AccountManager.get(filename=_TEST_FILENAME)
-        self.assertEqual(account.channel, "ibm_quantum_platform")
-        self.assertEqual(account.token, _TEST_IBM_CLOUD_ACCOUNT.token)
+        with no_envs(["QISKIT_IBM_CHANNEL"]), no_envs(["QISKIT_IBM_TOKEN"]):
+            account = AccountManager.get(filename=account_filename)
+        assert account.channel == "ibm_quantum_platform"
+        assert account.token == _TEST_IBM_CLOUD_ACCOUNT.token
 
-    @mock_responses
     @temporary_account_config_file()
-    def test_set_channel_precedence(self, registry):
+    def test_set_channel_precedence(self, registry: BaseRegistry) -> None:
         """Test the precedence of the various methods to set the account.
 
         account name > env_variables > channel parameter default account
@@ -354,7 +362,7 @@ class TestAccountManager(IBMTestCase):
         preferred_token = uuid.uuid4().hex
         any_token = uuid.uuid4().hex
         channel_env = {"QISKIT_IBM_CHANNEL": "ibm_quantum_platform"}
-        contents = {
+        contents: dict[str, dict[str, Any]] = {
             _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: {
                 "channel": "ibm_cloud",
                 "token": cloud_token,
@@ -380,53 +388,53 @@ class TestAccountManager(IBMTestCase):
         with (
             temporary_account_config_file(contents=contents),
             custom_envs(channel_env),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService(name="any-quantum")
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, any_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == any_token
 
         # No name or channel params, no env vars, get the account specified as "is_default_account"
         with (
             temporary_account_config_file(contents=contents),
-            no_envs("QISKIT_IBM_CHANNEL"),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_CHANNEL"]),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService()
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, preferred_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == preferred_token
 
         # parameter 'channel' is specified, it overrides channel in env
         # account specified as "is_default_account"
         with (
             temporary_account_config_file(contents=contents),
             custom_envs(channel_env),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService(channel="ibm_quantum_platform")
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, preferred_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == preferred_token
 
         # account with default name for the channel
         contents["preferred-ibm-quantum"]["is_default_account"] = False
         with (
             temporary_account_config_file(contents=contents),
             custom_envs(channel_env),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService(channel="ibm_quantum_platform")
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, cloud_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == cloud_token
 
         # any account for this channel
         with (
             temporary_account_config_file(contents=contents),
             custom_envs(channel_env),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService(channel="ibm_quantum_platform")
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, cloud_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == cloud_token
 
         # no channel param, get account that is specified as "is_default_account"
         # for channel from env
@@ -434,11 +442,11 @@ class TestAccountManager(IBMTestCase):
         with (
             temporary_account_config_file(contents=contents),
             custom_envs(channel_env),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService()
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, preferred_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == preferred_token
 
         # no channel param, account with default name for the channel from env
         del contents["preferred-ibm-quantum"]["is_default_account"]
@@ -450,29 +458,23 @@ class TestAccountManager(IBMTestCase):
         with (
             temporary_account_config_file(contents=contents),
             custom_envs(channel_env),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService()
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, cloud_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == cloud_token
 
         # no channel param, any account for the channel from env
         del contents["default-ibm-quantum"]
         with (
             temporary_account_config_file(contents=contents),
             custom_envs(channel_env),
-            no_envs("QISKIT_IBM_TOKEN"),
+            no_envs(["QISKIT_IBM_TOKEN"]),
         ):
             service = QiskitRuntimeService()
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-            self.assertEqual(service._account.token, cloud_token)
+            assert service.channel == "ibm_quantum_platform"
+            assert service._account.token == cloud_token
         # default channel
-        with temporary_account_config_file(contents=contents), no_envs("QISKIT_IBM_CHANNEL"):
+        with temporary_account_config_file(contents=contents), no_envs(["QISKIT_IBM_CHANNEL"]):
             service = QiskitRuntimeService()
-            self.assertEqual(service.channel, "ibm_quantum_platform")
-
-    def tearDown(self) -> None:
-        """Test level tear down."""
-        super().tearDown()
-        if os.path.exists(_TEST_FILENAME):
-            os.remove(_TEST_FILENAME)
+            assert service.channel == "ibm_quantum_platform"

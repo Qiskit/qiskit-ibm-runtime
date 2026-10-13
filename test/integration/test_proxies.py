@@ -20,7 +20,8 @@ import urllib
 from contextlib import contextmanager
 from time import sleep
 from typing import TYPE_CHECKING
-from unittest.mock import patch
+
+import pytest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
@@ -28,7 +29,6 @@ from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
-from ..ibm_test_case import IBMTestCase
 from .case import integration_test_dependencies
 
 if TYPE_CHECKING:
@@ -51,7 +51,8 @@ def blocked_network() -> Iterator[None]:
             raise RuntimeError(f"Blocked network access to {address}")
         return original_connect(sock, address)
 
-    with patch.object(socket.socket, "connect", blocking_connect):
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(socket.socket, "connect", blocking_connect)
         yield
 
 
@@ -76,7 +77,7 @@ def proxy_server() -> Iterator[subprocess.Popen]:
             process.wait()
 
 
-class TestProxies(IBMTestCase):
+class TestProxies:
     """Tests for proxy capabilities."""
 
     def test_proxies_cloud_runtime_client(self) -> None:
@@ -99,7 +100,7 @@ class TestProxies(IBMTestCase):
             process.terminate()  # kill to be able of reading the output
             proxy_output = process.stdout.read().decode("utf-8")
 
-        self.assertIn(api_line, proxy_output)
+        assert api_line in proxy_output
 
     def test_proxies_qiskit_runtime_service(self) -> None:
         """Should reach the proxy using QiskitRuntimeService."""
@@ -120,13 +121,13 @@ class TestProxies(IBMTestCase):
             process.terminate()  # kill to be able of reading the output
             proxy_output = process.stdout.read().decode("utf-8")
 
-        self.assertIn(api_line, proxy_output)
+        assert api_line in proxy_output
 
     def test_no_proxy_raises_exception(self) -> None:
         """Should raise an exception when no proxy is specified."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server(), self.assertRaises(InvalidAccountError):
+        with proxy_server(), pytest.raises(InvalidAccountError):
             service = QiskitRuntimeService(
                 instance=dependencies.instance,
                 token=dependencies.token,

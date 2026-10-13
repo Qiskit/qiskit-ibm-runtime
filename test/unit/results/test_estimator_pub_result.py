@@ -29,7 +29,7 @@ except ImportError:
     PLOTLY_INSTALLED = False
 
 
-def zne_pub_result():
+def zne_pub_result() -> EstimatorPubResult:
     """Return a pub result holding ZNE data for two noise factors and one extrapolator."""
     nfs = np.zeros((2, 2))
     extrapolated = np.zeros((2, 2, 3))
@@ -63,10 +63,10 @@ class TestEstimatorPubResult(IBMTestCase):
         pub_result = zne_pub_result()
 
         fig = pub_result.draw_zne_evs()
-        self.assertIsInstance(fig, go.Figure)
+        assert isinstance(fig, go.Figure)
 
         fig = pub_result.draw_zne_extrapolators()
-        self.assertIsInstance(fig, go.Figure)
+        assert isinstance(fig, go.Figure)
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_plot_zne_raises(self):

@@ -27,11 +27,11 @@ class TestGetQPYVersion(IBMTestCase):
 
     def test_no_highest_value(self):
         """Test with unset highest value."""
-        self.assertEqual(get_qpy_version(), QPY_VERSION)
+        assert get_qpy_version() == QPY_VERSION
 
     def test_highest_value(self):
         """Test with set highest value."""
-        self.assertEqual(get_qpy_version(1), 1)
+        assert get_qpy_version(1) == 1
 
 
 class TestGetSSVersion(IBMTestCase):
@@ -39,11 +39,11 @@ class TestGetSSVersion(IBMTestCase):
 
     def test_no_highest_value(self):
         """Test with unset highest value."""
-        self.assertEqual(get_ssv_version(), SSV)
+        assert get_ssv_version() == SSV
 
     def test_highest_value(self):
         """Test with set highest value."""
-        self.assertEqual(get_ssv_version(1), 1)
+        assert get_ssv_version(1) == 1
 
 
 class TestValidateNoBoxes(IBMTestCase):
