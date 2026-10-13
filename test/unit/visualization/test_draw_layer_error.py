@@ -12,8 +12,7 @@
 
 """Tests for the functions used to visualize noise learner results."""
 
-from unittest import skipUnless
-
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 from qiskit.utils.optionals import HAS_AER
@@ -22,13 +21,13 @@ from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 from qiskit_ibm_runtime.visualization import draw_layer_error_map, draw_layer_errors_swarm
 
-from ...ibm_test_case import IBMTestCase
 from .utils import save_plotly_artifact
 
 if HAS_AER:
     from qiskit_aer import AerSimulator
 
 
+@pytest.fixture
 def layer_errors() -> list[LayerError]:
     """Return three layer errors, acting on two, three, and four qubits."""
     circuits = [QuantumCircuit(2), QuantumCircuit(3), QuantumCircuit(4)]
@@ -50,14 +49,13 @@ def layer_errors() -> list[LayerError]:
     ]
 
 
-class TestDrawLayerErrorMap(IBMTestCase):
+class TestDrawLayerErrorMap:
     """Class for testing the ``draw_layer_error_map`` function."""
 
-    def test_plotting(self):
+    def test_plotting(self, layer_errors: list[LayerError], test_id: str) -> None:
         """Test to make sure that it produces the right figure."""
-        errors = layer_errors()
         fig = draw_layer_error_map(
-            errors[2],
+            layer_errors[2],
             embedding=FakeKyiv(),
             color_no_data="blue",
             colorscale="reds",
@@ -73,24 +71,22 @@ class TestDrawLayerErrorMap(IBMTestCase):
         assert layout["height"] == 1000
         assert layout["width"] == 1000
 
-        save_plotly_artifact(self.id(), fig)
+        save_plotly_artifact(test_id, fig)
 
-    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-    def test_no_coupling_map(self):
+    @pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_no_coupling_map(self, layer_errors: list[LayerError]) -> None:
         """Test error when invalid coordinates are passed."""
-        errors = layer_errors()
-        with self.assertRaises(ValueError):
-            draw_layer_error_map(errors[0], AerSimulator())
+        with pytest.raises(ValueError):
+            draw_layer_error_map(layer_errors[0], AerSimulator())
 
 
-class TestDrawLayerErrorsSwarm(IBMTestCase):
+class TestDrawLayerErrorsSwarm:
     """Class for testing the ``draw_layer_errors_swarm`` function."""
 
-    def test_plotting(self):
+    def test_plotting(self, layer_errors: list[LayerError], test_id: str) -> None:
         """Test that it produces the right image."""
-        errors = layer_errors()
         fig = draw_layer_errors_swarm(
-            errors,
+            layer_errors,
             colors=["red", "blue", "green"],
             names=["l1", "l2", "l3"],
             width=1000,
@@ -118,17 +114,15 @@ class TestDrawLayerErrorsSwarm(IBMTestCase):
         assert layout["width"] == 1000
         assert layout["height"] == 800
 
-        save_plotly_artifact(self.id(), fig)
+        save_plotly_artifact(test_id, fig)
 
-    def test_errors(self):
-        """Test errors."""
-        errors = layer_errors()
+    def test_errors(self, layer_errors: list[LayerError]) -> None:
+        """Test layer_errors."""
+        with pytest.raises(ValueError, match="Expected 3 colors"):
+            draw_layer_errors_swarm(layer_errors, colors=["blue", "red"])
 
-        with self.assertRaisesRegex(ValueError, "Expected 3 colors"):
-            draw_layer_errors_swarm(errors, colors=["blue", "red"])
+        with pytest.raises(ValueError, match="Expected 3 names"):
+            draw_layer_errors_swarm(layer_errors, names=["names1", "names2"])
 
-        with self.assertRaisesRegex(ValueError, "Expected 3 names"):
-            draw_layer_errors_swarm(errors, names=["names1", "names2"])
-
-        with self.assertRaisesRegex(ValueError, "Expected 3 opacities"):
-            draw_layer_errors_swarm(errors, opacities=[0.1, 0.2])
+        with pytest.raises(ValueError, match="Expected 3 opacities"):
+            draw_layer_errors_swarm(layer_errors, opacities=[0.1, 0.2])
