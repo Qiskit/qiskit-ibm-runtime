@@ -19,6 +19,11 @@ from pydantic import ValidationError
 
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
 
+from ...asserts import (
+    assert_dict_flat_partially_equal,
+    assert_dict_keys_equal,
+    assert_dict_partially_equal,
+)
 from ...ibm_test_case import IBMTestCase
 
 
@@ -58,8 +63,8 @@ class TestEstimatorOptions(IBMTestCase):
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
         options = asdict(NoiseLearnerOptions(**opts_dict))
-        self.assertDictPartiallyEqual(options, opts_dict)
-        self.assertDictKeysEqual(asdict(NoiseLearnerOptions()), options)
+        assert_dict_partially_equal(options, opts_dict)
+        assert_dict_keys_equal(asdict(NoiseLearnerOptions()), options)
 
     @data(
         {},
@@ -80,6 +85,6 @@ class TestEstimatorOptions(IBMTestCase):
         options.update(**new_opts)
 
         # Make sure the values are equal.
-        self.assertDictFlatPartiallyEqual(asdict(options), new_opts)
+        assert_dict_flat_partially_equal(asdict(options), new_opts)
         # Make sure the structure didn't change.
-        self.assertDictKeysEqual(asdict(options), asdict(NoiseLearnerOptions()))
+        assert_dict_keys_equal(asdict(options), asdict(NoiseLearnerOptions()))

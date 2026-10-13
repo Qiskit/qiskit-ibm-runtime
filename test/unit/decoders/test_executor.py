@@ -12,8 +12,11 @@
 
 """Tests the decoder for the quantum program result model."""
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import numpy as np
 from ibm_quantum_schemas.common import TensorModel
@@ -25,6 +28,9 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
 )
 
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
 from qiskit_ibm_runtime.decoders.executor.decoder import (
     BaseClientSideResultDecoder,
     ExecutorResultDecoder,
@@ -34,7 +40,9 @@ from qiskit_ibm_runtime.results.quantum_program import Metadata, QuantumProgramR
 from ...ibm_test_case import IBMTestCase
 
 
-def measurements():
+def measurements() -> tuple[
+    NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], datetime, datetime
+]:
     """Return the measurements and flips of two items, and the limits of the chunk they run in."""
     meas1 = np.array([[False], [True], [True]])
     meas2 = np.array([[True, True], [True, False], [False, False]])
@@ -45,7 +53,7 @@ def measurements():
     return meas1, meas2, meas_flips, start, stop
 
 
-def encoded_result():
+def encoded_result() -> str:
     """Return the encoding of a result holding the measurements of two items."""
     meas1, meas2, meas_flips, start, stop = measurements()
 
@@ -81,15 +89,15 @@ class TestDecoder(IBMTestCase):
 
         decoded = ExecutorResultDecoder.decode(encoded_result())
 
-        self.assertTrue(np.array_equal(decoded[0]["meas"], meas1))
-        self.assertTrue(np.array_equal(decoded[1]["meas"], meas2))
-        self.assertTrue(np.array_equal(decoded[1]["measurement_flips.meas"], meas_flips))
-        self.assertEqual(decoded.metadata.chunk_timing[0].start.replace(tzinfo=None), start)
-        self.assertEqual(decoded.metadata.chunk_timing[0].stop.replace(tzinfo=None), stop)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[0].idx_item, 0)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[0].size, 1)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[1].idx_item, 1)
-        self.assertEqual(decoded.metadata.chunk_timing[0].parts[1].size, 1)
+        assert np.array_equal(decoded[0]["meas"], meas1)
+        assert np.array_equal(decoded[1]["meas"], meas2)
+        assert np.array_equal(decoded[1]["measurement_flips.meas"], meas_flips)
+        assert decoded.metadata.chunk_timing[0].start.replace(tzinfo=None) == start
+        assert decoded.metadata.chunk_timing[0].stop.replace(tzinfo=None) == stop
+        assert decoded.metadata.chunk_timing[0].parts[0].idx_item == 0
+        assert decoded.metadata.chunk_timing[0].parts[0].size == 1
+        assert decoded.metadata.chunk_timing[0].parts[1].idx_item == 1
+        assert decoded.metadata.chunk_timing[0].parts[1].size == 1
 
     def test_no_schema_version(self):
         """Verify an error is raised if the encoded string does not specify any schema version."""
@@ -127,14 +135,14 @@ class TestBaseClientSideResultDecoder(IBMTestCase):
         )
 
         # Not applicable if the result has already been processed by a previous decoder.
-        self.assertEqual(BaseClientSideResultDecoder.is_applicable({}), False)
+        assert BaseClientSideResultDecoder.is_applicable({}) is False
 
         # Not applicable if the result does not have semantic role.
-        self.assertEqual(BaseClientSideResultDecoder.is_applicable(result), False)
+        assert BaseClientSideResultDecoder.is_applicable(result) is False
 
         # Not applicable if the result has a different semantic role.
         result._semantic_role = "not_foo"
-        self.assertEqual(MyDecoder.is_applicable(result), False)
+        assert MyDecoder.is_applicable(result) is False
 
     def test_decode_raises(self):
         """A decoder `decode` method should raise depending on the input."""

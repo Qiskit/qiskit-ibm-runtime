@@ -12,12 +12,18 @@
 
 """Serialization utility functions for runtime testing."""
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
-def get_complex_types():
+
+def get_complex_types() -> dict:
     """Return a dictionary with values of more complicated types."""
     return {
         "string": "foo",
@@ -30,19 +36,19 @@ def get_complex_types():
 class SerializableClass:
     """Custom class with serialization methods."""
 
-    def __init__(self, value):
+    def __init__(self, value: Any):
         self.value = value
 
-    def to_json(self):
+    def to_json(self) -> str:
         """To JSON serializable."""
         return json.dumps({"value": self.value})
 
     @classmethod
-    def from_json(cls, json_str):
+    def from_json(cls, json_str: str) -> Self:
         """From JSON serializable."""
         return cls(**json.loads(json_str))
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, str):
             return self.value == self.from_json(other).value
         return self.value == other.value

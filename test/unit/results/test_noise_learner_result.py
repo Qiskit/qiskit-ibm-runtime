@@ -35,7 +35,7 @@ if HAS_AER:
     from qiskit_aer import AerSimulator
 
 
-def generators_and_rates():
+def generators_and_rates() -> tuple[list[PauliList], list[list[float]]]:
     """Return a set of generators and their rates, for one and for two qubits."""
     generators = [PauliList(["X", "Z"]), PauliList(["XX", "ZZ", "IY"])]
     rates = [[0.1, 0.2], [0.3, 0.4, 0.5]]
@@ -52,9 +52,9 @@ class TestPauliLindbladError(IBMTestCase):
 
         for generators, rates in zip(all_generators, all_rates):
             error = PauliLindbladError(generators, rates)
-            self.assertEqual(error.generators, generators)
-            self.assertEqual(error.rates.tolist(), rates)
-            self.assertEqual(error.num_qubits, generators.num_qubits)
+            assert error.generators == generators
+            assert error.rates.tolist() == rates
+            assert error.num_qubits == generators.num_qubits
 
     def test_invalid_inputs(self):
         """Test PauliLindbladError with invalid inputs."""
@@ -70,8 +70,8 @@ class TestPauliLindbladError(IBMTestCase):
         for generators, rates in zip(all_generators, all_rates):
             error1 = PauliLindbladError(generators, rates)
             error2 = PauliLindbladError(**error1._json())
-            self.assertEqual(error1.generators, error2.generators)
-            self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
+            assert error1.generators == error2.generators
+            assert error1.rates.tolist() == error2.rates.tolist()
 
     def test_restrict_num_bodies(self):
         """Tests the ``restrict_num_bodies`` method."""
@@ -82,17 +82,19 @@ class TestPauliLindbladError(IBMTestCase):
         generators1 = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII"])
         rates1 = [0.01, 0.01, 0.01, 0.005, 0.02]
         error1 = PauliLindbladError(generators1, rates1)
-        self.assertEqual(error.restrict_num_bodies(1).generators, error1.generators)
-        self.assertEqual(error.restrict_num_bodies(1).rates.tolist(), error1.rates.tolist())
+        assert error.restrict_num_bodies(1).generators == error1.generators
+        assert error.restrict_num_bodies(1).rates.tolist() == error1.rates.tolist()
 
         generators2 = PauliList(["XXII", "ZZII"])
         rates2 = [0.01, 0.01]
         error2 = PauliLindbladError(generators2, rates2)
-        self.assertEqual(error.restrict_num_bodies(2).generators, error2.generators)
-        self.assertEqual(error.restrict_num_bodies(2).rates.tolist(), error2.rates.tolist())
+        assert error.restrict_num_bodies(2).generators == error2.generators
+        assert error.restrict_num_bodies(2).rates.tolist() == error2.rates.tolist()
 
 
-def circuits_qubits_and_errors():
+def circuits_qubits_and_errors() -> tuple[
+    list[QuantumCircuit], list[list[int]], list[PauliLindbladError | None]
+]:
     """Return a set of circuits, the qubits they act on, and their errors.
 
     The last error is `None`, to cover layer errors without one.
@@ -117,7 +119,7 @@ def circuits_qubits_and_errors():
     return circuits, qubits, errors
 
 
-def layer_error_to_draw():
+def layer_error_to_draw() -> LayerError:
     """Return a four-qubit layer error, with both one-body and two-body generators."""
     circuit = QuantumCircuit(4)
     qubits = [1, 2, 3, 4]
@@ -137,12 +139,12 @@ class TestLayerError(IBMTestCase):
 
         for circuit, qubits, error in zip(circuits, all_qubits, errors):
             layer_error = LayerError(circuit, qubits, error)
-            self.assertEqual(layer_error.circuit, circuit)
-            self.assertEqual(layer_error.qubits, qubits)
-            self.assertEqual(layer_error.error, error)
+            assert layer_error.circuit == circuit
+            assert layer_error.qubits == qubits
+            assert layer_error.error == error
 
-            self.assertEqual(layer_error.num_qubits, circuit.num_qubits)
-            self.assertEqual(layer_error.num_qubits, len(qubits))
+            assert layer_error.num_qubits == circuit.num_qubits
+            assert layer_error.num_qubits == len(qubits)
 
     def test_invalid_inputs(self):
         """Test LayerError with invalid inputs."""
@@ -164,9 +166,9 @@ class TestLayerError(IBMTestCase):
         for circuit, qubits, error in zip(circuits, all_qubits, errors):
             layer_error1 = LayerError(circuit, qubits, error)
             layer_error2 = LayerError(**layer_error1._json())
-            self.assertEqual(layer_error1.circuit, layer_error2.circuit)
-            self.assertEqual(layer_error1.qubits, layer_error2.qubits)
-            self.assertEqual(layer_error1.error, layer_error2.error)
+            assert layer_error1.circuit == layer_error2.circuit
+            assert layer_error1.qubits == layer_error2.qubits
+            assert layer_error1.error == layer_error2.error
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
@@ -187,5 +189,5 @@ class TestLayerError(IBMTestCase):
             height=200,
         )
 
-        self.assertIsInstance(fig, go.Figure)
-        self.assertEqual(len(fig.data), 160)
+        assert isinstance(fig, go.Figure)
+        assert len(fig.data) == 160

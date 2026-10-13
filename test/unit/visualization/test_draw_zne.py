@@ -22,7 +22,7 @@ from ...ibm_test_case import IBMTestCase
 from .utils import save_plotly_artifact
 
 
-def zne_results():
+def zne_results() -> tuple[EstimatorPubResult, list[EstimatorPubResult]]:
     """Return a pub result holding ZNE data, and pub results missing that data."""
     data = DataBin(
         shape=(1,),
@@ -63,7 +63,7 @@ class TestDrawZNE(IBMTestCase):
 
         # 1 expectation value with 2 extrapolators each with 1 std is
         # 1 + 2 * 2 = 5 traces
-        self.assertEqual(len(fig.data), 5)
+        assert len(fig.data) == 5
         save_plotly_artifact(self.id(), fig)
 
     def test_errors(self):
@@ -83,7 +83,7 @@ class TestDrawZNEExtrapolators(IBMTestCase):
         fig = draw_zne_extrapolators(zne_data)
 
         # 2 figures (one per extrapolator) with 3 traces each is 6
-        self.assertEqual(len(fig.data), 6)
+        assert len(fig.data) == 6
         save_plotly_artifact(self.id(), fig)
 
     def test_errors(self):

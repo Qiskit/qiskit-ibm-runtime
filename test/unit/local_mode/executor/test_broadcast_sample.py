@@ -12,6 +12,10 @@
 
 """Tests for ``broadcast_sample``."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
@@ -22,10 +26,13 @@ from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.fake_provider.executor.broadcast_sample import broadcast_sample
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.quantum_program import SamplexItem
+
 from ....ibm_test_case import IBMTestCase
 
 
-def cx_item():
+def cx_item() -> SamplexItem:
     """Return a SamplexItem for a Pauli-twirled CX circuit (no free parameters)."""
     qc = QuantumCircuit(2, 2)
     qc.cx(0, 1)
@@ -41,7 +48,7 @@ def cx_item():
     return program.items[0]
 
 
-def mixed_axes_item():
+def mixed_axes_item() -> SamplexItem:
     """Return a SamplexItem with mixed broadcast/randomization axes: shape (r0, 2, 2, r1)."""
     theta = Parameter("theta")
     phi = Parameter("phi")
@@ -81,14 +88,10 @@ class TestBroadcastSample(IBMTestCase):
 
         result = broadcast_sample(item.samplex, item.samplex_arguments, shape, rng)
 
-        self.assertIsInstance(result, dict)
-        self.assertGreater(len(result), 0)
+        assert isinstance(result, dict)
+        assert len(result) > 0
         for key, val in result.items():
-            self.assertEqual(
-                val.shape[: len(shape)],
-                shape,
-                f"Expected leading shape {shape} for '{key}', got {val.shape}",
-            )
+            assert val.shape[: len(shape)] == shape
 
     def test_broadcast_sample_output_keys(self):
         """Output contains 'parameter_values' and at least one 'measurement_flips.*' key."""
@@ -97,10 +100,10 @@ class TestBroadcastSample(IBMTestCase):
 
         result = broadcast_sample(item.samplex, item.samplex_arguments, item.shape, rng)
 
-        self.assertTrue("parameter_values" in result)
+        assert "parameter_values" in result
 
         flip_keys = [k for k in result if k.startswith("measurement_flips.")]
-        self.assertGreater(len(flip_keys), 0)
+        assert len(flip_keys) > 0
 
     def test_broadcast_sample_all_broadcast_axes(self):
         """Broadcast axes produce the correct leading shape."""
@@ -111,11 +114,7 @@ class TestBroadcastSample(IBMTestCase):
         result = broadcast_sample(item.samplex, item.samplex_arguments, shape, rng)
 
         for key, val in result.items():
-            self.assertEqual(
-                val.shape[: len(shape)],
-                shape,
-                f"Expected leading shape {shape} for '{key}', got {val.shape}",
-            )
+            assert val.shape[: len(shape)] == shape
 
     def test_broadcast_sample_rng_reproducible(self):
         """Same RNG seed produces identical results."""
