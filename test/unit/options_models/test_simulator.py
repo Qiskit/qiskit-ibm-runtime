@@ -28,10 +28,10 @@ class TestSimulatorOptions(IBMTestCase):
         """Test that simulator options have correct defaults."""
         options = SimulatorOptions()
 
-        self.assertEqual(options.angle_decimals, 5)
-        self.assertIsNone(options.layer_noise_model)
-        self.assertIsNone(options.seed_simulator)
-        self.assertTrue(options.warn_absent)
+        assert options.angle_decimals == 5
+        assert options.layer_noise_model is None
+        assert options.seed_simulator is None
+        assert options.warn_absent
 
     def test_layer_noise_model_validation(self):
         """Test that the validation for ``layer_noise_model`` works."""
@@ -42,7 +42,7 @@ class TestSimulatorOptions(IBMTestCase):
         not_box, box = circuit.data
 
         options = SimulatorOptions(layer_noise_model=[(box, PauliLindbladMap.identity(2))])
-        self.assertEqual(options.layer_noise_model, [(box, PauliLindbladMap.identity(2))])
+        assert options.layer_noise_model == [(box, PauliLindbladMap.identity(2))]
 
         with self.assertRaisesRegex(ValidationError, "does not contain a box"):
             SimulatorOptions(layer_noise_model=[(not_box, PauliLindbladMap.identity(2))])

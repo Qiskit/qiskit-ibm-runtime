@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from functools import wraps
 from typing import TYPE_CHECKING
-from unittest import SkipTest
 from unittest.mock import patch
 
 from ibm_cloud_sdk_core import IAMTokenManager
@@ -106,27 +105,3 @@ def mock_responses(
         return wrapper
 
     return decorator
-
-
-def production_only(func):
-    """Decorator that runs a test only on production services."""
-
-    @wraps(func)
-    def _wrapper(self, *args, **kwargs):
-        if "dev" in self.dependencies.url or "test" in self.dependencies.url:
-            raise SkipTest(f"Skipping integration test. {self} is not supported on staging.")
-        func(self, *args, **kwargs)
-
-    return _wrapper
-
-
-def staging_only(func):
-    """Decorator that runs a test only on staging services."""
-
-    @wraps(func)
-    def _wrapper(self, *args, **kwargs):
-        if "dev" not in self.dependencies.url and "test" not in self.dependencies.url:
-            raise SkipTest(f"Skipping integration test. {self} is not supported on production.")
-        func(self, *args, **kwargs)
-
-    return _wrapper

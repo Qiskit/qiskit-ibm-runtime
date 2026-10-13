@@ -88,6 +88,13 @@ disable_error_code = "import-untyped"
 [tool.coverage.run]
 source = ["qiskit_ibm_runtime"]
 
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+markers = [
+    "production: only run the test when the service is a production one.",
+    "registry: the `responses` registry to use for the patched HTTP responses.",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"

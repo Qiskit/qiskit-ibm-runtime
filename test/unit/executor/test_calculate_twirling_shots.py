@@ -49,7 +49,7 @@ class TestCalculateTwirlingShots(IBMTestCase):
             pub_shots, num_randomizations, shots_per_randomization
         )
 
-        self.assertEqual(num_rand, expected_num_rand)
-        self.assertEqual(shots_per_rand, expected_shots_per_rand)
-        self.assertIsInstance(num_rand, int)
-        self.assertIsInstance(shots_per_rand, int)
+        assert num_rand == expected_num_rand
+        assert shots_per_rand == expected_shots_per_rand
+        assert isinstance(num_rand, int)
+        assert isinstance(shots_per_rand, int)

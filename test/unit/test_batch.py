@@ -32,7 +32,7 @@ class TestBatch(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         session = Batch(backend=backend)
-        self.assertEqual(session.backend(), "common_backend")
+        assert session.backend() == "common_backend"
 
     @mock_responses
     def test_using_ibm_backend_service(self, registry):
@@ -40,7 +40,7 @@ class TestBatch(IBMTestCase):
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         session = Batch(backend=backend)
-        self.assertEqual(session.service, backend.service)
+        assert session.service == backend.service
 
     def test_run_after_close(self):
         """Test running after session is closed."""
@@ -59,7 +59,7 @@ class TestBatch(IBMTestCase):
         with Batch(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
-        self.assertFalse(session._active)
+        assert not session._active
 
     @mock_responses(OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry):
@@ -69,4 +69,4 @@ class TestBatch(IBMTestCase):
         with Batch(backend=backend) as session:
             job = session._run(program_id="foo", inputs={}, dry_run=True)
 
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

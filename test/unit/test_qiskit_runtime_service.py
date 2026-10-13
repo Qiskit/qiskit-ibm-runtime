@@ -76,7 +76,7 @@ class TestQiskitRuntimeService(IBMTestCase):
             api_client_a_run.assert_called()
             api_client_b_run.assert_not_called()
             api_client_c_run.assert_not_called()
-            self.assertEqual(service._active_api_client, backend_a._api_client)
+            assert service._active_api_client == backend_a._api_client
             api_client_a_run.reset_mock()
 
             # Run a job with the client and instance not active in the service.
@@ -85,19 +85,19 @@ class TestQiskitRuntimeService(IBMTestCase):
             api_client_a_run.assert_not_called()
             api_client_b_run.assert_called()
             api_client_c_run.assert_not_called()
-            self.assertEqual(service._active_api_client, backend_b._api_client)
+            assert service._active_api_client == backend_b._api_client
             api_client_b_run.reset_mock()
 
             # Run a job with the client and instance not active in the service.
             sampler = SamplerV2(mode=backend_c)
             with self.assertRaises(IBMRuntimeError) as ex:
                 _ = sampler.run(pubs)
-                self.assertIn("not among", str(ex.msg))
+                assert "not among" in str(ex.msg)
 
             api_client_a_run.assert_not_called()
             api_client_b_run.assert_not_called()
             api_client_c_run.assert_not_called()
-            self.assertEqual(service._active_api_client, backend_b._api_client)
+            assert service._active_api_client == backend_b._api_client
 
     @mock_responses
     def test_initialization_state(self, registry: BaseRegistry) -> None:
@@ -110,29 +110,23 @@ class TestQiskitRuntimeService(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         # `_all_instances` contains all the instances available.
-        self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
+        assert {instance["crn"] for instance in service._all_instances} == crns_in_registry
         # `_backend_configs` is empty (populated by `backends()`).
-        self.assertEqual(service._backend_configs, {})
+        assert service._backend_configs == {}
         # `_api_clients` contains one client per instance available.
-        self.assertEqual(set(service._api_clients.keys()), crns_in_registry)
+        assert set(service._api_clients.keys()) == crns_in_registry
         # `_active_api_client` is among the ones in `_api_clients`.
-        self.assertIn(service._active_api_client, service._api_clients.values())
+        assert service._active_api_client in service._api_clients.values()
         # `_backends_info_per_instance` contains one entry per instance, with its backends.
-        self.assertEqual(
-            {
-                crn: {info["name"] for info in value}
-                for crn, value in service._backends_info_per_instance.items()
-            },
-            backends_in_registry,
-        )
+        assert {
+            crn: {info["name"] for info in value}
+            for crn, value in service._backends_info_per_instance.items()
+        } == backends_in_registry
         # `_backend_instance_groups` contains one entry per instance, with its backends.
-        self.assertEqual(
-            {
-                info["crn"]: {name for name, _ in info["backends"]}
-                for info in service._backend_instance_groups
-            },
-            backends_in_registry,
-        )
+        assert {
+            info["crn"]: {name for name, _ in info["backends"]}
+            for info in service._backend_instance_groups
+        } == backends_in_registry
 
     @mock_responses(OneInstanceNoBackendsRegistry)
     @data(True, False)
@@ -155,23 +149,20 @@ class TestQiskitRuntimeService(IBMTestCase):
             service = QiskitRuntimeService(token="my_token", instance=chosen_crn)
 
         # `_all_instances` contains all the instances available.
-        self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
+        assert {instance["crn"] for instance in service._all_instances} == crns_in_registry
         # `_backend_configs` is empty (populated by `backends()`).
-        self.assertEqual(service._backend_configs, {})
+        assert service._backend_configs == {}
         # `_api_clients` contains only a client for the specified instance.
-        self.assertEqual(set(service._api_clients.keys()), {chosen_crn})
+        assert set(service._api_clients.keys()) == {chosen_crn}
         # `_active_api_client` is among the ones in `_api_clients`.
-        self.assertIn(service._active_api_client, service._api_clients.values())
+        assert service._active_api_client in service._api_clients.values()
         # `_backends_info_per_instance` is empty.
-        self.assertEqual(
-            {
-                crn: {info["name"] for info in value}
-                for crn, value in service._backends_info_per_instance.items()
-            },
-            backends_in_registry,
-        )
+        assert {
+            crn: {info["name"] for info in value}
+            for crn, value in service._backends_info_per_instance.items()
+        } == backends_in_registry
         # `_backend_instance_groups` is empty.
-        self.assertEqual(service._backend_instance_groups, [])
+        assert service._backend_instance_groups == []
 
     @mock_responses
     def test_experimental_workload_endpoint(self, registry: BaseRegistry) -> None:
@@ -187,8 +178,6 @@ class TestQiskitRuntimeService(IBMTestCase):
         workloads_response = service._active_api_client._api.workloads_get()
 
         # Jobs from all instances should be included.
-        self.assertEqual(len(workloads_response["workloads"]), 2)
+        assert len(workloads_response["workloads"]) == 2
         # All workloads should be jobs currently.
-        self.assertTrue(
-            all(workload["mode"] == "job" for workload in workloads_response["workloads"])
-        )
+        assert all(workload["mode"] == "job" for workload in workloads_response["workloads"])

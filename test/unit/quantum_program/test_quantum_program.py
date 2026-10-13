@@ -16,6 +16,7 @@ import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
+from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProgram
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
@@ -79,32 +80,28 @@ class TestQuantumProgram(IBMTestCase):
             },
         )
 
-        self.assertEqual(quantum_program.shots, shots)
+        assert quantum_program.shots == shots
 
         circuit_item = quantum_program.items[0]
-        self.assertEqual(circuit_item.circuit, circuit1)
-        self.assertTrue(np.array_equal(circuit_item.circuit_arguments, circuit_arguments))
-        self.assertEqual(circuit_item.chunk_size, 6)
-        self.assertEqual(circuit_item.shape, (3,))
+        assert circuit_item.circuit == circuit1
+        assert np.array_equal(circuit_item.circuit_arguments, circuit_arguments)
+        assert circuit_item.chunk_size == 6
+        assert circuit_item.shape == (3,)
 
         samplex_item = quantum_program.items[1]
-        self.assertEqual(samplex_item.samplex, samplex)
-        self.assertEqual(samplex_item.circuit, template_circuit)
-        self.assertEqual(samplex_item.chunk_size, 7)
-        self.assertEqual(samplex_item.shape, (4, 3, 2))
-        self.assertTrue(
-            np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values)
-        )
+        assert samplex_item.samplex == samplex
+        assert samplex_item.circuit == template_circuit
+        assert samplex_item.chunk_size == 7
+        assert samplex_item.shape == (4, 3, 2)
+        assert np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values)
         for i, noise_model in enumerate(noise_models):
-            self.assertEqual(
-                samplex_item.samplex_arguments[f"pauli_lindblad_maps.pl{i}"], noise_model
-            )
+            assert samplex_item.samplex_arguments[f"pauli_lindblad_maps.pl{i}"] == noise_model
 
         samplex_item_with_new_noise = quantum_program.items[2]
         for i, noise_model in enumerate(new_noise_models):
-            self.assertEqual(
-                samplex_item_with_new_noise.samplex_arguments[f"pauli_lindblad_maps.pl{i}"],
-                noise_model,
+            assert (
+                samplex_item_with_new_noise.samplex_arguments[f"pauli_lindblad_maps.pl{i}"]
+                == noise_model
             )
 
     def test_subset_of_noise_maps(self):
@@ -138,8 +135,20 @@ class TestQuantumProgram(IBMTestCase):
         )
 
         samplex_item = quantum_program.items[0]
-        self.assertEqual(samplex_item.samplex, samplex)
-        self.assertEqual(samplex_item.circuit, template_circuit)
-        self.assertEqual(samplex_item.chunk_size, 7)
-        self.assertEqual(samplex_item.shape, (4, 3, 2))
-        self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.pl1"], noise_models[1])
+        assert samplex_item.samplex == samplex
+        assert samplex_item.circuit == template_circuit
+        assert samplex_item.chunk_size == 7
+        assert samplex_item.shape == (4, 3, 2)
+        assert samplex_item.samplex_arguments["pauli_lindblad_maps.pl1"] == noise_models[1]
+
+    def test_from_samplomatic(self):
+        """Test that a samplomatic QuantumProgram is converted to a runtime QuantumProgram."""
+        circuit = QuantumCircuit(1)
+        samplomatic_program = SamplomaticQuantumProgram(shots=50)
+        samplomatic_program.append_circuit_item(circuit)
+
+        result = QuantumProgram.from_(samplomatic_program)
+
+        assert isinstance(result, QuantumProgram)
+        assert result.shots == 50
+        assert result.items == samplomatic_program.items

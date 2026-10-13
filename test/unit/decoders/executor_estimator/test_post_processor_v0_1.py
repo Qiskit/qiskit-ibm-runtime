@@ -12,6 +12,8 @@
 
 """Unit tests for Estimator post-processor."""
 
+from typing import Literal
+
 import numpy as np
 from ddt import data, ddt, unpack
 from qiskit.circuit import QuantumCircuit
@@ -44,7 +46,11 @@ def _make_circuit(num_qubits: int = 2) -> QuantumCircuit:
     return qc
 
 
-def _make_pub(circuit=None, observable="ZZ", num_qubits=2):
+def _make_pub(
+    circuit: QuantumCircuit | None = None,
+    observable: str = "ZZ",
+    num_qubits: int = 2,
+) -> EstimatorPub:
     """Return a coerced EstimatorPub for a simple circuit and observable."""
     if circuit is None:
         circuit = _make_circuit(num_qubits)
@@ -52,7 +58,13 @@ def _make_pub(circuit=None, observable="ZZ", num_qubits=2):
     return EstimatorPub.coerce((circuit, obs), precision=None)
 
 
-def _prepare_result(pubs, options, meas_data_list, *, precision=None):
+def _prepare_result(
+    pubs: list,
+    options: EstimatorOptions,
+    meas_data_list: list,
+    *,
+    precision: float | None = None,
+) -> QuantumProgramResult:
     """Run prepare() and inject fake measurement data into the items.
 
     Returns a ``QuantumProgramResult`` ready for the post-processor.
@@ -82,7 +94,7 @@ def _prepare_result(pubs, options, meas_data_list, *, precision=None):
     return result
 
 
-def _options(resilience_level=0, **kwargs):
+def _options(resilience_level: Literal[0, 1, 2] = 0, **kwargs: object) -> EstimatorOptions:
     opts = EstimatorOptions()
     opts.resilience_level = resilience_level
     for k, v in kwargs.items():
@@ -101,7 +113,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         """Empty result list returns an empty PrimitiveResult."""
         result = QuantumProgramResult(data=[], metadata=None, passthrough_data={})
         primitive_result = estimator_v2_post_processor_v0_1(result)
-        self.assertEqual(len(primitive_result), 0)
+        assert len(primitive_result) == 0
 
     def test_post_processor_missing_passthrough_data(self):
         """Missing ``post_processor`` key raises ValueError."""
@@ -124,7 +136,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertEqual(len(primitive_result), 1)
+        assert len(primitive_result) == 1
         self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), 1.0)
 
     def test_post_processor_multiple_pubs(self):
@@ -141,7 +153,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertEqual(len(primitive_result), 2)
+        assert len(primitive_result) == 2
         self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), 1.0)
         self.assertAlmostEqual(float(primitive_result[1].data.evs.ravel()[0]), 1.0)
 
@@ -157,10 +169,7 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertEqual(
-            primitive_result[0].metadata["circuit_metadata"],
-            {"my_key": "my_value"},
-        )
+        assert primitive_result[0].metadata["circuit_metadata"] == {"my_key": "my_value"}
 
     def test_post_processor_stds_without_twirling(self):
         """Without twirling (1 randomization), stds equals ensemble_standard_error."""
@@ -230,9 +239,9 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
         metadata = primitive_result.metadata
-        self.assertIn("shots", metadata)
-        self.assertIn("target_precision", metadata)
-        self.assertIn("options", metadata)
+        assert "shots" in metadata
+        assert "target_precision" in metadata
+        assert "options" in metadata
 
     def test_populating_compilation_key(self):
         """``compilation`` key is populated when ``ItemMetadata`` is present."""
@@ -251,9 +260,9 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
         compilation = primitive_result[0].metadata.get("compilation", {})
-        self.assertIn("scheduler_timing", compilation)
-        self.assertIn("stretch_values", compilation)
-        self.assertEqual(compilation["scheduler_timing"]["timing"], 1.0)
+        assert "scheduler_timing" in compilation
+        assert "stretch_values" in compilation
+        assert compilation["scheduler_timing"]["timing"] == 1.0
 
     def test_simulation_info_in_metadata(self):
         """Simulator dict metadata is stored under ``executor`` key."""
@@ -267,8 +276,8 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertIn("executor", primitive_result[0].metadata)
-        self.assertEqual(primitive_result[0].metadata["executor"], sim_meta)
+        assert "executor" in primitive_result[0].metadata
+        assert primitive_result[0].metadata["executor"] == sim_meta
 
 
 class TestEstimatorPostProcessorPEC(IBMTestCase):
@@ -403,9 +412,9 @@ class TestEstimatorPostProcessorPEC(IBMTestCase):
         # broadcast_shapes(obs_shape=(2,2), param_shape=()) == (2,2)
         expected_shape = np.broadcast_shapes(obs_shape, pub.parameter_values.shape)
         data_bin = primitive_result[0].data
-        self.assertTupleEqual(data_bin.evs.shape, expected_shape)
-        self.assertTupleEqual(data_bin.stds.shape, expected_shape)
-        self.assertTupleEqual(data_bin.ensemble_standard_error.shape, expected_shape)
+        assert data_bin.evs.shape == expected_shape
+        assert data_bin.stds.shape == expected_shape
+        assert data_bin.ensemble_standard_error.shape == expected_shape
 
 
 @ddt
@@ -433,10 +442,10 @@ class TestBuildProgramMetadata(IBMTestCase):
             return _build_program_result_metadata(post_processor_data)["options"]["resilience"]
 
         resilience_off = _get_resilience_metadata(False)
-        self.assertNotIn(options_key, resilience_off)
+        assert options_key not in resilience_off
 
         resilience_on = _get_resilience_metadata(True)
-        self.assertIn(options_key, resilience_on)
+        assert options_key in resilience_on
 
     def test_returns_shots_and_precision(self):
         """Shots and target_precision appear in the returned metadata."""
@@ -446,10 +455,10 @@ class TestBuildProgramMetadata(IBMTestCase):
             "precision": 0.02,
         }
         meta = _build_program_result_metadata(post_processor_data)
-        self.assertEqual(meta["shots"], 2048)
-        self.assertEqual(meta["target_precision"], 0.02)
+        assert meta["shots"] == 2048
+        assert meta["target_precision"] == 0.02
 
     def test_no_options_returns_empty(self):
         """Missing ``options`` returns empty dict."""
         meta = _build_program_result_metadata({"shots": 1024})
-        self.assertEqual(meta, {})
+        assert meta == {}

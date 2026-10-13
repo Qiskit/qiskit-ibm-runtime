@@ -73,12 +73,12 @@ class TestFoldRzzAngle(IBMTestCase):
         pm = PassManager([FoldRzzAngle()])
         isa = pm.run(qc)
 
-        self.assertEqual(Operator.from_circuit(qc), Operator.from_circuit(isa))
+        assert Operator.from_circuit(qc) == Operator.from_circuit(isa)
         for inst_data in isa.data:
             if inst_data.operation.name == "rzz":
                 fold_angle = inst_data.operation.params[0]
-                self.assertGreaterEqual(fold_angle, 0.0)
-                self.assertLessEqual(fold_angle, pi / 2)
+                assert fold_angle >= 0.0
+                assert fold_angle <= pi / 2
 
     def test_folding_rzz_angle_unbound(self):
         """Test skip folding unbound gate angle."""
@@ -86,7 +86,7 @@ class TestFoldRzzAngle(IBMTestCase):
         qc.rzz(Parameter("θ"), 0, 1)
         pm = PassManager([FoldRzzAngle()])
         isa = pm.run(qc)
-        self.assertEqual(qc, isa)
+        assert qc == isa
 
     def test_controlflow(self):
         """Test non-ISA Rzz gates inside/outside a control flow branch."""
@@ -113,7 +113,7 @@ class TestFoldRzzAngle(IBMTestCase):
                 expected.rzz(0.3, 0, 1)
                 expected.x(0)
 
-        self.assertEqual(isa, expected)
+        assert isa == expected
 
     @data(-1, -1 + 4 * np.pi)
     def test_fractional_plugin(self, rzz_angle):
@@ -128,9 +128,9 @@ class TestFoldRzzAngle(IBMTestCase):
         )
         isa_circ = pm.run(circ)
 
-        self.assertEqual(len(isa_circ.data), 3)
-        self.assertEqual(isa_circ.data[1].operation.name, "rzz")
-        self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 1))
+        assert len(isa_circ.data) == 3
+        assert isa_circ.data[1].operation.name == "rzz"
+        assert np.isclose(isa_circ.data[1].operation.params[0], 1)
 
     @data(
         [0.2, 0.1, 0.4, 0.3, 2],  # no modification in circuit
@@ -157,16 +157,14 @@ class TestFoldRzzAngle(IBMTestCase):
         )
 
         isa_param_vals = isa_pub.parameter_values
-        self.assertEqual(isa_param_vals.num_parameters, expected_num_params)
-        self.assertEqual(is_valid_rzz_pub(isa_pub), "")
+        assert isa_param_vals.num_parameters == expected_num_params
+        assert is_valid_rzz_pub(isa_pub) == ""
 
         param_flat = param_vals_arr.reshape(-1, param_vals_arr.shape[-1])
         isa_flat = isa_param_vals.ravel().as_array()
         for param_set_1, param_set_2 in zip(param_flat, isa_flat):
-            self.assertTrue(
-                Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
-                    Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2))
-                )
+            assert Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
+                Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2))
             )
 
     @unittest.skip("convert_to_rzz_valid_pub does not support dynamic circuits currently")
@@ -188,12 +186,12 @@ class TestFoldRzzAngle(IBMTestCase):
         isa_pub = convert_to_rzz_valid_pub(
             EstimatorV2(FakeFractionalBackend()), (circ, observable, [1, -1])
         )
-        self.assertEqual(is_valid_rzz_pub(isa_pub), "")
-        self.assertEqual([observable], isa_pub.observables)
+        assert is_valid_rzz_pub(isa_pub) == ""
+        assert [observable] == isa_pub.observables
 
         # TODO: test qubit indices
         isa_pub_param_names = np.array(list(chain.from_iterable(isa_pub.parameter_values.data)))
-        self.assertEqual(len(isa_pub_param_names), 6)
+        assert len(isa_pub_param_names) == 6
         for param_name in [
             "rzz_block1_rx1",
             "rzz_block1_rx2",
@@ -202,4 +200,4 @@ class TestFoldRzzAngle(IBMTestCase):
             "rzz_block2_rx2",
             "rzz_rx2",
         ]:
-            self.assertIn(param_name, isa_pub_param_names)
+            assert param_name in isa_pub_param_names
