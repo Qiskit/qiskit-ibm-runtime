@@ -28,7 +28,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound, RuntimeJobTimeoutError
 
-from ..utils import bell, cancel_job_safe, most_busy_backend, submit_and_cancel
+from ..utils import bell, cancel_job_safe, submit_and_cancel
 
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit
@@ -53,15 +53,30 @@ def last_month() -> datetime:
     return datetime.now() - timedelta(days=30)
 
 
+@pytest.fixture
+def most_busy_backend(dependencies: IntegrationTestDependencies) -> IBMBackend:
+    """Return the most busy backend available.
+
+    Only backends that have a `pending_jobs` in their `status` are considered. Backends such as
+    local backends that do not have this are not considered.
+    """
+    backends = dependencies.service.backends(simulator=False, operational=True)
+    return max(
+        (
+            b
+            for b in backends
+            if b.configuration().n_qubits >= 5 and b.status().status_msg == "active"
+        ),
+        key=lambda b: b.status().pending_jobs,
+    )
+
+
 class TestIBMJob:
     """Test ibm_job module."""
 
-    def test_cancel(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_cancel(self, most_busy_backend: IBMBackend) -> None:
         """Test job cancellation."""
-        service = dependencies.service
-        # Find the most busy backend
-        backend = most_busy_backend(service)
-        submit_and_cancel(backend, logger)
+        submit_and_cancel(most_busy_backend, logger)
 
     def test_retrieve_jobs(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs."""
@@ -254,12 +269,10 @@ class TestIBMJob:
         assert cached_result == result.metadata
         assert "test" not in result.metadata
 
-    def test_wait_for_final_state_timeout(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_wait_for_final_state_timeout(self, most_busy_backend: IBMBackend) -> None:
         """Test waiting for job to reach final state times out."""
-        service = dependencies.service
-        backend = most_busy_backend(service)
-        sampler = Sampler(mode=backend)
-        job = sampler.run([transpile(bell(), backend=backend)])
+        sampler = Sampler(mode=most_busy_backend)
+        job = sampler.run([transpile(bell(), backend=most_busy_backend)])
         with pytest.raises(RuntimeJobTimeoutError):
             job.wait_for_final_state(timeout=0.1)
         cancel_job_safe(job, logger)

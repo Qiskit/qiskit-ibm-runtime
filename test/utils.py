@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import itertools
-import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from unittest import mock
@@ -39,34 +38,6 @@ if TYPE_CHECKING:
     from qiskit.providers.backend import Backend, BackendV2
 
     from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
-
-
-def most_busy_backend(
-    service: QiskitRuntimeService,
-    instance: str | None = None,
-) -> IBMBackend:
-    """Return the most busy backend for the provider given.
-
-    Return the most busy available backend for those that
-    have a `pending_jobs` in their `status`. Backends such as
-    local backends that do not have this are not considered.
-
-    Args:
-        service: Qiskit Runtime Service.
-        instance: IBM Quantum Platform CRN.
-
-    Returns:
-        The most busy backend.
-    """
-    backends = service.backends(simulator=False, operational=True, instance=instance)
-    return max(
-        (
-            b
-            for b in backends
-            if b.configuration().n_qubits >= 5 and b.status().status_msg == "active"
-        ),
-        key=lambda b: b.status().pending_jobs,
-    )
 
 
 def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
