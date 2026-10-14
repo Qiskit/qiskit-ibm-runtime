@@ -17,14 +17,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from ddt import data, ddt, unpack
+import pytest
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.quantum_info import Statevector, hellinger_fidelity
 from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.executor_sampler import Sampler
 
-from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
 
 if TYPE_CHECKING:
@@ -61,16 +60,17 @@ def assert_pub_result(pub: SamplerPub, pub_result: SamplerPubResult) -> None:
         assert abs(fidelity - 1.0) <= tolerance
 
 
-@ddt
-class TestSampler(IBMTestCase):
+class TestSampler:
     """Client-side Sampler tests centered around qiskit-aer simulations.
 
     All the tests in this class perform noiseless simulations.
     """
 
-    @data([True, False], [False, True], [True, True], [False, False])
-    @unpack
-    def test_twirling_configurations(self, enable_gates, enable_measure):
+    @pytest.mark.parametrize(
+        "enable_gates, enable_measure",
+        [(True, False), (False, True), (True, True), (False, False)],
+    )
+    def test_twirling_configurations(self, enable_gates: bool, enable_measure: bool) -> None:
         """Test sampler with different configurations of twirling.
 
         Checks that:
