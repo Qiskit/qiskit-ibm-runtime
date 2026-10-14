@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
     from qiskit_ibm_runtime.options import DynamicalDecouplingOptions, SamplerExecutionOptionsV2
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 SHOTS = 10000
@@ -170,7 +170,7 @@ class TestSampler:
         ],
     )
     def test_sampler_run(
-        self, parameter_values: tuple | list | None, dependencies: IntegrationTestDependencies
+        self, parameter_values: tuple | list | None, dependencies: Dependencies
     ) -> None:
         """Test Sampler.run()."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -185,7 +185,7 @@ class TestSampler:
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_sample_run_multiple_circuits(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_sample_run_multiple_circuits(self, dependencies: Dependencies) -> None:
         """Test Sampler.run() with multiple circuits."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
@@ -210,7 +210,7 @@ class TestSampler:
             result, num_pubs=3, targets=[np.array(target1), np.array(target2), np.array(target3)]
         )
 
-    def test_run_1qubit(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_run_1qubit(self, dependencies: Dependencies) -> None:
         """Test for 1-qubit cases."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -224,7 +224,7 @@ class TestSampler:
         result = sampler.run([qc, qc2]).result()
         assert_result_type(result, num_pubs=2)
 
-    def test_run_2qubit(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_run_2qubit(self, dependencies: Dependencies) -> None:
         """Test for 2-qubit cases."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -262,7 +262,7 @@ class TestSampler:
     def test_run_single_circuit_no_parameter(
         self,
         parameter_values: tuple | list | np.ndarray | None,
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test for single circuit case, for a circuit without parameters."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -288,7 +288,7 @@ class TestSampler:
         ],
     )
     def test_run_single_circuit_one_parameter(
-        self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
+        self, parameter_values: tuple | list | np.ndarray, dependencies: Dependencies
     ) -> None:
         """Test for single circuit case, for a circuit with a single parameter."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -318,7 +318,7 @@ class TestSampler:
         ],
     )
     def test_run_single_circuit_more_than_one_parameter(
-        self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
+        self, parameter_values: tuple | list | np.ndarray, dependencies: Dependencies
     ) -> None:
         """Test for single circuit case, for a circuit with more than one parameter."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -331,7 +331,7 @@ class TestSampler:
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_run_reverse_meas_order(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_run_reverse_meas_order(self, dependencies: Dependencies) -> None:
         """Test for sampler with reverse measurement order."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -352,9 +352,7 @@ class TestSampler:
         assert_result_type(result, num_pubs=2)
 
     @pytest.mark.parametrize("num_circuits", [1, 2])
-    def test_run_empty_parameter(
-        self, num_circuits: int, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_run_empty_parameter(self, num_circuits: int, dependencies: Dependencies) -> None:
         """Test for empty parameter."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -369,9 +367,7 @@ class TestSampler:
         assert_result_type(result, num_pubs=num_circuits)
 
     @pytest.mark.parametrize("params_type", ["ndarray", "list"])
-    def test_run_numpy_params(
-        self, params_type: str, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_run_numpy_params(self, params_type: str, dependencies: Dependencies) -> None:
         """Test for numpy array as parameter values."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -395,9 +391,7 @@ class TestSampler:
 
         assert_result_type(result, num_pubs=num_pubs, targets=[np.array(target)])
 
-    def test_run_with_shots_option_init_option(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_run_with_shots_option_init_option(self, dependencies: Dependencies) -> None:
         """Test with the number of shots set in the options the sampler is created with."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
@@ -411,9 +405,7 @@ class TestSampler:
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_update_option(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_run_with_shots_option_update_option(self, dependencies: Dependencies) -> None:
         """Test with the number of shots set in the options of an existing sampler."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
@@ -428,7 +420,7 @@ class TestSampler:
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_run_arg(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_run_with_shots_option_run_arg(self, dependencies: Dependencies) -> None:
         """Test with the number of shots set as an argument of `Sampler.run()`."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
@@ -442,9 +434,7 @@ class TestSampler:
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_pub_like(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_run_with_shots_option_pub_like(self, dependencies: Dependencies) -> None:
         """Test with the number of shots set in a pub-like tuple."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
@@ -458,7 +448,7 @@ class TestSampler:
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_pub(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_run_with_shots_option_pub(self, dependencies: Dependencies) -> None:
         """Test with the number of shots set in a `SamplerPub`."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
@@ -472,9 +462,7 @@ class TestSampler:
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_multiple_pubs(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_run_with_shots_option_multiple_pubs(self, dependencies: Dependencies) -> None:
         """Test with per-pub shots option."""
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
@@ -494,7 +482,7 @@ class TestSampler:
         assert sum(result[1].data.meas.get_counts().values()) == shots2
         assert_result_type(result, num_pubs=2)
 
-    def test_run_shots_result_size(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_run_shots_result_size(self, dependencies: Dependencies) -> None:
         """Test with shots option to validate the result size."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -509,7 +497,7 @@ class TestSampler:
         assert sum(result[0].data.meas.get_counts().values()) == SHOTS
         assert_result_type(result, num_pubs=1)
 
-    def test_primitive_job_status_done(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_primitive_job_status_done(self, dependencies: Dependencies) -> None:
         """Test primitive job's status."""
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
@@ -526,9 +514,7 @@ class TestSampler:
             pytest.param(UnitaryGate([[0, 1], [1, 0]]), id="X"),
         ],
     )
-    def test_circuit_with_unitary(
-        self, gate: UnitaryGate, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_circuit_with_unitary(self, gate: UnitaryGate, dependencies: Dependencies) -> None:
         """Test for circuit with unitary gate."""
         backend = dependencies.service.backend(dependencies.qpu)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -543,7 +529,7 @@ class TestSampler:
 
         assert_result_type(result, num_pubs=1)
 
-    def test_metadata(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_metadata(self, dependencies: Dependencies) -> None:
         """Test for metatdata."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
@@ -563,7 +549,7 @@ class TestSampler:
         ],
     )
     def test_circuit_with_multiple_cregs(
-        self, circuit: QuantumCircuit, target: dict, dependencies: IntegrationTestDependencies
+        self, circuit: QuantumCircuit, target: dict, dependencies: Dependencies
     ) -> None:
         """Test for circuit with multiple classical registers."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -576,7 +562,7 @@ class TestSampler:
         assert len(result[0].data) == len(target)
         assert_result_type(result, num_pubs=1)
 
-    def test_sampler_v2_options(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_sampler_v2_options(self, dependencies: Dependencies) -> None:
         """Test SamplerV2 options."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
@@ -593,7 +579,7 @@ class TestSampler:
         result = job.result()
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_sampler_v2_dd(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_sampler_v2_dd(self, dependencies: Dependencies) -> None:
         """Test SamplerV2 DD options."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
