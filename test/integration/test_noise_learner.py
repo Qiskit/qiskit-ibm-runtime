@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     )
     from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 def ecr_circuits() -> list[QuantumCircuit]:
@@ -97,7 +97,7 @@ def assert_job_result(
 class TestIntegrationNoiseLearner:
     """Integration tests for NoiseLearner."""
 
-    def test_with_default_options(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_with_default_options(self, dependencies: Dependencies) -> None:
         """Test noise learner with default options."""
         backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
@@ -110,7 +110,7 @@ class TestIntegrationNoiseLearner:
 
         assert_job_result(job.result(), backend, default_input_options(), 3)
 
-    def test_with_non_default_options(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_with_non_default_options(self, dependencies: Dependencies) -> None:
         """Test noise learner with non-default options."""
         backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
@@ -128,7 +128,7 @@ class TestIntegrationNoiseLearner:
         input_options["layer_pair_depths"] = [0, 1]
         assert_job_result(job.result(), backend, input_options, 1)
 
-    def test_with_no_layers(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_with_no_layers(self, dependencies: Dependencies) -> None:
         """Test noise learner when `max_layers_to_learn` is `0`."""
         backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
@@ -146,7 +146,7 @@ class TestIntegrationNoiseLearner:
         input_options["max_layers_to_learn"] = 0
         assert_job_result(job.result(), backend, input_options, 0)
 
-    def test_learner_plus_estimator(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_learner_plus_estimator(self, dependencies: Dependencies) -> None:
         """Test feeding noise learner data to estimator."""
         backend = dependencies.service.backend(dependencies.qpu)
         options = EstimatorOptions()

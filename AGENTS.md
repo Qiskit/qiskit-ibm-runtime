@@ -23,10 +23,11 @@ existing Qiskit patterns.
 - Prefer parameterized tests over individual tests.
 - Run the smallest relevant test set first.
 - Avoid running the entire test suite unless necessary.
-- Integration tests require live IBM Quantum credentials; request permission before running and verify
-  existence of required env variables (`QISKIT_IBM_TOKEN`, `QISKIT_IBM_INSTANCE`,
+- Integration tests require live IBM Quantum credentials; request permission before running and
+  verify existence of required env variables (`QISKIT_IBM_TOKEN`, `QISKIT_IBM_INSTANCE`,
   `QISKIT_IBM_URL`, `QISKIT_IBM_QPU`).
-- Do not use `unittest.TestCase` directly; use the project base classes in `test/ibm_test_case.py`.
+- Tests are based on `pytest` (using fixtures, bare asserts, `pytest` features), and organized in
+  classes.
 - Unit tests must not contact any external service; use `FakeBackendV2` for backend interactions.
 - Avoid mocking; if mocking feels necessary, first try refactoring the code under test into
   smaller, more testable units.
