@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseLearnerV3Results:
-    """Convert a quantum program result to a noise learner result for NoiseLearnerV3.
+    """Convert a quantum program result to noise learner results for NoiseLearnerV3.
 
     Args:
         result: The raw quantum program result.
