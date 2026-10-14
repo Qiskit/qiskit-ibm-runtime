@@ -21,12 +21,12 @@ import pytest
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
-from .case import integration_test_dependencies
+from .dependencies import integration_test_dependencies
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 def backend_names() -> list[str]:
@@ -45,9 +45,7 @@ def backend_names() -> list[str]:
 
 
 @pytest.fixture
-def backend(
-    request: pytest.FixtureRequest, dependencies: IntegrationTestDependencies
-) -> IBMBackend:
+def backend(request: pytest.FixtureRequest, dependencies: Dependencies) -> IBMBackend:
     """Return the backend named by the indirect parametrization."""
     return dependencies.service.backend(request.param)
 

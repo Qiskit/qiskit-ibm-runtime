@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class IntegrationTestDependencies:
+class Dependencies:
     """Integration test dependencies."""
 
     service: QiskitRuntimeService
@@ -38,7 +38,7 @@ class IntegrationTestDependencies:
     url: str
 
 
-def integration_test_dependencies(init_service: bool = True) -> IntegrationTestDependencies:
+def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     """Return the dependencies of an integration test, from the environment configuration.
 
     Args:
@@ -63,7 +63,7 @@ def integration_test_dependencies(init_service: bool = True) -> IntegrationTestD
         else None
     )
 
-    return IntegrationTestDependencies(
+    return Dependencies(
         channel=channel,
         token=token,
         url=url,

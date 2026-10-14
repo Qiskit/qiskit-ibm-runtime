@@ -29,7 +29,7 @@ from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
-from .case import integration_test_dependencies
+from .dependencies import integration_test_dependencies
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

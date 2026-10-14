@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
     from qiskit_ibm_runtime import IBMBackend, QiskitRuntimeService, RuntimeJobV2
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IBMBackend]:
@@ -56,7 +56,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_job_queued(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving a queued job."""
         service = dependencies.service
@@ -70,7 +70,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_job_running(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving a running job."""
         service = dependencies.service
@@ -83,7 +83,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_job_done(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving a finished job."""
         service = dependencies.service
@@ -96,7 +96,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_all_jobs(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving all jobs."""
         service = dependencies.service
@@ -113,7 +113,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_jobs_limit(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving jobs with limit."""
         service = dependencies.service
@@ -127,7 +127,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_pending_jobs(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         service = dependencies.service
@@ -147,7 +147,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_returned_jobs(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
         service = dependencies.service
@@ -162,7 +162,7 @@ class TestIntegrationRetrieveJob:
                 break
         assert found
 
-    def test_retrieve_jobs_by_program_id(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_retrieve_jobs_by_program_id(self, dependencies: Dependencies) -> None:
         """Test retrieving jobs by Program ID."""
         service = dependencies.service
         program_id = "sampler"
@@ -173,7 +173,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_jobs_by_job_tags(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving jobs by job_tags."""
         service = dependencies.service
@@ -185,7 +185,7 @@ class TestIntegrationRetrieveJob:
         rjobs = service.jobs(job_tags=["no_test_tag"])
         assert not rjobs
 
-    def test_retrieve_jobs_by_instance(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_retrieve_jobs_by_instance(self, dependencies: Dependencies) -> None:
         """Test retrieving jobs by instance."""
         service = dependencies.service
         instance = dependencies.instance
@@ -196,7 +196,7 @@ class TestIntegrationRetrieveJob:
     def test_jobs_filter_by_date(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving jobs by creation date."""
         service = dependencies.service
@@ -215,7 +215,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_jobs_sorted_by_date(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test retrieving jobs sorted by the date."""
         service = dependencies.service
@@ -234,7 +234,7 @@ class TestIntegrationRetrieveJob:
         assert [rjob.job_id() for rjob in rjobs_ascending] == [job.job_id(), job_2.job_id()]
 
     def test_retrieve_jobs_backend(
-        self, backend_test: IBMBackend | None, dependencies: IntegrationTestDependencies
+        self, backend_test: IBMBackend | None, dependencies: Dependencies
     ) -> None:
         """Test retrieving jobs with backend filter."""
         service = dependencies.service
@@ -246,7 +246,7 @@ class TestIntegrationRetrieveJob:
     def test_retrieve_jobs_include_mocks(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """`service.jobs()` should respect the `include_mocks` flag."""
         service = dependencies.service

@@ -31,22 +31,22 @@ from qiskit_ibm_runtime.options import NoiseLearnerOptions
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
 
-from ..integration.case import integration_test_dependencies
+from ..integration.dependencies import integration_test_dependencies
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
-    from ..integration.case import IntegrationTestDependencies
+    from ..integration.dependencies import Dependencies
 
 
 @pytest.fixture(scope="class")
-def dependencies() -> IntegrationTestDependencies:
+def dependencies() -> Dependencies:
     """Return the dependencies of a smoke test, from the environment configuration."""
     return integration_test_dependencies()
 
 
 @pytest.fixture(scope="class")
-def backend(dependencies: IntegrationTestDependencies) -> IBMBackend:
+def backend(dependencies: Dependencies) -> IBMBackend:
     """Return the backend under test, as specified by the environment configuration."""
     return dependencies.service.backend(dependencies.qpu)
 

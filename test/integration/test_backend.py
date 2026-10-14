@@ -35,11 +35,11 @@ from ..utils import bell
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 @pytest.fixture(scope="class")
-def backend(dependencies: IntegrationTestDependencies) -> IBMBackend:
+def backend(dependencies: Dependencies) -> IBMBackend:
     """Return the backend used by the tests in the class, from the environment configuration."""
     return dependencies.service.backend(dependencies.qpu)
 
@@ -64,7 +64,7 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
 class TestIntegrationBackend:
     """Integration tests for backend functions."""
 
-    def test_least_busy(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_least_busy(self, dependencies: Dependencies) -> None:
         """Test the least busy method."""
         service = dependencies.service
         # test passing an instance
@@ -81,7 +81,7 @@ class TestIntegrationBackend:
         backend = service_with_no_default_instance.least_busy()
         assert backend
 
-    def test_backends(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_backends(self, dependencies: Dependencies) -> None:
         """Test getting all backends."""
         service = dependencies.service
         backends = service.backends()
@@ -89,20 +89,20 @@ class TestIntegrationBackend:
         backend_names = [back.name for back in backends]
         assert len(backend_names) == len(set(backend_names))
 
-    def test_get_backend(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_get_backend(self, dependencies: Dependencies) -> None:
         """Test getting a backend."""
         service = dependencies.service
         backends = service.backends()
         backend = service.backend(backends[0].name)
         assert backend
 
-    def test_target_reset(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_target_reset(self, dependencies: Dependencies) -> None:
         """Test confirming target contains reset."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
         assert "reset" in backend.target
 
-    def test_backends_physical_qubits(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_backends_physical_qubits(self, dependencies: Dependencies) -> None:
         """All backends should have a `physical_qubits` property."""
         service = dependencies.service
         backends = service.backends()
@@ -110,7 +110,7 @@ class TestIntegrationBackend:
         for backend in backends:
             assert isinstance(backend.physical_qubits, int)
 
-    def test_backends_include_mocks(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_backends_include_mocks(self, dependencies: Dependencies) -> None:
         """`service.backends()` should respect the `include_mocks` flag."""
         service = dependencies.service
         # Skip the test if there are no mock backends.
@@ -206,7 +206,7 @@ class TestIBMBackend:
         assert backend_copy._instance == backend._instance
         assert backend_copy._api_client._session.base_url == backend._api_client._session.base_url
 
-    def test_backend_pending_jobs(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_backend_pending_jobs(self, dependencies: Dependencies) -> None:
         """Test pending jobs are returned."""
         service = dependencies.service
         backends = service.backends()
@@ -243,7 +243,7 @@ class TestIBMBackend:
             sampler = Sampler(mode=backend)
             sampler.run([isa_circuit])
 
-    def test_retrieve_backend_not_exist(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_retrieve_backend_not_exist(self, dependencies: Dependencies) -> None:
         """Test that an error is raised when retrieving a backend that does not exist."""
         service = dependencies.service
         with pytest.raises(QiskitBackendNotFoundError):
@@ -262,7 +262,7 @@ class TestIBMBackend:
             err.value
         )
 
-    def test_use_fractional_gates_flag(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_use_fractional_gates_flag(self, dependencies: Dependencies) -> None:
         """Test use_fractional_gates returns correct backend config."""
         service = dependencies.service
         try:
@@ -275,7 +275,7 @@ class TestIBMBackend:
         assert "rzz" not in real_device_no_fg.basis_gates
 
     def test_backend_fractional_gates_error(
-        self, backend: IBMBackend, dependencies: IntegrationTestDependencies
+        self, backend: IBMBackend, dependencies: Dependencies
     ) -> None:
         """Test that use_fractional_gates = True raises error for unsupported backends."""
         service = dependencies.service
@@ -290,9 +290,7 @@ class TestIBMBackend:
         ):
             service.backend(backend.name, use_fractional_gates=True)
 
-    def test_backend_fractional_gates_cache_behavior(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_backend_fractional_gates_cache_behavior(self, dependencies: Dependencies) -> None:
         """Test backend config cache/refresh logic for use_fractional_gates."""
         service = dependencies.service
         try:
@@ -315,7 +313,7 @@ class TestIBMBackend:
         assert backend_no_fg2 is not backend_fg3
 
     def test_renew_backend_properties(
-        self, backend: IBMBackend, dependencies: IntegrationTestDependencies
+        self, backend: IBMBackend, dependencies: Dependencies
     ) -> None:
         """Test renewed backend property."""
         service = dependencies.service
@@ -331,7 +329,7 @@ class TestIBMBackend:
     def test_backend_calibration_id(
         self,
         backend: IBMBackend,
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test calibration_id is used when fetching the configuration."""
@@ -344,7 +342,7 @@ class TestIBMBackend:
 
         assert calibration_id in caplog.text
 
-    def test_run_dry_run(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_run_dry_run(self, dependencies: Dependencies) -> None:
         """Test `run` using the `dry_run` flag.
 
         This test does not use ``dependencies.qpu``, but instead attempts to find a backend that

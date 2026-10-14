@@ -38,7 +38,7 @@ if TYPE_CHECKING:
         ZneOptions,
     )
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> None:
@@ -56,7 +56,7 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> 
 class TestEstimatorV2:
     """Integration tests for Estimator V2 Primitive."""
 
-    def test_estimator_v2_session(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_estimator_v2_session(self, dependencies: Dependencies) -> None:
         """Verify correct results are returned."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
@@ -88,7 +88,7 @@ class TestEstimatorV2:
             assert_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
     def test_estimator_v2_options(
-        self, dependencies: IntegrationTestDependencies, request: pytest.FixtureRequest
+        self, dependencies: Dependencies, request: pytest.FixtureRequest
     ) -> None:
         """Test V2 Estimator with different options."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -138,9 +138,7 @@ class TestEstimatorV2:
         assert result[0].metadata["shots"] == 1600
 
     @pytest.mark.skip(reason="Skip until simulator options are accepted by server.")
-    def test_pec(
-        self, dependencies: IntegrationTestDependencies, request: pytest.FixtureRequest
-    ) -> None:
+    def test_pec(self, dependencies: Dependencies, request: pytest.FixtureRequest) -> None:
         """Test running with PEC."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)

@@ -18,7 +18,7 @@ from functools import partial
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-from ..integration.case import integration_test_dependencies
+from ..integration.dependencies import integration_test_dependencies
 
 
 def run_in_subprocess(cmd: str) -> None:

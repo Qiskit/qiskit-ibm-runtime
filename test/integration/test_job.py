@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 class TestIntegrationJob:
@@ -62,7 +62,7 @@ class TestIntegrationJob:
     def test_cancel_job_queued(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test canceling a queued job."""
         service = dependencies.service
@@ -78,7 +78,7 @@ class TestIntegrationJob:
     def test_cancel_job_running(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test canceling a running job."""
         service = dependencies.service
@@ -99,7 +99,7 @@ class TestIntegrationJob:
     def test_delete_job(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test deleting a job."""
         service = dependencies.service
@@ -117,7 +117,7 @@ class TestIntegrationJob:
     def test_delete_job_queued(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test deleting a queued job."""
         service = dependencies.service
@@ -157,7 +157,7 @@ class TestIntegrationJob:
     def test_wait_for_final_state(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test wait for final state."""
         job = submit_bell_job(backend_name=dependencies.qpu)
@@ -167,7 +167,7 @@ class TestIntegrationJob:
     def test_wait_for_final_state_after_job_status(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test wait for final state on a completed job when the status is updated first."""
         job = submit_bell_job(backend_name=dependencies.qpu)
@@ -180,7 +180,7 @@ class TestIntegrationJob:
     def test_job_creation_date(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test job creation date."""
         service = dependencies.service

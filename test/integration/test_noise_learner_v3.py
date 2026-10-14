@@ -25,13 +25,13 @@ from qiskit_ibm_runtime import NoiseLearnerV3
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 
 if TYPE_CHECKING:
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 class TestNoiseLearnerV3:
     """Test NLV3."""
 
-    def test_noise_learner_v3(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_noise_learner_v3(self, dependencies: Dependencies) -> None:
         """Test NLV3 with basic options."""
         backend = dependencies.service.backend(dependencies.qpu)
 
