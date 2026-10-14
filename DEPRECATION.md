@@ -179,7 +179,7 @@ class TestSomething:
       with pytest.warns(DeprecationWarning):
          output = deprecated_function()
       # ... do some things with output ...
-      self.assertEqual(output, expected)
+      assert output == expected
 ```
 
 ## Documenting deprecations and breaking changes
