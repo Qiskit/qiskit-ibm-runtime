@@ -22,13 +22,11 @@ from qiskit_ibm_runtime.options_models.converters import (
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestSamplerOptionsToExecutorOptions(IBMTestCase):
+class TestSamplerOptionsToExecutorOptions:
     """Tests for SamplerOptions to ExecutorOptions method."""
 
-    def test_default_options_mapping(self):
+    def test_default_options_mapping(self) -> None:
         """Test that default options are correctly mapped."""
         options = SamplerOptions()
         executor_options = sampler_option_to_executor_options(options)
@@ -44,7 +42,7 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
         assert executor_options.max_execution_time is None
         assert executor_options.environment.image is None
 
-    def test_all_options_mapping(self):
+    def test_all_options_mapping(self) -> None:
         """Test mapping of all supported options together."""
         options = SamplerOptions()
         options.execution.init_qubits = False
@@ -63,7 +61,7 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
         assert executor_options.environment.private is True
         assert executor_options.max_execution_time == 300
 
-    def test_experimental_image_not_set(self):
+    def test_experimental_image_not_set(self) -> None:
         """Test that image is None when experimental is empty."""
         options = SamplerOptions()
         options.experimental = {}
@@ -71,7 +69,7 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
 
         assert executor_options.environment.image is None
 
-    def test_experimental_dict_carry_over(self):
+    def test_experimental_dict_carry_over(self) -> None:
         """Test that experimental dict is carried over to executor options."""
         options = SamplerOptions()
         options.experimental = {
@@ -88,10 +86,10 @@ class TestSamplerOptionsToExecutorOptions(IBMTestCase):
         assert executor_options.execution.scheduler_timing is True
 
 
-class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
+class TestEstimatorOptionsToExecutorOptions:
     """Tests for EstimatorOptions to ExecutorOptions method."""
 
-    def test_to_executor_options(self):
+    def test_to_executor_options(self) -> None:
         """Test conversion to ExecutorOptions."""
         options = EstimatorOptions(default_precision=0.022097)
         options.max_execution_time = 300
@@ -104,7 +102,7 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
         assert executor_options.execution.rep_delay == 0.001
         assert executor_options.max_execution_time == 300
 
-    def test_to_executor_options_with_experimental(self):
+    def test_to_executor_options_with_experimental(self) -> None:
         """Test conversion with experimental options."""
         options = EstimatorOptions()
         options.experimental = {"other": "value"}
@@ -112,7 +110,7 @@ class TestEstimatorOptionsToExecutorOptions(IBMTestCase):
         executor_options = estimator_options_to_executor_options(options)
         assert executor_options.experimental == options.experimental
 
-    def test_to_executor_options_resilience_fallback(self):
+    def test_to_executor_options_resilience_fallback(self) -> None:
         """Test the simulator ``layer_noise_model`` fallback to resilience ``layer_noise_model``."""
         options = EstimatorOptions()
         options.resilience.layer_noise_model = []

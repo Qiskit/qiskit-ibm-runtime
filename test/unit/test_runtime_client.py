@@ -12,15 +12,14 @@
 
 """Tests for the RuntimeClient class."""
 
+import pytest
 import responses
-from ddt import data, ddt
 
 from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from ..account import custom_envs, no_envs
-from ..ibm_test_case import IBMTestCase
 
 
 def runtime_client() -> RuntimeClient:
@@ -35,18 +34,20 @@ def runtime_client() -> RuntimeClient:
     )
 
 
-@ddt
-class TestAccountClient(IBMTestCase):
+class TestAccountClient:
     """Tests for RuntimeClient."""
 
-    @data(
-        {"error": "Bad client input"},
-        {},
-        {"bad request": "Bad client input"},
-        "Bad client input",
+    @pytest.mark.parametrize(
+        "response",
+        [
+            {"error": "Bad client input"},
+            {},
+            {"bad request": "Bad client input"},
+            "Bad client input",
+        ],
     )
     @responses.activate
-    def test_client_error(self, response):
+    def test_client_error(self, response: dict | str) -> None:
         """Test client error."""
         responses.add(
             responses.GET,
@@ -58,13 +59,13 @@ class TestAccountClient(IBMTestCase):
         responses.add(responses.POST, url="https://iam.cloud.ibm.com/identity/token", json=None)
 
         client = runtime_client()
-        with self.assertRaises(RequestsApiError) as err_cm:
-            with self.assertWarnsRegex(UserWarning, "Provided API key could not be found."):
+        with pytest.raises(RequestsApiError) as err_cm:
+            with pytest.warns(UserWarning, match="Unable to retrieve"):
                 client.backend_status("ibmq_qasm_simulator")
         if response:
-            assert "Bad client input" in str(err_cm.exception)
+            assert "Bad client input" in str(err_cm.value)
 
-    def test_custom_client_app_header(self):
+    def test_custom_client_app_header(self) -> None:
         """Check custom client application header."""
         custom_header = "batman"
         with custom_envs({"QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER": custom_header}):
@@ -81,7 +82,7 @@ class TestAccountClient(IBMTestCase):
             client._session._set_custom_header()
             assert custom_header not in client._session.headers["X-Qx-Client-Application"]
 
-    def test_header_api_version(self):
+    def test_header_api_version(self) -> None:
         """Test IBM-API-Version is in header."""
         client = runtime_client()
         assert "IBM-API-Version" in client._session.headers

@@ -17,13 +17,11 @@ from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestEstimatorOptions(IBMTestCase):
+class TestEstimatorOptions:
     """Tests for EstimatorOptions."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Test default values."""
         options = EstimatorOptions()
         assert options.default_precision == 0.015625
