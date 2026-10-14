@@ -213,8 +213,7 @@ and the release notes in particular will be located at
 ### Test types
 
 There are three different types of tests in `qiskit-ibm-runtime`. The implementation is based upon
-the well-documented [unittest] Unit testing framework, and the default test runner used in this
-project is [pytest].
+the [pytest] testing framework.
 
 #### 1. Unit tests
 
@@ -395,7 +394,6 @@ the `main` branch, such as from `stable/0.21` to `main`.
 [mypy]: http://mypy-lang.org/
 [pytest]: https://pytest.org/
 [pre-commit]: https://pre-commit.com/
-[unittest]: https://docs.python.org/3/library/unittest.html
 [encrypted environment secrets]: https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment
 [IBM Quantum's writing style guide]: https://github.com/IBM/ibm-quantum-style-guide
 [pyproject.toml]: ./pyproject.toml
