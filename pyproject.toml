@@ -238,7 +238,7 @@ style_local = [
 test = [
     "ddt>=1.7.2",
     "pytest>=8.1",
-    "pproxy==2.7.8",
+    "mitmproxy==11.0.2",
     "coverage>=7.13.5",
     "pytest-benchmark==5.2.3",
     "responses>=0.26.2",
