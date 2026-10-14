@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 from qiskit.primitives.containers import BitArray
 from qiskit.quantum_info import PauliLindbladMap, Statevector, hellinger_fidelity
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -31,7 +32,6 @@ if TYPE_CHECKING:
 
 from qiskit_ibm_runtime import Executor, QuantumProgram
 
-from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
 
 
@@ -50,10 +50,10 @@ def boxed_mirror_circuit(backend: BackendV2) -> tuple[QuantumCircuit, QuantumCir
     return circuit, pass_manager.run(circuit)
 
 
-class TestExecutor(IBMTestCase):
+class TestExecutor:
     """Executor tests centered around qiskit-aer simulations."""
 
-    def test_noiseless_simulation(self):
+    def test_noiseless_simulation(self) -> None:
         """Test noiseless local mode simulations with the executor.
 
         Checks that:
@@ -90,17 +90,13 @@ class TestExecutor(IBMTestCase):
             assigned_parameters = parameter_values[index]
             bound_circuit = circuit.assign_parameters(assigned_parameters)
             probabilities = Statevector(bound_circuit).probabilities_dict()
-            self.assertAlmostEqual(
-                fidelity := hellinger_fidelity(
-                    BitArray.from_bool_array(array[index], order="little").get_counts(),
-                    probabilities,
-                ),
-                1.0,
-                msg=f"Fidelity: {fidelity}",
-                delta=tolerance,
+            fidelity = hellinger_fidelity(
+                BitArray.from_bool_array(array[index], order="little").get_counts(),
+                probabilities,
             )
+            assert fidelity == pytest.approx(1.0, abs=tolerance), f"Fidelity: {fidelity}"
 
-    def test_noisy_simulation(self):
+    def test_noisy_simulation(self) -> None:
         """Test noisy local mode simulations with the executor.
 
         Checks that:
@@ -140,8 +136,8 @@ class TestExecutor(IBMTestCase):
         ]
         fidelities = []
         for pauli_map in pauli_maps:
-            executor.options.simulator.layer_noise_model = zip(
-                unique_instructions, (pauli_map,) * len(unique_instructions)
+            executor.options.simulator.layer_noise_model = list(
+                zip(unique_instructions, (pauli_map,) * len(unique_instructions))
             )
             job = executor.run(program)
             result = job.result()

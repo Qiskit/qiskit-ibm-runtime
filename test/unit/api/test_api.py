@@ -14,19 +14,25 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ...account import custom_envs
-from ...decorators import mock_responses
-from ...ibm_test_case import IBMTestCase
+
+if TYPE_CHECKING:
+    from responses import RequestsMock
+
+    from ...registries import BaseRegistry
 
 
-class TestAPISession(IBMTestCase):
+class TestAPISession:
     """Class for testing API sessions."""
 
-    @mock_responses(expose_responses_mock=True)
-    def test_functions_identifier_header(self, registry, responses):
+    def test_functions_identifier_header(
+        self, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
         """Test for appending the HTTP header for functions identifier."""
         job_post_mock = next(
             mock

@@ -20,9 +20,9 @@ import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-from unittest.mock import patch
 from urllib.parse import urlparse
 
+import pytest
 from mitmproxy.options import Options
 from mitmproxy.tools.dump import DumpMaster
 
@@ -32,7 +32,6 @@ from qiskit_ibm_runtime.api.client import RuntimeClient
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
-from ..ibm_test_case import IBMTestCase
 from .case import integration_test_dependencies
 
 if TYPE_CHECKING:
@@ -74,7 +73,8 @@ def blocked_network(
             raise RuntimeError(f"Blocked network access to {address}")
         return original_connect(sock, address)
 
-    with patch.object(socket.socket, "connect", blocking_connect):
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(socket.socket, "connect", blocking_connect)
         yield
 
 
@@ -153,7 +153,7 @@ def proxy_server() -> Iterator[ProxyServerHandle]:
         thread.join()
 
 
-class TestProxies(IBMTestCase):
+class TestProxies:
     """Tests for proxy capabilities."""
 
     def test_proxies_cloud_runtime_client(self) -> None:
@@ -196,7 +196,7 @@ class TestProxies(IBMTestCase):
         """Should raise an exception when no proxy is specified."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server(), self.assertRaises(InvalidAccountError):
+        with proxy_server(), pytest.raises(InvalidAccountError):
             service = QiskitRuntimeService(
                 instance=dependencies.instance,
                 token=dependencies.token,

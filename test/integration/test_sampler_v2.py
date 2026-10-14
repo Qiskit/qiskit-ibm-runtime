@@ -14,10 +14,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from ddt import data, ddt, named_data
+import pytest
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate, real_amplitudes
@@ -32,10 +32,11 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
-from .case import IBMIntegrationTestCase
-
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
+    from qiskit_ibm_runtime.options import DynamicalDecouplingOptions, SamplerExecutionOptionsV2
+
+    from .case import IntegrationTestDependencies
 
 
 SHOTS = 10000
@@ -155,20 +156,24 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, targets: list | N
             assert isinstance(result[idx].data.meas, BitArray)
 
 
-@ddt
-class TestSampler(IBMIntegrationTestCase):
+class TestSampler:
     """Test Sampler."""
 
-    @named_data(
-        # The parameter values to be paired with the circuit in the pub, if any.
-        ("single", None),
-        ("single_with_param", ()),
-        ("single_array", [()]),
-        ("multiple", [(), (), ()]),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The parameter values to be paired with the circuit in the pub, if any.
+            pytest.param(None, id="single"),
+            pytest.param((), id="single_with_param"),
+            pytest.param([()], id="single_array"),
+            pytest.param([(), (), ()], id="multiple"),
+        ],
     )
-    def test_sampler_run(self, parameter_values):
+    def test_sampler_run(
+        self, parameter_values: tuple | list | None, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test Sampler.run()."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
         _, _, target = sampler_cases()[1]
         pub = isa_bell if parameter_values is None else (isa_bell, parameter_values)
@@ -180,9 +185,9 @@ class TestSampler(IBMIntegrationTestCase):
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_sample_run_multiple_circuits(self):
+    def test_sample_run_multiple_circuits(self, dependencies: IntegrationTestDependencies) -> None:
         """Test Sampler.run() with multiple circuits."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
@@ -205,9 +210,9 @@ class TestSampler(IBMIntegrationTestCase):
             result, num_pubs=3, targets=[np.array(target1), np.array(target2), np.array(target3)]
         )
 
-    def test_run_1qubit(self):
+    def test_run_1qubit(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for 1-qubit cases."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         qc = QuantumCircuit(1)
         qc.measure_all()
@@ -219,9 +224,9 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([qc, qc2]).result()
         assert_result_type(result, num_pubs=2)
 
-    def test_run_2qubit(self):
+    def test_run_2qubit(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for 2-qubit cases."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         qc0 = QuantumCircuit(2)
         qc0.measure_all()
@@ -239,21 +244,28 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         assert_result_type(result, num_pubs=4)
 
-    @named_data(
-        # The empty parameter values accepted by a circuit that takes no parameters.
-        ("none", None),
-        ("empty_tuple", ()),
-        ("empty_list", []),
-        ("empty_array", np.array([])),
-        ("tuple_of_empty_tuple", ((),)),
-        ("tuple_of_empty_list", ([],)),
-        ("list_of_empty_list", [[]]),
-        ("list_of_empty_tuple", [()]),
-        ("array_of_empty_array", np.array([[]])),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The empty parameter values accepted by a circuit that takes no parameters.
+            pytest.param(None, id="none"),
+            pytest.param((), id="empty_tuple"),
+            pytest.param([], id="empty_list"),
+            pytest.param(np.array([]), id="empty_array"),
+            pytest.param(((),), id="tuple_of_empty_tuple"),
+            pytest.param(([],), id="tuple_of_empty_list"),
+            pytest.param([[]], id="list_of_empty_list"),
+            pytest.param([()], id="list_of_empty_tuple"),
+            pytest.param(np.array([[]]), id="array_of_empty_array"),
+        ],
     )
-    def test_run_single_circuit_no_parameter(self, parameter_values):
+    def test_run_single_circuit_no_parameter(
+        self,
+        parameter_values: tuple | list | np.ndarray | None,
+        dependencies: IntegrationTestDependencies,
+    ) -> None:
         """Test for single circuit case, for a circuit without parameters."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
         _, _, target = sampler_cases()[1]
 
@@ -263,18 +275,23 @@ class TestSampler(IBMIntegrationTestCase):
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    @named_data(
-        # The shapes accepted for the values of a circuit that takes a single parameter.
-        ("list", [np.pi]),
-        ("tuple", (np.pi,)),
-        ("array", np.array([np.pi])),
-        ("nested_list", [[np.pi]]),
-        ("nested_tuple", ((np.pi,),)),
-        ("nested_array", np.array([[np.pi]])),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The shapes accepted for the values of a circuit that takes a single parameter.
+            pytest.param([np.pi], id="list"),
+            pytest.param((np.pi,), id="tuple"),
+            pytest.param(np.array([np.pi]), id="array"),
+            pytest.param([[np.pi]], id="nested_list"),
+            pytest.param(((np.pi,),), id="nested_tuple"),
+            pytest.param(np.array([[np.pi]]), id="nested_array"),
+        ],
     )
-    def test_run_single_circuit_one_parameter(self, parameter_values):
+    def test_run_single_circuit_one_parameter(
+        self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test for single circuit case, for a circuit with a single parameter."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         circuit = QuantumCircuit(1, 1, name="X gate")
@@ -287,19 +304,24 @@ class TestSampler(IBMIntegrationTestCase):
 
         assert_result_type(result, num_pubs=1)
 
-    @named_data(
-        # The shapes accepted for the values of a circuit that takes more than one parameter.
-        # The values match the ones of `sampler_cases()[3]`, used by the test.
-        ("list", [1] * 6),
-        ("tuple", (1,) * 6),
-        ("array", np.array([1] * 6)),
-        ("nested_list", [[1] * 6]),
-        ("nested_tuple", ([1] * 6,)),
-        ("nested_array", np.array([[1] * 6])),
+    @pytest.mark.parametrize(
+        "parameter_values",
+        [
+            # The shapes accepted for the values of a circuit that takes more than one parameter.
+            # The values match the ones of `sampler_cases()[3]`, used by the test.
+            pytest.param([1] * 6, id="list"),
+            pytest.param((1,) * 6, id="tuple"),
+            pytest.param(np.array([1] * 6), id="array"),
+            pytest.param([[1] * 6], id="nested_list"),
+            pytest.param(([1] * 6,), id="nested_tuple"),
+            pytest.param(np.array([[1] * 6]), id="nested_array"),
+        ],
     )
-    def test_run_single_circuit_more_than_one_parameter(self, parameter_values):
+    def test_run_single_circuit_more_than_one_parameter(
+        self, parameter_values: tuple | list | np.ndarray, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test for single circuit case, for a circuit with more than one parameter."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         circuit, _, target = sampler_cases()[3]
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
@@ -309,9 +331,9 @@ class TestSampler(IBMIntegrationTestCase):
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_run_reverse_meas_order(self):
+    def test_run_reverse_meas_order(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for sampler with reverse measurement order."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         x = Parameter("x")
         y = Parameter("y")
@@ -329,10 +351,12 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
         assert_result_type(result, num_pubs=2)
 
-    @data(1, 2)
-    def test_run_empty_parameter(self, num_circuits):
+    @pytest.mark.parametrize("num_circuits", [1, 2])
+    def test_run_empty_parameter(
+        self, num_circuits: int, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test for empty parameter."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         n = 5
         qc = QuantumCircuit(n, n - 1)
@@ -344,10 +368,12 @@ class TestSampler(IBMIntegrationTestCase):
 
         assert_result_type(result, num_pubs=num_circuits)
 
-    @data("ndarray", "list")
-    def test_run_numpy_params(self, params_type):
+    @pytest.mark.parametrize("params_type", ["ndarray", "list"])
+    def test_run_numpy_params(
+        self, params_type: str, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test for numpy array as parameter values."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         qc = real_amplitudes(num_qubits=2, reps=2)
         qc.measure_all()
@@ -369,10 +395,12 @@ class TestSampler(IBMIntegrationTestCase):
 
         assert_result_type(result, num_pubs=num_pubs, targets=[np.array(target)])
 
-    def test_run_with_shots_option_init_option(self):
+    def test_run_with_shots_option_init_option(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test with the number of shots set in the options the sampler is created with."""
         shots = 100
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -383,10 +411,12 @@ class TestSampler(IBMIntegrationTestCase):
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_update_option(self):
+    def test_run_with_shots_option_update_option(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test with the number of shots set in the options of an existing sampler."""
         shots = 100
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -398,10 +428,10 @@ class TestSampler(IBMIntegrationTestCase):
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_run_arg(self):
+    def test_run_with_shots_option_run_arg(self, dependencies: IntegrationTestDependencies) -> None:
         """Test with the number of shots set as an argument of `Sampler.run()`."""
         shots = 100
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -412,10 +442,12 @@ class TestSampler(IBMIntegrationTestCase):
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_pub_like(self):
+    def test_run_with_shots_option_pub_like(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test with the number of shots set in a pub-like tuple."""
         shots = 100
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -426,10 +458,10 @@ class TestSampler(IBMIntegrationTestCase):
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_pub(self):
+    def test_run_with_shots_option_pub(self, dependencies: IntegrationTestDependencies) -> None:
         """Test with the number of shots set in a `SamplerPub`."""
         shots = 100
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
@@ -440,9 +472,11 @@ class TestSampler(IBMIntegrationTestCase):
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_multiple_pubs(self):
+    def test_run_with_shots_option_multiple_pubs(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test with per-pub shots option."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         shots1 = 100
@@ -460,9 +494,9 @@ class TestSampler(IBMIntegrationTestCase):
         assert sum(result[1].data.meas.get_counts().values()) == shots2
         assert_result_type(result, num_pubs=2)
 
-    def test_run_shots_result_size(self):
+    def test_run_shots_result_size(self, dependencies: IntegrationTestDependencies) -> None:
         """Test with shots option to validate the result size."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
 
         n = 10
         qc = QuantumCircuit(n)
@@ -475,9 +509,9 @@ class TestSampler(IBMIntegrationTestCase):
         assert sum(result[0].data.meas.get_counts().values()) == SHOTS
         assert_result_type(result, num_pubs=1)
 
-    def test_primitive_job_status_done(self):
+    def test_primitive_job_status_done(self, dependencies: IntegrationTestDependencies) -> None:
         """Test primitive job's status."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         sampler = Sampler(mode=backend, options=OPTIONS)
@@ -485,13 +519,18 @@ class TestSampler(IBMIntegrationTestCase):
         _ = job.result()
         assert job.status() == "DONE"
 
-    @named_data(
-        ("identity", UnitaryGate(np.eye(2))),
-        ("X", UnitaryGate([[0, 1], [1, 0]])),
+    @pytest.mark.parametrize(
+        "gate",
+        [
+            pytest.param(UnitaryGate(np.eye(2)), id="identity"),
+            pytest.param(UnitaryGate([[0, 1], [1, 0]]), id="X"),
+        ],
     )
-    def test_circuit_with_unitary(self, gate):
+    def test_circuit_with_unitary(
+        self, gate: UnitaryGate, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test for circuit with unitary gate."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         circuit = QuantumCircuit(1)
@@ -504,9 +543,9 @@ class TestSampler(IBMIntegrationTestCase):
 
         assert_result_type(result, num_pubs=1)
 
-    def test_metadata(self):
+    def test_metadata(self, dependencies: IntegrationTestDependencies) -> None:
         """Test for metatdata."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -516,10 +555,18 @@ class TestSampler(IBMIntegrationTestCase):
         assert result[0].data.meas.num_shots == SHOTS
         assert_result_type(result, num_pubs=1)
 
-    @named_data(*multiple_cregs_cases())
-    def test_circuit_with_multiple_cregs(self, circuit, target):
+    @pytest.mark.parametrize(
+        ("circuit", "target"),
+        [
+            pytest.param(circuit, target, id=title)
+            for title, circuit, target in multiple_cregs_cases()
+        ],
+    )
+    def test_circuit_with_multiple_cregs(
+        self, circuit: QuantumCircuit, target: dict, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Test for circuit with multiple classical registers."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(backend) as session:
@@ -529,33 +576,37 @@ class TestSampler(IBMIntegrationTestCase):
         assert len(result[0].data) == len(target)
         assert_result_type(result, num_pubs=1)
 
-    def test_sampler_v2_options(self):
+    def test_sampler_v2_options(self, dependencies: IntegrationTestDependencies) -> None:
         """Test SamplerV2 options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
         sampler = Sampler(mode=backend)
         sampler.options.default_shots = 4096
-        sampler.options.execution.init_qubits = True
-        sampler.options.execution.rep_delay = 0.00025
+        execution = cast("SamplerExecutionOptionsV2", sampler.options.execution)
+        execution.init_qubits = True
+        execution.rep_delay = 0.00025
 
         _, _, target = cases[1]
         job = sampler.run([isa_bell])
         result = job.result()
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_sampler_v2_dd(self):
+    def test_sampler_v2_dd(self, dependencies: IntegrationTestDependencies) -> None:
         """Test SamplerV2 DD options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
 
         sampler = Sampler(mode=backend)
-        sampler.options.dynamical_decoupling.enable = True
-        sampler.options.dynamical_decoupling.sequence_type = "XX"
-        sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"
-        sampler.options.dynamical_decoupling.scheduling_method = "asap"
-        sampler.options.dynamical_decoupling.skip_reset_qubits = True
+        dynamical_decoupling = cast(
+            "DynamicalDecouplingOptions", sampler.options.dynamical_decoupling
+        )
+        dynamical_decoupling.enable = True
+        dynamical_decoupling.sequence_type = "XX"
+        dynamical_decoupling.extra_slack_distribution = "middle"
+        dynamical_decoupling.scheduling_method = "asap"
+        dynamical_decoupling.skip_reset_qubits = True
         bell, _, _ = cases[1]
         bell = transpile(bell, backend)
         job = sampler.run([bell])
@@ -563,5 +614,5 @@ class TestSampler(IBMIntegrationTestCase):
             result = job.result()
         except RuntimeJobFailureError as ex:
             if "Error code 6050" in ex.message:
-                self.skipTest("Backend cannot be used for this test")
+                pytest.skip("Backend cannot be used for this test")
         assert_result_type(result, num_pubs=1)

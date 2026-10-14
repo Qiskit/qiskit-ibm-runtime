@@ -14,17 +14,17 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import tempfile
-import unittest
 from typing import TYPE_CHECKING
 from unittest import mock
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
 
-from ddt import data, ddt
+import pytest
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import CZGate, ECRGate
 from qiskit.utils import optionals
@@ -40,8 +40,6 @@ from qiskit_ibm_runtime.fake_provider import (
     fake_backend,
 )
 from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
-
-from ...ibm_test_case import IBMTestCase
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
@@ -67,11 +65,11 @@ def make_refresh_service(backend: FakeBackendV2) -> tuple[mock.MagicMock, Abstra
     return service, patcher
 
 
-class FakeBackendsTest(IBMTestCase):
+class TestFakeProvider:
     """fake backends test."""
 
-    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
-    def test_fake_backends_get_kwargs(self):
+    @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_fake_backends_get_kwargs(self) -> None:
         """Fake backends honor kwargs passed."""
         backend = FakeAthensV2()
 
@@ -87,8 +85,8 @@ class FakeBackendsTest(IBMTestCase):
 
         assert sum(counts.values()) == 1024
 
-    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
-    def test_fake_backend_v2_noise_model_always_present(self):
+    @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_fake_backend_v2_noise_model_always_present(self) -> None:
         """Test that FakeBackendV2 instances always run with noise."""
         backend = FakePerth()
         qc = QuantumCircuit(1)
@@ -101,14 +99,14 @@ class FakeBackendsTest(IBMTestCase):
         # Assert noise was present and result wasn't ideal
         assert counts != {"1": 1000}
 
-    def test_retrieving_single_backend(self):
+    def test_retrieving_single_backend(self) -> None:
         """Test retrieving a single backend."""
         provider = FakeProviderForBackendV2()
         backend_name = "fake_jakarta"
         backend = provider.backend(backend_name)
         assert backend.name == backend_name
 
-    def test_all_fake_backends_registered(self):
+    def test_all_fake_backends_registered(self) -> None:
         """Test that every fake backend class in the module is registered in the provider."""
         all_classes = {
             name
@@ -121,7 +119,7 @@ class FakeBackendsTest(IBMTestCase):
         assert all_classes == registered
 
 
-class FakeBackendRefreshTest(IBMTestCase):
+class TestFakeBackendRefresh:
     """Tests for the ``persist`` behavior of :meth:`.FakeBackendV2.refresh`.
 
     With ``persist=False`` the refreshed data must be written to a temporary directory rather
@@ -129,7 +127,9 @@ class FakeBackendRefreshTest(IBMTestCase):
     :meth:`~.FakeBackendV2.refresh` succeeds without modifying the installed package.
     """
 
-    def test_refresh_no_persist_leaves_package_untouched(self):
+    def test_refresh_no_persist_leaves_package_untouched(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """``persist=False`` writes to a temp dir and never modifies the bundled files."""
         backend = FakeAthensV2()
         pkg_dir = backend.dirname
@@ -140,10 +140,11 @@ class FakeBackendRefreshTest(IBMTestCase):
 
         service, patcher = make_refresh_service(backend)
         with patcher:
-            with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+            caplog.clear()
+            with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
                 backend.refresh(service, persist=False)
 
-        assert "has been updated" in "".join(logs.output)
+        assert "has been updated" in caplog.text
 
         # ``dirname`` is left untouched (still pointing at the bundled files).
         # The refreshed data is written to and read from the temporary directory instead.
@@ -161,7 +162,7 @@ class FakeBackendRefreshTest(IBMTestCase):
         assert os.stat(pkg_conf).st_mtime_ns == pkg_conf_mtime
         assert os.stat(pkg_props).st_mtime_ns == pkg_props_mtime
 
-    def test_refresh_persist_after_no_persist_targets_bundled_files(self):
+    def test_refresh_persist_after_no_persist_targets_bundled_files(self) -> None:
         """A ``persist=True`` ``refresh()`` after a ``persist=False`` one still targets ``dirname``.
 
         Since ``persist=False`` no longer overwrites ``dirname``, a subsequent persisting
@@ -187,7 +188,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             reloaded._conf_dict = reloaded._get_conf_dict_from_json()
             assert reloaded._conf_dict["backend_version"] == "9.9.9-refreshed"
 
-    def test_refresh_default_writes_in_place(self):
+    def test_refresh_default_writes_in_place(self, caplog: pytest.LogCaptureFixture) -> None:
         """The default (``persist=True``) writes back into ``dirname`` without a temp dir.
 
         ``dirname`` is redirected to a writable copy of the bundled data so the test never touches
@@ -201,10 +202,11 @@ class FakeBackendRefreshTest(IBMTestCase):
 
             service, patcher = make_refresh_service(backend)
             with patcher:
-                with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+                caplog.clear()
+                with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
                     backend.refresh(service)
 
-            assert "has been updated" in "".join(logs.output)
+            assert "has been updated" in caplog.text
 
             # No temporary directory is created and ``dirname`` is unchanged.
             assert backend.dirname == data_dir
@@ -219,12 +221,11 @@ class FakeBackendRefreshTest(IBMTestCase):
             assert backend._conf_dict["backend_version"] == "9.9.9-refreshed"
 
 
-@ddt
-class TestFakeBackends(IBMTestCase):
+class TestFakeBackends:
     """Test case for fake backends."""
 
-    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
-    def test_to_dict_properties(self, backend):
+    @pytest.mark.parametrize("backend", FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_to_dict_properties(self, backend: FakeBackendV2) -> None:
         """Test converting backend properties to dict."""
         properties = backend.properties()
         if properties:
@@ -232,21 +233,21 @@ class TestFakeBackends(IBMTestCase):
         else:
             assert backend.configuration().simulator
 
-    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
-    def test_convert_to_target(self, backend):
+    @pytest.mark.parametrize("backend", FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_convert_to_target(self, backend: FakeBackendV2) -> None:
         """Test backend target's dt."""
         target = backend.target
         if target.dt is not None:
             assert target.dt < 1e-6
 
-    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
-    def test_backend_v2_dtm(self, backend):
+    @pytest.mark.parametrize("backend", FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_backend_v2_dtm(self, backend: FakeBackendV2) -> None:
         """Test backend dtm"."""
         if backend.dtm:
             assert backend.dtm < 1e-6
 
-    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
-    def test_to_dict_configuration(self, backend):
+    @pytest.mark.parametrize("backend", FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_to_dict_configuration(self, backend: FakeBackendV2) -> None:
         """Test backend configuration."""
         configuration = backend.configuration()
         if configuration.open_pulse:
@@ -273,7 +274,7 @@ class TestFakeBackends(IBMTestCase):
             roundtrip_config = configuration.from_dict(config_dict)
             assert configuration.rep_times == roundtrip_config.rep_times
 
-    def test_delay_circuit(self):
+    def test_delay_circuit(self) -> None:
         """Test transpiling with delay."""
         backend = FakeMumbaiV2()
         qc = QuantumCircuit(2)
@@ -284,21 +285,21 @@ class TestFakeBackends(IBMTestCase):
         res = transpile(qc, backend)
         assert "delay" in res.count_ops()
 
-    def test_non_cx_tests(self):
+    def test_non_cx_tests(self) -> None:
         """Test using non cx gates."""
         backend = FakePrague()
         assert isinstance(backend.target.operation_from_name("cz"), CZGate)
         backend = FakeSherbrooke()
         assert isinstance(backend.target.operation_from_name("ecr"), ECRGate)
 
-    def test_backend_configuration_attributes(self):
+    def test_backend_configuration_attributes(self) -> None:
         """Test specific backend configuration attributes."""
         backend = FakeMumbaiV2()
         assert backend.dynamic_reprate_enabled
         assert backend.rep_delay_range
 
-    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
-    def test_backend_physical_qubits(self, backend):
+    @pytest.mark.parametrize("backend", FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_backend_physical_qubits(self, backend: FakeBackendV2) -> None:
         """Test the `physical_qubits` property of backends.
 
         `physical_qubits` was added to all the backends that were active at the time.

@@ -12,7 +12,7 @@
 
 """Test the dynamic circuits scheduling analysis."""
 
-from ddt import ddt
+import pytest
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Delay, Parameter
 from qiskit.circuit.library import CXGate, Measure, Reset, RZGate, XGate
@@ -28,8 +28,6 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
     ASAPScheduleAnalysis,
 )
 
-from .....ibm_test_case import IBMTestCase
-
 
 def delay_dict(circ: QuantumCircuit) -> dict[int, list[int]]:
     """Return a dictionary with a list of delays for each qubit."""
@@ -41,11 +39,10 @@ def delay_dict(circ: QuantumCircuit) -> dict[int, list[int]]:
     return delays_per_qubit
 
 
-@ddt
-class TestASAPSchedulingAndPaddingPass(IBMTestCase):
+class TestASAPSchedulingAndPaddingPass:
     """Tests the ASAP Scheduling passes."""
 
-    def test_if_test_gate_after_measure(self):
+    def test_if_test_gate_after_measure(self) -> None:
         """Test if schedules circuits with if_test after measure with a common clbit.
 
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
@@ -93,7 +90,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_measure_after_measure(self):
+    def test_measure_after_measure(self) -> None:
         """Test if schedules circuits with measure after measure with a common clbit.
 
         Note: There is no delay to write into the same clbit with IBM backends.
@@ -133,7 +130,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         expected.measure(1, 0)
         assert expected == scheduled
 
-    def test_measure_block_not_end(self):
+    def test_measure_block_not_end(self) -> None:
         """Tests that measures trigger do not trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -181,7 +178,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_reset_block_end(self):
+    def test_reset_block_end(self) -> None:
         """Tests that measures trigger do trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -238,7 +235,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_if_test_on_different_qubits(self):
+    def test_if_test_on_different_qubits(self) -> None:
         """Test if schedules circuits with `if_test`s on different qubits."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -283,7 +280,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_shorter_measure_after_measure(self):
+    def test_shorter_measure_after_measure(self) -> None:
         """Test if schedules circuits with shorter measure after measure with a common clbit.
 
         Note: For dynamic circuits support we currently group measurements to start at the same
@@ -317,7 +314,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_measure_after_if_test(self):
+    def test_measure_after_if_test(self) -> None:
         """Test if schedules circuits with if_test after measure with a common clbit."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -375,7 +372,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_parallel_gate_different_length(self):
+    def test_parallel_gate_different_length(self) -> None:
         """Test circuit having two parallel instruction with different length."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -415,7 +412,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled == expected
 
-    def test_parallel_gate_different_length_with_barrier(self):
+    def test_parallel_gate_different_length_with_barrier(self) -> None:
         """Test circuit having two parallel instruction with different length with barrier."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -457,7 +454,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled == expected
 
-    def test_active_reset_circuit(self):
+    def test_active_reset_circuit(self) -> None:
         """Test practical example of reset circuit.
 
         Because of the stimulus pulse overlap with the previous XGate on the q register,
@@ -510,7 +507,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_dag_introduces_extra_dependency_between_conditionals(self):
+    def test_dag_introduces_extra_dependency_between_conditionals(self) -> None:
         """Test dependency between conditional operations in the scheduling.
 
         In the below example circuit, the conditional x on q1 could start at time 0,
@@ -555,7 +552,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_padding_not_working_without_scheduling(self):
+    def test_padding_not_working_without_scheduling(self) -> None:
         """Test padding fails when un-scheduled DAG is input."""
         qc = QuantumCircuit(1, 1)
         qc.delay(100, 0)
@@ -563,10 +560,10 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
 
         target = Target(num_qubits=2, dt=1)
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             PassManager(PadDelay(target=target)).run(qc)
 
-    def test_no_pad_very_end_of_circuit(self):
+    def test_no_pad_very_end_of_circuit(self) -> None:
         """Test padding option that inserts no delay at the very end of circuit.
 
         This circuit will be unchanged after scheduling/padding.
@@ -603,7 +600,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_reset_terminates_block(self):
+    def test_reset_terminates_block(self) -> None:
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets to start at the same time
@@ -659,7 +656,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_reset_merged_with_measure(self):
+    def test_reset_merged_with_measure(self) -> None:
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets to start at the same time
@@ -710,7 +707,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_scheduling_is_idempotent(self):
+    def test_scheduling_is_idempotent(self) -> None:
         """Test that padding can be applied back to back without changing the circuit."""
         qc = QuantumCircuit(3, 2)
         qc.x(2)
@@ -761,7 +758,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled0 == scheduled1
 
-    def test_gate_on_measured_qubit(self):
+    def test_gate_on_measured_qubit(self) -> None:
         """Test that a gate on a previously measured qubit triggers the end of the block."""
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
@@ -799,7 +796,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_grouped_measurements_prior_control_flow(self):
+    def test_grouped_measurements_prior_control_flow(self) -> None:
         """Test that measurements are grouped prior to control-flow."""
         qc = QuantumCircuit(3, 3)
         qc.measure(0, 0)
@@ -855,7 +852,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_back_to_back_if_test(self):
+    def test_back_to_back_if_test(self) -> None:
         """Test back to back if_test scheduling."""
         qc = QuantumCircuit(3, 1)
         qc.delay(800, 1)
@@ -913,7 +910,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_nested_control_scheduling(self):
+    def test_nested_control_scheduling(self) -> None:
         """Test scheduling of nested control-flow."""
         qc = QuantumCircuit(4, 3)
         qc.x(0)
@@ -983,7 +980,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_while_loop(self):
+    def test_while_loop(self) -> None:
         """Test scheduling while loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
@@ -1027,7 +1024,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_for_loop(self):
+    def test_for_loop(self) -> None:
         """Test scheduling for loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
@@ -1071,7 +1068,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_registers(self):
+    def test_registers(self) -> None:
         """Verify scheduling works with registers."""
         qr = QuantumRegister(1, name="q")
         cr = ClassicalRegister(1)
@@ -1109,11 +1106,10 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         assert expected == scheduled
 
 
-@ddt
-class TestALAPSchedulingAndPaddingPass(IBMTestCase):
+class TestALAPSchedulingAndPaddingPass:
     """Tests the ALAP Scheduling passes."""
 
-    def test_alap(self):
+    def test_alap(self) -> None:
         """Test standard ALAP scheduling."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -1152,7 +1148,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_if_test_gate_after_measure(self):
+    def test_if_test_gate_after_measure(self) -> None:
         """Test if schedules circuits with if_test after measure with a common clbit.
 
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
@@ -1199,7 +1195,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_classically_controlled_gate_after_measure(self):
+    def test_classically_controlled_gate_after_measure(self) -> None:
         """Test if schedules circuits with if_test after measure with a common clbit.
 
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
@@ -1242,7 +1238,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_measure_after_measure(self):
+    def test_measure_after_measure(self) -> None:
         """Test if schedules circuits with measure after measure with a common clbit.
 
         Note: There is no delay to write into the same clbit with IBM backends.
@@ -1283,7 +1279,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_measure_block_not_end(self):
+    def test_measure_block_not_end(self) -> None:
         """Tests that measures trigger do not trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -1331,7 +1327,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_reset_block_end(self):
+    def test_reset_block_end(self) -> None:
         """Tests that measures trigger do trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -1389,7 +1385,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_if_test_on_different_qubits(self):
+    def test_if_test_on_different_qubits(self) -> None:
         """Test if schedules circuits with `if_test`s on different qubits."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -1434,7 +1430,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_shorter_measure_after_measure(self):
+    def test_shorter_measure_after_measure(self) -> None:
         """Test if schedules circuits with shorter measure after measure with a common clbit.
 
         Note: For dynamic circuits support we currently group measurements
@@ -1468,7 +1464,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_measure_after_if_test(self):
+    def test_measure_after_if_test(self) -> None:
         """Test if schedules circuits with if_test after measure with a common clbit."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -1517,7 +1513,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_parallel_gate_different_length(self):
+    def test_parallel_gate_different_length(self) -> None:
         """Test circuit having two parallel instruction with different length."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -1557,7 +1553,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled == expected
 
-    def test_parallel_gate_different_length_with_barrier(self):
+    def test_parallel_gate_different_length_with_barrier(self) -> None:
         """Test circuit having two parallel instruction with different length with barrier."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -1599,7 +1595,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled == expected
 
-    def test_active_reset_circuit(self):
+    def test_active_reset_circuit(self) -> None:
         """Test practical example of reset circuit.
 
         Because of the stimulus pulse overlap with the previous XGate on the q register,
@@ -1657,7 +1653,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_dag_introduces_extra_dependency_between_conditionals(self):
+    def test_dag_introduces_extra_dependency_between_conditionals(self) -> None:
         """Test dependency between conditional operations in the scheduling.
 
         In the below example circuit, the conditional x on q1 could start at time 0,
@@ -1702,17 +1698,17 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_padding_not_working_without_scheduling(self):
+    def test_padding_not_working_without_scheduling(self) -> None:
         """Test padding fails when un-scheduled DAG is input."""
         qc = QuantumCircuit(1, 1)
         qc.delay(100, 0)
         qc.x(0)
         qc.measure(0, 0)
         target = Target(num_qubits=2, dt=1)
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             PassManager(PadDelay(target=target)).run(qc)
 
-    def test_no_pad_very_end_of_circuit(self):
+    def test_no_pad_very_end_of_circuit(self) -> None:
         """Test padding option that inserts no delay at the very end of circuit.
 
         This circuit will be unchanged after scheduling/padding.
@@ -1753,7 +1749,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_reset_terminates_block(self):
+    def test_reset_terminates_block(self) -> None:
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets
@@ -1809,7 +1805,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_reset_merged_with_measure(self):
+    def test_reset_merged_with_measure(self) -> None:
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets to start
@@ -1860,7 +1856,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_already_scheduled(self):
+    def test_already_scheduled(self) -> None:
         """Test no changes to pre-scheduled."""
         qc = QuantumCircuit(3, 2)
         qc.cx(0, 1)
@@ -1913,7 +1909,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert qc == scheduled
 
-    def test_scheduling_is_idempotent(self):
+    def test_scheduling_is_idempotent(self) -> None:
         """Test that padding can be applied back to back without changing the circuit."""
         qc = QuantumCircuit(3, 2)
         qc.x(2)
@@ -1959,7 +1955,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled0 == scheduled1
 
-    def test_gate_on_measured_qubit(self):
+    def test_gate_on_measured_qubit(self) -> None:
         """Test that a gate on a previously measured qubit triggers the end of the block."""
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
@@ -1997,7 +1993,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_grouped_measurements_prior_control_flow(self):
+    def test_grouped_measurements_prior_control_flow(self) -> None:
         """Test that measurements are grouped prior to control-flow."""
         qc = QuantumCircuit(3, 3)
         qc.measure(0, 0)
@@ -2053,7 +2049,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_fast_path_eligible_scheduling(self):
+    def test_fast_path_eligible_scheduling(self) -> None:
         """Test scheduling of the fast-path eligible blocks.
 
         Verify that no barrier is inserted between measurements and fast-path conditionals.
@@ -2129,7 +2125,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_back_to_back_if_test(self):
+    def test_back_to_back_if_test(self) -> None:
         """Test back to back if_test scheduling."""
         qc = QuantumCircuit(3, 1)
         qc.delay(800, 1)
@@ -2186,7 +2182,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         expected.delay(1000, 2)
         assert expected == scheduled
 
-    def test_issue_458_extra_idle_bug_0(self):
+    def test_issue_458_extra_idle_bug_0(self) -> None:
         """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458.
 
         This demonstrates that delays on idle qubits are pushed to the last schedulable
@@ -2275,7 +2271,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled == expected
 
-    def test_issue_458_extra_idle_bug_1(self):
+    def test_issue_458_extra_idle_bug_1(self) -> None:
         """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458.
 
         This demonstrates that a bug with a double-delay insertion has been resolved.
@@ -2329,7 +2325,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert scheduled == expected
 
-    def test_nested_control_scheduling(self):
+    def test_nested_control_scheduling(self) -> None:
         """Test scheduling of nested control-flow."""
         qc = QuantumCircuit(4, 3)
         qc.x(0)
@@ -2399,7 +2395,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_while_loop(self):
+    def test_while_loop(self) -> None:
         """Test scheduling while loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
@@ -2443,7 +2439,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_for_loop(self):
+    def test_for_loop(self) -> None:
         """Test scheduling for loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
@@ -2487,7 +2483,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_transpile_mock_backend(self):
+    def test_transpile_mock_backend(self) -> None:
         """Test scheduling works with transpilation."""
         backend = FakeJakartaV2()
 
@@ -2534,7 +2530,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         assert expected == scheduled
 
-    def test_transpile_both_paths(self):
+    def test_transpile_both_paths(self) -> None:
         """Test scheduling works with both fast- and standard path after transpiling."""
         backend = FakeJakartaV2()
 
@@ -2575,7 +2571,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
                     expected.delay(160, qr[q_ind])
         assert expected == scheduled
 
-    def test_no_unused_qubits(self):
+    def test_no_unused_qubits(self) -> None:
         """Test DD with if_test circuit that unused qubits are untouched and not scheduled.
 
         This ensures that programs don't have unnecessary information for unused qubits.
@@ -2619,7 +2615,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         for op in scheduled.data:
             assert dont_use not in op.qubits
 
-    def test_scheduling_nonuniform_durations(self):
+    def test_scheduling_nonuniform_durations(self) -> None:
         """Test scheduling uses the instruction durations correctly.
 
         Test that scheduling within control flow blocks uses the instruction durations on the

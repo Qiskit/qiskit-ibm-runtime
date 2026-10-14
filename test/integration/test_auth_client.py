@@ -16,11 +16,10 @@ from __future__ import annotations
 
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
-from ..ibm_test_case import IBMTestCase
 from .case import integration_test_dependencies
 
 
-class TestAuthClient(IBMTestCase):
+class TestAuthClient:
     """Tests for the AuthClient."""
 
     def test_cloud_access_token(self) -> None:

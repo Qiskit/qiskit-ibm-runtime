@@ -12,8 +12,11 @@
 
 """Integration tests for Session."""
 
-from unittest import SkipTest, mock
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+import pytest
 from qiskit.circuit import IfElseOp
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives import PrimitiveResult
@@ -24,17 +27,19 @@ from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMRuntimeError
 
 from ..utils import bell
-from .case import IBMIntegrationTestCase
 from .test_account import _get_service_instance_name_for_crn
 
+if TYPE_CHECKING:
+    from .case import IntegrationTestDependencies
 
-class TestIntegrationSession(IBMIntegrationTestCase):
+
+class TestIntegrationSession:
     """Integration tests for Session."""
 
-    def test_estimator_sampler(self):
+    def test_estimator_sampler(self, dependencies: IntegrationTestDependencies) -> None:
         """Test calling both estimator and sampler."""
-        service = self.service
-        backend = service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         psi1 = pm.run(real_amplitudes(num_qubits=2, reps=2))
@@ -59,12 +64,14 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             assert isinstance(result, PrimitiveResult)
             session.close()
 
-    def test_session_from_id(self):
+    def test_session_from_id(
+        self, dependencies: IntegrationTestDependencies, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test creating a session from a given id."""
-        service = self.service
-        backend = service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         if backend.configuration().simulator:
-            raise SkipTest("No proper backends available")
+            pytest.skip("No proper backends available")
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run([bell()])
         with Session(backend=backend) as session:
@@ -72,36 +79,42 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             job = sampler.run(isa_circuit)
             job.result()
 
-        with mock.patch.object(service._get_api_client(), "create_session") as mock_create_session:
-            new_session = Session.from_id(session_id=session._session_id, service=service)
-            mock_create_session.assert_not_called()
+        create_session_called = False
+
+        def mock_create_session(*args, **kwargs):
+            nonlocal create_session_called
+            create_session_called = True
+
+        monkeypatch.setattr(service._get_api_client(), "create_session", mock_create_session)
+        new_session = Session.from_id(session_id=session._session_id, service=service)
+        assert not create_session_called
 
         assert session._session_id == new_session._session_id
         new_session.close()
         assert not new_session._active
         assert not new_session.details()["accepting_jobs"]
 
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
 
-    def test_session_from_id_no_backend(self):
+    def test_session_from_id_no_backend(self, dependencies: IntegrationTestDependencies) -> None:
         """Test error is raised if session has no backend."""
-        service = self.service
-        backend = service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         if backend.configuration().simulator:
-            raise SkipTest("No proper backends available")
+            pytest.skip("No proper backends available")
 
         with Session(backend=backend) as session:
             _ = SamplerV2(mode=session)
 
         if session.details().get("backend_name") == "":
-            with self.assertRaises(IBMRuntimeError):
+            with pytest.raises(IBMRuntimeError):
                 Session.from_id(session_id=session._session_id, service=service)
 
-    def test_session_backend(self):
+    def test_session_backend(self, dependencies: IntegrationTestDependencies) -> None:
         """Test session backend is the correct backend."""
-        service = self.service
-        backend = service.backend(self.dependencies.qpu)
+        service = dependencies.service
+        backend = service.backend(dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         instruction_name = "test_name"
@@ -116,30 +129,30 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             job2 = sampler2.run([pm.run(bell())])
             assert instruction_name in job2.backend().target.operation_names
 
-    def test_session_instance_logic(self):
+    def test_session_instance_logic(self, dependencies: IntegrationTestDependencies) -> None:
         """Test creating a session with different service configurations."""
         # test with no instances passed in
         service_no_instance = QiskitRuntimeService(
-            token=self.dependencies.token,
+            token=dependencies.token,
             channel="ibm_quantum_platform",
-            url=self.dependencies.url,
+            url=dependencies.url,
         )
 
-        backend = service_no_instance.backend(self.dependencies.qpu)
+        backend = service_no_instance.backend(dependencies.qpu)
         session = Session(backend=backend)
         assert session
         session.close()
 
         # test when instance name is used at service init
-        instance_name = _get_service_instance_name_for_crn(self.dependencies)
+        instance_name = _get_service_instance_name_for_crn(dependencies)
         service_with_instance_name = QiskitRuntimeService(
-            token=self.dependencies.token,
+            token=dependencies.token,
             instance=instance_name,
             channel="ibm_quantum_platform",
-            url=self.dependencies.url,
+            url=dependencies.url,
         )
 
-        backend = service_with_instance_name.backend(self.dependencies.qpu)
+        backend = service_with_instance_name.backend(dependencies.qpu)
         session = Session(backend=backend)
         assert session
         session.close()

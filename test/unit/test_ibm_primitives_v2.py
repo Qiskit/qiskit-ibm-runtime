@@ -12,11 +12,14 @@
 
 """Tests for primitive classes."""
 
+from __future__ import annotations
+
 from dataclasses import asdict
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-from ddt import data, ddt
+import pytest
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import real_amplitudes
@@ -33,19 +36,19 @@ from ..asserts import (
     assert_dict_keys_equal,
     assert_dict_partially_equal,
 )
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
-from ..utils import combine, create_faulty_backend, get_mocked_backend, get_primitive_inputs
+from ..utils import create_faulty_backend, get_mocked_backend, get_primitive_inputs
+
+if TYPE_CHECKING:
+    from ..registries import BaseRegistry
 
 
-@ddt
-class TestPrimitivesV2(IBMTestCase):
+class TestPrimitivesV2:
     """Class for testing the Sampler and Estimator classes."""
 
-    @data(EstimatorV2, SamplerV2)
-    def test_dict_options(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_dict_options(self, primitive: type[EstimatorV2 | SamplerV2]) -> None:
         """Test passing a dictionary as options."""
-        options_vars = [
+        options_vars: list[dict] = [
             {},
             {
                 "max_execution_time": 100,
@@ -58,38 +61,40 @@ class TestPrimitivesV2(IBMTestCase):
             inst = primitive(mode=backend, options=options)
             assert_dict_partially_equal(asdict(inst.options), options)
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        env_var=[
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize(
+        "env_var",
+        [
             {"log_level": "DEBUG"},
             {"job_tags": ["foo", "bar"]},
         ],
     )
-    def test_runtime_options(self, primitive, env_var):
+    def test_runtime_options(self, primitive: type, env_var: dict) -> None:
         """Test RuntimeOptions specified as primitive options."""
         backend = get_mocked_backend()
-        options = primitive._options_class(environment=env_var)
+        options = primitive._options_class(environment=env_var)  # type: ignore[attr-defined]
         inst = primitive(mode=backend, options=options)
         inst.run(**get_primitive_inputs(inst, backend=backend))
-        run_options = backend.service._run.call_args.kwargs["options"]
+        run_options = backend.service._run.call_args.kwargs["options"]  # type: ignore[attr-defined]
         for key, val in env_var.items():
             assert run_options[key] == val
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        opts=[
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize(
+        "opts",
+        [
             {"experimental": {"image": "foo:bar"}},
             {"experimental": {"image": "foo:bar"}, "environment": {"log_level": "INFO"}},
         ],
     )
-    def test_image(self, primitive, opts):
+    def test_image(self, primitive: type, opts: dict) -> None:
         """Test passing an image to options."""
         backend = get_mocked_backend()
-        options = primitive._options_class(**opts)
+        options = primitive._options_class(**opts)  # type: ignore[attr-defined]
         inst = primitive(mode=backend, options=options)
         inst.run(**get_primitive_inputs(inst))
-        run_options = backend.service._run.call_args.kwargs["options"]
-        input_params = backend.service._run.call_args.kwargs["inputs"]
+        run_options = backend.service._run.call_args.kwargs["options"]  # type: ignore[attr-defined]
+        input_params = backend.service._run.call_args.kwargs["inputs"]  # type: ignore[attr-defined]
         expected = list(opts.values())[0]
         for key, val in expected.items():
             assert run_options[key] == val
@@ -97,21 +102,21 @@ class TestPrimitivesV2(IBMTestCase):
             assert key not in input_params["options"]
             assert key not in input_params["options"].get("experimental", {})
 
-    @data(EstimatorV2, SamplerV2)
-    def test_options_copied(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_options_copied(self, primitive: type) -> None:
         """Test modifying original options does not affect primitives."""
         backend = get_mocked_backend()
-        options = primitive._options_class()
+        options = primitive._options_class()  # type: ignore[attr-defined]
         options.max_execution_time = 100
         inst = primitive(mode=backend, options=options)
         options.max_execution_time = 200
         assert inst.options.max_execution_time == 100
 
-    @data(EstimatorV2, SamplerV2)
-    def test_init_with_backend_str(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_init_with_backend_str(self, primitive: type) -> None:
         """Test initializing a primitive with a backend name."""
         backend_name = "ibm_gotham"
-        mock_backend = get_mocked_backend(name=backend_name)
+        mock_backend: MagicMock = get_mocked_backend(name=backend_name)
         mock_service_inst = mock_backend.service
 
         class MockQRTService:
@@ -138,10 +143,10 @@ class TestPrimitivesV2(IBMTestCase):
             runtime_options = mock_service_inst._run.call_args.kwargs["options"]
             assert runtime_options["backend"] == mock_backend
 
-    @data(EstimatorV2, SamplerV2)
-    def test_init_with_backend_instance(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_init_with_backend_instance(self, primitive: type) -> None:
         """Test initializing a primitive with a backend instance."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         service = backend.service
 
         service.reset_mock()
@@ -152,9 +157,8 @@ class TestPrimitivesV2(IBMTestCase):
         runtime_options = service._run.call_args.kwargs["options"]
         assert runtime_options["backend"] == backend
 
-    @data(EstimatorV2, SamplerV2)
-    @mock_responses
-    def test_init_with_backend_session(self, primitive, registry):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_init_with_backend_session(self, primitive: type, registry: BaseRegistry) -> None:
         """Test initializing a primitive with both backend and session."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -165,9 +169,8 @@ class TestPrimitivesV2(IBMTestCase):
         job = inst.run(**get_primitive_inputs(inst))
         assert job.session_id == "session_12345"
 
-    @data(EstimatorV2, SamplerV2)
-    @mock_responses
-    def test_default_session_context_manager(self, primitive, registry):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_default_session_context_manager(self, primitive: type, registry: BaseRegistry) -> None:
         """Test getting default session within context manager."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -177,20 +180,20 @@ class TestPrimitivesV2(IBMTestCase):
             assert inst.mode == session
             assert inst.mode.backend() == "common_backend"
 
-    @data(EstimatorV2, SamplerV2)
-    def test_default_session_cm_new_backend(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_default_session_cm_new_backend(self, primitive: type) -> None:
         """Test using a different backend within context manager."""
         session_backend = get_mocked_backend("ibm_metropolis")
         backend = get_mocked_backend()
 
         with Session(backend=session_backend):
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 _ = primitive(mode=backend)
 
-    @data(EstimatorV2, SamplerV2)
-    def test_no_session(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_no_session(self, primitive: type) -> None:
         """Test running without session."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         service = backend.service
         inst = primitive(backend)
         inst.run(**get_primitive_inputs(inst))
@@ -200,10 +203,10 @@ class TestPrimitivesV2(IBMTestCase):
         assert "session_id" not in kwargs_list
         assert "start_session" not in kwargs_list
 
-    @data(SamplerV2, EstimatorV2)
-    def test_init_with_mode_as_backend(self, primitive):
+    @pytest.mark.parametrize("primitive", [SamplerV2, EstimatorV2])
+    def test_init_with_mode_as_backend(self, primitive: type) -> None:
         """Test initializing a primitive with mode as a Backend."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         service = backend.service
 
         inst = primitive(mode=backend)
@@ -213,9 +216,8 @@ class TestPrimitivesV2(IBMTestCase):
         runtime_options = service._run.call_args.kwargs["options"]
         assert runtime_options["backend"] == backend
 
-    @data(SamplerV2, EstimatorV2)
-    @mock_responses
-    def test_init_with_mode_as_session(self, primitive, registry):
+    @pytest.mark.parametrize("primitive", [SamplerV2, EstimatorV2])
+    def test_init_with_mode_as_session(self, primitive: type, registry: BaseRegistry) -> None:
         """Test initializing a primitive with mode as Session."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -227,9 +229,8 @@ class TestPrimitivesV2(IBMTestCase):
         assert inst.mode == session
         assert session._backend == backend
 
-    @data(SamplerV2, EstimatorV2)
-    @mock_responses
-    def test_init_with_mode_as_batch(self, primitive, registry):
+    @pytest.mark.parametrize("primitive", [SamplerV2, EstimatorV2])
+    def test_init_with_mode_as_batch(self, primitive: type, registry: BaseRegistry) -> None:
         """Test initializing a primitive with mode as a Batch."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -240,8 +241,8 @@ class TestPrimitivesV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst, backend=backend))
         assert batch._backend == backend
 
-    @data(EstimatorV2, SamplerV2)
-    def test_parameters_single_circuit(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_parameters_single_circuit(self, primitive: type) -> None:
         """Test parameters for a single circuit."""
         circ = real_amplitudes(num_qubits=2, reps=1)
         circ.measure_all()
@@ -272,8 +273,8 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (circ, "ZZIII", val) if isinstance(inst, EstimatorV2) else (circ, val)
             inst.run([pub])
 
-    @data(EstimatorV2, SamplerV2)
-    def test_nd_parameters_0d(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_nd_parameters_0d(self, primitive: type) -> None:
         """Test with 0-dimensional parameters."""
         circ = real_amplitudes(num_qubits=2, reps=1)
         circ.measure_all()
@@ -285,8 +286,8 @@ class TestPrimitivesV2(IBMTestCase):
         pub = (circ, "ZZIII", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
         inst.run([pub])
 
-    @data(EstimatorV2, SamplerV2)
-    def test_nd_parameters_nd(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_nd_parameters_nd(self, primitive: type) -> None:
         """Test with n-dimensional parameters."""
         circ = real_amplitudes(num_qubits=2, reps=1)
         circ.measure_all()
@@ -298,9 +299,10 @@ class TestPrimitivesV2(IBMTestCase):
         pub = (circ, "ZZIII", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
         inst.run([pub])
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        all_params=[
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize(
+        "all_params",
+        [
             (
                 [],
                 np.random.uniform(size=(4,)),
@@ -313,7 +315,7 @@ class TestPrimitivesV2(IBMTestCase):
             ),
         ],
     )
-    def test_parameters_multiple_circuits(self, primitive, all_params):
+    def test_parameters_multiple_circuits(self, primitive: type, all_params: tuple) -> None:
         """Test multiple parameters for multiple circuits."""
         backend = get_mocked_backend()
         qc2 = QuantumCircuit(2)
@@ -329,7 +331,7 @@ class TestPrimitivesV2(IBMTestCase):
         ]
 
         inst = primitive(mode=backend)
-        pubs = []
+        pubs: list = []
         for circ, circ_params in zip(circuits, all_params):
             publet = (
                 (circ, "Z" * backend.num_qubits, circ_params)
@@ -339,35 +341,39 @@ class TestPrimitivesV2(IBMTestCase):
             pubs.append(publet)
         inst.run(pubs)
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        options=[
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize(
+        "options",
+        [
             {"dynamical_decoupling": {"sequence_type": "XY4"}},
             {"default_shots": 2000},
             {"execution": {"init_qubits": True}},
         ],
     )
-    def test_run_updated_options(self, primitive, options):
+    def test_run_updated_options(self, primitive: type, options: dict) -> None:
         """Test run using overwritten options."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         inst = primitive(mode=backend)
         inst.options.update(**options)
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
         assert_dict_partially_equal(inputs, options)
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        options=[
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize(
+        "options",
+        [
             {"environment": {"log_level": "DEBUG"}},
             {"environment": {"job_tags": ["foo", "bar"]}},
             {"max_execution_time": 600},
             {"environment": {"log_level": "INFO"}, "max_execution_time": 800},
         ],
     )
-    def test_run_overwrite_runtime_options(self, primitive, options):
+    def test_run_overwrite_runtime_options(
+        self, primitive: type[EstimatorV2 | SamplerV2], options: dict
+    ) -> None:
         """Test run using overwritten runtime options."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         inst = primitive(mode=backend)
         inst.options.update(**options)
         inst.run(**get_primitive_inputs(inst))
@@ -375,13 +381,11 @@ class TestPrimitivesV2(IBMTestCase):
         rt_options = backend.service._run.call_args.kwargs["options"]
         assert_dict_partially_equal(rt_options, runtime_options)
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        exp_opt=[{"foo": "bar", "execution": {"extra_key": "bar"}}],
-    )
-    def test_run_experimental_options(self, primitive, exp_opt):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize("exp_opt", [{"foo": "bar", "execution": {"extra_key": "bar"}}])
+    def test_run_experimental_options(self, primitive: type, exp_opt: dict) -> None:
         """Test specifying arbitrary options in run."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         inst = primitive(mode=backend)
         inst.options.experimental = exp_opt
         inst.run(**get_primitive_inputs(inst))
@@ -390,13 +394,11 @@ class TestPrimitivesV2(IBMTestCase):
         assert inputs["execution"] == {"extra_key": "bar"}
         assert "extra_key" not in inputs
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        exp_opt=[{"foo": "bar", "execution": {"extra_key": "bar"}}],
-    )
-    def test_run_experimental_options_init(self, primitive, exp_opt):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize("exp_opt", [{"foo": "bar", "execution": {"extra_key": "bar"}}])
+    def test_run_experimental_options_init(self, primitive: type, exp_opt: dict) -> None:
         """Test specifying arbitrary options in initialization."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         inst = primitive(mode=backend, options={"experimental": exp_opt})
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
@@ -404,19 +406,19 @@ class TestPrimitivesV2(IBMTestCase):
         assert inputs["execution"] == {"extra_key": "bar"}
         assert "extra_key" not in inputs
 
-    @data(EstimatorV2, SamplerV2)
-    def test_run_unset_options(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_run_unset_options(self, primitive: type) -> None:
         """Test running with unset options."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         inst = primitive(mode=backend)
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service._run.call_args.kwargs["inputs"]["options"]
         assert not inputs
 
-    @data(EstimatorV2, SamplerV2)
-    def test_run_multiple_different_options(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_run_multiple_different_options(self, primitive: type) -> None:
         """Test multiple runs with different options."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         inst = primitive(mode=backend, options={"default_shots": 100})
         inst.run(**get_primitive_inputs(inst))
         inst.options.update(default_shots=200)
@@ -425,17 +427,16 @@ class TestPrimitivesV2(IBMTestCase):
         for idx, shots in zip([0, 1], [100, 200]):
             assert kwargs_list[idx][1]["inputs"]["options"]["default_shots"] == shots
 
-    @mock_responses
-    def test_run_same_session(self, registry):
+    def test_run_same_session(self, registry: BaseRegistry) -> None:
         """Test multiple runs within a session."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         session = Session(backend)
 
         num_runs = 5
-        primitives = [EstimatorV2, SamplerV2]
+        primitives: list[type[EstimatorV2 | SamplerV2]] = [EstimatorV2, SamplerV2]
 
-        jobs = []
+        jobs: list = []
         for idx in range(num_runs):
             cls = primitives[idx % len(primitives)]
             inst = cls(mode=session)
@@ -444,16 +445,17 @@ class TestPrimitivesV2(IBMTestCase):
         assert len(jobs) == 5
         assert all(job.session_id == "session_12345" for job in jobs)
 
-    @combine(
-        primitive=[EstimatorV2, SamplerV2],
-        new_opts=[
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize(
+        "new_opts",
+        [
             {"default_shots": 200},
             {"dynamical_decoupling": {"enable": True}, "default_shots": 300},
         ],
     )
-    def test_set_options(self, primitive, new_opts):
+    def test_set_options(self, primitive: type, new_opts: dict) -> None:
         """Test set options."""
-        opt_cls = primitive._options_class
+        opt_cls = primitive._options_class  # type: ignore[attr-defined]
         options = opt_cls(default_shots=100)
         backend = get_mocked_backend()
 
@@ -465,8 +467,8 @@ class TestPrimitivesV2(IBMTestCase):
         # Make sure the structure didn't change.
         assert_dict_keys_equal(inst_options, asdict(opt_cls()))
 
-    @data(EstimatorV2, SamplerV2)
-    def test_raise_faulty_qubits(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_raise_faulty_qubits(self, primitive: type) -> None:
         """Test faulty qubits is raised."""
         fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
@@ -481,17 +483,17 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(mode=ibm_backend)
 
         if isinstance(inst, IBMBaseEstimator):
-            pub = (transpiled, observable)
+            pub: tuple = (transpiled, observable)
         else:
             transpiled.measure_all()
             pub = (transpiled,)
 
-        with self.assertRaises(ValueError) as err:
+        with pytest.raises(ValueError) as err:
             inst.run(pubs=[pub])
-        assert f"faulty qubit {faulty_qubit}" in str(err.exception)
+        assert f"faulty qubit {faulty_qubit}" in str(err.value)
 
-    @data(EstimatorV2, SamplerV2)
-    def test_raise_faulty_qubits_many(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_raise_faulty_qubits_many(self, primitive: type) -> None:
         """Test faulty qubits is raised if one circuit uses it."""
         fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
@@ -509,18 +511,18 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
-            pubs = [(transpiled[0], observable), (transpiled[1], observable)]
+            pubs: list = [(transpiled[0], observable), (transpiled[1], observable)]
         else:
             for circ in transpiled:
                 circ.measure_all()
             pubs = [(transpiled[0],), (transpiled[1],)]
 
-        with self.assertRaises(ValueError) as err:
+        with pytest.raises(ValueError) as err:
             inst.run(pubs=pubs)
-        assert f"faulty qubit {faulty_qubit}" in str(err.exception)
+        assert f"faulty qubit {faulty_qubit}" in str(err.value)
 
-    @data(EstimatorV2, SamplerV2)
-    def test_raise_faulty_edge(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_raise_faulty_edge(self, primitive: type) -> None:
         """Test faulty edge is raised."""
         fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
@@ -535,18 +537,18 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
-            pub = (transpiled, observable)
+            pub: tuple = (transpiled, observable)
         else:
             transpiled.measure_all()
             pub = (transpiled,)
 
-        with self.assertRaises(ValueError) as err:
+        with pytest.raises(ValueError) as err:
             inst.run(pubs=[pub])
-        assert "cx" in str(err.exception)
-        assert f"faulty edge {tuple(edge_qubits)}" in str(err.exception)
+        assert "cx" in str(err.value)
+        assert f"faulty edge {tuple(edge_qubits)}" in str(err.value)
 
-    @data(EstimatorV2, SamplerV2)
-    def test_faulty_qubit_not_used(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_faulty_qubit_not_used(self, primitive: type) -> None:
         """Test faulty qubit is not raise if not used."""
         fake_backend = FakeManilaV2()
         circ = QuantumCircuit(2, 2)
@@ -559,7 +561,7 @@ class TestPrimitivesV2(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
-            pub = (transpiled, observable)
+            pub: tuple = (transpiled, observable)
         else:
             transpiled.measure_active(inplace=True)
             pub = (transpiled,)
@@ -568,8 +570,8 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run([pub])
         mock_run.assert_called_once()
 
-    @data(EstimatorV2, SamplerV2)
-    def test_faulty_edge_not_used(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_faulty_edge_not_used(self, primitive: type) -> None:
         """Test faulty edge is not raised if not used."""
         fake_backend = FakeManilaV2()
         coupling_map = fake_backend.configuration().coupling_map
@@ -589,7 +591,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(mode=session)
         if isinstance(inst, IBMBaseEstimator):
-            pub = (transpiled, observable)
+            pub: tuple = (transpiled, observable)
         else:
             transpiled.measure_all()
             pub = (transpiled,)
@@ -598,8 +600,8 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run([pub])
         mock_run.assert_called_once()
 
-    @data(EstimatorV2, SamplerV2)
-    def test_abstract_circuits(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_abstract_circuits(self, primitive: type) -> None:
         """Test passing in abstract circuit would fail."""
         backend = get_mocked_backend()
         inst = primitive(mode=backend)
@@ -611,18 +613,19 @@ class TestPrimitivesV2(IBMTestCase):
         else:
             circ.measure_all()
 
-        with self.assertRaisesRegex(IBMInputValueError, "target hardware"):
+        with pytest.raises(IBMInputValueError, match="target hardware"):
             inst.run(pubs=[tuple(pub)])
 
-    @data(EstimatorV2, SamplerV2)
-    def test_get_backend_primitive(self, primitive):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    def test_get_backend_primitive(self, primitive: type) -> None:
         """Test getting the backend used in the primitive."""
         backend = get_mocked_backend()
         inst = primitive(mode=backend)
         assert inst.backend().name == backend.name
 
-    @combine(primitive=[EstimatorV2, SamplerV2], session=[Session, Batch])
-    def test_get_backend_session(self, primitive, session):
+    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
+    @pytest.mark.parametrize("session", [Session, Batch])
+    def test_get_backend_session(self, primitive: type, session: type) -> None:
         """Test getting the backend used in the primitive when session is used."""
         backend = FakeManilaV2()
         with session(backend=backend):
@@ -630,10 +633,10 @@ class TestPrimitivesV2(IBMTestCase):
             assert inst.backend().name == backend.name
 
 
-class TestGetModeServiceBackend(IBMTestCase):
+class TestGetModeServiceBackend:
     """Test the function ``get_mode_service_backend``."""
 
-    def test_mode_is_backend(self):
+    def test_mode_is_backend(self) -> None:
         """Test ``get_mode_service_backend`` when the input mode is an ``IBMBackend``."""
         backend = get_mocked_backend()
         service = backend.service
@@ -642,8 +645,7 @@ class TestGetModeServiceBackend(IBMTestCase):
         assert result[1] == service
         assert result[2] == backend
 
-    @mock_responses
-    def test_mode_is_session(self, registry):
+    def test_mode_is_session(self, registry: BaseRegistry) -> None:
         """Test ``get_mode_service_backend`` when the input mode is a session."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -654,7 +656,7 @@ class TestGetModeServiceBackend(IBMTestCase):
         assert result[1] == session.service
         assert result[2].name == "common_backend"
 
-    def test_session_context_manager(self):
+    def test_session_context_manager(self) -> None:
         """Test ``get_mode_service_backend`` inside a session context manager."""
         backend = get_mocked_backend()
         service = backend.service
@@ -664,7 +666,7 @@ class TestGetModeServiceBackend(IBMTestCase):
             assert result[1] == service
             assert result[2] == backend
 
-    def test_mode_is_backend_inside_session_context_manager(self):
+    def test_mode_is_backend_inside_session_context_manager(self) -> None:
         """Test ``get_mode_service_backend`` inside a session context manager (IBMBackend mode).
 
         Test ``get_mode_service_backend`` inside a session context manager,
