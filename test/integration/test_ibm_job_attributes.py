@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime import RuntimeJobV2
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 @pytest.fixture(scope="class")
@@ -49,9 +49,7 @@ class TestIBMJobAttributes:
         """Test getting a job ID."""
         assert job_test_backend.job_id() is not None
 
-    def test_job_instance(
-        self, job_test_backend: RuntimeJobV2, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_job_instance(self, job_test_backend: RuntimeJobV2, dependencies: Dependencies) -> None:
         """Test getting job instance."""
         assert dependencies.instance == job_test_backend.instance
 
@@ -82,9 +80,7 @@ class TestIBMJobSubmission:
 
         assert start_datetime <= job.creation_date <= end_datetime
 
-    def test_job_tags(
-        self, backend_test: IBMBackend | None, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_job_tags(self, backend_test: IBMBackend | None, dependencies: Dependencies) -> None:
         """Test using job tags."""
         service = dependencies.service
         last_week = datetime.now() - timedelta(days=7)
@@ -132,7 +128,7 @@ class TestIBMJobSubmission:
             assert set(new_tags) == set(job.tags)
 
     def test_invalid_job_tags(
-        self, backend_test: IBMBackend | None, dependencies: IntegrationTestDependencies
+        self, backend_test: IBMBackend | None, dependencies: Dependencies
     ) -> None:
         """Test using job tags with an and operator."""
         service = dependencies.service
@@ -143,7 +139,7 @@ class TestIBMJobSubmission:
         with pytest.raises(IBMInputValueError):
             service.jobs(job_tags=[1, 2, 3])  # type: ignore[list-item]
 
-    def test_private_option(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_private_option(self, dependencies: Dependencies) -> None:
         """Test private option."""
         backend = dependencies.service.backend(dependencies.qpu)
 

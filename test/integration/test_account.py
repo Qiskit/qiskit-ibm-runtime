@@ -32,11 +32,11 @@ from qiskit_ibm_runtime.accounts.utils import (
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 
 if TYPE_CHECKING:
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 def _get_service_instance_name_for_crn(
-    dependencies: IntegrationTestDependencies,
+    dependencies: Dependencies,
 ) -> str:
     """Retrieves the service instance name and account id for a given CRN.
 
@@ -52,7 +52,7 @@ def _get_service_instance_name_for_crn(
 
 
 def _get_instance_tags(
-    dependencies: IntegrationTestDependencies,
+    dependencies: Dependencies,
 ) -> list[str] | None:
     """Retrieves the service instance tags for a given crn."""
     authenticator = IAMAuthenticator(dependencies.token, url=get_iam_api_url(dependencies.url))
@@ -71,7 +71,7 @@ class TestQuantumPlatform:
     """Integration tests for account management."""
 
     def test_initializing_service_no_instance(
-        self, caplog: pytest.LogCaptureFixture, dependencies: IntegrationTestDependencies
+        self, caplog: pytest.LogCaptureFixture, dependencies: Dependencies
     ) -> None:
         """Test initializing without an instance."""
         # no default instance and no filters
@@ -108,7 +108,7 @@ class TestQuantumPlatform:
             assert "Free and trial" in caplog.text
             assert f"region: {region}" in caplog.text
 
-    def test_backends_default_instance(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_backends_default_instance(self, dependencies: Dependencies) -> None:
         """Test that default instance returns the correct backends."""
         service_with_instance = QiskitRuntimeService(
             token=dependencies.token,
@@ -131,7 +131,7 @@ class TestQuantumPlatform:
         ]
         assert backend.name == backend_with_instance.name
 
-    def test_passing_name_as_instance(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_passing_name_as_instance(self, dependencies: Dependencies) -> None:
         """Test passing in a name as the instance."""
         with pytest.raises(IBMInputValueError):
             QiskitRuntimeService(
@@ -159,7 +159,7 @@ class TestQuantumPlatform:
             backend.name for backend in backends_instance_param
         ]
 
-    def test_account_plans_preference(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_account_plans_preference(self, dependencies: Dependencies) -> None:
         """Test one valid and one invalid plans_preference."""
         plans_preference = ["internal"]
         service = QiskitRuntimeService(
@@ -191,7 +191,7 @@ class TestQuantumPlatform:
                 plans_preference=["invalid_plan"],
             )
 
-    def test_account_region_preference(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_account_region_preference(self, dependencies: Dependencies) -> None:
         """Test account preferences region and plans_preference."""
         region = "us-east"
         service = QiskitRuntimeService(
@@ -213,7 +213,7 @@ class TestQuantumPlatform:
                 region="invalid_region",
             )
 
-    def test_account_preferences_tags(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_account_preferences_tags(self, dependencies: Dependencies) -> None:
         """Test tags account preference."""
         tags = _get_instance_tags(dependencies)
         if tags:
@@ -238,7 +238,7 @@ class TestQuantumPlatform:
                 tags=invalid_tags,
             )
 
-    def test_instances(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_instances(self, dependencies: Dependencies) -> None:
         """Test instances method."""
         service = QiskitRuntimeService(
             token=dependencies.token, channel="ibm_quantum_platform", url=dependencies.url
@@ -248,7 +248,7 @@ class TestQuantumPlatform:
         assert instances[0]["crn"]
         assert instances[0]["name"]
 
-    def test_active_instance(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_active_instance(self, dependencies: Dependencies) -> None:
         """Test active_instance method."""
         instance = dependencies.instance
         service = QiskitRuntimeService(
@@ -259,7 +259,7 @@ class TestQuantumPlatform:
         )
         assert instance == service.active_instance()
 
-    def test_jobs_before_backend(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_jobs_before_backend(self, dependencies: Dependencies) -> None:
         """Test retrieving jobs before backends call."""
         service = QiskitRuntimeService(
             token=dependencies.token, channel="ibm_quantum_platform", url=dependencies.url
@@ -270,7 +270,7 @@ class TestQuantumPlatform:
         job = jobs[0]
         assert job.status()
 
-    def test_jobs_different_instances(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_jobs_different_instances(self, dependencies: Dependencies) -> None:
         """Test retrieving jobs from different instances."""
         service = QiskitRuntimeService(
             token=dependencies.token, channel="ibm_quantum_platform", url=dependencies.url
@@ -288,7 +288,7 @@ class TestQuantumPlatform:
                 instance_job = jobs[0].job_id()
                 assert service.job(instance_job).job_id() == instance_job
 
-    def test_service_usage(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_service_usage(self, dependencies: Dependencies) -> None:
         """Test usage method."""
         service = QiskitRuntimeService(
             token=dependencies.token, channel="ibm_quantum_platform", url=dependencies.url
@@ -299,7 +299,7 @@ class TestQuantumPlatform:
         assert isinstance(usage, dict)
 
     def test_instances_archived(
-        self, dependencies: IntegrationTestDependencies, monkeypatch: pytest.MonkeyPatch
+        self, dependencies: Dependencies, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test that archived instances are available to the user."""
 
@@ -326,7 +326,7 @@ class TestQuantumPlatform:
 class TestIntegrationAccount:
     """Integration tests for account management."""
 
-    def test_local_channel(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_local_channel(self, dependencies: Dependencies) -> None:
         """Test local channel mode."""
         local_service: object = QiskitRuntimeService(
             channel="local",
@@ -340,9 +340,7 @@ class TestIntegrationAccount:
         assert isinstance(local_service, QiskitRuntimeLocalService)
         assert isinstance(local_service1, QiskitRuntimeLocalService)
 
-    def test_resolve_crn_for_valid_service_instance_name(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_resolve_crn_for_valid_service_instance_name(self, dependencies: Dependencies) -> None:
         """Verify if CRN is transparently resolved based for an existing service instance name."""
         service = QiskitRuntimeService(
             channel="ibm_cloud",
@@ -354,7 +352,7 @@ class TestIntegrationAccount:
         assert dependencies.instance == service.active_account().get("instance")
 
     def test_resolve_crn_for_invalid_service_instance_name(
-        self, dependencies: IntegrationTestDependencies
+        self, dependencies: Dependencies
     ) -> None:
         """Verify if CRN resolution fails for non-existing service instance name."""
         service_instance_name = "-non-existing-service-name-"
