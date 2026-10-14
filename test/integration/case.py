@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from test.ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.accounts import ChannelType
@@ -72,17 +71,3 @@ def integration_test_dependencies(init_service: bool = True) -> IntegrationTestD
         qpu=os.getenv("QISKIT_IBM_QPU"),
         service=service,
     )
-
-
-class IBMIntegrationTestCase(IBMTestCase):
-    """Custom integration test case for use with qiskit-ibm-runtime."""
-
-    dependencies: IntegrationTestDependencies
-    service: QiskitRuntimeService
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.dependencies = integration_test_dependencies()
-        cls.service = cls.dependencies.service
