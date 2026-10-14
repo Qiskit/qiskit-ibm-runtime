@@ -360,7 +360,8 @@ merged to it are bugfixes.
 When it is time to release a new minor version of qiskit-ibm-runtime, first open a PR
 to prepare the release notes. Install the tool `towncrier` with `pipx install towncrier`.
 Then, in a new branch, run `towncrier build --version=<full-version> --yes`, and replace
-`<full-version>` with the version like `0.22.0`. Add all the changes to Git and
+`<full-version>` with the version like `0.22.0`. Bump the `fallback_version` in the
+`[tool.setuptools_scm]` section of `pyproject.toml`. Add all the changes to Git and
 open a PR.
 
 After landing the release notes preparation, checkout `main` and make sure that the last
