@@ -29,7 +29,7 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Iterable
 
     from qiskit.providers.backend import Backend, BackendV2
 

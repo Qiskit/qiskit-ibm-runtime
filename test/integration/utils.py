@@ -10,10 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Helpers for the integration tests.
-
-These require a live service, so they are kept out of the shared `test.utils` module.
-"""
+"""Helpers for the integration tests."""
 
 from __future__ import annotations
 
