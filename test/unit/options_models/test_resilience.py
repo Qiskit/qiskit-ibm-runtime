@@ -12,7 +12,7 @@
 
 """Tests for ResilienceOptions."""
 
-from ddt import ddt
+import pytest
 from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
@@ -20,14 +20,11 @@ from qiskit.quantum_info import PauliLindbladMap
 from qiskit_ibm_runtime.options_models.resilience import ResilienceOptions
 from qiskit_ibm_runtime.options_models.zne import ZneOptions
 
-from ...ibm_test_case import IBMTestCase
 
-
-@ddt
-class TestResilienceOptionsDefaults(IBMTestCase):
+class TestResilienceOptionsDefaults:
     """Tests for ResilienceOptions default values and basic instantiation."""
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         """All fields carry their documented default values."""
         opts = ResilienceOptions()
         assert opts.measure_mitigation is None
@@ -40,7 +37,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         assert opts.zne.noise_factors == "auto"
         assert opts.layer_noise_model is None
 
-    def test_set_all_options(self):
+    def test_set_all_options(self) -> None:
         """All fields accept explicit non-default values."""
         circuit = QuantumCircuit(2)
         with circuit.box():
@@ -48,11 +45,11 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         layer_noise_model = [(layer, PauliLindbladMap.identity(2)) for layer in circuit.data]
         opts = ResilienceOptions(
             measure_mitigation=False,
-            measure_noise_learning={"num_randomizations": 64},
+            measure_noise_learning={"num_randomizations": 64},  # type: ignore[arg-type]
             pec_mitigation=True,
-            pec={"max_overhead": 50, "noise_gain": 0.5},
+            pec={"max_overhead": 50, "noise_gain": 0.5},  # type: ignore[arg-type]
             zne_mitigation=True,
-            zne={"amplifier": "gate_folding_front", "noise_factors": [1, 3, 5]},
+            zne={"amplifier": "gate_folding_front", "noise_factors": [1, 3, 5]},  # type: ignore[arg-type]
             layer_noise_model=layer_noise_model,
         )
         assert not opts.measure_mitigation
@@ -65,7 +62,7 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         assert list(opts.zne.noise_factors) == [1, 3, 5]
         assert opts.layer_noise_model == layer_noise_model
 
-    def test_invalid_layer_noise_model(self):
+    def test_invalid_layer_noise_model(self) -> None:
         """Invalid layer_noise_model values raise ValidationError."""
         circuit = QuantumCircuit(2)
         circuit.x(0)
@@ -76,19 +73,19 @@ class TestResilienceOptionsDefaults(IBMTestCase):
         options = ResilienceOptions(layer_noise_model=[(box, PauliLindbladMap.identity(2))])
         assert options.layer_noise_model == [(box, PauliLindbladMap.identity(2))]
 
-        with self.assertRaisesRegex(ValidationError, "does not contain a box"):
+        with pytest.raises(ValidationError, match="does not contain a box"):
             ResilienceOptions(layer_noise_model=[(not_box, PauliLindbladMap.identity(2))])
 
-        with self.assertRaisesRegex(ValidationError, "Found instruction with 2"):
+        with pytest.raises(ValidationError, match="Found instruction with 2"):
             ResilienceOptions(layer_noise_model=[(box, PauliLindbladMap.identity(1))])
 
 
-class TestZneOptions(IBMTestCase):
+class TestZneOptions:
     """Tests for ``ZneOptions`` validation."""
 
-    def test_noise_factors_requires_at_least_two(self):
+    def test_noise_factors_requires_at_least_two(self) -> None:
         """Setting noise_factors to fewer than two elements raises ValueError."""
         zne_options = ZneOptions()
         zne_options.amplifier = "gate_folding"
-        with self.assertRaisesRegex(ValueError, "Must have at least two noise factors"):
+        with pytest.raises(ValueError, match="Must have at least two noise factors"):
             zne_options.noise_factors = [1.0]

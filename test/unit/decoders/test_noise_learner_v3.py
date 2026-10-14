@@ -15,6 +15,7 @@
 import json
 
 import numpy as np
+import pytest
 from qiskit.quantum_info import QubitSparsePauliList
 
 from qiskit_ibm_runtime.decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
@@ -22,8 +23,6 @@ from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
     noise_learner_v3_result_to_0_1,
 )
 from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
-
-from ...ibm_test_case import IBMTestCase
 
 
 def results_and_encoding() -> tuple[NoiseLearnerV3Results, str]:
@@ -51,10 +50,10 @@ def results_and_encoding() -> tuple[NoiseLearnerV3Results, str]:
     return results, noise_learner_v3_result_to_0_1(results).model_dump_json()
 
 
-class TestDecoder(IBMTestCase):
+class TestDecoder:
     """Tests the decoder for the noise learner v3 model."""
 
-    def test_decoder(self):
+    def test_decoder(self) -> None:
         """Tests the decoder."""
         results, encoded = results_and_encoding()
 
@@ -65,22 +64,22 @@ class TestDecoder(IBMTestCase):
             assert np.allclose(datum_in._rates_std, datum_out._rates_std)
             assert datum_in.metadata == datum_out.metadata
 
-    def test_no_schema_version(self):
+    def test_no_schema_version(self) -> None:
         """Verify an error is raised if the encoded string does not specify any schema version."""
         _, encoded = results_and_encoding()
 
         encoded_as_json = json.loads(encoded)
         del encoded_as_json["schema_version"]
         encoded_as_str = json.dumps(encoded_as_json)
-        with self.assertRaisesRegex(ValueError, "Missing schema version."):
+        with pytest.raises(ValueError, match="Missing schema version."):
             NoiseLearnerV3ResultDecoder.decode(encoded_as_str)
 
-    def test_unknown_schema_version(self):
+    def test_unknown_schema_version(self) -> None:
         """Verify an error is raised if the schema version specified does not exist."""
         _, encoded = results_and_encoding()
 
         encoded_as_json = json.loads(encoded)
         encoded_as_json["schema_version"] = "unknown"
         encoded_as_str = json.dumps(encoded_as_json)
-        with self.assertRaisesRegex(ValueError, "No decoder found for schema version unknown."):
+        with pytest.raises(ValueError, match="No decoder found for schema version unknown."):
             NoiseLearnerV3ResultDecoder.decode(encoded_as_str)
