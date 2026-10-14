@@ -17,13 +17,23 @@ These require a live service, so they are kept out of the shared `test.utils` mo
 
 from __future__ import annotations
 
+import logging
 import time
 from typing import TYPE_CHECKING
 
 import pytest
+from qiskit.compiler import transpile
+
+from qiskit_ibm_runtime import SamplerV2
+from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+
+from ..utils import bell
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime import IBMBackend
     from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
+logger = logging.getLogger(__name__)
 
 
 def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out: int = 20) -> None:
@@ -34,3 +44,30 @@ def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out
         time_out -= wait_time
     if job.status() != status:
         pytest.skip(f"Job {job.job_id()} unable to reach status {status}.")
+
+
+def cancel_job_safe(job: RuntimeJobV2) -> bool:
+    """Cancel a runtime job."""
+    try:
+        job.cancel()
+        status = job.status()
+        if status != "CANCELLED":
+            raise AssertionError(
+                f"cancel() was successful for job {job.job_id()} but its status is {status}."
+            )
+        return True
+    except RuntimeInvalidStateError:
+        if job.status() in ["DONE", "CANCELLED", "ERROR"]:
+            logger.warning("Unable to cancel job because it's already done.")
+            return False
+        raise
+
+
+def submit_and_cancel(backend: IBMBackend) -> RuntimeJobV2:
+    """Submit a bell job to `backend` and cancel it, returning the cancelled job."""
+    circuit = transpile(bell(), backend=backend)
+    sampler = SamplerV2(backend)
+    job = sampler.run([circuit])
+    cancel_job_safe(job)
+
+    return job

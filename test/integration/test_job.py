@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import logging
 import random
 import time
 from typing import TYPE_CHECKING
@@ -28,8 +27,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobNotFound,
 )
 
-from ..utils import cancel_job_safe
-from .utils import wait_for_status
+from .utils import cancel_job_safe, wait_for_status
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -37,8 +35,6 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
 
     from .case import IntegrationTestDependencies
-
-logger = logging.getLogger(__name__)
 
 
 class TestIntegrationJob:
@@ -73,7 +69,7 @@ class TestIntegrationJob:
         _ = submit_bell_job()
         job = submit_bell_job()
         wait_for_status(job, "QUEUED")
-        if not cancel_job_safe(job, logger):
+        if not cancel_job_safe(job):
             return
         time.sleep(15)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
@@ -88,7 +84,7 @@ class TestIntegrationJob:
         service = dependencies.service
         job = submit_bell_job()
         rjob = service.job(job.job_id())
-        if not cancel_job_safe(rjob, logger):
+        if not cancel_job_safe(rjob):
             return
         time.sleep(5)
         assert rjob.status() == "CANCELLED"

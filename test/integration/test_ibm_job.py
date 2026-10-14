@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import copy
-import logging
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -28,7 +27,8 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound, RuntimeJobTimeoutError
 
-from ..utils import bell, cancel_job_safe, submit_and_cancel
+from ..utils import bell
+from .utils import cancel_job_safe, submit_and_cancel
 
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit
@@ -36,8 +36,6 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
 
     from .case import IntegrationTestDependencies
-
-logger = logging.getLogger(__name__)
 
 
 def run_bell_job(backend: IBMBackend) -> tuple[QuantumCircuit, RuntimeJobV2]:
@@ -76,7 +74,7 @@ class TestIBMJob:
 
     def test_cancel(self, most_busy_backend: IBMBackend) -> None:
         """Test job cancellation."""
-        submit_and_cancel(most_busy_backend, logger)
+        submit_and_cancel(most_busy_backend)
 
     def test_retrieve_jobs(self, dependencies: IntegrationTestDependencies) -> None:
         """Test retrieving jobs."""
@@ -275,7 +273,7 @@ class TestIBMJob:
         job = sampler.run([transpile(bell(), backend=most_busy_backend)])
         with pytest.raises(RuntimeJobTimeoutError):
             job.wait_for_final_state(timeout=0.1)
-        cancel_job_safe(job, logger)
+        cancel_job_safe(job)
 
     def test_job_circuits(self, dependencies: IntegrationTestDependencies) -> None:
         """Test job circuits."""

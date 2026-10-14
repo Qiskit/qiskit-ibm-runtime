@@ -26,35 +26,14 @@ from qiskit.compiler import transpile
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
 from qiskit_ibm_runtime import EstimatorV2, QiskitRuntimeService, SamplerV2
-from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
 
 if TYPE_CHECKING:
-    import logging
     from collections.abc import Callable, Iterable
 
     from qiskit.providers.backend import Backend, BackendV2
-
-    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
-
-
-def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
-    """Cancel a runtime job."""
-    try:
-        job.cancel()
-        status = job.status()
-        if status != "CANCELLED":
-            raise AssertionError(
-                f"cancel() was successful for job {job.job_id()} but its status is {status}."
-            )
-        return True
-    except RuntimeInvalidStateError:
-        if job.status() in ["DONE", "CANCELLED", "ERROR"]:
-            logger.warning("Unable to cancel job because it's already done.")
-            return False
-        raise
 
 
 def create_faulty_backend(
@@ -149,23 +128,6 @@ def get_mocked_backend(
     mock_service._get_api_client = mock.MagicMock(return_value=mock_api_client)
 
     return mock_backend
-
-
-def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJobV2:
-    """Submit and cancel a job.
-
-    Args:
-        backend: Backend to submit the job to.
-        logger: The logger to use for sending logs when cancelling.
-
-    Returns:
-        Cancelled job.
-    """
-    circuit = transpile(bell(), backend=backend)
-    sampler = SamplerV2(backend)
-    job = sampler.run([circuit])
-    cancel_job_safe(job, logger=logger)
-    return job
 
 
 class Case(dict):
