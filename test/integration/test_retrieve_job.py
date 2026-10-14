@@ -23,7 +23,7 @@ import pytest
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
-from ..utils import wait_for_status
+from .utils import wait_for_status
 
 if TYPE_CHECKING:
     from collections.abc import Callable

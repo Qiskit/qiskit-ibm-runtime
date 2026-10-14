@@ -28,7 +28,8 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobNotFound,
 )
 
-from ..utils import cancel_job_safe, wait_for_status
+from ..utils import cancel_job_safe
+from .utils import wait_for_status
 
 if TYPE_CHECKING:
     from collections.abc import Callable

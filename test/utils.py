@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import itertools
 import time
-import unittest
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from unittest import mock
@@ -85,16 +84,6 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
             logger.warning("Unable to cancel job because it's already done.")
             return False
         raise
-
-
-def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out: int = 20) -> None:
-    """Wait for job to reach a certain status."""
-    wait_time = 1 if status == "QUEUED" else poll_time
-    while job.status() not in ["DONE", "CANCELLED", "ERROR", status] and time_out > 0:
-        time.sleep(wait_time)
-        time_out -= wait_time
-    if job.status() != status:
-        raise unittest.SkipTest(f"Job {job.job_id()} unable to reach status {status}.")
 
 
 def create_faulty_backend(
