@@ -21,14 +21,13 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from test.ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.accounts import ChannelType
 
 
 @dataclass
-class IntegrationTestDependencies:
+class Dependencies:
     """Integration test dependencies."""
 
     service: QiskitRuntimeService
@@ -39,7 +38,7 @@ class IntegrationTestDependencies:
     url: str
 
 
-def integration_test_dependencies(init_service: bool = True) -> IntegrationTestDependencies:
+def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     """Return the dependencies of an integration test, from the environment configuration.
 
     Args:
@@ -64,7 +63,7 @@ def integration_test_dependencies(init_service: bool = True) -> IntegrationTestD
         else None
     )
 
-    return IntegrationTestDependencies(
+    return Dependencies(
         channel=channel,
         token=token,
         url=url,
@@ -72,17 +71,3 @@ def integration_test_dependencies(init_service: bool = True) -> IntegrationTestD
         qpu=os.getenv("QISKIT_IBM_QPU"),
         service=service,
     )
-
-
-class IBMIntegrationTestCase(IBMTestCase):
-    """Custom integration test case for use with qiskit-ibm-runtime."""
-
-    dependencies: IntegrationTestDependencies
-    service: QiskitRuntimeService
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.dependencies = integration_test_dependencies()
-        cls.service = cls.dependencies.service

@@ -22,14 +22,14 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
 
 if TYPE_CHECKING:
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 @pytest.mark.skip(reason="This feature is not yet supported.")
 class TestCalibrator:
     """Test Calibrator."""
 
-    def test_calibrator(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_calibrator(self, dependencies: Dependencies) -> None:
         """Test that a calibration job runs and returns a result."""
         backend = dependencies.service.backend(dependencies.qpu)
 

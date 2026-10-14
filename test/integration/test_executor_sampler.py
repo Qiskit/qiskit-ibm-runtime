@@ -27,14 +27,14 @@ from qiskit_ibm_runtime.options_models import SamplerOptions
 from ..utils import make_mirror_circuit_with_phases
 
 if TYPE_CHECKING:
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 class TestSampler:
     """Test client-side Sampler."""
 
     @pytest.mark.parametrize("twirling", [True, False])
-    def test_sampler(self, twirling: bool, dependencies: IntegrationTestDependencies) -> None:
+    def test_sampler(self, twirling: bool, dependencies: Dependencies) -> None:
         """Test sampler by submitting a couple of parametric circuits."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
