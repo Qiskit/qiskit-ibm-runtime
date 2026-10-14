@@ -170,14 +170,13 @@ warnings.  We must continue to test deprecated functionality throughout the
 deprecation period, to ensure that it still works.
 
 To update the tests, you need to wrap each call of deprecated behavior in its
-own assertion block.  For subclasses of `unittest.TestCase` (which all Qiskit
-test cases are), this is done by:
+own assertion block. For example:
 
 
 ```python
-class MyTestSuite(QiskitTestCase):
+class TestSomething:
    def test_deprecated_function(self):
-      with self.assertWarns(DeprecationWarning):
+      with pytest.warns(DeprecationWarning):
          output = deprecated_function()
       # ... do some things with output ...
       self.assertEqual(output, expected)
