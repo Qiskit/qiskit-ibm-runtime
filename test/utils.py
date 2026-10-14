@@ -14,13 +14,11 @@
 
 from __future__ import annotations
 
-import itertools
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from unittest import mock
 
 import numpy as np
-from ddt import data, unpack
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
 from qiskit.quantum_info import Pauli, SparsePauliOp
@@ -128,44 +126,6 @@ def get_mocked_backend(
     mock_service._get_api_client = mock.MagicMock(return_value=mock_api_client)
 
     return mock_backend
-
-
-class Case(dict):
-    """<no description>."""
-
-
-def generate_cases(
-    docstring: str, dsc: str | None = None, name: str | None = None, **kwargs: Any
-) -> list[Case]:
-    """Combines kwargs in Cartesian product and creates Case with them."""
-    ret = []
-    keys = kwargs.keys()
-    vals = kwargs.values()
-    for values in itertools.product(*vals):
-        case = Case(zip(keys, values))
-        if docstring is not None:
-            setattr(case, "__doc__", docstring.format(**case))
-        if dsc is not None:
-            setattr(case, "__doc__", dsc.format(**case))
-        if name is not None:
-            setattr(case, "__name__", name.format(**case))
-        ret.append(case)
-    return ret
-
-
-def combine(**kwargs: Any) -> Callable[[Callable], Callable]:
-    """Decorator to create combinations and tests.
-
-    @combine(level=[0, 1, 2, 3],
-             circuit=[a, b, c, d],
-             dsc='Test circuit {circuit.__name__} with level {level}',
-             name='{circuit.__name__}_level{level}').
-    """
-
-    def deco(func: Callable) -> Callable:
-        return data(*generate_cases(docstring=func.__doc__, **kwargs))(unpack(func))
-
-    return deco
 
 
 def bell() -> QuantumCircuit:
