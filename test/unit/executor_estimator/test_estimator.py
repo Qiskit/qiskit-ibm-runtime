@@ -15,7 +15,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -41,26 +42,10 @@ if TYPE_CHECKING:
     from ...registries import BaseRegistry
 
 
-@pytest.fixture
-def run_calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Executor, QuantumProgram]]:
-    """Record the ``(executor, program)`` of every ``Executor.run`` call, while still running it."""
-    calls: list[tuple[Executor, QuantumProgram]] = []
-    original_run = Executor.run
-
-    def spy(executor: Executor, program: QuantumProgram, *args: Any, **kwargs: Any) -> Any:
-        calls.append((executor, program))
-        return original_run(executor, program, *args, **kwargs)
-
-    monkeypatch.setattr(Executor, "run", spy)
-    return calls
-
-
 class TestEstimatorRun:
     """Tests for the Estimator.run() method."""
 
-    def test_run_single_pub_no_parameters(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_single_pub_no_parameters(self, registry: BaseRegistry) -> None:
         """Test run with single pub without parameters."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -72,13 +57,14 @@ class TestEstimatorRun:
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        job = estimator.run([(circuit, observable)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            job = estimator.run([(circuit, observable)], precision=0.03125)
 
         # Verify executor.run was called.
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
 
         # Verify the quantum program passed to executor.
-        quantum_program = run_calls[-1][1]
+        quantum_program = run_spy.call_args[0][1]
         assert isinstance(quantum_program, QuantumProgram)
         # precision=0.03125 -> shots = ceil(1/0.03125^2) = 1024
         assert quantum_program.shots == 1024
@@ -89,9 +75,7 @@ class TestEstimatorRun:
         # Verify job was returned.
         assert job.primitive_id == "executor"
 
-    def test_run_with_pub_level_precision(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_with_pub_level_precision(self, registry: BaseRegistry) -> None:
         """Test that EstimatorPub.coerce is called with precision parameter."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -102,17 +86,16 @@ class TestEstimatorRun:
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        job = estimator.run([(circuit, observable, None, 0.01)])
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            job = estimator.run([(circuit, observable, None, 0.01)])
 
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
         # precision=0.01 -> shots = ceil(1/0.01^2) = 10000
-        quantum_program = run_calls[-1][1]
+        quantum_program = run_spy.call_args[0][1]
         assert quantum_program.shots == 10000
         assert job.primitive_id == "executor"
 
-    def test_run_uses_default_precision_from_options(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_uses_default_precision_from_options(self, registry: BaseRegistry) -> None:
         """Test that run uses default_precision from options when precision not specified."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -123,18 +106,17 @@ class TestEstimatorRun:
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator.run([(circuit, observable)])
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            estimator.run([(circuit, observable)])
 
         # Verify executor.run was called.
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
 
         # Verify shots from precision were calculated.
-        quantum_program = run_calls[-1][1]
+        quantum_program = run_spy.call_args[0][1]
         assert quantum_program.shots == 10000
 
-    def test_run_precision_parameter_overrides_options(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_precision_parameter_overrides_options(self, registry: BaseRegistry) -> None:
         """Test that precision parameter in run() overrides options.default_precision."""
         options = EstimatorOptions()
         options.default_precision = 0.022097  # sqrt(1/2048)
@@ -147,16 +129,15 @@ class TestEstimatorRun:
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator.run([(circuit, observable)], precision=0.015625)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            estimator.run([(circuit, observable)], precision=0.015625)
 
         # Verify precision parameter was used instead of options.
-        quantum_program = run_calls[-1][1]
+        quantum_program = run_spy.call_args[0][1]
         # precision=0.015625 -> shots = ceil(1/0.015625^2) = 4096
         assert quantum_program.shots == 4096
 
-    def test_run_with_parametric_circuit(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_with_parametric_circuit(self, registry: BaseRegistry) -> None:
         """Test run with parametric circuit."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -169,18 +150,14 @@ class TestEstimatorRun:
         observable = SparsePauliOp.from_list([("ZZ", 1)])
         parameter_values = np.array([[0], [np.pi / 2], [np.pi]])
 
-        job = estimator.run([(circuit, observable, parameter_values)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            job = estimator.run([(circuit, observable, parameter_values)], precision=0.03125)
 
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
         assert job.primitive_id == "executor"
 
     @pytest.mark.parametrize("measure_mitigation", [True, False])
-    def test_run_multiple_pubs(
-        self,
-        measure_mitigation: bool,
-        registry: BaseRegistry,
-        run_calls: list[tuple[Executor, QuantumProgram]],
-    ) -> None:
+    def test_run_multiple_pubs(self, measure_mitigation: bool, registry: BaseRegistry) -> None:
         """Test run with multiple pubs."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -196,17 +173,16 @@ class TestEstimatorRun:
 
         pubs = [(circuit1, observable1), (circuit2, observable2)]
 
-        estimator.run(pubs, precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            estimator.run(pubs, precision=0.03125)
 
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
 
         # Verify multiple items in quantum program.
-        quantum_program = run_calls[-1][1]
+        quantum_program = run_spy.call_args[0][1]
         assert len(quantum_program.items) == 2 + measure_mitigation
 
-    def test_run_with_default_precision(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_with_default_precision(self, registry: BaseRegistry) -> None:
         """Test that run uses the default precision value from options."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -217,19 +193,18 @@ class TestEstimatorRun:
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator.run([(circuit, observable)])
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            estimator.run([(circuit, observable)])
 
         # Verify executor.run was called.
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
 
         # Verify shots from default precision were calculated.
-        quantum_program = run_calls[-1][1]
+        quantum_program = run_spy.call_args[0][1]
         # precision=0.015625 -> shots = ceil(1/0.015625^2) = 4096
         assert quantum_program.shots == 4096
 
-    def test_run_sets_executor_options(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_sets_executor_options(self, registry: BaseRegistry) -> None:
         """Test that run sets executor options correctly."""
         options = EstimatorOptions()
         options.execution.init_qubits = True
@@ -243,20 +218,19 @@ class TestEstimatorRun:
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator.run([(circuit, observable)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            estimator.run([(circuit, observable)], precision=0.03125)
 
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
         # Uses the `options` attribute on the `Executor` instance` (arg 0 is `self`).
-        executor_options = run_calls[-1][0].options
+        executor_options = run_spy.call_args[0][0].options
 
         # Verify Executor was constructed with the correctly mapped executor options.
         assert executor_options.execution.init_qubits
         assert executor_options.execution.rep_delay == 0.001
         assert executor_options.max_execution_time == 300
 
-    def test_run_adds_options_to_passthrough_data(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_adds_options_to_passthrough_data(self, registry: BaseRegistry) -> None:
         """Test that run adds options, shots and precision to passthrough data."""
         options = EstimatorOptions()
         options.twirling.enable_gates = True
@@ -270,13 +244,14 @@ class TestEstimatorRun:
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator.run([(circuit, observable)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            estimator.run([(circuit, observable)], precision=0.03125)
 
         # Verify executor.run was called.
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
 
         # Verify passthrough data contains inputs and calculated values.
-        quantum_program = run_calls[-1][1]
+        quantum_program = run_spy.call_args[0][1]
         assert quantum_program.passthrough_data is not None
         assert "post_processor" in quantum_program.passthrough_data
         post_processor_data = quantum_program.passthrough_data["post_processor"]
@@ -290,9 +265,7 @@ class TestEstimatorRun:
         assert options_data["dynamical_decoupling"]["enable"] is False
         assert options_data["resilience"]["measure_mitigation"] is True
 
-    def test_run_passthrough_options_are_finalized_not_raw(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_passthrough_options_are_finalized_not_raw(self, registry: BaseRegistry) -> None:
         """Test that run adds finalized options (not user options) to passthrough data."""
         # measure_mitigation=True force-resolves twirling.enable_measure -> True; the user
         # leaves enable_gates / enable_measure / zne_mitigation unset (raw value None).
@@ -306,10 +279,11 @@ class TestEstimatorRun:
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        estimator.run([(circuit, observable)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            estimator.run([(circuit, observable)], precision=0.03125)
 
-        assert len(run_calls) == 1
-        quantum_program = run_calls[-1][1]
+        run_spy.assert_called_once()
+        quantum_program = run_spy.call_args[0][1]
         options_metadata = quantum_program.passthrough_data["post_processor"]["options"]
 
         # Unset fields must echo their RESOLVED default, never None.
@@ -318,9 +292,7 @@ class TestEstimatorRun:
         assert options_metadata["twirling"]["enable_gates"] is False
         assert options_metadata["resilience"]["zne_mitigation"] is False
 
-    def test_run_with_multiple_observables(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_with_multiple_observables(self, registry: BaseRegistry) -> None:
         """Test run with multiple observables in a single pub."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -335,14 +307,13 @@ class TestEstimatorRun:
             SparsePauliOp.from_list([("YY", 1)]),
         ]
 
-        job = estimator.run([(circuit, observables)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            job = estimator.run([(circuit, observables)], precision=0.03125)
 
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
         assert job.primitive_id == "executor"
 
-    def test_run_preserves_circuit_metadata(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_preserves_circuit_metadata(self, registry: BaseRegistry) -> None:
         """Test that run preserves circuit metadata through the pipeline."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -353,9 +324,10 @@ class TestEstimatorRun:
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        job = estimator.run([(circuit, observable)], precision=0.03125)
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            job = estimator.run([(circuit, observable)], precision=0.03125)
 
-        assert len(run_calls) == 1
+        run_spy.assert_called_once()
         assert job.primitive_id == "executor"
 
     def test_run_incompatible_broadcast_shapes(self, registry: BaseRegistry) -> None:
@@ -399,18 +371,17 @@ class TestEstimatorRun:
             estimator.run([pub1, pub2])
         assert "same precision" in str(context.value)
 
-    def test_run_raises_error_when_no_pubs_provided(
-        self, registry: BaseRegistry, run_calls: list[tuple[Executor, QuantumProgram]]
-    ) -> None:
+    def test_run_raises_error_when_no_pubs_provided(self, registry: BaseRegistry) -> None:
         """Test that run raises IBMInputValueError when called with an empty pub list."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
 
-        with pytest.raises(IBMInputValueError, match="No pubs provided"):
-            estimator.run([])
+        with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
+            with pytest.raises(IBMInputValueError, match="No pubs provided"):
+                estimator.run([])
 
         # Executor should never be reached.
-        assert not run_calls
+        run_spy.assert_not_called()
 
     def test_run_raises_error_when_pec_and_zne_both_enabled(self, registry: BaseRegistry) -> None:
         """Test that run raises error when both pec_mitigation and zne_mitigation are enabled."""

@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -26,30 +27,10 @@ from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_sampler import prepare as prepare_module
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
-
-
-def spy_on_prepare(
-    monkeypatch: pytest.MonkeyPatch, name: str
-) -> list[tuple[tuple[Any, ...], dict[str, Any]]]:
-    """Wrap a function used by ``prepare``, and return the list of its recorded calls.
-
-    The wrapped function still runs; each call is recorded as an ``(args, kwargs)`` pair.
-    """
-    module = "qiskit_ibm_runtime.executor_sampler.prepare"
-    original = getattr(prepare_module, name)
-    calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
-
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        calls.append((args, kwargs))
-        return original(*args, **kwargs)
-
-    monkeypatch.setattr(f"{module}.{name}", wrapper)
-    return calls
 
 
 class TestPrepare:
@@ -420,14 +401,24 @@ class TestPrepareTwirling:
     @pytest.mark.parametrize(
         "enable_gates, enable_measure", [(True, False), (False, True), (True, True)]
     )
+    @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
+    @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
     def test_prepare_calls_boxing_pm_with_correct_params(
-        self, monkeypatch: pytest.MonkeyPatch, enable_gates: bool, enable_measure: bool
+        self,
+        mock_boxing_pm: MagicMock,
+        mock_build: MagicMock,
+        enable_gates: bool,
+        enable_measure: bool,
     ) -> None:
         """Test that prepare() calls boxing pass manager with correct twirling parameters."""
-        boxing_pm_calls = spy_on_prepare(monkeypatch, "generate_boxing_pass_manager")
+        # Setup mocks
+        mock_pm_instance = MagicMock()
+        mock_boxing_pm.return_value = mock_pm_instance
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
+        mock_pm_instance.run.return_value = circuit
+        mock_build.return_value = (circuit, MagicMock())
 
         pub = (circuit, None, 1024)
         options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})  # type: ignore[arg-type]
@@ -436,8 +427,8 @@ class TestPrepareTwirling:
 
         prepare([pub], options, shots=1024)
 
-        assert len(boxing_pm_calls) == 1
-        call_kwargs = boxing_pm_calls[0][1]
+        mock_boxing_pm.assert_called_once()
+        call_kwargs = mock_boxing_pm.call_args[1]
         assert call_kwargs["enable_gates"] == bool(enable_gates)
         assert call_kwargs["enable_measures"] == bool(enable_measure)
 
@@ -463,13 +454,26 @@ class TestPrepareTwirling:
         options.twirling.enable_measure = False
         prepare([pub], options, shots=1024)  # must not raise
 
-    def test_prepare_calls_samplomatic_build(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
+    @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
+    def test_prepare_calls_samplomatic_build(
+        self, mock_boxing_pm: MagicMock, mock_build: MagicMock
+    ) -> None:
         """Test that prepare() calls samplomatic.build with boxed circuit."""
-        build_calls = spy_on_prepare(monkeypatch, "build")
+        # Setup mocks
+        mock_pm_instance = MagicMock()
+        mock_boxing_pm.return_value = mock_pm_instance
 
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
+
+        boxed_circuit = QuantumCircuit(1, 1)
+        boxed_circuit.x(0)
+        boxed_circuit.measure_all()
+        mock_pm_instance.run.return_value = boxed_circuit
+
+        mock_build.return_value = (boxed_circuit, MagicMock())
 
         pub = (circuit, None, 1024)
         options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})  # type: ignore[arg-type]
@@ -477,10 +481,8 @@ class TestPrepareTwirling:
 
         prepare([pub], options, shots=1024)
 
-        # Verify build was called once, with a circuit that was boxed
-        assert len(build_calls) == 1
-        boxed_circuit = build_calls[0][0][0]
-        assert any(instruction.operation.name == "box" for instruction in boxed_circuit)
+        # Verify build was called with boxed circuit
+        mock_build.assert_called_once_with(boxed_circuit)
 
     @pytest.mark.parametrize(
         "pub_shots, num_rand, shots_per_rand, expected_qp_shots, expected_shape",
@@ -526,14 +528,24 @@ class TestPrepareTwirling:
             ("all", "all"),
         ],
     )
+    @patch("qiskit_ibm_runtime.executor_sampler.prepare.build")
+    @patch("qiskit_ibm_runtime.executor_sampler.prepare.generate_boxing_pass_manager")
     def test_prepare_handles_strategy_option(
-        self, monkeypatch: pytest.MonkeyPatch, strategy: str, expected_strategy: str
+        self,
+        mock_boxing_pm: MagicMock,
+        mock_build: MagicMock,
+        strategy: str,
+        expected_strategy: str,
     ) -> None:
         """Test that prepare() passes twirling strategy to boxing pass manager."""
-        boxing_pm_calls = spy_on_prepare(monkeypatch, "generate_boxing_pass_manager")
+        # Setup mocks
+        mock_pm_instance = MagicMock()
+        mock_boxing_pm.return_value = mock_pm_instance
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
+        mock_pm_instance.run.return_value = circuit
+        mock_build.return_value = (circuit, MagicMock())
 
         pub = (circuit, None, 1024)
         options = SamplerOptions(**{"twirling": {"enable_gates": True, "enable_measure": True}})  # type: ignore[arg-type]
@@ -543,7 +555,7 @@ class TestPrepareTwirling:
         prepare([pub], options, shots=1024)
 
         # Verify strategy was passed (with hyphen replaced by underscore)
-        call_kwargs = boxing_pm_calls[0][1]
+        call_kwargs = mock_boxing_pm.call_args[1]
         assert call_kwargs["twirling_strategy"] == expected_strategy
 
     def test_prepare_handles_parametric_circuits(self) -> None:

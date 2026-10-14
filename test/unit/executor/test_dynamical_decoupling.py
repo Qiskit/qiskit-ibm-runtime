@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
 from qiskit.circuit import Delay, Parameter, QuantumCircuit
@@ -336,36 +338,17 @@ class TestGenerateDDPassManager:
         assert delays_q2[2] == pytest.approx(expected_delay)
 
 
-class RecordingPassManager:
-    """A pass manager that returns circuits unchanged, counting how many it was run on."""
-
-    def __init__(self) -> None:
-        self.num_runs = 0
-
-    def run(self, circuit: QuantumCircuit) -> QuantumCircuit:
-        """Count the run, and return the given circuit."""
-        self.num_runs += 1
-        return circuit
-
-
 class TestApplyDynamicalDecoupling:
     """Tests for apply_dynamical_decoupling function."""
 
-    def test_pass_manager_called_once_per_item(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @patch("qiskit_ibm_runtime.executor.dynamical_decoupling.generate_dd_pass_manager")
+    def test_pass_manager_called_once_per_item(self, mock_generate_pm: MagicMock) -> None:
         """Test that pass manager is called once per item with mixed CircuitItem and SamplexItem."""
         backend = FakeManilaV2()
-        # Replace the pass manager generation with a recording one
-        pass_manager = RecordingPassManager()
-        generate_calls: list[dict[str, object]] = []
-
-        def fake_generate_dd_pass_manager(**kwargs: object) -> RecordingPassManager:
-            generate_calls.append(kwargs)
-            return pass_manager
-
-        monkeypatch.setattr(
-            "qiskit_ibm_runtime.executor.dynamical_decoupling.generate_dd_pass_manager",
-            fake_generate_dd_pass_manager,
-        )
+        # Create a mock pass manager
+        mock_pm = MagicMock(spec=PassManager)
+        mock_pm.run = MagicMock(side_effect=lambda circ: circ)
+        mock_generate_pm.return_value = mock_pm
 
         # Create a CircuitItem
         circuit1 = QuantumCircuit(2)
@@ -405,6 +388,9 @@ class TestApplyDynamicalDecoupling:
             quantum_program=quantum_program,
         )
 
-        assert generate_calls == [{"backend": backend, "options": dd_options}]
-        assert pass_manager.num_runs == 3
+        mock_generate_pm.assert_called_once_with(
+            backend=backend,
+            options=dd_options,
+        )
+        assert mock_pm.run.call_count == 3
         assert result_program is quantum_program
