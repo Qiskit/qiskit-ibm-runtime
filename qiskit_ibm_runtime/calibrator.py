@@ -10,7 +10,24 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Calibrator program."""
+"""
+=================================================
+Calibrator (:mod:`qiskit_ibm_runtime.calibrator`)
+=================================================
+
+.. currentmodule:: qiskit_ibm_runtime.calibrator
+
+The tool to calibrate an IBM Quantum backend.
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   Calibrator
+
+"""
 
 from __future__ import annotations
 

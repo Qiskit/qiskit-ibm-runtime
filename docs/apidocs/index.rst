@@ -13,6 +13,7 @@
    quantum_program
    noise_learner
    noise_learner_v3
+   calibrator
    options
    options_models
    results
