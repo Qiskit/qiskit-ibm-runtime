@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ibm_quantum_schemas.calibrator.version_0_1_dev import (
+from ibm_quantum_schemas.calibrator.version_0_1 import (
     CalibratorResultModel as CalibratorResultModel_0_1,
 )
 

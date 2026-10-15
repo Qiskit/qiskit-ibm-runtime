@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from ibm_quantum_schemas.calibrator.version_0_1_dev import ParamsModel as ParamsModel_0_1
+from ibm_quantum_schemas.calibrator.version_0_1 import ParamsModel as ParamsModel_0_1
 
 from .converters import calibrator_program_from_0_1, calibrator_program_to_0_1
 

@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from ibm_quantum_schemas.calibrator.version_0_1_dev import OptionsModel, ParamsModel
+from ibm_quantum_schemas.calibrator.version_0_1 import OptionsModel, ParamsModel
 
 from ...options_models.calibrator import CalibratorOptions
 

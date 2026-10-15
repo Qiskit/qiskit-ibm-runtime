@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from ...calibrator.results import CalibratorResult
 
 if TYPE_CHECKING:
-    from ibm_quantum_schemas.calibrator.version_0_1_dev import (
+    from ibm_quantum_schemas.calibrator.version_0_1 import (
         CalibratorResultModel as CalibratorResultModel_0_1,
     )
 
