@@ -38,7 +38,7 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
 
     Returns:
         A :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Results`, with one
-        :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result` per gate in the model.
+        :class:`~qiskit_ibm_runtime.results.NoiseLearnerV3Result` per user-provided layer.
     """
     if not isinstance(result.passthrough_data, dict):
         raise ValueError(
