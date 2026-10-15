@@ -10,8 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-=================================================
+"""=================================================
 Calibrator (:mod:`qiskit_ibm_runtime.calibrator`)
 =================================================
 
@@ -57,17 +56,30 @@ class Calibrator:
 
     .. code-block:: python
 
-        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session
         from qiskit_ibm_runtime.calibrator import Calibrator
 
         service = QiskitRuntimeService()
         backend = service.backend("ibm_boston")
 
-        calibrator = Calibrator(backend)
-        job = calibrator.run()
+        with Session(backend=backend) as session:
+            calibrator = Calibrator(session)
+            calibrator.run()
 
     Args:
-        backend: The backend to calibrate.
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `IBM Quantum Compute documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            for more information about the ``Execution modes``.
+
+        options: Calibrator options, see :class:`~qiskit_ibm_runtime.options.CalibratorOptions`
+            for detailed description.
     """
 
     _PROGRAM_ID = "calibrate"
