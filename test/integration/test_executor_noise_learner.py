@@ -43,9 +43,9 @@ class TestNoiseLearnerV3:
         )
 
         circuit = QuantumCircuit(3, name="GHZ with params")
-        circuit.h(0)
-        circuit.cx(0, 1)
+        circuit.h(1)
         circuit.cx(1, 2)
+        circuit.cx(1, 0)
         circuit.rz(Parameter("theta"), 0)
         circuit.rz(Parameter("phi"), 1)
         circuit.rz(Parameter("lam"), 2)
