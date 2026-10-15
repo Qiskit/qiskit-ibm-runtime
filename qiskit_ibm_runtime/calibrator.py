@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 class Calibrator:
     r"""Class for calibrating a backend.
 
+    A calibrator can be initialized only inside a session.
     The :meth:`run` method can be used to submit a calibration request for a backend.
 
     .. code-block:: python
