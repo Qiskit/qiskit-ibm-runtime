@@ -10,23 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""=================================================
-Calibrator (:mod:`qiskit_ibm_runtime.calibrator`)
-=================================================
-
-.. currentmodule:: qiskit_ibm_runtime.calibrator
-
-The tool to calibrate an IBM Quantum backend.
-
-Classes
-=======
-
-.. autosummary::
-   :toctree: ../stubs/
-
-   Calibrator
-
-"""
+"""Calibrator program."""
 
 from __future__ import annotations
 
@@ -56,8 +40,7 @@ class Calibrator:
 
     .. code-block:: python
 
-        from qiskit_ibm_runtime import QiskitRuntimeService, Session
-        from qiskit_ibm_runtime.calibrator import Calibrator
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Calibrator
 
         service = QiskitRuntimeService()
         backend = service.backend("ibm_boston")
@@ -92,7 +75,7 @@ class Calibrator:
         mode: BackendV2 | Session | Batch | str | None = None,
         options: CalibratorOptions | dict | None = None,
     ):
-        # Coerced to `CalibratorOptions` via `__setattr__()`.Expand comment
+        # Coerced to `CalibratorOptions` via `__setattr__()`.
         self.options = options if options is not None else CalibratorOptions()  # type: ignore[assignment]
 
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
