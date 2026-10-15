@@ -17,17 +17,17 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from .base_primitive import get_mode_service_backend
-from .options_models.calibrator import CalibratorOptions
-from .options_models.converters import to_runtime_options
-from .utils.default_session import get_cm_session
+from ..base_primitive import get_mode_service_backend
+from ..options_models.calibrator import CalibratorOptions
+from ..options_models.converters import to_runtime_options
+from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from .batch import Batch
-    from .runtime_job_v2 import RuntimeJobV2
-    from .session import Session
+    from ..batch import Batch
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
 
 
 logger = logging.getLogger(__name__)
