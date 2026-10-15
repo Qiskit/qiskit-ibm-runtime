@@ -79,3 +79,4 @@ from .sampler import SamplerOptions
 from .simulator import SimulatorOptions
 from .twirling import TwirlingOptions
 from .zne import ZneOptions
+from .calibrator import CalibratorOptions

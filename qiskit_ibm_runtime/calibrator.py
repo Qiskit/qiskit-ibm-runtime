@@ -61,7 +61,7 @@ class Calibrator:
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about the ``Execution modes``.
 
-        options: Calibrator options, see :class:`~qiskit_ibm_runtime.options.CalibratorOptions`
+        options: Calibrator options, see :class:`~qiskit_ibm_runtime.options_models.CalibratorOptions`
             for detailed description.
     """
 
