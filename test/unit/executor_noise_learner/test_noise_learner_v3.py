@@ -25,6 +25,7 @@ from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.executor_noise_learner.noise_learner_v3 import NoiseLearnerV3
+from qiskit_ibm_runtime.executor_noise_learner.prepare import HAS_QNL
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
@@ -146,6 +147,7 @@ class TestNoiseLearnerUsingOptions:
             options.not_a_variable = 0  # type: ignore[attr-defined]
 
 
+@pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
 class TestNoiseLearnerRun:
     """Tests for the NoiseLearnerV3.run() method."""
 

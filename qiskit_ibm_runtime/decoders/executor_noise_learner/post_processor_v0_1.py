@@ -17,23 +17,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from qiskit.quantum_info import QubitSparsePauliList
-from qiskit.utils import LazyImportTester
 from qiskit_mitigation.postselection.constants import (
     DEFAULT_POST_CHECK_SUFFIX,
     DEFAULT_PRE_CHECK_SUFFIX,
 )
 
+from ...executor_noise_learner.prepare import HAS_QNL
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
-
-
-HAS_QNL = LazyImportTester(
-    "qiskit_noise_learning",
-    name="Qiskit Noise Learning",
-    install="pip install qiskit-noise-learning",
-)
 
 if HAS_QNL:
     from qiskit_noise_learning.analysis.flip_post_select import (
