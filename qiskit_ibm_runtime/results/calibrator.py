@@ -21,12 +21,13 @@ if TYPE_CHECKING:
 
 
 class CalibratorResult:
-    """The results of a calibration job.
+    """The results of a calibration job."""
 
-    Args:
-        start: The start time of the calibration in UTC.
-        stop: The stop time of the calibration in UTC.
-    """
+    start: datetime.datetime
+    """The start time of the calibration in UTC."""
+
+    stop: datetime.datetime
+    """The stop time of the calibration in UTC."""
 
     def __init__(self, start: datetime.datetime, stop: datetime.datetime):
         self.start = start
