@@ -22,8 +22,8 @@ from qiskit_mitigation.postselection.constants import (
     DEFAULT_PRE_CHECK_SUFFIX,
 )
 
-from ...executor_noise_learner.prepare import HAS_QNL
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
+from ...utils.utils import HAS_QNL
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult

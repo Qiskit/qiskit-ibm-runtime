@@ -25,13 +25,13 @@ from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.executor_noise_learner.noise_learner_v3 import NoiseLearnerV3
-from qiskit_ibm_runtime.executor_noise_learner.prepare import HAS_QNL
 from qiskit_ibm_runtime.fake_provider import FakeBrisbane
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from qiskit_ibm_runtime.options_models.noise_learner_v3 import NoiseLearnerV3Options
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
+from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 from ...registries import OneInstanceDryRunRegistry
 
