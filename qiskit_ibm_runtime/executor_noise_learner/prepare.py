@@ -17,13 +17,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from qiskit.transpiler import PassManager
+from qiskit.utils import LazyImportTester
 from qiskit_mitigation.postselection.passes import (
     AddPostCircuitNonMarkovianErrorChecks,
     AddPreCircuitNonMarkovianErrorChecks,
     AddSpectatorPostCircuitNonMarkovianErrorChecks,
     AddSpectatorPreCircuitNonMarkovianErrorChecks,
 )
-from qiskit_noise_learning.protocols import prepare_learning_program
 
 from ..options_models.converters import noise_learner_options_to_executor_options
 
@@ -37,7 +37,17 @@ if TYPE_CHECKING:
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
     from ..quantum_program import QuantumProgram
 
+HAS_QNL = LazyImportTester(
+    "qiskit_noise_learning",
+    name="Qiskit Noise Learning",
+    install="pip install qiskit-noise-learning",
+)
 
+if HAS_QNL:
+    from qiskit_noise_learning.protocols import prepare_learning_program
+
+
+@HAS_QNL.require_in_call
 def prepare(
     instructions: Iterable[CircuitInstruction],
     options: NoiseLearnerV3Options,
