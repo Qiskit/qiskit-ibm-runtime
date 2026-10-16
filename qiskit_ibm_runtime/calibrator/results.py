@@ -14,19 +14,23 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import datetime
 
 
-@dataclass(frozen=True)
 class CalibratorResult:
-    """The results of a calibration job."""
+    """The results of a calibration job.
 
-    start: datetime.datetime
-    """The start time of the calibration in UTC."""
+    Args:
+        start: The start time of the calibration in UTC.
+        stop: The stop time of the calibration in UTC.
+    """
 
-    stop: datetime.datetime
-    """The stop time of the calibration in UTC."""
+    def __init__(self, start: datetime.datetime, stop: datetime.datetime):
+        self.start = start
+        self.stop = stop
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}(start='{self.start}', stop='{self.stop}')>"
