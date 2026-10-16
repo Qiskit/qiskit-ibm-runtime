@@ -31,6 +31,7 @@ from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from qiskit_ibm_runtime.options_models.noise_learner_v3 import NoiseLearnerV3Options
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
+from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 from ...registries import OneInstanceDryRunRegistry
 
@@ -146,6 +147,7 @@ class TestNoiseLearnerUsingOptions:
             options.not_a_variable = 0  # type: ignore[attr-defined]
 
 
+@pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
 class TestNoiseLearnerRun:
     """Tests for the NoiseLearnerV3.run() method."""
 
