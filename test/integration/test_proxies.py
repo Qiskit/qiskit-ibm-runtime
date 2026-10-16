@@ -114,8 +114,6 @@ def proxy_server() -> Iterator[ProxyServerHandle]:
     startup_errors: list[BaseException] = []
 
     async def run_master() -> None:
-        # DumpMaster needs a running event loop to be constructed, so it must be
-        # built here, inside the background thread, rather than before it starts.
         options = Options(listen_host=ADDRESS, listen_port=0)
         master = DumpMaster(options, with_termlog=False, with_dumper=False)
         master.addons.add(recorder, ready_signal)  # type: ignore[no-untyped-call]
@@ -127,7 +125,7 @@ def proxy_server() -> Iterator[ProxyServerHandle]:
             asyncio.run(run_master())
         except BaseException as exc:  # noqa: BLE001 -- surfaced to the main thread below
             startup_errors.append(exc)
-            ready_signal.ready.set()  # unblock the waiter so the error can be raised
+            ready_signal.ready.set()
 
     thread = threading.Thread(target=run_in_background, daemon=True)
     thread.start()
