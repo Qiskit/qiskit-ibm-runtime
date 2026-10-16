@@ -13,4 +13,3 @@
 """Calibrator program."""
 
 from .calibrator import Calibrator
-from .results import CalibratorResult

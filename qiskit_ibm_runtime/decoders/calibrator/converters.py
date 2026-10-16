@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...calibrator.results import CalibratorResult
+from ...results import CalibratorResult
 
 if TYPE_CHECKING:
     from ibm_quantum_schemas.calibrator.version_0_1 import (

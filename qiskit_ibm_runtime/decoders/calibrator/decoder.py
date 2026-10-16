@@ -21,7 +21,7 @@ from ibm_quantum_schemas.calibrator.version_0_1 import (
     CalibratorResultModel as CalibratorResultModel_0_1,
 )
 
-from ...calibrator.results import CalibratorResult
+from ...results import CalibratorResult
 from ..result_decoder import ResultDecoder
 from .converters import calibrator_result_from_0_1
 

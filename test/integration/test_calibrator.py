@@ -19,8 +19,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qiskit_ibm_runtime import Session
-from qiskit_ibm_runtime.calibrator import Calibrator, CalibratorResult
+from qiskit_ibm_runtime.calibrator import Calibrator
 from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
+from qiskit_ibm_runtime.results import CalibratorResult
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
