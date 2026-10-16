@@ -40,6 +40,7 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
 
 from samplomatic.quantum_program import ChunkPart, ChunkSpan, ChunkTiming
 
+from .calibrator import CalibratorResult
 from .estimator_pub import EstimatorPubResult
 from .noise_learner import LayerError, NoiseLearnerResult, PauliLindbladError
 from .noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
