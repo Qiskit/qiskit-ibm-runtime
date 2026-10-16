@@ -22,6 +22,7 @@ from .base import BaseOptionsModel
 from .bit_flip_checks import BitFlipChecksOptions
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
+from .simulator import SimulatorOptions
 
 
 class NoiseLearnerV3Options(BaseOptionsModel):
@@ -56,6 +57,9 @@ class NoiseLearnerV3Options(BaseOptionsModel):
 
     bit_flip_checks: BitFlipChecksOptions = BitFlipChecksOptions()
     """Options to apply bit-flip checks to the results of noise learning circuits."""
+
+    simulator: SimulatorOptions = SimulatorOptions()
+    """Options related to local mode simulations."""
 
     experimental: dict = {}
     """Experimental options.
