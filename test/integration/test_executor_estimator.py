@@ -30,7 +30,7 @@ from ..utils import make_mirror_circuit_with_phases
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 def estimator_pubs(backend: IBMBackend) -> list[tuple]:
@@ -59,7 +59,7 @@ def estimator_pubs(backend: IBMBackend) -> list[tuple]:
 class TestEstimator:
     """An integration test, testing Estimator implemented through Executor."""
 
-    def test_vanilla_estimator(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_vanilla_estimator(self, dependencies: Dependencies) -> None:
         """Test the "vanilla" path (no mitigation) for estimator.
 
         Tests
@@ -81,7 +81,7 @@ class TestEstimator:
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
-    def test_pec_estimator(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_pec_estimator(self, dependencies: Dependencies) -> None:
         """Test the PEC path for estimator.
 
         Tests
@@ -113,7 +113,7 @@ class TestEstimator:
 
     @pytest.mark.parametrize("amplifier", ["gate_folding", "pea"])
     def test_zne_estimator(
-        self, amplifier: Literal["gate_folding", "pea"], dependencies: IntegrationTestDependencies
+        self, amplifier: Literal["gate_folding", "pea"], dependencies: Dependencies
     ) -> None:
         """Test the ZNE path for estimator, parameterized over the noise amplifier.
 

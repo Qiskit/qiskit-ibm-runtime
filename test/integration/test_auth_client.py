@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
-from .case import integration_test_dependencies
+from .dependencies import integration_test_dependencies
 
 
 class TestAuthClient:

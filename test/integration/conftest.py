@@ -24,7 +24,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import SamplerV2
 
 from ..utils import bell
-from .case import integration_test_dependencies
+from .dependencies import integration_test_dependencies
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -32,19 +32,19 @@ if TYPE_CHECKING:
     from qiskit_ibm_runtime import RuntimeJobV2
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="class")
-def dependencies() -> IntegrationTestDependencies:
+def dependencies() -> Dependencies:
     """Return the dependencies of an integration test, from the environment configuration."""
     return integration_test_dependencies()
 
 
 @pytest.fixture(scope="class")
-def backend_test(dependencies: IntegrationTestDependencies) -> IBMBackend | None:
+def backend_test(dependencies: Dependencies) -> IBMBackend | None:
     """Return the test backend used by the tests in the class, from the environment config."""
     for backend in dependencies.service.backends():
         if backend.name.startswith("test_eagle"):
@@ -55,7 +55,7 @@ def backend_test(dependencies: IntegrationTestDependencies) -> IBMBackend | None
 
 @pytest.fixture
 def submit_bell_job(
-    dependencies: IntegrationTestDependencies, backend_test: IBMBackend | None
+    dependencies: Dependencies, backend_test: IBMBackend | None
 ) -> Iterator[Callable[..., RuntimeJobV2]]:
     """Return a function that submits a sampler job running a bell circuit.
 

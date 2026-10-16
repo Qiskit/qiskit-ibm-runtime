@@ -39,7 +39,7 @@ from qiskit_ibm_runtime.fake_provider import (
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
 if TYPE_CHECKING:
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
@@ -166,7 +166,7 @@ class TestRefreshFakeBackends:
 
     @pytest.mark.production
     def test_refresh_method(
-        self, caplog: pytest.LogCaptureFixture, dependencies: IntegrationTestDependencies
+        self, caplog: pytest.LogCaptureFixture, dependencies: Dependencies
     ) -> None:
         """Test refresh method."""
         # to verify the data files will be updated

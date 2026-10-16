@@ -21,23 +21,33 @@ import pytest
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
-from .case import integration_test_dependencies
+from .dependencies import integration_test_dependencies
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
-
-def get_backends() -> list[tuple[str, IBMBackend]]:
-    """Return the backends to be tested and the test label."""
-    dependencies = integration_test_dependencies()
-    backends = dependencies.service.backends(
-        operational=True, simulator=False, instance=dependencies.instance
-    )
-
-    return [(f"backend_{i}", backend) for i, backend in enumerate(backends, 1)]
+    from .dependencies import Dependencies
 
 
-BACKENDS = get_backends()
+def backend_names() -> list[str]:
+    """Return the names of the backends to be tested."""
+    try:
+        dependencies = integration_test_dependencies()
+    except pytest.skip.Exception:
+        return []
+
+    return [
+        backend.name
+        for backend in dependencies.service.backends(
+            operational=True, simulator=False, instance=dependencies.instance
+        )
+    ]
+
+
+@pytest.fixture
+def backend(request: pytest.FixtureRequest, dependencies: Dependencies) -> IBMBackend:
+    """Return the backend named by the indirect parametrization."""
+    return dependencies.service.backend(request.param)
 
 
 def assert_data(data: dict, good_keys: tuple, good_key_prefixes: tuple | None = None) -> None:
@@ -50,7 +60,7 @@ def assert_data(data: dict, good_keys: tuple, good_key_prefixes: tuple | None = 
             serialized objects.
     """
     suspect_keys: set[Any] = set()
-    _find_potential_encoded(data, "", suspect_keys)
+    find_potential_encoded(data, "", suspect_keys)
     # Remove known good keys from suspect keys.
     for gkey in good_keys:
         try:
@@ -63,7 +73,7 @@ def assert_data(data: dict, good_keys: tuple, good_key_prefixes: tuple | None = 
     assert not suspect_keys
 
 
-def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
+def find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
     """Find data that may be in JSON serialized format.
 
     Args:
@@ -71,19 +81,19 @@ def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
         c_key: Key of the field currently being traversed.
         tally: Keys of fields that look suspect.
     """
-    if _check_encoded(data):
+    if check_encoded(data):
         tally.add(c_key)
 
     if isinstance(data, list):
         for item in data:
-            _find_potential_encoded(item, c_key, tally)
+            find_potential_encoded(item, c_key, tally)
     elif isinstance(data, dict):
         for key, value in data.items():
             full_key = c_key + "." + str(key) if c_key else str(key)
-            _find_potential_encoded(value, full_key, tally)
+            find_potential_encoded(value, full_key, tally)
 
 
-def _check_encoded(data: list | str) -> bool:
+def check_encoded(data: list | str) -> bool:
     """Check if the input data is potentially in JSON serialized format."""
     if isinstance(data, list) and len(data) == 2 and all(isinstance(x, (float, int)) for x in data):
         return True
@@ -96,15 +106,19 @@ def _check_encoded(data: list | str) -> bool:
     return False
 
 
-BACKEND_PARAMS = [pytest.param(backend, id=label) for label, backend in BACKENDS]
-
-
+@pytest.mark.parametrize(
+    "backend",
+    [pytest.param(name, id=f"backend_{i}") for i, name in enumerate(backend_names(), 1)],
+    indirect=True,
+)
 class TestSerialization:
-    """Test data serialization."""
+    """Test data serialization.
 
-    @pytest.mark.parametrize("backend", BACKEND_PARAMS)
+    This class is parametrized with the names of the backends retrieved live from the service.
+    """
+
     @pytest.mark.production
-    def test_backend_configuration(self, backend):
+    def test_backend_configuration(self, backend: IBMBackend) -> None:
         """Test deserializing backend configuration."""
         # Known keys that look like a serialized complex number.
         good_keys = (
@@ -124,8 +138,7 @@ class TestSerialization:
 
         assert_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
-    @pytest.mark.parametrize("backend", BACKEND_PARAMS)
-    def test_backend_properties(self, backend):
+    def test_backend_properties(self, backend: IBMBackend) -> None:
         """Test deserializing backend properties."""
         # Known keys that look like a serialized object.
         good_keys = ("gates.qubits", "qubits.name", "backend_version", "general_qlists.qubits")

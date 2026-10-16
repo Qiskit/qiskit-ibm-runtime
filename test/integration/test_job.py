@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import logging
 import random
 import time
 from typing import TYPE_CHECKING
@@ -28,16 +27,14 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobNotFound,
 )
 
-from ..utils import cancel_job_safe, wait_for_status
+from .utils import cancel_job_safe, wait_for_status
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
 
-    from .case import IntegrationTestDependencies
-
-logger = logging.getLogger(__name__)
+    from .dependencies import Dependencies
 
 
 class TestIntegrationJob:
@@ -65,14 +62,14 @@ class TestIntegrationJob:
     def test_cancel_job_queued(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test canceling a queued job."""
         service = dependencies.service
         _ = submit_bell_job()
         job = submit_bell_job()
         wait_for_status(job, "QUEUED")
-        if not cancel_job_safe(job, logger):
+        if not cancel_job_safe(job):
             return
         time.sleep(15)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
@@ -81,13 +78,13 @@ class TestIntegrationJob:
     def test_cancel_job_running(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test canceling a running job."""
         service = dependencies.service
         job = submit_bell_job()
         rjob = service.job(job.job_id())
-        if not cancel_job_safe(rjob, logger):
+        if not cancel_job_safe(rjob):
             return
         time.sleep(5)
         assert rjob.status() == "CANCELLED"
@@ -102,7 +99,7 @@ class TestIntegrationJob:
     def test_delete_job(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test deleting a job."""
         service = dependencies.service
@@ -120,7 +117,7 @@ class TestIntegrationJob:
     def test_delete_job_queued(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test deleting a queued job."""
         service = dependencies.service
@@ -160,7 +157,7 @@ class TestIntegrationJob:
     def test_wait_for_final_state(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test wait for final state."""
         job = submit_bell_job(backend_name=dependencies.qpu)
@@ -170,7 +167,7 @@ class TestIntegrationJob:
     def test_wait_for_final_state_after_job_status(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test wait for final state on a completed job when the status is updated first."""
         job = submit_bell_job(backend_name=dependencies.qpu)
@@ -183,7 +180,7 @@ class TestIntegrationJob:
     def test_job_creation_date(
         self,
         submit_bell_job: Callable[..., RuntimeJobV2],
-        dependencies: IntegrationTestDependencies,
+        dependencies: Dependencies,
     ) -> None:
         """Test job creation date."""
         service = dependencies.service

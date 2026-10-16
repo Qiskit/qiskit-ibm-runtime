@@ -30,13 +30,13 @@ from ..utils import bell
 from .test_account import _get_service_instance_name_for_crn
 
 if TYPE_CHECKING:
-    from .case import IntegrationTestDependencies
+    from .dependencies import Dependencies
 
 
 class TestIntegrationSession:
     """Integration tests for Session."""
 
-    def test_estimator_sampler(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_estimator_sampler(self, dependencies: Dependencies) -> None:
         """Test calling both estimator and sampler."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
@@ -65,7 +65,7 @@ class TestIntegrationSession:
             session.close()
 
     def test_session_from_id(
-        self, dependencies: IntegrationTestDependencies, monkeypatch: pytest.MonkeyPatch
+        self, dependencies: Dependencies, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test creating a session from a given id."""
         service = dependencies.service
@@ -97,7 +97,7 @@ class TestIntegrationSession:
         with pytest.raises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
 
-    def test_session_from_id_no_backend(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_session_from_id_no_backend(self, dependencies: Dependencies) -> None:
         """Test error is raised if session has no backend."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
@@ -111,7 +111,7 @@ class TestIntegrationSession:
             with pytest.raises(IBMRuntimeError):
                 Session.from_id(session_id=session._session_id, service=service)
 
-    def test_session_backend(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_session_backend(self, dependencies: Dependencies) -> None:
         """Test session backend is the correct backend."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
@@ -129,7 +129,7 @@ class TestIntegrationSession:
             job2 = sampler2.run([pm.run(bell())])
             assert instruction_name in job2.backend().target.operation_names
 
-    def test_session_instance_logic(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_session_instance_logic(self, dependencies: Dependencies) -> None:
         """Test creating a session with different service configurations."""
         # test with no instances passed in
         service_no_instance = QiskitRuntimeService(
