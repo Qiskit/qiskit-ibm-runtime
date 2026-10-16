@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qiskit_ibm_runtime import Session
-from qiskit_ibm_runtime.calibrator import Calibrator
+from qiskit_ibm_runtime.calibrator import Calibrator, CalibratorResult
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
@@ -37,4 +37,6 @@ class TestCalibrator:
             calibrator = Calibrator(session)
             job = calibrator.run()
             result = job.result()
-            assert "calibration_result" in result
+
+        assert isinstance(result, CalibratorResult)
+        assert result.start < result.stop
