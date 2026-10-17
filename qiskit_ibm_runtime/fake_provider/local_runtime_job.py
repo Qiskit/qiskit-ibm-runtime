@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import wait
 from datetime import datetime
 from functools import reduce
 from typing import TYPE_CHECKING, Any, Literal
@@ -21,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from qiskit.primitives.primitive_job import PrimitiveJob
 
 from ..decoders.defaults import DEFAULT_DECODERS
+from ..exceptions import RuntimeJobTimeoutError
 from ..utils.converters import local_to_utc
 
 if TYPE_CHECKING:
@@ -32,6 +34,7 @@ if TYPE_CHECKING:
     from ..models import BackendProperties
     from ..quantum_program.quantum_program import QuantumProgram
     from ..results.quantum_program import QuantumProgramResult
+    from ..runtime_job_v2 import JobStatus
     from .fake_backend import FakeBackendV2
 
 
@@ -59,6 +62,8 @@ class LocalRuntimeJob(PrimitiveJob):
         kwargs: Additional keyword arguments to pass to the ``function``.
     """
 
+    JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
+
     def __init__(  # type: ignore[no-untyped-def]
         self,
         function: Callable,
@@ -75,6 +80,7 @@ class LocalRuntimeJob(PrimitiveJob):
         super().__init__(function, *args, **kwargs)
 
         self._future = future
+        self._status: JobStatus | None = None
         self._backend = backend
         self._primitive = primitive
         self._inputs = inputs
@@ -105,6 +111,66 @@ class LocalRuntimeJob(PrimitiveJob):
             },
             "usage": {"qpu_charge_time_seconds": 0, "status": "complete"},
         }
+
+    def status(self) -> JobStatus:
+        """Return the status of the job.
+
+        Returns:
+            Status of this job, with the same values as the status of a job run on the service.
+        """
+        if self._status in self.JOB_FINAL_STATES:
+            return self._status
+        if self._future is None:
+            return "INITIALIZING"
+        if self._future.cancelled():
+            self._status = "CANCELLED"
+        elif self._future.done():
+            self._status = "DONE" if self._future.exception() is None else "ERROR"
+        else:
+            # Only final states are stored, as the job can still move on from the others.
+            return "RUNNING" if self._future.running() else "QUEUED"
+        return self._status
+
+    def cancelled(self) -> bool:
+        """Return whether the job has been cancelled."""
+        return self.status() == "CANCELLED"
+
+    def done(self) -> bool:
+        """Return whether the job has successfully run."""
+        return self.status() == "DONE"
+
+    def errored(self) -> bool:
+        """Return whether the job has failed."""
+        return self.status() == "ERROR"
+
+    def in_final_state(self) -> bool:
+        """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
+        return self.status() in self.JOB_FINAL_STATES
+
+    def running(self) -> bool:
+        """Return whether the job is actively running."""
+        return self.status() == "RUNNING"
+
+    def wait_for_final_state(
+        self,
+        timeout: float | None = None,
+        poll_interval: float | None = None,
+    ) -> None:
+        """Wait until the job is in a final state.
+
+        Args:
+            timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
+            poll_interval: Not used in local mode, where the job is waited on directly. Accepted
+                for compatibility with jobs run on the service.
+
+        Raises:
+            RuntimeJobTimeoutError: If the job does not complete within given timeout.
+        """
+        self._check_submitted()
+        if wait([self._future], timeout=timeout).not_done:
+            raise RuntimeJobTimeoutError(
+                f"Timed out waiting for job to complete after {timeout} secs."
+            )
 
     def backend(self) -> FakeBackendV2:
         """Return the backend where this job was executed."""
