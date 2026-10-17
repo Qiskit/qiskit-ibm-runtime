@@ -29,7 +29,7 @@ from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import (
     FoldRzzAngle,
     convert_to_rzz_valid_pub,
 )
-from qiskit_ibm_runtime.utils.utils import is_valid_rzz_pub
+from qiskit_ibm_runtime.utils.utils import is_isa_circuit, is_valid_rzz_pub
 
 
 class TestFoldRzzAngle:
@@ -97,6 +97,82 @@ class TestFoldRzzAngle:
         isa = pm.run(qc)
 
         assert Operator.from_circuit(qc) == Operator.from_circuit(isa)
+        assert set(isa.count_ops()).issubset({"rzz", "cz", "rz", "sx", "x", "rx"})
+        for inst_data in isa.data:
+            if inst_data.operation.name == "rzz":
+                fold_angle = inst_data.operation.params[0]
+                assert fold_angle >= 0.0
+                assert fold_angle <= pi / 2
+
+    @pytest.mark.parametrize(
+        "angle",
+        [
+            pi / 2,
+            -pi / 2,
+            pi,
+            -pi,
+            0.1,
+            pi / 2 + 0.1,
+            -pi + 0.1,
+            -0.1,
+            2 * pi + 0.1,
+            -3 * pi / 2 + 0.1,
+            pi + 0.1,
+            2 * pi - 0.1,
+            -12 * pi + 0.1,
+            23 * pi / 2 + 0.1,
+            11 * pi + 0.1,
+            -12 * pi - 0.1,
+            # Odd-winding multiples of pi that wrap exactly onto the +-pi boundary. These drop
+            # an odd number of 2*pi windings, so the folded circuit must re-add a global phase
+            # of pi to remain unitary-equivalent (not merely equivalent up to global phase).
+            3 * pi,
+            -3 * pi,
+            7 * pi,
+            -7 * pi,
+            5 * pi,
+            -5 * pi,
+        ],
+        ids=[
+            "pi/2_pos",
+            "pi/2_neg",
+            "pi_pos",
+            "pi_neg",
+            "quad1_no_wrap",
+            "quad2_no_wrap",
+            "quad3_no_wrap",
+            "quad4_no_wrap",
+            "quad1_2pi_wrap",
+            "quad2_2pi_wrap",
+            "quad3_2pi_wrap",
+            "quad4_2pi_wrap",
+            "quad1_12pi_wrap",
+            "quad2_12pi_wrap",
+            "quad3_12pi_wrap",
+            "quad4_12pi_wrap",
+            "3pi_pos",
+            "3pi_neg",
+            "7pi_pos",
+            "7pi_neg",
+            "5pi_pos",
+            "5pi_neg",
+        ],
+    )
+    def test_rzz_folding_with_wrap_registry(self, angle: float) -> None:
+        """Test angle folding when done through Qiskit's built in angle bounds mechanism."""
+        qc = QuantumCircuit(2)
+        qc.rzz(angle, 0, 1)
+        backend = FakeFractionalBackend()
+
+        pm = generate_preset_pass_manager(
+            optimization_level=2,
+            backend=backend,
+        )
+        isa = pm.run(qc)
+        # By default the generated backend should register the angle wrapping
+        # function when angle bounds are set.
+        assert backend.target.gate_has_angle_bounds("rzz")
+        assert is_isa_circuit(isa, backend.target) == ""
         for inst_data in isa.data:
             if inst_data.operation.name == "rzz":
                 fold_angle = inst_data.operation.params[0]
@@ -143,14 +219,16 @@ class TestFoldRzzAngle:
         """Verify that a pass manager for a fractional backend applies the rzz folding pass."""
         circ = QuantumCircuit(2)
         circ.rzz(rzz_angle, 0, 1)
+        backend = FakeFractionalBackend()
 
         pm = generate_preset_pass_manager(
             optimization_level=2,
-            backend=FakeFractionalBackend(),
+            backend=backend,
             translation_method="ibm_dynamic_circuits",
         )
         isa_circ = pm.run(circ)
 
+        assert is_isa_circuit(isa_circ, backend.target) == ""
         assert len(isa_circ.data) == 3
         assert isa_circ.data[1].operation.name == "rzz"
         assert np.isclose(isa_circ.data[1].operation.params[0], 1)
