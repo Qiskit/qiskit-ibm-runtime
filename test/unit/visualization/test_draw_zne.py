@@ -13,16 +13,17 @@
 """Tests for the functions used to visualize ZNE expectation values."""
 
 import numpy as np
+import pytest
 from qiskit.primitives.containers import DataBin
 
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 from qiskit_ibm_runtime.visualization import draw_zne_evs, draw_zne_extrapolators
 
-from ...ibm_test_case import IBMTestCase
 from .utils import save_plotly_artifact
 
 
-def zne_results():
+@pytest.fixture
+def zne_results() -> tuple[EstimatorPubResult, list[EstimatorPubResult]]:
     """Return a pub result holding ZNE data, and pub results missing that data."""
     data = DataBin(
         shape=(1,),
@@ -53,42 +54,46 @@ def zne_results():
     return zne_data, error_data
 
 
-class TestDrawZNE(IBMTestCase):
+class TestDrawZNE:
     """Class for testing the ``draw_zne_evs`` function."""
 
-    def test_plotting(self):
+    def test_plotting(
+        self, zne_results: tuple[EstimatorPubResult, EstimatorPubResult], test_id: str
+    ) -> None:
         """Test to make sure that it produces the right figure."""
-        zne_data, _ = zne_results()
+        zne_data, _ = zne_results
         fig = draw_zne_evs(zne_data)
 
         # 1 expectation value with 2 extrapolators each with 1 std is
         # 1 + 2 * 2 = 5 traces
-        self.assertEqual(len(fig.data), 5)
-        save_plotly_artifact(self.id(), fig)
+        assert len(fig.data) == 5
+        save_plotly_artifact(test_id, fig)
 
-    def test_errors(self):
+    def test_errors(self, zne_results: tuple[EstimatorPubResult, EstimatorPubResult]) -> None:
         """Test error when no ZNE data is present."""
-        _, error_data = zne_results()
+        _, error_data = zne_results
         for error in error_data:
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 draw_zne_evs(error)
 
 
-class TestDrawZNEExtrapolators(IBMTestCase):
+class TestDrawZNEExtrapolators:
     """Class for testing the ``draw_zne_extrapolators`` function."""
 
-    def test_plotting(self):
+    def test_plotting(
+        self, zne_results: tuple[EstimatorPubResult, EstimatorPubResult], test_id: str
+    ) -> None:
         """Test to make sure that it produces the right figure."""
-        zne_data, _ = zne_results()
+        zne_data, _ = zne_results
         fig = draw_zne_extrapolators(zne_data)
 
         # 2 figures (one per extrapolator) with 3 traces each is 6
-        self.assertEqual(len(fig.data), 6)
-        save_plotly_artifact(self.id(), fig)
+        assert len(fig.data) == 6
+        save_plotly_artifact(test_id, fig)
 
-    def test_errors(self):
+    def test_errors(self, zne_results: tuple[EstimatorPubResult, EstimatorPubResult]) -> None:
         """Test error when no ZNE data is present."""
-        _, error_data = zne_results()
+        _, error_data = zne_results
         for error in error_data:
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 draw_zne_extrapolators(error)

@@ -15,8 +15,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
 
@@ -26,11 +27,16 @@ from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
-from .case import IBMIntegrationTestCase
-
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
+    from qiskit_ibm_runtime.options import (
+        LayerNoiseLearningOptions,
+        ResilienceOptionsV2,
+        ZneOptions,
+    )
     from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
+
+    from .dependencies import Dependencies
 
 
 def ecr_circuits() -> list[QuantumCircuit]:
@@ -88,12 +94,12 @@ def assert_job_result(
     assert metadata["input_options"] == {}
 
 
-class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
+class TestIntegrationNoiseLearner:
     """Integration tests for NoiseLearner."""
 
-    def test_with_default_options(self):
+    def test_with_default_options(self, dependencies: Dependencies) -> None:
         """Test noise learner with default options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=backend, options=options)
 
@@ -104,9 +110,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         assert_job_result(job.result(), backend, default_input_options(), 3)
 
-    def test_with_non_default_options(self):
+    def test_with_non_default_options(self, dependencies: Dependencies) -> None:
         """Test noise learner with non-default options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
@@ -122,9 +128,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         input_options["layer_pair_depths"] = [0, 1]
         assert_job_result(job.result(), backend, input_options, 1)
 
-    def test_with_no_layers(self):
+    def test_with_no_layers(self, dependencies: Dependencies) -> None:
         """Test noise learner when `max_layers_to_learn` is `0`."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
         learner = NoiseLearner(mode=backend, options=options)
@@ -134,19 +140,22 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         job = learner.run(circuits)
         job.wait_for_final_state()
 
-        self.assertEqual(job.result().data, [])
+        assert job.result().data == []
 
         input_options = default_input_options()
         input_options["max_layers_to_learn"] = 0
         assert_job_result(job.result(), backend, input_options, 0)
 
-    def test_learner_plus_estimator(self):
+    def test_learner_plus_estimator(self, dependencies: Dependencies) -> None:
         """Test feeding noise learner data to estimator."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         options = EstimatorOptions()
-        options.resilience.zne_mitigation = True
-        options.resilience.zne.amplifier = "pea"
-        options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
+        resilience = cast("ResilienceOptionsV2", options.resilience)
+        zne = cast("ZneOptions", resilience.zne)
+        layer_noise_learning = cast("LayerNoiseLearningOptions", resilience.layer_noise_learning)
+        resilience.zne_mitigation = True
+        zne.amplifier = "pea"
+        layer_noise_learning.layer_pair_depths = [0, 1]
 
         circuit = QuantumCircuit(3)
         circuit.ecr(0, 1)
@@ -164,12 +173,13 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                 learner_job = learner.run(ecr_circuits())
             except IBMInputValueError as ex:
                 if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
-                    self.skipTest("Backend does not meet requirements")
+                    pytest.skip("Backend does not meet requirements")
             noise_model = learner_job.result()
-            self.assertEqual(len(noise_model), 3)
+            assert len(noise_model) == 3
 
             estimator = EstimatorV2(mode=session, options=options)
-            estimator.options.resilience.layer_noise_model = noise_model.data
+            estimator_resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
+            estimator_resilience.layer_noise_model = noise_model.data
 
             estimator_job = estimator.run(pubs)
             result = estimator_job.result()
@@ -179,8 +189,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                 match_found = False
                 for nm1 in noise_model_metadata:
                     if nm0.circuit == nm1.circuit:
-                        self.assertEqual(nm0.qubits, nm1.qubits)
-                        self.assertEqual(nm0.error.generators, nm1.error.generators)
-                        self.assertEqual(nm0.error.rates.tolist(), nm1.error.rates.tolist())
+                        assert nm0.qubits == nm1.qubits
+                        assert nm0.error.generators == nm1.error.generators
+                        assert nm0.error.rates.tolist() == nm1.error.rates.tolist()
                         match_found = True
-                self.assertTrue(match_found)
+                assert match_found

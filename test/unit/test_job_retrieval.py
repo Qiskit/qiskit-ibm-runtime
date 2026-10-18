@@ -12,17 +12,24 @@
 
 """Tests for runtime job retrieval."""
 
-from ddt import data, ddt
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, cast
+
+import pytest
 
 from qiskit_ibm_runtime.ibm_backend import IBMBackend, IBMRetiredBackend
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, Job, OneInstanceNoBackendsRegistry
 
+if TYPE_CHECKING:
+    from ..registries.base import BaseRegistry
+    from ..registries.entities import JobStatus
 
-def populate_jobs(registry):
+
+def populate_jobs(registry: BaseRegistry) -> tuple[int, int]:
     """Populate the registry with jobs of all statuses."""
     pending_jobs_count = 0
     returned_jobs_count = 0
@@ -37,7 +44,9 @@ def populate_jobs(registry):
     pending_status = ["running", "queued"]
     for status, count in status_count.items():
         for i in range(count):
-            registry.add_job(Job(f"my_job_{status}_{i}", "common_backend", status=status), "a")
+            registry.add_job(
+                Job(f"my_job_{status}_{i}", "common_backend", status=cast("JobStatus", status)), "a"
+            )
             if status in pending_status:
                 pending_jobs_count += 1
             else:
@@ -45,104 +54,99 @@ def populate_jobs(registry):
     return pending_jobs_count, returned_jobs_count
 
 
-@ddt
-class TestRetrieveJobs(IBMTestCase):
+class TestRetrieveJobs:
     """Class for testing job retrieval."""
 
-    @mock_responses
-    def test_retrieve_job(self, registry):
+    def test_retrieve_job(self, registry: BaseRegistry) -> None:
         """Test retrieving a job."""
         registry.add_job(Job("my_job", "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token")
         job = service.job("my_job")
-        self.assertEqual(job.job_id(), "my_job")
-        self.assertEqual(job.primitive_id, "sampler")
+        assert job.job_id() == "my_job"
+        assert job.primitive_id == "sampler"
 
-    @mock_responses
-    def test_jobs_no_limit(self, registry):
+    def test_jobs_no_limit(self, registry: BaseRegistry) -> None:
         """Test retrieving jobs without limit."""
         for i in range(25):
             registry.add_job(Job(str(i), "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(limit=None)
-        self.assertEqual(25, len(jobs))
+        assert 25 == len(jobs)
 
-    @data(21, 30)
-    @mock_responses
-    def test_jobs_limit(self, limit, registry):
+    @pytest.mark.parametrize("limit", [21, 30])
+    def test_jobs_limit(self, limit: int, registry: BaseRegistry) -> None:
         """Test retrieving jobs with limit."""
         for i in range(25):
             registry.add_job(Job(str(i), "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(limit=limit)
-        self.assertEqual(min(limit, 25), len(jobs))
+        assert min(limit, 25) == len(jobs)
 
-    @mock_responses
-    def test_jobs_skip(self, registry):
+    def test_jobs_skip(self, registry: BaseRegistry) -> None:
         """Test retrieving jobs with skip."""
         for i in range(5):
             registry.add_job(Job(str(i), "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(skip=4)
-        self.assertEqual(1, len(jobs))
+        assert 1 == len(jobs)
 
-    @mock_responses
-    def test_backend_instance_warnings(self, registry):
+    def test_backend_instance_warnings(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test backend instance warnings do not appear."""
         registry.add_job(Job("my_job", "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.jobs()
+        assert not caplog.records
 
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             service.job("my_job")
+        assert not caplog.records
 
-    @mock_responses
-    def test_jobs_skip_limit(self, registry):
+    def test_jobs_skip_limit(self, registry: BaseRegistry) -> None:
         """Test retrieving jobs with skip and limit."""
         for i in range(10):
             registry.add_job(Job(str(i), "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(skip=4, limit=2)
-        self.assertEqual(2, len(jobs))
+        assert 2 == len(jobs)
 
-    @mock_responses
-    def test_jobs_pending(self, registry):
+    def test_jobs_pending(self, registry: BaseRegistry) -> None:
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         pending_jobs_count, _ = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(pending=True)
-        self.assertEqual(pending_jobs_count, len(jobs))
+        assert pending_jobs_count == len(jobs)
 
-    @mock_responses
-    def test_jobs_limit_pending(self, registry):
+    def test_jobs_limit_pending(self, registry: BaseRegistry) -> None:
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit."""
         populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         limit = 4
         jobs = service.jobs(limit=limit, pending=True)
-        self.assertEqual(limit, len(jobs))
+        assert limit == len(jobs)
 
-    @mock_responses
-    def test_jobs_skip_pending(self, registry):
+    def test_jobs_skip_pending(self, registry: BaseRegistry) -> None:
         """Test retrieving pending jobs (QUEUED, RUNNING) with skip."""
         pending_jobs_count, _ = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         skip = 4
         jobs = service.jobs(skip=skip, pending=True)
-        self.assertEqual(pending_jobs_count - skip, len(jobs))
+        assert pending_jobs_count - skip == len(jobs)
 
-    @mock_responses
-    def test_jobs_limit_skip_pending(self, registry):
+    def test_jobs_limit_skip_pending(self, registry: BaseRegistry) -> None:
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit and skip."""
         populate_jobs(registry)
 
@@ -150,39 +154,35 @@ class TestRetrieveJobs(IBMTestCase):
         limit = 2
         skip = 3
         jobs = service.jobs(limit=limit, skip=skip, pending=True)
-        self.assertEqual(limit, len(jobs))
+        assert limit == len(jobs)
 
-    @mock_responses
-    def test_jobs_returned(self, registry):
+    def test_jobs_returned(self, registry: BaseRegistry) -> None:
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
         _, returned_jobs_count = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(pending=False)
-        self.assertEqual(returned_jobs_count, len(jobs))
+        assert returned_jobs_count == len(jobs)
 
-    @mock_responses
-    def test_jobs_limit_returned(self, registry):
+    def test_jobs_limit_returned(self, registry: BaseRegistry) -> None:
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit."""
         populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         limit = 6
         jobs = service.jobs(limit=limit, pending=False)
-        self.assertEqual(limit, len(jobs))
+        assert limit == len(jobs)
 
-    @mock_responses
-    def test_jobs_skip_returned(self, registry):
+    def test_jobs_skip_returned(self, registry: BaseRegistry) -> None:
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with skip."""
         _, returned_jobs_count = populate_jobs(registry)
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         skip = 4
         jobs = service.jobs(skip=skip, pending=False)
-        self.assertEqual(returned_jobs_count - skip, len(jobs))
+        assert returned_jobs_count - skip == len(jobs)
 
-    @mock_responses
-    def test_jobs_limit_skip_returned(self, registry):
+    def test_jobs_limit_skip_returned(self, registry: BaseRegistry) -> None:
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit and skip."""
         populate_jobs(registry)
 
@@ -190,10 +190,9 @@ class TestRetrieveJobs(IBMTestCase):
         limit = 4
         skip = 2
         rjobs = service.jobs(limit=limit, skip=skip, pending=False)
-        self.assertEqual(limit, len(rjobs))
+        assert limit == len(rjobs)
 
-    @mock_responses
-    def test_jobs_by_instance(self, registry):
+    def test_jobs_by_instance(self, registry: BaseRegistry) -> None:
         """Test retrieving jobs with bad instance values."""
         registry.add_job(Job("my_job", "common_backend"), "a")
         crn_a = registry.instances["a"].crn
@@ -201,23 +200,22 @@ class TestRetrieveJobs(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token", instance="a")
 
-        self.assertEqual(len(service.jobs(instance=crn_a)), 1)
-        self.assertEqual(len(service.jobs(instance=crn_b)), 0)
+        assert len(service.jobs(instance=crn_a)) == 1
+        assert len(service.jobs(instance=crn_b)) == 0
 
-    @mock_responses
-    def test_different_instance(self, registry):
+    def test_different_instance(self, registry: BaseRegistry) -> None:
         """Test retrieving job submitted with different instance."""
         registry.add_job(Job("my_job", "unique_backend_a"), "a")
         service = QiskitRuntimeService(token="my_token")
 
         # Ensure the active api client is the one for the instance that does _not_ contain the job.
-        self.assertEqual(service._active_api_client._instance, registry.instances["b"].crn)
+        assert service._active_api_client._instance == registry.instances["b"].crn
 
         # Retrieve a job from instance "a" when active instance is "b".
         job = service.job("my_job")
-        self.assertIsNotNone(job.backend())
+        assert job.backend() is not None
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     def test_jobs_from_mock_devices(self, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test retrieving jobs from mock devices."""
         registry.add_backend(Backend("ibm_foo"))
@@ -229,21 +227,21 @@ class TestRetrieveJobs(IBMTestCase):
 
         # Jobs from mock devices should be excluded by default.
         jobs = service.jobs()
-        self.assertEqual([job.job_id() for job in jobs], ["1"])
+        assert [job.job_id() for job in jobs] == ["1"]
 
         # Jobs from mock devices should be included if passing the flag.
         jobs = service.jobs(include_mocks=True)
-        self.assertEqual([job.job_id() for job in jobs], ["1", "2"])
+        assert [job.job_id() for job in jobs] == ["1", "2"]
 
         # Jobs should be retrieved in all cases.
         job_1 = service.job("1")
         job_2 = service.job("2")
-        self.assertEqual(job_1.backend().backend_name, "ibm_foo")
-        self.assertFalse(job_1.backend().is_mock)
-        self.assertEqual(job_2.backend().backend_name, "mock_foo")
-        self.assertTrue(job_2.backend().is_mock)
+        assert job_1.backend().backend_name == "ibm_foo"
+        assert not job_1.backend().is_mock
+        assert job_2.backend().backend_name == "mock_foo"
+        assert job_2.backend().is_mock
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     def test_jobs_from_retired_backend(self, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test retrieving jobs that use a retired backend."""
         registry.add_backend(Backend("ibm_not_retired"))
@@ -254,13 +252,9 @@ class TestRetrieveJobs(IBMTestCase):
 
         # Retrieving a job should suceed, and produce a retired backend.
         job_retired = service.job("1")
-        self.assertIsInstance(job_retired.backend(), IBMRetiredBackend)
+        assert isinstance(job_retired.backend(), IBMRetiredBackend)
 
         # Retrieving all (2) jobs should suceed, and produce retired and non retired backends.
         jobs = service.jobs()
-        self.assertIsInstance(jobs[0].backend(), IBMRetiredBackend)
-        self.assertIsInstance(jobs[1].backend(), IBMBackend)
-
-
-class TestRetrieveJobsRegistry(IBMTestCase):
-    """Test retrieval of jobs, using a mocked registry."""
+        assert isinstance(jobs[0].backend(), IBMRetiredBackend)
+        assert isinstance(jobs[1].backend(), IBMBackend)

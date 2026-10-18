@@ -13,18 +13,17 @@
 """Test the cliffordization pass."""
 
 import numpy as np
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler.passmanager import PassManager
 
 from qiskit_ibm_runtime.transpiler.passes import ConvertISAToClifford
 
-from .....ibm_test_case import IBMTestCase
 
-
-class TestConvertISAToClifford(IBMTestCase):
+class TestConvertISAToClifford:
     """Tests the ConvertISAToClifford pass."""
 
-    def test_clifford_isa_circuit(self):
+    def test_clifford_isa_circuit(self) -> None:
         """Test the pass on a Clifford circuit with ISA gates."""
         qc = QuantumCircuit(2, 2)
         qc.id(0)
@@ -42,9 +41,9 @@ class TestConvertISAToClifford(IBMTestCase):
         pm = PassManager([ConvertISAToClifford()])
         transformed = pm.run(qc)
 
-        self.assertEqual(qc, transformed)
+        assert qc == transformed
 
-    def test_non_clifford_isa_circuits(self):
+    def test_non_clifford_isa_circuits(self) -> None:
         """Test the pass on a non-Clifford circuit with ISA gates."""
         qc = QuantumCircuit(2, 2)
         qc.id(0)
@@ -79,9 +78,9 @@ class TestConvertISAToClifford(IBMTestCase):
         expected.cz(0, 1)
         expected.ecr(0, 1)
 
-        self.assertEqual(transformed, expected)
+        assert transformed == expected
 
-    def test_error_clifford_non_isa_circuit(self):
+    def test_error_clifford_non_isa_circuit(self) -> None:
         """Test that the pass errors when run on a Clifford circuit with non-ISA gates."""
         qc = QuantumCircuit(2)
         qc.id(0)
@@ -93,10 +92,10 @@ class TestConvertISAToClifford(IBMTestCase):
         qc.ecr(0, 1)
 
         pm = PassManager([ConvertISAToClifford()])
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pm.run(qc)
 
-    def test_error_non_clifford_isa_circuit(self):
+    def test_error_non_clifford_isa_circuit(self) -> None:
         """Test that the pass errors when run on a non-Clifford circuit with ISA gates."""
         qc = QuantumCircuit(2)
         qc.id(0)
@@ -107,10 +106,10 @@ class TestConvertISAToClifford(IBMTestCase):
         qc.ecr(0, 1)
 
         pm = PassManager([ConvertISAToClifford()])
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pm.run(qc)
 
-    def test_error_reset(self):
+    def test_error_reset(self) -> None:
         """Test that the pass errors when run on circuits with resets."""
         qc = QuantumCircuit(2)
         qc.x(1)
@@ -119,5 +118,5 @@ class TestConvertISAToClifford(IBMTestCase):
         qc.ry(np.pi / 2 - 0.1, 1)
 
         pm = PassManager([ConvertISAToClifford()])
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pm.run(qc)

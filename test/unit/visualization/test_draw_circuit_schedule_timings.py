@@ -12,28 +12,33 @@
 
 """Unit tests for the circuit schedule timing visualization."""
 
-import ddt
+import pytest
 
 from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
 from qiskit_ibm_runtime.visualization.circuit_schedule import CircuitSchedule
 
-from ...ibm_test_case import IBMTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 from .utils import save_plotly_artifact
 
 
-@ddt.ddt
-class TestDrawCircuitScheduleTiming(IBMTestCase):
+class TestDrawCircuitScheduleTiming:
     """Tests for the ``draw_circuit_schedule_timing`` function."""
 
-    @ddt.data(
-        (None, False, False, 104),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 26),
+    @pytest.mark.parametrize(
+        ("included_channels", "filter_readout_channels", "filter_barriers", "expected_n_traces"),
+        [
+            (None, False, False, 104),
+            (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 26),
+        ],
     )
-    @ddt.unpack
     def test_plotting(
-        self, included_channels, filter_readout_channels, filter_barriers, expected_n_traces
-    ):
+        self,
+        included_channels: list[str] | None,
+        filter_readout_channels: bool,
+        filter_barriers: bool,
+        expected_n_traces: int,
+        test_id: str,
+    ) -> None:
         """Test to make sure that it produces the right figure."""
         pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
         circuit_schedule = pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
@@ -48,8 +53,8 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
             filter_readout_channels=filter_readout_channels,
             filter_barriers=filter_barriers,
         )
-        self.assertEqual(len(fig_1.data), expected_n_traces)
-        save_plotly_artifact(self.id(), fig_1)
+        assert len(fig_1.data) == expected_n_traces
+        save_plotly_artifact(test_id, fig_1)
 
         # test class input
         circuit_schedule_object = CircuitSchedule(circuit_schedule)
@@ -59,5 +64,5 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
             filter_readout_channels=filter_readout_channels,
             filter_barriers=filter_barriers,
         )
-        self.assertEqual(len(fig_2.data), expected_n_traces)
-        save_plotly_artifact(self.id(), fig_2)
+        assert len(fig_2.data) == expected_n_traces
+        save_plotly_artifact(test_id, fig_2)

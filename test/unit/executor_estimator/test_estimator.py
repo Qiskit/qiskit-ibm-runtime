@@ -12,11 +12,14 @@
 
 """Unit tests for Estimator run method."""
 
+from __future__ import annotations
+
 import warnings
+from typing import TYPE_CHECKING, Literal
 from unittest.mock import patch
 
 import numpy as np
-from ddt import data, ddt
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -33,17 +36,16 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.session import Session
 
-from ...decorators import mock_responses
-from ...ibm_test_case import IBMTestCase
 from ...registries import OneInstanceDryRunRegistry
 
+if TYPE_CHECKING:
+    from ...registries import BaseRegistry
 
-@ddt
-class TestEstimatorRun(IBMTestCase):
+
+class TestEstimatorRun:
     """Tests for the Estimator.run() method."""
 
-    @mock_responses
-    def test_run_single_pub_no_parameters(self, registry):
+    def test_run_single_pub_no_parameters(self, registry: BaseRegistry) -> None:
         """Test run with single pub without parameters."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -63,18 +65,17 @@ class TestEstimatorRun(IBMTestCase):
 
         # Verify the quantum program passed to executor.
         quantum_program = run_spy.call_args[0][1]
-        self.assertIsInstance(quantum_program, QuantumProgram)
+        assert isinstance(quantum_program, QuantumProgram)
         # precision=0.03125 -> shots = ceil(1/0.03125^2) = 1024
-        self.assertEqual(quantum_program.shots, 1024)
+        assert quantum_program.shots == 1024
 
         # Verify that information needed for post-processing dispatch were attached.
-        self.assertEqual(quantum_program._semantic_role, "estimator_v2")
+        assert quantum_program._semantic_role == "estimator_v2"
 
         # Verify job was returned.
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
 
-    @mock_responses
-    def test_run_with_pub_level_precision(self, registry):
+    def test_run_with_pub_level_precision(self, registry: BaseRegistry) -> None:
         """Test that EstimatorPub.coerce is called with precision parameter."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -91,11 +92,10 @@ class TestEstimatorRun(IBMTestCase):
         run_spy.assert_called_once()
         # precision=0.01 -> shots = ceil(1/0.01^2) = 10000
         quantum_program = run_spy.call_args[0][1]
-        self.assertEqual(quantum_program.shots, 10000)
-        self.assertEqual(job.primitive_id, "executor")
+        assert quantum_program.shots == 10000
+        assert job.primitive_id == "executor"
 
-    @mock_responses
-    def test_run_uses_default_precision_from_options(self, registry):
+    def test_run_uses_default_precision_from_options(self, registry: BaseRegistry) -> None:
         """Test that run uses default_precision from options when precision not specified."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -114,10 +114,9 @@ class TestEstimatorRun(IBMTestCase):
 
         # Verify shots from precision were calculated.
         quantum_program = run_spy.call_args[0][1]
-        self.assertEqual(quantum_program.shots, 10000)
+        assert quantum_program.shots == 10000
 
-    @mock_responses
-    def test_run_precision_parameter_overrides_options(self, registry):
+    def test_run_precision_parameter_overrides_options(self, registry: BaseRegistry) -> None:
         """Test that precision parameter in run() overrides options.default_precision."""
         options = EstimatorOptions()
         options.default_precision = 0.022097  # sqrt(1/2048)
@@ -136,10 +135,9 @@ class TestEstimatorRun(IBMTestCase):
         # Verify precision parameter was used instead of options.
         quantum_program = run_spy.call_args[0][1]
         # precision=0.015625 -> shots = ceil(1/0.015625^2) = 4096
-        self.assertEqual(quantum_program.shots, 4096)
+        assert quantum_program.shots == 4096
 
-    @mock_responses
-    def test_run_with_parametric_circuit(self, registry):
+    def test_run_with_parametric_circuit(self, registry: BaseRegistry) -> None:
         """Test run with parametric circuit."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -156,11 +154,10 @@ class TestEstimatorRun(IBMTestCase):
             job = estimator.run([(circuit, observable, parameter_values)], precision=0.03125)
 
         run_spy.assert_called_once()
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
 
-    @data(True, False)
-    @mock_responses
-    def test_run_multiple_pubs(self, measure_mitigation, registry):
+    @pytest.mark.parametrize("measure_mitigation", [True, False])
+    def test_run_multiple_pubs(self, measure_mitigation: bool, registry: BaseRegistry) -> None:
         """Test run with multiple pubs."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -183,10 +180,9 @@ class TestEstimatorRun(IBMTestCase):
 
         # Verify multiple items in quantum program.
         quantum_program = run_spy.call_args[0][1]
-        self.assertEqual(len(quantum_program.items), 2 + measure_mitigation)
+        assert len(quantum_program.items) == 2 + measure_mitigation
 
-    @mock_responses
-    def test_run_with_default_precision(self, registry):
+    def test_run_with_default_precision(self, registry: BaseRegistry) -> None:
         """Test that run uses the default precision value from options."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -206,10 +202,9 @@ class TestEstimatorRun(IBMTestCase):
         # Verify shots from default precision were calculated.
         quantum_program = run_spy.call_args[0][1]
         # precision=0.015625 -> shots = ceil(1/0.015625^2) = 4096
-        self.assertEqual(quantum_program.shots, 4096)
+        assert quantum_program.shots == 4096
 
-    @mock_responses
-    def test_run_sets_executor_options(self, registry):
+    def test_run_sets_executor_options(self, registry: BaseRegistry) -> None:
         """Test that run sets executor options correctly."""
         options = EstimatorOptions()
         options.execution.init_qubits = True
@@ -231,12 +226,11 @@ class TestEstimatorRun(IBMTestCase):
         executor_options = run_spy.call_args[0][0].options
 
         # Verify Executor was constructed with the correctly mapped executor options.
-        self.assertTrue(executor_options.execution.init_qubits)
-        self.assertEqual(executor_options.execution.rep_delay, 0.001)
-        self.assertEqual(executor_options.max_execution_time, 300)
+        assert executor_options.execution.init_qubits
+        assert executor_options.execution.rep_delay == 0.001
+        assert executor_options.max_execution_time == 300
 
-    @mock_responses
-    def test_run_adds_options_to_passthrough_data(self, registry):
+    def test_run_adds_options_to_passthrough_data(self, registry: BaseRegistry) -> None:
         """Test that run adds options, shots and precision to passthrough data."""
         options = EstimatorOptions()
         options.twirling.enable_gates = True
@@ -258,21 +252,20 @@ class TestEstimatorRun(IBMTestCase):
 
         # Verify passthrough data contains inputs and calculated values.
         quantum_program = run_spy.call_args[0][1]
-        self.assertIsNotNone(quantum_program.passthrough_data)
-        self.assertIn("post_processor", quantum_program.passthrough_data)
+        assert quantum_program.passthrough_data is not None
+        assert "post_processor" in quantum_program.passthrough_data
         post_processor_data = quantum_program.passthrough_data["post_processor"]
-        self.assertIn("options", post_processor_data)
-        self.assertIn("shots", post_processor_data)
-        self.assertIn("precision", post_processor_data)
+        assert "options" in post_processor_data
+        assert "shots" in post_processor_data
+        assert "precision" in post_processor_data
 
         # Verify options content.
         options_data = post_processor_data["options"]
-        self.assertEqual(options_data["twirling"]["enable_gates"], True)
-        self.assertEqual(options_data["dynamical_decoupling"]["enable"], False)
-        self.assertEqual(options_data["resilience"]["measure_mitigation"], True)
+        assert options_data["twirling"]["enable_gates"] is True
+        assert options_data["dynamical_decoupling"]["enable"] is False
+        assert options_data["resilience"]["measure_mitigation"] is True
 
-    @mock_responses
-    def test_run_passthrough_options_are_finalized_not_raw(self, registry):
+    def test_run_passthrough_options_are_finalized_not_raw(self, registry: BaseRegistry) -> None:
         """Test that run adds finalized options (not user options) to passthrough data."""
         # measure_mitigation=True force-resolves twirling.enable_measure -> True; the user
         # leaves enable_gates / enable_measure / zne_mitigation unset (raw value None).
@@ -294,13 +287,12 @@ class TestEstimatorRun(IBMTestCase):
         options_metadata = quantum_program.passthrough_data["post_processor"]["options"]
 
         # Unset fields must echo their RESOLVED default, never None.
-        self.assertIsNotNone(options_metadata["twirling"]["enable_gates"])
-        self.assertEqual(options_metadata["twirling"]["enable_measure"], True)
-        self.assertEqual(options_metadata["twirling"]["enable_gates"], False)
-        self.assertEqual(options_metadata["resilience"]["zne_mitigation"], False)
+        assert options_metadata["twirling"]["enable_gates"] is not None
+        assert options_metadata["twirling"]["enable_measure"] is True
+        assert options_metadata["twirling"]["enable_gates"] is False
+        assert options_metadata["resilience"]["zne_mitigation"] is False
 
-    @mock_responses
-    def test_run_with_multiple_observables(self, registry):
+    def test_run_with_multiple_observables(self, registry: BaseRegistry) -> None:
         """Test run with multiple observables in a single pub."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -319,10 +311,9 @@ class TestEstimatorRun(IBMTestCase):
             job = estimator.run([(circuit, observables)], precision=0.03125)
 
         run_spy.assert_called_once()
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
 
-    @mock_responses
-    def test_run_preserves_circuit_metadata(self, registry):
+    def test_run_preserves_circuit_metadata(self, registry: BaseRegistry) -> None:
         """Test that run preserves circuit metadata through the pipeline."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -337,10 +328,9 @@ class TestEstimatorRun(IBMTestCase):
             job = estimator.run([(circuit, observable)], precision=0.03125)
 
         run_spy.assert_called_once()
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
 
-    @mock_responses
-    def test_run_incompatible_broadcast_shapes(self, registry):
+    def test_run_incompatible_broadcast_shapes(self, registry: BaseRegistry) -> None:
         """Test that incompatible parameter and observable shapes raise an error."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -358,14 +348,13 @@ class TestEstimatorRun(IBMTestCase):
 
         # Should raise ValueError when trying to run with incompatible shapes.
         # The error will be raised during pub coercion in the run method.
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError) as context:
             estimator.run([(circuit, observables, parameter_values)], precision=0.03125)
 
         # Verify the error message mentions broadcasting incompatibility.
-        self.assertIn("broadcastable", str(context.exception).lower())
+        assert "broadcastable" in str(context.value).lower()
 
-    @mock_responses
-    def test_run_mismatched_precision_raises_error(self, registry):
+    def test_run_mismatched_precision_raises_error(self, registry: BaseRegistry) -> None:
         """Test that pubs with different precision values raise an error."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -378,25 +367,23 @@ class TestEstimatorRun(IBMTestCase):
         pub1 = EstimatorPub.coerce((circuit, observable), precision=0.01)
         pub2 = EstimatorPub.coerce((circuit, observable), precision=0.02)
 
-        with self.assertRaises(IBMInputValueError) as context:
+        with pytest.raises(IBMInputValueError) as context:
             estimator.run([pub1, pub2])
-        self.assertIn("same precision", str(context.exception))
+        assert "same precision" in str(context.value)
 
-    @mock_responses
-    def test_run_raises_error_when_no_pubs_provided(self, registry):
+    def test_run_raises_error_when_no_pubs_provided(self, registry: BaseRegistry) -> None:
         """Test that run raises IBMInputValueError when called with an empty pub list."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
 
         with patch.object(Executor, "run", autospec=True, side_effect=Executor.run) as run_spy:
-            with self.assertRaisesRegex(IBMInputValueError, "No pubs provided"):
+            with pytest.raises(IBMInputValueError, match="No pubs provided"):
                 estimator.run([])
 
         # Executor should never be reached.
         run_spy.assert_not_called()
 
-    @mock_responses
-    def test_run_raises_error_when_pec_and_zne_both_enabled(self, registry):
+    def test_run_raises_error_when_pec_and_zne_both_enabled(self, registry: BaseRegistry) -> None:
         """Test that run raises error when both pec_mitigation and zne_mitigation are enabled."""
         service = QiskitRuntimeService(token="my_token")
         estimator = Estimator(mode=service.backend("common_backend"))
@@ -407,14 +394,14 @@ class TestEstimatorRun(IBMTestCase):
         circuit.h(0)
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
-        with self.assertRaisesRegex(
+        with pytest.raises(
             IBMInputValueError,
-            "PEC mitigation and ZNE mitigation are incompatible with one another",
+            match="PEC mitigation and ZNE mitigation are incompatible with one another",
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
 
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_dry_run(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry: BaseRegistry) -> None:
         """Estimator can run in `dry-run` mode."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
@@ -426,11 +413,10 @@ class TestEstimatorRun(IBMTestCase):
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
         job = estimator.run([(circuit, observable)], precision=0.03125, dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"
 
-    @data("job", "session", "batch")
-    @mock_responses
-    def test_mode_handling(self, mode_id, registry):
+    @pytest.mark.parametrize("mode_id", ["job", "session", "batch"])
+    def test_mode_handling(self, mode_id: str, registry: BaseRegistry) -> None:
         """Estimator `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -451,8 +437,8 @@ class TestEstimatorRun(IBMTestCase):
 
         # Public interfaces should respect `mode`.
         estimator = Estimator(mode=mode)
-        self.assertEqual(estimator.backend(), backend)
-        self.assertEqual(estimator.mode, expected_mode)
+        assert estimator.backend() == backend
+        assert estimator.mode == expected_mode
 
         # Jobs issued should belong to a session under `session` / `batch`` modes.
         circuit = QuantumCircuit(2)
@@ -461,13 +447,13 @@ class TestEstimatorRun(IBMTestCase):
         observable = SparsePauliOp.from_list([("ZZ", 1)])
 
         job = estimator.run([(circuit, observable)], precision=0.03125)
-        self.assertEqual(job._session_id, expected_session_id)
+        assert job._session_id == expected_session_id
 
 
-class TestEstimatorSimulatorMode(IBMTestCase):
+class TestEstimatorSimulatorMode:
     """Tests for Estimator with local simulator backends."""
 
-    def test_simulator_mode_returns_result(self):
+    def test_simulator_mode_returns_result(self) -> None:
         """Test that local mode returns expectation values close to the ideal.
 
         The Bell state (|00> + |11>)/sqrt(2) has <ZZ> = 1.0 exactly.
@@ -489,10 +475,10 @@ class TestEstimatorSimulatorMode(IBMTestCase):
         estimator.options.simulator.seed_simulator = 42
         result = estimator.run([(transpiled, observable)]).result()
 
-        self.assertEqual(len(result), 1)
-        self.assertAlmostEqual(result[0].data.evs, 1.0, delta=0.1)
+        assert len(result) == 1
+        assert result[0].data.evs == pytest.approx(1.0, abs=0.1)
 
-    def test_simulator_mode_seed_is_deterministic(self):
+    def test_simulator_mode_seed_is_deterministic(self) -> None:
         """Test that seed_simulator produces deterministic expectation values."""
         backend = GenericBackendV2(num_qubits=2)
 
@@ -517,7 +503,7 @@ class TestEstimatorSimulatorMode(IBMTestCase):
 
         np.testing.assert_array_equal(result1[0].data.evs, result2[0].data.evs)
 
-    def test_simulator_mode_different_seeds_differ(self):
+    def test_simulator_mode_different_seeds_differ(self) -> None:
         """Test that different seeds produce different expectation values.
 
         Uses a single-qubit H gate whose <Z>=0 expectation value has shot-noise
@@ -543,48 +529,47 @@ class TestEstimatorSimulatorMode(IBMTestCase):
         estimator2.options.default_shots = 100
         result2 = estimator2.run([(transpiled, observable)]).result()
 
-        self.assertFalse(np.array_equal(result1[0].data.evs, result2[0].data.evs))
+        assert not np.array_equal(result1[0].data.evs, result2[0].data.evs)
 
 
-@ddt
-class TestFinalizeOptions(IBMTestCase):
+class TestFinalizeOptions:
     """Tests for ``finalize_options``."""
 
-    def test_resilience_level_0(self):
+    def test_resilience_level_0(self) -> None:
         """Tests for resilience level 0."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = 0
 
         finalized_options = estimator.finalize_options()
-        self.assertFalse(finalized_options.twirling.enable_gates)
-        self.assertFalse(finalized_options.twirling.enable_measure)
-        self.assertFalse(finalized_options.resilience.measure_mitigation)
-        self.assertFalse(finalized_options.resilience.zne_mitigation)
+        assert not finalized_options.twirling.enable_gates
+        assert not finalized_options.twirling.enable_measure
+        assert not finalized_options.resilience.measure_mitigation
+        assert not finalized_options.resilience.zne_mitigation
 
-    def test_resilience_level_1(self):
+    def test_resilience_level_1(self) -> None:
         """Tests for resilience level 1."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = 1
 
         finalized_options = estimator.finalize_options()
-        self.assertFalse(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-        self.assertTrue(finalized_options.resilience.measure_mitigation)
-        self.assertFalse(finalized_options.resilience.zne_mitigation)
+        assert not finalized_options.twirling.enable_gates
+        assert finalized_options.twirling.enable_measure
+        assert finalized_options.resilience.measure_mitigation
+        assert not finalized_options.resilience.zne_mitigation
 
-    def test_resilience_level_2(self):
+    def test_resilience_level_2(self) -> None:
         """Tests for resilience level 2."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = 2
 
         finalized_options = estimator.finalize_options()
-        self.assertTrue(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-        self.assertTrue(finalized_options.resilience.measure_mitigation)
-        self.assertTrue(finalized_options.resilience.zne_mitigation)
+        assert finalized_options.twirling.enable_gates
+        assert finalized_options.twirling.enable_measure
+        assert finalized_options.resilience.measure_mitigation
+        assert finalized_options.resilience.zne_mitigation
 
-    @data(0, 1, 2)
-    def test_set_values_are_preserved(self, resilience_level):
+    @pytest.mark.parametrize("resilience_level", [0, 1, 2])
+    def test_set_values_are_preserved(self, resilience_level: Literal[0, 1, 2]) -> None:
         """Test that when the user sets values, resilience level does not override them."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.twirling.enable_gates = False
@@ -594,36 +579,36 @@ class TestFinalizeOptions(IBMTestCase):
         estimator.options.resilience_level = resilience_level
 
         finalized_options = estimator.finalize_options()
-        self.assertFalse(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-        self.assertFalse(finalized_options.resilience.measure_mitigation)
-        self.assertTrue(finalized_options.resilience.zne_mitigation)
+        assert not finalized_options.twirling.enable_gates
+        assert finalized_options.twirling.enable_measure
+        assert not finalized_options.resilience.measure_mitigation
+        assert finalized_options.resilience.zne_mitigation
 
-    @data(0, 1, 2)
-    def test_forced_values(self, resilience_level):
+    @pytest.mark.parametrize("resilience_level", [0, 1, 2])
+    def test_forced_values(self, resilience_level: Literal[0, 1, 2]) -> None:
         """Test that finalize force-set certain values."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.measure_mitigation = True
         finalized_options = estimator.finalize_options()
-        self.assertTrue(finalized_options.twirling.enable_measure)
+        assert finalized_options.twirling.enable_measure
 
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.amplifier = "pea"
         finalized_options = estimator.finalize_options()
-        self.assertTrue(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
+        assert finalized_options.twirling.enable_gates
+        assert finalized_options.twirling.enable_measure
 
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.resilience_level = resilience_level
         estimator.options.resilience.pec_mitigation = True
         finalized_options = estimator.finalize_options()
-        self.assertTrue(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
+        assert finalized_options.twirling.enable_gates
+        assert finalized_options.twirling.enable_measure
 
-    def test_no_warning_when_twirling_field_not_set_by_user(self):
+    def test_no_warning_when_twirling_field_not_set_by_user(self) -> None:
         """No warning when the user never set the twirling field that is being overridden."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         # Use resilience_level=0 so enable_measure defaults to False, ensuring the only
@@ -635,9 +620,9 @@ class TestFinalizeOptions(IBMTestCase):
             warnings.simplefilter("always")
             estimator.finalize_options()
         user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
-        self.assertEqual(user_warns, [])
+        assert user_warns == []
 
-    def test_no_warning_when_user_set_field_to_true(self):
+    def test_no_warning_when_user_set_field_to_true(self) -> None:
         """No warning when the user already set the field to True (no conflict)."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.twirling.enable_measure = True
@@ -646,21 +631,21 @@ class TestFinalizeOptions(IBMTestCase):
             warnings.simplefilter("always")
             estimator.finalize_options()
         user_warns = [w for w in caught if issubclass(w.category, UserWarning)]
-        self.assertEqual(user_warns, [])
+        assert user_warns == []
 
-    def test_warning_measure_mitigation_overrides_enable_measure_false(self):
+    def test_warning_measure_mitigation_overrides_enable_measure_false(self) -> None:
         """Warning when measure_mitigation=True overrides user-set enable_measure=False."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         estimator.options.twirling.enable_measure = False
         estimator.options.resilience.measure_mitigation = True
-        with self.assertWarns(UserWarning) as ctx:
+        with pytest.warns(UserWarning) as ctx:
             estimator.finalize_options()
-        msg = str(ctx.warning)
-        self.assertIn("enable_measure", msg)
-        self.assertIn("measurement mitigation", msg)
+        msg = str(ctx.list[0].message)
+        assert "enable_measure" in msg
+        assert "measurement mitigation" in msg
 
-    @data("enable_gates", "enable_measure")
-    def test_warning_pea_overrides_twirling_field_false(self, field):
+    @pytest.mark.parametrize("field", ["enable_gates", "enable_measure"])
+    def test_warning_pea_overrides_twirling_field_false(self, field: str) -> None:
         """Warning when PEA overrides user-set enable_gates=False or enable_measure=False."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         setattr(estimator.options.twirling, field, False)
@@ -671,10 +656,10 @@ class TestFinalizeOptions(IBMTestCase):
             warnings.simplefilter("always")
             estimator.finalize_options()
         msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
-        self.assertTrue(any(field in m and "PEA mitigation" in m for m in msgs))
+        assert any(field in m and "PEA mitigation" in m for m in msgs)
 
-    @data("enable_gates", "enable_measure")
-    def test_warning_pec_overrides_twirling_field_false(self, field):
+    @pytest.mark.parametrize("field", ["enable_gates", "enable_measure"])
+    def test_warning_pec_overrides_twirling_field_false(self, field: str) -> None:
         """Warning when PEC overrides user-set enable_gates=False or enable_measure=False."""
         estimator = Estimator(GenericBackendV2(num_qubits=2))
         setattr(estimator.options.twirling, field, False)
@@ -684,4 +669,4 @@ class TestFinalizeOptions(IBMTestCase):
             warnings.simplefilter("always")
             estimator.finalize_options()
         msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
-        self.assertTrue(any(field in m and "PEC mitigation" in m for m in msgs))
+        assert any(field in m and "PEC mitigation" in m for m in msgs)

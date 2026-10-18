@@ -16,13 +16,11 @@ import numpy as np
 
 from qiskit_ibm_runtime.decoders.executor_sampler.utils import flatten_twirling_axes
 
-from ....ibm_test_case import IBMTestCase
 
-
-class TestFlattenTwirlingAxes(IBMTestCase):
+class TestFlattenTwirlingAxes:
     """Tests for ``flatten_twirling_axes``."""
 
-    def test_non_parametric_pub_with_twirling(self):
+    def test_non_parametric_pub_with_twirling(self) -> None:
         """Test flattening for a non-parametric pub (pub_shape=()) with twirling."""
         num_rand = 5
         shots_per_rand = 10
@@ -32,17 +30,17 @@ class TestFlattenTwirlingAxes(IBMTestCase):
         data = np.random.randint(0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8)
         item = {"meas": data.copy()}
 
-        flatten_twirling_axes(item, pub_shape=())
+        flatten_twirling_axes(item, pub_shape=())  # type: ignore[arg-type]
 
         # Expected shape: (total_shots, num_bits) where total_shots = num_rand * shots_per_rand
         expected_shape = (num_rand * shots_per_rand, num_bits)
-        self.assertEqual(item["meas"].shape, expected_shape)
+        assert item["meas"].shape == expected_shape
 
         # Verify data integrity: reshape back and compare
         reshaped = item["meas"].reshape(num_rand, shots_per_rand, num_bits)
         np.testing.assert_array_equal(reshaped, data)
 
-    def test_1d_parametric_pub_with_twirling(self):
+    def test_1d_parametric_pub_with_twirling(self) -> None:
         """Test flattening for a 1D parametric pub (pub_shape=(3,)) with twirling."""
         num_rand = 4
         param_size = 3
@@ -55,11 +53,11 @@ class TestFlattenTwirlingAxes(IBMTestCase):
         )
         item = {"meas": data.copy()}
 
-        flatten_twirling_axes(item, pub_shape=(param_size,))
+        flatten_twirling_axes(item, pub_shape=(param_size,))  # type: ignore[arg-type]
 
         # Expected shape: (param_size, total_shots, num_bits)
         expected_shape = (param_size, num_rand * shots_per_rand, num_bits)
-        self.assertEqual(item["meas"].shape, expected_shape)
+        assert item["meas"].shape == expected_shape
 
         # Verify data integrity: for each parameter value, shots should be concatenated correctly
         for i in range(param_size):
@@ -71,7 +69,7 @@ class TestFlattenTwirlingAxes(IBMTestCase):
             reshaped = flattened_param_data.reshape(num_rand, shots_per_rand, num_bits)
             np.testing.assert_array_equal(reshaped, original_param_data)
 
-    def test_2d_parametric_pub_with_twirling(self):
+    def test_2d_parametric_pub_with_twirling(self) -> None:
         """Test flattening for a 2D parametric pub (pub_shape=(2, 3)) with twirling."""
         num_rand = 3
         pub_shape = (2, 3)
@@ -84,11 +82,11 @@ class TestFlattenTwirlingAxes(IBMTestCase):
         )
         item = {"meas": data.copy()}
 
-        flatten_twirling_axes(item, pub_shape=pub_shape)
+        flatten_twirling_axes(item, pub_shape=pub_shape)  # type: ignore[arg-type]
 
         # Expected shape: (2, 3, total_shots, num_bits)
         expected_shape = (*pub_shape, num_rand * shots_per_rand, num_bits)
-        self.assertEqual(item["meas"].shape, expected_shape)
+        assert item["meas"].shape == expected_shape
 
         # Verify data integrity
         for i in range(pub_shape[0]):
@@ -98,7 +96,7 @@ class TestFlattenTwirlingAxes(IBMTestCase):
                 reshaped = flattened_param_data.reshape(num_rand, shots_per_rand, num_bits)
                 np.testing.assert_array_equal(reshaped, original_param_data)
 
-    def test_multiple_classical_registers(self):
+    def test_multiple_classical_registers(self) -> None:
         """Test flattening with multiple classical registers."""
         num_rand = 4
         pub_shape = (2,)
@@ -114,16 +112,16 @@ class TestFlattenTwirlingAxes(IBMTestCase):
 
         item = {"creg1": data1.copy(), "creg2": data2.copy()}
 
-        flatten_twirling_axes(item, pub_shape=pub_shape)
+        flatten_twirling_axes(item, pub_shape=pub_shape)  # type: ignore[arg-type]
 
         # Both registers should be flattened
         expected_shape1 = (*pub_shape, num_rand * shots_per_rand, 3)
         expected_shape2 = (*pub_shape, num_rand * shots_per_rand, 5)
 
-        self.assertEqual(item["creg1"].shape, expected_shape1)
-        self.assertEqual(item["creg2"].shape, expected_shape2)
+        assert item["creg1"].shape == expected_shape1
+        assert item["creg2"].shape == expected_shape2
 
-    def test_data_ordering_preserved(self):
+    def test_data_ordering_preserved(self) -> None:
         """Test that the order of shots is preserved correctly after flattening."""
         # Create data with known values to verify ordering
         # Shape: (num_rand=3, shots_per_rand=2, num_bits=1)
@@ -137,7 +135,7 @@ class TestFlattenTwirlingAxes(IBMTestCase):
         )
 
         item = {"meas": data}
-        flatten_twirling_axes(item, pub_shape=())
+        flatten_twirling_axes(item, pub_shape=())  # type: ignore[arg-type]
 
         # After flattening, shots should be ordered as:
         # rand0_shot0, rand0_shot1, rand1_shot0, rand1_shot1, rand2_shot0, rand2_shot1

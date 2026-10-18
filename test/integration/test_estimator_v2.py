@@ -12,8 +12,11 @@
 
 """Integration tests for Estimator V2."""
 
-from unittest import skip
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
+import pytest
 from qiskit.circuit.library import IQP, real_amplitudes
 from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
 from qiskit.quantum_info import SparsePauliOp
@@ -22,10 +25,23 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
 
-from .case import IBMIntegrationTestCase
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.options import (
+        EnvironmentOptions,
+        ExecutionOptionsV2,
+        LayerNoiseLearningOptions,
+        MeasureNoiseLearningOptions,
+        PecOptions,
+        ResilienceOptionsV2,
+        SimulatorOptions,
+        TwirlingOptions,
+        ZneOptions,
+    )
+
+    from .dependencies import Dependencies
 
 
-def assert_result_type(result, num_pubs, shapes):
+def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> None:
     """Assert result type."""
     assert isinstance(result, PrimitiveResult)
     assert len(result) == num_pubs
@@ -37,12 +53,12 @@ def assert_result_type(result, num_pubs, shapes):
         assert pub_result.data.stds.shape == shapes[idx]
 
 
-class TestEstimatorV2(IBMIntegrationTestCase):
+class TestEstimatorV2:
     """Integration tests for Estimator V2 Primitive."""
 
-    def test_estimator_v2_session(self):
+    def test_estimator_v2_session(self, dependencies: Dependencies) -> None:
         """Verify correct results are returned."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
@@ -71,9 +87,11 @@ class TestEstimatorV2(IBMIntegrationTestCase):
             result3 = job3.result()
             assert_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
-    def test_estimator_v2_options(self):
+    def test_estimator_v2_options(
+        self, dependencies: Dependencies, request: pytest.FixtureRequest
+    ) -> None:
         """Test V2 Estimator with different options."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
@@ -84,48 +102,61 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
         estimator.options.seed_estimator = 42
-        estimator.options.resilience.measure_mitigation = True
-        estimator.options.resilience.zne_mitigation = True
-        estimator.options.resilience.zne.amplifier = "gate_folding_back"
-        estimator.options.resilience.zne.noise_factors = [3, 5]
-        estimator.options.resilience.zne.extrapolator = "linear"
-        estimator.options.resilience.pec_mitigation = False
-        estimator.options.resilience.layer_noise_learning.max_layers_to_learn = 10
-        estimator.options.resilience.layer_noise_learning.shots_per_randomization = 64
-        estimator.options.resilience.layer_noise_learning.num_randomizations = 16
-        estimator.options.resilience.layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
-        estimator.options.resilience.measure_noise_learning.num_randomizations = 32
-        estimator.options.resilience.measure_noise_learning.shots_per_randomization = 100
-        estimator.options.execution.init_qubits = True
-        estimator.options.execution.rep_delay = 0.00025
-        estimator.options.twirling.enable_gates = True
-        estimator.options.twirling.enable_measure = True
-        estimator.options.twirling.strategy = "active"
-        estimator.options.twirling.num_randomizations = 16
-        estimator.options.twirling.shots_per_randomization = 100
-        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
+        resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
+        zne = cast("ZneOptions", resilience.zne)
+        layer_noise_learning = cast("LayerNoiseLearningOptions", resilience.layer_noise_learning)
+        measure_noise_learning = cast(
+            "MeasureNoiseLearningOptions", resilience.measure_noise_learning
+        )
+        execution = cast("ExecutionOptionsV2", estimator.options.execution)
+        twirling = cast("TwirlingOptions", estimator.options.twirling)
+        resilience.measure_mitigation = True
+        resilience.zne_mitigation = True
+        zne.amplifier = "gate_folding_back"
+        zne.noise_factors = [3, 5]
+        zne.extrapolator = "linear"
+        resilience.pec_mitigation = False
+        layer_noise_learning.max_layers_to_learn = 10
+        layer_noise_learning.shots_per_randomization = 64
+        layer_noise_learning.num_randomizations = 16
+        layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
+        measure_noise_learning.num_randomizations = 32
+        measure_noise_learning.shots_per_randomization = 100
+        execution.init_qubits = True
+        execution.rep_delay = 0.00025
+        twirling.enable_gates = True
+        twirling.enable_measure = True
+        twirling.strategy = "active"
+        twirling.num_randomizations = 16
+        twirling.shots_per_randomization = 100
+        environment = cast("EnvironmentOptions", estimator.options.environment)
+        environment.job_tags = [".".join(request.node.nodeid.split("::")[-2:])]
 
         job = estimator.run([(circuit, observable)])
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[()])
-        self.assertEqual(result[0].metadata["shots"], 1600)
+        assert result[0].metadata["shots"] == 1600
 
-    @skip("Skip until simulator options are accepted by server.")
-    def test_pec(self):
+    @pytest.mark.skip(reason="Skip until simulator options are accepted by server.")
+    def test_pec(self, dependencies: Dependencies, request: pytest.FixtureRequest) -> None:
         """Test running with PEC."""
-        backend = self.service.backend(self.dependencies.qpu)
+        backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)
 
         estimator = EstimatorV2(mode=backend)
         estimator.options.resilience_level = 0
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.resilience.pec_max_overhead = 200
-        estimator.options.simulator.set_backend(FakeAuckland())
-        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
+        resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
+        pec = cast("PecOptions", resilience.pec)
+        simulator = cast("SimulatorOptions", estimator.options.simulator)
+        environment = cast("EnvironmentOptions", estimator.options.environment)
+        resilience.pec_mitigation = True
+        pec.max_overhead = 200
+        simulator.set_backend(FakeAuckland())
+        environment.job_tags = [".".join(request.node.nodeid.split("::")[-2:])]
 
         job = estimator.run([(circuit, observables)])
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[(1,)])
-        self.assertIn("sampling_overhead", result[0].metadata["resilience"])
+        assert "sampling_overhead" in result[0].metadata["resilience"]

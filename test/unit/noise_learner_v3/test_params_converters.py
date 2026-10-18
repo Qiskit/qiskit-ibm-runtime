@@ -12,7 +12,7 @@
 
 """Tests the decoder for the quantum program result model."""
 
-from ddt import data, ddt
+import pytest
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic.transpiler import generate_boxing_pass_manager
@@ -22,15 +22,12 @@ from qiskit_ibm_runtime.fake_provider import FakeFez
 from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 
-from ...ibm_test_case import IBMTestCase
 
-
-@ddt
-class TestParamsConverters(IBMTestCase):
+class TestParamsConverters:
     """Tests for ParamConverters."""
 
-    @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
-    def test_round_trip(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS)])
+    def test_round_trip(self, schema_version: str) -> None:
         """Test a round trip."""
         circuit = QuantumCircuit(3, name="GHZ with params")
         circuit.h(0)
@@ -57,5 +54,5 @@ class TestParamsConverters(IBMTestCase):
         encoded = converters.encoder(instructions, options).model_dump()
         decoded = converters.decoder(converters.model(**encoded))
 
-        self.assertEqual(decoded[0], instructions)
-        self.assertEqual(decoded[1], options)
+        assert decoded[0] == instructions
+        assert decoded[1] == options

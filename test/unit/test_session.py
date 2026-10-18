@@ -10,68 +10,73 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Session classession."""
+"""Tests for Session class."""
 
-from ddt import data, ddt, unpack
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING
+
+import pytest
 
 from qiskit_ibm_runtime import Batch, SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
 from ..registries import Backend, OneInstanceDryRunRegistry
 from ..registries import Session as RegistrySession
 
+if TYPE_CHECKING:
+    from ..registries import BaseRegistry
 
-@ddt
-class TestSession(IBMTestCase):
+
+class TestSession:
     """Class for testing the Session class."""
 
-    @mock_responses
-    def test_passing_ibm_backend(self, registry):
+    def test_passing_ibm_backend(self, registry: BaseRegistry) -> None:
         """Test passing in IBMBackend instance."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         session = Session(backend=backend)
-        self.assertEqual(session.backend(), "common_backend")
+        assert session.backend() == "common_backend"
 
-    def test_max_time(self):
-        """Test max time."""
-        backend = FakeManilaV2()
-        max_times = [
+    @pytest.mark.parametrize(
+        ("max_time", "expected_max_time"),
+        [
             (42, 42),
             ("1h", 1 * 60 * 60),
             ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
             ("40s 1h", 40 + 1 * 60 * 60),
-        ]
-        for max_t, expected in max_times:
-            with self.subTest(max_time=max_t):
-                session = Session(backend=backend, max_time=max_t)
-                self.assertEqual(session._max_time, expected)
+        ],
+    )
+    def test_max_time(self, max_time: int | str | None, expected_max_time: int | None) -> None:
+        """Test max time."""
+        backend = FakeManilaV2()
 
-    def test_run_after_close(self):
+        session = Session(backend=backend, max_time=max_time)
+
+        assert session._max_time == expected_max_time
+
+    def test_run_after_close(self) -> None:
         """Test running after session is closed."""
         backend = FakeManilaV2()
         session = Session(backend=backend)
         session.cancel()
-        with self.assertRaises(IBMRuntimeError):
+        with pytest.raises(IBMRuntimeError):
             session._run(program_id="program_id", inputs={})
 
-    @mock_responses
-    def test_run(self, registry):
+    def test_run(self, registry: BaseRegistry) -> None:
         """Test the run method."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         max_time = 42
         session = Session(backend=backend, max_time=max_time)
         job = session._run(program_id="foo", inputs={})
-        self.assertEqual(job.backend().name, "common_backend")
-        self.assertEqual(job.session_id, "session_12345")
+        assert job.backend().name == "common_backend"
+        assert job.session_id == "session_12345"
 
-    @mock_responses
-    def test_context_manager(self, registry):
+    def test_context_manager(self, registry: BaseRegistry) -> None:
         """Test session as a context manager."""
         registry.add_session(RegistrySession("session_12345", "common_backend"), "a")
         service = QiskitRuntimeService(token="my_token")
@@ -79,11 +84,10 @@ class TestSession(IBMTestCase):
         with Session(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
-        self.assertFalse(session._active)
+        assert not session._active
 
-    @data(None, "my_id")
-    @mock_responses
-    def test_session_from_id(self, calibration_id, registry):
+    @pytest.mark.parametrize("calibration_id", [None, "my_id"])
+    def test_session_from_id(self, calibration_id: str | None, registry: BaseRegistry) -> None:
         """Create session with given session_id."""
         session_id = "123"
         registry.add_session(RegistrySession(session_id, "common_backend"), "a")
@@ -95,43 +99,33 @@ class TestSession(IBMTestCase):
             session_id=session_id, service=service, calibration_id=calibration_id
         )
         session._run(program_id="foo", inputs={})
-        self.assertEqual(session.session_id, session_id)
+        assert session.session_id == session_id
 
-    @mock_responses
-    def test_correct_execution_mode(self, registry):
+    def test_correct_execution_mode(self, registry: BaseRegistry) -> None:
         """Test that the execution mode is correctly set."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
         session = Session(backend=backend)
 
         registry.add_session(RegistrySession(session.session_id, "common_backend"), "a")
-        self.assertEqual(session.details()["mode"], "dedicated")
+        assert session.details()["mode"] == "dedicated"
 
-    @data(
-        (Session, None, []),
-        (Batch, None, []),
-        (
-            Session,
+    @pytest.mark.parametrize("session_cls", [Session, Batch])
+    @pytest.mark.parametrize(
+        "timestamps",
+        [
+            None,
             [{"status": "open", "timestamp": "2026-01-01T00:00:00Z"}],
-            [{"status": "open", "timestamp": "2026-01-01T00:00:00Z"}],
-        ),
-        (
-            Batch,
             [
                 {"status": "open", "timestamp": "2026-01-01T00:00:00Z"},
                 {"status": "active", "timestamp": "2026-01-01T00:01:00Z"},
                 {"status": "closed", "timestamp": "2026-01-01T00:02:00Z"},
             ],
-            [
-                {"status": "open", "timestamp": "2026-01-01T00:00:00Z"},
-                {"status": "active", "timestamp": "2026-01-01T00:01:00Z"},
-                {"status": "closed", "timestamp": "2026-01-01T00:02:00Z"},
-            ],
-        ),
+        ],
     )
-    @unpack
-    @mock_responses
-    def test_details_timestamps(self, session_cls, timestamps, expected, registry):
+    def test_details_timestamps(
+        self, session_cls: type, timestamps: list[dict] | None, registry: BaseRegistry
+    ) -> None:
         """Test that the session state transitions are included in the details."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
@@ -140,10 +134,10 @@ class TestSession(IBMTestCase):
         registry.add_session(
             RegistrySession(session.session_id, "common_backend", timestamps=timestamps), "a"
         )
-        self.assertEqual(session.details()["timestamps"], expected)
+        # Sessions with no state transitions report an empty list of timestamps.
+        assert session.details()["timestamps"] == (timestamps or [])
 
-    @mock_responses
-    def test_cm_session_fractional(self, registry):
+    def test_cm_session_fractional(self, registry: BaseRegistry) -> None:
         """Test instantiating primitive inside session context manager with fractional option."""
         registry.add_backend(Backend.from_(FakeFractionalBackend), "a")
         service = QiskitRuntimeService(token="my_token")
@@ -151,22 +145,25 @@ class TestSession(IBMTestCase):
         backend = service.backend("fake_fractional", use_fractional_gates=True)
         with Session(backend=backend) as _:
             primitive = SamplerV2()
-            self.assertTrue(primitive._backend.options.use_fractional_gates)
+            assert primitive._backend.options.use_fractional_gates
 
-    @mock_responses
-    def test_backend_instance_warnings(self, registry):
+    def test_backend_instance_warnings(
+        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """Test backend instance warnings do not appear."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("common_backend")
-        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             Session(backend=backend)
+        assert not caplog.records
 
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_dry_run(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry: BaseRegistry) -> None:
         """Session mode can run in `dry-run` mode."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
         with Session(backend=backend) as session:
             job = session._run(program_id="foo", inputs={}, dry_run=True)
 
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

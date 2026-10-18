@@ -12,9 +12,14 @@
 
 """Tests for job functions using real runtime service."""
 
-import logging
+from __future__ import annotations
+
 import random
 import time
+from typing import TYPE_CHECKING
+
+import pytest
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime.exceptions import (
     IBMRuntimeError,
@@ -22,191 +27,210 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobNotFound,
 )
 
-from ..decorators import production_only
-from ..utils import cancel_job_safe, get_real_device, wait_for_status
-from .case import IBMIntegrationJobTestCase
+from .utils import cancel_job_safe, wait_for_status
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
+
+    from .dependencies import Dependencies
 
 
-class TestIntegrationJob(IBMIntegrationJobTestCase):
+class TestIntegrationJob:
     """Integration tests for job functions."""
 
-    def test_run_program(self):
+    def test_run_program(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test running a program."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
-        self.assertEqual("DONE", job.status())
-        self.assertTrue(job.result())
+        assert "DONE" == job.status()
+        assert job.result()
 
-    def test_run_with_simplejson(self):
+    def test_run_with_simplejson(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test retrieving job results with simplejson package installed."""
-        service = self.service
         try:
             __import__("simplejson")
-            job = self.submit_bell_job(service=service)
-            job.wait_for_final_state()
-            self.assertTrue(job.result())
         except ImportError:
-            self.assertRaises(ImportError)
+            pytest.skip("simplejson is not installed")
 
-    @production_only
-    def test_cancel_job_queued(self):
+        job = submit_bell_job()
+        job.wait_for_final_state()
+        assert job.result()
+
+    @pytest.mark.production
+    def test_cancel_job_queued(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: Dependencies,
+    ) -> None:
         """Test canceling a queued job."""
-        service = self.service
-        _ = self.submit_bell_job(
-            service,
-        )
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        _ = submit_bell_job()
+        job = submit_bell_job()
         wait_for_status(job, "QUEUED")
-        if not cancel_job_safe(job, logger):
+        if not cancel_job_safe(job):
             return
         time.sleep(15)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
-        self.assertEqual(rjob.status(), "CANCELLED")
+        assert rjob.status() == "CANCELLED"
 
-    def test_cancel_job_running(self):
+    def test_cancel_job_running(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: Dependencies,
+    ) -> None:
         """Test canceling a running job."""
-        service = self.service
-        job = self.submit_bell_job(
-            service,
-        )
+        service = dependencies.service
+        job = submit_bell_job()
         rjob = service.job(job.job_id())
-        if not cancel_job_safe(rjob, logger):
+        if not cancel_job_safe(rjob):
             return
         time.sleep(5)
-        self.assertEqual(rjob.status(), "CANCELLED")
+        assert rjob.status() == "CANCELLED"
 
-    def test_cancel_job_done(self):
+    def test_cancel_job_done(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test canceling a finished job."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
-        with self.assertRaises(RuntimeInvalidStateError):
+        with pytest.raises(RuntimeInvalidStateError):
             job.cancel()
 
-    def test_delete_job(self):
+    def test_delete_job(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: Dependencies,
+    ) -> None:
         """Test deleting a job."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        service = dependencies.service
+        job = submit_bell_job()
         wait_for_status(job, "DONE")
         try:
             service.delete_job(job.job_id())
         except IBMRuntimeError as ex:
             if "403 Client Error" in ex.message or "401 Client Error" in ex.message:
-                self.skipTest("Credentials do not have delete job privileges")
-        with self.assertRaises(RuntimeJobNotFound):
+                pytest.skip("Credentials do not have delete job privileges")
+        with pytest.raises(RuntimeJobNotFound):
             service.job(job.job_id())
 
-    @production_only
-    def test_delete_job_queued(self):
+    @pytest.mark.production
+    def test_delete_job_queued(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: Dependencies,
+    ) -> None:
         """Test deleting a queued job."""
-        service = self.service
-        real_device_name = get_real_device(service)
-        _ = self.submit_bell_job(service, backend_name=real_device_name)
-        job = self.submit_bell_job(service, backend_name=real_device_name)
+        service = dependencies.service
+        try:
+            real_device_name = service.least_busy(simulator=False).name
+        except QiskitBackendNotFoundError:
+            pytest.skip("No real device found in the instance")
+        _ = submit_bell_job(backend_name=real_device_name)
+        job = submit_bell_job(backend_name=real_device_name)
         wait_for_status(job, "QUEUED")
         try:
             service.delete_job(job.job_id())
         except IBMRuntimeError as ex:
             if "403 Client Error" in ex.message or "401 Client Error" in ex.message:
-                self.skipTest("Credentials do not have delete job privileges")
-        with self.assertRaises(RuntimeJobNotFound):
+                pytest.skip("Credentials do not have delete job privileges")
+        with pytest.raises(RuntimeJobNotFound):
             service.job(job.job_id())
 
-    def test_job_status(self):
+    def test_job_status(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job status."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         time.sleep(random.randint(1, 5))
-        self.assertTrue(job.status())
+        assert job.status()
 
-    def test_job_backend(self):
+    def test_job_backend(
+        self, submit_bell_job: Callable[..., RuntimeJobV2], backend_test: IBMBackend | None
+    ) -> None:
         """Test job backend."""
-        service = self.service
-        job = self.submit_bell_job(service)
-        self.assertEqual(self.test_backend.name, job.backend().name)
+        job = submit_bell_job()
+        assert backend_test.name == job.backend().name
 
-    def test_job_program_id(self):
+    def test_job_program_id(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job program ID."""
-        service = self.service
-        job = self.submit_bell_job(service)
-        self.assertEqual("sampler", job.primitive_id)
+        job = submit_bell_job()
+        assert "sampler" == job.primitive_id
 
-    def test_wait_for_final_state(self):
+    def test_wait_for_final_state(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: Dependencies,
+    ) -> None:
         """Test wait for final state."""
-        service = self.service
-        job = self.submit_bell_job(service, backend_name=self.dependencies.qpu)
+        job = submit_bell_job(backend_name=dependencies.qpu)
         job.wait_for_final_state()
-        self.assertEqual("DONE", job.status())
+        assert "DONE" == job.status()
 
-    def test_wait_for_final_state_after_job_status(self):
+    def test_wait_for_final_state_after_job_status(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: Dependencies,
+    ) -> None:
         """Test wait for final state on a completed job when the status is updated first."""
-        service = self.service
-        job = self.submit_bell_job(service, backend_name=self.dependencies.qpu)
+        job = submit_bell_job(backend_name=dependencies.qpu)
         status = job.status()
         while status not in ["DONE", "CANCELLED", "ERROR"]:
             status = job.status()
         job.wait_for_final_state()
-        self.assertEqual("DONE", job.status())
+        assert "DONE" == job.status()
 
-    def test_job_creation_date(self):
+    def test_job_creation_date(
+        self,
+        submit_bell_job: Callable[..., RuntimeJobV2],
+        dependencies: Dependencies,
+    ) -> None:
         """Test job creation date."""
-        service = self.service
-        job = self.submit_bell_job(service)
-        self.assertTrue(job.creation_date)
+        service = dependencies.service
+        job = submit_bell_job()
+        assert job.creation_date
         rjob = service.job(job.job_id())
-        self.assertTrue(rjob.creation_date)
+        assert rjob.creation_date
         rjobs = service.jobs(limit=2)
         for rjob in rjobs:
-            self.assertTrue(rjob.creation_date)
+            assert rjob.creation_date
 
-    def test_job_metrics(self):
+    def test_job_metrics(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job metrics."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
         metrics = job.metrics()
-        self.assertTrue(metrics)
-        self.assertIn("timestamps", metrics)
-        self.assertIn("qiskit_version", metrics)
+        assert metrics
+        assert "timestamps" in metrics
+        assert "qiskit_version" in metrics
 
-    def test_usage_estimation(self):
+    def test_usage_estimation(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job usage estimation."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
-        self.assertTrue(job.usage_estimation)
-        self.assertIn("quantum_seconds", job.usage_estimation)
+        assert job.usage_estimation
+        assert "quantum_seconds" in job.usage_estimation
 
-    def test_job_usage(self):
+    def test_job_usage(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job usage."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
-        self.assertIsInstance(job.usage(), (float, int))
+        assert isinstance(job.usage(), (float, int))
 
-    def test_job_logs(self):
+    def test_job_logs(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job logs."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
-        self.assertIsInstance(job.logs(), str)
+        assert isinstance(job.logs(), str)
 
-    def test_updating_job_tags(self):
+    def test_updating_job_tags(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job metrics."""
-        service = self.service
-        job = self.submit_bell_job(service, job_tags=["test_tag123"])
+        job = submit_bell_job(job_tags=["test_tag123"])
         job.wait_for_final_state()
         new_job_tag = ["new_test_tag"]
         job.update_tags(new_job_tag)
-        self.assertTrue(job.tags, new_job_tag)
+        assert set(job.tags) == set(new_job_tag)
 
-    def test_circuit_params_not_stored(self):
+    def test_circuit_params_not_stored(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test that circuits are not automatically stored in the job params."""
-        service = self.service
-        job = self.submit_bell_job(service)
+        job = submit_bell_job()
         job.wait_for_final_state()
-        self.assertFalse(hasattr(job, "_params"))
-        self.assertTrue(job.inputs)
+        assert not hasattr(job, "_params")
+        assert job.inputs

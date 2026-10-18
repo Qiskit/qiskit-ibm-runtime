@@ -12,9 +12,7 @@
 
 """Tests for local mode."""
 
-from unittest import skipUnless
-
-from ddt import data, ddt
+import pytest
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
@@ -25,57 +23,55 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramResult
 from qiskit_ibm_runtime.utils.converters import utc_to_local
 
-from ...ibm_test_case import IBMTestCase
 from ...utils import get_primitive_inputs
 
 if optionals.HAS_AER:
     from qiskit_aer import AerSimulator
 
 
-@ddt
-class TestLocalRuntimeJob(IBMTestCase):
+class TestLocalRuntimeJob:
     """Class for testing local mode runtime jobs."""
 
-    @data(SamplerV2, EstimatorV2)
-    def test_metrics_layout(self, primitive_class):
+    @pytest.mark.parametrize("primitive_class", [SamplerV2, EstimatorV2])
+    def test_metrics_layout(self, primitive_class: type) -> None:
         """Test that local job metrics have the same layout as metrics of a service job."""
         primitive = primitive_class(mode=FakeManilaV2())
         job = primitive.run(**get_primitive_inputs(primitive))
         job.result()
         metrics = job.metrics()
 
-        self.assertEqual(metrics["usage"], {"qpu_charge_time_seconds": 0, "status": "complete"})
-        self.assertNotIn("bss", metrics)
+        assert metrics["usage"] == {"qpu_charge_time_seconds": 0, "status": "complete"}
+        assert "bss" not in metrics
         for name in ("created", "running", "finished"):
-            self.assertIsInstance(metrics["timestamps"][name], str)
-            self.assertTrue(metrics["timestamps"][name].endswith("Z"))
+            assert isinstance(metrics["timestamps"][name], str)
+            assert metrics["timestamps"][name].endswith("Z")
         # The UTC timestamps convert back to the job's local creation time.
-        self.assertEqual(
-            utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None), job.creation_date
+        assert (
+            utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None) == job.creation_date
         )
 
-    def test_v2_sampler(self):
+    def test_v2_sampler(self) -> None:
         """Test V2 Sampler on a local backend."""
         sampler = SamplerV2(mode=FakeManilaV2())
         job = sampler.run(**get_primitive_inputs(sampler))
 
-        self.assertIsInstance(job, LocalRuntimeJob)
-        self.assertTrue(job.metrics())
-        self.assertTrue(job.backend())
-        self.assertTrue(job.inputs)
-        self.assertEqual(job.usage(), 0)
+        assert isinstance(job, LocalRuntimeJob)
+        assert job.metrics()
+        assert job.backend()
+        assert job.inputs
+        assert job.usage() == 0
 
-    @skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
-    def test_executor(self):
+    @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_executor(self) -> None:
         """Test executor on a local backend."""
         executor = Executor(AerSimulator(method="stabilizer"))
         job = executor.run(QuantumProgram(1))
-        self.assertIsInstance(job, LocalRuntimeJob)
-        self.assertTrue(job.metrics())
-        self.assertTrue(job.backend())
-        self.assertTrue(job.inputs)
-        self.assertEqual(job.usage(), 0)
+        assert isinstance(job, LocalRuntimeJob)
+        assert job.metrics()
+        assert job.backend()
+        assert job.inputs
+        assert job.usage() == 0
 
         # Specific to executor jobs.
-        self.assertIsInstance(job.inputs, QuantumProgram)
-        self.assertIsInstance(job.result(), QuantumProgramResult)
+        assert isinstance(job.inputs, QuantumProgram)
+        assert isinstance(job.result(), QuantumProgramResult)

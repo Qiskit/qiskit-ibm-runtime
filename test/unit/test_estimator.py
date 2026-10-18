@@ -12,8 +12,12 @@
 
 """Tests for estimator class."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from ddt import data, ddt, unpack
+import pytest
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -23,8 +27,7 @@ from qiskit_ibm_runtime import EstimatorOptions, EstimatorV2, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
+from ..asserts import assert_dict_partially_equal, assert_warns_strict
 from ..registries import OneInstanceDryRunRegistry
 from ..utils import (
     get_mocked_backend,
@@ -34,41 +37,49 @@ from ..utils import (
     transpile_pubs,
 )
 
+if TYPE_CHECKING:
+    from ..registries import BaseRegistry
 
-@ddt
-class TestEstimatorV2(IBMTestCase):
+
+class TestEstimatorV2:
     """Class for testing the Estimator class."""
 
-    @data(
-        [(real_amplitudes(num_qubits=2, reps=1), ["ZZ"], [[1, 2, 3, 4]])],
-        [(real_amplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [[1, 2, 3, 4]])],
-        [(QuantumCircuit(2), ["XX"])],
-        [(real_amplitudes(num_qubits=1, reps=1), ["I"], [[1, 2]]), (QuantumCircuit(3), ["YYY"])],
+    @pytest.mark.parametrize(
+        "abs_pubs",
+        [
+            [(real_amplitudes(num_qubits=2, reps=1), ["ZZ"], [[1, 2, 3, 4]])],
+            [(real_amplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [[1, 2, 3, 4]])],
+            [(QuantumCircuit(2), ["XX"])],
+            [
+                (real_amplitudes(num_qubits=1, reps=1), ["I"], [[1, 2]]),
+                (QuantumCircuit(3), ["YYY"]),
+            ],
+        ],
     )
-    def test_run_program_inputs(self, abs_pubs):
+    def test_run_program_inputs(self, abs_pubs: list) -> None:
         """Verify program inputs are correct."""
         backend = get_mocked_backend()
         t_pubs = transpile_pubs(abs_pubs, backend, "estimator")
 
         inst = EstimatorV2(mode=backend)
         inst.run(t_pubs)
-        input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("pubs", input_params)
+        input_params = backend.service._run.call_args.kwargs["inputs"]  # type: ignore[attr-defined]
+        assert "pubs" in input_params
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
-            self.assertIsInstance(a_pub_param, EstimatorPub)
+            assert isinstance(a_pub_param, EstimatorPub)
             # Check circuit
-            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
+            assert a_pub_param.circuit == an_in_taks[0]
             # Check observables
             for a_pub_obs, an_input_obs in zip(a_pub_param.observables.tolist(), an_in_taks[1]):
-                self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
+                assert list(a_pub_obs.keys())[0] == an_input_obs
             # Check parameter values
             an_input_params = an_in_taks[2] if len(an_in_taks) == 3 else []
             param_values_array = list(a_pub_param.parameter_values.data.values())
             a_pub_param_values = param_values_array[0] if param_values_array else param_values_array
             np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
-    def test_unsupported_values_for_estimator_options(self):
+    def test_unsupported_values_for_estimator_options(self) -> None:
         """Test exception when options levels are not supported."""
         options_bad = [
             {
@@ -82,21 +93,21 @@ class TestEstimatorV2(IBMTestCase):
         ) as session:
             for bad_opt in options_bad:
                 inst = EstimatorV2(mode=session)
-                with self.assertRaises(ValueError) as exc:
+                with pytest.raises(ValueError) as exc:
                     inst.options.update(**bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
+                assert list(bad_opt.keys())[0] in str(exc.value)
 
-    def test_invalid_estimator_precision_option(self):
+    def test_invalid_estimator_precision_option(self) -> None:
         """Test exception when precision is invalid."""
         backend = get_mocked_backend()
         backend.configuration().simulator = True
 
         estimator = EstimatorV2(mode=backend)
-        with self.assertRaises(ValueError) as exc:
+        with pytest.raises(ValueError) as exc:
             estimator.run(**get_primitive_inputs(estimator), precision=0)
-        self.assertIn("The precision value must be strictly greater than 0", str(exc.exception))
+        assert "The precision value must be strictly greater than 0" in str(exc.value)
 
-    def test_invalid_estimator_pub_precision(self):
+    def test_invalid_estimator_pub_precision(self) -> None:
         """Test exception when a pub specifies a precision that is not strictly greater than 0."""
         backend = get_mocked_backend()
         backend.configuration().simulator = True
@@ -107,27 +118,24 @@ class TestEstimatorV2(IBMTestCase):
         # raises a bare ZeroDivisionError when it converts precision to shots.
         pub = get_primitive_inputs(estimator)["pubs"][0]
         pub_with_zero_precision = (*pub, 0)
-        with self.assertRaisesRegex(
-            ValueError, "The precision value must be strictly greater than 0"
-        ):
+        with pytest.raises(ValueError, match="The precision value must be strictly greater than 0"):
             estimator.run([pub_with_zero_precision])
 
-    def test_pec_simulator(self):
+    def test_pec_simulator(self) -> None:
         """Test error is raised when using pec on simulator without coupling map."""
         backend = get_mocked_backend()
         backend.configuration().simulator = True
 
         inst = EstimatorV2(mode=backend, options={"resilience": {"pec_mitigation": True}})
-        with self.assertRaises(ValueError) as exc:
+        with pytest.raises(ValueError) as exc:
             inst.run(**get_primitive_inputs(inst))
-        self.assertIn("coupling map", str(exc.exception))
+        assert "coupling map" in str(exc.value)
 
-    def test_run_default_options(self):
-        """Test run using default options."""
-        backend = get_mocked_backend()
-        options_vars = [
+    @pytest.mark.parametrize(
+        ("options", "expected"),
+        [
             (
-                EstimatorOptions(default_shots=1024),
+                EstimatorOptions(default_shots=1024),  # type: ignore[call-arg]
                 {"default_shots": 1024},
             ),
             (
@@ -140,31 +148,38 @@ class TestEstimatorV2(IBMTestCase):
                     "dynamical_decoupling": {"enable": True},
                 },
             ),
-        ]
-        for options, expected in options_vars:
-            with self.subTest(options=options):
-                inst = EstimatorV2(mode=backend, options=options)
-                inst.run(**get_primitive_inputs(inst, backend=backend))
-                options = backend.service._run.call_args.kwargs["inputs"]["options"]
-                self.assertDictPartiallyEqual(options, expected)
-
-    @data(
-        {"zne_extrapolator": "bad_extrapolator"},
-        {"zne_extrapolator": "double_exponential", "zne_noise_factors": [1]},
+        ],
     )
-    def test_invalid_resilience_options(self, res_opt):
+    def test_run_default_options(self, options: dict, expected: dict) -> None:
+        """Test run using default options."""
+        backend = get_mocked_backend()
+
+        inst = EstimatorV2(mode=backend, options=options)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+
+        run_options = backend.service._run.call_args.kwargs["inputs"]["options"]  # type: ignore[attr-defined]
+        assert_dict_partially_equal(run_options, expected)
+
+    @pytest.mark.parametrize(
+        "res_opt",
+        [
+            {"zne_extrapolator": "bad_extrapolator"},
+            {"zne_extrapolator": "double_exponential", "zne_noise_factors": [1]},
+        ],
+    )
+    def test_invalid_resilience_options(self, res_opt: dict) -> None:
         """Test invalid resilience options."""
         backend = get_mocked_backend()
-        with self.assertRaises(ValueError) as exc:
+        with pytest.raises(ValueError) as exc:
             inst = EstimatorV2(mode=backend, options={"resilience": res_opt})
             inst.run(**get_primitive_inputs(inst, backend))
-        self.assertIn(list(res_opt.values())[0], str(exc.exception))
+        assert list(res_opt.values())[0] in str(exc.value)
         if len(res_opt.keys()) > 1:
-            self.assertIn(list(res_opt.keys())[1], str(exc.exception))
+            assert list(res_opt.keys())[1] in str(exc.value)
 
-    def test_observable_types_single_circuit(self):
-        """Test different observable types for a single circuit."""
-        all_obs = [
+    @pytest.mark.parametrize(
+        "observables",
+        [
             "IX",
             Pauli("YZ"),
             SparsePauliOp(["IX", "YZ"]),
@@ -181,8 +196,10 @@ class TestEstimatorV2(IBMTestCase):
                 {Pauli("XX"): 1},
                 {Pauli("YY"): 2},
             ],
-        ]
-
+        ],
+    )
+    def test_observable_types_single_circuit(self, observables: object) -> None:
+        """Test different observable types for a single circuit."""
         backend = get_mocked_backend()
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
@@ -190,14 +207,12 @@ class TestEstimatorV2(IBMTestCase):
         isa_circuit = transpile(circuit, backend=backend)
 
         estimator = EstimatorV2(mode=backend)
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                pub = (isa_circuit, remap_observables(obs, isa_circuit))
-                estimator.run([pub])
+        pub = (isa_circuit, remap_observables(observables, isa_circuit))  # type: ignore[arg-type]
+        estimator.run([pub])
 
-    def test_observable_types_multi_circuits(self):
-        """Test different observable types for multiple circuits."""
-        all_obs = [
+    @pytest.mark.parametrize(
+        "observables",
+        [
             ["XX", "YYY"],
             [Pauli("XX"), Pauli("YYY")],
             [SparsePauliOp(["XX"]), SparsePauliOp(["YYY"])],
@@ -220,21 +235,22 @@ class TestEstimatorV2(IBMTestCase):
                 [{Pauli("XX"): 1}, {Pauli("YY"): 2}],
                 [{Pauli("XXX"): 1}, {Pauli("YYY"): 2}],
             ],
-        ]
-
+        ],
+    )
+    def test_observable_types_multi_circuits(self, observables: object) -> None:
+        """Test different observable types for multiple circuits."""
         backend = get_mocked_backend()
         circuit1 = get_transpiled_circuit(backend, num_qubits=2, measure=False)
         circuit2 = get_transpiled_circuit(backend, num_qubits=3, measure=False)
-        estimator = EstimatorV2(mode=backend)
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                obs1 = remap_observables(obs[0], circuit1)
-                obs2 = remap_observables(obs[1], circuit2)
-                estimator.run(pubs=[(circuit1, obs1), (circuit2, obs2)])
 
-    def test_invalid_basis(self):
-        """Test observable containing invalid basis."""
-        all_obs = [
+        estimator = EstimatorV2(mode=backend)
+        obs1 = remap_observables(observables[0], circuit1)  # type: ignore[index]
+        obs2 = remap_observables(observables[1], circuit2)  # type: ignore[index]
+        estimator.run(pubs=[(circuit1, obs1), (circuit2, obs2)])
+
+    @pytest.mark.parametrize(
+        "observables",
+        [
             ["Y0"],
             {"1X": 2},
             [["rZ", "YY"]],
@@ -244,16 +260,17 @@ class TestEstimatorV2(IBMTestCase):
                     {"++": 4},
                 ]
             ],
-        ]
-
+        ],
+    )
+    def test_invalid_basis(self, observables: object) -> None:
+        """Test observable containing invalid basis."""
         circuit = QuantumCircuit(2)
         estimator = EstimatorV2(mode=get_mocked_backend())
-        for obs in all_obs:
-            with self.subTest(obs=obs):
-                with self.assertRaisesRegex(ValueError, "Observable"):
-                    estimator.run([(circuit, obs)])
 
-    def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
+        with pytest.raises(ValueError, match="Observable"):
+            estimator.run([(circuit, observables)])
+
+    def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self) -> None:
         """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
@@ -265,23 +282,23 @@ class TestEstimatorV2(IBMTestCase):
         in_pubs = [(dynamic_circuit, ["XXX"])]
         backend = get_mocked_backend()
         inst = EstimatorV2(mode=backend)
-        inst.options.dynamical_decoupling.enable = True
-        with self.assertRaisesRegex(
+        inst.options.dynamical_decoupling.enable = True  # type: ignore[union-attr]
+        with pytest.raises(
             IBMInputValueError,
-            "Dynamical decoupling currently cannot be used with dynamic circuits",
+            match="Dynamical decoupling currently cannot be used with dynamic circuits",
         ):
             inst.run(in_pubs)
 
-    def test_estimator_validations(self):
+    def test_estimator_validations(self) -> None:
         """Test exceptions when failing client-side validations."""
         backend = get_mocked_backend()
         inst = EstimatorV2(mode=backend)
         circ = QuantumCircuit(2)
-        obs = []
-        with self.assertRaisesRegex(IBMInputValueError, "Empty observables array is not allowed"):
+        obs: list[object] = []
+        with pytest.raises(IBMInputValueError, match="Empty observables array is not allowed"):
             inst.run(pubs=[(circ, obs)])
 
-    def test_gate_not_in_target(self):
+    def test_gate_not_in_target(self) -> None:
         """Test exception when circuits contain gates that are not basis gates."""
         backend = FakeSherbrooke()
         estimator = EstimatorV2(mode=backend)
@@ -297,19 +314,23 @@ class TestEstimatorV2(IBMTestCase):
                 circ.h(0)
         circ.measure(0, 0)
 
-        with self.assertRaisesRegex(IBMInputValueError, " h "):
+        with pytest.raises(IBMInputValueError, match=" h "):
             estimator.run(pubs=[(circ, observable)])
 
-    @data(
-        ([None, None], 0.01, 0),
-        ([0.01, 0.01], 0.01, 0),
-        ([0.02, 0.02], 0.01, 0),
-        ([0.02, None], 0.02, 0),
-        ([0.02, None], 0.01, 1),
-        ([0.01, 0.02, 0.03], 0.04, 1),
+    @pytest.mark.parametrize(
+        ("pub_precisions", "run_precision", "num_appearances"),
+        [
+            ([None, None], 0.01, 0),
+            ([0.01, 0.01], 0.01, 0),
+            ([0.02, 0.02], 0.01, 0),
+            ([0.02, None], 0.02, 0),
+            ([0.02, None], 0.01, 1),
+            ([0.01, 0.02, 0.03], 0.04, 1),
+        ],
     )
-    @unpack
-    def test_deprecate_pub_level_precision(self, pub_precisions, run_precision, num_appearances):
+    def test_deprecate_pub_level_precision(
+        self, pub_precisions: list[float], run_precision: float, num_appearances: int
+    ) -> None:
         """Conflicting pub-level precision emits one DeprecationWarning."""
         backend = get_mocked_backend()
         circ = QuantumCircuit(1)
@@ -325,14 +346,14 @@ class TestEstimatorV2(IBMTestCase):
             for precision in pub_precisions
         ]
 
-        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, precision=run_precision)
 
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_dry_run(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry: BaseRegistry) -> None:
         """Estimator can run in `dry-run` mode."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
         estimator = EstimatorV2(mode=backend)
         job = estimator.run(**get_primitive_inputs(estimator, backend=backend), dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

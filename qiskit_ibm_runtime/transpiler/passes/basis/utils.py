@@ -56,8 +56,7 @@ def fold_rzz_angle(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
     # windings was dropped.
     windings = round((angle - wrap_angle) / (2 * pi))
     if windings % 2:
-        dag.apply_operation_back(GlobalPhaseGate(pi))
-
+        dag.global_phase += pi
     return dag
 
 
@@ -93,7 +92,7 @@ def build_rzz_quadrant_2(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
     """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
-    new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
+    new_dag.global_phase += pi / 2
     new_dag.apply_operation_back(
         RZGate(pi),
         qargs=(qubits[0],),
@@ -137,7 +136,7 @@ def build_rzz_quadrant_3(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
     """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
-    new_dag.apply_operation_back(GlobalPhaseGate(-pi / 2))
+    new_dag.global_phase -= pi / 2
     new_dag.apply_operation_back(
         RZGate(pi),
         qargs=(qubits[0],),

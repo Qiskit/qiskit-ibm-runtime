@@ -17,13 +17,11 @@ from samplomatic import Twirl
 
 from qiskit_ibm_runtime.noise_learner_v3.find_learning_protocol import find_learning_protocol
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestFindLearningProtocol(IBMTestCase):
+class TestFindLearningProtocol:
     """Tests the `find_learning_protocol` function."""
 
-    def test_gate_instructions(self):
+    def test_gate_instructions(self) -> None:
         """Test gate instructions."""
         circuit = QuantumCircuit(4)
         with circuit.box([Twirl()]):
@@ -44,9 +42,9 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.cz(0, 1)
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, ["pauli_lindblad"] * 2 + [None] * 3)
+        assert protocols == ["pauli_lindblad"] * 2 + [None] * 3
 
-    def test_measure_instructions(self):
+    def test_measure_instructions(self) -> None:
         """Test measure instructions."""
         circuit = QuantumCircuit(4, 4)
         with circuit.box([Twirl()]):
@@ -61,9 +59,9 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.measure(range(2), range(2))
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, ["trex"] * 2 + [None] * 2)
+        assert protocols == ["trex"] * 2 + [None] * 2
 
-    def test_empty_instructions(self):
+    def test_empty_instructions(self) -> None:
         """Test empty instructions."""
         circuit = QuantumCircuit(4)
         with circuit.box([Twirl()]):
@@ -72,9 +70,9 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.noop(2)
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, ["pauli_lindblad"] * 2)
+        assert protocols == ["pauli_lindblad"] * 2
 
-    def test_mixed_instructions(self):
+    def test_mixed_instructions(self) -> None:
         """Test instructions with gates and measurements."""
         circuit = QuantumCircuit(4, 2)
         with circuit.box([Twirl()]):
@@ -82,4 +80,4 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.measure([2, 3], [0, 1])
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, [None])
+        assert protocols == [None]

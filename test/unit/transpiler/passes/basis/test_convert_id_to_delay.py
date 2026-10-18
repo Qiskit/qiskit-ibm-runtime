@@ -18,18 +18,16 @@ from qiskit.transpiler.passmanager import PassManager
 
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import ConvertIdToDelay
 
-from .....ibm_test_case import IBMTestCase
 
-
-def durations():
+def durations() -> InstructionDurations:
     """Return the durations of a 160dt `sx` gate and a 200dt `x` gate."""
     return InstructionDurations([("sx", None, 160), ("x", None, 200)])
 
 
-class TestConvertIdToDelay(IBMTestCase):
+class TestConvertIdToDelay:
     """Tests the ConvertIdToDelay pass."""
 
-    def test_id_gate(self):
+    def test_id_gate(self) -> None:
         """Test if Id gate is converted a delay."""
         qc = QuantumCircuit(1, 0)
         qc.id(0)
@@ -40,9 +38,9 @@ class TestConvertIdToDelay(IBMTestCase):
         expected = QuantumCircuit(1, 0)
         expected.delay(160, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed
 
-    def test_id_gate_unit(self):
+    def test_id_gate_unit(self) -> None:
         """Test if Id gate is converted a delay with correct units."""
         qc = QuantumCircuit(1, 0)
         qc.id(0)
@@ -53,9 +51,9 @@ class TestConvertIdToDelay(IBMTestCase):
         expected = QuantumCircuit(1, 0)
         expected.delay(200, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed
 
-    def test_if_test_gate(self):
+    def test_if_test_gate(self) -> None:
         """Test if if_test gate is converted."""
         qc = QuantumCircuit(1, 1)
 
@@ -69,9 +67,9 @@ class TestConvertIdToDelay(IBMTestCase):
         with expected.if_test((0, 1)):
             expected.delay(160, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed
 
-    def test_if_test_id_gate(self):
+    def test_if_test_id_gate(self) -> None:
         """Test if if_test Id gate is converted a if_test delay."""
         qc = QuantumCircuit(1, 1)
         with qc.if_test((0, 1)) as else_:
@@ -88,4 +86,4 @@ class TestConvertIdToDelay(IBMTestCase):
         with else_:
             expected.delay(160, 0)
 
-        self.assertEqual(expected, transformed)
+        assert expected == transformed

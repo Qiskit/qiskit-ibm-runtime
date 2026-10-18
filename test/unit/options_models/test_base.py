@@ -14,11 +14,10 @@
 
 from dataclasses import asdict
 
+import pytest
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.options_models.base import BaseOptionsModel
-
-from ...ibm_test_case import IBMTestCase
 
 
 class Nested(BaseOptionsModel):
@@ -35,10 +34,10 @@ class Options(BaseOptionsModel):
     nested: Nested = Nested()
 
 
-class TestBaseOptionsModel(IBMTestCase):
+class TestBaseOptionsModel:
     """Tests for the BaseOptionsModel class."""
 
-    def test_update(self):
+    def test_update(self) -> None:
         """Test the `update()` method."""
         options = Options()
         options_dict = options.model_dump()
@@ -46,25 +45,25 @@ class TestBaseOptionsModel(IBMTestCase):
         # Updating top-level field.
         options.update(**{"a": "new_a"})
         options_dict.update(**{"a": "new_a"})
-        self.assertEqual(options_dict, options.model_dump())
+        assert options_dict == options.model_dump()
 
         # Updating nested fields.
         options.update(**{"nested": {"n": 42}})
         options_dict["nested"].update(**{"n": 42})
-        self.assertEqual(options_dict, options.model_dump())
+        assert options_dict == options.model_dump()
 
         # Should fail when trying to update a non-existing field.
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             options.update(**{"z": None})
 
         # Should fail when trying to update a field with an invalid value.
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             options.update(**{"a": None})
 
-    def test_asdict(self):
+    def test_asdict(self) -> None:
         """Test the ability to use `dataclass.asdict()` in an OptionsModel."""
         options = Options()
-        with self.assertWarnsRegex(DeprecationWarning, "is deprecated"):
+        with pytest.warns(DeprecationWarning, match="is deprecated"):
             options_as_dict = asdict(options)
 
-        self.assertEqual(options_as_dict, options.model_dump())
+        assert options_as_dict == options.model_dump()
