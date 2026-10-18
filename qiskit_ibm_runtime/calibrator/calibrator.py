@@ -17,17 +17,18 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from .base_primitive import get_mode_service_backend
-from .options_models.calibrator import CalibratorOptions
-from .options_models.converters import to_runtime_options
-from .utils.default_session import get_cm_session
+from ..base_primitive import get_mode_service_backend
+from ..options_models.calibrator import CalibratorOptions
+from ..options_models.converters import to_runtime_options
+from ..utils.default_session import get_cm_session
+from .params_converters import CALIBRATOR_PARAMS_CONVERTERS
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from .batch import Batch
-    from .runtime_job_v2 import RuntimeJobV2
-    from .session import Session
+    from ..batch import Batch
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
 
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ class Calibrator:
     """
 
     _PROGRAM_ID = "calibrate"
+    _SCHEMA_VERSION = "v0.1"
 
     options: CalibratorOptions
     """The options of this calibrator."""
@@ -121,6 +123,14 @@ class Calibrator:
         inputs = {
             "options": self.options.model_dump(mode="json", exclude={"environment"}),
         }
+
+        try:
+            converter = CALIBRATOR_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
+        except KeyError:
+            raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
+
+        params = converter.encoder(self.options)
+        inputs = params.model_dump(mode="json")
 
         if self._mode:
             _run = self._mode._run

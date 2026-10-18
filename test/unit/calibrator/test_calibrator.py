@@ -24,10 +24,10 @@ from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
 
-from ..utils import get_mocked_backend
+from ...utils import get_mocked_backend
 
 if TYPE_CHECKING:
-    from ..registries import BaseRegistry
+    from ...registries import BaseRegistry
 
 
 class TestCalibratorOptions:
