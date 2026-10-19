@@ -12,6 +12,8 @@ jobs:
     if: github.repository_owner == 'Qiskit'
     name: Qiskit Neko Integration Tests
     runs-on: ubuntu-latest
+    env:
+      GLIBC_TUNABLES: glibc.rtld.optional_static_tls=4096
     steps:
       - uses: Qiskit/qiskit-neko@main
         with:
