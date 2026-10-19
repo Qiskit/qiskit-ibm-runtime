@@ -284,13 +284,13 @@ class TestEstimatorRun(IBMTestCase):
         """Test run with multiple pubs."""
         estimator = Estimator(mode=self.backend)
         estimator.options.resilience.measure_mitigation = measure_mitigation
-        circuit1 = QuantumCircuit(2)
+        circuit1 = QuantumCircuit(3)
         circuit1.h(0)
 
         circuit2 = QuantumCircuit(3)
         circuit2.h([0, 1, 2])
 
-        observable1 = SparsePauliOp.from_list([("ZZ", 1)])
+        observable1 = SparsePauliOp.from_list([("ZZZ", 1)])
         observable2 = SparsePauliOp.from_list([("ZZZ", 1)])
 
         pubs = [(circuit1, observable1), (circuit2, observable2)]

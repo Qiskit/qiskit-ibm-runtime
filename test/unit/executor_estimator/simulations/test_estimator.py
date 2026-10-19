@@ -31,6 +31,7 @@ from .utils import (
     create_estimator_test_data_extended,
     create_local_mode_estimator,
     create_noise_model_without_noise,
+    widen_circuit,
 )
 
 if TYPE_CHECKING:
@@ -126,7 +127,11 @@ class TestEstimatorWithNoise(IBMTestCase):
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])
         preset_pass_manager = generate_preset_pass_manager(optimization_level=1, backend=backend)
 
-        pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
+        (isa_circuit, observables, parameters), ideal_evs = create_estimator_test_data(
+            backend, preset_pass_manager, False
+        )
+        isa_circuit, observables = widen_circuit(isa_circuit, observables, target_width=100)
+        pub = (isa_circuit, observables, parameters)
 
         # -- Run using base level Estimator with minor mitigation only:
 
@@ -244,9 +249,11 @@ class TestEstimatorWithoutNoise(IBMTestCase):
         )
 
         include_projections = not estimator.finalize_options().resilience.measure_mitigation
-        pub, ideal_evs = create_estimator_test_data_extended(
+        (isa_circuit, observables, parameters), ideal_evs = create_estimator_test_data_extended(
             self.backend, self.preset_pass_manager, include_projections
         )
+        isa_circuit, observables = widen_circuit(isa_circuit, observables, target_width=100)
+        pub = (isa_circuit, observables, parameters)
 
         # TODO: no DD possible on AER without gate durations.
         # Need to test this for a fake backend (e.g. in noisy test).

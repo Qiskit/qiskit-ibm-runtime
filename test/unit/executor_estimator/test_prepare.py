@@ -530,7 +530,7 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
     @data(32, "auto")
     def test_prepare_with_measure_noise_learning(self, num_randomizations):
         """Test that measure_noise_learning adds a correctly built TREX calibration item."""
-        circuit1 = QuantumCircuit(2)
+        circuit1 = QuantumCircuit(3)
         circuit1.h(0)
         circuit1.cx(0, 1)
         circuit2 = QuantumCircuit(3)
@@ -538,7 +538,7 @@ class TestPrepareVanilla(IBMEstimatorPrepareTestCase):
         circuit2.cx(0, 1)
         circuit2.cx(1, 2)
 
-        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZZ", 1)])))
         pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
         pubs = [pub1, pub2]
 
@@ -947,7 +947,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
     @data(32, "auto")
     def test_prepare_pec_with_measure_noise_learning(self, num_randomizations):
         """Test that measure_noise_learning adds a correctly built TREX calibration item."""
-        circuit1 = QuantumCircuit(2)
+        circuit1 = QuantumCircuit(3)
         circuit1.h(0)
         circuit1.cx(0, 1)
         circuit2 = QuantumCircuit(3)
@@ -955,7 +955,7 @@ class TestPreparePec(IBMEstimatorPrepareTestCase):
         circuit2.cx(0, 1)
         circuit2.cx(1, 2)
 
-        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZZ", 1)])))
         pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
         pubs = [pub1, pub2]
 
@@ -1340,7 +1340,7 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
     @data(32, "auto")
     def test_prepare_zne_with_measure_noise_learning(self, num_randomizations):
         """Test that measure_noise_learning adds a correctly built TREX calibration item."""
-        circuit1 = QuantumCircuit(2)
+        circuit1 = QuantumCircuit(3)
         circuit1.h(0)
         circuit1.cx(0, 1)
         circuit2 = QuantumCircuit(3)
@@ -1348,7 +1348,7 @@ class TestPrepareZne(IBMEstimatorPrepareTestCase):
         circuit2.cx(0, 1)
         circuit2.cx(1, 2)
 
-        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZZ", 1)])))
         pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
         pubs = [pub1, pub2]
 
@@ -1781,7 +1781,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
     @data(32, "auto")
     def test_prepare_pea_with_measure_noise_learning(self, num_randomizations):
         """Test that measure_noise_learning adds a correctly built TREX calibration item."""
-        circuit1 = QuantumCircuit(2)
+        circuit1 = QuantumCircuit(3)
         circuit1.h(0)
         circuit1.cx(0, 1)
         circuit2 = QuantumCircuit(3)
@@ -1789,7 +1789,7 @@ class TestPreparePea(IBMEstimatorPrepareTestCase):
         circuit2.cx(0, 1)
         circuit2.cx(1, 2)
 
-        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
+        pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZZ", 1)])))
         pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
         pubs = [pub1, pub2]
 

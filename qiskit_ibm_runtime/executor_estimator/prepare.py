@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit_mitigation import PEA, PEC, TREX, GateFolding, MitigationTask
+from qiskit_mitigation import PEA, PEC, TREX, GateFolding, MitigationTask, get_measured_qubits
 from samplomatic.annotations import InjectNoise
 from samplomatic.utils import get_annotation
 
@@ -262,6 +262,12 @@ def _build_quantum_program(
     )
     trex: TREX | None = TREX() if measure_noise_learning is not None else None
 
+    meas_qubits = get_measured_qubits(
+        circuits=[pub.circuit for pub in coerced_pubs],
+        observables=[pub.observables for pub in coerced_pubs],
+        custom_boxing_options=boxing_options,
+    )
+
     # Build the quantum program
     quantum_program = QuantumProgram(shots=shots_per_randomization)
 
@@ -280,6 +286,7 @@ def _build_quantum_program(
             broadcast_obs_and_params=True,
             trex=trex,
             quantum_program=quantum_program,
+            meas_qubits=meas_qubits,
             **build_task_prepare_kwargs(
                 task_class, resilience, noise_model, num_randomizations, shots_per_randomization
             ),
