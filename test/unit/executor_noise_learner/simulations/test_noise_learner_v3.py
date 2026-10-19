@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.quantum_info import PauliLindbladMap, random_pauli_list
 from qiskit.transpiler import generate_preset_pass_manager
@@ -94,7 +95,8 @@ class TestNoiseLearnerV3:
         for expected, obtained in zip(noise_maps, simplified_noise_maps):
             assert_almost_equal_pauli_maps(expected, obtained)
 
-    def test_noise_learning_with_noop_noise_injection(self):
+    @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
+    def test_noise_learning_with_noop_noise_injection(self, qubits):
         """Tests the client-side noise learner with local mode noise injection and a noop layer.
 
         The resulting noise model should match what is injected.
@@ -102,12 +104,15 @@ class TestNoiseLearnerV3:
         backend = AerSimulator(method="stabilizer", target=FakeMarrakesh().target)
 
         circuit = QuantumCircuit(QuantumRegister(backend.num_qubits, name="q"))
-        with circuit.box(annotations=[Twirl(), InjectNoise("my_ref"), Tag("ciao")]):
-            circuit.noop([3, 2, 4])
+        with circuit.box(annotations=[Twirl(), InjectNoise("my_ref"), Tag()]):
+            circuit.noop(qubits)
 
         layers = find_unique_box_instructions(circuit.data)
         noise_maps = [
-            generate_random_pauli_map(num_qubits=3, size=10, max_rate=0.003),
+            generate_random_pauli_map(
+                num_qubits=layer.operation.num_qubits, size=10, max_rate=0.003
+            )
+            for layer in layers
         ]
 
         noise_learner = NoiseLearner(mode=backend)
