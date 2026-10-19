@@ -12,8 +12,7 @@
 
 """Tests for the functions used to visualize noise learner results."""
 
-from unittest import skipUnless
-
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 from qiskit.utils.optionals import HAS_AER
@@ -22,54 +21,41 @@ from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 from qiskit_ibm_runtime.visualization import draw_layer_error_map, draw_layer_errors_swarm
 
-from ...ibm_test_case import IBMVisualizationTestCase
+from .utils import save_plotly_artifact
 
 if HAS_AER:
     from qiskit_aer import AerSimulator
 
 
-class DrawLayerErrorBase(IBMVisualizationTestCase):
-    """Base class for testing the functions that draw layer errors."""
+@pytest.fixture
+def layer_errors() -> list[LayerError]:
+    """Return three layer errors, acting on two, three, and four qubits."""
+    circuits = [QuantumCircuit(2), QuantumCircuit(3), QuantumCircuit(4)]
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
+    qubits = [[8, 9], [7, 11, 27], [1, 8, 9, 10]]
 
-        # A set of circuits
-        c1 = QuantumCircuit(2)
-        c2 = QuantumCircuit(3)
-        c3 = QuantumCircuit(4)
-        self.circuits = [c1, c2, c3]
-
-        # A set of qubits
-        qubits1 = [8, 9]
-        qubits2 = [7, 11, 27]
-        qubits3 = [1, 8, 9, 10]
-        self.qubits = [qubits1, qubits2, qubits3]
-
-        # A set of errors
-        error1 = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
-        error2 = PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5])
-        error3 = PauliLindbladError(
+    errors = [
+        PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2]),
+        PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5]),
+        PauliLindbladError(
             PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"]),
             [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01],
-        )
-        self.errors = [error1, error2, error3]
+        ),
+    ]
 
-        # A set of layer errors
-        layer_error1 = LayerError(c1, qubits1, error1)
-        layer_error2 = LayerError(c2, qubits2, error2)
-        layer_error3 = LayerError(c3, qubits3, error3)
-        self.layer_errors = [layer_error1, layer_error2, layer_error3]
+    return [
+        LayerError(circuit, layer_qubits, error)
+        for circuit, layer_qubits, error in zip(circuits, qubits, errors)
+    ]
 
 
-class TestDrawLayerErrorMap(DrawLayerErrorBase):
+class TestDrawLayerErrorMap:
     """Class for testing the ``draw_layer_error_map`` function."""
 
-    def test_plotting(self):
+    def test_plotting(self, layer_errors: list[LayerError], test_id: str) -> None:
         """Test to make sure that it produces the right figure."""
         fig = draw_layer_error_map(
-            self.layer_errors[2],
+            layer_errors[2],
             embedding=FakeKyiv(),
             color_no_data="blue",
             colorscale="reds",
@@ -81,26 +67,26 @@ class TestDrawLayerErrorMap(DrawLayerErrorBase):
         fig_d = fig.to_dict()
         data = fig_d["data"]
         layout = fig_d["layout"]
-        self.assertEqual(len(data), 160)
-        self.assertEqual(layout["height"], 1000)
-        self.assertEqual(layout["width"], 1000)
+        assert len(data) == 160
+        assert layout["height"] == 1000
+        assert layout["width"] == 1000
 
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(test_id, fig)
 
-    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-    def test_no_coupling_map(self):
+    @pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_no_coupling_map(self, layer_errors: list[LayerError]) -> None:
         """Test error when invalid coordinates are passed."""
-        with self.assertRaises(ValueError):
-            draw_layer_error_map(self.layer_errors[0], AerSimulator())
+        with pytest.raises(ValueError):
+            draw_layer_error_map(layer_errors[0], AerSimulator())
 
 
-class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
+class TestDrawLayerErrorsSwarm:
     """Class for testing the ``draw_layer_errors_swarm`` function."""
 
-    def test_plotting(self):
+    def test_plotting(self, layer_errors: list[LayerError], test_id: str) -> None:
         """Test that it produces the right image."""
         fig = draw_layer_errors_swarm(
-            self.layer_errors,
+            layer_errors,
             colors=["red", "blue", "green"],
             names=["l1", "l2", "l3"],
             width=1000,
@@ -111,35 +97,32 @@ class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
         data = fig_d["data"]
         layout = fig_d["layout"]
 
-        self.assertEqual(len(data), 3)
-        self.assertEqual(data[0]["name"], "l1")
-        self.assertEqual(data[1]["name"], "l2")
-        self.assertEqual(data[2]["name"], "l3")
+        assert len(data) == 3
+        assert data[0]["name"] == "l1"
+        assert data[1]["name"] == "l2"
+        assert data[2]["name"] == "l3"
 
-        self.assertEqual(
-            layout["xaxis"],
-            {
-                "title": {"text": "layers"},
-                "range": [-1, 3],
-                "ticktext": ["l1", "l2", "l3"],
-                "tickvals": [0, 1, 2],
-                "showgrid": False,
-                "zeroline": False,
-            },
-        )
-        self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 1000)
-        self.assertEqual(layout["height"], 800)
+        assert layout["xaxis"] == {
+            "title": {"text": "layers"},
+            "range": [-1, 3],
+            "ticktext": ["l1", "l2", "l3"],
+            "tickvals": [0, 1, 2],
+            "showgrid": False,
+            "zeroline": False,
+        }
+        assert layout["yaxis"] == {"title": {"text": "rates"}}
+        assert layout["width"] == 1000
+        assert layout["height"] == 800
 
-        self.save_plotly_artifact(fig)
+        save_plotly_artifact(test_id, fig)
 
-    def test_errors(self):
-        """Test errors."""
-        with self.assertRaisesRegex(ValueError, "Expected 3 colors"):
-            draw_layer_errors_swarm(self.layer_errors, colors=["blue", "red"])
+    def test_errors(self, layer_errors: list[LayerError]) -> None:
+        """Test layer_errors."""
+        with pytest.raises(ValueError, match="Expected 3 colors"):
+            draw_layer_errors_swarm(layer_errors, colors=["blue", "red"])
 
-        with self.assertRaisesRegex(ValueError, "Expected 3 names"):
-            draw_layer_errors_swarm(self.layer_errors, names=["names1", "names2"])
+        with pytest.raises(ValueError, match="Expected 3 names"):
+            draw_layer_errors_swarm(layer_errors, names=["names1", "names2"])
 
-        with self.assertRaisesRegex(ValueError, "Expected 3 opacities"):
-            draw_layer_errors_swarm(self.layer_errors, opacities=[0.1, 0.2])
+        with pytest.raises(ValueError, match="Expected 3 opacities"):
+            draw_layer_errors_swarm(layer_errors, opacities=[0.1, 0.2])

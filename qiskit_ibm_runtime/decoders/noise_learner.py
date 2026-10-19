@@ -10,30 +10,25 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""NoiseLearner result decoder."""
+"""Result decoder for NoiseLearner."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from ..decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
 from ..results.noise_learner import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
-
-if TYPE_CHECKING:
-    from ..results.noise_learner_v3 import NoiseLearnerV3Results
 
 
 class NoiseLearnerResultDecoder(ResultDecoder):
     """Class used to decode noise learner results."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> NoiseLearnerResult | NoiseLearnerV3Results:
-        """Convert the result to NoiseLearnerResult."""
-        if "schema_version" in raw_result:
-            return NoiseLearnerV3ResultDecoder().decode(raw_result)
+    def is_applicable(cls, data: str) -> bool:
+        """Return `True` if this decoder can be applied."""
+        return "schema_version" not in data
 
-        # Decode for legacy noise learner
+    @classmethod
+    def decode(cls, raw_result: str) -> NoiseLearnerResult:
+        """Convert the result to NoiseLearnerResult."""
         decoded: dict = super().decode(raw_result)
 
         data = []

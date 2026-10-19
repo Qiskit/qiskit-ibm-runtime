@@ -14,23 +14,17 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
-from ..decorators import integration_test_setup
-from ..ibm_test_case import IBMTestCase
-
-if TYPE_CHECKING:
-    from ..decorators import IntegrationTestDependencies
+from .dependencies import integration_test_dependencies
 
 
-class TestAuthClient(IBMTestCase):
+class TestAuthClient:
     """Tests for the AuthClient."""
 
-    @integration_test_setup(supported_channel=["ibm_cloud"], init_service=False)
-    def test_cloud_access_token(self, dependencies: IntegrationTestDependencies) -> None:
+    def test_cloud_access_token(self) -> None:
         """Test valid cloud authentication."""
+        dependencies = integration_test_dependencies(init_service=False)
         params = ClientParameters(
             channel="ibm_cloud",
             token=dependencies.token,
@@ -38,5 +32,5 @@ class TestAuthClient(IBMTestCase):
             instance=dependencies.instance,
         )
         cloud_auth = params.get_auth_handler()
-        self.assertTrue(cloud_auth.tm)
-        self.assertTrue(cloud_auth.tm.get_token())
+        assert cloud_auth.tm
+        assert cloud_auth.tm.get_token()

@@ -29,27 +29,29 @@ from ....utils import make_mirror_circuit_with_phases
 if TYPE_CHECKING:
     from typing import Any
 
+    from qiskit.circuit.instruction import CircuitInstruction
+    from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
     from qiskit.providers import BackendV2
+    from qiskit.transpiler.passmanager import StagedPassManager
 
 
-def widen_circuit(
-    circuit: QuantumCircuit, observables: ObservablesArray, target_width: int
-) -> tuple[QuantumCircuit, ObservablesArray]:
-    """Pad a circuit with idle qubits to reach ``target_width``.
+def widen_circuit(pub: EstimatorPubLike, target_width: int) -> EstimatorPubLike:
+    """Pad the circuit in a pub with idle qubits to reach ``target_width``.
 
     The active qubits are placed on the low-index qubits (0 .. circuit.num_qubits-1);
     the remaining qubits are left idle.  The observables are re-mapped to the wider
     circuit so their qubit indices stay consistent.
 
     Args:
-        circuit: The circuit to widen (already transpiled / ISA).
-        observables: The observables associated with ``circuit``.
+        pub: An estimator pub whose first element is the (already transpiled / ISA) circuit.
+            May be a 2- or 3-tuple of (circuit, observables[, parameters]).
         target_width: Total number of qubits in the returned circuit.
-            Must be strictly greater than ``circuit.num_qubits``.
+            Must be strictly greater than the circuit's current ``num_qubits``.
 
     Returns:
-        A ``(wide_circuit, wide_observables)`` tuple.
+        A pub tuple with the widened circuit and re-mapped observables.
     """
+    circuit, observables, *rest = pub
     if target_width <= circuit.num_qubits:
         raise ValueError(
             f"target_width ({target_width}) must be greater than "
@@ -57,11 +59,17 @@ def widen_circuit(
         )
     wide = QuantumCircuit(target_width)
     wide.compose(circuit, qubits=list(range(circuit.num_qubits)), inplace=True)
-    wide_observables = observables.apply_layout(circuit.layout, num_qubits=target_width)
-    return wide, wide_observables
+    wide_observables = ObservablesArray.coerce(observables).apply_layout(
+        circuit.layout, num_qubits=target_width
+    )
+    return (wide, wide_observables, *rest)
 
 
-def create_estimator_test_data(backend, preset_pass_manager, include_projectors):
+def create_estimator_test_data(
+    backend: BackendV2,
+    preset_pass_manager: StagedPassManager,
+    include_projectors: bool,
+) -> tuple[EstimatorPubLike, list[float]]:
     """Create a pub and ideal expectation values for it.
 
     The circuit will use 3 qubits and only a subset of observable combinations.
@@ -101,7 +109,11 @@ def create_estimator_test_data(backend, preset_pass_manager, include_projectors)
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
 
-def create_estimator_test_data_extended(backend, preset_pass_manager, include_projectors):
+def create_estimator_test_data_extended(
+    backend: BackendV2,
+    preset_pass_manager: StagedPassManager,
+    include_projectors: bool,
+) -> tuple[EstimatorPubLike, list[float]]:
     """Create a pub and ideal expectation values for it.
 
     The circuit will use 4 qubits and try to use an extensive list of observables to provide
@@ -163,7 +175,9 @@ def create_estimator_test_data_extended(backend, preset_pass_manager, include_pr
     return pub, [ev for _, ev in observable_ideal_ev_pairs]
 
 
-def create_noise_model_without_noise(estimator, pub):
+def create_noise_model_without_noise(
+    estimator: Estimator, pub: EstimatorPubLike
+) -> list[tuple[CircuitInstruction, PauliLindbladMap]]:
     """Creates a noise-model, mapping each layer to the identity (no noise)."""
     layers = estimator.find_unique_layers([pub], types="all")
 

@@ -1,0 +1,220 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2021-2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Tests for ClientParameters."""
+
+from __future__ import annotations
+
+import uuid
+from typing import TYPE_CHECKING, Any
+
+import pytest
+from requests_ntlm import HttpNtlmAuth
+
+from qiskit_ibm_runtime.api.auth import CloudAuth
+from qiskit_ibm_runtime.api.client_parameters import ClientParameters
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+
+MOCK_PROXIES_URLS = {"http": "localhost:8080", "https": "localhost:8080"}
+
+
+def client_params(
+    channel: str = "ibm_quantum_platform",
+    token: str = "dummy_token",
+    url: str = "https://dummy_url",
+    instance: str | None = None,
+    proxies: ProxyConfiguration | None = None,
+    verify: bool | None = None,
+    url_resolver: Callable | None = None,
+) -> ClientParameters:
+    """Return a custom ClientParameters."""
+    if verify is None:
+        verify = True
+    return ClientParameters(
+        channel=channel,
+        token=token,
+        url=url,
+        instance=instance,
+        proxies=proxies,
+        verify=verify,
+        url_resolver=url_resolver,
+    )
+
+
+class TestClientParameters:
+    """Test for ``ClientParameters``."""
+
+    def test_no_proxy_params(self) -> None:
+        """Test when no proxy parameters are passed."""
+        no_params_expected_result = {"verify": True}
+        no_params_credentials = client_params()
+        result = no_params_credentials.connection_parameters()
+        assert no_params_expected_result == result
+
+    def test_verify_param(self) -> None:
+        """Test 'verify' arg is acknowledged."""
+        false_verify_expected_result = {"verify": False}
+        false_verify_credentials = client_params(verify=False)
+        result = false_verify_credentials.connection_parameters()
+        assert false_verify_expected_result == result
+
+    def test_proxy_param(self) -> None:
+        """Test using only proxy urls (no NTLM credentials)."""
+        proxies_only_expected_result = {"verify": True, "proxies": MOCK_PROXIES_URLS}
+        proxies_only_credentials = client_params(
+            proxies=ProxyConfiguration(**{"urls": MOCK_PROXIES_URLS})  # type: ignore[arg-type]
+        )
+        result = proxies_only_credentials.connection_parameters()
+        assert proxies_only_expected_result == result
+
+    @pytest.mark.parametrize(
+        ("channel", "instance", "url", "url_resolver", "expected_url"),
+        [
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
+                "https://cloud.ibm.com",
+                None,
+                "https://quantum.cloud.ibm.com/api/v1",
+            ),
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://cloud.ibm.com",
+                None,
+                "https://my-region.quantum.cloud.ibm.com/api/v1",
+            ),
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+                None,
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+            ),
+            (
+                "ibm_cloud",
+                "crn",
+                "https://auth.quantum.ibm.com/api",
+                None,
+                "https://auth.quantum.ibm.com/api",
+            ),
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+                lambda a, b, c, _: f"{a}:{b}:{c}",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud:"
+                + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
+            ),
+            (
+                "ibm_cloud",
+                "crn",
+                "https://auth.quantum.ibm.com/api",
+                lambda a, b, c, _: f"{a}:{b}:{c}",
+                "https://auth.quantum.ibm.com/api:crn:False",
+            ),
+        ],
+        ids=[
+            "default_region",
+            "other_region",
+            "custom_url",
+            "instance_without_region",
+            "url_resolver",
+            "url_resolver_with_instance_without_region",
+        ],
+    )
+    def test_get_runtime_api_base_url(
+        self,
+        channel: str,
+        instance: str,
+        url: str,
+        url_resolver: Callable | None,
+        expected_url: str,
+    ) -> None:
+        """Test resolution of runtime API base URL."""
+        params = client_params(
+            channel=channel, instance=instance, url=url, url_resolver=url_resolver
+        )
+
+        assert params.get_runtime_api_base_url() == expected_url
+
+    def test_proxies_param_with_ntlm(self) -> None:
+        """Test proxies with NTLM credentials."""
+        proxies_with_ntlm_dict = {
+            "urls": MOCK_PROXIES_URLS,
+            "username_ntlm": "domain\\username",
+            "password_ntlm": "password",
+        }
+        ntlm_expected_result: dict[str, Any] = {
+            "verify": True,
+            "proxies": MOCK_PROXIES_URLS,
+            "auth": HttpNtlmAuth("domain\\username", "password"),
+        }
+        proxies_with_ntlm_credentials = client_params(
+            proxies=ProxyConfiguration(**proxies_with_ntlm_dict)  # type: ignore[arg-type]
+        )
+        result = proxies_with_ntlm_credentials.connection_parameters()
+
+        # Verify the NTLM credentials.
+        assert ntlm_expected_result["auth"].username == result["auth"].username
+        assert ntlm_expected_result["auth"].password == result["auth"].password
+
+        # Remove the HttpNtlmAuth objects for direct comparison of the dicts.
+        ntlm_expected_result.pop("auth")
+        result.pop("auth")
+        assert ntlm_expected_result == result
+
+    def test_malformed_ntlm_params(self) -> None:
+        """Test input with malformed NTLM credentials."""
+        malformed_ntlm_credentials_dict = {
+            "urls": MOCK_PROXIES_URLS,
+            "username_ntlm": 1234,
+            "password_ntlm": 5678,
+        }
+        malformed_ntlm_credentials = client_params(
+            proxies=malformed_ntlm_credentials_dict  # type: ignore[arg-type]
+        )
+        # Should raise when trying to do username.split('\\', <int>)
+        # in NTLM credentials due to int not facilitating 'split'.
+        with pytest.raises(AttributeError):
+            _ = malformed_ntlm_credentials.connection_parameters()
+
+    def test_auth_handler_cloud(self) -> None:
+        """Test getting cloud auth handler."""
+        token = uuid.uuid4().hex
+        instance = uuid.uuid4().hex
+        verify = False
+        params = client_params(
+            channel="ibm_quantum_platform",
+            token=token,
+            instance=instance,
+            proxies=ProxyConfiguration(urls=MOCK_PROXIES_URLS),
+            verify=False,
+        )
+        handler = params.get_auth_handler()
+        assert isinstance(handler, CloudAuth)
+
+        with pytest.warns(UserWarning, match="Unable to retrieve"):
+            headers = handler.get_headers()
+        assert f"apikey {token}" in headers.values()
+
+        # Use a new handler, for avoiding delay in second response.
+        handler = params.get_auth_handler()
+        with pytest.warns(UserWarning, match="Unable to retrieve"):
+            headers = handler.get_headers()
+        assert f"apikey {token}" in headers.values()
+        assert handler.tm.disable_ssl_verification == (not verify)
+        assert handler.tm.proxies == MOCK_PROXIES_URLS

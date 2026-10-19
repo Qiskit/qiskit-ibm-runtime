@@ -99,7 +99,7 @@ class ConvertToMidCircuitResetAndMeasure(TransformationPass):
                         dag.substitute_node(node, mid_circ_measure, inplace=True)
                     else:
                         warnings.warn(
-                            f"{self.mcm_name} with qubits {node_indices} is not supported "
+                            f"'{self.mcm_name}' with qubits {node_indices} is not supported "
                             f"by the given target."
                         )
 

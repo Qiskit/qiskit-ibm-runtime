@@ -14,25 +14,22 @@
 
 from pathlib import Path
 
-from ddt import data, ddt
+import pytest
 from qiskit.primitives import PrimitiveResult
 
 from qiskit_ibm_runtime.fake_provider import FakeFez
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
 
-from ...decorators import mock_responses
-from ...ibm_test_case import IBMTestCase
 from ...registries import Backend, Job, OneInstanceNoBackendsRegistry
 from .catalog import ESTIMATOR_JOBS, EXECUTOR_JOBS, SAMPLER_JOBS
 
 
-@ddt
-class StoredJobsTestCase(IBMTestCase):
+class TestStoredJobs:
     """Test for loading stored jobs from earlier versions."""
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    @data(*EXECUTOR_JOBS["0.49"])
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    @pytest.mark.parametrize("job_id", EXECUTOR_JOBS["0.49"])
     def test_executor_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored Executor jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
@@ -50,12 +47,12 @@ class StoredJobsTestCase(IBMTestCase):
         result = job.result()
 
         # Job should be an executor job.
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
         # Result should be loaded correctly.
-        self.assertIsInstance(result, QuantumProgramResult)
+        assert isinstance(result, QuantumProgramResult)
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    @data(*ESTIMATOR_JOBS["0.49"])
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    @pytest.mark.parametrize("job_id", ESTIMATOR_JOBS["0.50"])
     def test_estimator_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Estimator jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
@@ -73,12 +70,12 @@ class StoredJobsTestCase(IBMTestCase):
         result = job.result()
 
         # Job should be an executor job.
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
         # Result should be loaded correctly.
-        self.assertIsInstance(result, PrimitiveResult)
+        assert isinstance(result, PrimitiveResult)
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    @data(*SAMPLER_JOBS["0.49"])
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    @pytest.mark.parametrize("job_id", SAMPLER_JOBS["0.49"])
     def test_sampler_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Sampler jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
@@ -96,6 +93,6 @@ class StoredJobsTestCase(IBMTestCase):
         result = job.result()
 
         # Job should be an executor job.
-        self.assertEqual(job.primitive_id, "executor")
+        assert job.primitive_id == "executor"
         # Result should be loaded correctly.
-        self.assertIsInstance(result, PrimitiveResult)
+        assert isinstance(result, PrimitiveResult)

@@ -1,0 +1,66 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Tests for the `api/` package."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+
+from ...account import custom_envs
+
+if TYPE_CHECKING:
+    from responses import RequestsMock
+
+    from ...registries import BaseRegistry
+
+
+class TestAPISession:
+    """Class for testing API sessions."""
+
+    def test_functions_identifier_header(
+        self, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
+        """Test for appending the HTTP header for functions identifier."""
+        job_post_mock = next(
+            mock
+            for mock in responses.registered()
+            if mock.url == "https://my-region.quantum.cloud.ibm.com/api/v1/jobs"
+        )
+
+        # Sending a job with default environment variables.
+        service = QiskitRuntimeService(token="my_token")
+        service._run("sampler", {}, {"backend": "common_backend"})
+        headers = job_post_mock.calls[-1].request.headers
+
+        # The job POST should receive the usual headers.
+        assert RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"] == headers["IBM-API-Version"]
+        assert registry.instances["a"].crn == headers["Service-CRN"]
+        assert "qiskit_ibm_runtime" in headers["X-Qx-Client-Application"]
+        # The job POST should not receive the function id header.
+        assert "IBM-API-Function-Id" not in headers
+
+        with custom_envs({"QISKIT_FUNCTIONS_IDENTIFIER": "my-cool-id"}):
+            service._run("sampler", {}, {"backend": "common_backend"})
+            headers = job_post_mock.calls[-1].request.headers
+
+            # The job POST should receive the usual headers.
+            assert (
+                RestAdapterBase._HEADER_API_VERSION["IBM-API-Version"] == headers["IBM-API-Version"]
+            )
+            assert registry.instances["a"].crn == headers["Service-CRN"]
+            assert "qiskit_ibm_runtime" in headers["X-Qx-Client-Application"]
+            # The job POST should receive the function id header.
+            assert "my-cool-id" == headers["IBM-API-Function-Id"]

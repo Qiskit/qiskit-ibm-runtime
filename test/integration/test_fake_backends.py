@@ -12,11 +12,14 @@
 
 """Tests for fake backends."""
 
-import operator
-import unittest
-from dataclasses import asdict
+from __future__ import annotations
 
-from ddt import data, ddt
+import logging
+import operator
+from dataclasses import asdict
+from typing import TYPE_CHECKING
+
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.transpiler import generate_preset_pass_manager
@@ -35,72 +38,78 @@ from qiskit_ibm_runtime.fake_provider import (
 )
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
-from ..decorators import production_only
-from ..ibm_test_case import IBMIntegrationTestCase, IBMTestCase
-from ..utils import combine
+if TYPE_CHECKING:
+    from .dependencies import Dependencies
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
 
-@ddt
-class TestFakeBackends(IBMTestCase):
+def flipped_circuit() -> QuantumCircuit:
+    """Return a two-qubit circuit whose only net effect is flipping both qubits.
+
+    The pairs of Hadamard gates cancel out, so the expected outcome is `11`.
+    """
+    circuit = QuantumCircuit(2)
+    circuit.h(0)
+    circuit.h(1)
+    circuit.h(0)
+    circuit.h(1)
+    circuit.x(0)
+    circuit.x(1)
+    circuit.measure_active()
+
+    return circuit
+
+
+class TestFakeBackends:
     """Test runnning circuits in fake backends.
 
     These tests are considered integration tests, even if they do not require network access, as
     they depend on `aer` and are time consuming.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """Initial class level setup."""
-        super().setUpClass()
-        cls.circuit = QuantumCircuit(2)
-        cls.circuit.h(0)
-        cls.circuit.h(1)
-        cls.circuit.h(0)
-        cls.circuit.h(1)
-        cls.circuit.x(0)
-        cls.circuit.x(1)
-        cls.circuit.measure_active()
-
-    @data(*[be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1])
+    @pytest.mark.parametrize(
+        "backend",
+        [be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1],
+        ids=lambda be: be.name,
+    )
     def test_circuit_on_fake_backend_v2(self, backend):
         """Test running a circuit in fake backends."""
         if not optionals.HAS_AER and backend.num_qubits > 20:
-            self.skipTest(f"Unable to run fake_backend {backend.backend_name} without qiskit-aer")
+            pytest.skip(f"Unable to run fake_backend {backend.backend_name} without qiskit-aer")
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
-        isa_circuit = pm.run(self.circuit)
+        isa_circuit = pm.run(flipped_circuit())
         sampler = Sampler(backend)
         job = sampler.run([isa_circuit])
         pub_result = job.result()[0]
         counts = pub_result.data.meas.get_counts()
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
-        self.assertEqual(max_count, "11")
+        assert max_count == "11"
 
-    @data(0, 1, 2, 3)
+    @pytest.mark.parametrize("optimization_level", [0, 1, 2, 3])
     def test_circuit_on_fake_backend_v2_with_optimization_level(self, optimization_level):
         """Test running a circuit in a fake backend with different optimization level."""
         backend = FakeVigoV2()
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
-        isa_circuit = pm.run(self.circuit)
+        isa_circuit = pm.run(flipped_circuit())
         sampler = Sampler(backend)
         job = sampler.run([isa_circuit])
         pub_result = job.result()[0]
         counts = pub_result.data.meas.get_counts()
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
-        self.assertEqual(max_count, "11")
+        assert max_count == "11"
 
-    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
+    @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
     def test_fake_nighthawk(self):
         """Test that submitting a simple circuit with FakeNighthawk works."""
         # Initialize fake_nighthawk
         backend = FakeNighthawk()
-        self.assertEqual(backend.num_qubits, 120)
+        assert backend.num_qubits == 120
 
         # Assert backend property shapes are correct
-        self.assertEqual(len(backend.properties().qubits), backend.num_qubits)
+        assert len(backend.properties().qubits) == backend.num_qubits
 
         # Initialize quantum circuit
         qc = QuantumCircuit(2, 2)
@@ -112,18 +121,21 @@ class TestFakeBackends(IBMTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run(qc)
 
-        self.assertEqual(isa_circuit.num_qubits, backend.num_qubits)
+        assert isa_circuit.num_qubits == backend.num_qubits
 
         # Run using local simulator
         sampler = Sampler(backend)
         job = sampler.run([isa_circuit])
         result = job.result()
 
-        self.assertTrue(job.done())
-        self.assertIsNotNone(result)
+        assert job.done()
+        assert result is not None
 
-    @combine(
-        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManilaV2(), FakeNairobiV2()]
+    @pytest.mark.parametrize(
+        "opt_cls", [EstimatorOptions, SamplerOptions], ids=lambda cls: cls.__name__
+    )
+    @pytest.mark.parametrize(
+        "fake_backend", [FakeManilaV2(), FakeNairobiV2()], ids=lambda be: be.name
     )
     def test_simulator_set_backend(self, opt_cls, fake_backend):
         """Test Options.simulator.set_backend method."""
@@ -135,8 +147,8 @@ class TestFakeBackends(IBMTestCase):
         basis_gates = fake_backend.operation_names
         coupling_map = fake_backend.coupling_map
 
-        self.assertEqual(options.simulator.coupling_map, coupling_map)
-        self.assertEqual(options.simulator.noise_model, noise_model)
+        assert options.simulator.coupling_map == coupling_map
+        assert options.simulator.noise_model == noise_model
 
         expected_options = opt_cls()
         expected_options.simulator = {
@@ -146,14 +158,16 @@ class TestFakeBackends(IBMTestCase):
             "seed_simulator": 42,
         }
 
-        self.assertDictEqual(asdict(options), asdict(expected_options))
+        assert asdict(options) == asdict(expected_options)
 
 
-class TestRefreshFakeBackends(IBMIntegrationTestCase):
+class TestRefreshFakeBackends:
     """Test case for refreshing fake backends."""
 
-    @production_only
-    def test_refresh_method(self):
+    @pytest.mark.production
+    def test_refresh_method(
+        self, caplog: pytest.LogCaptureFixture, dependencies: Dependencies
+    ) -> None:
         """Test refresh method."""
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
@@ -161,25 +175,26 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
         old_backend.backend_version = "fake_version"
 
         service = QiskitRuntimeService(
-            token=self.dependencies.token,
-            channel=self.dependencies.channel,
-            url=self.dependencies.url,
+            token=dependencies.token,
+            channel=dependencies.channel,
+            url=dependencies.url,
         )
 
         # This tests needs access to the real device, and it might not be available.
         try:
             service.backend("ibm_sherbrooke")
         except QiskitBackendNotFoundError:
-            self.skipTest("Credentials do not have access to ibm_sherbrooke")
+            pytest.skip("Credentials do not have access to ibm_sherbrooke")
 
-        with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+        with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
             old_backend.refresh(service)
-        self.assertIn("The backend fake_sherbrooke has been updated", logs.output[1])
+        assert "The backend fake_sherbrooke has been updated" in caplog.text
 
         # to verify the refresh can't be done
         wrong_backend = FakeSherbrooke()
         # set a non-existent backend name
         wrong_backend.backend_name = "wrong_fake_sherbrooke"
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
             wrong_backend.refresh(service)
-        self.assertIn("The refreshing of wrong_fake_sherbrooke has failed", logs.output[0])
+        assert "The refreshing of wrong_fake_sherbrooke has failed" in caplog.text

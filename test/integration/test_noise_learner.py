@@ -15,8 +15,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
 
@@ -26,94 +27,135 @@ from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
-from ..decorators import run_integration_test
-from ..ibm_test_case import IBMIntegrationTestCase
-
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import RuntimeJobV2
+    from qiskit_ibm_runtime import IBMBackend
+    from qiskit_ibm_runtime.options import (
+        LayerNoiseLearningOptions,
+        ResilienceOptionsV2,
+        ZneOptions,
+    )
+    from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
+
+    from .dependencies import Dependencies
 
 
-class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
+def ecr_circuits() -> list[QuantumCircuit]:
+    """Return two circuits of `ecr` gates, acting on two and three qubits."""
+    c1 = QuantumCircuit(2)
+    c1.ecr(0, 1)
+
+    c2 = QuantumCircuit(3)
+    c2.ecr(0, 1)
+    c2.ecr(1, 2)
+    c2.ecr(0, 1)
+
+    return [c1, c2]
+
+
+def default_input_options() -> dict:
+    """Return the input options a noise learner defaults to."""
+    return {
+        "max_execution_time": None,
+        "max_layers_to_learn": 4,
+        "shots_per_randomization": 128,
+        "num_randomizations": 32,
+        "layer_pair_depths": [0, 1, 2, 4, 16, 32],
+        "twirling_strategy": "active-accum",
+    }
+
+
+def assert_job_result(
+    result: NoiseLearnerResult,
+    backend: IBMBackend,
+    expected_input_options: dict,
+    n_results: int,
+) -> None:
+    """Assert that `result` is well formed and matches the expected input options."""
+    assert len(result) >= n_results
+
+    for datum in result.data:
+        circuit = datum.circuit
+        qubits = datum.qubits
+        error = datum.error
+
+        assert isinstance(datum, LayerError)
+        assert isinstance(circuit, QuantumCircuit)
+        assert isinstance(qubits, list)
+        assert isinstance(error, PauliLindbladError)
+
+        assert circuit.num_qubits == len(qubits)
+        assert circuit.num_qubits == error.num_qubits
+
+    metadata = deepcopy(result.metadata)
+    assert metadata.pop("backend", None) == backend.name
+    for key, val in expected_input_options.items():
+        metadatum = metadata["input_options"].pop(key, None)
+        assert val == metadatum
+    assert metadata["input_options"] == {}
+
+
+class TestIntegrationNoiseLearner:
     """Integration tests for NoiseLearner."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-
-        self._backend = self.service.backend(self.dependencies.qpu)
-
-        c1 = QuantumCircuit(2)
-        c1.ecr(0, 1)
-
-        c2 = QuantumCircuit(3)
-        c2.ecr(0, 1)
-        c2.ecr(1, 2)
-        c2.ecr(0, 1)
-
-        self.circuits = [c1, c2]
-
-        self.default_input_options = {
-            "max_execution_time": None,
-            "max_layers_to_learn": 4,
-            "shots_per_randomization": 128,
-            "num_randomizations": 32,
-            "layer_pair_depths": [0, 1, 2, 4, 16, 32],
-            "twirling_strategy": "active-accum",
-        }
-
-    @run_integration_test
-    def test_with_default_options(self, service):
+    def test_with_default_options(self, dependencies: Dependencies) -> None:
         """Test noise learner with default options."""
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
-        learner = NoiseLearner(mode=self._backend, options=options)
+        learner = NoiseLearner(mode=backend, options=options)
 
-        pm = generate_preset_pass_manager(backend=self._backend, optimization_level=0)
-        circuits = pm.run(self.circuits)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        circuits = pm.run(ecr_circuits())
         job = learner.run(circuits)
+        job.wait_for_final_state()
 
-        self._verify(job, self.default_input_options, 3)
+        assert_job_result(job.result(), backend, default_input_options(), 3)
 
-    @run_integration_test
-    def test_with_non_default_options(self, service):
+    def test_with_non_default_options(self, dependencies: Dependencies) -> None:
         """Test noise learner with non-default options."""
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
-        learner = NoiseLearner(mode=self._backend, options=options)
+        learner = NoiseLearner(mode=backend, options=options)
 
-        pm = generate_preset_pass_manager(backend=self._backend, optimization_level=0)
-        circuits = pm.run(self.circuits)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        circuits = pm.run(ecr_circuits())
         job = learner.run(circuits)
+        job.wait_for_final_state()
 
-        input_options = deepcopy(self.default_input_options)
+        input_options = default_input_options()
         input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
-        self._verify(job, input_options, 1)
+        assert_job_result(job.result(), backend, input_options, 1)
 
-    @run_integration_test
-    def test_with_no_layers(self, service):
+    def test_with_no_layers(self, dependencies: Dependencies) -> None:
         """Test noise learner when `max_layers_to_learn` is `0`."""
+        backend = dependencies.service.backend(dependencies.qpu)
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
-        learner = NoiseLearner(mode=self._backend, options=options)
+        learner = NoiseLearner(mode=backend, options=options)
 
-        pm = generate_preset_pass_manager(backend=self._backend, optimization_level=0)
-        circuits = pm.run(self.circuits)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        circuits = pm.run(ecr_circuits())
         job = learner.run(circuits)
+        job.wait_for_final_state()
 
-        self.assertEqual(job.result().data, [])
+        assert job.result().data == []
 
-        input_options = deepcopy(self.default_input_options)
+        input_options = default_input_options()
         input_options["max_layers_to_learn"] = 0
-        self._verify(job, input_options, 0)
+        assert_job_result(job.result(), backend, input_options, 0)
 
-    @run_integration_test
-    def test_learner_plus_estimator(self, service):
+    def test_learner_plus_estimator(self, dependencies: Dependencies) -> None:
         """Test feeding noise learner data to estimator."""
+        backend = dependencies.service.backend(dependencies.qpu)
         options = EstimatorOptions()
-        options.resilience.zne_mitigation = True
-        options.resilience.zne.amplifier = "pea"
-        options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
+        resilience = cast("ResilienceOptionsV2", options.resilience)
+        zne = cast("ZneOptions", resilience.zne)
+        layer_noise_learning = cast("LayerNoiseLearningOptions", resilience.layer_noise_learning)
+        resilience.zne_mitigation = True
+        zne.amplifier = "pea"
+        layer_noise_learning.layer_pair_depths = [0, 1]
 
         circuit = QuantumCircuit(3)
         circuit.ecr(0, 1)
@@ -125,18 +167,19 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         pubs = [(circuit, "Z" * circuit.num_qubits)]
 
-        with Session(self._backend) as session:
+        with Session(backend) as session:
             learner = NoiseLearner(mode=session, options=options)
             try:
-                learner_job = learner.run(self.circuits)
+                learner_job = learner.run(ecr_circuits())
             except IBMInputValueError as ex:
                 if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
-                    self.skipTest("Backend does not meet requirements")
+                    pytest.skip("Backend does not meet requirements")
             noise_model = learner_job.result()
-            self.assertEqual(len(noise_model), 3)
+            assert len(noise_model) == 3
 
             estimator = EstimatorV2(mode=session, options=options)
-            estimator.options.resilience.layer_noise_model = noise_model.data
+            estimator_resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
+            estimator_resilience.layer_noise_model = noise_model.data
 
             estimator_job = estimator.run(pubs)
             result = estimator_job.result()
@@ -146,34 +189,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                 match_found = False
                 for nm1 in noise_model_metadata:
                     if nm0.circuit == nm1.circuit:
-                        self.assertEqual(nm0.qubits, nm1.qubits)
-                        self.assertEqual(nm0.error.generators, nm1.error.generators)
-                        self.assertEqual(nm0.error.rates.tolist(), nm1.error.rates.tolist())
+                        assert nm0.qubits == nm1.qubits
+                        assert nm0.error.generators == nm1.error.generators
+                        assert nm0.error.rates.tolist() == nm1.error.rates.tolist()
                         match_found = True
-                self.assertTrue(match_found)
-
-    def _verify(self, job: RuntimeJobV2, expected_input_options: dict, n_results: int) -> None:
-        job.wait_for_final_state()
-
-        result = job.result()
-        self.assertGreaterEqual(len(result), n_results)
-
-        for datum in result.data:
-            circuit = datum.circuit
-            qubits = datum.qubits
-            error = datum.error
-
-            self.assertIsInstance(datum, LayerError)
-            self.assertIsInstance(circuit, QuantumCircuit)
-            self.assertIsInstance(qubits, list)
-            self.assertIsInstance(error, PauliLindbladError)
-
-            self.assertEqual(circuit.num_qubits, len(qubits))
-            self.assertEqual(circuit.num_qubits, error.num_qubits)
-
-        metadata = deepcopy(result.metadata)
-        self.assertEqual(metadata.pop("backend", None), self._backend.name)
-        for key, val in expected_input_options.items():
-            metadatum = metadata["input_options"].pop(key, None)
-            self.assertEqual(val, metadatum)
-        self.assertEqual(metadata["input_options"], {})
+                assert match_found

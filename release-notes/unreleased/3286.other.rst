@@ -1,1 +1,0 @@
-The deprecated Python package ``extras`` (``common`` and ``documentation``) have been removed.

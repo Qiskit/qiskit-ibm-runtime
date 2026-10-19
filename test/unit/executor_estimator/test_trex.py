@@ -12,22 +12,22 @@
 
 """Unit tests for Estimator TREX helper functions."""
 
+from __future__ import annotations
+
 from qiskit_ibm_runtime.executor_estimator.trex import resolve_trex_num_randomizations
 from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestResolveTrexNumRandomizations(IBMTestCase):
+class TestResolveTrexNumRandomizations:
     """Tests for resolve_trex_num_randomizations."""
 
-    def test_auto_returns_twirling_value(self):
+    def test_auto_returns_twirling_value(self) -> None:
         """'auto' resolves to the twirling num_randomizations."""
         options = MeasureNoiseLearningOptions()  # num_randomizations="auto"
-        self.assertEqual(resolve_trex_num_randomizations(options, 12), 12)
+        assert resolve_trex_num_randomizations(options, 12) == 12
 
-    def test_explicit_int_is_returned(self):
+    def test_explicit_int_is_returned(self) -> None:
         """An explicit int is returned unchanged, regardless of the twirling value."""
         options = MeasureNoiseLearningOptions()
         options.num_randomizations = 50
-        self.assertEqual(resolve_trex_num_randomizations(options, 12), 50)
+        assert resolve_trex_num_randomizations(options, 12) == 50

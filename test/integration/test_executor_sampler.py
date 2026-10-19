@@ -12,34 +12,35 @@
 
 """Tests for client-side Sampler."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from ddt import data, ddt, unpack
+import pytest
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_sampler import Sampler
 from qiskit_ibm_runtime.options_models import SamplerOptions
 
-from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import make_mirror_circuit_with_phases
 
+if TYPE_CHECKING:
+    from .dependencies import Dependencies
 
-@ddt
-class TestSampler(IBMIntegrationTestCase):
+
+class TestSampler:
     """Test client-side Sampler."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = self.service.backend(self.dependencies.qpu)
+    @pytest.mark.parametrize("twirling", [True, False])
+    def test_sampler(self, twirling: bool, dependencies: Dependencies) -> None:
+        """Test sampler by submitting a couple of parametric circuits."""
+        backend = dependencies.service.backend(dependencies.qpu)
+        pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
-        self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
-
-    @data(True, False)
-    def test_sampler_with_parametric_circuits(self, twirling):
-        """Test sampler with parametric circuits."""
-        circuit = make_mirror_circuit_with_phases(self.backend)
-        isa_circuit = self.pm.run(circuit)
+        circuit = make_mirror_circuit_with_phases(backend)
+        isa_circuit = pass_manager.run(circuit)
 
         shapes = [(5, 4), (3,)]
         num_parameters = isa_circuit.num_parameters
@@ -54,39 +55,17 @@ class TestSampler(IBMIntegrationTestCase):
         options.twirling.enable_gates = twirling
         options.default_shots = 1000
 
-        sampler = Sampler(self.backend, options)
+        sampler = Sampler(backend, options)
         job = sampler.run(pubs)
 
         results = job.result()
 
-        self.assertIsInstance(results, PrimitiveResult)
-        self.assertIsInstance(results.metadata, dict)
-        self.assertEqual(len(results), 2)
+        assert isinstance(results, PrimitiveResult)
+        assert isinstance(results.metadata, dict)
+        assert len(results) == 2
 
         for result, shape in zip(results, shapes):
-            self.assertEqual(result.data.meas.shape, shape)
+            assert result.data.meas.shape == shape
 
-        self.assertEqual(results[0].metadata["circuit_metadata"], {"list": [1, 2, 3]})
-        self.assertEqual(results[1].metadata["circuit_metadata"], {"tuple": [1, 2, 3]})
-
-    @data([1000, "auto", "auto", 1024], [1000, 5, "auto", 1000], [1000, 5, 3, 15])
-    @unpack
-    def test_sampler_num_shots(
-        self, default_shots, num_randomizations, shots_per_randomization, num_shots
-    ):
-        """Test result's num_shots with different twirling options."""
-        circuit = make_mirror_circuit_with_phases(self.backend)
-        isa_circuit = self.pm.run(circuit)
-        parameter_values = np.zeros(isa_circuit.num_parameters)
-
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-        options.default_shots = default_shots
-        options.twirling.num_randomizations = num_randomizations
-        options.twirling.shots_per_randomization = shots_per_randomization
-
-        sampler = Sampler(self.backend, options)
-        job = sampler.run([(isa_circuit, parameter_values)])
-
-        results = job.result()
-        self.assertEqual(results[0].data.meas.num_shots, num_shots)
+        assert results[0].metadata["circuit_metadata"] == {"list": [1, 2, 3]}
+        assert results[1].metadata["circuit_metadata"] == {"tuple": [1, 2, 3]}

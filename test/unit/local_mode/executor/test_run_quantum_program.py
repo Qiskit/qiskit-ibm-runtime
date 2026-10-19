@@ -16,11 +16,10 @@ from __future__ import annotations
 
 from itertools import islice, product
 from typing import TYPE_CHECKING, Any
-from unittest import skipUnless
 from unittest.mock import MagicMock
 
 import numpy as np
-from ddt import data, ddt, unpack
+import pytest
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.bit_array import BitArray
 from qiskit.quantum_info import PauliLindbladMap
@@ -37,8 +36,6 @@ from qiskit_ibm_runtime.fake_provider.executor.run_quantum_program import run_qu
 from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.results import QuantumProgramItemResult
-
-from ....ibm_test_case import IBMTestCase
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
@@ -84,58 +81,45 @@ def generate_circuit(
     return qc_boxed, active_qubits
 
 
-@ddt
-@skipUnless(condition=optionals.HAS_AER, reason="qiskit-aer is required to run this test")
-class TestRunQuantumProgram(IBMTestCase):
+def assert_correct(
+    expected: dict[str, np.ndarray], executor_results: dict[str, np.ndarray]
+) -> None:
+    """Assert that results match the expected bit arrays after flip correction.
+
+    Bit arrays use LSB-first ordering: ``data[..., 0]`` corresponds to classical register bit 0.
+
+    Args:
+        expected: A map from classical register names to boolean arrays of shape ``(num_bits,)``
+            giving the expected deterministic outcome.
+        executor_results: A map from register names to boolean arrays of shape
+            ``(num_randomizations, num_shots, num_bits)``, and optionally
+            ``measurement_flips.<name>`` arrays that broadcast over the shots axis.
+
+    Raises:
+        AssertionError: If not every expected key is present in the results.
+        AssertionError: If any result array is not 3-d bool with the correct last axis.
+        AssertionError: If corrected data does not exactly match the expected outcome.
+    """
+    for name, expected_bits in expected.items():
+        assert name in executor_results
+
+        arr = executor_results[name]
+        assert arr.dtype == bool
+        assert arr.ndim == 3
+        assert arr.shape[2] == len(expected_bits)
+
+        corrected = arr
+        if (flips := executor_results.get(f"measurement_flips.{name}")) is not None:
+            corrected = arr ^ flips
+
+        assert (corrected == expected_bits).all()
+
+
+@pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+class TestRunQuantumProgram:
     """Test for running quantum programs."""
 
-    def assert_correct(
-        self, expected: dict[str, np.ndarray], executor_results: dict[str, np.ndarray]
-    ) -> None:
-        """Assert that results match the expected bit arrays after flip correction.
-
-        Bit arrays use LSB-first ordering: ``data[..., 0]`` corresponds to classical
-        register bit 0.
-
-        Args:
-            expected: A map from classical register names to boolean arrays of shape
-                ``(num_bits,)`` giving the expected deterministic outcome.
-            executor_results: A map from register names to boolean arrays of shape
-                ``(num_randomizations, num_shots, num_bits)``, and optionally
-                ``measurement_flips.<name>`` arrays that broadcast over the shots axis.
-
-        Raises:
-            AssertionError: If not every expected key is present in the results.
-            AssertionError: If any result array is not 3-d bool with the correct last axis.
-            AssertionError: If corrected data does not exactly match the expected outcome.
-        """
-        for name, expected_bits in expected.items():
-            self.assertTrue(
-                name in executor_results,
-                f"Classical register '{name}' not found in executor results",
-            )
-
-            arr = executor_results[name]
-            self.assertEqual(
-                arr.dtype, bool, f"Expected '{name}' to have dtype bool, got '{arr.dtype}'."
-            )
-            self.assertEqual(arr.ndim, 3, f"Expected 3-d array for '{name}', got shape {arr.shape}")
-            self.assertEqual(
-                arr.shape[2],
-                len(expected_bits),
-                f"Expected {len(expected_bits)} bits for '{name}', got {arr.shape[2]}",
-            )
-
-            corrected = arr
-            if (flips := executor_results.get(f"measurement_flips.{name}")) is not None:
-                corrected = arr ^ flips
-
-            self.assertTrue(
-                (corrected == expected_bits).all(),
-                f"Corrected data for '{name}' does not match expected outcome {expected_bits}",
-            )
-
-    def test_angle_rounding_snaps_near_clifford(self):
+    def test_angle_rounding_snaps_near_clifford(self) -> None:
         """RZ(π + ε) with a tiny ε should round to π, yielding |1⟩ deterministically.
 
         H → RZ(π) → H maps |0⟩ → |1⟩. Without rounding, ε would make the angle non-Clifford
@@ -154,9 +138,9 @@ class TestRunQuantumProgram(IBMTestCase):
 
         result = run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
-        self.assertTrue((result[0]["c"] == [[True]]).all())
+        assert (result[0]["c"] == [[True]]).all()
 
-    def test_clifford_circuit_item(self):
+    def test_clifford_circuit_item(self) -> None:
         """Test using the stabilizer simulation method via a Circuit item."""
         # Build a simple 3-qubit Clifford circuit (GHZ state preparation + measurement)
         qc = QuantumCircuit(3, 3)
@@ -180,28 +164,23 @@ class TestRunQuantumProgram(IBMTestCase):
         result = run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
         # The result should have one item
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
 
         # There should be a classical register key in the result data
         item_data = result[0]
-        self.assertGreater(len(item_data), 0)
+        assert len(item_data) > 0
 
         # Each measurement outcome array should have shape (shots, num_clbits)
         for key, arr in item_data.items():
-            self.assertEqual(
-                arr.shape[0], 1024, f"Expected 1024 shots, got {arr.shape[0]} for register '{key}'"
-            )
+            assert arr.shape[0] == 1024
 
         # For a GHZ state, only '000' and '111' outcomes are possible.
         # Verify that all shots are either all-zeros or all-ones across the 3 bits.
         for key, arr in item_data.items():
             for shot in arr:
-                self.assertTrue(
-                    all(shot == 0) or all(shot == 1),
-                    f"Unexpected measurement outcome {shot}—GHZ state should only yield 000 or 111",
-                )
+                assert all(shot == 0) or all(shot == 1)
 
-    def test_clifford_samplex_item(self):
+    def test_clifford_samplex_item(self) -> None:
         """Test using the stabilizer simulation method via a Samplex item."""
         num_randomizations = 8
         shots = 256
@@ -231,13 +210,13 @@ class TestRunQuantumProgram(IBMTestCase):
 
         result = run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         item_data = result[0]
 
         # CX|00⟩ = |00⟩
-        self.assert_correct({"c": np.array([False, False])}, item_data)
+        assert_correct({"c": np.array([False, False])}, item_data)
 
-    def test_circuit_item_with_circuit_arguments(self):
+    def test_circuit_item_with_circuit_arguments(self) -> None:
         """Run a parameterized Circuit item by supplying circuit arguments directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
@@ -270,26 +249,25 @@ class TestRunQuantumProgram(IBMTestCase):
 
         result = run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         item_data = result[0]
-        self.assertIsInstance(item_data, QuantumProgramItemResult)
-        self.assertIsNotNone(item_data.metadata)
+        assert isinstance(item_data, QuantumProgramItemResult)
+        assert item_data.metadata is not None
 
         # Result shape: (4, shots, 2)
-        self.assertEqual(item_data["c"].shape, (4, shots, 2))
+        assert item_data["c"].shape == (4, shots, 2)
 
         # phi=0, theta=0 → |00⟩
-        self.assertTrue((item_data["c"][0] == [False, False]).all())
+        assert (item_data["c"][0] == [False, False]).all()
         # phi=π, theta=0 → |01⟩ (phi acts on q1, LSB-first: bit1=True)
-        self.assertTrue((item_data["c"][1] == [False, True]).all())
+        assert (item_data["c"][1] == [False, True]).all()
         # phi=0, theta=π → |10⟩ (theta acts on q0, LSB-first: bit0=True)
-        self.assertTrue((item_data["c"][2] == [True, False]).all())
+        assert (item_data["c"][2] == [True, False]).all()
         # phi=π, theta=π → |11⟩
-        self.assertTrue((item_data["c"][3] == [True, True]).all())
+        assert (item_data["c"][3] == [True, True]).all()
 
-    @data(*product([True, False], [2, 156]))
-    @unpack
-    def test_noisy_simulation(self, noise, num_qubits):
+    @pytest.mark.parametrize(("noise", "num_qubits"), list(product([True, False], [2, 156])))
+    def test_noisy_simulation(self, noise: bool, num_qubits: int) -> None:
         """Test noisy simulation."""
         fez_backend = FakeFez()
         coupling_map = fez_backend.coupling_map
@@ -299,7 +277,7 @@ class TestRunQuantumProgram(IBMTestCase):
 
         template_circuit, samplex = build(qc_boxed)
 
-        self.assertGreater(template_circuit.count_ops().get("rz", 0), 0)
+        assert template_circuit.count_ops().get("rz", 0) > 0
 
         shots_per_twirl = 1024
         num_twirls = 1
@@ -340,16 +318,16 @@ class TestRunQuantumProgram(IBMTestCase):
             SimulatorOptions(layer_noise_model=noise_model),
         )
 
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
 
         ba_c = BitArray.from_bool_array(result[0]["c"])
         cts = ba_c.get_counts()
         if noise:
-            self.assertGreater(num_shots_tot, cts.get("0" * len(active_qubits), 0))
+            assert num_shots_tot > cts.get("0" * len(active_qubits), 0)
         else:
-            self.assertEqual(num_shots_tot, cts.get("0" * len(active_qubits), 0))
+            assert num_shots_tot == cts.get("0" * len(active_qubits), 0)
 
-    def test_samplex_item_with_parameter_sweep(self):
+    def test_samplex_item_with_parameter_sweep(self) -> None:
         """Run a parameterized Samplex item by supplying parameter values directly.
 
         Uses RX(theta) bitflips (theta ∈ {0, π}) on two qubits to produce four
@@ -388,25 +366,25 @@ class TestRunQuantumProgram(IBMTestCase):
 
         result = run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         item_data = result[0]
 
         # Result shape: (4, shots, 2)
-        self.assertEqual(item_data["c"].shape, (4, shots, 2))
+        assert item_data["c"].shape == (4, shots, 2)
 
         # bit flip correction
         corrected_data = item_data["c"] ^ item_data["measurement_flips.c"]
 
         # phi=0, theta=0 → |00⟩
-        self.assertTrue((corrected_data[0] == [False, False]).all())
+        assert (corrected_data[0] == [False, False]).all()
         # phi=π, theta=0 → |01⟩ (phi acts on q1, LSB-first: bit1=True)
-        self.assertTrue((corrected_data[1] == [False, True]).all())
+        assert (corrected_data[1] == [False, True]).all()
         # phi=0, theta=π → |10⟩ (theta acts on q0, LSB-first: bit0=True)
-        self.assertTrue((corrected_data[2] == [True, False]).all())
+        assert (corrected_data[2] == [True, False]).all()
         # phi=π, theta=π → |11⟩
-        self.assertTrue((corrected_data[3] == [True, True]).all())
+        assert (corrected_data[3] == [True, True]).all()
 
-    def test_samplex_item_with_broadcast_sweep(self):
+    def test_samplex_item_with_broadcast_sweep(self) -> None:
         """Run a Pauli-twirled circuit with a parameter sweep over input bitflips.
 
         This test verifies that broadcast dimensions in samplex arguments are handled correctly.
@@ -462,38 +440,34 @@ class TestRunQuantumProgram(IBMTestCase):
 
         result = run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         item_data = result[0]
 
         # Verify broadcast produced the expected extrinsic shape (r0, 2, 2, r1, ...)
         for key, arr in item_data.items():
-            self.assertEqual(
-                arr.shape[:4],
-                (r0, 2, 2, r1),
-                f"Expected leading shape {(r0, 2, 2, r1)}, got {arr.shape[:4]} for '{key}'",
-            )
+            assert arr.shape[:4] == (r0, 2, 2, r1)
 
         # Check correctness per sweep value.
         # Collapse the two randomization axes (r0, r1) into one for assert_correct.
-        def sweep_slice(i, j):
+        def sweep_slice(i: int, j: int) -> dict:
             return {
                 key: arr[:, i, j, :].reshape(r0 * r1, *arr.shape[4:])
                 for key, arr in item_data.items()
             }
 
         # theta=0, phi=0: CX|00⟩ = |00⟩, no flip on q1 → |00⟩
-        self.assert_correct({"c": np.array([False, False])}, sweep_slice(0, 0))
+        assert_correct({"c": np.array([False, False])}, sweep_slice(0, 0))
 
         # theta=0, phi=π: CX|00⟩ = |00⟩, X on q1 → |01⟩
-        self.assert_correct({"c": np.array([False, True])}, sweep_slice(0, 1))
+        assert_correct({"c": np.array([False, True])}, sweep_slice(0, 1))
 
         # theta=π, phi=0: CX|10⟩ = |11⟩, no flip on q1 → |11⟩
-        self.assert_correct({"c": np.array([True, True])}, sweep_slice(1, 0))
+        assert_correct({"c": np.array([True, True])}, sweep_slice(1, 0))
 
         # theta=π, phi=π: CX|10⟩ = |11⟩, X on q1 → |10⟩
-        self.assert_correct({"c": np.array([True, False])}, sweep_slice(1, 1))
+        assert_correct({"c": np.array([True, False])}, sweep_slice(1, 1))
 
-    def test_unsupported_item_type_raises_type_error(self):
+    def test_unsupported_item_type_raises_type_error(self) -> None:
         """Test unsupported types."""
         fake_item = MagicMock()
         fake_item.circuit = QuantumCircuit(1)
@@ -503,14 +477,14 @@ class TestRunQuantumProgram(IBMTestCase):
         program.shots = 64
         program.passthrough_data = None
 
-        with self.assertRaisesRegex(TypeError, "Unsupported QuantumProgramItem type"):
+        with pytest.raises(TypeError, match="Unsupported QuantumProgramItem type"):
             run_quantum_program(AerSimulator(method="stabilizer"), program, SimulatorOptions())
 
 
-class TestFindBoxType(IBMTestCase):
+class TestFindBoxType:
     """Tests for ``find_box_type``."""
 
-    def test_gates(self):
+    def test_gates(self) -> None:
         """Test that ``find_box_type`` returns "gates" as the type."""
         circuit = QuantumCircuit(2)
         with circuit.box():
@@ -518,9 +492,9 @@ class TestFindBoxType(IBMTestCase):
             circuit.barrier()
             circuit.cx(0, 1)
 
-        self.assertEqual(find_box_type(circuit.data[0]), "gates")
+        assert find_box_type(circuit.data[0]) == "gates"
 
-    def test_measurement(self):
+    def test_measurement(self) -> None:
         """Test that ``find_box_type`` returns "measurement" as the type."""
         circuit = QuantumCircuit(2, 2)
         with circuit.box():
@@ -528,13 +502,13 @@ class TestFindBoxType(IBMTestCase):
             circuit.measure(0, 0)
             circuit.measure(1, 1)
 
-        self.assertEqual(find_box_type(circuit.data[0]), "measurement")
+        assert find_box_type(circuit.data[0]) == "measurement"
 
-    def test_unknown(self):
+    def test_unknown(self) -> None:
         """Test that ``find_box_type`` returns "unknown" as the type."""
         circuit = QuantumCircuit(2, 1)
         with circuit.box():
             circuit.h(0)
             circuit.measure(0, 0)
 
-        self.assertEqual(find_box_type(circuit.data[0]), "unknown")
+        assert find_box_type(circuit.data[0]) == "unknown"

@@ -12,103 +12,159 @@
 
 """Tests the `Calibrator` class."""
 
-from unittest.mock import patch
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+from pydantic import ValidationError
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.calibrator import Calibrator
-from qiskit_ibm_runtime.executor import Executor
-from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
+from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions, ReadoutAngleOptions
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
-from ..utils import get_mocked_backend, get_mocked_session
+from ..utils import get_mocked_backend
+
+if TYPE_CHECKING:
+    from ..registries import BaseRegistry
 
 
-class TestCalibratorOptions(IBMTestCase):
+class TestCalibratorOptions:
     """Tests option setting on the ``Calibrator`` class."""
 
-    def test_default_options(self):
+    def test_default_options(self) -> None:
         """Test that default options are set when none are provided."""
         calibrator = Calibrator(mode=get_mocked_backend())
-        self.assertIsInstance(calibrator.options, CalibratorOptions)
-        self.assertEqual(calibrator.options, CalibratorOptions())
+        assert isinstance(calibrator.options, CalibratorOptions)
+        assert calibrator.options == CalibratorOptions()
 
-    def test_options_from_instance(self):
+    def test_options_from_instance(self) -> None:
         """Test constructing with a CalibratorOptions instance."""
-        env_opts = EnvironmentOptions(image="hi:bye")
-        opts = CalibratorOptions(environment=env_opts)
+        opts = CalibratorOptions(readout_angle=ReadoutAngleOptions(enable=False))
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts)
-        self.assertIs(calibrator.options, opts)
+        assert calibrator.options is opts
+        assert not calibrator.options.readout_angle.enable
 
-    def test_options_from_dict(self):
-        """Test constructing with a dict."""
-        opts_dict = {"environment": {"image": "hi:bye"}}
+    def test_options_from_dict(self) -> None:
+        """Test constructing with a nested dict."""
+        opts_dict = {
+            "readout_angle": {"enable": False},
+            "environment": {"log_level": "DEBUG"},
+        }
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts_dict)
-        self.assertEqual(calibrator.options.environment.image, "hi:bye")
+        assert not calibrator.options.readout_angle.enable
+        assert calibrator.options.environment.log_level == "DEBUG"
 
-    def test_setter_with_instance(self):
-        """Test setting options via the setter with an CalibratorOptions instance."""
+    def test_options_from_partial_dict(self) -> None:
+        """Test constructing with a nested dict when only specifying some of the options."""
+        calibrator = Calibrator(
+            mode=get_mocked_backend(), options={"readout_angle": {"enable": False}}
+        )
+        assert not calibrator.options.readout_angle.enable
+        assert calibrator.options.environment == EnvironmentOptions()
+
+    def test_options_constructor_invalid_type(self) -> None:
+        """Test that an invalid options type raises TypeError."""
+        with pytest.raises(TypeError, match="Expected CalibratorOptions or dict"):
+            Calibrator(mode=get_mocked_backend(), options="invalid")  # type: ignore[arg-type]
+
+    def test_setter_with_instance(self) -> None:
+        """Test setting options via the setter with a CalibratorOptions instance."""
         calibrator = Calibrator(mode=get_mocked_backend())
-        env_opts = EnvironmentOptions(image="hi:bye")
-        new_opts = CalibratorOptions(environment=env_opts)
+        new_opts = CalibratorOptions(readout_angle=ReadoutAngleOptions(enable=False))
         calibrator.options = new_opts
-        self.assertIs(calibrator.options, new_opts)
+        assert calibrator.options is new_opts
+
+    def test_setter_with_dict(self) -> None:
+        """Test setting options via the setter with a dict."""
+        calibrator = Calibrator(mode=get_mocked_backend())
+        calibrator.options = {"readout_angle": {"enable": False}}  # type: ignore[assignment]
+        assert isinstance(calibrator.options, CalibratorOptions)
+        assert not calibrator.options.readout_angle.enable
+
+    def test_setter_invalid_type(self) -> None:
+        """Test that setting options with an invalid type raises TypeError."""
+        calibrator = Calibrator(mode=get_mocked_backend())
+        with pytest.raises(TypeError, match="Expected CalibratorOptions or dict"):
+            calibrator.options = 42  # type: ignore[assignment]
+
+    def test_setter_replaces_options(self) -> None:
+        """Test that the setter replaces (not updates) the options."""
+        calibrator = Calibrator(
+            mode=get_mocked_backend(), options={"environment": {"log_level": "DEBUG"}}
+        )
+        calibrator.options = {"readout_angle": {"enable": False}}  # type: ignore[assignment]
+        # environment should be back to defaults since we replaced, not updated
+        assert calibrator.options.environment.log_level == "WARNING"
+        assert not calibrator.options.readout_angle.enable
+
+    def test_experimental_options_default_empty(self) -> None:
+        """Test that experimental options default to empty dict."""
+        calibrator = Calibrator(mode=get_mocked_backend())
+        assert calibrator.options.experimental == {}
+
+    def test_experimental_options_from_dict(self) -> None:
+        """Test constructing with experimental options in dict."""
+        opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
+        calibrator = Calibrator(mode=get_mocked_backend(), options=opts_dict)
+        assert calibrator.options.experimental == {"foo": "bar", "baz": 123}
+
+    def test_experimental_options_from_instance(self) -> None:
+        """Test constructing with a CalibratorOptions instance with experimental options."""
+        opts = CalibratorOptions(experimental={"custom_key": "custom_value"})
+        calibrator = Calibrator(mode=get_mocked_backend(), options=opts)
+        assert calibrator.options.experimental == {"custom_key": "custom_value"}
+
+    def test_experimental_options_setter(self) -> None:
+        """Test setting experimental options via the setter."""
+        calibrator = Calibrator(mode=get_mocked_backend())
+        calibrator.options = {"experimental": {"test": "value"}}  # type: ignore[assignment]
+        assert calibrator.options.experimental == {"test": "value"}
+
+    def test_validation_on_mutation(self) -> None:
+        """Test validation errors are raised on mutation, not just construction."""
+        options = ReadoutAngleOptions(enable=True)
+        with pytest.raises(ValidationError):
+            options.enable = "not_a_bool"  # type: ignore[assignment]
+
+    def test_extra_variables_are_forbidden(self) -> None:
+        """Test that we can not set variables undefined by the model."""
+        options = ReadoutAngleOptions()
+        with pytest.raises(ValidationError):
+            options.not_a_variable = 0  # type: ignore[assignment, attr-defined]
 
 
-class TestCalibrator(IBMTestCase):
+class TestCalibrator:
     """Tests the ``Calibrator`` class."""
 
-    def test_run_of_session_is_selected(self):
-        """Test ``Calibrator.run`` selects the service ``run`` method, if session is specified."""
-        backend_name = "ibm_hello"
-        session = get_mocked_session(get_mocked_backend(backend_name))
-        with (
-            patch.object(session, "_run", return_value="session"),
-            patch.object(session.service, "_run", return_value="service"),
-        ):
-            calibrator = Calibrator(mode=session)
-            selected_run = calibrator.run()
-            self.assertEqual(selected_run, "session")
-
-    def test_run_of_service_is_selected(self):
-        """Test ``Calibrator.run`` selects the service ``run`` method.
-
-        This is tested when session is not specified.
-        """
-        backend = get_mocked_backend()
-        with patch.object(backend.service, "_run", return_value="service"):
-            calibrator = Calibrator(mode=backend)
-            selected_run = calibrator.run()
-            self.assertEqual(selected_run, "service")
-
-    @mock_responses
-    def test_mode(self, registry):
-        """Estimator `mode` and `backend()` is based on `mode` init argument."""
+    @pytest.mark.parametrize("mode_id", ["job", "session", "batch"])
+    def test_mode_handling(self, mode_id: str, registry: BaseRegistry) -> None:
+        """Calibrator `mode` init argument should propagate to interface and through `run()`."""
         service = QiskitRuntimeService(token="my_token")
-
-        # Job mode, online backend.
         backend = service.backend("common_backend")
-        calibrator = Executor(mode=backend)
-        self.assertEqual(calibrator.backend(), backend)
-        self.assertEqual(calibrator.mode, None)
 
-        # Session mode.
-        session = Session(backend)
-        calibrator = Executor(mode=session)
-        self.assertEqual(calibrator.backend(), backend)
-        self.assertEqual(calibrator.mode, session)
+        match mode_id:
+            case "job":
+                mode = backend
+                expected_mode = None
+                expected_session_id = None
+            case "session":
+                mode = Session(backend)
+                expected_mode = mode
+                expected_session_id = "session_12345"
+            case "batch":
+                mode = Batch(backend)
+                expected_mode = mode
+                expected_session_id = "session_12345"
 
-        # Batch mode.
-        batch = Batch(backend)
-        calibrator = Executor(mode=batch)
-        self.assertEqual(calibrator.backend(), backend)
-        self.assertEqual(calibrator.mode, batch)
+        # Public interfaces should respect `mode`.
+        calibrator = Calibrator(mode=mode)
+        assert calibrator.backend() == backend
+        assert calibrator.mode == expected_mode
 
-        # `None` mode (inside session).
-        with Session(backend) as session:
-            calibrator = Executor()
-            self.assertEqual(calibrator.backend(), backend)
-            self.assertEqual(calibrator.mode, session)
+        # Jobs issued should belong to a session under `session` / `batch` modes.
+        job = calibrator.run()
+        assert job._session_id == expected_session_id

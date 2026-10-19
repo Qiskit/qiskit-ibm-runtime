@@ -12,17 +12,26 @@
 
 """Mapping between program names and decoders."""
 
+from .executor.decoder import ExecutorResultDecoder
+from .executor_estimator.decoder import ClientSideEstimatorDecoder
+from .executor_noise_learner.decoder import ClientSideNoiseLearnerResultDecoder
+from .executor_sampler.decoder import ClientSideSamplerResultDecoder
 from .noise_learner import NoiseLearnerResultDecoder
-from .quantum_program.decoder import QuantumProgramResultDecoder
+from .noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
 from .result_decoder import ResultDecoder
 from .runner import RunnerResultDecoder
 
-DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
-    "sampler": ResultDecoder,
-    "estimator": ResultDecoder,
-    "executor": QuantumProgramResultDecoder,
-    "noise-learner": NoiseLearnerResultDecoder,
-    "circuit-runner": RunnerResultDecoder,
-    "qasm3-runner": RunnerResultDecoder,
-    "calibrate": ResultDecoder,
+DEFAULT_DECODERS: dict[str, list[type[ResultDecoder]]] = {
+    "sampler": [ResultDecoder],
+    "estimator": [ResultDecoder],
+    "executor": [
+        ExecutorResultDecoder,
+        ClientSideSamplerResultDecoder,
+        ClientSideEstimatorDecoder,
+        ClientSideNoiseLearnerResultDecoder,
+    ],
+    "noise-learner": [NoiseLearnerResultDecoder, NoiseLearnerV3ResultDecoder],
+    "circuit-runner": [RunnerResultDecoder],
+    "qasm3-runner": [RunnerResultDecoder],
+    "calibrate": [ResultDecoder],
 }

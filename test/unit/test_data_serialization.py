@@ -12,20 +12,22 @@
 
 """Tests for runtime data serialization."""
 
+from __future__ import annotations
+
 import base64
 import json
-import os
 import subprocess
 import sys
 import tempfile
 import warnings
 import zlib
 from datetime import datetime
-from unittest import skipUnless
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 import qiskit.quantum_info as qi
-from ddt import data, ddt
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
 from qiskit.exceptions import QiskitError
@@ -69,21 +71,296 @@ from qiskit_ibm_runtime.results.noise_learner import (
     PauliLindbladError,
 )
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
 from ..registries import Job
 from ..serialization import SerializableClass, SerializableClassDecoder, get_complex_types
+
+if TYPE_CHECKING:
+    from qiskit.circuit import Gate
+
+    from ..registries import BaseRegistry
 from ..utils import bell
 
 if HAS_AER:
     from qiskit_aer.noise import NoiseModel
 
 
-@ddt
-class TestDataSerialization(IBMTestCase):
+def assert_observable_arrays_equal(obs1: ObservablesArray, obs2: ObservablesArray) -> None:
+    """Assert that two ObservableArray objects are equal."""
+    assert obs1.tolist() == obs2.tolist()
+
+
+def assert_binding_arrays_equal(barr1: BindingsArray, barr2: BindingsArray) -> None:
+    """Assert that two BindingArray objects are equal."""
+
+    def _to_str_keyed(_in_dict: dict) -> dict[tuple, np.ndarray]:
+        _out_dict: dict[tuple, np.ndarray] = {}
+        for a_key_tuple, val in _in_dict.items():
+            str_key = tuple(
+                a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple
+            )
+            _out_dict[str_key] = val
+        return _out_dict
+
+    assert barr1.shape == barr2.shape
+    barr1_str_keyed = _to_str_keyed(barr1.data)
+    barr2_str_keyed = _to_str_keyed(barr2.data)
+    for key, val in barr1_str_keyed.items():
+        assert key in barr2_str_keyed
+        np.testing.assert_allclose(val, barr2_str_keyed[key])
+
+
+def assert_data_bins_equal(dbin1: DataBin, dbin2: DataBin) -> None:
+    """Compares two DataBins.
+
+    Field types are compared up to their string representation.
+    """
+    assert tuple(dbin1) == tuple(dbin2)
+    assert dbin1.shape == dbin2.shape
+    for field_name in dbin1:
+        field_1 = dbin1[field_name]
+        field_2 = dbin2[field_name]
+        if isinstance(field_1, np.ndarray):
+            np.testing.assert_allclose(field_1, field_2)
+        else:
+            assert field_1 == field_2
+
+
+def assert_estimator_pubs_equal(pub1: EstimatorPub, pub2: EstimatorPub) -> None:
+    """Assert that two EstimatorPub objects are equal."""
+    assert pub1.circuit == pub2.circuit
+    assert_observable_arrays_equal(pub1.observables, pub2.observables)
+    assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
+    assert pub1.precision == pub2.precision
+
+
+def assert_sampler_pubs_equal(pub1: SamplerPub, pub2: SamplerPub) -> None:
+    """Assert that two SamplerPub objects are equal."""
+    assert pub1.circuit == pub2.circuit
+    assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
+    assert pub1.shots == pub2.shots
+
+
+def assert_pub_results_equal(pub_result1: PubResult, pub_result2: PubResult) -> None:
+    """Assert that two PubResult objects are equal."""
+    assert_data_bins_equal(pub_result1.data, pub_result2.data)
+    assert pub_result1.metadata == pub_result2.metadata
+
+
+def assert_primitive_results_equal(
+    primitive_result1: PrimitiveResult, primitive_result2: PrimitiveResult
+) -> None:
+    """Assert that two PrimitiveResult objects are equal."""
+    assert len(primitive_result1) == len(primitive_result2)
+    for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
+        assert_pub_results_equal(pub_result1, pub_result2)
+
+    assert primitive_result1.metadata == primitive_result2.metadata
+
+
+def assert_pauli_lindblad_error_equal(
+    error1: PauliLindbladError | None, error2: PauliLindbladError | None
+) -> None:
+    """Assert that two PauliLindbladError objects are equal."""
+    if error1 or error2:
+        assert error1.generators == error2.generators
+        assert error1.rates.tolist() == error2.rates.tolist()
+
+
+def assert_layer_errors_equal(layer_error1: LayerError, layer_error2: LayerError) -> None:
+    """Assert that two LayerError objects are equal."""
+    assert layer_error1.circuit == layer_error2.circuit
+    assert layer_error1.qubits == layer_error2.qubits
+    assert_pauli_lindblad_error_equal(layer_error1.error, layer_error2.error)
+
+
+def assert_noise_learner_results_equal(
+    result1: NoiseLearnerResult, result2: NoiseLearnerResult
+) -> None:
+    """Assert that two NoiseLearnerResult objects are equal."""
+    assert len(result1) == len(result2)
+    for layer_error1, layer_error2 in zip(result1, result2):
+        assert_layer_errors_equal(layer_error1, layer_error2)
+
+    assert result1.metadata == result2.metadata
+
+
+def data_bins() -> list[DataBin]:
+    """Return the data bins used to test DataBin serialization."""
+    alpha = np.empty((10, 20), dtype=np.uint16)
+    beta = np.empty((10, 20), dtype=int)
+
+    return [DataBin(alpha=alpha, beta=beta, shape=(10, 20))]
+
+
+def estimator_pubs() -> list[EstimatorPub]:
+    """Return the pubs used to test EstimatorPub serialization."""
+    params = (Parameter("a"), Parameter("b"))
+    circuit = QuantumCircuit(2)
+    circuit.rx(params[0], 0)
+    circuit.ry(params[1], 1)
+
+    return [
+        EstimatorPub(
+            circuit=circuit,
+            observables=ObservablesArray([{"XX": 0.1}]),
+            parameter_values=BindingsArray(data={params: np.ones((10, 2))}),
+            precision=0.05,
+        )
+    ]
+
+
+def sampler_pubs() -> list[SamplerPub]:
+    """Return the pubs used to test SamplerPub serialization."""
+    params = (Parameter("a"), Parameter("b"))
+    circuit = QuantumCircuit(2)
+    circuit.rx(params[0], 0)
+    circuit.ry(params[1], 1)
+    circuit.measure_all()
+
+    return [
+        SamplerPub(
+            circuit=circuit,
+            parameter_values=BindingsArray(data={params: np.ones((10, 2))}),
+            shots=1000,
+        )
+    ]
+
+
+def pub_results() -> list[PubResult]:
+    """Return the pub results used to test PubResult serialization."""
+    return [
+        PubResult(DataBin(a=1.0, b=2)),
+        PubResult(DataBin(a=1.0, b=2), {"x": 1}),
+    ]
+
+
+def estimator_pub_results() -> list[EstimatorPubResult]:
+    """Return the pub results used to test EstimatorPubResult serialization."""
+    return [
+        EstimatorPubResult(DataBin(a=1.0, b=2)),
+        EstimatorPubResult(DataBin(a=1.0, b=2), {"x": 1}),
+    ]
+
+
+def sampler_pub_results() -> list[SamplerPubResult]:
+    """Return the pub results used to test SamplerPubResult serialization."""
+    return [
+        SamplerPubResult(DataBin(a=1.0, b=2)),
+        SamplerPubResult(DataBin(a=1.0, b=2), {"x": 1}),
+    ]
+
+
+def primitive_results() -> list[PrimitiveResult]:
+    """Return the primitive results used to test PrimitiveResult serialization."""
+    alpha = np.empty((10, 20), dtype=np.uint16)
+    beta = np.empty((10, 20), dtype=int)
+
+    results = [
+        PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+        PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+        PubResult(DataBin()),
+    ]
+
+    metadata = {
+        "execution": {
+            "execution_spans": ExecutionSpans(
+                [
+                    SliceSpan(
+                        datetime(2022, 1, 1),
+                        datetime(2023, 1, 1),
+                        {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
+                    ),
+                    SliceSpan(
+                        datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
+                    ),
+                    DoubleSliceSpan(
+                        datetime(2022, 1, 1),
+                        datetime(2023, 1, 1),
+                        {
+                            1: ((100,), slice(4, 9), slice(1, 2)),
+                            0: ((2, 5), slice(5, 7), slice(3, 4)),
+                        },
+                    ),
+                    DoubleSliceSpan(
+                        datetime(2024, 8, 20),
+                        datetime(2024, 8, 21),
+                        {0: ((14,), slice(2, 3), slice(1, 9))},
+                    ),
+                    TwirledSliceSpan(
+                        datetime(2024, 9, 20),
+                        datetime(2024, 3, 21),
+                        {
+                            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
+                            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
+                        },
+                    ),
+                    TwirledSliceSpanV2(
+                        datetime(2024, 9, 20),
+                        datetime(2024, 3, 21),
+                        {
+                            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
+                            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
+                        },
+                    ),
+                ]
+            )
+        }
+    }
+
+    return [PrimitiveResult(results, metadata)]
+
+
+def noise_learner_results(unknown_err: bool = False) -> list[NoiseLearnerResult]:
+    """Return the results used to test NoiseLearnerResult serialization."""
+    circuit = QuantumCircuit(2)
+    circuit.cx(0, 1)
+    circuit.measure_all()
+    error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
+    layer_error = LayerError(circuit, [3, 5], error)
+
+    return [NoiseLearnerResult([layer_error])]
+
+
+@pytest.fixture
+def spans_to_serialize() -> tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2]:
+    """Return a slice span, a double slice span, and a twirled slice span of each version."""
+    slice_span = SliceSpan(
+        datetime(2022, 1, 1),
+        datetime(2023, 1, 1),
+        {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
+    )
+
+    double_span = DoubleSliceSpan(
+        datetime(2024, 8, 20),
+        datetime(2024, 8, 21),
+        {0: ((14,), slice(2, 3), slice(1, 9))},
+    )
+
+    twirl1 = TwirledSliceSpan(
+        datetime(2024, 9, 20),
+        datetime(2024, 3, 21),
+        {
+            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
+            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
+        },
+    )
+
+    twirl2 = TwirledSliceSpanV2(
+        datetime(2024, 9, 20),
+        datetime(2024, 3, 21),
+        {
+            0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
+            2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
+        },
+    )
+
+    return slice_span, double_span, twirl1, twirl2
+
+
+class TestDataSerialization:
     """Class for testing runtime data serialization."""
 
-    def test_coder(self):
+    def test_coder(self) -> None:
         """Test runtime encoder and decoder."""
         result = Result(
             backend_name="ibmqx2",
@@ -112,121 +389,141 @@ class TestDataSerialization(IBMTestCase):
         decoded_array = decoded.pop("array")
         orig_array = base_types.pop("array")
 
-        self.assertEqual(decoded, base_types)
-        self.assertIsInstance(decoded_result, Result)
-        self.assertTrue((decoded_array == orig_array).all())
+        assert decoded == base_types
+        assert isinstance(decoded_result, Result)
+        assert (decoded_array == orig_array).all()
 
-    def test_coder_qc(self):
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            bell(),
+            efficient_su2(num_qubits=4, reps=1, entanglement="linear"),
+            [bell(), efficient_su2(num_qubits=4, reps=1, entanglement="linear")],
+        ],
+    )
+    def test_coder_qc(self, object_: QuantumCircuit | list[QuantumCircuit]) -> None:
         """Test runtime encoder and decoder for circuits."""
-        bell_circuit = bell()
-        unbound = efficient_su2(num_qubits=4, reps=1, entanglement="linear")
-        subtests = (bell_circuit, unbound, [bell_circuit, unbound])
-        for circ in subtests:
-            with self.subTest(circ=circ):
-                encoded = json.dumps(circ, cls=RuntimeEncoder)
-                self.assertIsInstance(encoded, str)
-                decoded = json.loads(encoded, cls=RuntimeDecoder)
-                if not isinstance(circ, list):
-                    decoded = [decoded]
-                self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        assert isinstance(encoded, str)
 
-    def test_coder_operators(self):
-        """Test runtime encoder and decoder for operators."""
-        subtests = (
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        if not isinstance(object_, list):
+            decoded = [decoded]
+        assert all(isinstance(item, QuantumCircuit) for item in decoded)
+
+    @pytest.mark.parametrize(
+        "object_",
+        [
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
             Pauli("XYZ"),
-        )
+        ],
+    )
+    def test_coder_operators(self, object_: SparsePauliOp | Pauli) -> None:
+        """Test runtime encoder and decoder for operators."""
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        assert isinstance(encoded, str)
 
-        for operator in subtests:
-            with self.subTest(operator=operator):
-                encoded = json.dumps(operator, cls=RuntimeEncoder)
-                self.assertIsInstance(encoded, str)
+        with warnings.catch_warnings():
+            # in L146 of utils/json.py
+            warnings.filterwarnings(
+                "ignore",
+                category=DeprecationWarning,
+                module=r"qiskit_ibm_runtime\.utils\.json",
+            )
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
+            assert object_ == decoded
 
-                with warnings.catch_warnings():
-                    # in L146 of utils/json.py
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=DeprecationWarning,
-                        module=r"qiskit_ibm_runtime\.utils\.json",
-                    )
-                    decoded = json.loads(encoded, cls=RuntimeDecoder)
-                    self.assertEqual(operator, decoded)
-
-    @skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-    def test_coder_noise_model(self):
+    @pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_coder_noise_model(self) -> None:
         """Test encoding and decoding a noise model."""
         noise_model = NoiseModel.from_backend(FakeNairobiV2())
-        self.assertIsInstance(noise_model, NoiseModel)
+        assert isinstance(noise_model, NoiseModel)
         encoded = json.dumps(noise_model, cls=RuntimeEncoder)
-        self.assertIsInstance(encoded, str)
+        assert isinstance(encoded, str)
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
                 category=DeprecationWarning,
             )
             decoded = json.loads(encoded, cls=RuntimeDecoder)
-        self.assertIsInstance(decoded, NoiseModel)
-        self.assertEqual(noise_model.noise_qubits, decoded.noise_qubits)
-        self.assertEqual(noise_model.noise_instructions, decoded.noise_instructions)
+        assert isinstance(decoded, NoiseModel)
+        assert noise_model.noise_qubits == decoded.noise_qubits
+        assert noise_model.noise_instructions == decoded.noise_instructions
 
-    def test_encoder_datetime(self):
-        """Test encoding a datetime."""
-        subtests = (
+    @pytest.mark.parametrize(
+        "object_",
+        [
             {"datetime": datetime.now()},
             {"datetime": datetime(2021, 8, 4)},
             {"datetime": datetime.fromtimestamp(1326244364)},
-        )
-        for obj in subtests:
-            encoded = json.dumps(obj, cls=RuntimeEncoder)
-            self.assertIsInstance(encoded, str)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)
-            self.assertEqual(decoded, obj)
+        ],
+    )
+    def test_encoder_datetime(self, object_: dict[str, datetime]) -> None:
+        """Test encoding a datetime."""
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        assert isinstance(encoded, str)
 
-    def test_encoder_ndarray(self):
-        """Test encoding and decoding a numpy ndarray."""
-        subtests = (
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        assert decoded == object_
+
+    @pytest.mark.parametrize(
+        "object_",
+        [
             {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]], dtype=object)},
             {"ndarray": np.array([1, {"obj": 123}], dtype=object)},
             {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]])},
             {"ndarray": np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=int)},
-        )
-        for obj in subtests:
-            encoded = json.dumps(obj, cls=RuntimeEncoder)
-            self.assertIsInstance(encoded, str)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)
-            self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
+        ],
+    )
+    def test_encoder_ndarray(self, object_: dict[str, np.ndarray]) -> None:
+        """Test encoding and decoding a numpy ndarray."""
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        assert isinstance(encoded, str)
 
-    def test_encoder_instruction(self):
-        """Test encoding and decoding instructions."""
-        subtests = (
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        assert np.array_equal(decoded["ndarray"], object_["ndarray"])
+
+    @pytest.mark.parametrize(
+        "object_",
+        [
             {"instruction": CXGate()},
             {"instruction": PhaseGate(theta=1)},
             {"instruction": U2Gate(phi=1, lam=1)},
             {"instruction": U2Gate(phi=Parameter("phi"), lam=Parameter("lambda"))},
-        )
-        for obj in subtests:
-            encoded = json.dumps(obj, cls=RuntimeEncoder)
-            self.assertIsInstance(encoded, str)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)
-            self.assertEqual(decoded, obj)
+        ],
+    )
+    def test_encoder_instruction(self, object_: dict[str, Gate]) -> None:
+        """Test encoding and decoding instructions."""
+        encoded = json.dumps(object_, cls=RuntimeEncoder)
+        assert isinstance(encoded, str)
 
-    def test_encoder_np_number(self):
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        assert decoded == object_
+
+    def test_encoder_np_number(self) -> None:
         """Test encoding and decoding instructions."""
         encoded = json.dumps(np.int64(100), cls=RuntimeEncoder)
-        self.assertIsInstance(encoded, str)
+        assert isinstance(encoded, str)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
-        self.assertEqual(decoded, 100)
+        assert decoded == 100
 
-    def test_encoder_callable(self):
+    def test_encoder_callable(self) -> None:
         """Test encoding a callable."""
         with warnings.catch_warnings(record=True) as warn_cm:
             encoded = json.dumps({"fidelity": lambda x: x}, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)
-            self.assertIsNone(decoded["fidelity"])
-            self.assertEqual(len(warn_cm), 1)
+            assert decoded["fidelity"] is None
+            assert len(warn_cm) == 1
 
-    def test_decoder_import(self):
+    @pytest.mark.parametrize(
+        "object_",
+        [
+            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
+            Pauli("XYZX"),
+        ],
+    )
+    def test_decoder_import(self, object_: SparsePauliOp | Pauli) -> None:
         """Test runtime decoder importing modules."""
         script = """
 import sys
@@ -236,30 +533,23 @@ if __name__ == '__main__':
     obj = json.loads(sys.argv[1], cls=RuntimeDecoder)
     print(obj.__class__.__name__)
 """
-        temp_fp = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        self.addCleanup(os.remove, temp_fp.name)
-        temp_fp.write(script)
-        temp_fp.close()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            script_path = Path(temp_dir) / "decoder_script.py"
+            script_path.write_text(script, encoding="utf-8")
 
-        subtests = (
-            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            Pauli("XYZX"),
-        )
-        for operator in subtests:
-            with self.subTest(operator=operator):
-                encoded = json.dumps(operator, cls=RuntimeEncoder)
-                self.assertIsInstance(encoded, str)
-                cmd = [sys.executable, temp_fp.name, encoded]
-                proc = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                )
-                self.assertIn(operator.__class__.__name__, proc.stdout)
+            encoded = json.dumps(object_, cls=RuntimeEncoder)
+            assert isinstance(encoded, str)
 
-    @mock_responses
-    def test_result_decoder(self, registry):
+            cmd = [sys.executable, str(script_path), encoded]
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            assert object_.__class__.__name__ in proc.stdout
+
+    def test_result_decoder(self, registry: BaseRegistry) -> None:
         """Test result decoder."""
         registry.add_job(
             Job(
@@ -273,415 +563,188 @@ if __name__ == '__main__':
 
         job = service.job("my_job")
         result = job.result(decoder=SerializableClassDecoder)
-        self.assertIsInstance(result["serializable_class"], SerializableClass)
+        assert isinstance(result["serializable_class"], SerializableClass)
 
-    def test_circuit_metadata(self):
+    def test_circuit_metadata(self) -> None:
         """Test serializing circuit metadata."""
         circ = QuantumCircuit(1)
         circ.metadata = {"test": np.arange(0, 10)}
         payload = {"circuits": [circ]}
 
-        self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
+        assert json.dumps(payload, cls=RuntimeEncoder)
 
 
-@ddt
-class TestContainerSerialization(IBMTestCase):
+class TestContainerSerialization:
     """Class for testing primitive containers serialization."""
 
-    # Container specific assertEqual methods
-    def assert_observable_arrays_equal(self, obs1, obs2):
-        """Tests that two ObservableArray objects are equal."""
-        self.assertEqual(obs1.tolist(), obs2.tolist())
-
-    def assert_binding_arrays_equal(self, barr1, barr2):
-        """Tests that two BindingArray objects are equal."""
-
-        def _to_str_keyed(_in_dict):
-            _out_dict = {}
-            for a_key_tuple, val in _in_dict.items():
-                str_key = tuple(
-                    a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple
-                )
-                _out_dict[str_key] = val
-            return _out_dict
-
-        self.assertEqual(barr1.shape, barr2.shape)
-        barr1_str_keyed = _to_str_keyed(barr1.data)
-        barr2_str_keyed = _to_str_keyed(barr2.data)
-        for key, val in barr1_str_keyed.items():
-            self.assertIn(key, barr2_str_keyed)
-            np.testing.assert_allclose(val, barr2_str_keyed[key])
-
-    def assert_data_bins_equal(self, dbin1, dbin2):
-        """Compares two DataBins.
-
-        Field types are compared up to their string representation.
-        """
-        self.assertEqual(tuple(dbin1), tuple(dbin2))
-        self.assertEqual(dbin1.shape, dbin2.shape)
-        for field_name in dbin1:
-            field_1 = dbin1[field_name]
-            field_2 = dbin2[field_name]
-            if isinstance(field_1, np.ndarray):
-                np.testing.assert_allclose(field_1, field_2)
-            else:
-                self.assertEqual(field_1, field_2)
-
-    def assert_estimator_pubs_equal(self, pub1, pub2):
-        """Tests that two EstimatorPub objects are equal."""
-        self.assertEqual(pub1.circuit, pub2.circuit)
-        self.assert_observable_arrays_equal(pub1.observables, pub2.observables)
-        self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
-        self.assertEqual(pub1.precision, pub2.precision)
-
-    def assert_sampler_pubs_equal(self, pub1, pub2):
-        """Tests that two SamplerPub objects are equal."""
-        self.assertEqual(pub1.circuit, pub2.circuit)
-        self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
-        self.assertEqual(pub1.shots, pub2.shots)
-
-    def assert_pub_results_equal(self, pub_result1, pub_result2):
-        """Tests that two PubResult objects are equal."""
-        self.assert_data_bins_equal(pub_result1.data, pub_result2.data)
-        self.assertEqual(pub_result1.metadata, pub_result2.metadata)
-
-    def assert_primitive_results_equal(self, primitive_result1, primitive_result2):
-        """Tests that two PrimitiveResult objects are equal."""
-        self.assertEqual(len(primitive_result1), len(primitive_result2))
-        for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
-            self.assert_pub_results_equal(pub_result1, pub_result2)
-
-        self.assertEqual(primitive_result1.metadata, primitive_result2.metadata)
-
-    def assert_pauli_lindblad_error_equal(self, error1, error2):
-        """Tests that two PauliLindbladError objects are equal."""
-        if error1 or error2:
-            self.assertEqual(error1.generators, error2.generators)
-            self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
-
-    def assert_layer_errors_equal(self, layer_error1, layer_error2):
-        """Tests that two LayerError objects are equal."""
-        self.assertEqual(layer_error1.circuit, layer_error2.circuit)
-        self.assertEqual(layer_error1.qubits, layer_error2.qubits)
-        self.assert_pauli_lindblad_error_equal(layer_error1.error, layer_error2.error)
-
-    def assert_noise_learner_results_equal(self, result1, result2):
-        """Tests that two NoiseLearnerResult objects are equal."""
-        self.assertEqual(len(result1), len(result2))
-        for layer_error1, layer_error2 in zip(result1, result2):
-            self.assert_layer_errors_equal(layer_error1, layer_error2)
-
-        self.assertEqual(result1.metadata, result2.metadata)
-
-    # Data generation methods
-
-    def make_test_data_bins(self):
-        """Generates test data for DataBin test."""
-        result_bins = []
-        alpha = np.empty((10, 20), dtype=np.uint16)
-        beta = np.empty((10, 20), dtype=int)
-        my_bin = DataBin(alpha=alpha, beta=beta, shape=(10, 20))
-        result_bins.append(my_bin)
-        return result_bins
-
-    def make_test_estimator_pubs(self):
-        """Generates test data for EstimatorPub test."""
-        pubs = []
-        params = (Parameter("a"), Parameter("b"))
-        circuit = QuantumCircuit(2)
-        circuit.rx(params[0], 0)
-        circuit.ry(params[1], 1)
-        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
-        observables = ObservablesArray([{"XX": 0.1}])
-        precision = 0.05
-
-        pub = EstimatorPub(
-            circuit=circuit,
-            observables=observables,
-            parameter_values=parameter_values,
-            precision=precision,
-        )
-        pubs.append(pub)
-        return pubs
-
-    def make_test_sampler_pubs(self):
-        """Generates test data for SamplerPub test."""
-        pubs = []
-        params = (Parameter("a"), Parameter("b"))
-        circuit = QuantumCircuit(2)
-        circuit.rx(params[0], 0)
-        circuit.ry(params[1], 1)
-        circuit.measure_all()
-        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
-        shots = 1000
-
-        pub = SamplerPub(
-            circuit=circuit,
-            parameter_values=parameter_values,
-            shots=shots,
-        )
-        pubs.append(pub)
-        return pubs
-
-    def make_test_pub_results(self):
-        """Generates test data for PubResult test."""
-        pub_results = []
-        pub_result = PubResult(DataBin(a=1.0, b=2))
-        pub_results.append(pub_result)
-        pub_result = PubResult(DataBin(a=1.0, b=2), {"x": 1})
-        pub_results.append(pub_result)
-        return pub_results
-
-    def make_test_estimator_pub_results(self):
-        """Generates test data for EstimatorPubResult test."""
-        pub_results = []
-        pub_result = EstimatorPubResult(DataBin(a=1.0, b=2))
-        pub_results.append(pub_result)
-        pub_result = EstimatorPubResult(DataBin(a=1.0, b=2), {"x": 1})
-        pub_results.append(pub_result)
-        return pub_results
-
-    def make_test_sampler_pub_results(self):
-        """Generates test data for SamplerPubResult test."""
-        pub_results = []
-        pub_result = SamplerPubResult(DataBin(a=1.0, b=2))
-        pub_results.append(pub_result)
-        pub_result = SamplerPubResult(DataBin(a=1.0, b=2), {"x": 1})
-        pub_results.append(pub_result)
-        return pub_results
-
-    def make_test_primitive_results(self):
-        """Generates test data for PrimitiveResult test."""
-        primitive_results = []
-
-        alpha = np.empty((10, 20), dtype=np.uint16)
-        beta = np.empty((10, 20), dtype=int)
-
-        pub_results = [
-            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
-            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
-            PubResult(DataBin()),
-        ]
-
-        metadata = {
-            "execution": {
-                "execution_spans": ExecutionSpans(
-                    [
-                        SliceSpan(
-                            datetime(2022, 1, 1),
-                            datetime(2023, 1, 1),
-                            {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
-                        ),
-                        SliceSpan(
-                            datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
-                        ),
-                        DoubleSliceSpan(
-                            datetime(2022, 1, 1),
-                            datetime(2023, 1, 1),
-                            {
-                                1: ((100,), slice(4, 9), slice(1, 2)),
-                                0: ((2, 5), slice(5, 7), slice(3, 4)),
-                            },
-                        ),
-                        DoubleSliceSpan(
-                            datetime(2024, 8, 20),
-                            datetime(2024, 8, 21),
-                            {0: ((14,), slice(2, 3), slice(1, 9))},
-                        ),
-                        TwirledSliceSpan(
-                            datetime(2024, 9, 20),
-                            datetime(2024, 3, 21),
-                            {
-                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
-                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
-                            },
-                        ),
-                        TwirledSliceSpanV2(
-                            datetime(2024, 9, 20),
-                            datetime(2024, 3, 21),
-                            {
-                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
-                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
-                            },
-                        ),
-                    ]
-                )
-            }
-        }
-
-        result = PrimitiveResult(pub_results, metadata)
-        primitive_results.append(result)
-        return primitive_results
-
-    def make_test_noise_learner_results(self, unknown_err=False):
-        """Generates test data for NoiseLearnerResult test."""
-        noise_learner_results = []
-        circuit = QuantumCircuit(2)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-        error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
-        layer_error = LayerError(circuit, [3, 5], error)
-
-        noise_learner_result = NoiseLearnerResult([layer_error])
-        noise_learner_results.append(noise_learner_result)
-        return noise_learner_results
-
     # Tests
-    @data(
-        ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
-        ObservablesArray(qi.pauli_basis(2)),
-        ObservablesArray([qi.random_pauli_list(2, 3, phase=False) for _ in range(5)]),
-        ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
-        ObservablesArray(
-            [
-                [SparsePauliOp(qi.random_pauli_list(2, 3, phase=False)) for _ in range(3)]
-                for _ in range(5)
-            ]
-        ),
+    @pytest.mark.parametrize(
+        "oarray",
+        [
+            ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
+            ObservablesArray(qi.pauli_basis(2)),
+            ObservablesArray([qi.random_pauli_list(2, 3, phase=False) for _ in range(5)]),
+            ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
+            ObservablesArray(
+                [
+                    [SparsePauliOp(qi.random_pauli_list(2, 3, phase=False)) for _ in range(3)]
+                    for _ in range(5)
+                ]
+            ),
+        ],
     )
-    def test_obs_array(self, oarray):
+    def test_obs_array(self, oarray: ObservablesArray) -> None:
         """Test encoding and decoding ObservablesArray."""
         payload = {"array": oarray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
-        self.assertIsInstance(decoded, ObservablesArray)
-        self.assert_observable_arrays_equal(decoded, oarray)
+        assert isinstance(decoded, ObservablesArray)
+        assert_observable_arrays_equal(decoded, oarray)
 
-    @data(
-        BindingsArray({"a": [1, 2, 3.4]}),
-        BindingsArray({("a", "b", "c"): [4.0, 5.0, 6.0]}, shape=()),
-        BindingsArray({Parameter("a"): np.random.uniform(size=(5,))}),
-        BindingsArray({ParameterVector("a", 5): np.linspace(0, 1, 30).reshape((2, 3, 5))}),
-        BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
-        BindingsArray(
-            data={
-                (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
-                Parameter("c"): np.random.random((4, 3)),
-            }
-        ),
-        BindingsArray(
-            data={
-                (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
-                Parameter("c"): np.random.random((2, 3)),
-            },
-        ),
-        BindingsArray(data={Parameter("c"): [3.0, 3.1]}),
-        BindingsArray(data={"param1": [1, 2, 3], "param2": [3, 4, 5]}),
+    @pytest.mark.parametrize(
+        "barray",
+        [
+            BindingsArray({"a": [1, 2, 3.4]}),
+            BindingsArray({("a", "b", "c"): [4.0, 5.0, 6.0]}, shape=()),
+            BindingsArray({Parameter("a"): np.random.uniform(size=(5,))}),
+            BindingsArray({ParameterVector("a", 5): np.linspace(0, 1, 30).reshape((2, 3, 5))}),
+            BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
+            BindingsArray(
+                data={
+                    (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
+                    Parameter("c"): np.random.random((4, 3)),
+                }
+            ),
+            BindingsArray(
+                data={
+                    (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
+                    Parameter("c"): np.random.random((2, 3)),
+                },
+            ),
+            BindingsArray(data={Parameter("c"): [3.0, 3.1]}),
+            BindingsArray(data={"param1": [1, 2, 3], "param2": [3, 4, 5]}),
+        ],
     )
-    def test_bindings_array(self, barray):
+    def test_bindings_array(self, barray: BindingsArray | BitArray) -> None:
         """Test encoding and decoding BindingsArray."""
         payload = {"array": barray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
-        self.assertIsInstance(decoded, BindingsArray)
-        self.assert_binding_arrays_equal(decoded, barray)
+        assert isinstance(decoded, BindingsArray)
+        assert_binding_arrays_equal(decoded, barray)
 
-    @data(
-        BitArray(
-            np.array([[[3, 5], [3, 5], [234, 100]], [[0, 1], [1, 0], [1, 0]]], dtype=np.uint8),
-            num_bits=15,
-        ),
-        BitArray.from_bool_array([[1, 0, 0], [1, 1, 0]]),
-        BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4})),
+    @pytest.mark.parametrize(
+        "barray",
+        [
+            BitArray(
+                np.array([[[3, 5], [3, 5], [234, 100]], [[0, 1], [1, 0], [1, 0]]], dtype=np.uint8),
+                num_bits=15,
+            ),
+            BitArray.from_bool_array([[1, 0, 0], [1, 1, 0]]),
+            BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4})),
+        ],
     )
-    def test_bit_array(self, barray):
+    def test_bit_array(self, barray: BindingsArray | BitArray) -> None:
         """Test encoding and decoding BitArray."""
         payload = {"array": barray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
-        self.assertIsInstance(decoded, BitArray)
-        self.assertEqual(barray, decoded)
+        assert isinstance(decoded, BitArray)
+        assert barray == decoded
 
-    def test_data_bin(self):
+    def test_data_bin(self) -> None:
         """Test encoding and decoding DataBin."""
-        for dbin in self.make_test_data_bins():
+        for dbin in data_bins():
             payload = {"bin": dbin}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
-            self.assertIsInstance(decoded, DataBin)
-            self.assert_data_bins_equal(dbin, decoded)
+            assert isinstance(decoded, DataBin)
+            assert_data_bins_equal(dbin, decoded)
 
-    def test_estimator_pub(self):
+    def test_estimator_pub(self) -> None:
         """Test encoding and decoding EstimatorPub."""
-        for pub in self.make_test_estimator_pubs():
+        for pub in estimator_pubs():
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-            self.assertIsInstance(decoded, (list, tuple))
-            self.assertEqual(len(decoded), 4)
+            assert isinstance(decoded, (list, tuple))
+            assert len(decoded) == 4
             decoded_pub = EstimatorPub.coerce(decoded)
-            self.assert_estimator_pubs_equal(pub, decoded_pub)
+            assert_estimator_pubs_equal(pub, decoded_pub)
 
-    def test_sampler_pub(self):
+    def test_sampler_pub(self) -> None:
         """Test encoding and decoding SamplerPub."""
-        for pub in self.make_test_sampler_pubs():
+        for pub in sampler_pubs():
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-            self.assertIsInstance(decoded, (list, tuple))
-            self.assertEqual(len(decoded), 3)
+            assert isinstance(decoded, (list, tuple))
+            assert len(decoded) == 3
             decoded_pub = SamplerPub.coerce(decoded)
-            self.assert_sampler_pubs_equal(pub, decoded_pub)
+            assert_sampler_pubs_equal(pub, decoded_pub)
 
-    def test_pub_result(self):
+    def test_pub_result(self) -> None:
         """Test encoding and decoding PubResult."""
-        for pub_result in self.make_test_pub_results():
+        for pub_result in pub_results():
             payload = {"pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
-            self.assertIsInstance(decoded, PubResult)
-            self.assert_pub_results_equal(pub_result, decoded)
+            assert isinstance(decoded, PubResult)
+            assert_pub_results_equal(pub_result, decoded)
 
-    def test_estimator_pub_result(self):
+    def test_estimator_pub_result(self) -> None:
         """Test encoding and decoding EstimatorPubResult."""
-        for pub_result in self.make_test_estimator_pub_results():
+        for pub_result in estimator_pub_results():
             payload = {"estimator_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["estimator_pub_result"]
-            self.assertIsInstance(decoded, EstimatorPubResult)
-            self.assert_pub_results_equal(pub_result, decoded)
+            assert isinstance(decoded, EstimatorPubResult)
+            assert_pub_results_equal(pub_result, decoded)
 
-    def test_sampler_pub_result(self):
+    def test_sampler_pub_result(self) -> None:
         """Test encoding and decoding SamplerPubResult."""
-        for pub_result in self.make_test_sampler_pub_results():
+        for pub_result in sampler_pub_results():
             payload = {"sampler_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["sampler_pub_result"]
-            self.assertIsInstance(decoded, SamplerPubResult)
-            self.assert_pub_results_equal(pub_result, decoded)
+            assert isinstance(decoded, SamplerPubResult)
+            assert_pub_results_equal(pub_result, decoded)
 
-    def test_primitive_result(self):
+    def test_primitive_result(self) -> None:
         """Test encoding and decoding PubResult."""
-        for primitive_result in self.make_test_primitive_results():
+        for primitive_result in primitive_results():
             payload = {"primitive_result": primitive_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
-            self.assertIsInstance(decoded, PrimitiveResult)
-            self.assert_primitive_results_equal(primitive_result, decoded)
+            assert isinstance(decoded, PrimitiveResult)
+            assert_primitive_results_equal(primitive_result, decoded)
 
-    @data(True, False)
-    def test_noise_learner_result(self, unknown_err):
+    @pytest.mark.parametrize("unknown_err", [True, False])
+    def test_noise_learner_result(self, unknown_err: bool) -> None:
         """Test encoding and decoding NoiseLearnerResult."""
-        for noise_learner_result in self.make_test_noise_learner_results(unknown_err):
+        for noise_learner_result in noise_learner_results(unknown_err):
             payload = {"noise_learner_result": noise_learner_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]
-            self.assertIsInstance(decoded, NoiseLearnerResult)
-            self.assert_noise_learner_results_equal(noise_learner_result, decoded)
+            assert isinstance(decoded, NoiseLearnerResult)
+            assert_noise_learner_results_equal(noise_learner_result, decoded)
 
-    @data(
-        PauliLindbladMap.from_sparse_list([("XX", (0, 1), 0.5)], num_qubits=5),
-        PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)]),
+    @pytest.mark.parametrize(
+        "noise_map",
+        [
+            PauliLindbladMap.from_sparse_list([("XX", (0, 1), 0.5)], num_qubits=5),
+            PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)]),
+        ],
     )
-    def test_pauli_lindblad_map(self, noise_map):
+    def test_pauli_lindblad_map(self, noise_map: PauliLindbladMap) -> None:
         """Test enconding and decoding for PauliLindbladMap."""
         payload = {"map": noise_map}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["map"]
-        self.assertIsInstance(decoded, PauliLindbladMap)
-        self.assertEqual(noise_map, decoded)
+        assert isinstance(decoded, PauliLindbladMap)
+        assert noise_map == decoded
 
-    def test_unknown_settings(self):
+    def test_unknown_settings(self) -> None:
         """Test settings not on whitelisted path."""
         random_settings = {
             "__type__": "settings",
@@ -691,106 +754,86 @@ class TestContainerSerialization(IBMTestCase):
         }
         encoded = json.dumps(random_settings)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
-        self.assertIsInstance(decoded, dict)
-        self.assertDictEqual(decoded, random_settings)
+        assert isinstance(decoded, dict)
+        assert decoded == random_settings
 
 
-class TestExecutionSpansSerialization(IBMTestCase):
+class TestExecutionSpansSerialization:
     """Class for testing execution spans serialization, with a focus on backward compatibility.
 
     The deserialization may be done with an old version of qiskit-ibm-runtime, which does not
     support twirled slice spans with data slice version 2.
     """
 
-    def setUp(self):
-        """Test level setup."""
-        self.slice_span = SliceSpan(
-            datetime(2022, 1, 1),
-            datetime(2023, 1, 1),
-            {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
-        )
-
-        self.double_span = DoubleSliceSpan(
-            datetime(2024, 8, 20),
-            datetime(2024, 8, 21),
-            {0: ((14,), slice(2, 3), slice(1, 9))},
-        )
-
-        self.twirl1 = TwirledSliceSpan(
-            datetime(2024, 9, 20),
-            datetime(2024, 3, 21),
-            {
-                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
-                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
-            },
-        )
-
-        self.twirl2 = TwirledSliceSpanV2(
-            datetime(2024, 9, 20),
-            datetime(2024, 3, 21),
-            {
-                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
-                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
-            },
-        )
-
-        return super().setUp()
-
-    def test_new_runtime_encodes_and_decodes(self):
+    def test_new_runtime_encodes_and_decodes(
+        self,
+        spans_to_serialize: tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2],
+    ) -> None:
         """Test both encoding and decoding supporting `TwirledSliceSpanV2`.
 
         Test the case where both encoding and decoding are done with a
         qiskit-ibm-runtime version that supports `TwirledSliceSpanV2`.
         """
-        spans = ExecutionSpans([self.slice_span, self.twirl1, self.twirl2, self.double_span])
-        encoded = json.dumps(spans, cls=RuntimeEncoder)
-        self.assertTrue("ExecutionSpans" in encoded)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)
-        self.assertEqual(spans, decoded)
+        slice_span, double_span, twirl1, twirl2 = spans_to_serialize
 
-    def test_new_runtime_encodes_but_old_runtime_decodes(self):
+        spans = ExecutionSpans([slice_span, twirl1, twirl2, double_span])
+        encoded = json.dumps(spans, cls=RuntimeEncoder)
+        assert "ExecutionSpans" in encoded
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        assert spans == decoded
+
+    def test_new_runtime_encodes_but_old_runtime_decodes(
+        self,
+        spans_to_serialize: tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2],
+    ) -> None:
         """Test encoding supporting `TwirledSliceSpanV2`.
 
         Test the case where deserialization is done with an old qiskit-ibm-runtime version that
         does not support `TwirledSliceSpanV2`.
         """
-        spans = ExecutionSpans([self.slice_span, self.twirl1, self.twirl2, self.double_span])
+        slice_span, double_span, twirl1, twirl2 = spans_to_serialize
+
+        spans = ExecutionSpans([slice_span, twirl1, twirl2, double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
-        self.assertTrue("ExecutionSpans" in encoded)
+        assert "ExecutionSpans" in encoded
 
         # to mimic an old qiskit-ibm-runtime version, change types to something unknown
         encoded = encoded.replace("ExecutionSpans", "yoohoo")
         encoded = encoded.replace("TwirledSliceSpanV2", "unknown-type")
         decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        self.assertEqual(decoded["__type__"], "yoohoo")
+        assert decoded["__type__"] == "yoohoo"
         decoded_spans = decoded["__value__"]["spans"]
-        self.assertEqual(type(decoded_spans), list)
-        self.assertEqual(decoded_spans[0], self.slice_span)
-        self.assertEqual(decoded_spans[1], self.twirl1)
-        self.assertEqual(decoded_spans[3], self.double_span)
-        self.assertEqual(decoded_spans[2]["__value__"]["start"], self.twirl2.start)
+        assert isinstance(decoded_spans, list)
+        assert decoded_spans[0] == slice_span
+        assert decoded_spans[1] == twirl1
+        assert decoded_spans[3] == double_span
+        assert decoded_spans[2]["__value__"]["start"] == twirl2.start
 
-    def test_old_runtime_encodes_but_new_runtime_decodes(self):
+    def test_old_runtime_encodes_but_new_runtime_decodes(
+        self,
+        spans_to_serialize: tuple[SliceSpan, DoubleSliceSpan, TwirledSliceSpan, TwirledSliceSpanV2],
+    ) -> None:
         """Test and decoding supporting `TwirledSliceSpanV2.
 
         Test the case where deserialization is done with a new qiskit-ibm-runtime version that
         supports `TwirledSliceSpanV2`.
         """
-        spans = ExecutionSpans([self.slice_span, self.twirl1, self.double_span])
+        slice_span, double_span, twirl1, _ = spans_to_serialize
+
+        spans = ExecutionSpans([slice_span, twirl1, double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
         encoded = encoded.replace("ExecutionSpans", "ExecutionSpanCollection")
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
-        self.assertEqual(spans, decoded)
+        assert spans == decoded
 
 
-@ddt
-class TestRuntimeDecoder(IBMTestCase):
+class TestRuntimeDecoder:
     """Tests for RuntimeDecoder class."""
 
-    @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
-    def test_decoding_executor_params(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS)])
+    def test_decoding_executor_params(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of executor jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in the correct format,
@@ -811,11 +854,11 @@ class TestRuntimeDecoder(IBMTestCase):
         encoded = json.dumps(params, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        self.assertIsInstance(decoded["params"]["quantum_program"], QuantumProgram)
-        self.assertEqual(decoded["params"]["options"], ExecutorOptions())
+        assert isinstance(decoded["params"]["quantum_program"], QuantumProgram)
+        assert decoded["params"]["options"] == ExecutorOptions()
 
-    @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
-    def test_decoding_incorrect_executor_params_warns(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS)])
+    def test_decoding_incorrect_executor_params_warns(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of executor jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in an incorrect format,
@@ -832,14 +875,14 @@ class TestRuntimeDecoder(IBMTestCase):
         }
         encoded = json.dumps(params, cls=RuntimeEncoder)
 
-        with self.assertWarnsRegex(Warning, "Unable to convert"):
+        with pytest.warns(Warning, match="Unable to convert"):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        self.assertEqual(decoded["params"]["quantum_program"], "foo")
-        self.assertEqual(decoded["params"]["options"], "bar")
+        assert decoded["params"]["quantum_program"] == "foo"
+        assert decoded["params"]["options"] == "bar"
 
-    @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
-    def test_decoding_noise_learner_v3_params(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS)])
+    def test_decoding_noise_learner_v3_params(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of NLV3 jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in the correct format,
@@ -879,11 +922,11 @@ class TestRuntimeDecoder(IBMTestCase):
         encoded = json.dumps(params, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        self.assertEqual(decoded["params"]["instructions"], instructions)
-        self.assertEqual(decoded["params"]["options"], options)
+        assert decoded["params"]["instructions"] == instructions
+        assert decoded["params"]["options"] == options
 
-    @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
-    def test_decoding_incorrect_noise_learner_v3_params_warns(self, schema_version):
+    @pytest.mark.parametrize("schema_version", [*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS)])
+    def test_decoding_incorrect_noise_learner_v3_params_warns(self, schema_version: str) -> None:
         """Test that inputs (or 'params') of NLV3 jobs can be decoded correctly.
 
         The goal of this test is to check that when these 'params' are in an incorrect format,
@@ -897,17 +940,17 @@ class TestRuntimeDecoder(IBMTestCase):
         }
         encoded = json.dumps(params, cls=RuntimeEncoder)
 
-        with self.assertWarnsRegex(Warning, "Unable to convert"):
+        with pytest.warns(Warning, match="Unable to convert"):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        self.assertEqual(decoded["params"]["instructions"], "foo")
-        self.assertEqual(decoded["params"]["options"], "bar")
+        assert decoded["params"]["instructions"] == "foo"
+        assert decoded["params"]["options"] == "bar"
 
 
-class TestQpyQiskitVersionValidation(IBMTestCase):
+class TestQpyQiskitVersionValidation:
     """Tests for QPY version warnings during deserialization."""
 
-    def test_newer_qpy_format_version_warns_before_load_fails(self):
+    def test_newer_qpy_format_version_warns_before_load_fails(self) -> None:
         """A newer QPY format version emits a clear warning before load fails."""
         circuit = QuantumCircuit(1)
         encoded = json.dumps(circuit, cls=RuntimeEncoder)
@@ -920,7 +963,7 @@ class TestQpyQiskitVersionValidation(IBMTestCase):
 
         with warnings.catch_warnings(record=True) as caught_warnings:
             warnings.simplefilter("always")
-            with self.assertRaises(QiskitError):
+            with pytest.raises(QiskitError):
                 json.loads(json.dumps(payload), cls=RuntimeDecoder)
 
         clear_warnings = [
@@ -929,4 +972,4 @@ class TestQpyQiskitVersionValidation(IBMTestCase):
             if "pip install -U qiskit" in str(warning.message)
             and "newer Qiskit release" in str(warning.message)
         ]
-        self.assertEqual(len(clear_warnings), 1)
+        assert len(clear_warnings) == 1

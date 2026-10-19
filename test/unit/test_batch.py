@@ -12,61 +12,65 @@
 
 """Tests for Batch class."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+
 from qiskit_ibm_runtime import Batch
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
-from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
 from ..registries import OneInstanceDryRunRegistry
-from ..utils import get_mocked_backend
+from ..registries import Session as RegistrySession
+
+if TYPE_CHECKING:
+    from ..registries import BaseRegistry
 
 
-class TestBatch(IBMTestCase):
+class TestBatch:
     """Class for testing the Batch class."""
 
-    def tearDown(self) -> None:
-        """Test level teardown."""
-        super().tearDown()
-        _DEFAULT_SESSION.set(None)
-
-    def test_passing_ibm_backend(self):
+    def test_passing_ibm_backend(self, registry: BaseRegistry) -> None:
         """Test passing in IBMBackend instance."""
-        name = "ibm_gotham"
-        backend = get_mocked_backend(name=name)
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         session = Batch(backend=backend)
-        self.assertEqual(session.backend(), name)
+        assert session.backend() == "common_backend"
 
-    def test_using_ibm_backend_service(self):
+    def test_using_ibm_backend_service(self, registry: BaseRegistry) -> None:
         """Test using service from an IBMBackend instance."""
-        name = "ibm_gotham"
-        backend = get_mocked_backend(name=name)
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         session = Batch(backend=backend)
-        self.assertEqual(session.service, backend.service)
+        assert session.service == backend.service
 
-    def test_run_after_close(self):
+    def test_run_after_close(self) -> None:
         """Test running after session is closed."""
-        backend = get_mocked_backend(name="ibm_gotham")
+        backend = FakeManilaV2()
         session = Batch(backend=backend)
         session.cancel()
-        with self.assertRaises(IBMRuntimeError):
+        with pytest.raises(IBMRuntimeError):
             session._run(program_id="program_id", inputs={})
 
-    def test_context_manager(self):
+    def test_context_manager(self, registry: BaseRegistry) -> None:
         """Test session as a context manager."""
-        backend = get_mocked_backend(name="ibm_gotham")
+        registry.add_session(RegistrySession("session_12345", "common_backend", mode="batch"), "a")
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with Batch(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
-        self.assertFalse(session._active)
+        assert not session._active
 
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_dry_run(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry: BaseRegistry) -> None:
         """Batch mode can run in `dry-run` mode."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
         with Batch(backend=backend) as session:
             job = session._run(program_id="foo", inputs={}, dry_run=True)
 
-        self.assertEqual(job.backend().name, "mock_foo")
+        assert job.backend().name == "mock_foo"

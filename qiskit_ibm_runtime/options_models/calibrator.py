@@ -18,6 +18,41 @@ from .base import BaseOptionsModel
 from .environment import EnvironmentOptions
 
 
+class ReadoutAngleOptions(BaseOptionsModel):
+    """Options for readout angle calibration."""
+
+    enable: bool = True
+    """Whether to perform readout angle calibration."""
+
+
+class OneAndTwoQubitOptions(BaseOptionsModel):
+    """Options for one-and-two-qubit calibration."""
+
+    enable: bool = False
+    """Whether to perform one-and-two-qubit calibration."""
+
+
+class TwoQubitOptions(BaseOptionsModel):
+    """Options for two-qubit calibration."""
+
+    enable: bool = False
+    """Whether to perform two-qubit calibration."""
+
+
+class TwoQubitFractionalOptions(BaseOptionsModel):
+    """Options for two-qubit fractional calibration."""
+
+    enable: bool = False
+    """Whether to perform two-qubit fractional calibration."""
+
+
+class TlsBiasOptions(BaseOptionsModel):
+    """Options for TLS bias calibration."""
+
+    enable: bool = False
+    """Whether to perform TLS bias calibration."""
+
+
 class CalibratorOptions(BaseOptionsModel):
     """Options for the Calibrator."""
 
@@ -26,3 +61,18 @@ class CalibratorOptions(BaseOptionsModel):
 
     experimental: dict = {}
     """Experimental options that are passed to the executor."""
+
+    readout_angle: ReadoutAngleOptions = ReadoutAngleOptions()
+    """Options for readout angle calibration."""
+
+    one_and_two_qubit: OneAndTwoQubitOptions = OneAndTwoQubitOptions()
+    """Options for one-and-two-qubit calibration."""
+
+    two_qubit: TwoQubitOptions = TwoQubitOptions()
+    """Options for two-qubit calibration."""
+
+    two_qubit_fractional: TwoQubitFractionalOptions = TwoQubitFractionalOptions()
+    """Options for two-qubit fractional calibration."""
+
+    tls_bias: TlsBiasOptions = TlsBiasOptions()
+    """Options for TLS bias calibration."""

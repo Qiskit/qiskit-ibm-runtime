@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Noise learner program."""
+"""Result decoder for NoiseLearnerV3."""
 
 from __future__ import annotations
 
@@ -50,7 +50,12 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
     """Decoder for noise learner V3."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> NoiseLearnerV3Results:  # type: ignore[no-untyped-def]
+    def is_applicable(cls, data: str) -> bool:
+        """Return `True` if this decoder can be applied."""
+        return "schema_version" in data
+
+    @classmethod
+    def decode(cls, raw_result: str) -> NoiseLearnerV3Results:
         """Decode raw json to result type."""
         decoded: dict[str, Any] = super().decode(raw_result)
 

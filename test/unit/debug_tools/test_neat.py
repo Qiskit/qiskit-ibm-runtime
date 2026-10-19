@@ -12,121 +12,141 @@
 
 """Tests for Neat class."""
 
-from unittest import skipUnless
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.utils.optionals import HAS_AER
 
 from qiskit_ibm_runtime.debug_tools import Neat, NeatResult
+from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
-from ...ibm_test_case import IBMTestCase
+if TYPE_CHECKING:
+    from qiskit.providers import BackendV2
 
 if HAS_AER:
-    from qiskit_aer import AerSimulator
     from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 
-@skipUnless(condition=HAS_AER, reason="qiskit-aer is required to run this test")
-class TestNeat(IBMTestCase):
+def transpiled_circuits(
+    backend: BackendV2,
+) -> tuple[
+    QuantumCircuit,
+    SparsePauliOp,
+    SparsePauliOp,
+    QuantumCircuit,
+    SparsePauliOp,
+    SparsePauliOp,
+    SparsePauliOp,
+]:
+    """Return two GHZ circuits transpiled for `backend`, and observables laid out for them.
+
+    The first circuit acts on two qubits, the second one on three.
+    """
+    pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+
+    c1 = QuantumCircuit(2)
+    c1.h(0)
+    c1.cx(0, 1)
+    c1 = pass_manager.run(c1)
+    obs1_xx = SparsePauliOp(["XX"]).apply_layout(c1.layout)
+    obs1_zi = SparsePauliOp(["ZI"]).apply_layout(c1.layout)
+
+    c2 = QuantumCircuit(3)
+    c2.h(0)
+    c2.cx(0, 1)
+    c2.cx(1, 2)
+    c2 = pass_manager.run(c2)
+    obs2_xxx = SparsePauliOp(["XXX"]).apply_layout(c2.layout)
+    obs2_zzz = SparsePauliOp(["ZZZ"]).apply_layout(c2.layout)
+    obs2_ziz = SparsePauliOp(["ZIZ"]).apply_layout(c2.layout)
+
+    return c1, obs1_xx, obs1_zi, c2, obs2_xxx, obs2_zzz, obs2_ziz
+
+
+@pytest.mark.skipif(not HAS_AER, reason="qiskit-aer is required to run this test")
+class TestNeat:
     """Class for testing the Neat class."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        noise_strength = 0.05
-        self.noise_model = NoiseModel()
-        self.noise_model.add_quantum_error(depolarizing_error(noise_strength, 2), ["cx"], [0, 1])
-        self.noise_model.add_quantum_error(depolarizing_error(noise_strength, 2), ["cx"], [1, 0])
-        self.noise_model.add_quantum_error(depolarizing_error(noise_strength, 2), ["cx"], [1, 2])
-        self.backend = AerSimulator(
-            noise_model=self.noise_model, coupling_map=[[0, 1], [1, 0], [1, 2]]
-        )
-
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
-
-        self.c1 = QuantumCircuit(2)
-        self.c1.h(0)
-        self.c1.cx(0, 1)
-        self.c1 = pm.run(self.c1)
-        self.obs1_xx = SparsePauliOp(["XX"]).apply_layout(self.c1.layout)
-        self.obs1_zi = SparsePauliOp(["ZI"]).apply_layout(self.c1.layout)
-
-        self.c2 = QuantumCircuit(3)
-        self.c2.h(0)
-        self.c2.cx(0, 1)
-        self.c2.cx(1, 2)
-        self.c2 = pm.run(self.c2)
-        self.obs2_xxx = SparsePauliOp(["XXX"]).apply_layout(self.c2.layout)
-        self.obs2_zzz = SparsePauliOp(["ZZZ"]).apply_layout(self.c2.layout)
-        self.obs2_ziz = SparsePauliOp(["ZIZ"]).apply_layout(self.c2.layout)
-
-    def test_ideal_sim(self):
+    def test_ideal_sim(self) -> None:
         """Test the ``ideal_sim`` method."""
-        analyzer = Neat(self.backend)
+        backend = FakeVigoV2()
+        c1, obs1_xx, obs1_zi, c2, obs2_xxx, obs2_zzz, obs2_ziz = transpiled_circuits(backend)
 
-        r1 = analyzer.ideal_sim([(self.c1, self.obs1_xx)])
-        self.assertIsInstance(r1, NeatResult)
-        self.assertEqual(r1[0].vals, 1)
+        analyzer = Neat(backend)
 
-        r2 = analyzer.ideal_sim([(self.c1, [self.obs1_xx, self.obs1_zi])])
-        self.assertIsInstance(r2, NeatResult)
-        self.assertListEqual(r2[0].vals.tolist(), [1, 0])
+        r1 = analyzer.ideal_sim([(c1, obs1_xx)])
+        assert isinstance(r1, NeatResult)
+        assert r1[0].vals == 1
+
+        r2 = analyzer.ideal_sim([(c1, [obs1_xx, obs1_zi])])
+        assert isinstance(r2, NeatResult)
+        assert r2[0].vals.tolist() == [1, 0]
 
         pubs3 = [
-            (self.c1, [self.obs1_xx, self.obs1_zi]),
-            (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
+            (c1, [obs1_xx, obs1_zi]),
+            (c2, [obs2_xxx, obs2_zzz, obs2_ziz]),
         ]
         r3 = analyzer.ideal_sim(pubs3)
-        self.assertIsInstance(r3, NeatResult)
-        self.assertListEqual(r3[0].vals.tolist(), [1, 0])
-        self.assertListEqual(r3[1].vals.tolist(), [1, 0, 1])
+        assert isinstance(r3, NeatResult)
+        assert r3[0].vals.tolist() == [1, 0]
+        assert r3[1].vals.tolist() == [1, 0, 1]
 
-    def test_noisy_sim(self):
+    def test_noisy_sim(self) -> None:
         """Test the ``noisy_sim`` method."""
-        analyzer = Neat(self.backend, self.noise_model)
+        backend = FakeVigoV2()
+        c1, obs1_xx, obs1_zi, c2, obs2_xxx, obs2_zzz, obs2_ziz = transpiled_circuits(backend)
 
-        r1 = analyzer.noisy_sim([(self.c1, self.obs1_xx)])
-        self.assertIsInstance(r1, NeatResult)
-        self.assertListEqual(list(r1[0].vals.shape), [])
+        noise_model = NoiseModel()
+        noise_model.add_quantum_error(depolarizing_error(0, 2), ["cx"], [0, 1])
 
-        r2 = analyzer.noisy_sim([(self.c1, [self.obs1_xx, self.obs1_zi])])
-        self.assertIsInstance(r2, NeatResult)
-        self.assertListEqual(list(r2[0].vals.shape), [2])
+        analyzer = Neat(backend, noise_model)
+
+        r1 = analyzer.noisy_sim([(c1, obs1_xx)])
+        assert isinstance(r1, NeatResult)
+        assert list(r1[0].vals.shape) == []
+
+        r2 = analyzer.noisy_sim([(c1, [obs1_xx, obs1_zi])])
+        assert isinstance(r2, NeatResult)
+        assert list(r2[0].vals.shape) == [2]
 
         pubs3 = [
-            (self.c1, [self.obs1_xx, self.obs1_zi]),
-            (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
+            (c1, [obs1_xx, obs1_zi]),
+            (c2, [obs2_xxx, obs2_zzz, obs2_ziz]),
         ]
         r3 = analyzer.noisy_sim(pubs3)
-        self.assertIsInstance(r3, NeatResult)
-        self.assertListEqual(list(r3[0].vals.shape), [2])
-        self.assertListEqual(list(r3[1].vals.shape), [3])
+        assert isinstance(r3, NeatResult)
+        assert list(r3[0].vals.shape) == [2]
+        assert list(r3[1].vals.shape) == [3]
 
-    def test_non_clifford_error(self):
+    def test_non_clifford_error(self) -> None:
         """Tests ``_simulate`` erroring when pubs are not Clifford if not ``cliffordize`."""
+        analyzer = Neat(FakeVigoV2())
+
         qc = QuantumCircuit(3)
         qc.rz(0.02, 0)
         pubs = [(qc, "ZZZ")]
 
-        with self.assertRaisesRegex(ValueError, "Couldn't run"):
-            Neat(self.backend).ideal_sim(pubs)
+        with pytest.raises(ValueError, match="Couldn't run"):
+            analyzer.ideal_sim(pubs)
 
-        with self.assertRaisesRegex(ValueError, "Couldn't run."):
-            Neat(self.backend).noisy_sim(pubs)
+        with pytest.raises(ValueError, match="Couldn't run."):
+            analyzer.noisy_sim(pubs)
 
-        r1 = Neat(self.backend).ideal_sim(pubs, cliffordize=True)
-        self.assertIsInstance(r1, NeatResult)
-        self.assertEqual(r1[0].vals, 1)
+        r1 = analyzer.ideal_sim(pubs, cliffordize=True)
+        assert isinstance(r1, NeatResult)
+        assert r1[0].vals == 1
 
-        r2 = Neat(self.backend).noisy_sim(pubs, cliffordize=True)
-        self.assertIsInstance(r2, NeatResult)
-        self.assertEqual(r2[0].vals, 1)
+        r2 = analyzer.noisy_sim(pubs, cliffordize=True)
+        assert isinstance(r2, NeatResult)
+        assert r2[0].vals == 1
 
-    def test_to_clifford(self):
+    def test_to_clifford(self) -> None:
         """Tests the ``to_clifford`` method."""
         qc = QuantumCircuit(2, 2)
         qc.id(0)
@@ -138,7 +158,7 @@ class TestNeat(IBMTestCase):
         qc.rz(np.pi, 0)
         qc.rz(3 * np.pi / 2 + 0.1, 1)
         qc.cx(0, 1)
-        transformed = Neat(self.backend).to_clifford([(qc, "ZZ")])[0]
+        transformed = Neat(FakeVigoV2()).to_clifford([(qc, "ZZ")])[0]
 
         expected = QuantumCircuit(2, 2)
         expected.id(0)
@@ -151,4 +171,4 @@ class TestNeat(IBMTestCase):
         expected.rz(3 * np.pi / 2, 1)
         expected.cx(0, 1)
 
-        self.assertEqual(transformed.circuit, expected)
+        assert transformed.circuit == expected

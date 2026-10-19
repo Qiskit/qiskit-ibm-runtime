@@ -1,0 +1,11 @@
+The :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.backends` and the
+:meth:`~qiskit_ibm_runtime.QiskitRuntimeService.jobs` methods now allow including mock backends
+and jobs from mock backends via the ``include_mocks`` argument. By default, such backends and mocks
+will be excluded from the returned results. :class:`~qiskit_ibm_runtime.IBMBackend` now also has a
+``is_mock`` property that returns whether the backend is a mock device.
+
+This allows for using the ``dry_run`` as widely available feature. When using this feature, it
+will perform a dry run without executing the job on a QPU, using the mock backends instead.
+This mode can be used to validate the job, estimate usage consumption, and retrieve circuit timing
+metadata. Returned results preserve the expected schema but contain randomized mock data rather
+than actual or simulated measurement results.

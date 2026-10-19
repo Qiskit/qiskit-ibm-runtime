@@ -12,10 +12,13 @@
 
 """Tests for sampler class."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import numpy as np
-from ddt import data, ddt, unpack
+import pytest
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import real_amplitudes
@@ -29,10 +32,12 @@ from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Se
 from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
+from ..asserts import assert_dict_partially_equal, assert_warns_strict
 from ..registries import Backend, OneInstanceDryRunRegistry
 from ..utils import get_mocked_backend, transpile_pubs
+
+if TYPE_CHECKING:
+    from ..registries import BaseRegistry
 
 
 class MockSession(Session):
@@ -42,70 +47,70 @@ class MockSession(Session):
     _instance = None
 
 
-def _measured(n: int) -> QuantumCircuit:
+def measured(n: int) -> QuantumCircuit:
     """Return an n-qubit circuit with all qubits measured."""
     qc = QuantumCircuit(n)
     qc.measure_all()
     return qc
 
 
-def _real_amplitudes_measured(num_qubits: int, reps: int) -> QuantumCircuit:
+def real_amplitudes_measured(num_qubits: int, reps: int) -> QuantumCircuit:
     """Return a real_amplitudes circuit with all qubits measured."""
     qc = real_amplitudes(num_qubits=num_qubits, reps=reps)
     qc.measure_all()
     return qc
 
 
-@ddt
-class TestSamplerV2(IBMTestCase):
+class TestSamplerV2:
     """Class for testing the Sampler class."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        self.circuit = QuantumCircuit(1, 1)
-
-    @data(
-        [(_real_amplitudes_measured(num_qubits=2, reps=1), [1, 2, 3, 4])],
-        [(_measured(2),)],
-        [(_real_amplitudes_measured(num_qubits=1, reps=1), [1, 2]), (_measured(3),)],
+    @pytest.mark.parametrize(
+        "in_pubs",
+        [
+            [(real_amplitudes_measured(num_qubits=2, reps=1), [1, 2, 3, 4])],
+            [(measured(2),)],
+            [(real_amplitudes_measured(num_qubits=1, reps=1), [1, 2]), (measured(3),)],
+        ],
     )
-    def test_run_program_inputs(self, in_pubs):
+    def test_run_program_inputs(self, in_pubs: list) -> None:
         """Verify program inputs are correct."""
-        backend = get_mocked_backend()
+        backend: MagicMock = get_mocked_backend()
         t_pubs = transpile_pubs(in_pubs, backend, "sampler")
         inst = SamplerV2(mode=backend)
         inst.run(t_pubs)
         input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertIn("pubs", input_params)
+        assert "pubs" in input_params
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
-            self.assertIsInstance(a_pub_param, SamplerPub)
+            assert isinstance(a_pub_param, SamplerPub)
             # Check circuit
-            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
+            assert a_pub_param.circuit == an_in_taks[0]
             # Check parameter values
             an_input_params = an_in_taks[1] if len(an_in_taks) == 2 else []
             param_values_array = list(a_pub_param.parameter_values.data.values())
             a_pub_param_values = param_values_array[0] if param_values_array else param_values_array
             np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
-    @data(
-        {"resilience_level": 1},
-        {"resilience": {"zne_mitigation": True}},
-        {"execution": {"meas_type": "unclassified"}},
+    @pytest.mark.parametrize(
+        "opt",
+        [
+            {"resilience_level": 1},
+            {"resilience": {"zne_mitigation": True}},
+            {"execution": {"meas_type": "unclassified"}},
+        ],
     )
-    def test_unsupported_values_for_sampler_options(self, opt):
+    def test_unsupported_values_for_sampler_options(self, opt: dict) -> None:
         """Test exception when options levels are not supported."""
         backend = get_mocked_backend()
         with Session(
             backend=backend,
         ) as session:
             inst = SamplerV2(mode=session)
-            with self.assertRaises(ValueError) as exc:
+            with pytest.raises(ValueError) as exc:
                 inst.options.update(**opt)
-            self.assertIn(list(opt.keys())[0], str(exc.exception))
+            assert list(opt.keys())[0] in str(exc.value)
 
-    def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
+    def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self) -> None:
         """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
@@ -117,23 +122,22 @@ class TestSamplerV2(IBMTestCase):
         in_pubs = [(dynamic_circuit,)]
         backend = get_mocked_backend()
         inst = SamplerV2(mode=backend)
-        inst.options.dynamical_decoupling.enable = True
-        with self.assertRaisesRegex(
+        inst.options.dynamical_decoupling.enable = True  # type: ignore[union-attr]
+        with pytest.raises(
             IBMInputValueError,
-            "Dynamical decoupling currently cannot be used with dynamic circuits",
+            match="Dynamical decoupling currently cannot be used with dynamic circuits",
         ):
             inst.run(in_pubs)
 
-    def test_run_default_options(self):
-        """Test run using default options."""
-        session = MagicMock(spec=MockSession, _backend="common_backend")
-        options_vars = [
+    @pytest.mark.parametrize(
+        ("options", "expected_options"),
+        [
             (
-                SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),
+                SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),  # type: ignore[call-arg]
                 {"dynamical_decoupling": {"sequence_type": "XX"}},
             ),
             (
-                SamplerOptions(default_shots=1000),
+                SamplerOptions(default_shots=1000),  # type: ignore[call-arg]
                 {"default_shots": 1000},
             ),
             (
@@ -144,15 +148,19 @@ class TestSamplerV2(IBMTestCase):
                     "execution": {"init_qubits": True, "rep_delay": 0.01},
                 },
             ),
-        ]
-        for options, expected in options_vars:
-            with self.subTest(options=options):
-                inst = SamplerV2(mode=session, options=options)
-                inst.run((self.circuit,))
-                inputs = session._run.call_args.kwargs["inputs"]["options"]
-                self.assertDictPartiallyEqual(inputs, expected)
+        ],
+    )
+    def test_run_default_options(self, options: dict, expected_options: dict) -> None:
+        """Test run using default options."""
+        session = MagicMock(spec=MockSession, _backend="common_backend")
 
-    def test_sampler_validations(self):
+        inst = SamplerV2(mode=session, options=options)
+        inst.run((QuantumCircuit(1, 1),))
+
+        run_options = session._run.call_args.kwargs["inputs"]["options"]
+        assert_dict_partially_equal(run_options, expected_options)
+
+    def test_sampler_validations(self) -> None:
         """Test exceptions when failing client-side validations."""
         backend = get_mocked_backend()
         with Session(
@@ -160,25 +168,24 @@ class TestSamplerV2(IBMTestCase):
         ) as session:
             inst = SamplerV2(mode=session)
             circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(0))
-            with self.assertRaisesRegex(ValueError, "Classical register .* is of size 0"):
+            with pytest.raises(ValueError, match="Classical register .* is of size 0"):
                 inst.run([(circ,)])
 
             creg = ClassicalRegister(2, "not-an-identifier")
             circ = QuantumCircuit(QuantumRegister(2), creg)
-            with self.assertRaisesRegex(
-                ValueError, "Classical register names must be valid identifiers"
+            with pytest.raises(
+                ValueError, match="Classical register names must be valid identifiers"
             ):
                 inst.run([(circ,)])
 
             creg = ClassicalRegister(2, "lambda")
             circ = QuantumCircuit(QuantumRegister(2), creg)
-            with self.assertRaisesRegex(
-                ValueError, "Classical register names cannot be Python keywords"
+            with pytest.raises(
+                ValueError, match="Classical register names cannot be Python keywords"
             ):
                 inst.run([(circ,)])
 
-    @mock_responses
-    def test_run_dynamic_circuit_with_fractional_opted(self, registry):
+    def test_run_dynamic_circuit_with_fractional_opted(self, registry: BaseRegistry) -> None:
         """Fractional opted backend can run dynamic circuits."""
         registry.add_backend(Backend.from_(FakeFractionalBackend), "a")
         service = QiskitRuntimeService(token="my_token")
@@ -193,8 +200,7 @@ class TestSamplerV2(IBMTestCase):
         sampler = SamplerV2(mode=backend)
         sampler.run([dynamic_circuit])
 
-    @mock_responses
-    def test_run_fractional_circuit_without_fractional_opted(self, registry):
+    def test_run_fractional_circuit_without_fractional_opted(self, registry: BaseRegistry) -> None:
         """Fractional non-opted backend cannot run fractional circuits."""
         registry.add_backend(Backend.from_(FakeFractionalBackend), "a")
         service = QiskitRuntimeService(token="my_token")
@@ -205,11 +211,10 @@ class TestSamplerV2(IBMTestCase):
         fractional_circuit.measure(0, 0)
 
         sampler = SamplerV2(mode=backend)
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             sampler.run([fractional_circuit])
 
-    @mock_responses
-    def test_run_fractional_dynamic_mix(self, registry):
+    def test_run_fractional_dynamic_mix(self, registry: BaseRegistry) -> None:
         """Any backend cannot run mixture of fractional and dynamic circuits."""
         registry.add_backend(Backend.from_(FakeFractionalBackend), "a")
         service = QiskitRuntimeService(token="my_token")
@@ -226,10 +231,10 @@ class TestSamplerV2(IBMTestCase):
         fractional_circuit.measure(0, 0)
 
         inst = SamplerV2(mode=backend)
-        with self.assertRaises(IBMInputValueError):
+        with pytest.raises(IBMInputValueError):
             inst.run([dynamic_circuit, fractional_circuit])
 
-    def test_gate_not_in_target(self):
+    def test_gate_not_in_target(self) -> None:
         """Test exception when circuits contain gates that are not basis gates."""
         backend = FakeSherbrooke()
         sampler = SamplerV2(mode=backend)
@@ -244,11 +249,11 @@ class TestSamplerV2(IBMTestCase):
                 circ.h(0)
         circ.measure(0, 0)
 
-        with self.assertRaisesRegex(IBMInputValueError, " h "):
+        with pytest.raises(IBMInputValueError, match=" h "):
             sampler.run(pubs=[circ])
 
-    @data(FakeSherbrooke(), FakeCusco())
-    def test_isa_inside_condition_block(self, backend):
+    @pytest.mark.parametrize("backend", [FakeSherbrooke(), FakeCusco()])
+    def test_isa_inside_condition_block(self, backend: BackendV2) -> None:
         """Test ISA inside condition block.
 
         Test no exception for 2q gates involving qubits that are not connected in
@@ -264,11 +269,11 @@ class TestSamplerV2(IBMTestCase):
         if backend.name == "fake_sherbrooke":
             SamplerV2(backend).run(pubs=[circ])
         else:
-            with self.assertRaises(IBMInputValueError):
+            with pytest.raises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @data(FakeSherbrooke(), FakeCusco())
-    def test_isa_inside_condition_block_body_in_separate_circuit(self, backend):
+    @pytest.mark.parametrize("backend", [FakeSherbrooke(), FakeCusco()])
+    def test_isa_inside_condition_block_body_in_separate_circuit(self, backend: BackendV2) -> None:
         """Test ISA inside condition block, with body in separate circuit.
 
         Test no exception for 2q gates involving qubits that are not connected in
@@ -288,11 +293,11 @@ class TestSamplerV2(IBMTestCase):
         if backend.name == "fake_sherbrooke":
             SamplerV2(backend).run(pubs=[circ])
         else:
-            with self.assertRaises(IBMInputValueError):
+            with pytest.raises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @data(-1, 1, 2)
-    def test_rzz_fixed_angle_validation(self, angle):
+    @pytest.mark.parametrize("angle", [-1, 1, 2])
+    def test_rzz_fixed_angle_validation(self, angle: float) -> None:
         """Test exception when rzz gate is used with an angle outside the range [0, pi/2]."""
         backend = FakeFractionalBackend()
 
@@ -303,11 +308,11 @@ class TestSamplerV2(IBMTestCase):
         if angle == 1:
             SamplerV2(backend).run(pubs=[circ])
         else:
-            with self.assertRaisesRegex(IBMInputValueError, f"{angle}"):
+            with pytest.raises(IBMInputValueError, match=f"{angle}"):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @data(-1, 1, 2)
-    def test_rzz_parametrized_angle_validation(self, angle):
+    @pytest.mark.parametrize("angle", [-1, 1, 2])
+    def test_rzz_parametrized_angle_validation(self, angle: float) -> None:
         """Test rzz gate with parameter outside range.
 
         Test exception when rzz gate is used with a parameter which is assigned a value outside
@@ -323,12 +328,11 @@ class TestSamplerV2(IBMTestCase):
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ, [angle])])
         else:
-            with self.assertRaisesRegex(IBMInputValueError, f"p={angle}"):
+            with pytest.raises(IBMInputValueError, match=f"p={angle}"):
                 SamplerV2(backend).run(pubs=[(circ, [angle])])
 
-    @data([1.0, 2.0], [1.0, 0.0])
-    @unpack
-    def test_rzz_validation_param_exp(self, val1, val2):
+    @pytest.mark.parametrize(("val1", "val2"), [[1.0, 2.0], [1.0, 0.0]])
+    def test_rzz_validation_param_exp(self, val1: float, val2: float) -> None:
         """Test rzz gate with parameter expression evaluated outside range.
 
         Test exception when rzz gate is used with a parameter expression, which is evaluated to
@@ -346,13 +350,15 @@ class TestSamplerV2(IBMTestCase):
             SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
         else:
             # order of the values is not guaranteed
-            with self.assertRaisesRegex(
-                IBMInputValueError, (rf"p2={val2}, p1={val1}" rf"|p1={val1}, p2={val2}")
+            with pytest.raises(
+                IBMInputValueError, match=(rf"p2={val2}, p1={val1}" rf"|p1={val1}, p2={val2}")
             ):
                 SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
 
-    @data(("a", -1.0), ("b", 2.0), ("d", 3.0), (-1.0, 1.0), (1.0, 2.0), None)
-    def test_rzz_complex(self, flawed_params):
+    @pytest.mark.parametrize(
+        "flawed_params", [("a", -1.0), ("b", 2.0), ("d", 3.0), (-1.0, 1.0), (1.0, 2.0), None]
+    )
+    def test_rzz_complex(self, flawed_params: tuple) -> None:
         """Test rzz validation for a complex case.
 
         Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
@@ -403,22 +409,25 @@ class TestSamplerV2(IBMTestCase):
             SamplerV2(backend).run(pubs=[pub])
         else:
             if isinstance(flawed_params[0], str):
-                with self.assertRaisesRegex(
-                    IBMInputValueError, f"{flawed_params[0]}={flawed_params[1]}"
+                with pytest.raises(
+                    IBMInputValueError, match=f"{flawed_params[0]}={flawed_params[1]}"
                 ):
                     SamplerV2(backend).run(pubs=[pub])
             else:
-                with self.assertRaisesRegex(
-                    IBMInputValueError, f"{flawed_params[0] * flawed_params[1]}"
+                with pytest.raises(
+                    IBMInputValueError, match=f"{flawed_params[0] * flawed_params[1]}"
                 ):
                     SamplerV2(backend).run(pubs=[pub])
 
-    @data(
-        "classified",
-        "kerneled",
-        "avg_kerneled",
+    @pytest.mark.parametrize(
+        "meas_type",
+        [
+            "classified",
+            "kerneled",
+            "avg_kerneled",
+        ],
     )
-    def test_backend_run_options(self, meas_type):
+    def test_backend_run_options(self, meas_type: str) -> None:
         """Test translation of sampler options into backend run options."""
         # This test is checking that meas_level, meas_return, and noise_model
         # get through the backend's run() call when SamplerV2 falls back to
@@ -469,7 +478,7 @@ class TestSamplerV2(IBMTestCase):
             # it is difficult to get a handle on the actual backend used to run
             # the job. Here we save the run options into a class level variable
             # that can be checked after run() is called.
-            used_run_options = {}
+            used_run_options: dict = {}
 
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
@@ -489,43 +498,47 @@ class TestSamplerV2(IBMTestCase):
                 DummyBackend.used_run_options = run_options
                 return DummyJob(run_options)
 
-        backend = DummyBackend()
+        backend = DummyBackend()  # type: ignore[no-untyped-call]
 
         circ = QuantumCircuit(1, 1)
         circ.measure(0, 0)
 
         sampler = SamplerV2(mode=backend)
-        sampler.options.simulator.noise_model = {"name": "some_model"}
-        sampler.options.execution.meas_type = meas_type
+        sampler.options.simulator.noise_model = {"name": "some_model"}  # type: ignore[union-attr]
+        sampler.options.execution.meas_type = meas_type  # type: ignore[union-attr]
 
         job = sampler.run([circ], shots=100)
         result = job.result()
 
         used_run_options = DummyBackend.used_run_options
-        self.assertDictEqual(used_run_options["noise_model"], {"name": "some_model"})
+        assert used_run_options["noise_model"] == {"name": "some_model"}
 
         if meas_type == "classified":
-            self.assertEqual(used_run_options["meas_level"], 2)
-            self.assertDictEqual(result[0].data.c.get_counts(), {"0": 100})
+            assert used_run_options["meas_level"] == 2
+            assert result[0].data.c.get_counts() == {"0": 100}
         elif meas_type == "kerneled":
-            self.assertEqual(used_run_options["meas_level"], 1)
-            self.assertEqual(used_run_options["meas_return"], "single")
-            self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1, 100))))
+            assert used_run_options["meas_level"] == 1
+            assert used_run_options["meas_return"] == "single"
+            assert np.array_equal(result[0].data.c, np.zeros((1, 100)))
         else:  # meas_type == "avg_kerneled"
-            self.assertEqual(used_run_options["meas_level"], 1)
-            self.assertEqual(used_run_options["meas_return"], "avg")
-            self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
+            assert used_run_options["meas_level"] == 1
+            assert used_run_options["meas_return"] == "avg"
+            assert np.array_equal(result[0].data.c, np.zeros((1,)))
 
-    @data(
-        ([None, None], 100, 0),
-        ([100, 100], 100, 0),
-        ([20, 20], 100, 0),
-        ([20, None], 20, 0),
-        ([20, None], 100, 1),
-        ([100, 20, 34], 50, 1),
+    @pytest.mark.parametrize(
+        ("pub_shots", "run_shots", "num_appearances"),
+        [
+            ([None, None], 100, 0),
+            ([100, 100], 100, 0),
+            ([20, 20], 100, 0),
+            ([20, None], 20, 0),
+            ([20, None], 100, 1),
+            ([100, 20, 34], 50, 1),
+        ],
     )
-    @unpack
-    def test_deprecate_pub_level_shots(self, pub_shots, run_shots, num_appearances):
+    def test_deprecate_pub_level_shots(
+        self, pub_shots: int | None, run_shots: int | None, num_appearances: int
+    ) -> None:
         """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
         backend = get_mocked_backend()
         circ = QuantumCircuit(1, 1)
@@ -536,17 +549,17 @@ class TestSamplerV2(IBMTestCase):
         warning_msg = "Specifying different 'shots' across pubs is deprecated"
         pubs = [
             (t_circ, None, shots) if shots is not None else SamplerPub(t_circ)
-            for shots in pub_shots
+            for shots in pub_shots  # type: ignore[union-attr]
         ]
 
-        with self.assertWarnsStrict(DeprecationWarning, warning_msg, num_appearances):
+        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, shots=run_shots)
 
-    @mock_responses(OneInstanceDryRunRegistry)
-    def test_run_dry_run(self, registry):
+    @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
+    def test_run_dry_run(self, registry: BaseRegistry) -> None:
         """Sampler can run in `dry-run` mode."""
         service = QiskitRuntimeService(token="my_token")
         backend = service.backend("ibm_foo")
         sampler = SamplerV2(mode=backend)
-        job = sampler.run((self.circuit,), dry_run=True)
-        self.assertEqual(job.backend().name, "mock_foo")
+        job = sampler.run((QuantumCircuit(1, 1),), dry_run=True)
+        assert job.backend().name == "mock_foo"

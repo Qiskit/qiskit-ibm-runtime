@@ -43,7 +43,7 @@ class FakeNighthawk(FakeBackendV2):
     from qiskit import QuantumCircuit
     from qiskit.transpiler import generate_preset_pass_manager
     from qiskit_ibm_runtime.fake_provider import FakeNighthawk
-    from qiskit_ibm_runtime import SamplerV2 as Sampler
+    from qiskit_ibm_runtime.executor_sampler import Sampler
 
     # Initialize fake_nighthawk
     backend = FakeNighthawk()

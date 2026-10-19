@@ -190,9 +190,7 @@ class Sampler(BaseSamplerV2):
         to executor inputs can be resource intensive and cause a delay
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
-        `IBM Quantum Compute documentation
-        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`__
-        for more information.
+        :ref:`IBM Quantum Compute Logging information <logging_guide>` for more details.
 
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits

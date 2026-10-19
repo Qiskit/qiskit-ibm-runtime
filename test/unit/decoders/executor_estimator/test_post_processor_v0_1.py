@@ -12,8 +12,10 @@
 
 """Unit tests for Estimator post-processor."""
 
+from typing import Literal
+
 import numpy as np
-from ddt import data, ddt, unpack
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
@@ -32,10 +34,8 @@ from qiskit_ibm_runtime.results.quantum_program import (
     StretchValues,
 )
 
-from ....ibm_test_case import IBMTestCase
 
-
-def _make_circuit(num_qubits: int = 2) -> QuantumCircuit:
+def make_circuit(num_qubits: int = 2) -> QuantumCircuit:
     """Return a simple non-parameterised circuit (H + CX)."""
     qc = QuantumCircuit(num_qubits)
     qc.h(0)
@@ -44,15 +44,25 @@ def _make_circuit(num_qubits: int = 2) -> QuantumCircuit:
     return qc
 
 
-def _make_pub(circuit=None, observable="ZZ", num_qubits=2):
+def make_pub(
+    circuit: QuantumCircuit | None = None,
+    observable: str = "ZZ",
+    num_qubits: int = 2,
+) -> EstimatorPub:
     """Return a coerced EstimatorPub for a simple circuit and observable."""
     if circuit is None:
-        circuit = _make_circuit(num_qubits)
+        circuit = make_circuit(num_qubits)
     obs = SparsePauliOp.from_list([(observable, 1.0)])
     return EstimatorPub.coerce((circuit, obs), precision=None)
 
 
-def _prepare_result(pubs, options, meas_data_list, *, precision=None):
+def prepare_result(
+    pubs: list,
+    options: EstimatorOptions,
+    meas_data_list: list,
+    *,
+    precision: float | None = None,
+) -> QuantumProgramResult:
     """Run prepare() and inject fake measurement data into the items.
 
     Returns a ``QuantumProgramResult`` ready for the post-processor.
@@ -66,7 +76,7 @@ def _prepare_result(pubs, options, meas_data_list, *, precision=None):
     """
     qp, _ = prepare(pubs, options, precision=precision)
 
-    result_data = []
+    result_data: list = []
     for i, item_data in enumerate(meas_data_list):
         if isinstance(item_data, dict):
             result_data.append(QuantumProgramItemResult(item_data))
@@ -82,7 +92,8 @@ def _prepare_result(pubs, options, meas_data_list, *, precision=None):
     return result
 
 
-def _options(resilience_level=0, **kwargs):
+def options(resilience_level: Literal[0, 1, 2] = 0, **kwargs: object) -> EstimatorOptions:
+    """Build EstimatorOptions."""
     opts = EstimatorOptions()
     opts.resilience_level = resilience_level
     for k, v in kwargs.items():
@@ -94,92 +105,88 @@ def _options(resilience_level=0, **kwargs):
     return opts
 
 
-class TestEstimatorPostProcessorV0_1(IBMTestCase):
+class TestEstimatorPostProcessorV0_1:
     """Tests for ``estimator_v2_post_processor_v0_1``."""
 
-    def test_post_processor_empty_result(self):
+    def test_post_processor_empty_result(self) -> None:
         """Empty result list returns an empty PrimitiveResult."""
         result = QuantumProgramResult(data=[], metadata=None, passthrough_data={})
         primitive_result = estimator_v2_post_processor_v0_1(result)
-        self.assertEqual(len(primitive_result), 0)
+        assert len(primitive_result) == 0
 
-    def test_post_processor_missing_passthrough_data(self):
+    def test_post_processor_missing_passthrough_data(self) -> None:
         """Missing ``post_processor`` key raises ValueError."""
         result = QuantumProgramResult(
             data=[QuantumProgramItemResult({"_meas": np.zeros((1, 1, 1, 2), dtype=bool)})],
             metadata=None,
             passthrough_data={"qiskit_mitigation": []},
         )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             estimator_v2_post_processor_v0_1(result)
 
-    def test_post_processor_single_pub_vanilla(self):
+    def test_post_processor_single_pub_vanilla(self) -> None:
         """Single vanilla pub returns correct expectation value."""
         # All-zero shots on ZZ → eigenvalue +1 for both qubits → ZZ = +1
         meas_data = np.zeros((1, 1, 10, 2), dtype=bool)
 
-        opts = _options(resilience_level=0)
-        pub = _make_pub(observable="ZZ")
-        result = _prepare_result([pub], opts, [meas_data])
+        opts = options(resilience_level=0)
+        pub = make_pub(observable="ZZ")
+        result = prepare_result([pub], opts, [meas_data])
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertEqual(len(primitive_result), 1)
-        self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), 1.0)
+        assert len(primitive_result) == 1
+        assert float(primitive_result[0].data.evs.ravel()[0]) == pytest.approx(1.0, abs=0.5e-7)
 
-    def test_post_processor_multiple_pubs(self):
+    def test_post_processor_multiple_pubs(self) -> None:
         """Multiple vanilla pubs each return the correct expectation value."""
         # Pub 0: all zeros → ZZ = +1
         meas_0 = np.zeros((1, 1, 10, 2), dtype=bool)
         # Pub 1: all ones → ZZ = (−1)(−1) = +1
         meas_1 = np.ones((1, 1, 10, 2), dtype=bool)
 
-        opts = _options(resilience_level=0)
-        pub0 = _make_pub(observable="ZZ")
-        pub1 = _make_pub(observable="ZZ")
-        result = _prepare_result([pub0, pub1], opts, [meas_0, meas_1])
+        opts = options(resilience_level=0)
+        pub0 = make_pub(observable="ZZ")
+        pub1 = make_pub(observable="ZZ")
+        result = prepare_result([pub0, pub1], opts, [meas_0, meas_1])
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertEqual(len(primitive_result), 2)
-        self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), 1.0)
-        self.assertAlmostEqual(float(primitive_result[1].data.evs.ravel()[0]), 1.0)
+        assert len(primitive_result) == 2
+        assert float(primitive_result[0].data.evs.ravel()[0]) == pytest.approx(1.0, abs=0.5e-7)
+        assert float(primitive_result[1].data.evs.ravel()[0]) == pytest.approx(1.0, abs=0.5e-7)
 
-    def test_post_processor_with_circuit_metadata(self):
+    def test_post_processor_with_circuit_metadata(self) -> None:
         """Circuit metadata stored in passthrough appears in pub result metadata."""
-        circuit = _make_circuit()
+        circuit = make_circuit()
         circuit.metadata = {"my_key": "my_value"}
         meas_data = np.zeros((1, 1, 10, 2), dtype=bool)
 
-        opts = _options(resilience_level=0)
+        opts = options(resilience_level=0)
         pub = EstimatorPub.coerce((circuit, SparsePauliOp.from_list([("ZZ", 1.0)])), None)
-        result = _prepare_result([pub], opts, [meas_data])
+        result = prepare_result([pub], opts, [meas_data])
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertEqual(
-            primitive_result[0].metadata["circuit_metadata"],
-            {"my_key": "my_value"},
-        )
+        assert primitive_result[0].metadata["circuit_metadata"] == {"my_key": "my_value"}
 
-    def test_post_processor_stds_without_twirling(self):
+    def test_post_processor_stds_without_twirling(self) -> None:
         """Without twirling (1 randomization), stds equals ensemble_standard_error."""
         # Shape: (1 rand, 1 config, 10 shots, 2 qubits)
         meas_data = np.array([[[[False, False]] * 8 + [[False, True], [True, False]]]])
 
-        opts = _options(resilience_level=0)
-        pub = _make_pub(observable="ZZ")
-        result = _prepare_result([pub], opts, [meas_data])
+        opts = options(resilience_level=0)
+        pub = make_pub(observable="ZZ")
+        result = prepare_result([pub], opts, [meas_data])
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
         data_bin = primitive_result[0].data
 
-        self.assertAlmostEqual(
-            float(data_bin.stds.ravel()[0]),
-            float(data_bin.ensemble_standard_error.ravel()[0]),
+        assert float(data_bin.stds.ravel()[0]) == pytest.approx(
+            float(data_bin.ensemble_standard_error.ravel()[0]), abs=0.5e-7
         )
 
-    def test_post_processor_stds_with_twirling(self):
+    def test_post_processor_stds_with_twirling(self) -> None:
         """With twirling, stds and ensemble_standard_error differ and match expected values."""
         # Shape: (3 rands, 1 config, 10 shots, 2 qubits)
         # Twirl 0: 8×00 + 01 + 10  → ZZ: 8×+1 + 2×-1 → ev = 0.6
@@ -193,57 +200,56 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
             ]
         )
 
-        opts = _options(
+        opts = options(
             resilience_level=0,
             **{"twirling.num_randomizations": 3, "twirling.shots_per_randomization": 10},
         )
-        pub = _make_pub(observable="ZZ")
-        result = _prepare_result([pub], opts, [meas_data])
+        pub = make_pub(observable="ZZ")
+        result = prepare_result([pub], opts, [meas_data])
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
         data_bin = primitive_result[0].data
 
-        self.assertAlmostEqual(float(data_bin.evs.ravel()[0]), 1 / 3, places=5)
+        assert float(data_bin.evs.ravel()[0]) == pytest.approx(1 / 3, abs=0.5e-5)
 
         expected_ensemble_std = np.sqrt((1 - (1 / 3) ** 2) / 30)
-        self.assertAlmostEqual(
-            float(data_bin.ensemble_standard_error.ravel()[0]), expected_ensemble_std, places=5
+        assert float(data_bin.ensemble_standard_error.ravel()[0]) == pytest.approx(
+            expected_ensemble_std, abs=0.5e-5
         )
 
         twirl_variance = (0.36 + 0.0 + 0.16) / 3 - (1 / 3) ** 2
         expected_stds = np.sqrt(twirl_variance / 3)
-        self.assertAlmostEqual(float(data_bin.stds.ravel()[0]), expected_stds, places=5)
+        assert float(data_bin.stds.ravel()[0]) == pytest.approx(expected_stds, abs=0.5e-5)
 
-        self.assertNotAlmostEqual(
-            float(data_bin.stds.ravel()[0]),
-            float(data_bin.ensemble_standard_error.ravel()[0]),
+        assert float(data_bin.stds.ravel()[0]) != pytest.approx(
+            float(data_bin.ensemble_standard_error.ravel()[0]), abs=0.5e-7
         )
 
-    def test_post_processor_computes_program_metadata_from_passthrough(self):
+    def test_post_processor_computes_program_metadata_from_passthrough(self) -> None:
         """Program-level metadata (shots, precision, options) appears in PrimitiveResult."""
         meas_data = np.zeros((1, 1, 10, 2), dtype=bool)
 
-        opts = _options(resilience_level=0)
-        pub = _make_pub(observable="ZZ")
-        result = _prepare_result([pub], opts, [meas_data], precision=0.03125)
+        opts = options(resilience_level=0)
+        pub = make_pub(observable="ZZ")
+        result = prepare_result([pub], opts, [meas_data], precision=0.03125)
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
         metadata = primitive_result.metadata
-        self.assertIn("shots", metadata)
-        self.assertIn("target_precision", metadata)
-        self.assertIn("options", metadata)
+        assert "shots" in metadata
+        assert "target_precision" in metadata
+        assert "options" in metadata
 
-    def test_populating_compilation_key(self):
+    def test_populating_compilation_key(self) -> None:
         """``compilation`` key is populated when ``ItemMetadata`` is present."""
-        timing = SchedulerTiming(timing=1.0, circuit_duration=2.0)
+        timing = SchedulerTiming(timing=1.0, circuit_duration=2.0)  # type: ignore[arg-type]
         stretch = StretchValues(name="cx", value=1, remainder=0, expanded_values=[(1, 2)])
         item_meta = ItemMetadata(scheduler_timing=timing, stretch_values=[stretch])
 
         meas_data = np.zeros((1, 1, 10, 2), dtype=bool)
-        opts = _options(resilience_level=0)
-        pub = _make_pub(observable="ZZ")
-        result = _prepare_result([pub], opts, [meas_data])
+        opts = options(resilience_level=0)
+        pub = make_pub(observable="ZZ")
+        result = prepare_result([pub], opts, [meas_data])
 
         # Inject real ItemMetadata into the result item
         result._data[0] = QuantumProgramItemResult({"_meas": meas_data}, metadata=item_meta)
@@ -251,39 +257,30 @@ class TestEstimatorPostProcessorV0_1(IBMTestCase):
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
         compilation = primitive_result[0].metadata.get("compilation", {})
-        self.assertIn("scheduler_timing", compilation)
-        self.assertIn("stretch_values", compilation)
-        self.assertEqual(compilation["scheduler_timing"]["timing"], 1.0)
+        assert "scheduler_timing" in compilation
+        assert "stretch_values" in compilation
+        assert compilation["scheduler_timing"]["timing"] == 1.0
 
-    def test_simulation_info_in_metadata(self):
+    def test_simulation_info_in_metadata(self) -> None:
         """Simulator dict metadata is stored under ``executor`` key."""
         sim_meta = {"simulator": "aer", "shots": 1024}
         meas_data = np.zeros((1, 1, 10, 2), dtype=bool)
-        opts = _options(resilience_level=0)
-        pub = _make_pub(observable="ZZ")
-        result = _prepare_result([pub], opts, [meas_data])
+        opts = options(resilience_level=0)
+        pub = make_pub(observable="ZZ")
+        result = prepare_result([pub], opts, [meas_data])
 
         result._data[0] = QuantumProgramItemResult({"_meas": meas_data}, metadata=sim_meta)
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertIn("executor", primitive_result[0].metadata)
-        self.assertEqual(primitive_result[0].metadata["executor"], sim_meta)
+        assert "executor" in primitive_result[0].metadata
+        assert primitive_result[0].metadata["executor"] == sim_meta
 
 
-class TestEstimatorPostProcessorPEC(IBMTestCase):
+class TestEstimatorPostProcessorPEC:
     """Integration tests for PEC dispatch in ``estimator_v2_post_processor_v0_1``."""
 
-    def _make_pec_options(self, noise_gain="auto", max_overhead=100):
-        opts = EstimatorOptions()
-        opts.resilience.pec_mitigation = True
-        opts.twirling.enable_gates = True
-        opts.twirling.enable_measure = True
-        opts.resilience.pec.noise_gain = noise_gain
-        opts.resilience.pec.max_overhead = max_overhead
-        return opts
-
-    def test_post_processor_pec_dispatch_applies_gamma(self):
+    def test_post_processor_pec_dispatch_applies_gamma(self) -> None:
         """PEC gamma scaling is applied to the expectation value.
 
         Uses an empty circuit (no gates) so PEC doesn't need layer-specific
@@ -342,9 +339,9 @@ class TestEstimatorPostProcessorPEC(IBMTestCase):
 
         primitive_result = estimator_v2_post_processor_v0_1(result)
 
-        self.assertAlmostEqual(float(primitive_result[0].data.evs.ravel()[0]), gamma, places=5)
+        assert float(primitive_result[0].data.evs.ravel()[0]) == pytest.approx(gamma, abs=0.5e-5)
 
-    def test_pec_post_processor_output_shape(self):
+    def test_pec_post_processor_output_shape(self) -> None:
         """PEC output DataBin has the correct broadcast shape.
 
         Uses Z-only observables on an empty circuit so all terms are diagonal
@@ -412,25 +409,26 @@ class TestEstimatorPostProcessorPEC(IBMTestCase):
         # broadcast_shapes(obs_shape=(2,2), param_shape=()) == (2,2)
         expected_shape = np.broadcast_shapes(obs_shape, pub.parameter_values.shape)
         data_bin = primitive_result[0].data
-        self.assertTupleEqual(data_bin.evs.shape, expected_shape)
-        self.assertTupleEqual(data_bin.stds.shape, expected_shape)
-        self.assertTupleEqual(data_bin.ensemble_standard_error.shape, expected_shape)
+        assert data_bin.evs.shape == expected_shape
+        assert data_bin.stds.shape == expected_shape
+        assert data_bin.ensemble_standard_error.shape == expected_shape
 
 
-@ddt
-class TestBuildProgramMetadata(IBMTestCase):
+class TestBuildProgramMetadata:
     """Tests for the :func:`_build_program_result_metadata` helper."""
 
-    @data(
-        ("zne_mitigation", "zne"),
-        ("pec_mitigation", "pec"),
-        ("measure_mitigation", "measure_noise_learning"),
+    @pytest.mark.parametrize(
+        ("flag_key", "options_key"),
+        [
+            ("zne_mitigation", "zne"),
+            ("pec_mitigation", "pec"),
+            ("measure_mitigation", "measure_noise_learning"),
+        ],
     )
-    @unpack
-    def test_drops_inactive_resilience_sub_options(self, flag_key, options_key):
+    def test_drops_inactive_resilience_sub_options(self, flag_key: str, options_key: str) -> None:
         """Inactive-flag sub-option dicts are dropped from the metadata dict."""
 
-        def _get_resilience_metadata(flag_value):
+        def _get_resilience_metadata(flag_value: bool) -> dict:
             options = EstimatorOptions()
             options.resilience_level = 0
             setattr(options.resilience, flag_key, flag_value)
@@ -442,12 +440,12 @@ class TestBuildProgramMetadata(IBMTestCase):
             return _build_program_result_metadata(post_processor_data)["options"]["resilience"]
 
         resilience_off = _get_resilience_metadata(False)
-        self.assertNotIn(options_key, resilience_off)
+        assert options_key not in resilience_off
 
         resilience_on = _get_resilience_metadata(True)
-        self.assertIn(options_key, resilience_on)
+        assert options_key in resilience_on
 
-    def test_returns_shots_and_precision(self):
+    def test_returns_shots_and_precision(self) -> None:
         """Shots and target_precision appear in the returned metadata."""
         post_processor_data = {
             "options": EstimatorOptions().model_dump(),
@@ -455,10 +453,10 @@ class TestBuildProgramMetadata(IBMTestCase):
             "precision": 0.02,
         }
         meta = _build_program_result_metadata(post_processor_data)
-        self.assertEqual(meta["shots"], 2048)
-        self.assertEqual(meta["target_precision"], 0.02)
+        assert meta["shots"] == 2048
+        assert meta["target_precision"] == 0.02
 
-    def test_no_options_returns_empty(self):
+    def test_no_options_returns_empty(self) -> None:
         """Missing ``options`` returns empty dict."""
         meta = _build_program_result_metadata({"shots": 1024})
-        self.assertEqual(meta, {})
+        assert meta == {}

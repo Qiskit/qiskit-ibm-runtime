@@ -29,6 +29,7 @@ from ..options.noise_learner_options import NoiseLearnerOptions
 from ..options.utils import remove_dict_unset_values, remove_empty_dict
 from ..qiskit_runtime_service import QiskitRuntimeService
 from ..utils import validate_isa_circuits
+from ..utils.deprecation import issue_deprecation_msg
 from ..utils.utils import is_simulator
 
 if TYPE_CHECKING:
@@ -127,6 +128,14 @@ class NoiseLearner:
         mode: BackendV2 | Session | Batch | None = None,
         options: dict | NoiseLearnerOptions | options.EstimatorOptions | None = None,
     ):
+        issue_deprecation_msg(
+            msg="The NoiseLearner class is deprecated",
+            version="0.51.0",
+            remedy="Switch to `qiskit_ibm_runtime.NoiseLearnerV3`, a new noise learner class "
+            "designed to be compatible with Executor and with the client-side implementation of "
+            "Estimator.",
+            stacklevel=2,
+        )
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         if self._service.is_local:
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")

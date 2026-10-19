@@ -1,0 +1,6 @@
+Added the :meth:`.QuantumProgram.from_` class method, which converts a
+:class:`samplomatic.quantum_program.QuantumProgram` to a :class:`.QuantumProgram`.
+
+In addition, :meth:`.Executor.run` now accepts a :class:`samplomatic.quantum_program.QuantumProgram`
+as a valid input. It is automatically converted to a :class:`.QuantumProgram` using
+:meth:`.QuantumProgram.from_` when run.

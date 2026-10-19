@@ -14,7 +14,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
+import pytest
 from qiskit.primitives.containers import BitArray
 from qiskit.quantum_info import PauliLindbladMap, Statevector, hellinger_fidelity
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -23,26 +26,34 @@ from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
+    from qiskit.providers import BackendV2
+
 from qiskit_ibm_runtime import Executor, QuantumProgram
 
-from ....ibm_test_case import IBMTestCase
 from ....utils import make_mirror_circuit_with_phases
 
 
-class TestExecutor(IBMTestCase):
+def boxed_mirror_circuit(backend: BackendV2) -> tuple[QuantumCircuit, QuantumCircuit]:
+    """Return a mirror circuit, and the boxed and ISA-compliant version of it for `backend`."""
+    circuit = make_mirror_circuit_with_phases(backend)
+
+    pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+    pass_manager.post_scheduling = generate_boxing_pass_manager(
+        enable_gates=True,
+        enable_measures=True,
+        add_tags="unique_box",
+        inject_noise_site="after",
+    )
+
+    return circuit, pass_manager.run(circuit)
+
+
+class TestExecutor:
     """Executor tests centered around qiskit-aer simulations."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        self.backend = AerSimulator()
-
-        # The tolerance used when verifying simulated counts with exact probabilities via
-        # Hellinger distance.
-        self.tolerance = 0.01
-
-    def test_noiseless_simulation(self):
+    def test_noiseless_simulation(self) -> None:
         """Test noiseless local mode simulations with the executor.
 
         Checks that:
@@ -50,17 +61,11 @@ class TestExecutor(IBMTestCase):
         * The results are correct via Hellinger distance. Probabilities of each outcome are computed
           exactly using Qiskit's StateVector class.
         """
-        circuit = make_mirror_circuit_with_phases(self.backend)
+        # The tolerance used when verifying simulated counts with exact probabilities via
+        # Hellinger distance.
+        tolerance = 0.01
 
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
-        pm.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True,
-            enable_measures=True,
-            add_tags="unique_box",
-            inject_noise_site="after",
-        )
-
-        boxed_isa_circuit = pm.run(circuit)
+        circuit, boxed_isa_circuit = boxed_mirror_circuit(AerSimulator())
         isa_template, samplex = build(boxed_isa_circuit)
 
         shape = (2, 4)
@@ -78,24 +83,20 @@ class TestExecutor(IBMTestCase):
         result = job.result()
 
         array = result[0]["meas"] ^ result[0]["measurement_flips.meas"]
-        self.assertEqual(array.shape, shape + (shots,) + (circuit.num_parameters,))
+        assert array.shape == shape + (shots,) + (circuit.num_parameters,)
 
         circuit.remove_final_measurements()
         for index in np.ndindex(parameter_values.shape[:-1]):
             assigned_parameters = parameter_values[index]
             bound_circuit = circuit.assign_parameters(assigned_parameters)
             probabilities = Statevector(bound_circuit).probabilities_dict()
-            self.assertAlmostEqual(
-                fidelity := hellinger_fidelity(
-                    BitArray.from_bool_array(array[index], order="little").get_counts(),
-                    probabilities,
-                ),
-                1.0,
-                msg=f"Fidelity: {fidelity}",
-                delta=self.tolerance,
+            fidelity = hellinger_fidelity(
+                BitArray.from_bool_array(array[index], order="little").get_counts(),
+                probabilities,
             )
+            assert fidelity == pytest.approx(1.0, abs=tolerance), f"Fidelity: {fidelity}"
 
-    def test_noisy_simulation(self):
+    def test_noisy_simulation(self) -> None:
         """Test noisy local mode simulations with the executor.
 
         Checks that:
@@ -103,17 +104,7 @@ class TestExecutor(IBMTestCase):
           Probabilities of each outcome are computed exactly using Qiskit's StateVector class
           and fidelities are computed via Hellinger distance.
         """
-        circuit = make_mirror_circuit_with_phases(self.backend)
-
-        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
-        pm.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True,
-            enable_measures=True,
-            add_tags="unique_box",
-            inject_noise_site="after",
-        )
-
-        boxed_isa_circuit = pm.run(circuit)
+        circuit, boxed_isa_circuit = boxed_mirror_circuit(AerSimulator())
         isa_template, samplex = build(boxed_isa_circuit)
 
         parameter_values = np.random.random((circuit.num_parameters,))
@@ -145,8 +136,8 @@ class TestExecutor(IBMTestCase):
         ]
         fidelities = []
         for pauli_map in pauli_maps:
-            executor.options.simulator.layer_noise_model = zip(
-                unique_instructions, (pauli_map,) * len(unique_instructions)
+            executor.options.simulator.layer_noise_model = list(
+                zip(unique_instructions, (pauli_map,) * len(unique_instructions))
             )
             job = executor.run(program)
             result = job.result()
@@ -159,5 +150,5 @@ class TestExecutor(IBMTestCase):
                 )
             )
 
-        self.assertGreater(fidelities[0], fidelities[1])
-        self.assertGreater(fidelities[1], fidelities[2])
+        assert fidelities[0] > fidelities[1]
+        assert fidelities[1] > fidelities[2]

@@ -30,6 +30,10 @@ extras `performance` and `visualization` when installing:
 pip install qiskit-ibm-runtime[performance,visualization]
 ```
 
+## Code migration
+
+Consider using the `migrate-qiskit-ibm-runtime` AI agent skill from [Qiskit/skills](https://github.com/Qiskit/skills) to migrate old `qiskit-ibm-runtime` code to the latest version.
+
 ## Account setup
 
 ### IBM Quantum Compute service on IBM Quantum Platform
@@ -150,7 +154,8 @@ To invoke the `Sampler` primitive
 ```python
 from qiskit import QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.executor_sampler import Sampler
 
 service = QiskitRuntimeService()
 
@@ -181,11 +186,13 @@ This primitive takes circuits and observables as input, to evaluate expectation 
 To invoke the `Estimator` primitive:
 
 ```python
-from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
-from qiskit.quantum_info import SparsePauliOp
+from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.executor_estimator import Estimator
+
 from qiskit import QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.circuit import Parameter
+from qiskit.quantum_info import SparsePauliOp
 import numpy as np
 
 service = QiskitRuntimeService()
@@ -236,7 +243,9 @@ session. Consider the same example above and try to find the optimal `theta`. Th
 To invoke the `Estimator` primitive within a session:
 
 ```python
-from qiskit_ibm_runtime import QiskitRuntimeService, Session, EstimatorV2 as Estimator
+from qiskit_ibm_runtime import QiskitRuntimeService, Session
+from qiskit_ibm_runtime.executor_estimator import Estimator
+
 from qiskit.quantum_info import SparsePauliOp
 from qiskit import QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -368,7 +377,7 @@ export USAGE_DATA_OPT_OUT=True
 
 If you'd like to contribute to `qiskit-ibm-runtime`, please take a look at our
 [contribution guidelines]. This project adheres to Qiskit's [code of conduct].
-By participating, you are expected to uphold to this code.
+By participating, you are expected to uphold this code.
 
 We use [GitHub issues] for tracking requests and bugs. Please use our [slack]
 for discussion and simple questions. To join our Slack community use the
