@@ -264,6 +264,7 @@ doc = [
 dev = [
     "qiskit-ibm-runtime[doc]",
     "qiskit-ibm-runtime[performance]",
+    "qiskit_ibm_runtime[noise-learning]",
     "qiskit-ibm-runtime[style_local]",
     "qiskit-ibm-runtime[style]",
     "qiskit-ibm-runtime[test]",
