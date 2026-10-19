@@ -64,7 +64,7 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
             creg_identifier=suffix_creg_identifier(DEFAULT_POST_CHECK_SUFFIX), mode=post["strategy"]
         )
         raw_data_stage = raw_data_stage if raw_data_stage is None else raw_data_stage + post_stage
-    noise_maps, gate_names, fit = process_vanilla_result(result, raw_data_stage=raw_data_stage)
+    noise_maps, gate_names, _ = process_vanilla_result(result, raw_data_stage=raw_data_stage)
     return NoiseLearnerV3Results(
         [
             NoiseLearnerV3Result.from_generators(
