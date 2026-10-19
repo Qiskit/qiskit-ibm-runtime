@@ -146,7 +146,7 @@ def quantum_program_to_2_0(program: QuantumProgram, options: ExecutorOptions) ->
                     else:
                         arguments[name] = value
             model_item = SamplexItemModel(
-                samplex=SamplexModel.from_samplex(item.samplex, ssv=get_ssv_version(4)),
+                samplex=SamplexModel.from_samplex(item.samplex, ssv=get_ssv_version(None)),
                 samplex_arguments=arguments,
                 shape=item.shape,
                 chunk_size=chunk_size,
