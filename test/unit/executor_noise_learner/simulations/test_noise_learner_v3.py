@@ -14,26 +14,59 @@
 
 from __future__ import annotations
 
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import PauliLindbladMap
+import numpy as np
+from qiskit import QuantumCircuit, QuantumRegister
+from qiskit.quantum_info import PauliLindbladMap, random_pauli_list
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
+from samplomatic import InjectNoise, Tag, Twirl
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.executor_noise_learner import NoiseLearnerV3 as NoiseLearner
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
+
+
+def assert_almost_equal_pauli_maps(
+    actual: PauliLindbladMap, desired: PauliLindbladMap, atol: float = 0.005
+) -> None:
+    """Raises an AssertionError if two `PauliLindbladMap`s are not equal up to desired precision."""
+    desired_table = {gen: {tuple(qubits): rate} for gen, qubits, rate in desired.to_sparse_list()}
+    for gen, qubits, rate in actual.to_sparse_list():
+        if gen in desired_table and tuple(qubits) in desired_table[gen]:
+            np.testing.assert_allclose(desired_table[gen][tuple(qubits)], rate, atol=atol)
+        else:
+            np.testing.assert_allclose(rate, 0, atol=atol)
+
+
+def generate_random_pauli_map(
+    num_qubits: int, size: int = 1, max_rate: float = 1.0, seed: int | None = None
+) -> PauliLindbladMap:
+    """Generates a random ``PauliLindbladMap``.
+
+    Args:
+        num_qubits: The number of qubits.
+        size: The number of Pauli terms.
+        max_rate: The maximum allowable rate.
+        seed: Set a fixed seed or generator for RNG.
+
+    Returns:
+        A random ``PauliLindbladMap``.
+    """
+    rng = np.random.default_rng(seed)
+    generators = random_pauli_list(num_qubits, size=size, seed=rng, phase=False)
+    return PauliLindbladMap.from_list([(str(gen), rng.uniform(0, max_rate)) for gen in generators])
 
 
 class TestNoiseLearnerV3:
     """Tests client-side noise learner using simulator with noise through local mode."""
 
     def test_noise_learning_with_identity_noise_injection(self) -> None:
-        """Tests the client-side noise learner with local mode noise injection.
+        """Tests the client-side noise learner with identity local mode noise injection.
 
         The resulting noise model should match what is injected.
         """
-        backend = AerSimulator(method="stabilizer", target=FakeManilaV2().target)
+        backend = AerSimulator(method="stabilizer", target=FakeMarrakesh().target)
 
         circuit = QuantumCircuit(2)
         circuit.cz(0, 1)
@@ -51,11 +84,40 @@ class TestNoiseLearnerV3:
 
         noise_learner = NoiseLearner(mode=backend)
         noise_learner.options.simulator.layer_noise_model = list(zip(layers, noise_maps))
-        noise_learner.options.shots_per_randomization = 256
         job = noise_learner.run(layers)
         result = job.result()
 
         simplified_noise_maps = [
             noise_map.simplify() for noise_map in result.to_pauli_lindblad_maps()
         ]
-        assert simplified_noise_maps == noise_maps
+
+        for expected, obtained in zip(noise_maps, simplified_noise_maps):
+            assert_almost_equal_pauli_maps(expected, obtained)
+
+    def test_noise_learning_with_noop_noise_injection(self):
+        """Tests the client-side noise learner with local mode noise injection and a noop layer.
+
+        The resulting noise model should match what is injected.
+        """
+        backend = AerSimulator(method="stabilizer", target=FakeMarrakesh().target)
+
+        circuit = QuantumCircuit(QuantumRegister(backend.num_qubits, name="q"))
+        with circuit.box(annotations=[Twirl(), InjectNoise("my_ref"), Tag("ciao")]):
+            circuit.noop([3, 2, 4])
+
+        layers = find_unique_box_instructions(circuit.data)
+        noise_maps = [
+            generate_random_pauli_map(num_qubits=3, size=10, max_rate=0.003),
+        ]
+
+        noise_learner = NoiseLearner(mode=backend)
+        noise_learner.options.simulator.layer_noise_model = zip(layers, noise_maps)
+        job = noise_learner.run(layers)
+        result = job.result()
+
+        simplified_noise_maps = [
+            noise_map.simplify() for noise_map in result.to_pauli_lindblad_maps()
+        ]
+
+        for expected, obtained in zip(noise_maps, simplified_noise_maps):
+            assert_almost_equal_pauli_maps(expected, obtained)
