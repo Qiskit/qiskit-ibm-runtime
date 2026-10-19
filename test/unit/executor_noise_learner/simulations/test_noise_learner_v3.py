@@ -62,8 +62,8 @@ def generate_random_pauli_map(
 class TestNoiseLearnerV3:
     """Tests client-side noise learner using simulator with noise through local mode."""
 
-    def test_noise_learning_with_identity_noise_injection(self) -> None:
-        """Tests the client-side noise learner with identity local mode noise injection.
+    def test_noise_learning_with_noise_injection(self) -> None:
+        """Tests the client-side noise learner with local mode noise injection.
 
         The resulting noise model should match what is injected.
         """
@@ -79,9 +79,7 @@ class TestNoiseLearnerV3:
 
         layers = find_unique_box_instructions(boxed_circuit.data)
         noise_maps = [
-            generate_random_pauli_map(
-                num_qubits=layer.operation.num_qubits, size=10, max_rate=0.003
-            )
+            generate_random_pauli_map(num_qubits=layer.operation.num_qubits, size=3, max_rate=0.003)
             for layer in layers
         ]
 
@@ -108,6 +106,37 @@ class TestNoiseLearnerV3:
         circuit = QuantumCircuit(QuantumRegister(backend.num_qubits, name="q"))
         with circuit.box(annotations=[Twirl(), InjectNoise("my_ref"), Tag()]):
             circuit.noop(qubits)
+
+        layers = find_unique_box_instructions(circuit.data)
+        noise_maps = [
+            generate_random_pauli_map(
+                num_qubits=layer.operation.num_qubits, size=10, max_rate=0.003
+            )
+            for layer in layers
+        ]
+
+        noise_learner = NoiseLearner(mode=backend)
+        noise_learner.options.simulator.layer_noise_model = zip(layers, noise_maps)
+        job = noise_learner.run(layers)
+        result = job.result()
+
+        simplified_noise_maps = [
+            noise_map.simplify() for noise_map in result.to_pauli_lindblad_maps()
+        ]
+
+        for expected, obtained in zip(noise_maps, simplified_noise_maps):
+            assert_almost_equal_pauli_maps(expected, obtained)
+
+    def test_noise_learning_with_meas_noise_injection(self):
+        """Tests the client-side noise learner with local mode noise injection and a meas layer.
+
+        The resulting noise model should match what is injected.
+        """
+        backend = AerSimulator(method="stabilizer", target=FakeMarrakesh().target)
+
+        circuit = QuantumCircuit(QuantumRegister(backend.num_qubits, name="q"))
+        with circuit.box(annotations=[Twirl(), InjectNoise("my_ref"), Tag()]):
+            circuit.measure_all()
 
         layers = find_unique_box_instructions(circuit.data)
         noise_maps = [
