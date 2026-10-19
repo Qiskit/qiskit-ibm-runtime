@@ -19,7 +19,7 @@ from math import pi
 from typing import TYPE_CHECKING
 
 import numpy as np
-from qiskit.circuit.library.standard_gates import GlobalPhaseGate, RZGate, RZZGate, XGate
+from qiskit.circuit.library.standard_gates import RZGate, RZZGate, XGate
 from qiskit.dagcircuit import DAGCircuit
 
 if TYPE_CHECKING:
