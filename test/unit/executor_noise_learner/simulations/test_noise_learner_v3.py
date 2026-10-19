@@ -79,8 +79,10 @@ class TestNoiseLearnerV3:
 
         layers = find_unique_box_instructions(boxed_circuit.data)
         noise_maps = [
-            PauliLindbladMap.identity(layers[0].operation.num_qubits),
-            PauliLindbladMap.identity(layers[1].operation.num_qubits),
+            generate_random_pauli_map(
+                num_qubits=layer.operation.num_qubits, size=10, max_rate=0.003
+            )
+            for layer in layers
         ]
 
         noise_learner = NoiseLearner(mode=backend)
