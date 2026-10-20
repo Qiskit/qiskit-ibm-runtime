@@ -99,8 +99,8 @@ class TestNoiseLearnerV3:
         layers = find_unique_box_instructions(boxed_circuit.data)
 
         noise_maps = [
-            PauliLindbladMap.from_list([("ZI", 0.03)]),
-            PauliLindbladMap.from_list([("IX", 0.01)]),
+            PauliLindbladMap.from_list([("ZI", 0.03), ("XI", 0.04)]),
+            PauliLindbladMap.from_list([("XI", 0.02), ("IX", 0.01)]),
         ]
 
         noise_learner = NoiseLearner(mode=backend)
