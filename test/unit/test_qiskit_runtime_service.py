@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -190,6 +191,8 @@ class TestAccountHandling:
         # The service stores information for backends (3) in all the 2 accounts.
         assert len(service.backends()) == 3
 
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
     def test_with_config_file_no_args(self, registry: BaseRegistry) -> None:
         """Initializing with no args and a config file selects the last instance in the file."""
         with temporary_account_config_file(
@@ -203,6 +206,8 @@ class TestAccountHandling:
         # The service stores information for backends (2) in 1 account.
         assert len(service.backends()) == 2
 
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
     def test_with_config_file_instance(self, registry: BaseRegistry) -> None:
         """Initializing with `instance` arg and a config file selects that instance."""
         with temporary_account_config_file(
@@ -216,6 +221,8 @@ class TestAccountHandling:
         # The service stores information for backends (2) in 1 account.
         assert len(service.backends()) == 2
 
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
     def test_with_config_file_name(self, registry: BaseRegistry) -> None:
         """Initializing with `name` arg and a config file selects that instance."""
         with temporary_account_config_file(

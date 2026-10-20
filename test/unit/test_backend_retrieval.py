@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -379,7 +380,14 @@ class TestGetBackend:
 
     @pytest.mark.parametrize(
         "use_account",
-        [True, False],
+        [
+            # NamedTemporaryFiles not supported in Windows.
+            pytest.param(
+                True,
+                marks=pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows"),
+            ),
+            False,
+        ],
     )
     def test_retrieve_mock_backend(
         self, use_account: bool, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
@@ -439,7 +447,14 @@ class TestGetBackend:
 
     @pytest.mark.parametrize(
         "use_account",
-        [True, False],
+        [
+            # NamedTemporaryFiles not supported in Windows.
+            pytest.param(
+                True,
+                marks=pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows"),
+            ),
+            False,
+        ],
     )
     def test_retrieve_mock_backend_instance_auto(
         self, use_account: bool, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
