@@ -149,18 +149,18 @@ class TestNoiseLearnerV3:
         for expected, obtained in zip(noise_maps, simplified_noise_maps):
             compare_pauli_lindblad_maps(expected, obtained)
 
-    @pytest.mark.parametrize("qubits", [(0, 1)])
+    @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_meas_noise_injection(self, qubits):
         """Tests the client-side noise learner with local mode noise injection and a meas layer.
 
         The resulting noise model should match what is injected.
         """
         backend = AerSimulator(method="stabilizer")
-        backend.set_max_qubits(num_qubits := len(qubits))
+        backend.set_max_qubits(num_qubits := max(qubits) + 1)
 
         circuit = QuantumCircuit(num_qubits, num_qubits)
         with circuit.box(annotations=[Twirl(), InjectNoise("my_ref"), Tag()]):
-            circuit.measure(qubits, list(range(num_qubits)))
+            circuit.measure(qubits, qubits)
 
         layers = find_unique_box_instructions(circuit.data)
         noise_maps = [
