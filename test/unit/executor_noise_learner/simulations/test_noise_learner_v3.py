@@ -115,19 +115,16 @@ class TestNoiseLearnerV3:
             noise_map.simplify() for noise_map in result.to_pauli_lindblad_maps()
         ]
 
-        # check measurement layer
-        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1], atol=5e-3)
-
-        # checking of degeneracies in gate layer
-        obtained_sparse_list = simplified_noise_maps[0].to_sparse_list()
-        for pauli, qubit, rate in obtained_sparse_list:
-            if pauli == "Z" and qubit == [1]:
-                np.testing.assert_allclose(rate, 0.03, atol=5e-3)
-            elif (pauli == "X" and qubit == [1]) or (pauli == "ZX" and qubit == [0, 1]):
-                # rate should be half due to degeneracy
-                np.testing.assert_allclose(rate, 0.04 / 2, atol=5e-3)
-            else:
-                np.testing.assert_allclose(rate, 0, atol=5e-3)
+        # expect a degeneracy with the noncommutative "XI" term
+        expected_gate_map = PauliLindbladMap.from_list(
+            [
+                ("XZ", 0.04 / 2),
+                ("XI", 0.04 / 2),
+                ("ZI", 0.03),
+            ]
+        )
+        compare_pauli_lindblad_maps(simplified_noise_maps[0], expected_gate_map)
+        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1])
 
     @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_noop_noise_injection(self, qubits):
