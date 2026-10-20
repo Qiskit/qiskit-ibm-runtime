@@ -10,4 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Estimator tests centered around qiskit-aer simulations."""
+"""Client-side noise learner tests centered around qiskit-aer simulations."""
