@@ -27,19 +27,38 @@ from samplomatic.utils import find_unique_box_instructions
 from qiskit_ibm_runtime.executor_noise_learner import NoiseLearnerV3 as NoiseLearner
 
 
-def assert_almost_equal_pauli_maps(
+def compare_pauli_lindblad_maps(
     actual: PauliLindbladMap, desired: PauliLindbladMap, atol: float = 0.005
 ) -> None:
-    """Raises an AssertionError if two `PauliLindbladMap`s are not equal up to desired precision."""
+    """Compare ``actual`` to ``desired`` via their rates.
+
+    The two maps are considered equal if every (approximately) non-zero rate in
+    ``actual`` matches the corresponding rate in ``desired`` and
+    ``actual`` is not missing any (approximately) non-zero term that appears in
+    ``desired``.
+
+    Args:
+        actual: The ``PauliLindbladMap`` to test.
+        desired: The ``PauliLindbladMap`` to compare against.
+        atol: Absolute tolerance used when comparing rates.
+
+    Raises:
+        AssertionError: If ``actual`` and ``desired`` are not equal within ``atol``.
+    """
     desired_table = {gen: {tuple(qubits): rate} for gen, qubits, rate in desired.to_sparse_list()}
     for gen, qubits, rate in actual.to_sparse_list():
         if gen in desired_table and tuple(qubits) in desired_table[gen]:
             np.testing.assert_allclose(desired_table[gen][tuple(qubits)], rate, atol=atol)
+            desired_table[gen].pop(tuple(qubits))
         else:
             np.testing.assert_allclose(rate, 0, atol=atol)
+    remaining_rates = [
+        rate for qubit_rates in desired_table.values() for rate in qubit_rates.values()
+    ]
+    np.testing.assert_allclose(remaining_rates, 0, atol=atol)
 
 
-def generate_random_pauli_map(
+def generate_random_pauli_lindblad_map(
     num_qubits: int, size: int = 1, max_rate: float = 1.0, seed: int | None = None
 ) -> PauliLindbladMap:
     """Generates a random ``PauliLindbladMap``.
@@ -78,9 +97,10 @@ class TestNoiseLearnerV3:
         boxed_circuit = pass_manager.run(circuit)
 
         layers = find_unique_box_instructions(boxed_circuit.data)
+
         noise_maps = [
-            generate_random_pauli_map(num_qubits=layer.operation.num_qubits, size=3, max_rate=0.003)
-            for layer in layers
+            PauliLindbladMap.from_list([("ZI", 0.03)]),
+            PauliLindbladMap.from_list([("IX", 0.01)]),
         ]
 
         noise_learner = NoiseLearner(mode=backend)
@@ -93,7 +113,7 @@ class TestNoiseLearnerV3:
         ]
 
         for expected, obtained in zip(noise_maps, simplified_noise_maps):
-            assert_almost_equal_pauli_maps(expected, obtained)
+            compare_pauli_lindblad_maps(expected, obtained)
 
     @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_noop_noise_injection(self, qubits):
@@ -110,7 +130,7 @@ class TestNoiseLearnerV3:
 
         layers = find_unique_box_instructions(circuit.data)
         noise_maps = [
-            generate_random_pauli_map(
+            generate_random_pauli_lindblad_map(
                 num_qubits=layer.operation.num_qubits, size=10, max_rate=0.003
             )
             for layer in layers
@@ -118,6 +138,7 @@ class TestNoiseLearnerV3:
 
         noise_learner = NoiseLearner(mode=backend)
         noise_learner.options.simulator.layer_noise_model = zip(layers, noise_maps)
+        noise_learner.options.simulator.warn_absent = False  # due to missing `M` tag
         job = noise_learner.run(layers)
         result = job.result()
 
@@ -126,23 +147,24 @@ class TestNoiseLearnerV3:
         ]
 
         for expected, obtained in zip(noise_maps, simplified_noise_maps):
-            assert_almost_equal_pauli_maps(expected, obtained)
+            compare_pauli_lindblad_maps(expected, obtained)
 
-    def test_noise_learning_with_meas_noise_injection(self):
+    @pytest.mark.parametrize("qubits", [(0, 1)])
+    def test_noise_learning_with_meas_noise_injection(self, qubits):
         """Tests the client-side noise learner with local mode noise injection and a meas layer.
 
         The resulting noise model should match what is injected.
         """
         backend = AerSimulator(method="stabilizer")
-        backend.set_max_qubits(2)
+        backend.set_max_qubits(num_qubits := len(qubits))
 
-        circuit = QuantumCircuit(backend.num_qubits, backend.num_qubits)
+        circuit = QuantumCircuit(num_qubits, num_qubits)
         with circuit.box(annotations=[Twirl(), InjectNoise("my_ref"), Tag()]):
-            circuit.measure_all()
+            circuit.measure(qubits, list(range(num_qubits)))
 
         layers = find_unique_box_instructions(circuit.data)
         noise_maps = [
-            generate_random_pauli_map(
+            generate_random_pauli_lindblad_map(
                 num_qubits=layer.operation.num_qubits, size=10, max_rate=0.003
             )
             for layer in layers
@@ -158,4 +180,4 @@ class TestNoiseLearnerV3:
         ]
 
         for expected, obtained in zip(noise_maps, simplified_noise_maps):
-            assert_almost_equal_pauli_maps(expected, obtained)
+            compare_pauli_lindblad_maps(expected, obtained)
