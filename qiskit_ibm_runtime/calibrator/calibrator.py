@@ -17,17 +17,18 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from .base_primitive import get_mode_service_backend
-from .options_models.calibrator import CalibratorOptions
-from .options_models.converters import to_runtime_options
-from .utils.default_session import get_cm_session
+from ..base_primitive import get_mode_service_backend
+from ..options_models.calibrator import CalibratorOptions
+from ..options_models.converters import to_runtime_options
+from ..utils.default_session import get_cm_session
+from .params_converters import CALIBRATOR_PARAMS_CONVERTERS
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
-    from .batch import Batch
-    from .runtime_job_v2 import RuntimeJobV2
-    from .session import Session
+    from ..batch import Batch
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
 
 
 logger = logging.getLogger(__name__)
@@ -36,24 +37,39 @@ logger = logging.getLogger(__name__)
 class Calibrator:
     r"""Class for calibrating a backend.
 
+    A calibrator can be initialized only inside a session.
     The :meth:`run` method can be used to submit a calibration request for a backend.
 
     .. code-block:: python
 
-        from qiskit_ibm_runtime import QiskitRuntimeService
-        from qiskit_ibm_runtime.calibrator import Calibrator
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Calibrator
 
         service = QiskitRuntimeService()
         backend = service.backend("ibm_boston")
 
-        calibrator = Calibrator(backend)
-        job = calibrator.run()
+        with Session(backend=backend) as session:
+            calibrator = Calibrator(session)
+            calibrator.run()
 
     Args:
-        backend: The backend to calibrate.
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `IBM Quantum Compute documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            for more information about the ``Execution modes``.
+
+        options: Calibrator options, see
+            :class:`~qiskit_ibm_runtime.options_models.CalibratorOptions`
+            for detailed description.
     """
 
     _PROGRAM_ID = "calibrate"
+    _SCHEMA_VERSION = "v0.1"
 
     options: CalibratorOptions
     """The options of this calibrator."""
@@ -63,7 +79,7 @@ class Calibrator:
         mode: BackendV2 | Session | Batch | str | None = None,
         options: CalibratorOptions | dict | None = None,
     ):
-        # Coerced to `CalibratorOptions` via `__setattr__()`.Expand comment
+        # Coerced to `CalibratorOptions` via `__setattr__()`.
         self.options = options if options is not None else CalibratorOptions()  # type: ignore[assignment]
 
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
@@ -107,6 +123,14 @@ class Calibrator:
         inputs = {
             "options": self.options.model_dump(mode="json", exclude={"environment"}),
         }
+
+        try:
+            converter = CALIBRATOR_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
+        except KeyError:
+            raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
+
+        params = converter.encoder(self.options)
+        inputs = params.model_dump(mode="json")
 
         if self._mode:
             _run = self._mode._run

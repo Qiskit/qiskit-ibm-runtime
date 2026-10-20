@@ -12,6 +12,7 @@
 
 """Mapping between program names and decoders."""
 
+from .calibrator.decoder import CalibratorResultDecoder
 from .executor.decoder import ExecutorResultDecoder
 from .executor_estimator.decoder import ClientSideEstimatorDecoder
 from .executor_noise_learner.decoder import ClientSideNoiseLearnerResultDecoder
@@ -33,5 +34,5 @@ DEFAULT_DECODERS: dict[str, list[type[ResultDecoder]]] = {
     "noise-learner": [NoiseLearnerResultDecoder, NoiseLearnerV3ResultDecoder],
     "circuit-runner": [RunnerResultDecoder],
     "qasm3-runner": [RunnerResultDecoder],
-    "calibrate": [ResultDecoder],
+    "calibrate": [CalibratorResultDecoder],
 }

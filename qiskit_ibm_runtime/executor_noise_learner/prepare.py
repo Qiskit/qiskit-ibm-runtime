@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from ..quantum_program import QuantumProgram
 
 if HAS_QNL:
-    from qiskit_noise_learning.protocols import prepare_learning_program
+    from qiskit_noise_learning.protocols import prepare_vanilla_program
 
 
 @HAS_QNL.require_in_call
@@ -83,7 +83,7 @@ def prepare(
             )
             pass_manager = PassManager(bit_flip_passes)
 
-    quantum_program = prepare_learning_program(
+    quantum_program = prepare_vanilla_program(
         backend=backend,
         instructions=instructions,
         num_randomizations=options.num_randomizations,

@@ -20,6 +20,8 @@ import pytest
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
+from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
+from qiskit_ibm_runtime.results import CalibratorResult
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
@@ -35,6 +37,14 @@ class TestCalibrator:
 
         with Session(backend=backend) as session:
             calibrator = Calibrator(session)
+            calibrator.options.experimental = {"foo": "bar"}
             job = calibrator.run()
             result = job.result()
-            assert "calibration_result" in result
+
+        inputs = job.inputs
+        assert inputs["schema_version"] == "v0.1"
+        assert isinstance(inputs["options"], CalibratorOptions)
+        assert inputs["options"].experimental == calibrator.options.experimental
+
+        assert isinstance(result, CalibratorResult)
+        assert result.start < result.stop
