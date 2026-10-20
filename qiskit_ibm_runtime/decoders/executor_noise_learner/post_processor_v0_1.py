@@ -22,7 +22,7 @@ from qiskit_mitigation.postselection.constants import (
     DEFAULT_PRE_CHECK_SUFFIX,
 )
 from qiskit_noise_learning.analysis.flip_post_select import FlipPostSelect, suffix_creg_identifier
-from qiskit_noise_learning.protocols import process_learning_result
+from qiskit_noise_learning.protocols import process_vanilla_result
 
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
@@ -64,12 +64,7 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
             creg_identifier=suffix_creg_identifier(DEFAULT_POST_CHECK_SUFFIX), mode=post["strategy"]
         )
         raw_data_stage = raw_data_stage if raw_data_stage is None else raw_data_stage + post_stage
-    result_fit = process_learning_result(result, raw_data_stage=raw_data_stage)
-    maps = result_fit.model.to_pauli_lindblad_maps(
-        result_fit.model_data,
-        restrict_to_qubit_idxs=True,
-        include_spam=True,
-    )  # type: ignore
+    noise_maps, _, _ = process_vanilla_result(result, raw_data_stage=raw_data_stage)
     return NoiseLearnerV3Results(
         [
             NoiseLearnerV3Result.from_generators(
@@ -78,8 +73,7 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
                     for pauli in plm.generators()
                 ],
                 rates=plm.rates,
-                metadata={"gate_name": gate_name},
             )
-            for gate_name, plm in maps.items()
+            for plm in noise_maps
         ]
     )

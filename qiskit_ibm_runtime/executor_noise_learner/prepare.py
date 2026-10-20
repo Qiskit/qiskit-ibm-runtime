@@ -23,7 +23,7 @@ from qiskit_mitigation.postselection.passes import (
     AddSpectatorPostCircuitNonMarkovianErrorChecks,
     AddSpectatorPreCircuitNonMarkovianErrorChecks,
 )
-from qiskit_noise_learning.protocols import prepare_learning_program
+from qiskit_noise_learning.protocols import prepare_vanilla_program
 
 from ..options_models.converters import noise_learner_options_to_executor_options
 
@@ -79,7 +79,7 @@ def prepare(
             )
             pass_manager = PassManager(bit_flip_passes)
 
-    quantum_program = prepare_learning_program(
+    quantum_program = prepare_vanilla_program(
         backend=backend,
         instructions=instructions,
         num_randomizations=options.num_randomizations,
