@@ -25,6 +25,7 @@ from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeTorino
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
+from ..account import get_account_config_contents, temporary_account_config_file
 from ..registries import Backend, OneInstanceNoBackendsRegistry
 
 if TYPE_CHECKING:
@@ -376,8 +377,12 @@ class TestGetBackend:
         with pytest.raises(QiskitBackendNotFoundError):
             service.backend("ibm_torino", calibration_id="invalid")
 
+    @pytest.mark.parametrize(
+        "use_account",
+        [True, False],
+    )
     def test_retrieve_mock_backend(
-        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+        self, use_account: bool, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
     ) -> None:
         """Test retrieving a backend that is not in the default list of backends.
 
@@ -392,7 +397,16 @@ class TestGetBackend:
         instance_a = registry.instances["a"]
         instance_b = registry.instances["b"]
 
-        service = QiskitRuntimeService(token="my_token")
+        # Initialize the service, by token or with accounts.
+        if use_account:
+            with temporary_account_config_file(
+                get_account_config_contents("account_a", token="my_token", instance="a")
+                | get_account_config_contents("account_b", token="my_token", instance="b")
+            ):
+                service = QiskitRuntimeService(instance=registry.instances["a"].crn)
+        else:
+            service = QiskitRuntimeService(token="my_token")
+
         # Ensure that no backend appears in the backends list by default.
         assert service.backends() == []
 
@@ -423,8 +437,12 @@ class TestGetBackend:
             backend = service.backend("unique_backend_a", instance="b")
         assert not caplog.records
 
+    @pytest.mark.parametrize(
+        "use_account",
+        [True, False],
+    )
     def test_retrieve_mock_backend_instance_auto(
-        self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
+        self, use_account: bool, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
     ) -> None:
         """Test retrieving a backend not in default the list of backends, with instance `auto`.
 
@@ -439,16 +457,23 @@ class TestGetBackend:
             for backend in instance.values():
                 backend.is_mock = True
 
-        instance_a = registry.instances["a"]
+        # Initialize the service, by token or with accounts.
+        if use_account:
+            with temporary_account_config_file(
+                get_account_config_contents("account_a", token="my_token", instance="a")
+                | get_account_config_contents("account_b", token="my_token", instance="b")
+            ):
+                service = QiskitRuntimeService(instance="auto")
+        else:
+            service = QiskitRuntimeService(token="my_token", instance="auto")
 
-        service = QiskitRuntimeService(token="my_token", instance="auto")
         # Ensure that no backend appears in the backends list.
         assert service.backends() == []
 
         # Retrieve an existing backend (available in one instance).
         caplog.clear()
         with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
-            backend = service.backend("unique_backend_a")
+            backend = service.backend("unique_backend_b")
         assert not caplog.records
-        assert backend.name == "unique_backend_a"
-        assert backend._instance == instance_a.crn
+        assert backend.name == "unique_backend_b"
+        assert backend._instance == registry.instances["b"].crn
