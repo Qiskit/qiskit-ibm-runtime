@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit_mitigation import PEA, PEC, find_combined_unique_layers, get_measured_qubits
+from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
@@ -178,17 +178,12 @@ class Estimator(BaseEstimatorV2):
             add_tags=True,
         )
         box_types_arg = "all" if types == "all" else "gates"
-        meas_qubits = get_measured_qubits(
-            circuits=[pub.circuit for pub in coerced_pubs],
-            observables=[pub.observables for pub in coerced_pubs],
-            custom_boxing_options=boxing_opts,
-        )
         return find_combined_unique_layers(
             circuits=[pub.circuit for pub in coerced_pubs],
             mitigation_types=[task_class() for _ in coerced_pubs],
             custom_boxing_options=boxing_opts,
             box_types=box_types_arg,
-            meas_qubits=meas_qubits,
+            observables=[pub.observables for pub in coerced_pubs],
         )
 
     def finalize_options(self) -> EstimatorOptions:
