@@ -45,7 +45,10 @@ def compare_pauli_lindblad_maps(
     Raises:
         AssertionError: If ``actual`` and ``desired`` are not equal within ``atol``.
     """
-    desired_table = {gen: {tuple(qubits): rate} for gen, qubits, rate in desired.to_sparse_list()}
+    desired_table: dict[str, dict] = {}
+    for gen, qubits, rate in desired.to_sparse_list():
+        desired_table.setdefault(gen, {})[tuple(qubits)] = rate
+
     for gen, qubits, rate in actual.to_sparse_list():
         if gen in desired_table and tuple(qubits) in desired_table[gen]:
             np.testing.assert_allclose(desired_table[gen][tuple(qubits)], rate, atol=atol)
@@ -112,8 +115,19 @@ class TestNoiseLearnerV3:
             noise_map.simplify() for noise_map in result.to_pauli_lindblad_maps()
         ]
 
-        for expected, obtained in zip(noise_maps, simplified_noise_maps):
-            compare_pauli_lindblad_maps(expected, obtained)
+        # check measurement layer
+        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1], atol=5e-3)
+
+        # checking of degeneracies in gate layer
+        obtained_sparse_list = simplified_noise_maps[0].to_sparse_list()
+        for pauli, qubit, rate in obtained_sparse_list:
+            if pauli == "Z" and qubit == [1]:
+                np.testing.assert_allclose(rate, 0.03, atol=5e-3)
+            elif (pauli == "X" and qubit == [1]) or (pauli == "ZX" and qubit == [0, 1]):
+                # rate should be half due to degeneracy
+                np.testing.assert_allclose(rate, 0.04 / 2, atol=5e-3)
+            else:
+                np.testing.assert_allclose(rate, 0, atol=5e-3)
 
     @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_noop_noise_injection(self, qubits):
@@ -146,8 +160,8 @@ class TestNoiseLearnerV3:
             noise_map.simplify() for noise_map in result.to_pauli_lindblad_maps()
         ]
 
-        for expected, obtained in zip(noise_maps, simplified_noise_maps):
-            compare_pauli_lindblad_maps(expected, obtained)
+        for obtained, expected in zip(simplified_noise_maps, noise_maps):
+            compare_pauli_lindblad_maps(obtained, expected)
 
     @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_meas_noise_injection(self, qubits):
@@ -179,5 +193,5 @@ class TestNoiseLearnerV3:
             noise_map.simplify() for noise_map in result.to_pauli_lindblad_maps()
         ]
 
-        for expected, obtained in zip(noise_maps, simplified_noise_maps):
-            compare_pauli_lindblad_maps(expected, obtained)
+        for obtained, expected in zip(simplified_noise_maps, noise_maps):
+            compare_pauli_lindblad_maps(obtained, expected)
