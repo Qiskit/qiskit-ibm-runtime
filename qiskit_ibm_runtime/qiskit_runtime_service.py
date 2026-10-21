@@ -1102,8 +1102,8 @@ class QiskitRuntimeService:
         if isinstance(backend, str):
             backend = self.backend(name=qrt_options.get_backend_name())
 
-        # Take into account `dry_run`, replacing the backend with its mock counterpart.
-        if dry_run:
+        # Take into account `dry_run`, replacing the backend with its mock counterpart if needed.
+        if dry_run and not backend.name.startswith("mock_"):
             backend_name = re.sub(r"^[^_]+", "mock", backend.name)
 
             try:
@@ -1465,7 +1465,7 @@ class QiskitRuntimeService:
 
         candidates = []
         for backend in all_backends:
-            if backend["status"]["name"] == "online":
+            if backend["status"]["name"] == "online" and backend.get("class", None) != "mock":
                 candidates.append(backend)
 
         if filters or kwargs:

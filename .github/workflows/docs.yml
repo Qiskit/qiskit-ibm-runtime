@@ -9,6 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      GLIBC_TUNABLES: glibc.rtld.optional_static_tls=4096
     steps:
     - uses: actions/checkout@v6
     - name: Set up Python
