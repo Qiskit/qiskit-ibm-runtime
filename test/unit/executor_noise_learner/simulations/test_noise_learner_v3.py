@@ -25,6 +25,7 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.executor_noise_learner import NoiseLearnerV3 as NoiseLearner
+from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 
 def compare_pauli_lindblad_maps(
@@ -80,6 +81,7 @@ def generate_random_pauli_lindblad_map(
     return PauliLindbladMap.from_list([(str(gen), rng.uniform(0, max_rate)) for gen in generators])
 
 
+@pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
 class TestNoiseLearnerV3:
     """Tests client-side noise learner using simulator with noise through local mode."""
 

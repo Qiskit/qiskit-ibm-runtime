@@ -23,9 +23,9 @@ from qiskit_mitigation.postselection.passes import (
     AddSpectatorPostCircuitNonMarkovianErrorChecks,
     AddSpectatorPreCircuitNonMarkovianErrorChecks,
 )
-from qiskit_noise_learning.protocols import prepare_vanilla_program
 
 from ..options_models.converters import noise_learner_options_to_executor_options
+from ..utils.utils import HAS_QNL
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -37,7 +37,11 @@ if TYPE_CHECKING:
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
     from ..quantum_program import QuantumProgram
 
+if HAS_QNL:
+    from qiskit_noise_learning.protocols import prepare_vanilla_program
 
+
+@HAS_QNL.require_in_call
 def prepare(
     instructions: Iterable[CircuitInstruction],
     options: NoiseLearnerV3Options,

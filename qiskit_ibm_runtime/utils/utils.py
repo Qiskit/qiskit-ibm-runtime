@@ -22,6 +22,7 @@ from qiskit.circuit import BoxOp, ControlFlowOp, ParameterExpression, QuantumCir
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.library.standard_gates import PhaseGate, RZGate, U1Gate
 from qiskit.qpy import QPY_VERSION
+from qiskit.utils import LazyImportTester
 from samplomatic.ssv import SSV
 
 from ..exceptions import IBMInputValueError
@@ -33,6 +34,13 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.sampler_pub import SamplerPub
     from qiskit.providers.backend import BackendV2
     from qiskit.transpiler import Target
+
+
+HAS_QNL = LazyImportTester(
+    "qiskit_noise_learning",
+    name="Qiskit Noise Learning",
+    install="pip install qiskit-noise-learning",
+)
 
 
 def get_ssv_version(highest_value: int | None = None) -> int:

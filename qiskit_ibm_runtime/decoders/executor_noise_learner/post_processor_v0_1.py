@@ -21,15 +21,22 @@ from qiskit_mitigation.postselection.constants import (
     DEFAULT_POST_CHECK_SUFFIX,
     DEFAULT_PRE_CHECK_SUFFIX,
 )
-from qiskit_noise_learning.analysis.flip_post_select import FlipPostSelect, suffix_creg_identifier
-from qiskit_noise_learning.protocols import process_vanilla_result
 
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
+from ...utils.utils import HAS_QNL
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
 
+if HAS_QNL:
+    from qiskit_noise_learning.analysis.flip_post_select import (
+        FlipPostSelect,
+        suffix_creg_identifier,
+    )
+    from qiskit_noise_learning.protocols import process_vanilla_result
 
+
+@HAS_QNL.require_in_call
 def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseLearnerV3Results:
     """Convert a quantum program result to noise learner results for NoiseLearnerV3.
 
