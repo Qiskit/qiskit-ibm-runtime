@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -24,7 +25,7 @@ from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..account import custom_envs
+from ..account import custom_envs, get_account_config_contents, temporary_account_config_file
 from ..registries import Backend, Instance, Job, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
 
@@ -176,3 +177,61 @@ class TestQiskitRuntimeService:
         assert len(workloads_response["workloads"]) == 2
         # All workloads should be jobs currently.
         assert all(workload["mode"] == "job" for workload in workloads_response["workloads"])
+
+
+class TestAccountHandling:
+    """Class for testing how account/instances are handled in `QiskitRuntimeService`."""
+
+    def test_with_token(self, registry: BaseRegistry) -> None:
+        """`token` ignores stored accounts, and does not set default instance."""
+        service = QiskitRuntimeService(token="my_token")
+
+        assert service._account.instance is None
+        assert not service._default_instance
+        # The service stores information for backends (3) in all the 2 accounts.
+        assert len(service.backends()) == 3
+
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+    def test_with_config_file_no_args(self, registry: BaseRegistry) -> None:
+        """Initializing with no args and a config file selects the last instance in the file."""
+        with temporary_account_config_file(
+            get_account_config_contents("account_a", token="my_token", instance="a")
+            | get_account_config_contents("account_b", token="my_token", instance="b")
+        ):
+            service = QiskitRuntimeService()
+
+        assert service._account.instance == registry.instances["b"].crn
+        assert service._default_instance
+        # The service stores information for backends (2) in 1 account.
+        assert len(service.backends()) == 2
+
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+    def test_with_config_file_instance(self, registry: BaseRegistry) -> None:
+        """Initializing with `instance` arg and a config file selects that instance."""
+        with temporary_account_config_file(
+            get_account_config_contents("account_a", token="my_token", instance="a")
+            | get_account_config_contents("account_b", token="my_token", instance="b")
+        ):
+            service = QiskitRuntimeService(instance=registry.instances["a"].crn)
+
+        assert service._account.instance == registry.instances["a"].crn
+        assert service._default_instance
+        # The service stores information for backends (2) in 1 account.
+        assert len(service.backends()) == 2
+
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+    def test_with_config_file_name(self, registry: BaseRegistry) -> None:
+        """Initializing with `name` arg and a config file selects that instance."""
+        with temporary_account_config_file(
+            get_account_config_contents("account_a", token="my_token", instance="a")
+            | get_account_config_contents("account_b", token="my_token", instance="b")
+        ):
+            service = QiskitRuntimeService(instance=registry.instances["a"].crn)
+
+        assert service._account.instance == registry.instances["a"].crn
+        assert service._default_instance
+        # The service stores information for backends (2) in 1 account.
+        assert len(service.backends()) == 2
