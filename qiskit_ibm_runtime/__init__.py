@@ -192,7 +192,6 @@ Classes
    Sampler
    SamplerV2
    Executor
-   Calibrator
    Session
    Batch
    IBMBackend
