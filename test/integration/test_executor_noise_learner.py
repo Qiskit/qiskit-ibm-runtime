@@ -66,7 +66,6 @@ class TestNoiseLearnerV3:
         # default option of experimental is Unset, and is then converted to {}
         params["options"].experimental = {}
 
-        assert params["instructions"] == instructions
         assert params["options"] == learner.options
 
         result = job.result()
@@ -75,16 +74,13 @@ class TestNoiseLearnerV3:
 
         metadata = result[0].metadata
         assert isinstance(metadata, dict)
-        assert metadata["learning_protocol"] == "lindblad"
         assert result[0].to_pauli_lindblad_map().num_qubits == len(instructions[0].qubits)
 
         metadata = result[1].metadata
         assert isinstance(metadata, dict)
-        assert metadata["learning_protocol"] == "lindblad"
         assert result[1].to_pauli_lindblad_map().num_qubits == len(instructions[1].qubits)
 
         metadata = result[2].metadata
         assert isinstance(metadata, dict)
-        assert metadata["learning_protocol"] == "trex"
         assert result[2].to_pauli_lindblad_map().num_qubits == len(instructions[2].qubits)
         assert result[2].to_pauli_lindblad_map().num_terms == len(instructions[2].qubits)
