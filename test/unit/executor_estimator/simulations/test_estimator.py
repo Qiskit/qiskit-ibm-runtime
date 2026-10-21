@@ -124,7 +124,7 @@ class TestEstimatorWithNoise:
         error = 0.005
 
         pub, ideal_evs = create_estimator_test_data(backend, preset_pass_manager, False)
-        pub = widen_circuit(pub, target_width=100)
+        pub = widen_circuit(pub, target_width=50)
 
         # -- Run using base level Estimator with minor mitigation only:
 
@@ -266,7 +266,7 @@ class TestEstimatorWithoutNoise:
         pub, ideal_evs = create_estimator_test_data_extended(
             backend, preset_pass_manager, include_projections
         )
-        pub = widen_circuit(pub, target_width=100)
+        pub = widen_circuit(pub, target_width=50)
 
         # TODO: no DD possible on AER without gate durations.
         # Need to test this for a fake backend (e.g. in noisy test).
