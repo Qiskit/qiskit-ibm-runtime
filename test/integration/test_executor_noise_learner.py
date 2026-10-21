@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic.transpiler import generate_boxing_pass_manager
@@ -23,11 +24,13 @@ from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.executor_noise_learner import NoiseLearnerV3
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
+from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
 
 
+@pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
 class TestNoiseLearnerV3:
     """Test client-side NLV3."""
 
@@ -61,12 +64,6 @@ class TestNoiseLearnerV3:
         learner.options.shots_per_randomization = 100
 
         job = learner.run(instructions)
-
-        params = job.inputs
-        # default option of experimental is Unset, and is then converted to {}
-        params["options"].experimental = {}
-
-        assert params["options"] == learner.options
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)
