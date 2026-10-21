@@ -21,7 +21,6 @@ Python.
    noise_learner_v3_0_1
    noise_learner_v3_0_2
    noise_learner_v3_0_3
-   calibrator_0_1
    schema_common
 
 .. _separate dependency: https://pypi.org/project/ibm-quantum-schemas/
