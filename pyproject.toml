@@ -224,7 +224,7 @@ performance = [
 ]
 
 noise-learning = [
-    "qiskit-noise-learning @ git+https://github.com/Qiskit/qiskit-noise-learning.git@main",
+    "qiskit-noise-learning>=0.1.0",
 ]
 
 # Developer extras.
