@@ -76,6 +76,7 @@ module = [
     "qiskit_aer.*",
     "qiskit.*",
     "qiskit_mitigation.*",
+    "qiskit_noise_learning.*",
     "requests_ntlm.*",
     "samplomatic.*",
     "scipy.*",
@@ -220,6 +221,10 @@ visualization = [
 
 performance = [
     "qiskit-aer>=0.17.0",
+]
+
+noise-learning = [
+    "qiskit-noise-learning>=0.1.0",
 ]
 
 # Developer extras.
