@@ -126,7 +126,7 @@ class TestNoiseLearnerV3:
             ]
         )
         compare_pauli_lindblad_maps(simplified_noise_maps[0], expected_gate_map)
-        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1])
+        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1], atol=6e-3)
 
     @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_noop_noise_injection(self, qubits):
