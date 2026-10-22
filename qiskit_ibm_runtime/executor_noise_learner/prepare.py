@@ -16,10 +16,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit import QuantumCircuit
+from qiskit.transpiler import PassManager
+from qiskit_mitigation.postselection.passes import (
+    AddPostCircuitNonMarkovianErrorChecks,
+    AddPreCircuitNonMarkovianErrorChecks,
+    AddSpectatorPostCircuitNonMarkovianErrorChecks,
+    AddSpectatorPreCircuitNonMarkovianErrorChecks,
+)
 
 from ..options_models.converters import noise_learner_options_to_executor_options
-from ..quantum_program import QuantumProgram
+from ..utils.utils import HAS_QNL
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -29,13 +35,17 @@ if TYPE_CHECKING:
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
+    from ..quantum_program import QuantumProgram
+
+if HAS_QNL:
+    from qiskit_noise_learning.protocols import prepare_vanilla_program
 
 
-# TODO: use `qiskit_noise_learning.prepare` once available
+@HAS_QNL.require_in_call
 def prepare(
     instructions: Iterable[CircuitInstruction],
     options: NoiseLearnerV3Options,
-    backend: BackendV2 | None = None,
+    backend: BackendV2,
 ) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a sequence of instructions to a quantum program and map options.
 
@@ -52,9 +62,39 @@ def prepare(
         - :class:`~.ExecutorOptions` The finalized executor options.
     """
     executor_options = noise_learner_options_to_executor_options(options)
-    quantum_program = QuantumProgram(shots=1)
+    pre = options.bit_flip_checks.pre_circuit
+    post = options.bit_flip_checks.post_circuit
+    coupling_map = backend.target.build_coupling_map()
+    pass_manager = None
 
-    circuit = QuantumCircuit(1)
-    circuit.measure_all()
-    quantum_program.append_circuit_item(circuit)
+    if pre.enable or post.enable:
+        pre_x_pulse_type = pre.x_pulse_type if pre.enable else None
+        post_x_pulse_type = post.x_pulse_type if post.enable else None
+        bit_flip_passes = []
+        if pre_x_pulse_type is not None:
+            bit_flip_passes.append(AddPreCircuitNonMarkovianErrorChecks(pre_x_pulse_type))
+            bit_flip_passes.append(
+                AddSpectatorPreCircuitNonMarkovianErrorChecks(coupling_map, pre_x_pulse_type)
+            )
+        if post_x_pulse_type is not None:
+            bit_flip_passes.append(AddPostCircuitNonMarkovianErrorChecks(post_x_pulse_type))
+            bit_flip_passes.append(
+                AddSpectatorPostCircuitNonMarkovianErrorChecks(coupling_map, post_x_pulse_type)
+            )
+            pass_manager = PassManager(bit_flip_passes)
+
+    quantum_program = prepare_vanilla_program(
+        backend=backend,
+        instructions=instructions,
+        num_randomizations=options.num_randomizations,
+        shots_per_randomization=options.shots_per_randomization,
+        fragment_depths=options.layer_pair_depths,
+        creg_prefix="meas",
+        local_clifford_ref_prefix="c",
+        pass_manager=pass_manager,
+    )
+    quantum_program.passthrough_data["post_processor"] = {  # type: ignore[index]
+        "version": "v0.1",
+        "options": options.model_dump(),
+    }
     return quantum_program, executor_options

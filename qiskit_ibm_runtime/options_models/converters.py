@@ -108,6 +108,7 @@ def noise_learner_options_to_executor_options(options: NoiseLearnerV3Options) ->
     executor_options.max_execution_time = options.max_execution_time
     executor_options.environment = EnvironmentOptions(**options.environment.model_dump())
     executor_options.execution = ExecutionOptions(**options.execution.model_dump())
+    executor_options.simulator = SimulatorOptions(**options.simulator.model_dump())
 
     if options.experimental:
         executor_options.experimental.update(options.experimental)

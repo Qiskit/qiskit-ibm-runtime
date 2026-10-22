@@ -19,6 +19,9 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 from qiskit import QuantumCircuit
+from qiskit.transpiler import generate_preset_pass_manager
+from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.executor_noise_learner.noise_learner_v3 import NoiseLearnerV3
@@ -28,6 +31,7 @@ from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from qiskit_ibm_runtime.options_models.noise_learner_v3 import NoiseLearnerV3Options
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
+from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 from ...registries import OneInstanceDryRunRegistry
 
@@ -143,6 +147,7 @@ class TestNoiseLearnerUsingOptions:
             options.not_a_variable = 0  # type: ignore[attr-defined]
 
 
+@pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
 class TestNoiseLearnerRun:
     """Tests for the NoiseLearnerV3.run() method."""
 
@@ -156,8 +161,14 @@ class TestNoiseLearnerRun:
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
+        circuit.measure_all()
 
-        job = noise_learner.run([circuit], dry_run=True)
+        pass_manager = generate_preset_pass_manager(optimization_level=0, backend=backend)
+        pass_manager.post_scheduling = generate_boxing_pass_manager()
+        boxed_circuit = pass_manager.run(circuit)
+        layers = find_unique_box_instructions(boxed_circuit.data)
+
+        job = noise_learner.run(layers, dry_run=True)
         assert job.backend().name == "mock_foo"
 
     @pytest.mark.parametrize("mode_id", ["job", "session", "batch"])
@@ -189,6 +200,12 @@ class TestNoiseLearnerRun:
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
+        circuit.measure_all()
 
-        job = noise_learner.run([circuit])
+        pass_manager = generate_preset_pass_manager(optimization_level=0, backend=backend)
+        pass_manager.post_scheduling = generate_boxing_pass_manager()
+        boxed_circuit = pass_manager.run(circuit)
+        layers = find_unique_box_instructions(boxed_circuit.data)
+
+        job = noise_learner.run(layers)
         assert job._session_id == expected_session_id
