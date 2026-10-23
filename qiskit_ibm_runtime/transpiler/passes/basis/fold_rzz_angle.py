@@ -27,7 +27,7 @@ from qiskit.circuit import (
     Parameter,
     ParameterExpression,
 )
-from qiskit.circuit.library.standard_gates import GlobalPhaseGate, RXGate, RZGate, RZZGate, XGate
+from qiskit.circuit.library.standard_gates import RXGate, RZGate, RZZGate, XGate
 from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -136,7 +136,7 @@ class FoldRzzAngle(TransformationPass):
             # is fragile at the pi/3*pi window boundaries due to floating-point rounding).
             windings = round((angle - wrap_angle) / (2 * pi))
             if windings % 2:
-                replace.apply_operation_back(GlobalPhaseGate(pi))
+                replace.global_phase += pi
             dag.substitute_node_with_dag(node, replace)
         return modified
 
@@ -175,7 +175,7 @@ class FoldRzzAngle(TransformationPass):
         """
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
-        new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
+        new_dag.global_phase += pi / 2
         new_dag.apply_operation_back(
             RZGate(pi),
             qargs=(qubits[0],),
@@ -222,7 +222,7 @@ class FoldRzzAngle(TransformationPass):
         """
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
-        new_dag.apply_operation_back(GlobalPhaseGate(-pi / 2))
+        new_dag.global_phase -= pi / 2
         new_dag.apply_operation_back(
             RZGate(pi),
             qargs=(qubits[0],),
