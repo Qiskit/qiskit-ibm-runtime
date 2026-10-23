@@ -12,10 +12,14 @@
 
 """Tests for local mode."""
 
+import threading
+from concurrent.futures import Future
+
 import pytest
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.fake_provider.local_runtime_job import LocalRuntimeJob
@@ -49,6 +53,83 @@ class TestLocalRuntimeJob:
         assert (
             utc_to_local(metrics["timestamps"]["created"]).replace(tzinfo=None) == job.creation_date
         )
+
+    @pytest.mark.parametrize("primitive_class", [SamplerV2, EstimatorV2])
+    def test_status_done(self, primitive_class: type) -> None:
+        """Test that a finished local job has the same status as a finished service job."""
+        primitive = primitive_class(mode=FakeManilaV2())
+        job = primitive.run(**get_primitive_inputs(primitive))
+        job.wait_for_final_state()
+
+        assert job.status() == "DONE"
+        assert job.done()
+        assert job.in_final_state()
+        assert not job.errored()
+        assert not job.running()
+        assert not job.cancelled()
+
+    def test_status_error(self) -> None:
+        """Test the status of a failed local job."""
+
+        def fail() -> None:
+            raise ValueError("failed")
+
+        job = LocalRuntimeJob(function=fail, backend=FakeManilaV2(), primitive="sampler", inputs={})
+        job._submit()
+        job.wait_for_final_state()
+
+        assert job.status() == "ERROR"
+        assert job.errored()
+        assert job.in_final_state()
+        assert not job.done()
+
+    def test_status_before_final_state(self) -> None:
+        """Test the status of a local job before it is in a final state."""
+        backend = FakeManilaV2()
+        job = LocalRuntimeJob(function=print, backend=backend, primitive="sampler", inputs={})
+        assert job.status() == "INITIALIZING"
+
+        job = LocalRuntimeJob(
+            function=print, backend=backend, primitive="sampler", inputs={}, future=Future()
+        )
+        assert job.status() == "QUEUED"
+        assert not job.in_final_state()
+
+        job._future.set_running_or_notify_cancel()
+        assert job.status() == "RUNNING"
+        assert job.running()
+
+        job._future.set_result(None)
+        assert job.status() == "DONE"
+
+    def test_status_cancelled(self) -> None:
+        """Test the status of a cancelled local job."""
+        job = LocalRuntimeJob(
+            function=print, backend=FakeManilaV2(), primitive="sampler", inputs={}, future=Future()
+        )
+        assert job.cancel()
+
+        assert job.status() == "CANCELLED"
+        assert job.cancelled()
+        assert job.in_final_state()
+
+    def test_wait_for_final_state_timeout(self) -> None:
+        """Test that waiting for a local job times out like waiting for a service job."""
+        release = threading.Event()
+        job = LocalRuntimeJob(
+            function=release.wait, backend=FakeManilaV2(), primitive="sampler", inputs={}
+        )
+        job._submit()
+
+        try:
+            with pytest.raises(RuntimeJobTimeoutError):
+                job.wait_for_final_state(timeout=0.1)
+            assert not job.in_final_state()
+        finally:
+            # Let the job finish even if the test fails, so its thread does not block the exit.
+            release.set()
+        job.wait_for_final_state(timeout=10)
+        assert job.status() == "DONE"
 
     def test_v2_sampler(self) -> None:
         """Test V2 Sampler on a local backend."""
