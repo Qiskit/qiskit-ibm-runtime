@@ -273,6 +273,7 @@ def _build_quantum_program(
             broadcast_obs_and_params=True,
             trex=trex,
             quantum_program=quantum_program,
+            trim_measurements=True,
             **build_task_prepare_kwargs(
                 task_class, resilience, noise_model, num_randomizations, shots_per_randomization
             ),

@@ -723,7 +723,7 @@ class TestPrepareVanilla:
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
         twirling_options.num_randomizations = 7
-        twirling_options.strategy = "all"
+        twirling_options.strategy = "active-circuit"
         program = prepare_vanilla(pubs=[pub], twirling_options=twirling_options, shots=1024)
 
         assert len(program.items) == 1
