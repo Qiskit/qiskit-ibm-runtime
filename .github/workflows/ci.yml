@@ -89,7 +89,6 @@ jobs:
         -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
         -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
         -W 'ignore:The NoiseLearner class is deprecated:DeprecationWarning'
-      GLIBC_TUNABLES: glibc.rtld.optional_static_tls=4096
     steps:
       - uses: actions/checkout@v6
         with:
@@ -134,7 +133,6 @@ jobs:
         -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
         -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
         -W 'ignore:The NoiseLearner class is deprecated:DeprecationWarning'
-      GLIBC_TUNABLES: glibc.rtld.optional_static_tls=4096
     steps:
       - uses: actions/checkout@v6
         with:
@@ -180,7 +178,6 @@ jobs:
         -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
         -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
         -W 'ignore:The NoiseLearner class is deprecated:DeprecationWarning'
-      GLIBC_TUNABLES: glibc.rtld.optional_static_tls=4096
     steps:
       - uses: actions/checkout@v6
         with:
