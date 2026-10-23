@@ -1,0 +1,6 @@
+The ``qiskit_ibm_runtime.utils`` modules:
+* ``estimator_pub_result``
+* ``json``
+* ``noise_learner_result``
+
+which were previously deprecated and moved to other modules, have been removed.
