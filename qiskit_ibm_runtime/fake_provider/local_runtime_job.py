@@ -176,12 +176,14 @@ class LocalRuntimeJob(PrimitiveJob):
         """Return the backend where this job was executed."""
         return self._backend
 
-    def usage(self, partial: bool = False) -> float:
+    def usage(self, partial: bool = False, resource_units: bool = False) -> float:
         """Return job usage in seconds.
 
         Args:
             partial: if ``True``, return the accumulated intermediate usage thus far until final
-                usage is reached.
+                usage is reached. Not used in local mode.
+            resource_units: If ``True``, return usage in resource units instead of seconds. Not
+                used in local mode.
         """
         return 0
 
