@@ -208,17 +208,12 @@ class TestIntegrationJob:
         assert job.usage_estimation
         assert "quantum_seconds" in job.usage_estimation
 
-    def test_job_usage(
-        self, dependencies: Dependencies, submit_bell_job: Callable[..., RuntimeJobV2]
-    ) -> None:
+    def test_job_usage(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job usage."""
         job = submit_bell_job()
         job.wait_for_final_state()
         assert isinstance(job.usage(), (float, int))
-
-        # Assert in staging.
-        if "test" in dependencies.url:
-            assert isinstance(job.usage(resource_units=True), float)
+        assert isinstance(job.usage(resource_units=True), float)
 
     def test_job_logs(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job logs."""
