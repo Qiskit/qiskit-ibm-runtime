@@ -32,7 +32,6 @@ from ...asserts import (
     assert_dict_partially_equal,
     assert_warns_strict,
 )
-from ...utils import get_mocked_backend, get_primitive_inputs
 
 SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG = (
     "Specifying 'measure_noise_learning.shots_per_randomization' as an integer is deprecated"
@@ -140,7 +139,7 @@ class TestEstimatorOptions:
         self, value, num_appearances
     ):
         """Integer shots_per_randomization warns when assigned on an estimator instance."""
-        estimator = Estimator(mode=get_mocked_backend())
+        estimator = Estimator(mode=FakeManilaV2())
 
         with assert_warns_strict(
             DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
@@ -300,18 +299,13 @@ class TestEstimatorOptions:
     )
     def test_zero_values(self, opt_dict: dict[str, Any]) -> None:
         """Test options with values of 0."""
-        backend = get_mocked_backend()
-        estimator = Estimator(mode=backend, options=opt_dict)
-        _ = estimator.run(**get_primitive_inputs(estimator))
-        options = backend.service._run.call_args.kwargs["inputs"]["options"]  # type: ignore[attr-defined]
-        assert options == opt_dict
+        opt = EstimatorOptions(**opt_dict)
+        inputs = opt._get_program_inputs(asdict(opt))
+        assert inputs["options"] == opt_dict
 
     def test_zero_resilience_level(self) -> None:
         """Test resilience_level=0."""
-        opt_dict = {"resilience_level": 0}
-        backend = get_mocked_backend()
-        estimator = Estimator(mode=backend, options=opt_dict)
-        _ = estimator.run(**get_primitive_inputs(estimator))
-        options = backend.service._run.call_args.kwargs["inputs"]  # type: ignore[attr-defined]
-        assert "resilience_level" in options
-        assert options["resilience_level"] == 0
+        opt = EstimatorOptions(resilience_level=0)  # type: ignore[call-arg]
+        inputs = opt._get_program_inputs(asdict(opt))
+        assert "resilience_level" in inputs
+        assert inputs["resilience_level"] == 0

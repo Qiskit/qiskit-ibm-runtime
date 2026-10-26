@@ -23,10 +23,10 @@ from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, Quantum
 from qiskit.compiler import transpile
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import EstimatorV2, QiskitRuntimeService, SamplerV2
+from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
+from qiskit_ibm_runtime.models import BackendProperties, BackendStatus
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -92,40 +92,6 @@ def create_faulty_backend(
     )
     out_backend.properties = lambda: BackendProperties.from_dict(properties)  # type: ignore
     return out_backend
-
-
-def get_mocked_backend(
-    name: str = "ibm_gotham",
-    configuration: dict | None = None,
-    properties: dict | None = None,
-) -> IBMBackend:
-    """Return a mock backend."""
-    mock_service = mock.MagicMock(spec=QiskitRuntimeService, is_local=False)
-    mock_api_client = mock.MagicMock()
-    mock_api_client._instance = "mock_instance"
-    mock_service._active_api_client = mock_api_client
-
-    configuration = (
-        FakeManilaV2().configuration()  # type: ignore[assignment]
-        if configuration is None
-        else BackendConfiguration.from_dict(configuration)
-    )
-
-    mock_api_client.backend_properties = lambda *args, **kwargs: properties
-    mock_api_client.session_details = mock.MagicMock(return_value={"mode": "dedicated"})
-    mock_backend = IBMBackend(
-        configuration=configuration,  # type: ignore[arg-type]
-        service=mock_service,
-        api_client=mock_api_client,
-    )
-    mock_backend.name = name
-    mock_backend._instance = None
-    mock_service.backend = lambda name, **kwargs: (
-        mock_backend if name == mock_backend.name else None
-    )
-    mock_service._get_api_client = mock.MagicMock(return_value=mock_api_client)
-
-    return mock_backend
 
 
 def bell() -> QuantumCircuit:

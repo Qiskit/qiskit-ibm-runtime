@@ -24,20 +24,16 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
 from qiskit_ibm_runtime import EstimatorOptions, EstimatorV2, IBMInputValueError, Session
-from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
+from qiskit_ibm_runtime.fake_provider import FakeSherbrooke, FakeVigoV2
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
 from ..asserts import assert_dict_partially_equal, assert_warns_strict
-from ..registries import OneInstanceDryRunRegistry
-from ..utils import (
-    get_mocked_backend,
-    get_primitive_inputs,
-    get_transpiled_circuit,
-    remap_observables,
-    transpile_pubs,
-)
+from ..registries import OneInstanceDryRunRegistry, get_submitted_jobs
+from ..utils import get_primitive_inputs, get_transpiled_circuit, remap_observables, transpile_pubs
 
 if TYPE_CHECKING:
+    from responses import RequestsMock
+
     from ..registries import BaseRegistry
 
 
@@ -56,16 +52,19 @@ class TestEstimatorV2:
             ],
         ],
     )
-    def test_run_program_inputs(self, abs_pubs: list) -> None:
+    def test_run_program_inputs(
+        self, abs_pubs: list, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
         """Verify program inputs are correct."""
-        backend = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         t_pubs = transpile_pubs(abs_pubs, backend, "estimator")
 
         inst = EstimatorV2(mode=backend)
         inst.run(t_pubs)
-        input_params = backend.service._run.call_args.kwargs["inputs"]  # type: ignore[attr-defined]
+        input_params = get_submitted_jobs(responses)[0]["params"]
         assert "pubs" in input_params
-        pubs_param = input_params["pubs"]
+        pubs_param = [EstimatorPub.coerce(pub) for pub in input_params["pubs"]]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
             assert isinstance(a_pub_param, EstimatorPub)
             # Check circuit
@@ -79,7 +78,7 @@ class TestEstimatorV2:
             a_pub_param_values = param_values_array[0] if param_values_array else param_values_array
             np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
-    def test_unsupported_values_for_estimator_options(self) -> None:
+    def test_unsupported_values_for_estimator_options(self, registry: BaseRegistry) -> None:
         """Test exception when options levels are not supported."""
         options_bad = [
             {
@@ -87,7 +86,8 @@ class TestEstimatorV2:
             },
         ]
 
-        backend = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with Session(
             backend=backend,
         ) as session:
@@ -99,20 +99,14 @@ class TestEstimatorV2:
 
     def test_invalid_estimator_precision_option(self) -> None:
         """Test exception when precision is invalid."""
-        backend = get_mocked_backend()
-        backend.configuration().simulator = True
-
-        estimator = EstimatorV2(mode=backend)
+        estimator = EstimatorV2(mode=FakeVigoV2())
         with pytest.raises(ValueError) as exc:
             estimator.run(**get_primitive_inputs(estimator), precision=0)
         assert "The precision value must be strictly greater than 0" in str(exc.value)
 
     def test_invalid_estimator_pub_precision(self) -> None:
         """Test exception when a pub specifies a precision that is not strictly greater than 0."""
-        backend = get_mocked_backend()
-        backend.configuration().simulator = True
-
-        estimator = EstimatorV2(mode=backend)
+        estimator = EstimatorV2(mode=FakeVigoV2())
         # Precision supplied at the pub level (4th element) must also be guarded client-side,
         # not just the run() kwarg -- otherwise a pub-level precision=0 reaches the server and
         # raises a bare ZeroDivisionError when it converts precision to shots.
@@ -121,9 +115,10 @@ class TestEstimatorV2:
         with pytest.raises(ValueError, match="The precision value must be strictly greater than 0"):
             estimator.run([pub_with_zero_precision])
 
-    def test_pec_simulator(self) -> None:
+    def test_pec_simulator(self, registry: BaseRegistry) -> None:
         """Test error is raised when using pec on simulator without coupling map."""
-        backend = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         backend.configuration().simulator = True
 
         inst = EstimatorV2(mode=backend, options={"resilience": {"pec_mitigation": True}})
@@ -150,14 +145,17 @@ class TestEstimatorV2:
             ),
         ],
     )
-    def test_run_default_options(self, options: dict, expected: dict) -> None:
+    def test_run_default_options(
+        self, options: dict, expected: dict, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
         """Test run using default options."""
-        backend = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
 
         inst = EstimatorV2(mode=backend, options=options)
         inst.run(**get_primitive_inputs(inst, backend=backend))
 
-        run_options = backend.service._run.call_args.kwargs["inputs"]["options"]  # type: ignore[attr-defined]
+        run_options = get_submitted_jobs(responses)[0]["params"]["options"]
         assert_dict_partially_equal(run_options, expected)
 
     @pytest.mark.parametrize(
@@ -169,7 +167,7 @@ class TestEstimatorV2:
     )
     def test_invalid_resilience_options(self, res_opt: dict) -> None:
         """Test invalid resilience options."""
-        backend = get_mocked_backend()
+        backend = FakeVigoV2()
         with pytest.raises(ValueError) as exc:
             inst = EstimatorV2(mode=backend, options={"resilience": res_opt})
             inst.run(**get_primitive_inputs(inst, backend))
@@ -200,7 +198,7 @@ class TestEstimatorV2:
     )
     def test_observable_types_single_circuit(self, observables: object) -> None:
         """Test different observable types for a single circuit."""
-        backend = get_mocked_backend()
+        backend = FakeVigoV2()
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
         circuit.cx(0, 1)
@@ -239,7 +237,7 @@ class TestEstimatorV2:
     )
     def test_observable_types_multi_circuits(self, observables: object) -> None:
         """Test different observable types for multiple circuits."""
-        backend = get_mocked_backend()
+        backend = FakeVigoV2()
         circuit1 = get_transpiled_circuit(backend, num_qubits=2, measure=False)
         circuit2 = get_transpiled_circuit(backend, num_qubits=3, measure=False)
 
@@ -265,7 +263,7 @@ class TestEstimatorV2:
     def test_invalid_basis(self, observables: object) -> None:
         """Test observable containing invalid basis."""
         circuit = QuantumCircuit(2)
-        estimator = EstimatorV2(mode=get_mocked_backend())
+        estimator = EstimatorV2(mode=FakeVigoV2())
 
         with pytest.raises(ValueError, match="Observable"):
             estimator.run([(circuit, observables)])
@@ -280,8 +278,7 @@ class TestEstimatorV2:
         )
 
         in_pubs = [(dynamic_circuit, ["XXX"])]
-        backend = get_mocked_backend()
-        inst = EstimatorV2(mode=backend)
+        inst = EstimatorV2(mode=FakeVigoV2())
         inst.options.dynamical_decoupling.enable = True  # type: ignore[union-attr]
         with pytest.raises(
             IBMInputValueError,
@@ -291,8 +288,7 @@ class TestEstimatorV2:
 
     def test_estimator_validations(self) -> None:
         """Test exceptions when failing client-side validations."""
-        backend = get_mocked_backend()
-        inst = EstimatorV2(mode=backend)
+        inst = EstimatorV2(mode=FakeVigoV2())
         circ = QuantumCircuit(2)
         obs: list[object] = []
         with pytest.raises(IBMInputValueError, match="Empty observables array is not allowed"):
@@ -332,7 +328,7 @@ class TestEstimatorV2:
         self, pub_precisions: list[float], run_precision: float, num_appearances: int
     ) -> None:
         """Conflicting pub-level precision emits one DeprecationWarning."""
-        backend = get_mocked_backend()
+        backend = FakeVigoV2()
         circ = QuantumCircuit(1)
         t_circ = transpile(circ, backend=backend)
         observable = remap_observables("Z", t_circ)
