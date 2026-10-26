@@ -167,3 +167,36 @@ class TestSession:
             job = session._run(program_id="foo", inputs={}, dry_run=True)
 
         assert job.backend().name == "mock_foo"
+
+    def test_usage(self, registry: BaseRegistry) -> None:
+        """The `usage()` method should return seconds by default."""
+        registry.add_session(RegistrySession("session_12345", "common_backend"), "a")
+
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        with Session(backend=backend) as session:
+            usage = session.usage()
+
+        assert usage == 2
+
+    def test_usage_resource_unit(self, registry: BaseRegistry) -> None:
+        """The `usage()` method should return resource units when using the flag."""
+        registry.add_session(RegistrySession("session_12345", "common_backend"), "a")
+
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        with Session(backend=backend) as session:
+            usage = session.usage(resource_units=True)
+
+        assert usage == 1.1
+
+    def test_details(self, registry: BaseRegistry) -> None:
+        """The `details()` method should return the `usage` dict verbatim."""
+        registry.add_session(RegistrySession("session_12345", "common_backend"), "a")
+
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        with Session(backend=backend) as session:
+            details = session.details()
+
+        assert "usage" in details.keys()
