@@ -298,6 +298,10 @@ class TestQuantumPlatform:
         assert isinstance(usage["usage_remaining_seconds"], int)
         assert isinstance(usage, dict)
 
+        # Assert in staging.
+        if "test" in dependencies.url:
+            assert isinstance(usage["usage_remaining_ru"], float)
+
     def test_instances_archived(
         self, dependencies: Dependencies, monkeypatch: pytest.MonkeyPatch
     ) -> None:
