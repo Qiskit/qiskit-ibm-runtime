@@ -62,6 +62,18 @@ def compare_pauli_lindblad_maps(
     np.testing.assert_allclose(remaining_rates, 0, atol=atol)
 
 
+def estimate_rate_tolerance(
+    shots_per_randomization: int, num_randomizations: int, margin: float = 1.0
+) -> float:
+    """Approximate bound on the standard error of a learned Pauli-Lindblad rate.
+
+    Per-shot Pauli expectation values are bounded in ``[-1, 1]``, so the standard error of
+    the fidelity estimate underlying a learned rate is bounded by
+    ```margin / (2 * sqrt(shots_per_randomization * num_randomizations))``.
+    """
+    return margin / (2 * np.sqrt(shots_per_randomization * num_randomizations))
+
+
 def generate_random_pauli_lindblad_map(
     num_qubits: int, size: int = 1, max_rate: float = 1.0, seed: int | None = None
 ) -> PauliLindbladMap:
@@ -109,7 +121,6 @@ class TestNoiseLearnerV3:
         ]
 
         noise_learner = NoiseLearner(mode=backend)
-        noise_learner.options.num_randomizations = 40
         noise_learner.options.simulator.layer_noise_model = list(zip(layers, noise_maps))
         job = noise_learner.run(layers)
         result = job.result()
@@ -126,8 +137,14 @@ class TestNoiseLearnerV3:
                 ("ZI", 0.03),
             ]
         )
-        compare_pauli_lindblad_maps(simplified_noise_maps[0], expected_gate_map)
-        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1])
+        # compute a tolerance based on the total number of shots
+        # i.e. (shots_per_randomization * num_randomizations)
+        atol = estimate_rate_tolerance(
+            noise_learner.options.shots_per_randomization,
+            noise_learner.options.num_randomizations,
+        )
+        compare_pauli_lindblad_maps(simplified_noise_maps[0], expected_gate_map, atol=atol)
+        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1], atol=atol)
 
     @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_noop_noise_injection(self, qubits):
