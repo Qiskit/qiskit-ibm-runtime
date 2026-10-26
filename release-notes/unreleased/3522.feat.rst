@@ -1,0 +1,2 @@
+:meth:`.RuntimeJobV2.usage`, :meth:`.Session.usage` and :meth:`.Batch.usage` now support a
+``resource_units`` parameter for returning usage based on resource units, as opposed to seconds.
