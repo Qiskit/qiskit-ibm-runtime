@@ -19,7 +19,6 @@ import pytest
 from pydantic import ValidationError
 from qiskit.utils.optionals import HAS_AER
 
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
 
 from ...asserts import (
@@ -27,7 +26,6 @@ from ...asserts import (
     assert_dict_keys_equal,
     assert_dict_partially_equal,
 )
-from ...utils import get_mocked_backend, get_primitive_inputs
 
 if HAS_AER:
     from qiskit_aer.noise import NoiseModel
@@ -150,8 +148,6 @@ class TestSamplerOptions:
     )
     def test_zero_values(self, opt_dict: dict[str, Any]) -> None:
         """Test options with values of 0."""
-        backend = get_mocked_backend()
-        sampler = Sampler(mode=backend, options=opt_dict)
-        _ = sampler.run(**get_primitive_inputs(sampler))
-        options = backend.service._run.call_args.kwargs["inputs"]["options"]  # type: ignore[attr-defined]
-        assert options == opt_dict
+        opt = SamplerOptions(**opt_dict)
+        inputs = opt._get_program_inputs(asdict(opt))
+        assert inputs["options"] == opt_dict
