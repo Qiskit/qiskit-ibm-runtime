@@ -24,8 +24,6 @@ from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
 
-from ...utils import get_mocked_backend
-
 if TYPE_CHECKING:
     from ...registries import BaseRegistry
 
@@ -33,49 +31,65 @@ if TYPE_CHECKING:
 class TestCalibratorOptions:
     """Tests option setting on the ``Calibrator`` class."""
 
-    def test_default_options(self) -> None:
+    def test_default_options(self, registry: BaseRegistry) -> None:
         """Test that default options are set when none are provided."""
-        calibrator = Calibrator(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        calibrator = Calibrator(mode=backend)
         assert isinstance(calibrator.options, CalibratorOptions)
         assert calibrator.options == CalibratorOptions()
 
-    def test_options_from_instance(self) -> None:
+    def test_options_from_instance(self, registry: BaseRegistry) -> None:
         """Test constructing with a CalibratorOptions instance."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         opts = CalibratorOptions()
-        calibrator = Calibrator(mode=get_mocked_backend(), options=opts)
+        calibrator = Calibrator(mode=backend, options=opts)
         assert calibrator.options is opts
 
-    def test_options_constructor_invalid_type(self) -> None:
+    def test_options_constructor_invalid_type(self, registry: BaseRegistry) -> None:
         """Test that an invalid options type raises TypeError."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with pytest.raises(TypeError, match="Expected CalibratorOptions or dict"):
-            Calibrator(mode=get_mocked_backend(), options="invalid")  # type: ignore[arg-type]
+            Calibrator(mode=backend, options="invalid")  # type: ignore[arg-type]
 
-    def test_setter_invalid_type(self) -> None:
+    def test_setter_invalid_type(self, registry: BaseRegistry) -> None:
         """Test that setting options with an invalid type raises TypeError."""
-        calibrator = Calibrator(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        calibrator = Calibrator(mode=backend)
         with pytest.raises(TypeError, match="Expected CalibratorOptions or dict"):
             calibrator.options = 42  # type: ignore[assignment]
 
-    def test_experimental_options_default_empty(self) -> None:
+    def test_experimental_options_default_empty(self, registry: BaseRegistry) -> None:
         """Test that experimental options default to empty dict."""
-        calibrator = Calibrator(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        calibrator = Calibrator(mode=backend)
         assert calibrator.options.experimental == {}
 
-    def test_experimental_options_from_dict(self) -> None:
+    def test_experimental_options_from_dict(self, registry: BaseRegistry) -> None:
         """Test constructing with experimental options in dict."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
-        calibrator = Calibrator(mode=get_mocked_backend(), options=opts_dict)
+        calibrator = Calibrator(mode=backend, options=opts_dict)
         assert calibrator.options.experimental == {"foo": "bar", "baz": 123}
 
-    def test_experimental_options_from_instance(self) -> None:
+    def test_experimental_options_from_instance(self, registry: BaseRegistry) -> None:
         """Test constructing with a CalibratorOptions instance with experimental options."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         opts = CalibratorOptions(experimental={"custom_key": "custom_value"})
-        calibrator = Calibrator(mode=get_mocked_backend(), options=opts)
+        calibrator = Calibrator(mode=backend, options=opts)
         assert calibrator.options.experimental == {"custom_key": "custom_value"}
 
-    def test_experimental_options_setter(self) -> None:
+    def test_experimental_options_setter(self, registry: BaseRegistry) -> None:
         """Test setting experimental options via the setter."""
-        calibrator = Calibrator(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        calibrator = Calibrator(mode=backend)
         calibrator.options = {"experimental": {"test": "value"}}  # type: ignore[assignment]
         assert calibrator.options.experimental == {"test": "value"}
 

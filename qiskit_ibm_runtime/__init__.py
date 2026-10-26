@@ -224,6 +224,7 @@ from .executor import Executor
 from .sampler import SamplerV2, SamplerV2 as Sampler
 from .noise_learner import NoiseLearner, NoiseLearner as NoiseLearnerV2
 from .noise_learner_v3 import NoiseLearnerV3
+from .calibrator import Calibrator
 from .options import (
     EstimatorOptions,
     NoiseLearnerOptions,

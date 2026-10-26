@@ -66,6 +66,7 @@ from .bit_flip_checks import (
     PostCircuitBitFlipChecksOptions,
     PreCircuitBitFlipChecksOptions,
 )
+from .calibrator import CalibratorOptions
 from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment import EnvironmentOptions
 from .estimator import EstimatorOptions
