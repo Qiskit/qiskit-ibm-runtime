@@ -341,54 +341,72 @@ we'll document what has changed since the previous version in the release notes.
 
 ## Branches
 
-* `main`:
+* `main`: The main branch is used for development of the next version of `qiskit-ibm-runtime`. It
+  will be updated frequently and should not be considered stable. The API can and will change on
+  `main` as we introduce and refine new features.
 
-The main branch is used for development of the next version of qiskit-ibm.
-It will be updated frequently and should not be considered stable. The API
-can and will change on main as we introduce and refine new features.
-
-* `stable/*` branches:
-Branches under `stable/*` are used to maintain released versions of qiskit-ibm.
-It contains the version of the code corresponding to the latest release for
-that minor version on pypi. For example, stable/0.8 contains the code for the
-0.8.2 release on pypi. The API on these branches are stable and the only changes
-merged to it are bugfixes.
+* `stable/*` branches: Branches under `stable/*` are used to maintain released versions of
+  `qiskit-ibm-runtime`. It contains the version of the code corresponding to the latest release for
+  that minor version on `pypi`. For example, `stable/0.8` contains the code for the `0.8.2` release
+  on `pypi`. The API on these branches are stable and the only changes merged to it are bugfixes.
 
 ## Release cycle
 
-When it is time to release a new minor version of qiskit-ibm-runtime, first open a PR
-to prepare the release notes. Install the tool `towncrier` with `pipx install towncrier`.
-Then, in a new branch, run `towncrier build --version=<full-version> --yes`, and replace
-`<full-version>` with the version like `0.22.0`. Bump the `fallback_version` in the
-`[tool.setuptools_scm]` section of `pyproject.toml`. Add all the changes to Git and
-open a PR.
+When it is time to release a new version of `qiskit-ibm-runtime`, such as `0.22.0`, first open a PR
+to prepare the release notes:
 
-After landing the release notes preparation, checkout `main` and make sure that the last
-commit is the release notes prep. Then, create a new Git tag from `main` for the full
-version number, like `git tag 0.22.0`. Push the tag to GitHub. Also create a new branch like
-`stable/0.22` and push it to GitHub.
+> [!IMPORTANT]
+> Please make sure to use the full version string (as in `0.22.0`, including the three components)
+> when following these instructions unless otherwise specified.
 
-GitHub Actions will automatically build and upload the wheels to PyPI. The
-qiskit-bot should also automatically create the GitHub Release for you.
+1. In a new branch `prepare/0.22.0`, create the base release notes via:
+   ```sh
+   towncrier build --version=<full-version> --yes
+   ```
+   replacing `<full-version>` with the version such as `0.22.0`. Ensure that the
+   `release_notes/unreleased` folder does not contain any `rst` files after this command - if so,
+   rename them so they are recognized by our `towncrier` configuration and appended to the release
+   notes.
+2. Bump the `fallback_version` in the `[tool.setuptools_scm]` section of `pyproject.toml`.
+3. Bump the sphinx `release` version in `docs/conf.py`
+4. Run `tox -e docs` for ensuring that the documentation can be rendered correctly. This usually
+   involves fixing formatting issues and sphinx warnings.
+5. Revise the contributions that are mentioned in the release notes, and label them as described
+   in the [Changelog generation](#changelog-generation) section.
+6. Open a PR with the changes, and ask the team and the documentation team to review.
+
+Once the PR is merged into `main`, uploading the wheels to `pypi` and creating a GitHub release is
+handled by the `qiskit-bot` when a new tag is pushed to the repository:
+
+1. Checkout the `main` branch, and ensure that the last commit is the release notes preparation.
+2. Create a new git tag from `main` with the full version number, ideally signed:
+   ```sh
+   git tag -s 0.22.0 -m "Release 0.22.0"
+   ```
+3. Double-check that the tag has been created correctly and that is pointing to the desired commit,
+   and push the tag to the repository via `git push upstream 0.22.0`.
+
+This should trigger a new GitHub release, as well as uploading the new package to `pypi`. Once the
+new version of the package has been released, create a new `stable/` branch based on `main` with the
+version number _without_ the patch version (`stable/0.22`) in the repository.
 
 ### Patch releases
 
-The `stable/*` branches should only receive changes in the form of bug fixes.
-These bug fixes should first land on `main`, then be `git cherry-pick`ed to
-the stable branch. Include the Towncrier release note in these cherry-picks.
+The `stable/*` branches should only receive changes in the form of bug fixes. These bug fixes should
+first land on `main`, then be `git cherry-pick`ed to the stable branch, and they should include the
+release note in these cherry-picks.
 
-When preparing a patch release, you also need to first land a PR against
-the `stable/*` branch to prepare the release notes with
-`towncrier build --version=<full-version> --yes`, where `<full-version>` is
-the patch release like `0.21.1`. Then, from the `stable/*` branch, create a new
-Git tag for the full version number, like `git tag 0.21.1`, and
-push the tag to GitHub.
+When preparing a patch release (for example, against version `0.21`), follow the steps in the
+section above, but targeting the specific `stable/0.X` branch instead of main:
 
-GitHub Actions will automatically build and upload the wheels to PyPI. The
-qiskit-bot should also automatically create the GitHub Release for you.
+1. Issue a PR against the `stable/0.X` branch preparing the release notes as described in the
+   section above.
+2. Once the PR is merged into the `stable/0.X` branch, create a new tag targeting the commit with
+   the release notes.
+3. Push the tag to the repository.
 
-Finally, you need to cherry-pick the release notes prep from `stable/*` to
-the `main` branch, such as from `stable/0.21` to `main`.
+Finally, you need to cherry-pick the release notes prep from `stable/*` to the `main` branch, such
+as from `stable/0.21` to `main`.
 
 [ruff]: https://github.com/astral-sh/ruff
 [mypy]: http://mypy-lang.org/
