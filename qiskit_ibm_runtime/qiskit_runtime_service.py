@@ -1322,6 +1322,11 @@ class QiskitRuntimeService:
     def usage(self) -> dict[str, Any]:
         """Return usage information for the current active instance.
 
+        .. note::
+            Since ``qiskit_ibm_runtime`` version ``0.51``, the keys in the returned dictionary
+            ``usage_consumed_seconds``, ``usage_limit_seconds``, ``usage_allocation_seconds`` and
+            ``usage_limit_seconds`` are deprecated, in favor of their resource units counterparts.
+
         Returns:
             Dict with usage details.
         """
@@ -1333,6 +1338,14 @@ class QiskitRuntimeService:
                 0,
             )
             usage_dict["usage_remaining_seconds"] = usage_remaining
+        if usage_dict.get("usage_limit_ru") or usage_dict.get("usage_allocation_ru"):
+            usage_remaining = max(
+                usage_dict.get("usage_limit_ru", usage_dict.get("usage_allocation_ru"))
+                - usage_dict.get("usage_consumed_ru", 0),
+                0,
+            )
+            usage_dict["usage_remaining_ru"] = usage_remaining
+
         return usage_dict
 
     def _check_instance_usage(self) -> None:
