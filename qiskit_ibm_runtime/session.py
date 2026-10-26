@@ -269,7 +269,6 @@ class Session:
 
         Batch usage is the amount of time all jobs spend on the QPU.
 
-
         Args:
             resource_units: If ``True``, return usage in resource units instead of seconds.
         """
