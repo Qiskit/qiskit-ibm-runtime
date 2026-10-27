@@ -71,6 +71,7 @@ class TestBackendFilters:
             service.backend("common_backend")
         assert not caplog.records
 
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
     def test_saved_account_instance_auto_suppresses_warnings(
         self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
     ) -> None:
