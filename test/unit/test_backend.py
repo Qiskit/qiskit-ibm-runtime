@@ -16,49 +16,27 @@ from __future__ import annotations
 
 import copy
 from typing import TYPE_CHECKING, cast
-from unittest import mock
 
 import pytest
-from qiskit import QuantumCircuit, qasm3, transpile
+from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2, FakeSherbrooke
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
+from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
+from ..registries import Backend, get_submitted_jobs
 from ..utils import create_faulty_backend
 
 if TYPE_CHECKING:
     from qiskit.transpiler import Target
+    from responses import RequestsMock
 
-
-@pytest.fixture
-def dynamic_circuits_backend() -> IBMBackend:
-    """Create a test backend with an IfElseOp enables."""
-    model_backend = FakeManilaV2()
-    properties = model_backend.properties()
-
-    out_backend = IBMBackend(
-        configuration=model_backend.configuration(),
-        service=mock.MagicMock(),
-        api_client=None,
-        instance=None,
-    )
-
-    out_backend.status = lambda: BackendStatus(  # type: ignore[method-assign]
-        backend_name="foo",
-        backend_version="1.0",
-        operational=True,
-        pending_jobs=0,
-        status_msg="",
-    )
-    out_backend.properties = lambda: properties  # type: ignore[method-assign, misc, assignment]
-
-    return out_backend
+    from ..registries import BaseRegistry
 
 
 def assert_props(
@@ -191,12 +169,9 @@ class TestBackend:
         transpiled = transpile(circ, backend=fake_backend, initial_layout=[0, 1])
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        sampler = SamplerV2(ibm_backend)
 
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([transpiled])
-
-        mock_run.assert_called_once()
+        # A circuit that does not use the faulty qubit is accepted.
+        ibm_backend.check_faulty(transpiled)
 
     def test_faulty_edge_not_used(self) -> None:
         """Test faulty edge is not raised if not used."""
@@ -209,77 +184,36 @@ class TestBackend:
         transpiled = transpile(circ, backend=fake_backend, initial_layout=coupling_map[0])
         edge_qubits = coupling_map[-1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
-        sampler = SamplerV2(ibm_backend)
 
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([transpiled])
+        # A circuit that does not use the faulty edge is accepted.
+        ibm_backend.check_faulty(transpiled)
 
-        mock_run.assert_called_once()
-
-    def test_single_dynamic_circuit_submission(self, dynamic_circuits_backend: IBMBackend) -> None:
-        """Test submitting single circuit with dynamic=True."""
-        sampler = SamplerV2(dynamic_circuits_backend)
-
-        circ = QuantumCircuit(2, 2)
-        circ.measure(0, 0)
-        with circ.if_test((0, False)):
-            circ.x(1)
-
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([circ])
-
-        mock_run.assert_called_once()
-
-    def test_multi_dynamic_circuit_submission(self, dynamic_circuits_backend: IBMBackend) -> None:
-        """Test submitting multiple circuits with dynamic=True."""
-        sampler = SamplerV2(dynamic_circuits_backend)
+    @pytest.mark.parametrize("num_circuits", [1, 2], ids=["single", "multi"])
+    def test_dynamic_circuit_submission(
+        self, num_circuits: int, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
+        """Test submitting dynamic circuits."""
+        registry.add_backend(Backend.from_(FakeManilaV2, name="ibm_manila"))
+        backend = QiskitRuntimeService(token="my_token").backend("ibm_manila")
+        sampler = SamplerV2(backend)
 
         circ = QuantumCircuit(2, 2)
         circ.measure(0, 0)
         with circ.if_test((0, False)):
             circ.x(1)
 
-        circuits = [circ, circ]
+        sampler.run([circ] * num_circuits)
 
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run(circuits)
+        submitted_pubs = get_submitted_jobs(responses)[0]["params"]["pubs"]
+        assert len(submitted_pubs) == num_circuits
 
-        mock_run.assert_called_once()
+    def test_deepcopy(self, registry: BaseRegistry) -> None:
+        """Test that deepcopy of a backend works properly."""
+        registry.add_backend(Backend.from_(FakeManilaV2, name="ibm_manila"))
+        backend = QiskitRuntimeService(token="my_token").backend("ibm_manila")
 
-    def test_single_openqasm3_submission(self, dynamic_circuits_backend: IBMBackend) -> None:
-        """Test submitting a single openqasm3 strings with dynamic=True."""
-        sampler = SamplerV2(dynamic_circuits_backend)
-
-        circ = QuantumCircuit(2, 2)
-        circ.measure(0, 0)
-        with circ.if_test((0, False)):
-            circ.x(1)
-
-        qasm3_circ = qasm3.dumps(circ, disable_constants=True)
-
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([qasm3_circ])
-
-        mock_run.assert_called_once()
-
-    def test_runtime_image_selection_submission(self, dynamic_circuits_backend: IBMBackend) -> None:
-        """Test image selection from runtime."""
-        sampler = SamplerV2(dynamic_circuits_backend)
-
-        circ = QuantumCircuit(2, 2)
-        circ.measure(0, 0)
-        with circ.if_test((0, False)):
-            circ.x(1)
-
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([circ])
-
-        mock_run.assert_called_once()
-
-    def test_deepcopy(self, dynamic_circuits_backend: IBMBackend) -> None:
-        """Test that deepcopy of a dynamic_circuits_backend works properly."""
-        backend_copy = copy.deepcopy(dynamic_circuits_backend)
-        assert backend_copy.name == dynamic_circuits_backend.name
+        backend_copy = copy.deepcopy(backend)
+        assert backend_copy.name == backend.name
 
     def test_control_flow_converter(self) -> None:
         """Test that control flow instructions are properly added to the target."""

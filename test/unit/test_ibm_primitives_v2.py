@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -524,31 +523,21 @@ class TestPrimitivesV2:
         assert "cx" in str(err.value)
         assert f"faulty edge {tuple(edge_qubits)}" in str(err.value)
 
-    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
-    def test_faulty_qubit_not_used(self, primitive: type) -> None:
+    def test_faulty_qubit_not_used(self) -> None:
         """Test faulty qubit is not raise if not used."""
         fake_backend = FakeManilaV2()
         circ = QuantumCircuit(2, 2)
         for i in range(2):
             circ.x(i)
         transpiled = transpile(circ, backend=fake_backend, initial_layout=[0, 1])
-        observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
 
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        inst = primitive(ibm_backend)
-        if isinstance(inst, IBMBaseEstimator):
-            pub: tuple = (transpiled, observable)
-        else:
-            transpiled.measure_active(inplace=True)
-            pub = (transpiled,)
 
-        with patch.object(inst, "_run") as mock_run:
-            inst.run([pub])
-        mock_run.assert_called_once()
+        # A circuit that does not use the faulty qubit is accepted.
+        ibm_backend.check_faulty(transpiled)
 
-    @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
-    def test_faulty_edge_not_used(self, primitive: type) -> None:
+    def test_faulty_edge_not_used(self) -> None:
         """Test faulty edge is not raised if not used."""
         fake_backend = FakeManilaV2()
         coupling_map = fake_backend.configuration().coupling_map
@@ -557,25 +546,11 @@ class TestPrimitivesV2:
         circ.cx(0, 1)
 
         transpiled = transpile(circ, backend=fake_backend, initial_layout=coupling_map[0])
-        observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
-
         edge_qubits = coupling_map[-1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
 
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(backend=fake_backend)
-
-        inst = primitive(mode=session)
-        if isinstance(inst, IBMBaseEstimator):
-            pub: tuple = (transpiled, observable)
-        else:
-            transpiled.measure_all()
-            pub = (transpiled,)
-
-        with patch.object(Session, "_run") as mock_run:
-            inst.run([pub])
-        mock_run.assert_called_once()
+        # A circuit that does not use the faulty edge is accepted.
+        ibm_backend.check_faulty(transpiled)
 
     @pytest.mark.parametrize("primitive", [EstimatorV2, SamplerV2])
     def test_abstract_circuits(self, primitive: type) -> None:
