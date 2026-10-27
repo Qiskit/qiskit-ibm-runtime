@@ -18,29 +18,6 @@ import pytest
 from qiskit_ibm_runtime.visualization.circuit_schedule import CircuitSchedule
 from qiskit_ibm_runtime.visualization.utils import plotly_module
 
-from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
-
-
-@pytest.fixture
-def large_timing() -> str:
-    """Return the whole scheduler timing of the fake sampler pub results."""
-    pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
-    return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
-
-
-@pytest.fixture
-def small_timing() -> str:
-    """Return a small constant portion of the scheduler timing."""
-    pub_result = FakeCircuitScheduleInputData.sampler_pub_result_small
-    return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
-
-
-@pytest.fixture
-def merge_timing() -> str:
-    """Return the scheduler timing of a merge use case."""
-    pub_result = FakeCircuitScheduleInputData.sampler_pub_result_merge
-    return pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
-
 
 class TestCircuitSchedule:
     """Tests for CircuitSchedule class."""
