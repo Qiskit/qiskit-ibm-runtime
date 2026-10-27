@@ -12,8 +12,10 @@
 
 """Tests for the backend functions."""
 
+from __future__ import annotations
+
 import copy
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from unittest import mock
 
 import pytest
@@ -29,7 +31,9 @@ from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, B
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..utils import create_faulty_backend
-from .mock.fake_backends import FakeMidcircuit
+
+if TYPE_CHECKING:
+    from qiskit.transpiler import Target
 
 
 @pytest.fixture
@@ -58,14 +62,62 @@ def dynamic_circuits_backend() -> IBMBackend:
 
 
 def assert_props(
-    backend: IBMBackend, name: str, ref_error: float | None, ref_duration: float | None
+    target: Target, name: str, ref_error: float | None, ref_duration: float | None
 ) -> None:
     """Assert that all instruction properties for ``name`` have the given error and duration."""
-    for _, props in backend.target[name].items():
+    for _, props in target[name].items():
         error = props.error if props else None
         duration = props.duration if props else None
         assert error == ref_error
         assert duration == ref_duration
+
+
+@pytest.fixture
+def alternative_backend_snapshots() -> tuple[BackendConfiguration, BackendProperties]:
+    """Create the configuration and properties of a backend with alternative instructions.
+
+    They are based on ``FakeManilaV2``, with alternative instructions added to the configuration
+    as ``instruction_signatures`` and their gate errors and lengths added to the properties.
+    """
+    backend = FakeManilaV2()
+    conf_dict = backend._get_conf_dict_from_json()
+    backend._set_props_dict_from_json()
+    props_dict = backend._props_dict
+
+    conf_dict["supported_instructions"] = ["delay", "measure", "reset"]
+    conf_dict["instruction_signatures"] = []
+
+    # Alternative instructions, as (name, number of clbits, parameters, gate error, gate length).
+    alternative_instructions = [
+        ("measure_2", 1, [], 3.142, None),
+        ("reset_2", 1, [], None, 31.42),
+        ("reset_3", 0, [], None, 31.42),
+        ("alternative_rx", 0, ["theta"], 3.142, 31.42),
+    ]
+    for name, num_clbits, parameters, error, length in alternative_instructions:
+        conf_dict["supported_instructions"].append(name)
+        conf_dict["instruction_signatures"].append(
+            {"name": name, "num_qubits": 1, "num_clbits": num_clbits, "parameters": parameters}
+        )
+
+        markers = []
+        if error is not None:
+            markers.append({"name": "gate_error", "unit": "", "value": error})
+        if length is not None:
+            markers.append({"name": "gate_length", "unit": "ns", "value": length})
+        for qubit in range(conf_dict["n_qubits"]):
+            props_dict["gates"].append(
+                {
+                    "qubits": [qubit],
+                    "gate": name,
+                    "name": f"{name}{qubit}",
+                    "parameters": [
+                        {"date": "2021-01-20T02:35:09-05:00", **marker} for marker in markers
+                    ],
+                }
+            )
+
+    return BackendConfiguration.from_dict(conf_dict), BackendProperties.from_dict(props_dict)
 
 
 class TestBackend:
@@ -331,12 +383,15 @@ class TestBackend:
         assert ("if_else" in target.operation_names) == use_dynamic
         assert ("while_loop" in target.operation_names) == use_dynamic
 
-    def test_instruction_signatures(self) -> None:
+    def test_instruction_signatures(
+        self, alternative_backend_snapshots: tuple[BackendConfiguration, BackendProperties]
+    ) -> None:
         """Test building a target with alternative instruction signatures in its configuration."""
-        backend = FakeMidcircuit()
+        configuration, properties = alternative_backend_snapshots
+        target = convert_to_target(configuration=configuration, properties=properties)
 
-        assert set(backend.basis_gates) == {"id", "rz", "sx", "x", "cx"}
-        assert set(backend.operation_names) == {
+        assert set(configuration.basis_gates) == {"id", "rz", "sx", "x", "cx"}
+        assert set(target.operation_names) == {
             "id",
             "cx",
             "sx",
@@ -350,12 +405,12 @@ class TestBackend:
             "reset_3",
             "alternative_rx",
         }
-        assert_props(backend, "measure_2", 3.142, None)
-        assert_props(backend, "reset_2", None, 3.142e-08)
+        assert_props(target, "measure_2", 3.142, None)
+        assert_props(target, "reset_2", None, 3.142e-08)
 
-        # Test transpilation with FakeMidcircuit
+        # Test transpilation of an alternative mid-circuit measurement.
         mcm = MidCircuitMeasure()
-        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        pm = generate_preset_pass_manager(target=target, seed_transpiler=0)
         qc = QuantumCircuit(1, 2)
         qc.append(mcm, [0], [0])
         transpiled = pm.run(qc)
