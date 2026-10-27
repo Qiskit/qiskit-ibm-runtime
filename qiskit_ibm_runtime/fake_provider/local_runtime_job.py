@@ -181,9 +181,9 @@ class LocalRuntimeJob(PrimitiveJob):
 
         Args:
             partial: if ``True``, return the accumulated intermediate usage thus far until final
-                usage is reached. Not used in local mode.
-            resource_units: If ``True``, return usage in resource units instead of seconds. Not
-                used in local mode.
+                usage is reached. Ignored in local mode.
+            resource_units: If ``True``, return usage in resource units instead of seconds. Ignored
+               in local mode.
         """
         return 0
 
