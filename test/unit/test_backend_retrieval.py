@@ -17,12 +17,10 @@ from __future__ import annotations
 import logging
 import os
 from typing import TYPE_CHECKING
-from unittest import mock
 
 import pytest
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeTorino
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
@@ -73,17 +71,16 @@ class TestBackendFilters:
             service.backend("common_backend")
         assert not caplog.records
 
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
     def test_saved_account_instance_auto_suppresses_warnings(
         self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
     ) -> None:
         """A saved account with instance='auto' must suppress backend instance warnings."""
-        saved_account = Account.create_account(
-            channel="ibm_quantum_platform", token="my_token", instance="auto"
-        )
-        with mock.patch.object(
-            QiskitRuntimeService, "_discover_account", return_value=saved_account
+        # Create service outside the log capture so init's "Loading account" doesn't interfere.
+        with temporary_account_config_file(
+            get_account_config_contents(token="my_token", instance="auto")
         ):
-            service = QiskitRuntimeService(channel="ibm_quantum_platform", token="my_token")
+            service = QiskitRuntimeService()
 
         caplog.clear()
         with caplog.at_level(logging.WARNING, logger="qiskit_ibm_runtime"):
