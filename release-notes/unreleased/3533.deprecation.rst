@@ -1,0 +1,1 @@
+Manually setting the `shots_per_randomization` field of `MeasureNoiseLearningOptions` is deprecated.
