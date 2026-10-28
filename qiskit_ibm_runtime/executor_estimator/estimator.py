@@ -183,6 +183,7 @@ class Estimator(BaseEstimatorV2):
             mitigation_types=[task_class() for _ in coerced_pubs],
             custom_boxing_options=boxing_opts,
             box_types=box_types_arg,
+            observables=[pub.observables for pub in coerced_pubs],
         )
 
     def finalize_options(self) -> EstimatorOptions:
