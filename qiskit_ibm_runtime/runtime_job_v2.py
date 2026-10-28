@@ -382,8 +382,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self._status = "CANCELLED"
 
-    def usage(self, partial: bool = False) -> float:
-        """Return job usage in seconds.
+    def usage(self, partial: bool = False, resource_units: bool = False) -> float:
+        """Return job usage in resource units or seconds.
 
         By default, the job usage returned is ``0`` until the usage calculation is
         completed. Accumulated intermediate usage can be returned by the method by using the
@@ -398,15 +398,18 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         Args:
             partial: if ``True``, return the accumulated intermediate usage thus far until final
                 usage is reached.
+            resource_units: If ``True``, return usage in resource units instead of seconds.
         """
         try:
             metrics = self._api_client.job_metadata(self.job_id())
             usage = metrics.get("usage", {})
+            usage_field = "value" if resource_units else "qpu_charge_time_seconds"
+
             if partial:
-                return usage.get("qpu_charge_time_seconds")
+                return usage.get(usage_field)
             if usage.get("status", "pending") == "pending":
                 return 0
-            return usage.get("qpu_charge_time_seconds")
+            return usage.get(usage_field)
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 

@@ -296,6 +296,7 @@ class TestQuantumPlatform:
         usage = service.usage()
         assert usage
         assert isinstance(usage["usage_remaining_seconds"], int)
+        assert isinstance(usage["usage_remaining_ru"], float)
         assert isinstance(usage, dict)
 
     def test_instances_archived(
