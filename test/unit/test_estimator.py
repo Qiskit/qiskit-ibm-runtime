@@ -27,7 +27,7 @@ from qiskit_ibm_runtime import EstimatorOptions, EstimatorV2, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke, FakeVigoV2
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..asserts import assert_dict_partially_equal, assert_warns_strict
+from ..asserts import assert_dict_partially_equal
 from ..registries import OneInstanceDryRunRegistry, get_submitted_jobs
 from ..utils import get_primitive_inputs, get_transpiled_circuit, remap_observables, transpile_pubs
 
@@ -314,27 +314,26 @@ class TestEstimatorV2:
             estimator.run(pubs=[(circ, observable)])
 
     @pytest.mark.parametrize(
-        ("pub_precisions", "run_precision", "num_appearances"),
+        ("pub_precisions", "run_precision", "should_raise"),
         [
-            ([None, None], 0.01, 0),
-            ([0.01, 0.01], 0.01, 0),
-            ([0.02, 0.02], 0.01, 0),
-            ([0.02, None], 0.02, 0),
-            ([0.02, None], 0.01, 1),
-            ([0.01, 0.02, 0.03], 0.04, 1),
+            ([None, None], 0.01, False),
+            ([0.01, 0.01], 0.01, False),
+            ([0.02, 0.02], 0.01, False),
+            ([0.02, None], 0.02, False),
+            ([0.02, None], 0.01, True),
+            ([0.01, 0.02, 0.03], 0.04, True),
         ],
     )
-    def test_deprecate_pub_level_precision(
-        self, pub_precisions: list[float], run_precision: float, num_appearances: int
+    def test_pub_level_precision_raises(
+        self, pub_precisions: list[float], run_precision: float, should_raise: bool
     ) -> None:
-        """Conflicting pub-level precision emits one DeprecationWarning."""
+        """Conflicting pub-level precision raises an error."""
         backend = FakeVigoV2()
         circ = QuantumCircuit(1)
         t_circ = transpile(circ, backend=backend)
         observable = remap_observables("Z", t_circ)
-        inst = EstimatorV2(mode=backend)
+        estimator = EstimatorV2(mode=backend)
 
-        warning_msg = "Specifying different 'precision' across pubs is deprecated"
         pubs = [
             (t_circ, observable, None, precision)
             if precision is not None
@@ -342,8 +341,12 @@ class TestEstimatorV2:
             for precision in pub_precisions
         ]
 
-        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
-            inst.run(pubs, precision=run_precision)
+        if should_raise:
+            warning_msg = "Specifying different 'precision' across pubs is not supported"
+            with pytest.raises(ValueError, match=warning_msg):
+                estimator.run(pubs, precision=run_precision)
+        else:
+            estimator.run(pubs, precision=run_precision)
 
     @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry: BaseRegistry) -> None:

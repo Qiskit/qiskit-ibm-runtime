@@ -1,0 +1,2 @@
+The ability to run a :class:`~qiskit_ibm_runtime.SamplerV2` job with different ``pub.shots`` values across PUBs is deprecated, which was previously deprecated, has been removed.
+Similarly, running an  :class:`~qiskit_ibm_runtime.EstimatorV2` job with different ``pub.precision`` values across PUBs is no longer possible.

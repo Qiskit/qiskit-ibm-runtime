@@ -36,7 +36,7 @@ from qiskit_ibm_runtime.fake_provider import (
 )
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..asserts import assert_dict_partially_equal, assert_warns_strict
+from ..asserts import assert_dict_partially_equal
 from ..registries import Backend, OneInstanceDryRunRegistry, get_submitted_jobs
 from ..utils import transpile_pubs
 
@@ -539,34 +539,37 @@ class TestSamplerV2:
             assert np.array_equal(result[0].data.c, np.zeros((1,)))
 
     @pytest.mark.parametrize(
-        ("pub_shots", "run_shots", "num_appearances"),
+        ("pub_shots", "shots", "should_raise"),
         [
-            ([None, None], 100, 0),
-            ([100, 100], 100, 0),
-            ([20, 20], 100, 0),
-            ([20, None], 20, 0),
-            ([20, None], 100, 1),
-            ([100, 20, 34], 50, 1),
+            ([None, None], 100, False),
+            ([100, 100], 100, False),
+            ([20, 20], 100, False),
+            ([20, None], 20, False),
+            ([20, None], 100, True),
+            ([100, 20, 34], 50, True),
         ],
     )
-    def test_deprecate_pub_level_shots(
-        self, pub_shots: int | None, run_shots: int | None, num_appearances: int
+    def test_pub_level_shots_raises(
+        self, pub_shots: int | None, shots: int | None, should_raise: bool
     ) -> None:
-        """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
+        """Conflicting pub-level shots raises; matching shots do not."""
         backend = FakeVigoV2()
         circ = QuantumCircuit(1, 1)
         circ.measure(0, 0)
         t_circ = transpile(circ, backend=backend)
-        inst = SamplerV2(mode=backend)
+        sampler = SamplerV2(mode=backend)
 
-        warning_msg = "Specifying different 'shots' across pubs is deprecated"
         pubs = [
             (t_circ, None, shots) if shots is not None else SamplerPub(t_circ)
             for shots in pub_shots  # type: ignore[union-attr]
         ]
 
-        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
-            inst.run(pubs, shots=run_shots)
+        if should_raise:
+            warning_msg = "Specifying different 'shots' across pubs is not supported"
+            with pytest.raises(ValueError, match=warning_msg):
+                sampler.run(pubs, shots=shots)
+        else:
+            sampler.run(pubs, shots=shots)
 
     @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry: BaseRegistry) -> None:
