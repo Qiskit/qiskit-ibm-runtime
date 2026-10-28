@@ -17,7 +17,6 @@ import pytest
 from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
 from qiskit_ibm_runtime.visualization.circuit_schedule import CircuitSchedule
 
-from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 from .utils import save_plotly_artifact
 
 
@@ -38,17 +37,15 @@ class TestDrawCircuitScheduleTiming:
         filter_barriers: bool,
         expected_n_traces: int,
         test_id: str,
+        large_timing: str,
     ) -> None:
         """Test to make sure that it produces the right figure."""
-        pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
-        circuit_schedule = pub_result.metadata["compilation"]["scheduler_timing"]["timing"]
-
         if included_channels is not None:
             included_channels = list(included_channels)
 
         # test string input
         fig_1 = draw_circuit_schedule_timing(
-            circuit_schedule=circuit_schedule,
+            circuit_schedule=large_timing,
             included_channels=included_channels,
             filter_readout_channels=filter_readout_channels,
             filter_barriers=filter_barriers,
@@ -57,7 +54,7 @@ class TestDrawCircuitScheduleTiming:
         save_plotly_artifact(test_id, fig_1)
 
         # test class input
-        circuit_schedule_object = CircuitSchedule(circuit_schedule)
+        circuit_schedule_object = CircuitSchedule(large_timing)
         fig_2 = draw_circuit_schedule_timing(
             circuit_schedule=circuit_schedule_object,
             included_channels=included_channels,
