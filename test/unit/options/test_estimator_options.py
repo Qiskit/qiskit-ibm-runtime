@@ -30,11 +30,6 @@ from ...asserts import (
     assert_dict_flat_partially_equal,
     assert_dict_keys_equal,
     assert_dict_partially_equal,
-    assert_warns_strict,
-)
-
-SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG = (
-    "Specifying 'measure_noise_learning.shots_per_randomization' as an integer is deprecated"
 )
 
 
@@ -103,71 +98,36 @@ class TestEstimatorOptions:
         with pytest.raises(ValidationError, match=error_msg):
             EstimatorOptions(**bad_input)
 
-    @pytest.mark.parametrize(("value", "num_appearances"), [("auto", 0), (20, 1)])
-    def test_deprecate_measure_noise_learning_shots_per_randomization_on_nested_init(
-        self, value, num_appearances
-    ):
-        """Integer shots_per_randomization warns when set via nested EstimatorOptions init."""
-        with assert_warns_strict(
-            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
-        ):
-            options = EstimatorOptions(
+    def test_deprecate_measure_noise_learning_shots_per_randomization(self):
+        """Integer shots_per_randomization warns set explicitly."""
+        with pytest.warns(DeprecationWarning, match="is deprecated"):
+            EstimatorOptions(
                 resilience={
                     "measure_mitigation": True,
-                    "measure_noise_learning": {"shots_per_randomization": value},
+                    "measure_noise_learning": {"shots_per_randomization": "auto"},
                 }
             )
 
-        assert options.resilience.measure_noise_learning.shots_per_randomization == value
-
-    @pytest.mark.parametrize(("value", "num_appearances"), [("auto", 0), (20, 1)])
-    def test_deprecate_measure_noise_learning_shots_per_randomization_on_assignment(
-        self, value, num_appearances
-    ):
+    def test_deprecate_measure_noise_learning_shots_per_randomization_on_assignment(self):
         """Integer shots_per_randomization warns on attribute assignment."""
         options = MeasureNoiseLearningOptions()
+        with pytest.warns(DeprecationWarning, match="deprecated"):
+            options.shots_per_randomization = "auto"
 
-        with assert_warns_strict(
-            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
-        ):
-            options.shots_per_randomization = value
+        assert options.shots_per_randomization == "auto"
 
-        assert options.shots_per_randomization == value
-
-    @pytest.mark.parametrize(("value", "num_appearances"), [("auto", 0), (20, 1)])
-    def test_deprecate_measure_noise_learning_shots_per_randomization_on_class_assignment(
-        self, value, num_appearances
-    ):
+    def test_deprecate_measure_noise_learning_shots_per_randomization_on_class_assignment(self):
         """Integer shots_per_randomization warns when assigned on an estimator instance."""
         estimator = Estimator(mode=FakeManilaV2())
+        with pytest.warns(DeprecationWarning, match="deprecated"):
+            estimator.options.resilience.measure_noise_learning.shots_per_randomization = "auto"
 
-        with assert_warns_strict(
-            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
-        ):
-            estimator.options.resilience.measure_noise_learning.shots_per_randomization = value
+        assert estimator.options.resilience.measure_noise_learning.shots_per_randomization == "auto"
 
-        assert estimator.options.resilience.measure_noise_learning.shots_per_randomization == value
-
-    @pytest.mark.parametrize(("value", "num_appearances"), [("auto", 0), (20, 1)])
-    def test_deprecate_measure_noise_learning_shots_per_randomization_on_init(
-        self, value, num_appearances
-    ):
+    def test_deprecate_measure_noise_learning_shots_per_randomization_on_init(self):
         """Auto shots_per_randomization does not warn on option init."""
-        with assert_warns_strict(
-            DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, num_appearances
-        ):
-            options = MeasureNoiseLearningOptions(shots_per_randomization=value)
-
-        assert options.shots_per_randomization == value
-
-    def test_measure_noise_learning_shots_per_randomization_auto_on_assignment_does_not_warn(
-        self,
-    ) -> None:
-        """Auto shots_per_randomization does not warn on attribute assignment."""
-        options = MeasureNoiseLearningOptions()
-
-        with assert_warns_strict(DeprecationWarning, SHOTS_PER_RANDOMIZATION_DEPRECATION_MSG, 0):
-            options.shots_per_randomization = "auto"
+        with pytest.warns(DeprecationWarning, match="deprecated"):
+            options = MeasureNoiseLearningOptions(shots_per_randomization="auto")
 
         assert options.shots_per_randomization == "auto"
 
@@ -187,10 +147,7 @@ class TestEstimatorOptions:
         execution = {"init_qubits": True, "rep_delay": 0.01}
         resilience = {
             "measure_mitigation": True,
-            "measure_noise_learning": {
-                "num_randomizations": 1,
-                "shots_per_randomization": "auto",
-            },
+            "measure_noise_learning": {"num_randomizations": 1},
             "zne_mitigation": True,
             "zne": {
                 "noise_factors": [1.0, 3.0],

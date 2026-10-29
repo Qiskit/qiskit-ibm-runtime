@@ -36,7 +36,7 @@ class MeasureNoiseLearningOptions:
     Default: 32.
     """
 
-    shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
+    shots_per_randomization: UnsetType | Literal["auto"] = Unset
     """The number of shots to use for the learning experiment per random circuit.
 
     If "auto", the value will be chosen automatically based on the input PUBs.
@@ -46,22 +46,21 @@ class MeasureNoiseLearningOptions:
 
     _ge1 = make_constraint_validator(
         "num_randomizations",
-        "shots_per_randomization",
         ge=1,  # type: ignore[arg-type]
     )
 
     @field_validator("shots_per_randomization")
     @classmethod
-    def _warn_shots_per_randomization_int(
-        cls, value: UnsetType | int | Literal["auto"]
-    ) -> UnsetType | int | Literal["auto"]:
-        """Warn when shots per randomization is set to a deprecated integer value."""
-        if isinstance(value, int):
+    def _warn_shots_per_randomization_set(
+        cls, value: UnsetType | Literal["auto"]
+    ) -> UnsetType | Literal["auto"]:
+        """Warn when shots per randomization is set, as the field is being removed."""
+        if not isinstance(value, UnsetType):
             issue_deprecation_msg(
-                msg="Specifying 'measure_noise_learning.shots_per_randomization' as an integer "
-                "is deprecated",
-                version="0.48.0",
-                remedy='Use "auto" instead.',
+                msg="The 'measure_noise_learning.shots_per_randomization' option is deprecated "
+                "and will be removed soon",
+                version="0.51.0",
+                remedy="Do not set this option.",
                 stacklevel=3,
             )
         return value
