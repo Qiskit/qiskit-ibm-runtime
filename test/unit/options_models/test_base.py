@@ -12,8 +12,6 @@
 
 """Tests for the BaseOptionsModel class."""
 
-from dataclasses import asdict
-
 import pytest
 from pydantic import ValidationError
 
@@ -59,11 +57,3 @@ class TestBaseOptionsModel:
         # Should fail when trying to update a field with an invalid value.
         with pytest.raises(ValidationError):
             options.update(**{"a": None})
-
-    def test_asdict(self) -> None:
-        """Test the ability to use `dataclass.asdict()` in an OptionsModel."""
-        options = Options()
-        with pytest.warns(DeprecationWarning, match="is deprecated"):
-            options_as_dict = asdict(options)
-
-        assert options_as_dict == options.model_dump()
