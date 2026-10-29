@@ -76,7 +76,7 @@ class Calibrator:
 
     def __init__(
         self,
-        mode: BackendV2 | Session | Batch | str | None = None,
+        mode: BackendV2 | Session | Batch | None = None,
         options: CalibratorOptions | dict | None = None,
     ):
         # Coerced to `CalibratorOptions` via `__setattr__()`.
