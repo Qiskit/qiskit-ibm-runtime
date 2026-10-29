@@ -240,8 +240,10 @@ style_local = [
 ]
 
 test = [
+    "ddt>=1.7.2",
+    "mitmproxy==10.2.4; python_version < '3.11'",
+    "mitmproxy==11.0.2; python_version >= '3.11'",
     "pytest>=9.1",
-    "pproxy==2.7.8",
     "coverage>=7.13.5",
     "pytest-benchmark==5.2.3",
     "responses>=0.26.2",
