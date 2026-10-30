@@ -27,7 +27,7 @@ from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
 
-from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Session
+from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, Session
 from qiskit_ibm_runtime.fake_provider import (
     FakeCusco,
     FakeFractionalBackend,
@@ -35,6 +35,7 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeVigoV2,
 )
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.server_side import SamplerV2
 
 from ..asserts import assert_dict_partially_equal
 from ..registries import Backend, OneInstanceDryRunRegistry, get_submitted_jobs

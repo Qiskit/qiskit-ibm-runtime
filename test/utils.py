@@ -23,10 +23,10 @@ from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, Quantum
 from qiskit.compiler import transpile
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import BackendProperties, BackendStatus
+from qiskit_ibm_runtime.server_side import EstimatorV2, SamplerV2
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
