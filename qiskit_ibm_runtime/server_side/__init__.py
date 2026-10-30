@@ -11,3 +11,8 @@
 # that they have been altered from the originals.
 
 """Server-side primitives."""
+
+from .estimator import EstimatorV2
+from .estimator import EstimatorV2 as Estimator
+from .sampler import SamplerV2
+from .sampler import SamplerV2 as Sampler

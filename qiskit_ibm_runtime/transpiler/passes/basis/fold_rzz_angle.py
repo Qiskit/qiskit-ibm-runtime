@@ -33,8 +33,8 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.basepasses import TransformationPass
 
-from ....estimator import EstimatorV2
-from ....sampler import SamplerV2
+from ....server_side.estimator import EstimatorV2
+from ....server_side.sampler import SamplerV2
 from .utils import fold_rzz_angle
 
 if TYPE_CHECKING:
