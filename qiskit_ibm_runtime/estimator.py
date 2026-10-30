@@ -11,3 +11,16 @@
 # that they have been altered from the originals.
 
 """Estimator primitive."""
+
+import warnings
+
+from .server_side import Estimator, EstimatorV2  # noqa: F401
+
+warnings.warn(
+    "You are using a non-public import that will be removed in v0.53.0. Please adjust your imports "
+    "accordingly, to either `from qiskit_ibm_runtime import Estimator` for using the client-side "
+    "primitive or `from qiskit_ibm_runtime.server_side import Estimator` for using the server-side "
+    "primitive.",
+    DeprecationWarning,
+    stacklevel=2,
+)

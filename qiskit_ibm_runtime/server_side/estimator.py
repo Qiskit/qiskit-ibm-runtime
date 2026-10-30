@@ -76,7 +76,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         from qiskit.circuit.library import real_amplitudes
         from qiskit.quantum_info import SparsePauliOp
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-        from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime.server_side import EstimatorV2 as Estimator
 
         service = QiskitRuntimeService()
         backend = service.least_busy(operational=True, simulator=False)

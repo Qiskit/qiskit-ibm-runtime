@@ -11,3 +11,16 @@
 # that they have been altered from the originals.
 
 """Sampler primitive."""
+
+import warnings
+
+from .server_side import Sampler, SamplerV2  # noqa: F401
+
+warnings.warn(
+    "You are using a non-public import that will be removed in v0.53.0. Please adjust your imports "
+    "accordingly, to either `from qiskit_ibm_runtime import Sampler` for using the client-side "
+    "primitive or `from qiskit_ibm_runtime.server_side import Sampler` for using the server-side "
+    "primitive.",
+    DeprecationWarning,
+    stacklevel=2,
+)
