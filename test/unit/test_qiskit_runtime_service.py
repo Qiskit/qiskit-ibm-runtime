@@ -21,9 +21,9 @@ from unittest.mock import patch
 import pytest
 from qiskit import QuantumCircuit
 
-from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.server_side import SamplerV2
 
 from ..account import custom_envs, get_account_config_contents, temporary_account_config_file
 from ..registries import Backend, Instance, Job, OneInstanceNoBackendsRegistry

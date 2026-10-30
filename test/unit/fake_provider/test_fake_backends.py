@@ -76,7 +76,7 @@ class TestFakeProvider:
         pub_result = job.result()[0]
         counts = pub_result.data.meas.get_counts()
 
-        assert sum(counts.values()) == 1024
+        assert sum(counts.values()) == 4096
 
     @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
     def test_fake_backend_v2_noise_model_always_present(self) -> None:
