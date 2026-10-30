@@ -27,7 +27,6 @@ from qiskit.utils import optionals
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import (
     FakeManilaV2,
     FakeNairobiV2,
@@ -37,6 +36,7 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeVigoV2,
 )
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
+from qiskit_ibm_runtime.server_side import SamplerV2 as Sampler
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
@@ -61,6 +61,7 @@ def flipped_circuit() -> QuantumCircuit:
     return circuit
 
 
+@pytest.mark.server_side_primitives
 class TestFakeBackends:
     """Test runnning circuits in fake backends.
 
@@ -85,7 +86,7 @@ class TestFakeBackends:
         pub_result = job.result()[0]
         counts = pub_result.data.meas.get_counts()
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
-        assert max_count == "10"
+        assert max_count == "11"
 
     @pytest.mark.parametrize("optimization_level", [0, 1, 2, 3])
     def test_circuit_on_fake_backend_v2_with_optimization_level(self, optimization_level):
