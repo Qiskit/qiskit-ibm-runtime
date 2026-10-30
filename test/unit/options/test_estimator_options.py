@@ -33,6 +33,7 @@ from ...asserts import (
 )
 
 
+@pytest.mark.server_side_primitives
 class TestEstimatorOptions:
     """Class for testing the EstimatorOptions class."""
 

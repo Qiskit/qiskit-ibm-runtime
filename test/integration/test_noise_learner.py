@@ -95,6 +95,7 @@ def assert_job_result(
     assert metadata["input_options"] == {}
 
 
+@pytest.mark.server_side_primitives
 class TestIntegrationNoiseLearner:
     """Integration tests for NoiseLearner."""
 

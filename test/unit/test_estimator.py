@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from ..registries import BaseRegistry
 
 
+@pytest.mark.server_side_primitives
 class TestEstimatorV2:
     """Class for testing the Estimator class."""
 

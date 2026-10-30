@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 class TestQiskitRuntimeService:
     """Class for testing the `QiskitRuntimeService` class."""
 
+    @pytest.mark.server_side_primitives
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     def test_run_active_client(self, registry: BaseRegistry) -> None:
         """`_run()` should use the backend/instance api client rather than the active client."""

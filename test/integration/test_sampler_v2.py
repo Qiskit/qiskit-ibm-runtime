@@ -156,6 +156,7 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, targets: list | N
             assert isinstance(result[idx].data.meas, BitArray)
 
 
+@pytest.mark.server_side_primitives
 class TestSampler:
     """Test Sampler."""
 

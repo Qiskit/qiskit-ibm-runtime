@@ -54,6 +54,7 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> 
         assert pub_result.data.stds.shape == shapes[idx]
 
 
+@pytest.mark.server_side_primitives
 class TestEstimatorV2:
     """Integration tests for Estimator V2 Primitive."""
 

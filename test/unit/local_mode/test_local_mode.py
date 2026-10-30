@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
 
+@pytest.mark.server_side_primitives
 class TestLocalModeV2:
     """Class for testing local mode for V2 primitives."""
 

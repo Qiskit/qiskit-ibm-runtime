@@ -61,6 +61,7 @@ def real_amplitudes_measured(num_qubits: int, reps: int) -> QuantumCircuit:
     return qc
 
 
+@pytest.mark.server_side_primitives
 class TestSamplerV2:
     """Class for testing the Sampler class."""
 

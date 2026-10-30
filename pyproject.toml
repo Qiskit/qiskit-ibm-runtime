@@ -92,6 +92,7 @@ addopts = "--strict-markers"
 markers = [
     "production: only run the test when the service is a production one.",
     "registry: the `responses` registry class to use, as `registry_class=...`.",
+    "server_side_primitives: the test consciously uses the deprecated server-side primitives.",
 ]
 
 [tool.ruff]

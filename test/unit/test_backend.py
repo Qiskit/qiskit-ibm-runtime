@@ -98,6 +98,7 @@ def alternative_backend_snapshots() -> tuple[BackendConfiguration, BackendProper
     return BackendConfiguration.from_dict(conf_dict), BackendProperties.from_dict(props_dict)
 
 
+@pytest.mark.server_side_primitives
 class TestBackend:
     """Tests for IBMBackend class."""
 
