@@ -21,11 +21,12 @@ import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import EstimatorV2, Session
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
+from qiskit_ibm_runtime.server_side import EstimatorV2
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend

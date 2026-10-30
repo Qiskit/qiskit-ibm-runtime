@@ -22,8 +22,9 @@ from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import EstimatorV2, Session
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
+from qiskit_ibm_runtime.server_side import EstimatorV2
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.options import (
