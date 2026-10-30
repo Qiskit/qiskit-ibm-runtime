@@ -10,7 +10,22 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Sampler primitive."""
+"""
+===================================================================
+Server-side Sampler (:mod:`qiskit_ibm_runtime.server_side.sampler`)
+===================================================================
+
+.. currentmodule:: qiskit_ibm_runtime.server_side.sampler
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   Sampler
+   SamplerV2
+"""  # noqa: D205, D212, D415
 
 from __future__ import annotations
 

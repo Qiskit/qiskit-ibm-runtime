@@ -10,7 +10,22 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Estimator primitive."""
+"""
+=======================================================================
+Server-side Estimator (:mod:`qiskit_ibm_runtime.server_side.estimator`)
+=======================================================================
+
+.. currentmodule:: qiskit_ibm_runtime.server_side.estimator
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   Estimator
+   EstimatorV2
+"""  # noqa: D205, D212, D415
 
 from __future__ import annotations
 
