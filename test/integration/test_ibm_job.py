@@ -24,8 +24,8 @@ from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound, RuntimeJobTimeoutError
+from qiskit_ibm_runtime.server_side import SamplerV2 as Sampler
 
 from ..utils import bell
 from .utils import cancel_job_safe, submit_and_cancel
@@ -69,6 +69,7 @@ def most_busy_backend(dependencies: Dependencies) -> IBMBackend:
     )
 
 
+@pytest.mark.server_side_primitives
 class TestIBMJob:
     """Test ibm_job module."""
 

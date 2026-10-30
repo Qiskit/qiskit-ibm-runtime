@@ -22,11 +22,11 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 from qiskit.transpiler import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2, FakeSherbrooke
 from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.server_side import SamplerV2
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..registries import Backend, get_submitted_jobs
@@ -98,6 +98,7 @@ def alternative_backend_snapshots() -> tuple[BackendConfiguration, BackendProper
     return BackendConfiguration.from_dict(conf_dict), BackendProperties.from_dict(props_dict)
 
 
+@pytest.mark.server_side_primitives
 class TestBackend:
     """Tests for IBMBackend class."""
 

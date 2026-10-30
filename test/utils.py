@@ -23,10 +23,11 @@ from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, Quantum
 from qiskit.compiler import transpile
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime import Estimator, Sampler
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import BackendProperties, BackendStatus
+from qiskit_ibm_runtime.server_side import EstimatorV2, SamplerV2
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -204,9 +205,9 @@ def get_primitive_inputs(
     obs = obs.apply_layout(circ.layout, num_qubits=circ.num_qubits)
     param_val = [0.1]
 
-    if isinstance(primitive, EstimatorV2):
+    if isinstance(primitive, (Estimator, EstimatorV2)):
         return {"pubs": [(circ, [obs], [param_val])] * num_sets}
-    elif isinstance(primitive, SamplerV2):
+    elif isinstance(primitive, (Sampler, SamplerV2)):
         circ.measure_all()
         return {"pubs": [(circ, param_val)] * num_sets}
     else:

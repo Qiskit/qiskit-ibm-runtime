@@ -24,11 +24,12 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, SamplerV2, Session
+from qiskit_ibm_runtime import Batch, QiskitRuntimeService, Session
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
-from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeVigoV2
+from qiskit_ibm_runtime.server_side import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime.server_side.estimator import Estimator as IBMBaseEstimator
 
 from ..asserts import (
     assert_dict_flat_partially_equal,
@@ -44,6 +45,7 @@ if TYPE_CHECKING:
     from ..registries import BaseRegistry
 
 
+@pytest.mark.server_side_primitives
 class TestPrimitivesV2:
     """Class for testing the Sampler and Estimator classes."""
 

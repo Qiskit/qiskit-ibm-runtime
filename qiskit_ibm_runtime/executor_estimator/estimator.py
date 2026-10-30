@@ -56,7 +56,7 @@ class Estimator(BaseEstimatorV2):
             from qiskit import QuantumCircuit
             from qiskit.quantum_info import SparsePauliOp
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor_estimator import Estimator
+            from qiskit_ibm_runtime import Estimator
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)

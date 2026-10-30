@@ -65,7 +65,7 @@ Basic usage
     from qiskit.quantum_info import SparsePauliOp
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
     from qiskit_ibm_runtime import QiskitRuntimeService
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
 
     # Select a backend.
     service = QiskitRuntimeService()
@@ -301,7 +301,7 @@ behavioral changes:
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
     from qiskit_ibm_runtime.options_models import EstimatorOptions
 
 **Step 2 — Perform noise learning explicitly (if using PEC or PEA).**
@@ -325,7 +325,7 @@ you need to perform noise learning explicitly by using ``NoiseLearnerV3``.
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
     from qiskit_ibm_runtime import NoiseLearnerV3
 
     pubs = [...]  # Your PUBs
@@ -374,7 +374,7 @@ the groups still run together.
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
     from qiskit_ibm_runtime import Batch
 
     # Group the PUBs by precision, one group per job.

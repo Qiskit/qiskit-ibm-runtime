@@ -27,8 +27,8 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.transpiler.target import Target
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.server_side import SamplerV2 as Sampler
 
 from ..utils import bell
 
@@ -61,6 +61,7 @@ def get_mock_backend_pair(service: QiskitRuntimeService) -> tuple[IBMBackend, IB
         pytest.skip("No backend with corresponding mock backend available.")
 
 
+@pytest.mark.server_side_primitives
 class TestIntegrationBackend:
     """Integration tests for backend functions."""
 
@@ -126,6 +127,7 @@ class TestIntegrationBackend:
         assert any(backend.is_mock for backend in backends_include_mocks)
 
 
+@pytest.mark.server_side_primitives
 class TestIBMBackend:
     """Test ibm_backend module."""
 

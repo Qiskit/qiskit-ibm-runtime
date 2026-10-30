@@ -62,7 +62,7 @@ class Sampler(BaseSamplerV2):
 
             from qiskit import QuantumCircuit
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor_sampler import Sampler
+            from qiskit_ibm_runtime import Sampler
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)

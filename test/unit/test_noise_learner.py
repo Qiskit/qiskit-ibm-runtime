@@ -61,6 +61,7 @@ def equivalent_options() -> tuple[NoiseLearnerOptions, EstimatorOptions, dict[st
     return nl_options, est_options, dict_options
 
 
+@pytest.mark.server_side_primitives
 class TestNoiseLearner:
     """Class for testing the NoiseLearner class."""
 
