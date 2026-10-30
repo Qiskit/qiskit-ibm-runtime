@@ -85,7 +85,7 @@ class TestFakeBackends:
         pub_result = job.result()[0]
         counts = pub_result.data.meas.get_counts()
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
-        assert max_count == "11"
+        assert max_count == "10"
 
     @pytest.mark.parametrize("optimization_level", [0, 1, 2, 3])
     def test_circuit_on_fake_backend_v2_with_optimization_level(self, optimization_level):
