@@ -24,6 +24,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from test.asserts import fail_on_missing_noise_warning
 
 from .utils import (
     create_estimator_test_data,
@@ -77,6 +78,7 @@ TWIRLING_TREX = {
 class TestEstimatorWithNoise:
     """Tests client-side Estimator using simulator with noise through local mode."""
 
+    @fail_on_missing_noise_warning
     def test_result_quality_for_different_resilience_levels(self) -> None:
         """Tests the effect of resilience on Estimator results.
 
@@ -111,6 +113,7 @@ class TestEstimatorWithNoise:
         np.testing.assert_array_less(errors[1], errors[0], err_msg=debug_message)
 
     @pytest.mark.parametrize("option_overrides", [TWIRLING_TREX_PEC, TWIRLING_TREX_PEA])
+    @fail_on_missing_noise_warning
     def test_result_quality_with_noise_injection(self, option_overrides: dict[str, Any]) -> None:
         """Tests the effect of resilience on Estimator results.
 
@@ -188,6 +191,7 @@ class TestEstimatorWithNoise:
         debug_message = f"Ideal errors: {errors}\nDivergent errors: {divergent_errors}"
         np.testing.assert_array_less(errors, divergent_errors, err_msg=debug_message)
 
+    @fail_on_missing_noise_warning
     def test_result_quality_with_measurement_noise_injection(self) -> None:
         """Tests that measurement noise injection works as expected.
 
@@ -248,6 +252,7 @@ class TestEstimatorWithoutNoise:
             TWIRLING_TREX_PEA,
         ],
     )
+    @fail_on_missing_noise_warning
     def test_correct_estimates(self, option_overrides: dict[str, Any]) -> None:
         """Tests Estimator configurations to produce correct results in a noise-less environment."""
         backend = AerSimulator(basis_gates=["cz", "rz", "sx", "x"])

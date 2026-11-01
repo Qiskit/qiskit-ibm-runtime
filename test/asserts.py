@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import functools
 import inspect
 import os
 import warnings
@@ -21,7 +22,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
 
 def assert_dict_partially_equal(a: dict, b: dict) -> None:
@@ -139,3 +140,46 @@ def assert_warns_strict(
                 f"the user's code -- past any qiskit_ibm_runtime or pydantic internals -- "
                 f"so the warning is visible in scripts and Jupyter notebooks."
             )
+
+
+#: The warning message fragment emitted by the AerExecutor when a circuit layer has no entry
+#: in the noise model.
+_MISSING_NOISE_WARNING_MSG = "No noise found for tag"
+
+
+def fail_on_missing_noise_warning(func: Callable) -> Callable:
+    """Fail a test if the AerExecutor warns that a layer is missing from the noise model.
+
+    Particularly important for executor-based primitives, where the prepare and layer-finding
+    pathways are separate.
+
+    Apply this decorator to simulation tests that set ``options.simulator.layer_noise_model`` to
+    guarantee that every layer in the circuit is covered by the model.
+
+    Example::
+
+        @fail_on_missing_noise_warning
+        def test_noisy_simulation(self) -> None:
+            ...
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", UserWarning)
+            func(*args, **kwargs)
+
+        missing_noise_warnings = [
+            w
+            for w in caught
+            if issubclass(w.category, UserWarning) and _MISSING_NOISE_WARNING_MSG in str(w.message)
+        ]
+        if missing_noise_warnings:
+            msgs = [str(w.message) for w in missing_noise_warnings]
+            raise AssertionError(
+                f"Test issued {len(missing_noise_warnings)} missing-noise warning(s); "
+                f"ensure every tagged layer is covered by the noise model.\n"
+                + "\n".join(f"  - {m}" for m in msgs)
+            )
+
+    return wrapper
