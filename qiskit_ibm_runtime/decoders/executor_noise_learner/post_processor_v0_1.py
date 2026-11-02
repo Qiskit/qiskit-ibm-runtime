@@ -88,7 +88,9 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
         )
 
     fraction_kept = _fraction_kept(fit.raw_data, gate_names)
-    success_rates = _success_rates(fit.raw_data, gate_names, suffix_creg_identifier(creg_suffix))
+    success_rates = _success_rates(
+        fit.raw_data, gate_names, suffix_creg_identifier(creg_suffix) if creg_suffix else None
+    )
 
     return NoiseLearnerV3Results(
         [
