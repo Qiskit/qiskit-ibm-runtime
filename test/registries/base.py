@@ -665,10 +665,15 @@ class BaseRegistry(FirstMatchRegistry):
             return (404, {"Content-Type": "application/json"}, "{}")
         session = self.sessions[instance.name][session_id]
 
-        response_body: dict[str, str | list[dict[str, str]]] = {
+        response_body: dict[str, str | int | dict | list[dict[str, str]]] = {
             "id": "session_12345",
             "backend_name": session.backend_name,
             "mode": session.mode,
+            "elapsed_time": 2,
+            "usage": {
+                "value": 1.1,
+                "unit": "resource_units",
+            },
         }
         if session.timestamps is not None:
             response_body["timestamps"] = session.timestamps

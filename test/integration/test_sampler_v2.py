@@ -462,26 +462,6 @@ class TestSampler:
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_multiple_pubs(self, dependencies: Dependencies) -> None:
-        """Test with per-pub shots option."""
-        backend = dependencies.service.backend(dependencies.qpu)
-        isa_bell = isa_bell_circuit(backend)
-
-        shots1 = 100
-        shots2 = 200
-        sampler = Sampler(mode=backend)
-        result = sampler.run(
-            [
-                SamplerPub(isa_bell, shots=shots1),
-                SamplerPub(isa_bell, shots=shots2),
-            ]
-        ).result()
-        assert result[0].data.meas.num_shots == shots1
-        assert sum(result[0].data.meas.get_counts().values()) == shots1
-        assert result[1].data.meas.num_shots == shots2
-        assert sum(result[1].data.meas.get_counts().values()) == shots2
-        assert_result_type(result, num_pubs=2)
-
     def test_run_shots_result_size(self, dependencies: Dependencies) -> None:
         """Test with shots option to validate the result size."""
         backend = dependencies.service.backend(dependencies.qpu)

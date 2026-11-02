@@ -1,0 +1,2 @@
+The usage of stdlib ``asdict`` with option classes from the :mod:`options_models` package,
+which was previously deprecated, is now removed.

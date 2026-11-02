@@ -24,12 +24,12 @@ from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..registries import OneInstanceDryRunRegistry
-from ..utils import get_mocked_backend
+from ..registries import OneInstanceDryRunRegistry, get_submitted_jobs
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from unittest.mock import MagicMock
+
+    from responses import RequestsMock
 
     from ..registries import BaseRegistry
 
@@ -71,9 +71,12 @@ class TestNoiseLearner:
         task_type: str,
         options_type: str,
         equivalent_options: tuple[NoiseLearnerOptions, EstimatorOptions, dict],
+        registry: BaseRegistry,
+        responses: RequestsMock,
     ) -> None:
         """Test all supported tasks and options types."""
-        backend: MagicMock = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         nl_options, est_options, dict_options = equivalent_options
 
         if task_type == "circs":
@@ -91,7 +94,7 @@ class TestNoiseLearner:
         inst = NoiseLearner(backend, options)
         inst.run(tasks)
 
-        input_params = backend.service._run.call_args.kwargs["inputs"]
+        input_params = get_submitted_jobs(responses)[0]["params"]
         assert input_params["circuits"] == [transpile(c) for c in circuits()]
 
         expected = dict_options
@@ -99,12 +102,15 @@ class TestNoiseLearner:
         assert input_params["options"] == expected
 
     @pytest.mark.parametrize("task_type", ["circs", "pubs", "circs_iterator", "pubs_iterator"])
-    def test_run_program_inputs_with_default_options(self, task_type: str) -> None:
+    def test_run_program_inputs_with_default_options(
+        self, task_type: str, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
         """Test a circuit with default options.
 
         Also tests support for generators/iterators.
         """
-        backend: MagicMock = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
 
         def circuit_generator(
             generated_circuits: list[QuantumCircuit],
@@ -131,24 +137,28 @@ class TestNoiseLearner:
         inst = NoiseLearner(backend)
         inst.run(tasks)
 
-        input_params = backend.service._run.call_args.kwargs["inputs"]
+        input_params = get_submitted_jobs(responses)[0]["params"]
         assert input_params["circuits"] == [transpile(c) for c in circuits()]
         assert input_params["options"] == {"support_qiskit": True}
 
-    def test_run_program_inputs_with_no_learnable_layers(self) -> None:
+    def test_run_program_inputs_with_no_learnable_layers(
+        self, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
         """Test a circuit with no learnable layers."""
-        backend: MagicMock = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
 
         inst = NoiseLearner(backend)
         inst.run([QuantumCircuit(3)])
 
-        input_params = backend.service._run.call_args.kwargs["inputs"]
+        input_params = get_submitted_jobs(responses)[0]["params"]
         assert "circuits" in input_params
         assert input_params["circuits"] == [QuantumCircuit(3)]
 
-    def test_irrelevant_options_are_ignored(self) -> None:
+    def test_irrelevant_options_are_ignored(self, registry: BaseRegistry) -> None:
         """Test that irrelevant estimator options are ignored."""
-        backend: MagicMock = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
 
         options = EstimatorOptions()
         options.default_shots = 10
@@ -166,9 +176,10 @@ class TestNoiseLearner:
         with pytest.raises(ValueError, match="not currently supported in local mode"):
             NoiseLearner(FakeSherbrooke())
 
-    def test_get_backend(self) -> None:
+    def test_get_backend(self, registry: BaseRegistry) -> None:
         """Test getting the backend used."""
-        backend = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         inst = NoiseLearner(backend)
         assert inst.backend().name == backend.name
 

@@ -121,7 +121,6 @@ class TestEstimatorV2:
         layer_noise_learning.num_randomizations = 16
         layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
         measure_noise_learning.num_randomizations = 32
-        measure_noise_learning.shots_per_randomization = 100
         execution.init_qubits = True
         execution.rep_delay = 0.00025
         twirling.enable_gates = True

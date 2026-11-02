@@ -1,0 +1,3 @@
+In local testing mode, ``job.status()`` now returns the same values as jobs run on IBM Quantum Platform
+(``"DONE"``, ``"ERROR"``, ``"CANCELLED"``, ...) instead of a :class:`~qiskit.providers.JobStatus`, and
+jobs now have the ``errored()`` and ``wait_for_final_state()`` methods.

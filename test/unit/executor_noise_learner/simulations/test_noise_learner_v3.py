@@ -85,7 +85,6 @@ def generate_random_pauli_lindblad_map(
 class TestNoiseLearnerV3:
     """Tests client-side noise learner using simulator with noise through local mode."""
 
-    @pytest.mark.skip(reason="Skipping due to flaky test")
     def test_noise_learning_with_noise_injection(self) -> None:
         """Tests the client-side noise learner with local mode noise injection.
 
@@ -126,8 +125,17 @@ class TestNoiseLearnerV3:
                 ("ZI", 0.03),
             ]
         )
-        compare_pauli_lindblad_maps(simplified_noise_maps[0], expected_gate_map)
-        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1], atol=6e-3)
+        # compute an approximate tolerance based on the standard error
+        # of total number of samples i.e. (shots_per_randomization * num_randomizations)
+        atol = 1 / (
+            2
+            * np.sqrt(
+                noise_learner.options.shots_per_randomization
+                * noise_learner.options.num_randomizations
+            )
+        )
+        compare_pauli_lindblad_maps(simplified_noise_maps[0], expected_gate_map, atol=atol)
+        compare_pauli_lindblad_maps(simplified_noise_maps[1], noise_maps[1], atol=atol)
 
     @pytest.mark.parametrize("qubits", [(0, 1), (1, 0), (3, 4, 2)])
     def test_noise_learning_with_noop_noise_injection(self, qubits):

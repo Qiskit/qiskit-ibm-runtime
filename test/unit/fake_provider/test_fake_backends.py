@@ -19,10 +19,6 @@ import os
 import shutil
 import tempfile
 from typing import TYPE_CHECKING
-from unittest import mock
-
-if TYPE_CHECKING:
-    from contextlib import AbstractContextManager
 
 import pytest
 from qiskit import QuantumCircuit, transpile
@@ -37,32 +33,29 @@ from qiskit_ibm_runtime.fake_provider import (
     FakePrague,
     FakeProviderForBackendV2,
     FakeSherbrooke,
-    fake_backend,
 )
 from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
+
+from ...registries import Backend, OneInstanceNoBackendsRegistry
+
+if TYPE_CHECKING:
+    from ...registries import BaseRegistry
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
 
-def make_refresh_service(backend: FakeBackendV2) -> tuple[mock.MagicMock, AbstractContextManager]:
-    """Build a mocked service that returns ``backend``'s own bundled data as the real data.
+@pytest.fixture
+def refresh_service(registry: BaseRegistry) -> QiskitRuntimeService:
+    """Return a service that serves ``FakeAthensV2``'s own data as the data of ``ibm_athens``.
 
-    This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is
-    injected so tests can assert the in-session update actually took effect.
+    The served configuration reports a distinctive backend version, so that tests can assert
+    that a ``refresh()`` of ``FakeAthensV2`` actually took effect.
     """
-    real_config = backend.configuration()
-    real_config.backend_version = "9.9.9-refreshed"
-    real_props = backend.properties()
+    backend = Backend.from_(FakeAthensV2, name="ibm_athens")
+    backend.configuration["backend_version"] = "9.9.9-refreshed"
+    registry.add_backend(backend)
 
-    fake_real_backend = mock.MagicMock()
-    fake_real_backend.properties.return_value = real_props
-    service = mock.MagicMock(spec=QiskitRuntimeService)
-    service.backends.return_value = [fake_real_backend]
-
-    patcher = mock.patch.object(
-        fake_backend, "configuration_from_server_data", return_value=real_config
-    )
-    return service, patcher
+    return QiskitRuntimeService(token="my_token")
 
 
 class TestFakeProvider:
@@ -127,8 +120,9 @@ class TestFakeBackendRefresh:
     :meth:`~.FakeBackendV2.refresh` succeeds without modifying the installed package.
     """
 
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     def test_refresh_no_persist_leaves_package_untouched(
-        self, caplog: pytest.LogCaptureFixture
+        self, refresh_service: QiskitRuntimeService, caplog: pytest.LogCaptureFixture
     ) -> None:
         """``persist=False`` writes to a temp dir and never modifies the bundled files."""
         backend = FakeAthensV2()
@@ -138,11 +132,9 @@ class TestFakeBackendRefresh:
         pkg_conf_mtime = os.stat(pkg_conf).st_mtime_ns
         pkg_props_mtime = os.stat(pkg_props).st_mtime_ns
 
-        service, patcher = make_refresh_service(backend)
-        with patcher:
-            caplog.clear()
-            with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
-                backend.refresh(service, persist=False)
+        caplog.clear()
+        with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
+            backend.refresh(refresh_service, persist=False)
 
         assert "has been updated" in caplog.text
 
@@ -162,7 +154,10 @@ class TestFakeBackendRefresh:
         assert os.stat(pkg_conf).st_mtime_ns == pkg_conf_mtime
         assert os.stat(pkg_props).st_mtime_ns == pkg_props_mtime
 
-    def test_refresh_persist_after_no_persist_targets_bundled_files(self) -> None:
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_refresh_persist_after_no_persist_targets_bundled_files(
+        self, refresh_service: QiskitRuntimeService
+    ) -> None:
         """A ``persist=True`` ``refresh()`` after a ``persist=False`` one still targets ``dirname``.
 
         Since ``persist=False`` no longer overwrites ``dirname``, a subsequent persisting
@@ -174,12 +169,10 @@ class TestFakeBackendRefresh:
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = make_refresh_service(backend)
-            with patcher:
-                backend.refresh(service, persist=False)
-                assert backend._tmp_data_dir is not None
+            backend.refresh(refresh_service, persist=False)
+            assert backend._tmp_data_dir is not None
 
-                backend.refresh(service)
+            backend.refresh(refresh_service)
 
             # The in-place refresh writes back into ``dirname`` (the writable copy).
             assert backend.dirname == data_dir
@@ -188,7 +181,10 @@ class TestFakeBackendRefresh:
             reloaded._conf_dict = reloaded._get_conf_dict_from_json()
             assert reloaded._conf_dict["backend_version"] == "9.9.9-refreshed"
 
-    def test_refresh_default_writes_in_place(self, caplog: pytest.LogCaptureFixture) -> None:
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    def test_refresh_default_writes_in_place(
+        self, refresh_service: QiskitRuntimeService, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """The default (``persist=True``) writes back into ``dirname`` without a temp dir.
 
         ``dirname`` is redirected to a writable copy of the bundled data so the test never touches
@@ -200,11 +196,9 @@ class TestFakeBackendRefresh:
             shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
             backend.dirname = data_dir
 
-            service, patcher = make_refresh_service(backend)
-            with patcher:
-                caplog.clear()
-                with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
-                    backend.refresh(service)
+            caplog.clear()
+            with caplog.at_level(logging.INFO, logger="qiskit_ibm_runtime"):
+                backend.refresh(refresh_service)
 
             assert "has been updated" in caplog.text
 

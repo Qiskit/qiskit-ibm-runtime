@@ -178,6 +178,14 @@ class TestQiskitRuntimeService:
         # All workloads should be jobs currently.
         assert all(workload["mode"] == "job" for workload in workloads_response["workloads"])
 
+    def test_usage(self, registry: BaseRegistry) -> None:
+        """Test the `usage()` method."""
+        service = QiskitRuntimeService(token="my_token")
+        usage = service.usage()
+
+        # The returned usage should contain the mandatory resource units field.
+        assert "usage_consumed_ru" in usage
+
 
 class TestAccountHandling:
     """Class for testing how account/instances are handled in `QiskitRuntimeService`."""
