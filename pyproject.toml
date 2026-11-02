@@ -243,7 +243,7 @@ test = [
     "pytest>=9.1",
     "pproxy==2.7.8",
     "coverage>=7.13.5",
-    "pytest-benchmark==5.2.3",
+    "pytest-benchmark==5.3.1",
     "responses>=0.26.2",
 ]
 
