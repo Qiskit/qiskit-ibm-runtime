@@ -184,6 +184,7 @@ class Estimator(BaseEstimatorV2):
             custom_boxing_options=boxing_opts,
             box_types=box_types_arg,
             observables=[pub.observables for pub in coerced_pubs],
+            trex=options.resilience.measure_mitigation,
         )
 
     def finalize_options(self) -> EstimatorOptions:
