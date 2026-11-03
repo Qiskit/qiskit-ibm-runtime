@@ -38,8 +38,8 @@ allows you to make iterative calls to the quantum computer more efficiently.
 Below is an example of using primitives within a session::
 
     from qiskit_ibm_runtime import QiskitRuntimeService, Session
-    from qiskit_ibm_runtime.executor_sampler import Sampler
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Sampler
+    from qiskit_ibm_runtime import Estimator
     from qiskit.circuit.library import real_amplitudes
     from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
     from qiskit.quantum_info import SparsePauliOp
@@ -98,7 +98,7 @@ instance is used when instantiating a primitive or a session. For example::
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
     from qiskit_ibm_runtime import Session
-    from qiskit_ibm_runtime.executor_sampler import Sampler
+    from qiskit_ibm_runtime import Sampler
     from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
     # Bell Circuit
@@ -187,10 +187,6 @@ Classes
    :nosignatures:
 
    QiskitRuntimeService
-   Estimator
-   EstimatorV2
-   Sampler
-   SamplerV2
    Executor
    Session
    Batch
@@ -219,9 +215,9 @@ from .exceptions import *
 from .utils.logging import setup_logger
 from .version import __version__
 
-from .estimator import EstimatorV2, EstimatorV2 as Estimator
+from .executor_estimator import EstimatorV2, EstimatorV2 as Estimator
 from .executor import Executor
-from .sampler import SamplerV2, SamplerV2 as Sampler
+from .executor_sampler import SamplerV2, SamplerV2 as Sampler
 from .noise_learner import NoiseLearner, NoiseLearner as NoiseLearnerV2
 from .noise_learner_v3 import NoiseLearnerV3
 from .calibrator import Calibrator

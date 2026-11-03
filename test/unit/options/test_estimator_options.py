@@ -22,9 +22,9 @@ from qiskit.utils.optionals import HAS_AER
 if HAS_AER:
     from qiskit_aer.noise import NoiseModel
 
-from qiskit_ibm_runtime import EstimatorV2 as Estimator
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options import EstimatorOptions, MeasureNoiseLearningOptions
+from qiskit_ibm_runtime.server_side import EstimatorV2 as Estimator
 
 from ...asserts import (
     assert_dict_flat_partially_equal,
@@ -33,6 +33,7 @@ from ...asserts import (
 )
 
 
+@pytest.mark.server_side_primitives
 class TestEstimatorOptions:
     """Class for testing the EstimatorOptions class."""
 

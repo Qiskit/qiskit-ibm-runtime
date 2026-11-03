@@ -33,8 +33,10 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.basepasses import TransformationPass
 
-from ....estimator import EstimatorV2
-from ....sampler import SamplerV2
+from ....executor_estimator import Estimator
+from ....executor_sampler import Sampler
+from ....server_side.estimator import EstimatorV2
+from ....server_side.sampler import SamplerV2
 from .utils import fold_rzz_angle
 
 if TYPE_CHECKING:
@@ -120,7 +122,7 @@ class FoldRzzAngle(TransformationPass):
 
 
 def convert_to_rzz_valid_pub(
-    primitive: BasePrimitiveV2, pub: SamplerPubLike | EstimatorPubLike
+    primitive: BasePrimitiveV2 | Sampler | Estimator, pub: SamplerPubLike | EstimatorPubLike
 ) -> SamplerPub | EstimatorPub:
     """Return a pub which is compatible with Rzz constraints.
 
@@ -130,10 +132,10 @@ def convert_to_rzz_valid_pub(
     3. This function defines new parameters, whose names start with `rzz_`. We therefore
        require that the input pub does not contain parameters whose names also start with `rzz_`.
     """
-    if isinstance(primitive, SamplerV2):
+    if isinstance(primitive, (SamplerV2, Sampler)):
         is_sampler = True
         pub = SamplerPub.coerce(pub)
-    elif isinstance(primitive, EstimatorV2):
+    elif isinstance(primitive, (EstimatorV2, Estimator)):
         is_sampler = False
         pub = EstimatorPub.coerce(pub)
     else:

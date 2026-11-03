@@ -27,10 +27,10 @@ from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.server_side import SamplerV2 as Sampler
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
@@ -156,6 +156,7 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, targets: list | N
             assert isinstance(result[idx].data.meas, BitArray)
 
 
+@pytest.mark.server_side_primitives
 class TestSampler:
     """Test Sampler."""
 

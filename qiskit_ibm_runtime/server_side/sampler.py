@@ -1,0 +1,166 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2022-2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""
+===================================================================
+Server-side Sampler (:mod:`qiskit_ibm_runtime.server_side.sampler`)
+===================================================================
+
+.. currentmodule:: qiskit_ibm_runtime.server_side.sampler
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   Sampler
+   SamplerV2
+"""  # noqa: D205, D212, D415
+
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING
+
+from qiskit.primitives.base import BaseSamplerV2
+from qiskit.primitives.containers.sampler_pub import SamplerPub
+
+from ..base_primitive import BasePrimitiveV2
+from ..options import SamplerOptions
+from ..utils import validate_classical_registers
+from ..utils.deprecation import issue_deprecation_msg
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.primitives.containers.sampler_pub import SamplerPubLike
+    from qiskit.providers import BackendV2
+
+    from .. import options  # Needed as sphinx is unable to solve conflicts.
+    from ..batch import Batch
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
+
+logger = logging.getLogger(__name__)
+
+
+class Sampler:
+    """Base type for Sampler."""
+
+    version = 0
+
+
+class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
+    """SamplerV2 primitive for IBM Quantum Compute (formerly Qiskit Runtime).
+
+    This class supports version 2 of the Sampler interface, which uses different
+    input and output formats than version 1.
+
+    IBM Quantum Compute Sampler primitive returns the sampled result
+    according to the specified output type. For example, it returns a bitstring for each shot
+    if measurement level 2 (bits) is requested.
+
+    The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `IBM Quantum Compute documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            for more information about the ``Execution modes``.
+
+        options: Sampler options, see :class:`qiskit_ibm_runtime.options.SamplerOptions` for
+            detailed description.
+    """
+
+    _options_class = SamplerOptions
+
+    version = 2
+
+    def __init__(
+        self,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: dict | options.SamplerOptions | None = None,
+    ):
+        issue_deprecation_msg(
+            msg="The SamplerV2 class is deprecated",
+            version="0.50.0",
+            remedy="`qiskit_ibm_runtime.executor_sampler.Sampler` provides a new Sampler "
+            "implementation that runs all the pre- and post-processing in the client side. "
+            "The top-level `qiskit_ibm_runtime.Sampler` import will be updated to point "
+            "to the client-side sampler in an upcoming release, with the legacy Sampler "
+            "being available until the deprecation is completed.",
+            stacklevel=2,
+        )
+
+        BaseSamplerV2.__init__(self)
+        Sampler.__init__(self)
+
+        BasePrimitiveV2.__init__(self, mode=mode, options=options)
+
+    def run(
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None, dry_run: bool = False
+    ) -> RuntimeJobV2:
+        """Submit a request to the sampler primitive.
+
+        Args:
+            pubs: An iterable of pub-like objects. For example, a list of circuits or tuples
+                ``(circuit, parameter_values)``.
+            shots: The total number of shots to sample for each sampler pub that does not specify
+                its own shots. If ``None``, the primitive's default shots value will be used, which
+                can vary by implementation.
+            dry_run: If ``True``, performs a dry run without executing the job on a QPU. This mode
+                can be used to validate the job, estimate usage consumption, and retrieve circuit
+                timing metadata. Returned results preserve the expected schema but contain
+                **randomized mock data** rather than actual or simulated measurement results.
+                Unlike the fake backends, the processing of this dry run happens on the server-side,
+                so the job may not finish immediately and access to this feature may be restricted.
+
+        Returns:
+            Submitted job.
+            The result of the job is an instance of
+            :class:`qiskit.primitives.containers.PrimitiveResult`.
+
+        Raises:
+            ValueError: Invalid arguments are given.
+        """
+        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+
+        if len({pub.shots for pub in coerced_pubs}) > 1:
+            raise ValueError(
+                "Specifying different 'shots' across pubs is not supported. Submit one job for "
+                "each desired shot count instead. To reduce overhead, Consider submitting these "
+                "jobs inside a Batch execution mode."
+            )
+
+        validate_classical_registers(coerced_pubs)
+
+        return self._run(coerced_pubs, dry_run=dry_run)
+
+    def _validate_options(self, options: dict) -> None:
+        """Validate that primitive inputs (options) are valid.
+
+        Raises:
+            ValidationError: if validation fails.
+        """
+        pass
+
+    @classmethod
+    def _program_id(cls) -> str:
+        """Return the program ID."""
+        return "sampler"
