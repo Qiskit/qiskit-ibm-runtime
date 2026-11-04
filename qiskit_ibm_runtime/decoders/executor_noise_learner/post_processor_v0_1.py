@@ -17,10 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from qiskit.quantum_info import QubitSparsePauliList
-from qiskit_mitigation.postselection.constants import (
-    DEFAULT_POST_CHECK_SUFFIX,
-    DEFAULT_PRE_CHECK_SUFFIX,
-)
+from qiskit_mitigation.postselection.constants import DEFAULT_POST_CHECK_SUFFIX
 
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 from ...utils.utils import HAS_QNL
@@ -67,8 +64,10 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
 
     raw_data_stage = None
     if pre["enable"]:
+        # for pre circuit bit flip checks we specify the registers explicitly to avoid including the
+        # "meas0" register
         raw_data_stage = FlipPostSelect(
-            creg_identifier=suffix_creg_identifier(DEFAULT_PRE_CHECK_SUFFIX), mode=pre["strategy"]
+            creg_identifier=suffix_creg_identifier(["meas0_pre", "spec_pre"]), mode=pre["strategy"]
         )
     if post["enable"]:
         post_stage = FlipPostSelect(
@@ -79,18 +78,20 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
 
     creg_suffix = None
     if pre["enable"]:
-        creg_suffix = DEFAULT_PRE_CHECK_SUFFIX
+        creg_suffix = ["meas0_pre", "spec_pre"]
     if post["enable"]:
         creg_suffix = (
             DEFAULT_POST_CHECK_SUFFIX
             if creg_suffix is None
-            else [creg_suffix, DEFAULT_POST_CHECK_SUFFIX]
+            else creg_suffix + [DEFAULT_POST_CHECK_SUFFIX]
         )
 
     fraction_kept = _fraction_kept(fit.raw_data, gate_names)
     success_rates = _success_rates(
         fit.raw_data, gate_names, suffix_creg_identifier(creg_suffix) if creg_suffix else None
     )
+
+    # TODO: filter and append learning_protocol
 
     return NoiseLearnerV3Results(
         [
