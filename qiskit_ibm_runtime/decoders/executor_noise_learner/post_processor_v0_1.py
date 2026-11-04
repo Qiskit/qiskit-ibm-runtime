@@ -59,9 +59,12 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (options := post_processor_data.get("options", None)) is None:
         raise ValueError("Missing 'options' in passthrough data.")
-
-    pre = options["bit_flip_checks"]["pre_circuit"]
-    post = options["bit_flip_checks"]["post_circuit"]
+    if (bit_flip_checks := options.get("bit_flip_checks")) is None:
+        raise ValueError("Missing 'bit_flip_checks' in passthrough data.")
+    if (pre := bit_flip_checks.get("pre_circuit")) is None:
+        raise ValueError("Missing 'pre_circuit' in passthrough data.")
+    if (post := bit_flip_checks.get("post_circuit")) is None:
+        raise ValueError("Missing 'post_circuit' in passthrough data.")
 
     raw_data_stage = None
     if pre["enable"]:
