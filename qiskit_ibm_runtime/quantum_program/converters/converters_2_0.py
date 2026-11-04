@@ -162,12 +162,12 @@ def quantum_program_to_2_0(program: QuantumProgram, options: ExecutorOptions) ->
     if options.experimental:
         options_dict["experimental"] = options.experimental
 
-    print("Ciao")
-
     return ParamsModel(
         quantum_program=QuantumProgramModel(
             shots=program.shots,
-            circuits=CompressedQpyDataModel.from_python(circuits, qpy_version=get_qpy_version(17)),
+            circuits=CompressedQpyDataModel.from_python(
+                circuits, qpy_version=get_qpy_version(None)
+            ),
             items=model_items,
             meas_level=program.meas_level,
             passthrough_data=passthrough_data_to_2_0(program.passthrough_data),
