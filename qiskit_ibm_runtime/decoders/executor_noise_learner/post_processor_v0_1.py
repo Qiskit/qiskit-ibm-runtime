@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 
 from qiskit.quantum_info import QubitSparsePauliList
 from qiskit_mitigation.postselection.constants import DEFAULT_POST_CHECK_SUFFIX
-from qiskit_noise_learning.models import split_pauli_lindblad_model
 
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 from ...utils.utils import HAS_QNL
@@ -31,6 +30,7 @@ if HAS_QNL:
         FlipPostSelect,
         suffix_creg_identifier,
     )
+    from qiskit_noise_learning.models import split_pauli_lindblad_model
     from qiskit_noise_learning.protocols.vanilla import (
         _fraction_kept,
         _success_rates,
