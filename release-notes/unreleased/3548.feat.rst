@@ -1,0 +1,6 @@
+Added a "client-side" implementation of :class:`qiskit_ibm_runtime.executor_noise_learner.NoiseLearnerV3`.
+
+Unlike the legacy, server-side server-side :class:`qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3`
+class, it performs pre- and post-processing on the client side and delegate execution to the
+:class:`qiskit_ibm_runtime.Executor`. Running on the client side provides greater transparency, faster
+debugging feedback, and finer control.
