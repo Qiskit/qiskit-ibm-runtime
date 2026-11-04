@@ -225,7 +225,7 @@ performance = [
 ]
 
 noise-learning = [
-    "qiskit-noise-learning>=0.1.0",
+    "qiskit-noise-learning>=0.2.0",
 ]
 
 # Developer extras.
