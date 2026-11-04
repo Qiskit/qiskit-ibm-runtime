@@ -50,6 +50,7 @@ Suboptions
    EnvironmentOptions
    ExecutionOptions
    MeasureNoiseLearningOptions
+   NoiseLearnerV3Options
    PecOptions
    PostCircuitBitFlipChecksOptions
    PreCircuitBitFlipChecksOptions
