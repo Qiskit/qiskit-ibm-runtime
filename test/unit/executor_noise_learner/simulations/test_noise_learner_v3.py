@@ -245,6 +245,8 @@ class TestNoiseLearnerV3:
 
         # Validate results for gate layer
         result = results[0]
+        assert result.metadata["learning_protocol"] == "lindblad"
+
         for depth in layer_pair_depths:
             fraction_kept = result.metadata["post_selection"]["fraction_kept"][depth]
             ratio = fraction_kept / (1 - prob_ps_error)
@@ -290,18 +292,15 @@ class TestNoiseLearnerV3:
 
         # Validate results for meas layer
         measure_result = results[0]
-        # assert metadata["learning_protocol"] == "trex"  <- missing
-        fraction_kept = measure_result.metadata["post_selection"]["fraction_kept"][0]
+        assert measure_result.metadata["learning_protocol"] == "trex"
+
+        fraction_kept = measure_result.metadata["post_selection"]["fraction_kept"]
         ratio = fraction_kept / (1 - prob_ps_error)
         assert np.isclose(ratio, 1.0, rtol=0.01)
 
-        success_rates = measure_result.metadata["post_selection"]["success_rates"][0]
+        success_rates = measure_result.metadata["post_selection"]["success_rates"]
         for qubit, success_rate in success_rates.items():
             if qubit == 2:
                 assert np.isclose(success_rate / (1 - prob_ps_error), 1.0, rtol=0.01)
             else:
                 assert np.isclose(success_rate, 1.0, rtol=0.01)
-
-        # Note: the '[0]' in lines 298 and 302 shouldn't be there--we need, for example, this
-        # to work:
-        # fraction_kept = measure_result.metadata["post_selection"]["fraction_kept"]

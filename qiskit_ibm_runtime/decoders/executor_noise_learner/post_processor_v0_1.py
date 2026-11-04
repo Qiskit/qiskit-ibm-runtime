@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from qiskit.quantum_info import QubitSparsePauliList
 from qiskit_mitigation.postselection.constants import DEFAULT_POST_CHECK_SUFFIX
+from qiskit_noise_learning.models import split_pauli_lindblad_model
 
 from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 from ...utils.utils import HAS_QNL
@@ -91,8 +92,16 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
         fit.raw_data, gate_names, suffix_creg_identifier(creg_suffix) if creg_suffix else None
     )
 
-    # TODO: filter and append learning_protocol
-
+    model_gate_set = split_pauli_lindblad_model(fit.model).model.gate_set
+    learning_protocols = [
+        "trex" if model_gate_set[name].meas_idxs else "lindblad" for name in gate_names
+    ]
+    fraction_kept = [
+        fk if lp == "lindblad" else fk[0] for fk, lp in zip(fraction_kept, learning_protocols)
+    ]
+    success_rates = [
+        sr if lp == "lindblad" else sr[0] for sr, lp in zip(success_rates, learning_protocols)
+    ]
     return NoiseLearnerV3Results(
         [
             NoiseLearnerV3Result.from_generators(
@@ -101,8 +110,11 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
                     for pauli in plm.generators()
                 ],
                 rates=plm.rates,
-                metadata={"post_selection": {"fraction_kept": fk, "success_rates": sr}},
+                metadata={
+                    "learning_protocol": lp,
+                    "post_selection": {"fraction_kept": fk, "success_rates": sr},
+                },
             )
-            for plm, fk, sr in zip(noise_maps, fraction_kept, success_rates)
+            for plm, lp, fk, sr in zip(noise_maps, learning_protocols, fraction_kept, success_rates)
         ]
     )
