@@ -99,7 +99,7 @@ def noise_learner_v3_post_processor_v0_1(result: QuantumProgramResult) -> NoiseL
     for plm, name, fk, sr in zip(noise_maps, gate_names, fraction_kept, success_rates):
         is_trex = bool(model_gate_set[name].meas_idxs)
         if is_trex:
-            fk, sr = fk[0], sr[0]
+            fk, sr = fk.get(0), sr.get(0)
         results.append(
             NoiseLearnerV3Result.from_generators(
                 generators=[
