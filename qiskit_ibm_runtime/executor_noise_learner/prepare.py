@@ -81,7 +81,7 @@ def prepare(
             bit_flip_passes.append(
                 AddSpectatorPostCircuitNonMarkovianErrorChecks(coupling_map, post_x_pulse_type)
             )
-            pass_manager = PassManager(bit_flip_passes)
+        pass_manager = PassManager(bit_flip_passes)
 
     quantum_program = prepare_vanilla_program(
         backend=backend,

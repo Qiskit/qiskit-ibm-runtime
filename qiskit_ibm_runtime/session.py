@@ -261,20 +261,26 @@ class Session:
 
         return None
 
-    def usage(self) -> float | None:
-        """Return session usage in seconds.
+    def usage(self, resource_units: bool = False) -> float | None:
+        """Return session usage in resource units or seconds.
 
         Session usage is the time from when the first job starts until the session goes inactive,
         is closed, or when its last job completes, whichever happens last.
 
         Batch usage is the amount of time all jobs spend on the QPU.
+
+        Args:
+            resource_units: If ``True``, return usage in resource units instead of seconds.
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             response = self._service._get_api_client(self._instance).session_details(
                 self._session_id
             )
             if response:
-                return response.get("elapsed_time")
+                if resource_units:
+                    return response.get("usage", {}).get("value")
+                else:
+                    return response.get("elapsed_time")
         return None
 
     def details(self) -> dict[str, Any] | None:
@@ -304,6 +310,8 @@ class Session:
               dictionary with the ``status`` (open, active, inactive, or closed) and the
               ``timestamp`` of when the session transitioned into that status. The list is empty
               if the API response does not include timestamps.
+            * ``usage``: The usage for the session split into billable metrics if there are
+              multiple.
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             response = self._service._get_api_client(self._instance).session_details(
@@ -326,6 +334,7 @@ class Session:
                     "mode": response.get("mode"),
                     "usage_time": response.get("elapsed_time"),
                     "timestamps": response.get("timestamps", []),
+                    "usage": response.get("usage"),
                 }
         return None
 

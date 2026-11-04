@@ -1,0 +1,4 @@
+:meth:`.RuntimeJobV2.usage`, :meth:`.Session.usage` and :meth:`.Batch.usage` now support a
+``resource_units`` parameter for returning usage based on resource units, as opposed to seconds.
+:meth:`.QiskitRuntimeService.usage` now also returns in the dictionary keys specific to resource
+units ``usage_consumed_ru``, ``usage_limit_ru``, ``usage_allocation_ru`` and ``usage_limit_ru``.

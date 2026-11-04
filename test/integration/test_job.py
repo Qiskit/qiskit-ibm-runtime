@@ -152,7 +152,7 @@ class TestIntegrationJob:
     def test_job_program_id(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job program ID."""
         job = submit_bell_job()
-        assert "sampler" == job.primitive_id
+        assert "executor" == job.primitive_id
 
     def test_wait_for_final_state(
         self,
@@ -213,6 +213,7 @@ class TestIntegrationJob:
         job = submit_bell_job()
         job.wait_for_final_state()
         assert isinstance(job.usage(), (float, int))
+        assert isinstance(job.usage(resource_units=True), (float, int))
 
     def test_job_logs(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job logs."""

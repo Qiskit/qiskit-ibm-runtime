@@ -21,9 +21,9 @@ from unittest.mock import patch
 import pytest
 from qiskit import QuantumCircuit
 
-from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.server_side import SamplerV2
 
 from ..account import custom_envs, get_account_config_contents, temporary_account_config_file
 from ..registries import Backend, Instance, Job, OneInstanceNoBackendsRegistry
@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 class TestQiskitRuntimeService:
     """Class for testing the `QiskitRuntimeService` class."""
 
+    @pytest.mark.server_side_primitives
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     def test_run_active_client(self, registry: BaseRegistry) -> None:
         """`_run()` should use the backend/instance api client rather than the active client."""
@@ -177,6 +178,14 @@ class TestQiskitRuntimeService:
         assert len(workloads_response["workloads"]) == 2
         # All workloads should be jobs currently.
         assert all(workload["mode"] == "job" for workload in workloads_response["workloads"])
+
+    def test_usage(self, registry: BaseRegistry) -> None:
+        """Test the `usage()` method."""
+        service = QiskitRuntimeService(token="my_token")
+        usage = service.usage()
+
+        # The returned usage should contain the mandatory resource units field.
+        assert "usage_consumed_ru" in usage
 
 
 class TestAccountHandling:

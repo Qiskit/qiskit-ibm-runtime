@@ -39,7 +39,7 @@ Here is an example of using a fake backend for transpilation and simulation.
    from qiskit import QuantumCircuit
    from qiskit import transpile
    from qiskit.visualization import plot_histogram
-   from qiskit_ibm_runtime.executor_sampler import Sampler
+   from qiskit_ibm_runtime import Sampler
    from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
    # Get a fake backend from the fake provider

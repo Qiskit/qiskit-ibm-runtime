@@ -134,7 +134,7 @@ class TestIBMJobSubmission:
         service = dependencies.service
         with pytest.raises(ValidationError):
             sampler = Sampler(mode=backend_test)
-            sampler.options.environment.job_tags = "foo"  # type: ignore[union-attr]
+            sampler.options.environment.job_tags = "foo"  # type: ignore[assignment]
 
         with pytest.raises(IBMInputValueError):
             service.jobs(job_tags=[1, 2, 3])  # type: ignore[list-item]

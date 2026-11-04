@@ -27,7 +27,6 @@ from qiskit.utils import optionals
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import (
     FakeManilaV2,
     FakeNairobiV2,
@@ -37,6 +36,7 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeVigoV2,
 )
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
+from qiskit_ibm_runtime.server_side import SamplerV2 as Sampler
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
@@ -61,6 +61,7 @@ def flipped_circuit() -> QuantumCircuit:
     return circuit
 
 
+@pytest.mark.server_side_primitives
 class TestFakeBackends:
     """Test runnning circuits in fake backends.
 

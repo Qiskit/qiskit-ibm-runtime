@@ -1,0 +1,11 @@
+The top-level imports ``from qiskit-ibm-runtime import Sampler`` and
+``from qiskit-ibm-runtime import Estimator``, as well as their ``V2`` aliases now import the
+client-side implementations of the primitives that were introduced in ``v0.50.0``. The client-side
+primitives are implementations that perform pre- and post-processing on the client side and
+delegate execution to the :class:`qiskit_ibm_runtime.Executor`. Running on the client side provides
+greater transparency, faster debugging feedback, and finer control.
+
+The server-side implementations of the primitives are still available in the new
+``qiskit_ibm_runtime.server_side`` package, importable via
+``from qiskit-ibm-runtime.server_side.Sampler`` and
+``from qiskit-ibm-runtime.server_side.Estimator``.

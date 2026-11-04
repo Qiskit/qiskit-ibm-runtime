@@ -22,8 +22,9 @@ from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import EstimatorV2, Session
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
+from qiskit_ibm_runtime.server_side import EstimatorV2
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.options import (
@@ -53,6 +54,7 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> 
         assert pub_result.data.stds.shape == shapes[idx]
 
 
+@pytest.mark.server_side_primitives
 class TestEstimatorV2:
     """Integration tests for Estimator V2 Primitive."""
 
@@ -121,7 +123,6 @@ class TestEstimatorV2:
         layer_noise_learning.num_randomizations = 16
         layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
         measure_noise_learning.num_randomizations = 32
-        measure_noise_learning.shots_per_randomization = 100
         execution.init_qubits = True
         execution.rep_delay = 0.00025
         twirling.enable_gates = True

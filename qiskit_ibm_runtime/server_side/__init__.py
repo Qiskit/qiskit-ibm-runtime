@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019-2026.
+# (C) Copyright IBM 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,6 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Fake backends for testing"""
+"""Server-side primitives."""
 
-from .midcircuit import FakeMidcircuit
+from .estimator import EstimatorV2
+from .estimator import EstimatorV2 as Estimator
+from .sampler import SamplerV2
+from .sampler import SamplerV2 as Sampler

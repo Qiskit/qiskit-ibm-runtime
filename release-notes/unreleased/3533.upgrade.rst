@@ -1,0 +1,1 @@
+Setting the `MeasureNoiseLearningOptions.shots_per_randomization` to an integer, which was previously deprecated, is not no longer possible.
