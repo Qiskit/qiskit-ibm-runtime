@@ -20,6 +20,7 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap, random_pauli_list
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
+from qiskit_aer.noise import NoiseModel, pauli_error
 from samplomatic import InjectNoise, Tag, Twirl
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
@@ -203,3 +204,108 @@ class TestNoiseLearnerV3:
 
         for obtained, expected in zip(simplified_noise_maps, noise_maps):
             compare_pauli_lindblad_maps(obtained, expected)
+
+
+def test_bit_flip_checks_gate_layers():
+    """Test bit-flip cehcks for gate layers."""
+    noise_model = NoiseModel()
+
+    # The probability of Post Selection error. We post-select using rx gates, which
+    # are applied 20 times sequentially. By setting the probability of error per rx gate
+    # to `0.001`, we expect the chain of rx gates to error with probability `0.02`.
+    prob_ps_error = 0.02
+    rx_error = pauli_error([("X", prob_ps_error / 20), ("I", 1 - prob_ps_error / 20)])
+    noise_model.add_quantum_error(rx_error, "rx", [2])
+
+    # Gate error
+    noise_strength = 0.05
+    xx_error = pauli_error([("XX", noise_strength), ("II", 1 - noise_strength)])
+    noise_model.add_quantum_error(xx_error, "cx", [1, 2])
+
+    backend = AerSimulator(
+        # method="stabilizer",
+        noise_model=noise_model,
+        coupling_map=[[0, 1], [1, 2]],
+        basis_gates=["rx", "cx"],
+    )
+    backend.set_max_qubits(3)
+
+    circuit = QuantumCircuit(backend.num_qubits)
+    with circuit.box([Twirl()]):
+        circuit.cx(1, 2)
+
+    learner = NoiseLearner(backend)
+    learner.options.layer_pair_depths = (layer_pair_depths := [0, 2, 6])
+    learner.options.shots_per_randomization = 100
+    learner.options.num_randomizations = 10
+    learner.options.bit_flip_checks.post_circuit.enable = True
+    learner.options.bit_flip_checks.post_circuit.x_pulse_type = "rx"
+    learner.options.bit_flip_checks.post_circuit.strategy = "node"
+
+    job = learner.run(circuit)
+    results = job.result()
+
+    # Validate results for gate layer
+    result = results[0]
+    for depth in layer_pair_depths:
+        fraction_kept = result.metadata["post_selection"]["fraction_kept"][depth]
+        ratio = fraction_kept / (1 - prob_ps_error)
+        assert np.isclose(ratio, 1.0, rtol=0.01)
+
+        success_rates = result.metadata["post_selection"]["success_rates"][depth]
+        for qubit, success_rate in success_rates.items():
+            if qubit == 2:
+                assert np.isclose(success_rate / (1 - prob_ps_error), 1.0, rtol=0.01)
+            else:
+                assert np.isclose(success_rate, 1.0, rtol=0.01)
+
+
+def test_bit_flip_checks_measure_layers():
+    """Test bit flip checks for measure layers."""
+    noise_model = NoiseModel()
+
+    # The probability of Post Selection error. We post-select using 'rx' gates, which
+    # are applied 20 times sequentially
+    prob_ps_error = 0.02
+    rx_error = pauli_error([("X", prob_ps_error / 20), ("I", 1 - prob_ps_error / 20)])
+    noise_model.add_quantum_error(rx_error, "rx", [2])
+
+    backend = AerSimulator(
+        # method="stabilizer",
+        noise_model=noise_model,
+        coupling_map=[[0, 1], [1, 2]],
+        basis_gates=["rx", "cx"],
+    )
+    backend.set_max_qubits(3)
+
+    circuit = QuantumCircuit(backend.num_qubits)
+    with circuit.box([Twirl()]):
+        circuit.measure_all()
+
+    learner = NoiseLearner(backend)
+    learner.options.shots_per_randomization = 100
+    learner.options.num_randomizations = 10
+    learner.options.bit_flip_checks.post_circuit.enable = True
+    learner.options.bit_flip_checks.post_circuit.x_pulse_type = "rx"
+    learner.options.bit_flip_checks.post_circuit.strategy = "node"
+
+    job = learner.run(circuit)
+    results = job.result()
+
+    # Validate results for meas layer
+    measure_result = results[0]
+    # assert metadata["learning_protocol"] == "trex"  <- missing
+    fraction_kept = measure_result.metadata["post_selection"]["fraction_kept"][0]
+    ratio = fraction_kept / (1 - prob_ps_error)
+    assert np.isclose(ratio, 1.0, rtol=0.01)
+
+    success_rates = measure_result.metadata["post_selection"]["success_rates"][0]
+    for qubit, success_rate in success_rates.items():
+        if qubit == 2:
+            assert np.isclose(success_rate / (1 - prob_ps_error), 1.0, rtol=0.01)
+        else:
+            assert np.isclose(success_rate, 1.0, rtol=0.01)
+
+    # Note: the '[0]' in lines 298 and 302 shouldn't be there--we need, for example, this
+    # to work:
+    # fraction_kept = measure_result.metadata["post_selection"]["fraction_kept"]
