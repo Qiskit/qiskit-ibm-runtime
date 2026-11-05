@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -22,11 +23,14 @@ import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub, ObservablesArray
 from qiskit.quantum_info import SparsePauliOp
+from samplomatic.quantum_program import SamplexItem
 
 from qiskit_ibm_runtime.options_models.twirling import TwirlingOptions
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 
 @dataclass(frozen=True)
@@ -428,3 +432,36 @@ Covers: no twirling, both-auto, num_rand fixed, shots_per_rand fixed, both fixed
 All use shots=1024 with pre-computed expected_num_randomizations and
 expected_shots_per_randomization.
 """
+
+TAG_REGEX = re.compile(r"tag=(?P<tag>[^@\s]+)")
+
+
+def extract_barrier_tags(circuit: QuantumCircuit) -> set[str]:
+    """Extract all tag strings from barrier labels in a QuantumCircuit."""
+    tags = set()
+    for instr in circuit.data:
+        if instr.operation.name == "barrier" and instr.operation._label:
+            if match := TAG_REGEX.search(instr.operation._label):
+                tags.add(match.group("tag"))
+    return tags
+
+
+def extract_program_barrier_tags(program: QuantumProgram) -> set[str]:
+    """Extract all tag strings from barrier labels in all items of a QuantumProgram."""
+    tags = set()
+    for item in program.items:
+        tags |= extract_barrier_tags(item.circuit)
+    return tags
+
+
+def extract_samplex_noise_refs(program: QuantumProgram) -> set[str]:
+    """Extract all noise model references required by SamplexItems in a QuantumProgram."""
+    noise_refs = set()
+    for item in program.items:
+        if isinstance(item, SamplexItem):
+            for key in item.samplex_arguments:
+                if key.startswith("pauli_lindblad_maps."):
+                    noise_refs.add(key.removeprefix("pauli_lindblad_maps."))
+                elif key.startswith("noise_scales."):
+                    noise_refs.add(key.removeprefix("noise_scales."))
+    return noise_refs
