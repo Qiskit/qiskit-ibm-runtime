@@ -14,22 +14,23 @@
 
 from types import ModuleType
 
+import pytest
+
 from qiskit_ibm_runtime.visualization.utils import plotly_module
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestUtils(IBMTestCase):
+class TestUtils:
     """Tests for the utility module."""
 
-    def test_get_plotly_module(self):
+    def test_get_plotly_module(self) -> None:
         """Test that getting a module works."""
-        self.assertIsInstance(plotly_module(), ModuleType)
-        self.assertIsInstance(plotly_module(".graph_objects"), ModuleType)
+        assert isinstance(plotly_module(), ModuleType)
+        assert isinstance(plotly_module(".graph_objects"), ModuleType)
 
-    def test_plotly_module_raises(self):
+    def test_plotly_module_raises(self) -> None:
         """Test that correct error is raised."""
-        with self.assertRaisesRegex(
-            ModuleNotFoundError, "Install all qiskit-ibm-runtime visualization dependencies"
+        with pytest.raises(
+            ModuleNotFoundError,
+            match="Install all qiskit-ibm-runtime visualization dependencies",
         ):
             plotly_module(".not_a_module")

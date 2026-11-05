@@ -12,27 +12,39 @@
 
 """Tests for Calibrator."""
 
-import unittest
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
+from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
+from qiskit_ibm_runtime.results import CalibratorResult
 
-from .case import IBMIntegrationTestCase
+if TYPE_CHECKING:
+    from .dependencies import Dependencies
 
 
-@unittest.skip("This feature is not yet supported.")
-class TestCalibrator(IBMIntegrationTestCase):
+@pytest.mark.skip(reason="This feature is not yet supported.")
+class TestCalibrator:
     """Test Calibrator."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = self.service.backend(self.dependencies.qpu)
-
-    def test_calibrator(self):
+    def test_calibrator(self, dependencies: Dependencies) -> None:
         """Test that a calibration job runs and returns a result."""
-        with Session(backend=self.backend) as session:
+        backend = dependencies.service.backend(dependencies.qpu)
+
+        with Session(backend=backend) as session:
             calibrator = Calibrator(session)
+            calibrator.options.experimental = {"foo": "bar"}
             job = calibrator.run()
             result = job.result()
-            self.assertIn("calibration_result", result)
+
+        inputs = job.inputs
+        assert inputs["schema_version"] == "v0.1"
+        assert isinstance(inputs["options"], CalibratorOptions)
+        assert inputs["options"].experimental == calibrator.options.experimental
+
+        assert isinstance(result, CalibratorResult)
+        assert result.start < result.stop

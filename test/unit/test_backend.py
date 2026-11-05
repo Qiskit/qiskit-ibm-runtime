@@ -12,64 +12,97 @@
 
 """Tests for the backend functions."""
 
-import copy
-from unittest import mock
+from __future__ import annotations
 
-from ddt import ddt, named_data
-from qiskit import QuantumCircuit, qasm3, transpile
+import copy
+from typing import TYPE_CHECKING, cast
+
+import pytest
+from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 from qiskit.transpiler import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2, FakeSherbrooke
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
+from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.server_side import SamplerV2
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
-from ..ibm_test_case import IBMTestCase
+from ..registries import Backend, get_submitted_jobs
 from ..utils import create_faulty_backend
-from .mock.fake_backends import FakeMidcircuit
+
+if TYPE_CHECKING:
+    from qiskit.transpiler import Target
+    from responses import RequestsMock
+
+    from ..registries import BaseRegistry
 
 
-def dynamic_circuits_backend():
-    """Create a test backend with an IfElseOp enables."""
-    model_backend = FakeManilaV2()
-    properties = model_backend.properties()
-
-    out_backend = IBMBackend(
-        configuration=model_backend.configuration(),
-        service=mock.MagicMock(),
-        api_client=None,
-        instance=None,
-    )
-
-    out_backend.status = lambda: BackendStatus(
-        backend_name="foo",
-        backend_version="1.0",
-        operational=True,
-        pending_jobs=0,
-        status_msg="",
-    )
-    out_backend.properties = lambda: properties
-
-    return out_backend
-
-
-def assert_props(backend, name, ref_error, ref_duration):
+def assert_props(
+    target: Target, name: str, ref_error: float | None, ref_duration: float | None
+) -> None:
     """Assert that all instruction properties for ``name`` have the given error and duration."""
-    for _, props in backend.target[name].items():
+    for _, props in target[name].items():
         error = props.error if props else None
         duration = props.duration if props else None
         assert error == ref_error
         assert duration == ref_duration
 
 
-@ddt
-class TestBackend(IBMTestCase):
+@pytest.fixture
+def alternative_backend_snapshots() -> tuple[BackendConfiguration, BackendProperties]:
+    """Create the configuration and properties of a backend with alternative instructions.
+
+    They are based on ``FakeManilaV2``, with alternative instructions added to the configuration
+    as ``instruction_signatures`` and their gate errors and lengths added to the properties.
+    """
+    backend = FakeManilaV2()
+    conf_dict = backend._get_conf_dict_from_json()
+    backend._set_props_dict_from_json()
+    props_dict = backend._props_dict
+
+    conf_dict["supported_instructions"] = ["delay", "measure", "reset"]
+    conf_dict["instruction_signatures"] = []
+
+    # Alternative instructions, as (name, number of clbits, parameters, gate error, gate length).
+    alternative_instructions = [
+        ("measure_2", 1, [], 3.142, None),
+        ("reset_2", 1, [], None, 31.42),
+        ("reset_3", 0, [], None, 31.42),
+        ("alternative_rx", 0, ["theta"], 3.142, 31.42),
+    ]
+    for name, num_clbits, parameters, error, length in alternative_instructions:
+        conf_dict["supported_instructions"].append(name)
+        conf_dict["instruction_signatures"].append(
+            {"name": name, "num_qubits": 1, "num_clbits": num_clbits, "parameters": parameters}
+        )
+
+        markers = []
+        if error is not None:
+            markers.append({"name": "gate_error", "unit": "", "value": error})
+        if length is not None:
+            markers.append({"name": "gate_length", "unit": "ns", "value": length})
+        for qubit in range(conf_dict["n_qubits"]):
+            props_dict["gates"].append(
+                {
+                    "qubits": [qubit],
+                    "gate": name,
+                    "name": f"{name}{qubit}",
+                    "parameters": [
+                        {"date": "2021-01-20T02:35:09-05:00", **marker} for marker in markers
+                    ],
+                }
+            )
+
+    return BackendConfiguration.from_dict(conf_dict), BackendProperties.from_dict(props_dict)
+
+
+@pytest.mark.server_side_primitives
+class TestBackend:
     """Tests for IBMBackend class."""
 
-    def test_raise_faulty_qubits(self):
+    def test_raise_faulty_qubits(self) -> None:
         """Test faulty qubits is raised."""
         fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
@@ -82,12 +115,12 @@ class TestBackend(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         sampler = SamplerV2(ibm_backend)
 
-        with self.assertRaises(ValueError) as err:
+        with pytest.raises(ValueError) as err:
             sampler.run([transpiled])
 
-        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+        assert f"faulty qubit {faulty_qubit}" in str(err.value)
 
-    def test_raise_faulty_qubits_many(self):
+    def test_raise_faulty_qubits_many(self) -> None:
         """Test faulty qubits is raised if one circuit uses it."""
         fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
@@ -103,12 +136,12 @@ class TestBackend(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         sampler = SamplerV2(ibm_backend)
 
-        with self.assertRaises(ValueError) as err:
+        with pytest.raises(ValueError) as err:
             sampler.run(transpiled)
 
-        self.assertIn("faulty", str(err.exception))
+        assert "faulty" in str(err.value)
 
-    def test_raise_faulty_edge(self):
+    def test_raise_faulty_edge(self) -> None:
         """Test faulty edge is raised."""
         fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
@@ -121,14 +154,13 @@ class TestBackend(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         sampler = SamplerV2(ibm_backend)
 
-        with self.assertRaises(ValueError) as err:
+        with pytest.raises(ValueError) as err:
             sampler.run([transpiled])
 
-        self.assertIn("cx", str(err.exception))
-        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+        assert "cx" in str(err.value)
+        assert f"faulty edge {tuple(edge_qubits)}" in str(err.value)
 
-    @staticmethod
-    def test_faulty_qubit_not_used():
+    def test_faulty_qubit_not_used(self) -> None:
         """Test faulty qubit is not raise if not used."""
         fake_backend = FakeManilaV2()
         circ = QuantumCircuit(2, 2)
@@ -138,15 +170,11 @@ class TestBackend(IBMTestCase):
         transpiled = transpile(circ, backend=fake_backend, initial_layout=[0, 1])
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        sampler = SamplerV2(ibm_backend)
 
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([transpiled])
+        # A circuit that does not use the faulty qubit is accepted.
+        ibm_backend.check_faulty(transpiled)
 
-        mock_run.assert_called_once()
-
-    @staticmethod
-    def test_faulty_edge_not_used():
+    def test_faulty_edge_not_used(self) -> None:
         """Test faulty edge is not raised if not used."""
         fake_backend = FakeManilaV2()
         coupling_map = fake_backend.configuration().coupling_map
@@ -157,16 +185,17 @@ class TestBackend(IBMTestCase):
         transpiled = transpile(circ, backend=fake_backend, initial_layout=coupling_map[0])
         edge_qubits = coupling_map[-1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
-        sampler = SamplerV2(ibm_backend)
 
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([transpiled])
+        # A circuit that does not use the faulty edge is accepted.
+        ibm_backend.check_faulty(transpiled)
 
-        mock_run.assert_called_once()
-
-    def test_single_dynamic_circuit_submission(self):
-        """Test submitting single circuit with dynamic=True."""
-        backend = dynamic_circuits_backend()
+    @pytest.mark.parametrize("num_circuits", [1, 2], ids=["single", "multi"])
+    def test_dynamic_circuit_submission(
+        self, num_circuits: int, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
+        """Test submitting dynamic circuits."""
+        registry.add_backend(Backend.from_(FakeManilaV2, name="ibm_manila"))
+        backend = QiskitRuntimeService(token="my_token").backend("ibm_manila")
         sampler = SamplerV2(backend)
 
         circ = QuantumCircuit(2, 2)
@@ -174,67 +203,20 @@ class TestBackend(IBMTestCase):
         with circ.if_test((0, False)):
             circ.x(1)
 
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([circ])
+        sampler.run([circ] * num_circuits)
 
-        mock_run.assert_called_once()
+        submitted_pubs = get_submitted_jobs(responses)[0]["params"]["pubs"]
+        assert len(submitted_pubs) == num_circuits
 
-    def test_multi_dynamic_circuit_submission(self):
-        """Test submitting multiple circuits with dynamic=True."""
-        backend = dynamic_circuits_backend()
-        sampler = SamplerV2(backend)
-
-        circ = QuantumCircuit(2, 2)
-        circ.measure(0, 0)
-        with circ.if_test((0, False)):
-            circ.x(1)
-
-        circuits = [circ, circ]
-
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run(circuits)
-
-        mock_run.assert_called_once()
-
-    def test_single_openqasm3_submission(self):
-        """Test submitting a single openqasm3 strings with dynamic=True."""
-        backend = dynamic_circuits_backend()
-        sampler = SamplerV2(backend)
-
-        circ = QuantumCircuit(2, 2)
-        circ.measure(0, 0)
-        with circ.if_test((0, False)):
-            circ.x(1)
-
-        qasm3_circ = qasm3.dumps(circ, disable_constants=True)
-
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([qasm3_circ])
-
-        mock_run.assert_called_once()
-
-    def test_runtime_image_selection_submission(self):
-        """Test image selection from runtime."""
-        backend = dynamic_circuits_backend()
-        sampler = SamplerV2(backend)
-
-        circ = QuantumCircuit(2, 2)
-        circ.measure(0, 0)
-        with circ.if_test((0, False)):
-            circ.x(1)
-
-        with mock.patch.object(SamplerV2, "run") as mock_run:
-            sampler.run([circ])
-
-        mock_run.assert_called_once()
-
-    def test_deepcopy(self):
+    def test_deepcopy(self, registry: BaseRegistry) -> None:
         """Test that deepcopy of a backend works properly."""
-        backend = dynamic_circuits_backend()
-        backend_copy = copy.deepcopy(backend)
-        self.assertEqual(backend_copy.name, backend.name)
+        registry.add_backend(Backend.from_(FakeManilaV2, name="ibm_manila"))
+        backend = QiskitRuntimeService(token="my_token").backend("ibm_manila")
 
-    def test_control_flow_converter(self):
+        backend_copy = copy.deepcopy(backend)
+        assert backend_copy.name == backend.name
+
+    def test_control_flow_converter(self) -> None:
         """Test that control flow instructions are properly added to the target."""
         backend = FakeSherbrooke()
         backend._get_conf_dict_from_json()
@@ -243,16 +225,16 @@ class TestBackend(IBMTestCase):
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),
         )
-        self.assertTrue(target.instruction_supported("if_else", ()))
-        self.assertTrue(target.instruction_supported(operation_class=IfElseOp))
-        self.assertFalse(target.instruction_supported("while_loop", ()))
-        self.assertFalse(target.instruction_supported(operation_class=WhileLoopOp))
-        self.assertTrue(target.instruction_supported("for_loop", ()))
-        self.assertTrue(target.instruction_supported(operation_class=ForLoopOp))
-        self.assertTrue(target.instruction_supported("switch_case", ()))
-        self.assertTrue(target.instruction_supported(operation_class=SwitchCaseOp))
+        assert target.instruction_supported("if_else", ())
+        assert target.instruction_supported(operation_class=IfElseOp)
+        assert not target.instruction_supported("while_loop", ())
+        assert not target.instruction_supported(operation_class=WhileLoopOp)
+        assert target.instruction_supported("for_loop", ())
+        assert target.instruction_supported(operation_class=ForLoopOp)
+        assert target.instruction_supported("switch_case", ())
+        assert target.instruction_supported(operation_class=SwitchCaseOp)
 
-    def test_reset(self):
+    def test_reset(self) -> None:
         """Test that reset instruction is properly added to the target."""
         backend = FakeSherbrooke()
         backend._get_conf_dict_from_json()
@@ -261,18 +243,18 @@ class TestBackend(IBMTestCase):
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),
         )
-        self.assertTrue(target.instruction_supported("reset"))
-        self.assertTrue(target.instruction_supported(operation_class=Reset))
+        assert target.instruction_supported("reset")
+        assert target.instruction_supported(operation_class=Reset)
 
-    def test_non_unitary_isa_operations(self):
+    def test_non_unitary_isa_operations(self) -> None:
         """Test handling of non-unitary ISA operations."""
-        target = convert_to_target(FakeSherbrooke().configuration())
+        target = convert_to_target(cast("BackendConfiguration", FakeSherbrooke().configuration()))
 
-        self.assertIsInstance(target.get("reset"), dict)
-        self.assertIsInstance(target.get("measure"), dict)
-        self.assertIsNone(target.get("measure_2"))
+        assert isinstance(target.get("reset"), dict)
+        assert isinstance(target.get("measure"), dict)
+        assert target.get("measure_2") is None
 
-    def test_convert_to_target_with_filter(self):
+    def test_convert_to_target_with_filter(self) -> None:
         """Test converting legacy data structure to V2 target model with faulty qubits.
 
         Measure and Delay are automatically added to the output Target
@@ -284,39 +266,37 @@ class TestBackend(IBMTestCase):
         faulty_qubit = 1
         faulty_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         target = convert_to_target(
-            configuration=faulty_backend.configuration(),
+            configuration=cast("BackendConfiguration", faulty_backend.configuration()),
             properties=faulty_backend.properties(),
         )
-        self.assertFalse(target.instruction_supported(operation_name="measure", qargs=(1,)))
-        self.assertFalse(target.instruction_supported(operation_name="delay", qargs=(1,)))
+        assert not target.instruction_supported(operation_name="measure", qargs=(1,))
+        assert not target.instruction_supported(operation_name="delay", qargs=(1,))
 
-    def test_convert_to_target(self):
+    def test_convert_to_target(self) -> None:
         """Test converting legacy data structure to V2 target model with missing qubit property."""
         fake_backend = FakeManilaV2()
         faulty_qubit = 1
         faulty_backend = create_faulty_backend(fake_backend, faulty_q1_property=faulty_qubit)
         target = convert_to_target(
-            configuration=faulty_backend.configuration(),
+            configuration=cast("BackendConfiguration", faulty_backend.configuration()),
             properties=faulty_backend.properties(),
         )
 
-        self.assertIsNone(target.qubit_properties[1].t1)
-        self.assertEqual(
-            target.qubit_properties[1].t2,
-            faulty_backend.properties().t2(1),
-        )
-        self.assertEqual(
-            target.qubit_properties[1].frequency,
-            faulty_backend.properties().frequency(1),
-        )
+        assert target.qubit_properties[1].t1 is None
+        assert target.qubit_properties[1].t2 == faulty_backend.properties().t2(1)
+        assert target.qubit_properties[1].frequency == faulty_backend.properties().frequency(1)
 
-    @named_data(
-        ("with_dynamic_with_fractional", [True, True]),
-        ("with_dynamic_without_fractional", [True, False]),
-        ("without_dynamic_with_fractional", [False, True]),
-        ("without_dynamic_without_fractional", [False, False]),
+    @pytest.mark.parametrize(
+        "options",
+        [[True, True], [True, False], [False, True], [False, False]],
+        ids=[
+            "with_dynamic_with_fractional",
+            "with_dynamic_without_fractional",
+            "without_dynamic_with_fractional",
+            "without_dynamic_without_fractional",
+        ],
     )
-    def test_convert_to_target_with_features(self, options):
+    def test_convert_to_target_with_features(self, options: list[bool]) -> None:
         """Test converting into Target model with selective features."""
         use_dynamic, use_fractional = options
         backend = FakeFractionalBackend()
@@ -331,60 +311,42 @@ class TestBackend(IBMTestCase):
             include_fractional_gates=use_fractional,
         )
 
-        self.assertEqual(
-            "rx" in target,
-            use_fractional,
-        )
-        self.assertEqual(
-            "rzz" in target,
-            use_fractional,
-        )
-        self.assertEqual(
-            "rx" in target.operation_names,
-            use_fractional,
-        )
-        self.assertEqual(
-            "rzz" in target.operation_names,
-            use_fractional,
-        )
-        self.assertEqual(
-            "if_else" in target.operation_names,
-            use_dynamic,
-        )
-        self.assertEqual(
-            "while_loop" in target.operation_names,
-            use_dynamic,
-        )
+        assert ("rx" in target) == use_fractional
+        assert ("rzz" in target) == use_fractional
+        assert ("rx" in target.operation_names) == use_fractional
+        assert ("rzz" in target.operation_names) == use_fractional
+        assert ("if_else" in target.operation_names) == use_dynamic
+        assert ("while_loop" in target.operation_names) == use_dynamic
 
-    def test_instruction_signatures(self):
+    def test_instruction_signatures(
+        self, alternative_backend_snapshots: tuple[BackendConfiguration, BackendProperties]
+    ) -> None:
         """Test building a target with alternative instruction signatures in its configuration."""
-        backend = FakeMidcircuit()
+        configuration, properties = alternative_backend_snapshots
+        target = convert_to_target(configuration=configuration, properties=properties)
 
-        self.assertEqual(set(backend.basis_gates), {"id", "rz", "sx", "x", "cx"})
-        self.assertEqual(
-            set(backend.operation_names),
-            {
-                "id",
-                "cx",
-                "sx",
-                "rz",
-                "delay",
-                "measure",
-                "measure_2",
-                "x",
-                "reset",
-                "reset_2",
-                "reset_3",
-                "alternative_rx",
-            },
-        )
-        assert_props(backend, "measure_2", 3.142, None)
-        assert_props(backend, "reset_2", None, 3.142e-08)
+        assert set(configuration.basis_gates) == {"id", "rz", "sx", "x", "cx"}
+        assert set(target.operation_names) == {
+            "id",
+            "cx",
+            "sx",
+            "rz",
+            "delay",
+            "measure",
+            "measure_2",
+            "x",
+            "reset",
+            "reset_2",
+            "reset_3",
+            "alternative_rx",
+        }
+        assert_props(target, "measure_2", 3.142, None)
+        assert_props(target, "reset_2", None, 3.142e-08)
 
-        # Test transpilation with FakeMidcircuit
+        # Test transpilation of an alternative mid-circuit measurement.
         mcm = MidCircuitMeasure()
-        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        pm = generate_preset_pass_manager(target=target, seed_transpiler=0)
         qc = QuantumCircuit(1, 2)
         qc.append(mcm, [0], [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "measure_2")
+        assert transpiled.data[0].operation.name == "measure_2"

@@ -267,7 +267,7 @@ class RuntimeClient:
         Returns:
             IBM backends available for this service instance.
         """
-        return self._api.backends(include_mocks=include_mocks)["devices"]
+        return self._api.backends(include_mocks=include_mocks).get("devices", [])
 
     def backend_configuration(
         self, backend_name: str, refresh: bool = False, calibration_id: str | None = None

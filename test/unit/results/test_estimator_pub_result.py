@@ -12,14 +12,11 @@
 
 """Tests for the classes used to instantiate estimator pub results."""
 
-from unittest import skipIf
-
 import numpy as np
+import pytest
 from qiskit.primitives import DataBin
 
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
-
-from ...ibm_test_case import IBMTestCase
 
 try:
     import plotly.graph_objects as go
@@ -29,7 +26,8 @@ except ImportError:
     PLOTLY_INSTALLED = False
 
 
-def zne_pub_result():
+@pytest.fixture
+def zne_pub_result() -> EstimatorPubResult:
     """Return a pub result holding ZNE data for two noise factors and one extrapolator."""
     nfs = np.zeros((2, 2))
     extrapolated = np.zeros((2, 2, 3))
@@ -54,30 +52,28 @@ def zne_pub_result():
     return EstimatorPubResult(data, metadata)
 
 
-class TestEstimatorPubResult(IBMTestCase):
+class TestEstimatorPubResult:
     """Class for testing the EstimatorPubResult class."""
 
-    @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
-    def test_plot_zne(self):
+    @pytest.mark.skipif(not PLOTLY_INSTALLED, reason="Plotly is not installed")
+    def test_plot_zne(self, zne_pub_result: EstimatorPubResult) -> None:
         """Test that plots are generated with each method."""
-        pub_result = zne_pub_result()
+        fig = zne_pub_result.draw_zne_evs()
+        assert isinstance(fig, go.Figure)
 
-        fig = pub_result.draw_zne_evs()
-        self.assertIsInstance(fig, go.Figure)
+        fig = zne_pub_result.draw_zne_extrapolators()
+        assert isinstance(fig, go.Figure)
 
-        fig = pub_result.draw_zne_extrapolators()
-        self.assertIsInstance(fig, go.Figure)
-
-    @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
-    def test_plot_zne_raises(self):
+    @pytest.mark.skipif(not PLOTLY_INSTALLED, reason="Plotly is not installed")
+    def test_plot_zne_raises(self) -> None:
         """Test the raises."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             EstimatorPubResult(DataBin()).draw_zne_evs()
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             EstimatorPubResult(DataBin(), {"resilience": {"measure_mitigation": ""}}).draw_zne_evs()
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             EstimatorPubResult(
                 DataBin(), {"resilience": {"zne": {"noise_factors": [1]}}}
             ).draw_zne_evs(names=["test"])

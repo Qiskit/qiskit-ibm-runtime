@@ -22,7 +22,7 @@ from ..options_models.converters import to_runtime_options
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session
 from .params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
-from .validation import validate_instruction, validate_options
+from .validation import validate_instruction
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -157,9 +157,6 @@ class NoiseLearnerV3:
         if target := getattr(self._backend, "target", None):
             for instruction in instructions:
                 validate_instruction(instruction, target)
-
-        if configuration := getattr(self._backend, "configuration", None):
-            validate_options(self.options, configuration())
 
         try:
             converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[self._SCHEMA_VERSION]

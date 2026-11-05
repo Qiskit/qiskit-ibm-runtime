@@ -12,10 +12,18 @@
 
 """Test the conversion of terminal Measure to MidCircuitMeasure."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import Measure, Reset
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import PassManager
+
+if TYPE_CHECKING:
+    from qiskit.transpiler import Target
 
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
@@ -23,10 +31,10 @@ from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
     ConvertToMidCircuitResetAndMeasure,
 )
 
-from .....ibm_test_case import IBMTestCase
 
-
-def target_with_mid_circuit_instructions(measure_name="measure_2", reset_name="reset_2"):
+def target_with_mid_circuit_instructions(
+    measure_name: str = "measure_2", reset_name: str = "reset_2"
+) -> Target:
     """Return a target supporting a mid-circuit measure and reset on every qubit."""
     target = GenericBackendV2(num_qubits=5, seed=0).target
     target.add_instruction(MidCircuitMeasure(measure_name), {(i,): None for i in range(5)})
@@ -34,7 +42,7 @@ def target_with_mid_circuit_instructions(measure_name="measure_2", reset_name="r
     return target
 
 
-def circuit_with_mid_circuit_instructions():
+def circuit_with_mid_circuit_instructions() -> QuantumCircuit:
     """Return a circuit with mid-circuit measures and resets, plus terminal measures."""
     circuit = QuantumCircuit(2, 2)
     circuit.x(0)
@@ -46,10 +54,10 @@ def circuit_with_mid_circuit_instructions():
     return circuit
 
 
-class TestConvertToMidCircuitMeasure(IBMTestCase):
+class TestConvertToMidCircuitMeasure:
     """Tests the ConvertToMidCircuitMeasure pass."""
 
-    def test_convert_default(self):
+    def test_convert_default(self) -> None:
         """Test basic conversion to measure_2 and reset_2."""
         custom_pass = ConvertToMidCircuitResetAndMeasure(target_with_mid_circuit_instructions())
         pm = PassManager([custom_pass])
@@ -58,27 +66,27 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         # The transpiled circuit will contain measure_2 in the two mid-circ-measurements
         # and regular Measure instances in terminal measurements,
         # similarly it will contain reset_2 in the two mid-circuit resets
-        self.assertIsInstance(transpiled.data[1].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[2].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[3].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[4].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[1].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[2].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[3].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[4].operation, MidCircuitMeasure)
         # [5] is the barrier
-        self.assertNotIsInstance(transpiled.data[6].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[6].operation, Measure)
-        self.assertNotIsInstance(transpiled.data[7].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[7].operation, Measure)
+        assert not isinstance(transpiled.data[6].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[6].operation, Measure)
+        assert not isinstance(transpiled.data[7].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[7].operation, Measure)
 
-    def test_convert_raises(self):
+    def test_convert_raises(self) -> None:
         """Test that value error is raised if measure_2 not supported in target."""
-        with self.assertRaisesRegex(
+        with pytest.raises(
             ValueError,
-            r"measure_2 is not supported by the given target\. "
+            match=r"measure_2 is not supported by the given target\. "
             r"Supported operations are: dict_keys\(\['cx', 'id', 'rz', "
             r"'sx', 'x', 'reset', 'delay', 'measure'\]\)",
         ):
             ConvertToMidCircuitMeasure(GenericBackendV2(num_qubits=5, seed=0).target)
 
-    def test_convert_measure_3(self):
+    def test_convert_measure_3(self) -> None:
         """Test conversion with non-default alternative measure and reset.
 
         The pass is only expected to convert the non-terminal measure into measure_3, the existing
@@ -91,21 +99,21 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         pm = PassManager([custom_pass])
         transpiled = pm.run(circuit_with_mid_circuit_instructions())
 
-        self.assertIsInstance(transpiled.data[1].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[2].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[3].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[4].operation, MidCircuitMeasure)
-        self.assertEqual(transpiled.data[1].operation.name, "measure_2")
-        self.assertEqual(transpiled.data[2].operation.name, "reset_2")
-        self.assertEqual(transpiled.data[3].operation.name, "reset_3")
-        self.assertEqual(transpiled.data[4].operation.name, "measure_3")
+        assert isinstance(transpiled.data[1].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[2].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[3].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[4].operation, MidCircuitMeasure)
+        assert transpiled.data[1].operation.name == "measure_2"
+        assert transpiled.data[2].operation.name == "reset_2"
+        assert transpiled.data[3].operation.name == "reset_3"
+        assert transpiled.data[4].operation.name == "measure_3"
         # [5] is the barrier
-        self.assertNotIsInstance(transpiled.data[6].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[6].operation, Measure)
-        self.assertNotIsInstance(transpiled.data[7].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[7].operation, Measure)
+        assert not isinstance(transpiled.data[6].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[6].operation, Measure)
+        assert not isinstance(transpiled.data[7].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[7].operation, Measure)
 
-    def test_different_qarg(self):
+    def test_different_qarg(self) -> None:
         """Test correct replacing of measure_2.
 
         Test that non-terminal measure is only replaced if measure_2 is defined
@@ -129,14 +137,14 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
 
         custom_pass = ConvertToMidCircuitMeasure(target)
         pm = PassManager([custom_pass])
-        with self.assertWarnsRegex(UserWarning, "'measure_2'"):
+        with pytest.warns(UserWarning, match="'measure_2'"):
             transpiled = pm.run(qc)
 
         # The transpiled circuit will not contain any MidCircuitMeasure instance
-        self.assertNotIsInstance(transpiled.data[0].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[0].operation, Measure)
-        self.assertNotIsInstance(transpiled.data[1].operation, MidCircuitReset)
-        self.assertIsInstance(transpiled.data[1].operation, Reset)
+        assert not isinstance(transpiled.data[0].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[0].operation, Measure)
+        assert not isinstance(transpiled.data[1].operation, MidCircuitReset)
+        assert isinstance(transpiled.data[1].operation, Reset)
         # [4] is a barrier
-        self.assertNotIsInstance(transpiled.data[5].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[5].operation, Measure)
+        assert not isinstance(transpiled.data[5].operation, MidCircuitMeasure)
+        assert isinstance(transpiled.data[5].operation, Measure)

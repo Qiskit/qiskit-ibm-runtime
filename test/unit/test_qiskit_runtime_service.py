@@ -14,19 +14,18 @@
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from ddt import data, ddt
+import pytest
 from qiskit import QuantumCircuit
 
-from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.server_side import SamplerV2
 
-from ..account import custom_envs
-from ..decorators import mock_responses
-from ..ibm_test_case import IBMTestCase
+from ..account import custom_envs, get_account_config_contents, temporary_account_config_file
 from ..registries import Backend, Instance, Job, OneInstanceNoBackendsRegistry
 from ..utils import transpile_pubs
 
@@ -34,11 +33,11 @@ if TYPE_CHECKING:
     from ..registries import BaseRegistry
 
 
-@ddt
-class TestQiskitRuntimeService(IBMTestCase):
+class TestQiskitRuntimeService:
     """Class for testing the `QiskitRuntimeService` class."""
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
+    @pytest.mark.server_side_primitives
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     def test_run_active_client(self, registry: BaseRegistry) -> None:
         """`_run()` should use the backend/instance api client rather than the active client."""
         # Create several instances, with one instance per backend, so they use different clients.
@@ -76,7 +75,7 @@ class TestQiskitRuntimeService(IBMTestCase):
             api_client_a_run.assert_called()
             api_client_b_run.assert_not_called()
             api_client_c_run.assert_not_called()
-            self.assertEqual(service._active_api_client, backend_a._api_client)
+            assert service._active_api_client == backend_a._api_client
             api_client_a_run.reset_mock()
 
             # Run a job with the client and instance not active in the service.
@@ -85,21 +84,20 @@ class TestQiskitRuntimeService(IBMTestCase):
             api_client_a_run.assert_not_called()
             api_client_b_run.assert_called()
             api_client_c_run.assert_not_called()
-            self.assertEqual(service._active_api_client, backend_b._api_client)
+            assert service._active_api_client == backend_b._api_client
             api_client_b_run.reset_mock()
 
             # Run a job with the client and instance not active in the service.
             sampler = SamplerV2(mode=backend_c)
-            with self.assertRaises(IBMRuntimeError) as ex:
+            with pytest.raises(IBMRuntimeError) as ex:
                 _ = sampler.run(pubs)
-                self.assertIn("not among", str(ex.msg))
+            assert "not among" in str(ex.value)
 
             api_client_a_run.assert_not_called()
             api_client_b_run.assert_not_called()
             api_client_c_run.assert_not_called()
-            self.assertEqual(service._active_api_client, backend_b._api_client)
+            assert service._active_api_client == backend_b._api_client
 
-    @mock_responses
     def test_initialization_state(self, registry: BaseRegistry) -> None:
         """Test `__init__` state variables, with default arguments."""
         crns_in_registry = {instance.crn for instance in registry.instances.values()}
@@ -110,35 +108,36 @@ class TestQiskitRuntimeService(IBMTestCase):
 
         service = QiskitRuntimeService(token="my_token")
         # `_all_instances` contains all the instances available.
-        self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
+        assert {instance["crn"] for instance in service._all_instances} == crns_in_registry
         # `_backend_configs` is empty (populated by `backends()`).
-        self.assertEqual(service._backend_configs, {})
+        assert service._backend_configs == {}
         # `_api_clients` contains one client per instance available.
-        self.assertEqual(set(service._api_clients.keys()), crns_in_registry)
+        assert set(service._api_clients.keys()) == crns_in_registry
         # `_active_api_client` is among the ones in `_api_clients`.
-        self.assertIn(service._active_api_client, service._api_clients.values())
+        assert service._active_api_client in service._api_clients.values()
         # `_backends_info_per_instance` contains one entry per instance, with its backends.
-        self.assertEqual(
-            {
-                crn: {info["name"] for info in value}
-                for crn, value in service._backends_info_per_instance.items()
-            },
-            backends_in_registry,
-        )
+        assert {
+            crn: {info["name"] for info in value}
+            for crn, value in service._backends_info_per_instance.items()
+        } == backends_in_registry
         # `_backend_instance_groups` contains one entry per instance, with its backends.
-        self.assertEqual(
-            {info["crn"]: set(info["backends"]) for info in service._backend_instance_groups},
-            backends_in_registry,
-        )
+        assert {
+            info["crn"]: {name for name, _ in info["backends"]}
+            for info in service._backend_instance_groups
+        } == backends_in_registry
 
-    @mock_responses(OneInstanceNoBackendsRegistry)
-    @data(True, False)
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    @pytest.mark.parametrize("with_env_var", [True, False])
     def test_initialization_state_passing_instance(
         self, with_env_var: bool, registry: BaseRegistry
     ) -> None:
         """Test `__init__` state variables, passing the `instance` argument."""
         chosen_crn = registry.instances["a"].crn
         crns_in_registry = {chosen_crn}
+        backends_in_registry = {
+            instance.crn: set(registry.backends[instance.name])
+            for instance in registry.instances.values()
+        }
 
         if with_env_var:
             # Using the `QISKIT_FUNCTIONS_EXPERIMENTAL` should have no side effects.
@@ -148,19 +147,21 @@ class TestQiskitRuntimeService(IBMTestCase):
             service = QiskitRuntimeService(token="my_token", instance=chosen_crn)
 
         # `_all_instances` contains all the instances available.
-        self.assertEqual({instance["crn"] for instance in service._all_instances}, crns_in_registry)
+        assert {instance["crn"] for instance in service._all_instances} == crns_in_registry
         # `_backend_configs` is empty (populated by `backends()`).
-        self.assertEqual(service._backend_configs, {})
+        assert service._backend_configs == {}
         # `_api_clients` contains only a client for the specified instance.
-        self.assertEqual(set(service._api_clients.keys()), {chosen_crn})
+        assert set(service._api_clients.keys()) == {chosen_crn}
         # `_active_api_client` is among the ones in `_api_clients`.
-        self.assertIn(service._active_api_client, service._api_clients.values())
+        assert service._active_api_client in service._api_clients.values()
         # `_backends_info_per_instance` is empty.
-        self.assertEqual(service._backends_info_per_instance, {})
+        assert {
+            crn: {info["name"] for info in value}
+            for crn, value in service._backends_info_per_instance.items()
+        } == backends_in_registry
         # `_backend_instance_groups` is empty.
-        self.assertEqual(service._backend_instance_groups, [])
+        assert service._backend_instance_groups == []
 
-    @mock_responses
     def test_experimental_workload_endpoint(self, registry: BaseRegistry) -> None:
         """Test the experimental usage of the `/workloads` endpoint.
 
@@ -174,8 +175,72 @@ class TestQiskitRuntimeService(IBMTestCase):
         workloads_response = service._active_api_client._api.workloads_get()
 
         # Jobs from all instances should be included.
-        self.assertEqual(len(workloads_response["workloads"]), 2)
+        assert len(workloads_response["workloads"]) == 2
         # All workloads should be jobs currently.
-        self.assertTrue(
-            all(workload["mode"] == "job" for workload in workloads_response["workloads"])
-        )
+        assert all(workload["mode"] == "job" for workload in workloads_response["workloads"])
+
+    def test_usage(self, registry: BaseRegistry) -> None:
+        """Test the `usage()` method."""
+        service = QiskitRuntimeService(token="my_token")
+        usage = service.usage()
+
+        # The returned usage should contain the mandatory resource units field.
+        assert "usage_consumed_ru" in usage
+
+
+class TestAccountHandling:
+    """Class for testing how account/instances are handled in `QiskitRuntimeService`."""
+
+    def test_with_token(self, registry: BaseRegistry) -> None:
+        """`token` ignores stored accounts, and does not set default instance."""
+        service = QiskitRuntimeService(token="my_token")
+
+        assert service._account.instance is None
+        assert not service._default_instance
+        # The service stores information for backends (3) in all the 2 accounts.
+        assert len(service.backends()) == 3
+
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+    def test_with_config_file_no_args(self, registry: BaseRegistry) -> None:
+        """Initializing with no args and a config file selects the last instance in the file."""
+        with temporary_account_config_file(
+            get_account_config_contents("account_a", token="my_token", instance="a")
+            | get_account_config_contents("account_b", token="my_token", instance="b")
+        ):
+            service = QiskitRuntimeService()
+
+        assert service._account.instance == registry.instances["b"].crn
+        assert service._default_instance
+        # The service stores information for backends (2) in 1 account.
+        assert len(service.backends()) == 2
+
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+    def test_with_config_file_instance(self, registry: BaseRegistry) -> None:
+        """Initializing with `instance` arg and a config file selects that instance."""
+        with temporary_account_config_file(
+            get_account_config_contents("account_a", token="my_token", instance="a")
+            | get_account_config_contents("account_b", token="my_token", instance="b")
+        ):
+            service = QiskitRuntimeService(instance=registry.instances["a"].crn)
+
+        assert service._account.instance == registry.instances["a"].crn
+        assert service._default_instance
+        # The service stores information for backends (2) in 1 account.
+        assert len(service.backends()) == 2
+
+    # NamedTemporaryFiles not supported in Windows
+    @pytest.mark.skipif(os.name == "nt", reason="Test not supported in Windows")
+    def test_with_config_file_name(self, registry: BaseRegistry) -> None:
+        """Initializing with `name` arg and a config file selects that instance."""
+        with temporary_account_config_file(
+            get_account_config_contents("account_a", token="my_token", instance="a")
+            | get_account_config_contents("account_b", token="my_token", instance="b")
+        ):
+            service = QiskitRuntimeService(instance=registry.instances["a"].crn)
+
+        assert service._account.instance == registry.instances["a"].crn
+        assert service._default_instance
+        # The service stores information for backends (2) in 1 account.
+        assert len(service.backends()) == 2

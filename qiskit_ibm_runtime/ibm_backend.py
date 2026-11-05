@@ -140,6 +140,7 @@ class IBMBackend(Backend):
         instance: The service instance to use.
         calibration_id: An optional calibration id to use for this backend
         physical_qubits: The number of physical qubits of the backend.
+        is_mock: ``True`` if the backend is a mock device.
     """
 
     id_warning_issued = False
@@ -152,6 +153,7 @@ class IBMBackend(Backend):
         instance: str | None = None,
         calibration_id: str | None = None,
         physical_qubits: int | None = None,
+        is_mock: bool = False,
     ) -> None:
         super().__init__(
             name=configuration.backend_name,
@@ -164,6 +166,7 @@ class IBMBackend(Backend):
         self._instance = instance
         self._calibration_id = calibration_id
         self._physical_qubits = physical_qubits
+        self._is_mock = is_mock
 
         self._properties: Any = None
         self._target: Any = None
@@ -237,6 +240,11 @@ class IBMBackend(Backend):
     def calibration_id(self) -> str | None:
         """The calibration id used for this backend."""
         return self._calibration_id
+
+    @property
+    def is_mock(self) -> bool:
+        """Return whether the backend is a mock device."""
+        return self._is_mock
 
     @property
     def service(self) -> QiskitRuntimeService:

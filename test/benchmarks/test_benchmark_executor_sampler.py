@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.decoders.executor.decoder import ExecutorResultDecoder
+from qiskit_ibm_runtime.decoders.executor_sampler.decoder import ClientSideSamplerResultDecoder
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
 from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
@@ -119,7 +119,7 @@ def test_executor_sampler_post_processor(benchmark, variant_id, variant_options)
         return (create_dummy_executor_result(quantum_program),), {}
 
     benchmark.pedantic(
-        ExecutorResultDecoder._apply_post_processing,
+        ClientSideSamplerResultDecoder.decode,
         setup=setup,
         rounds=10,
     )

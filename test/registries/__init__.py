@@ -15,3 +15,4 @@
 from .base import BaseRegistry, CallbackResult
 from .entities import Backend, Instance, Job, Session
 from .registries import DefaultRegistry, OneInstanceDryRunRegistry, OneInstanceNoBackendsRegistry
+from .utils import get_submitted_jobs

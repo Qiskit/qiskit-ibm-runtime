@@ -73,6 +73,9 @@ class Instance:
                 "usage_consumed_seconds": 12,
                 "usage_limit_seconds": 60,
                 "usage_allocation_seconds": 120,
+                "usage_consumed_ru": 1.1,
+                "usage_limit_ru": 2.2,
+                "usage_allocation_ru": 3.3,
                 "usage_limit_reached": False,
             }
 
@@ -205,3 +208,6 @@ class Session:
 
     mode: Literal["batch", "dedicated"] = "dedicated"
     """Session mode."""
+
+    timestamps: list[dict[str, str]] | None = None
+    """Session state transitions, as returned by the API."""

@@ -12,7 +12,12 @@
 
 """Tests for ``broadcast_sample``."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
+import pytest
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
 from samplomatic.builders.build import build
@@ -22,10 +27,12 @@ from qiskit_ibm_runtime.fake_provider.backends.fez import FakeFez
 from qiskit_ibm_runtime.fake_provider.executor.broadcast_sample import broadcast_sample
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
-from ....ibm_test_case import IBMTestCase
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.quantum_program import SamplexItem
 
 
-def cx_item():
+@pytest.fixture
+def cx_item() -> SamplexItem:
     """Return a SamplexItem for a Pauli-twirled CX circuit (no free parameters)."""
     qc = QuantumCircuit(2, 2)
     qc.cx(0, 1)
@@ -41,7 +48,8 @@ def cx_item():
     return program.items[0]
 
 
-def mixed_axes_item():
+@pytest.fixture
+def mixed_axes_item() -> SamplexItem:
     """Return a SamplexItem with mixed broadcast/randomization axes: shape (r0, 2, 2, r1)."""
     theta = Parameter("theta")
     phi = Parameter("phi")
@@ -70,62 +78,51 @@ def mixed_axes_item():
     return program.items[0]
 
 
-class TestBroadcastSample(IBMTestCase):
+class TestBroadcastSample:
     """Tests for ``broadcast_sample``."""
 
-    def test_broadcast_sample_no_broadcast_axes(self):
+    def test_broadcast_sample_no_broadcast_axes(self, cx_item: SamplexItem) -> None:
         """All axes are randomization axes: output shape matches the requested shape."""
-        item = cx_item()
-        shape = item.shape  # (3, 5)
+        shape = cx_item.shape  # (3, 5)
         rng = np.random.default_rng(42)
 
-        result = broadcast_sample(item.samplex, item.samplex_arguments, shape, rng)
+        result = broadcast_sample(cx_item.samplex, cx_item.samplex_arguments, shape, rng)
 
-        self.assertIsInstance(result, dict)
-        self.assertGreater(len(result), 0)
+        assert isinstance(result, dict)
+        assert len(result) > 0
         for key, val in result.items():
-            self.assertEqual(
-                val.shape[: len(shape)],
-                shape,
-                f"Expected leading shape {shape} for '{key}', got {val.shape}",
-            )
+            assert val.shape[: len(shape)] == shape
 
-    def test_broadcast_sample_output_keys(self):
+    def test_broadcast_sample_output_keys(self, cx_item: SamplexItem) -> None:
         """Output contains 'parameter_values' and at least one 'measurement_flips.*' key."""
-        item = cx_item()
         rng = np.random.default_rng(0)
 
-        result = broadcast_sample(item.samplex, item.samplex_arguments, item.shape, rng)
+        result = broadcast_sample(cx_item.samplex, cx_item.samplex_arguments, cx_item.shape, rng)
 
-        self.assertTrue("parameter_values" in result)
+        assert "parameter_values" in result
 
         flip_keys = [k for k in result if k.startswith("measurement_flips.")]
-        self.assertGreater(len(flip_keys), 0)
+        assert len(flip_keys) > 0
 
-    def test_broadcast_sample_all_broadcast_axes(self):
+    def test_broadcast_sample_all_broadcast_axes(self, mixed_axes_item: SamplexItem) -> None:
         """Broadcast axes produce the correct leading shape."""
-        item = mixed_axes_item()
-        shape = item.shape  # (3, 2, 2, 4)
+        shape = mixed_axes_item.shape  # (3, 2, 2, 4)
         rng = np.random.default_rng(7)
 
-        result = broadcast_sample(item.samplex, item.samplex_arguments, shape, rng)
+        result = broadcast_sample(
+            mixed_axes_item.samplex, mixed_axes_item.samplex_arguments, shape, rng
+        )
 
         for key, val in result.items():
-            self.assertEqual(
-                val.shape[: len(shape)],
-                shape,
-                f"Expected leading shape {shape} for '{key}', got {val.shape}",
-            )
+            assert val.shape[: len(shape)] == shape
 
-    def test_broadcast_sample_rng_reproducible(self):
+    def test_broadcast_sample_rng_reproducible(self, cx_item: SamplexItem) -> None:
         """Same RNG seed produces identical results."""
-        item = cx_item()
-
         r1 = broadcast_sample(
-            item.samplex, item.samplex_arguments, item.shape, np.random.default_rng(1)
+            cx_item.samplex, cx_item.samplex_arguments, cx_item.shape, np.random.default_rng(1)
         )
         r2 = broadcast_sample(
-            item.samplex, item.samplex_arguments, item.shape, np.random.default_rng(1)
+            cx_item.samplex, cx_item.samplex_arguments, cx_item.shape, np.random.default_rng(1)
         )
 
         for key in r1:

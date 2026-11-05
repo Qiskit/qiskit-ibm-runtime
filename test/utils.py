@@ -14,96 +14,25 @@
 
 from __future__ import annotations
 
-import itertools
-import time
-import unittest
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from unittest import mock
 
 import numpy as np
-from ddt import data, unpack
 from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
-from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, SamplerV2, Session
-from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+from qiskit_ibm_runtime import Estimator, Sampler
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
+from qiskit_ibm_runtime.models import BackendProperties, BackendStatus
+from qiskit_ibm_runtime.server_side import EstimatorV2, SamplerV2
 
 if TYPE_CHECKING:
-    import logging
-    from collections.abc import Callable, Iterable
+    from collections.abc import Iterable
 
     from qiskit.providers.backend import Backend, BackendV2
-
-    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
-
-
-def most_busy_backend(
-    service: QiskitRuntimeService,
-    instance: str | None = None,
-) -> IBMBackend:
-    """Return the most busy backend for the provider given.
-
-    Return the most busy available backend for those that
-    have a `pending_jobs` in their `status`. Backends such as
-    local backends that do not have this are not considered.
-
-    Args:
-        service: Qiskit Runtime Service.
-        instance: IBM Quantum Platform CRN.
-
-    Returns:
-        The most busy backend.
-    """
-    backends = service.backends(simulator=False, operational=True, instance=instance)
-    return max(
-        (
-            b
-            for b in backends
-            if b.configuration().n_qubits >= 5 and b.status().status_msg == "active"
-        ),
-        key=lambda b: b.status().pending_jobs,
-    )
-
-
-def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
-    """Cancel a runtime job."""
-    try:
-        job.cancel()
-        status = job.status()
-        if status != "CANCELLED":
-            raise AssertionError(
-                f"cancel() was successful for job {job.job_id()} but its status is {status}."
-            )
-        return True
-    except RuntimeInvalidStateError:
-        if job.status() in ["DONE", "CANCELLED", "ERROR"]:
-            logger.warning("Unable to cancel job because it's already done.")
-            return False
-        raise
-
-
-def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out: int = 20) -> None:
-    """Wait for job to reach a certain status."""
-    wait_time = 1 if status == "QUEUED" else poll_time
-    while job.status() not in ["DONE", "CANCELLED", "ERROR", status] and time_out > 0:
-        time.sleep(wait_time)
-        time_out -= wait_time
-    if job.status() != status:
-        raise unittest.SkipTest(f"Job {job.job_id()} unable to reach status {status}.")
-
-
-def get_real_device(service):
-    """Get a real device for the service."""
-    try:
-        return service.least_busy(simulator=False).name
-    except QiskitBackendNotFoundError:
-        raise unittest.SkipTest("No real device")  # cloud has no real device
 
 
 def create_faulty_backend(
@@ -164,115 +93,6 @@ def create_faulty_backend(
     )
     out_backend.properties = lambda: BackendProperties.from_dict(properties)  # type: ignore
     return out_backend
-
-
-def get_mocked_backend(
-    name: str = "ibm_gotham",
-    configuration: dict | None = None,
-    properties: dict | None = None,
-) -> IBMBackend:
-    """Return a mock backend."""
-    mock_service = mock.MagicMock(spec=QiskitRuntimeService, is_local=False)
-    mock_api_client = mock.MagicMock()
-    mock_api_client._instance = "mock_instance"
-    mock_service._active_api_client = mock_api_client
-
-    configuration = (
-        FakeManilaV2().configuration()  # type: ignore[assignment]
-        if configuration is None
-        else BackendConfiguration.from_dict(configuration)
-    )
-
-    mock_api_client.backend_properties = lambda *args, **kwargs: properties
-    mock_api_client.session_details = mock.MagicMock(return_value={"mode": "dedicated"})
-    mock_backend = IBMBackend(
-        configuration=configuration,  # type: ignore[arg-type]
-        service=mock_service,
-        api_client=mock_api_client,
-    )
-    mock_backend.name = name
-    mock_backend._instance = None
-    mock_service.backend = lambda name, **kwargs: (
-        mock_backend if name == mock_backend.name else None
-    )
-    mock_service._get_api_client = mock.MagicMock(return_value=mock_api_client)
-
-    return mock_backend
-
-
-def get_mocked_session(backend: Any = None) -> mock.MagicMock:
-    """Return a mocked session object."""
-    session = mock.MagicMock(spec=Session)
-    session._instance = None
-    session._backend = backend or get_mocked_backend()
-    session.service = getattr(backend, "service", None) or mock.MagicMock(
-        spec=QiskitRuntimeService, is_local=False
-    )
-    return session
-
-
-def get_mocked_batch(backend: Any = None) -> mock.MagicMock:
-    """Return a mocked batch object."""
-    batch = mock.MagicMock(spec=Batch)
-    batch._instance = None
-    batch._backend = backend or get_mocked_backend()
-    batch._service = getattr(backend, "service", None) or mock.MagicMock(spec=QiskitRuntimeService)
-    return batch
-
-
-def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJobV2:
-    """Submit and cancel a job.
-
-    Args:
-        backend: Backend to submit the job to.
-        logger: The logger to use for sending logs when cancelling.
-
-    Returns:
-        Cancelled job.
-    """
-    circuit = transpile(bell(), backend=backend)
-    sampler = SamplerV2(backend)
-    job = sampler.run([circuit])
-    cancel_job_safe(job, logger=logger)
-    return job
-
-
-class Case(dict):
-    """<no description>."""
-
-
-def generate_cases(
-    docstring: str, dsc: str | None = None, name: str | None = None, **kwargs: Any
-) -> list[Case]:
-    """Combines kwargs in Cartesian product and creates Case with them."""
-    ret = []
-    keys = kwargs.keys()
-    vals = kwargs.values()
-    for values in itertools.product(*vals):
-        case = Case(zip(keys, values))
-        if docstring is not None:
-            setattr(case, "__doc__", docstring.format(**case))
-        if dsc is not None:
-            setattr(case, "__doc__", dsc.format(**case))
-        if name is not None:
-            setattr(case, "__name__", name.format(**case))
-        ret.append(case)
-    return ret
-
-
-def combine(**kwargs: Any) -> Callable[[Callable], Callable]:
-    """Decorator to create combinations and tests.
-
-    @combine(level=[0, 1, 2, 3],
-             circuit=[a, b, c, d],
-             dsc='Test circuit {circuit.__name__} with level {level}',
-             name='{circuit.__name__}_level{level}').
-    """
-
-    def deco(func: Callable) -> Callable:
-        return data(*generate_cases(docstring=func.__doc__, **kwargs))(unpack(func))
-
-    return deco
 
 
 def bell() -> QuantumCircuit:
@@ -356,7 +176,9 @@ def make_mirror_circuit_with_phases(
     return circuit
 
 
-def get_transpiled_circuit(backend, num_qubits=2, measure=False):
+def get_transpiled_circuit(
+    backend: IBMBackend, num_qubits: int = 2, measure: bool = False
+) -> QuantumCircuit:
     """Return a transpiled circuit."""
     circ = QuantumCircuit(num_qubits)
     circ.h(0)
@@ -367,7 +189,9 @@ def get_transpiled_circuit(backend, num_qubits=2, measure=False):
     return transpile(circ, backend=backend)
 
 
-def get_primitive_inputs(primitive, backend=None, num_sets=1):
+def get_primitive_inputs(
+    primitive: type, backend: BackendV2 | None = None, num_sets: int = 1
+) -> dict:
     """Return primitive specific inputs."""
     backend = backend or FakeManilaV2()
     theta = Parameter("θ")
@@ -381,9 +205,9 @@ def get_primitive_inputs(primitive, backend=None, num_sets=1):
     obs = obs.apply_layout(circ.layout, num_qubits=circ.num_qubits)
     param_val = [0.1]
 
-    if isinstance(primitive, EstimatorV2):
+    if isinstance(primitive, (Estimator, EstimatorV2)):
         return {"pubs": [(circ, [obs], [param_val])] * num_sets}
-    elif isinstance(primitive, SamplerV2):
+    elif isinstance(primitive, (Sampler, SamplerV2)):
         circ.measure_all()
         return {"pubs": [(circ, param_val)] * num_sets}
     else:

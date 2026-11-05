@@ -12,6 +12,7 @@
 
 """Tests for MidCircuitMeasure instruction."""
 
+import pytest
 from qiskit import QuantumCircuit, generate_preset_pass_manager
 from qiskit.circuit import Instruction
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -20,64 +21,55 @@ from qiskit.transpiler.exceptions import TranspilerError
 from qiskit_ibm_runtime.circuit import MeasureReset, MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestMidCircuitMeasure(IBMTestCase):
+class TestMidCircuitMeasure:
     """Test MidCircuitMeasure instruction."""
 
-    def test_instantiation(self):
+    def test_instantiation(self) -> None:
         """Test default instantiation."""
         mcm = MidCircuitMeasure()
-        self.assertIs(mcm.base_class, MidCircuitMeasure)
-        self.assertIsInstance(mcm, Instruction)
-        self.assertEqual(mcm.name, "measure_2")
-        self.assertEqual(mcm.num_qubits, 1)
-        self.assertEqual(mcm.num_clbits, 1)
+        assert mcm.base_class is MidCircuitMeasure
+        assert isinstance(mcm, Instruction)
+        assert mcm.name == "measure_2"
+        assert mcm.num_qubits == 1
+        assert mcm.num_clbits == 1
 
-    def test_instantiation_name(self):
+    @pytest.mark.parametrize("name", ["measure_3", "measure_reset"])
+    def test_instantiation_name(self, name: str) -> None:
         """Test instantiation with custom name."""
-        with self.subTest("measure_3"):
-            mcm = MidCircuitMeasure("measure_3")
-            self.assertIs(mcm.base_class, MidCircuitMeasure)
-            self.assertIsInstance(mcm, Instruction)
-            self.assertEqual(mcm.name, "measure_3")
-            self.assertEqual(mcm.num_qubits, 1)
-            self.assertEqual(mcm.num_clbits, 1)
+        mcm = MidCircuitMeasure(name)
+        assert mcm.base_class is MidCircuitMeasure
+        assert isinstance(mcm, Instruction)
+        assert mcm.name == name
+        assert mcm.num_qubits == 1
+        assert mcm.num_clbits == 1
 
-        with self.subTest("measure_reset"):
-            mcm = MidCircuitMeasure("measure_reset")
-            self.assertIs(mcm.base_class, MidCircuitMeasure)
-            self.assertIsInstance(mcm, Instruction)
-            self.assertEqual(mcm.name, "measure_reset")
-            self.assertEqual(mcm.num_qubits, 1)
-            self.assertEqual(mcm.num_clbits, 1)
+    def test_instantiation_invalid_name(self) -> None:
+        """Test instantiation with an invalid name."""
+        with pytest.raises(ValueError):
+            MidCircuitMeasure("invalid_name")
 
-        with self.subTest("invalid_name"):
-            with self.assertRaises(ValueError):
-                mcm = MidCircuitMeasure("invalid_name")
-
-    def test_circuit_integration(self):
+    def test_circuit_integration(self) -> None:
         """Test appending to circuit."""
         mcm = MidCircuitMeasure()
         qc = QuantumCircuit(1, 2)
         qc.append(mcm, [0], [0])
         qc.append(mcm, [0], [1])
         qc.reset(0)
-        self.assertIs(qc.data[0].operation, mcm)
-        self.assertIs(qc.data[1].operation, mcm)
+        assert qc.data[0].operation is mcm
+        assert qc.data[1].operation is mcm
 
-    def test_transpiler_compat_without(self):
+    def test_transpiler_compat_without(self) -> None:
         """Test that default pass manager FAILS if measure_2 not in Target."""
         mcm = MidCircuitMeasure()
         backend = FakeVigoV2()
         pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
         qc = QuantumCircuit(1, 2)
         qc.append(mcm, [0], [0])
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             _ = pm.run(qc)
 
-    def test_transpiler_compat_with(self):
+    def test_transpiler_compat_with(self) -> None:
         """Test default PM passes if measure_2 is in Target and does not modify the instruction.
 
         Test that default pass manager PASSES if measure_2 is in Target and doesn't modify the
@@ -90,56 +82,56 @@ class TestMidCircuitMeasure(IBMTestCase):
         qc = QuantumCircuit(1, 2)
         qc.append(mcm, [0], [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "measure_2")
+        assert transpiled.data[0].operation.name == "measure_2"
 
 
-class TestMidCircuitReset(IBMTestCase):
+class TestMidCircuitReset:
     """Test MidCircuitReset instruction."""
 
-    def test_instantiation(self):
+    def test_instantiation(self) -> None:
         """Test default instantiation."""
         mcr = MidCircuitReset()
-        self.assertIs(mcr.base_class, MidCircuitReset)
-        self.assertIsInstance(mcr, Instruction)
-        self.assertEqual(mcr.name, "reset_2")
-        self.assertEqual(mcr.num_qubits, 1)
-        self.assertEqual(mcr.num_clbits, 0)
+        assert mcr.base_class is MidCircuitReset
+        assert isinstance(mcr, Instruction)
+        assert mcr.name == "reset_2"
+        assert mcr.num_qubits == 1
+        assert mcr.num_clbits == 0
 
-    def test_instantiation_name(self):
+    def test_instantiation_name(self) -> None:
         """Test instantiation with custom name."""
-        with self.subTest("reset_3"):
-            mcr = MidCircuitReset("reset_3")
-            self.assertIs(mcr.base_class, MidCircuitReset)
-            self.assertIsInstance(mcr, Instruction)
-            self.assertEqual(mcr.name, "reset_3")
-            self.assertEqual(mcr.num_qubits, 1)
-            self.assertEqual(mcr.num_clbits, 0)
+        mcr = MidCircuitReset("reset_3")
+        assert mcr.base_class is MidCircuitReset
+        assert isinstance(mcr, Instruction)
+        assert mcr.name == "reset_3"
+        assert mcr.num_qubits == 1
+        assert mcr.num_clbits == 0
 
-        with self.subTest("invalid_name"):
-            with self.assertRaises(ValueError):
-                MidCircuitReset("invalid_name")
+    def test_instantiation_invalid_name(self) -> None:
+        """Test instantiation with an invalid name."""
+        with pytest.raises(ValueError):
+            MidCircuitReset("invalid_name")
 
-    def test_circuit_integration(self):
+    def test_circuit_integration(self) -> None:
         """Test appending to circuit."""
         mcr = MidCircuitReset()
         qc = QuantumCircuit(1, 2)
         qc.append(mcr, [0])
         qc.append(mcr, [0])
         qc.reset(0)
-        self.assertIs(qc.data[0].operation, mcr)
-        self.assertIs(qc.data[1].operation, mcr)
+        assert qc.data[0].operation is mcr
+        assert qc.data[1].operation is mcr
 
-    def test_transpiler_compat_without(self):
+    def test_transpiler_compat_without(self) -> None:
         """Test that default pass manager FAILS if reset_2 is not in Target."""
         mcr = MidCircuitReset()
         backend = FakeVigoV2()
         pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
         qc = QuantumCircuit(1, 2)
         qc.append(mcr, [0])
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             _ = pm.run(qc)
 
-    def test_transpiler_compat_with(self):
+    def test_transpiler_compat_with(self) -> None:
         """Test default PM passes if reset_2 is in Target.
 
         Verifies it does not modify the instruction.
@@ -151,53 +143,53 @@ class TestMidCircuitReset(IBMTestCase):
         qc = QuantumCircuit(1, 2)
         qc.append(mcr, [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "reset_2")
+        assert transpiled.data[0].operation.name == "reset_2"
 
 
-class TestMeasureReset(IBMTestCase):
+class TestMeasureReset:
     """Test MeasureReset instruction."""
 
-    def test_instantiation(self):
+    def test_instantiation(self) -> None:
         """Test default instantiation."""
         mr = MeasureReset()
-        self.assertIs(mr.base_class, MeasureReset)
-        self.assertIsInstance(mr, Instruction)
-        self.assertEqual(mr.name, "measure_reset")
-        self.assertEqual(mr.num_qubits, 1)
-        self.assertEqual(mr.num_clbits, 1)
+        assert mr.base_class is MeasureReset
+        assert isinstance(mr, Instruction)
+        assert mr.name == "measure_reset"
+        assert mr.num_qubits == 1
+        assert mr.num_clbits == 1
 
-    def test_instantiation_name(self):
+    def test_instantiation_name(self) -> None:
         """Test instantiation with custom name."""
-        with self.subTest("measure_reset_2"):
-            mr = MeasureReset("measure_reset_2")
-            self.assertIs(mr.base_class, MeasureReset)
-            self.assertIsInstance(mr, Instruction)
-            self.assertEqual(mr.name, "measure_reset_2")
-            self.assertEqual(mr.num_qubits, 1)
-            self.assertEqual(mr.num_clbits, 1)
+        mr = MeasureReset("measure_reset_2")
+        assert mr.base_class is MeasureReset
+        assert isinstance(mr, Instruction)
+        assert mr.name == "measure_reset_2"
+        assert mr.num_qubits == 1
+        assert mr.num_clbits == 1
 
-        with self.subTest("invalid_name"):
-            with self.assertRaises(ValueError):
-                MeasureReset("invalid_name")
+    def test_instantiation_invalid_name(self) -> None:
+        """Test instantiation with an invalid name."""
+        with pytest.raises(ValueError):
+            MeasureReset("invalid_name")
 
-    def test_circuit_integration(self):
+    def test_circuit_integration(self) -> None:
         """Test appending to circuit."""
         mr = MeasureReset()
         qc = QuantumCircuit(1, 1)
         qc.append(mr, [0], [0])
-        self.assertIs(qc.data[0].operation, mr)
+        assert qc.data[0].operation is mr
 
-    def test_transpiler_compat_without(self):
+    def test_transpiler_compat_without(self) -> None:
         """Test that default pass manager FAILS if measure_reset is not in Target."""
         mr = MeasureReset()
         backend = FakeVigoV2()
         pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
         qc = QuantumCircuit(1, 1)
         qc.append(mr, [0], [0])
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             _ = pm.run(qc)
 
-    def test_transpiler_compat_with(self):
+    def test_transpiler_compat_with(self) -> None:
         """Test default PM passes if measure_reset is in Target.
 
         Verifies it does not modify the instruction.
@@ -209,4 +201,4 @@ class TestMeasureReset(IBMTestCase):
         qc = QuantumCircuit(1, 1)
         qc.append(mr, [0], [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "measure_reset")
+        assert transpiled.data[0].operation.name == "measure_reset"

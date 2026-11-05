@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 
     from qiskit.primitives.containers import PrimitiveResult
 
-    from ...results.noise_learner_v3 import NoiseLearnerV3Result
+    from ...results.noise_learner_v3 import NoiseLearnerV3Results
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class ExecutorResultDecoder(ResultDecoder):
     @classmethod
     def decode(
         cls, raw_result: str
-    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Result:
+    ) -> QuantumProgramResult | PrimitiveResult | NoiseLearnerV3Results:
         """Decode raw json to result type."""
         decoded: dict[str, str] = super().decode(raw_result)
 
@@ -119,7 +119,7 @@ class BaseClientSideResultDecoder(ResultDecoder):
             return semantic_role == cls.SEMANTIC_ROLE
 
     @classmethod
-    def decode(cls, result: QuantumProgramResult) -> PrimitiveResult | NoiseLearnerV3Result:
+    def decode(cls, result: QuantumProgramResult) -> PrimitiveResult | NoiseLearnerV3Results:
         """Decode a QuantumProgramResult into the result type."""
         if not isinstance(result.passthrough_data, dict):
             raise ValueError("Expected passthrough data to be of dict-like format.")

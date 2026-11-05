@@ -12,8 +12,12 @@
 
 """Tests for client-side Sampler."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from ddt import data, ddt
+import pytest
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -21,25 +25,22 @@ from qiskit_ibm_runtime.executor_sampler import Sampler
 from qiskit_ibm_runtime.options_models import SamplerOptions
 
 from ..utils import make_mirror_circuit_with_phases
-from .case import IBMIntegrationTestCase
+
+if TYPE_CHECKING:
+    from .dependencies import Dependencies
 
 
-@ddt
-class TestSampler(IBMIntegrationTestCase):
+class TestSampler:
     """Test client-side Sampler."""
 
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-        self.backend = self.service.backend(self.dependencies.qpu)
-
-        self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
-
-    @data(True, False)
-    def test_sampler(self, twirling):
+    @pytest.mark.parametrize("twirling", [True, False])
+    def test_sampler(self, twirling: bool, dependencies: Dependencies) -> None:
         """Test sampler by submitting a couple of parametric circuits."""
-        circuit = make_mirror_circuit_with_phases(self.backend)
-        isa_circuit = self.pm.run(circuit)
+        backend = dependencies.service.backend(dependencies.qpu)
+        pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+
+        circuit = make_mirror_circuit_with_phases(backend)
+        isa_circuit = pass_manager.run(circuit)
 
         shapes = [(5, 4), (3,)]
         num_parameters = isa_circuit.num_parameters
@@ -54,17 +55,17 @@ class TestSampler(IBMIntegrationTestCase):
         options.twirling.enable_gates = twirling
         options.default_shots = 1000
 
-        sampler = Sampler(self.backend, options)
+        sampler = Sampler(backend, options)
         job = sampler.run(pubs)
 
         results = job.result()
 
-        self.assertIsInstance(results, PrimitiveResult)
-        self.assertIsInstance(results.metadata, dict)
-        self.assertEqual(len(results), 2)
+        assert isinstance(results, PrimitiveResult)
+        assert isinstance(results.metadata, dict)
+        assert len(results) == 2
 
         for result, shape in zip(results, shapes):
-            self.assertEqual(result.data.meas.shape, shape)
+            assert result.data.meas.shape == shape
 
-        self.assertEqual(results[0].metadata["circuit_metadata"], {"list": [1, 2, 3]})
-        self.assertEqual(results[1].metadata["circuit_metadata"], {"tuple": [1, 2, 3]})
+        assert results[0].metadata["circuit_metadata"] == {"list": [1, 2, 3]}
+        assert results[1].metadata["circuit_metadata"] == {"tuple": [1, 2, 3]}

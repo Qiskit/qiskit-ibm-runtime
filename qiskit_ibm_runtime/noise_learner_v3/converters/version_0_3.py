@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
     from ...results.noise_learner_v3 import NoiseLearnerV3Results
 
-EXECUTION_FIELDS = {"init_qubits", "rep_delay"}
+EXECUTION_FIELDS = frozenset({"init_qubits", "rep_delay"})
 """Fields that belong to ``options.execution`` in user-land, but in ``options`` in schemas."""
 
 
@@ -73,6 +73,7 @@ def noise_learner_v3_inputs_from_0_3(
     # Convert `model.options` to dict, moving the fields that are part of `options.execution` from
     # top-level.
     top_level_dump = model.options.model_dump(exclude_none=True, exclude=EXECUTION_FIELDS)
+    top_level_dump.pop("post_selection", None)
     top_level_dump["execution"] = model.options.model_dump(
         exclude_none=True, include=EXECUTION_FIELDS
     )

@@ -52,7 +52,6 @@ Suboptions
    MeasureNoiseLearningOptions
    PecOptions
    PostCircuitBitFlipChecksOptions
-   PostSelectionOptions
    PreCircuitBitFlipChecksOptions
    ResilienceOptions
    SamplerExecutionOptions
@@ -67,6 +66,7 @@ from .bit_flip_checks import (
     PostCircuitBitFlipChecksOptions,
     PreCircuitBitFlipChecksOptions,
 )
+from .calibrator import CalibratorOptions
 from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment import EnvironmentOptions
 from .estimator import EstimatorOptions
@@ -75,7 +75,6 @@ from .executor import ExecutorOptions
 from .measure_noise_learning import MeasureNoiseLearningOptions
 from .noise_learner_v3 import NoiseLearnerV3Options
 from .pec import PecOptions
-from .post_selection import PostSelectionOptions
 from .resilience import ResilienceOptions
 from .sampler import SamplerOptions
 from .simulator import SimulatorOptions

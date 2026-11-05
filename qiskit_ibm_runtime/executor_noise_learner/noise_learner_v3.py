@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
+from ..quantum_program import QuantumProgram
 from .prepare import prepare
 
 if TYPE_CHECKING:
@@ -131,12 +132,13 @@ class NoiseLearnerV3:
         )
 
         # Set semantic role for post-processing dispatch
+        quantum_program = QuantumProgram.from_(quantum_program)
         quantum_program._semantic_role = "noise_learner_v3"
 
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
         logger.info(
-            "Submitting %d items%s to executor with %d total shots",
+            "Submitting %d item%s to executor with %d total shots",
             len(quantum_program.items),
             "s" if len(quantum_program.items) > 1 else "",
             quantum_program.shots * sum(item.size() for item in quantum_program.items),

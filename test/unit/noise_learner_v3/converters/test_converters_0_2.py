@@ -13,6 +13,7 @@
 """Tests the converters for the noise learner v3 model."""
 
 import numpy as np
+import pytest
 from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
@@ -26,13 +27,11 @@ from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_2 import (
 from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
-from ....ibm_test_case import IBMTestCase
 
-
-class TestConverters(IBMTestCase):
+class TestConverters:
     """Tests the converters for the noise learner v3 model."""
 
-    def test_converting_inputs(self):
+    def test_converting_inputs(self) -> None:
         """Tests converting inputs."""
         circuit = QuantumCircuit(3)
         with circuit.box():
@@ -52,9 +51,9 @@ class TestConverters(IBMTestCase):
         encoded = noise_learner_v3_inputs_to_0_2(instructions, options)
         decoded = noise_learner_v3_inputs_from_0_2(encoded)
 
-        self.assertEqual(decoded, (instructions, options))
+        assert decoded == (instructions, options)
 
-    def test_converting_results(self):
+    def test_converting_results(self) -> None:
         """Tests converting results."""
         generators = [
             QubitSparsePauliList.from_list(["IX", "XX"]),
@@ -67,7 +66,7 @@ class TestConverters(IBMTestCase):
             "learning_protocol": "trex",
             "post_selection": {"fraction_kept": 1, "success_rates": {0: 0.1, 1: 0.9}},
         }
-        result0 = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadatum0)
+        result0 = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadatum0)  # type: ignore[arg-type]
 
         metadatum1 = {
             "learning_protocol": "lindblad",
@@ -76,18 +75,18 @@ class TestConverters(IBMTestCase):
                 "success_rates": {0: {0: 0.1, 1: 0.9}, 4: {0: 0.1, 1: 0.9}},
             },
         }
-        result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)
+        result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)  # type: ignore[arg-type]
         results = NoiseLearnerV3Results([result0, result1])
 
         encoded = noise_learner_v3_result_to_0_2(results)
         decoded = noise_learner_v3_result_from_0_2(encoded)
         for datum_in, datum_out in zip(results.data, decoded.data):
-            self.assertEqual(datum_in._generators, datum_out._generators)
-            self.assertTrue(np.allclose(datum_in._rates, datum_out._rates))
-            self.assertTrue(np.allclose(datum_in._rates_std, datum_out._rates_std))
-            self.assertEqual(datum_in.metadata, datum_out.metadata)
+            assert datum_in._generators == datum_out._generators
+            assert np.allclose(datum_in._rates, datum_out._rates)
+            assert np.allclose(datum_in._rates_std, datum_out._rates_std)
+            assert datum_in.metadata == datum_out.metadata
 
-    def test_converting_invalid_results(self):
+    def test_converting_invalid_results(self) -> None:
         """Test that converting results raises when results are invalid."""
         generators = [
             QubitSparsePauliList.from_list(["IX", "XX"]),
@@ -105,11 +104,11 @@ class TestConverters(IBMTestCase):
                 "post_selection": {"fraction_kept": -0.3, "success_rates": {0: 0.1, 1: 0.9}},
             },
         ]:
-            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
-            results = NoiseLearnerV3Results([result], metadata={"key": "value"})
-            with self.assertRaisesRegex(
+            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)  # type: ignore[arg-type]
+            results = NoiseLearnerV3Results([result], metadata={"key": "value"})  # type: ignore[arg-type]
+            with pytest.raises(
                 ValidationError,
-                "1 validation error for NoiseLearnerV3ResultModel",
+                match="1 validation error for NoiseLearnerV3ResultModel",
             ):
                 noise_learner_v3_result_to_0_2(results).model_dump()
 
@@ -126,9 +125,9 @@ class TestConverters(IBMTestCase):
                 "post_selection": {"fraction_kept": 0.3, "success_rates": {0: {0: 0.1, 1: 0.9}}},
             },
         ]:
-            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
+            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)  # type: ignore[arg-type]
             results = NoiseLearnerV3Results([result], metadata={"key": "value"})
-            with self.assertRaisesRegex(
-                ValidationError, "1 validation error for NoiseLearnerV3ResultModel"
+            with pytest.raises(
+                ValidationError, match="1 validation error for NoiseLearnerV3ResultModel"
             ):
                 noise_learner_v3_result_to_0_2(results).model_dump()

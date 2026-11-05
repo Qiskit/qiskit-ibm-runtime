@@ -12,9 +12,12 @@
 
 """Tests for client-side Sampler utility functions."""
 
-from copy import deepcopy
+from __future__ import annotations
 
-from ddt import data, ddt
+from copy import deepcopy
+from typing import Literal
+
+import pytest
 from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.circuit import BoxOp
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -24,8 +27,6 @@ from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.utils import box_circuit, extract_shots_from_pubs
-
-from ...ibm_test_case import IBMTestCase
 
 
 def assert_circuits_equal_ignoring_annotations(
@@ -71,7 +72,7 @@ def assert_circuits_annotations_are_equal(
         for ann1 in annotations_1:
             # Look up the matching annotation in circuit_2 by type (order-independent).
             ann2 = get_annotation(instr2.operation, type(ann1))
-            assert ann2 is not None, f"circuit_2 box is missing a {type(ann1).__name__} annotation"
+            assert ann2 is not None
             if isinstance(ann1, (ChangeBasis, InjectNoise)):
                 # ref is a runtime-unique identifier; normalise ann2's ref to ann1's before
                 # comparing so only the semantically meaningful fields are checked.
@@ -86,10 +87,10 @@ def assert_circuits_annotations_are_equal(
                 assert ann1 == ann2
 
 
-class TestExtractShotsFromPubs(IBMTestCase):
+class TestExtractShotsFromPubs:
     """Tests for extract_shots_from_pubs function."""
 
-    def test_single_pub_with_shots(self):
+    def test_single_pub_with_shots(self) -> None:
         """Test extracting shots from a single pub with shots specified."""
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
@@ -99,9 +100,9 @@ class TestExtractShotsFromPubs(IBMTestCase):
         pub = SamplerPub.coerce(circuit, shots=1024)
         shots = extract_shots_from_pubs([pub])
 
-        self.assertEqual(shots, 1024)
+        assert shots == 1024
 
-    def test_single_pub_with_default_shots(self):
+    def test_single_pub_with_default_shots(self) -> None:
         """Test extracting shots using default_shots when pub doesn't specify."""
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
@@ -110,9 +111,9 @@ class TestExtractShotsFromPubs(IBMTestCase):
         pub = SamplerPub.coerce(circuit)  # No shots specified
         shots = extract_shots_from_pubs([pub], default_shots=2048)
 
-        self.assertEqual(shots, 2048)
+        assert shots == 2048
 
-    def test_multiple_pubs_same_shots(self):
+    def test_multiple_pubs_same_shots(self) -> None:
         """Test extracting shots from multiple pubs with same shots value."""
         circuit1 = QuantumCircuit(2, 2)
         circuit1.h(0)
@@ -128,9 +129,9 @@ class TestExtractShotsFromPubs(IBMTestCase):
         ]
         shots = extract_shots_from_pubs(pubs)
 
-        self.assertEqual(shots, 1024)
+        assert shots == 1024
 
-    def test_multiple_pubs_mixed_shots_sources(self):
+    def test_multiple_pubs_mixed_shots_sources(self) -> None:
         """Test multiple pubs where some use default_shots and some specify shots."""
         circuit1 = QuantumCircuit(1, 1)
         circuit1.h(0)
@@ -146,9 +147,9 @@ class TestExtractShotsFromPubs(IBMTestCase):
         ]
         shots = extract_shots_from_pubs(pubs, default_shots=512)
 
-        self.assertEqual(shots, 512)
+        assert shots == 512
 
-    def test_mismatched_shots_raises_error(self):
+    def test_mismatched_shots_raises_error(self) -> None:
         """Test that mismatched shots across pubs raises an error."""
         circuit1 = QuantumCircuit(1, 1)
         circuit1.h(0)
@@ -163,14 +164,14 @@ class TestExtractShotsFromPubs(IBMTestCase):
             SamplerPub.coerce(circuit2, shots=2048),
         ]
 
-        with self.assertRaises(IBMInputValueError) as context:
+        with pytest.raises(IBMInputValueError) as context:
             extract_shots_from_pubs(pubs)
 
-        self.assertIn("same number of shots", str(context.exception))
-        self.assertIn("1024", str(context.exception))
-        self.assertIn("2048", str(context.exception))
+        assert "same number of shots" in str(context.value)
+        assert "1024" in str(context.value)
+        assert "2048" in str(context.value)
 
-    def test_no_shots_specified_raises_error(self):
+    def test_no_shots_specified_raises_error(self) -> None:
         """Test that missing shots raises an error."""
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
@@ -178,12 +179,12 @@ class TestExtractShotsFromPubs(IBMTestCase):
 
         pub = SamplerPub.coerce(circuit)  # No shots
 
-        with self.assertRaises(IBMInputValueError) as context:
+        with pytest.raises(IBMInputValueError) as context:
             extract_shots_from_pubs([pub], default_shots=None)
 
-        self.assertIn("Shots must be specified", str(context.exception))
+        assert "Shots must be specified" in str(context.value)
 
-    def test_pub_shots_overrides_default(self):
+    def test_pub_shots_overrides_default(self) -> None:
         """Test that pub.shots takes precedence over default_shots."""
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
@@ -193,21 +194,20 @@ class TestExtractShotsFromPubs(IBMTestCase):
         shots = extract_shots_from_pubs([pub], default_shots=2048)
 
         # Should use pub.shots (1024), not default_shots (2048)
-        self.assertEqual(shots, 1024)
+        assert shots == 1024
 
-    def test_empty_pubs_returns_default_shots(self):
+    def test_empty_pubs_returns_default_shots(self) -> None:
         """Test that empty pubs list returns default_shots."""
         shots = extract_shots_from_pubs([], default_shots=4096)
 
-        self.assertEqual(shots, 4096)
+        assert shots == 4096
 
 
-@ddt
-class TestBoxCircuit(IBMTestCase):
+class TestBoxCircuit:
     """Tests for ``box_circuit``."""
 
-    @data(True, False)
-    def test_enable_gates(self, enable_gates):
+    @pytest.mark.parametrize("enable_gates", [True, False])
+    def test_enable_gates(self, enable_gates: bool) -> None:
         """Tests for the ``enable_gates`` argument."""
         circuit = QuantumCircuit(3)
         circuit.h(0)
@@ -239,8 +239,8 @@ class TestBoxCircuit(IBMTestCase):
         assert_circuits_annotations_are_equal(circuit_out, expected_circuit)
         assert_circuits_equal_ignoring_annotations(circuit_out, expected_circuit)
 
-    @data("change_basis", "all")
-    def test_measure_annotations(self, measure_annotations):
+    @pytest.mark.parametrize("measure_annotations", ["change_basis", "all"])
+    def test_measure_annotations(self, measure_annotations: str) -> None:
         """Tests for the ``measure_annotations`` argument."""
         circuit = QuantumCircuit(3)
         circuit.h(0)
@@ -272,8 +272,10 @@ class TestBoxCircuit(IBMTestCase):
         assert_circuits_equal_ignoring_annotations(circuit_out, expected_circuit)
         assert_circuits_annotations_are_equal(circuit_out, expected_circuit)
 
-    @data("active", "active_accum", "active_circuit", "all")
-    def test_twirling_strategy(self, twirling_strategy):
+    @pytest.mark.parametrize(
+        "twirling_strategy", ["active", "active_accum", "active_circuit", "all"]
+    )
+    def test_twirling_strategy(self, twirling_strategy: str) -> None:
         """Tests for the ``twirling_strategy`` argument."""
         circuit = QuantumCircuit(3)
         circuit.h(0)
@@ -305,8 +307,8 @@ class TestBoxCircuit(IBMTestCase):
         assert_circuits_annotations_are_equal(circuit_out, expected_circuit)
         assert_circuits_equal_ignoring_annotations(circuit_out, expected_circuit)
 
-    @data(True, False)
-    def test_inject_noise(self, inject_noise):
+    @pytest.mark.parametrize("inject_noise", [True, False])
+    def test_inject_noise(self, inject_noise: bool) -> None:
         """Tests for the ``inject_noise`` argument."""
         circuit = QuantumCircuit(3)
         circuit.h(0)
@@ -341,8 +343,10 @@ class TestBoxCircuit(IBMTestCase):
         assert_circuits_annotations_are_equal(circuit_out, expected_circuit)
         assert_circuits_equal_ignoring_annotations(circuit_out, expected_circuit)
 
-    @data("none", "unique_box", "unique_instance", "noise_ref")
-    def test_add_tags(self, add_tags):
+    @pytest.mark.parametrize("add_tags", ["none", "unique_box", "unique_instance", "noise_ref"])
+    def test_add_tags(
+        self, add_tags: Literal["none", "unique_box", "unique_instance", "noise_ref"]
+    ) -> None:
         """Tests for the ``add_tags`` argument.
 
         Checks that the circuit produced by ``box_circuit`` matches the expected circuit
@@ -391,15 +395,6 @@ class TestBoxCircuit(IBMTestCase):
             instr for instr in box_instructions if get_annotation(instr.operation, Tag) is not None
         ]
         if add_tags in ("none", "noise_ref"):
-            self.assertEqual(
-                len(tagged_boxes),
-                0,
-                msg=f"Expected no tagged boxes for add_tags={add_tags!r} (without inject_noise), "
-                f"but found {len(tagged_boxes)}.",
-            )
+            assert len(tagged_boxes) == 0
         else:
-            self.assertGreater(
-                len(tagged_boxes),
-                0,
-                msg=f"Expected at least one tagged box for add_tags={add_tags!r}, but found none.",
-            )
+            assert len(tagged_boxes) > 0

@@ -12,6 +12,7 @@
 
 """Tests for XSlowGate instruction."""
 
+import pytest
 from qiskit import QuantumCircuit, generate_preset_pass_manager
 from qiskit.circuit import Gate
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -20,41 +21,39 @@ from qiskit.transpiler.exceptions import TranspilerError
 from qiskit_ibm_runtime.circuit.library import XSlowGate
 from qiskit_ibm_runtime.fake_provider import FakeVigoV2
 
-from ...ibm_test_case import IBMTestCase
 
-
-class TestXSlowGate(IBMTestCase):
+class TestXSlowGate:
     """Test XSlowGate instruction."""
 
-    def test_instantiation(self):
+    def test_instantiation(self) -> None:
         """Test default instantiation."""
         gate = XSlowGate()
-        self.assertIs(gate.base_class, XSlowGate)
-        self.assertIsInstance(gate, Gate)
-        self.assertEqual(gate.name, "xslow")
-        self.assertEqual(gate.num_qubits, 1)
-        self.assertEqual(gate.num_clbits, 0)
+        assert gate.base_class is XSlowGate
+        assert isinstance(gate, Gate)
+        assert gate.name == "xslow"
+        assert gate.num_qubits == 1
+        assert gate.num_clbits == 0
 
-    def test_circuit_integration(self):
+    def test_circuit_integration(self) -> None:
         """Test appending XSlowGate to a circuit."""
         gate = XSlowGate()
         qc = QuantumCircuit(2)
         qc.append(gate, [0])
         qc.append(gate, [1])
-        self.assertIs(qc.data[0].operation, gate)
-        self.assertIs(qc.data[1].operation, gate)
+        assert qc.data[0].operation is gate
+        assert qc.data[1].operation is gate
 
-    def test_transpiler_compat_without(self):
+    def test_transpiler_compat_without(self) -> None:
         """Test that the default pass manager fails if xslow is not inthe target."""
         gate = XSlowGate()
         backend = FakeVigoV2()
         pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
         qc = QuantumCircuit(1)
         qc.append(gate, [0])
-        with self.assertRaises(TranspilerError):
+        with pytest.raises(TranspilerError):
             pm.run(qc)
 
-    def test_transpiler_compat_with(self):
+    def test_transpiler_compat_with(self) -> None:
         """Test that the default pass manager passes if xslow is in the target.
 
         Test also that the pass manager does not modify the instruction.
@@ -66,4 +65,4 @@ class TestXSlowGate(IBMTestCase):
         qc = QuantumCircuit(1)
         qc.append(gate, [0])
         transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "xslow")
+        assert transpiled.data[0].operation.name == "xslow"

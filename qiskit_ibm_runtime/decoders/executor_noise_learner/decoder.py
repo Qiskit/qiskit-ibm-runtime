@@ -21,7 +21,7 @@ from ..executor.decoder import BaseClientSideResultDecoder
 from .post_processor_v0_1 import noise_learner_v3_post_processor_v0_1
 
 if TYPE_CHECKING:
-    from ...results.noise_learner_v3 import NoiseLearnerV3Result
+    from ...results.noise_learner_v3 import NoiseLearnerV3Results
     from ...results.quantum_program import QuantumProgramResult
 
 
@@ -38,6 +38,6 @@ class ClientSideNoiseLearnerResultDecoder(BaseClientSideResultDecoder):
     }
 
     @classmethod
-    def decode(cls, result: QuantumProgramResult) -> NoiseLearnerV3Result:
+    def decode(cls, result: QuantumProgramResult) -> NoiseLearnerV3Results:
         """Decode a QuantumProgramResult into the result type."""
         return super().decode(result)

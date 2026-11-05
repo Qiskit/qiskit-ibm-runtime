@@ -25,7 +25,7 @@ jobs:
       # avoid cancellation of in-progress jobs if any matrix job fails
       fail-fast: false
       matrix:
-        python-version: [ "3.10" ]
+        python-version: [ "3.11" ]
         os: [ "ubuntu-latest" ]
         environment: ["ibm-cloud-production", "ibm-cloud-staging" ]
     environment: ${{ matrix.environment }}
@@ -38,9 +38,6 @@ jobs:
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
       PYTEST_ADDOPTS: |
         -v -s --durations=10
-        -W 'ignore:The EstimatorV2 class is deprecated:DeprecationWarning'
-        -W 'ignore:The SamplerV2 class is deprecated:DeprecationWarning'
-        -W 'ignore:The NoiseLearner class is deprecated:DeprecationWarning'
     steps:
       - uses: actions/checkout@v6
         with:
