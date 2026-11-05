@@ -18,6 +18,8 @@ import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import pytest
+
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 if TYPE_CHECKING:
@@ -36,12 +38,17 @@ class Dependencies:
     url: str
 
 
-def integration_test_dependencies(init_service: bool = True) -> Dependencies:
+def integration_test_dependencies(
+    init_service: bool = True, skip_if_missing: bool = False
+) -> Dependencies:
     """Return the dependencies of an integration test, from the environment configuration.
 
     Args:
         init_service: whether to initialize the `QiskitRuntimeService` from the environment
             configuration. When `False`, the returned dependencies have no service.
+        skip_if_missing: whether to skip the running test when the environment configuration is
+            incomplete. When `False`, a `RuntimeError` is raised instead. Meant for tests that run
+            outside the integration tests, where the configuration is not guaranteed to exist.
 
     Returns:
         The dependencies of an integration test.
@@ -52,12 +59,15 @@ def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     url = os.getenv("QISKIT_IBM_URL")
     instance = os.getenv("QISKIT_IBM_INSTANCE")
 
-    if not token:
-        raise RuntimeError("QISKIT_IBM_TOKEN is not set.")
-    if not url:
-        raise RuntimeError("QISKIT_IBM_URL is not set.")
-    if not instance:
-        raise RuntimeError("QISKIT_IBM_INSTANCE is not set.")
+    for name, value in (
+        ("QISKIT_IBM_TOKEN", token),
+        ("QISKIT_IBM_URL", url),
+        ("QISKIT_IBM_INSTANCE", instance),
+    ):
+        if not value:
+            if skip_if_missing:
+                pytest.skip(f"{name} is not set.")
+            raise RuntimeError(f"{name} is not set.")
 
     service = (
         QiskitRuntimeService(channel=channel, token=token, url=url, instance=instance)
