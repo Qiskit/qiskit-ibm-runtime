@@ -27,13 +27,14 @@ from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
 
-from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, Session
+from qiskit_ibm_runtime import IBMInputValueError, Session
 from qiskit_ibm_runtime.fake_provider import (
     FakeCusco,
     FakeFractionalBackend,
     FakeSherbrooke,
     FakeVigoV2,
 )
+from qiskit_ibm_runtime.options import SamplerOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.server_side import SamplerV2
 
