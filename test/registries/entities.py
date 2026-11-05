@@ -182,6 +182,9 @@ class Job:
     statuses_reason: dict[JobStatus, tuple[int, str]] = field(default_factory=dict)
     """Reason code and reason message for each job status."""
 
+    calibration_id: str | None = None
+    """Calibration ID specified for this job, if any."""
+
     def __post_init__(self) -> None:
         if self.usage is None:
             self.usage = {

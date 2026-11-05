@@ -86,6 +86,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         tags: Tags assigned to the job.
         version: Primitive version.
         private: Marks job as private.
+        calibration_id: Calibration ID specified for this job, if any.
     """
 
     JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
@@ -105,6 +106,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         tags: list | None = None,
         version: int | None = None,
         private: bool | None = False,
+        calibration_id: str | None = None,
     ) -> None:
         BasePrimitiveJob.__init__(self, job_id=job_id)
         self._backend = backend
@@ -124,6 +126,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
         self._queue_info = None
         self._private = private
         self._status: JobStatus = "INITIALIZING"
+        self._calibration_id = calibration_id
 
         # Store the list of decoders for this job.
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
@@ -231,6 +234,11 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus]):
     def instance(self) -> str | None:
         """Return the IBM Cloud instance CRN."""
         return self._backend._instance
+
+    @property
+    def calibration_id(self) -> str | None:
+        """Return the calibration ID specified for this job, if any."""
+        return self._calibration_id
 
     def status(self) -> JobStatus:
         """Return the status of the job.
