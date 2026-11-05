@@ -731,7 +731,9 @@ class TestPrepareLayerTagCorrespondence:
     @pytest.mark.parametrize(
         "enable_gates, enable_measure", [(True, True), (True, False), (False, True)]
     )
-    @pytest.mark.parametrize("scenario", SAMPLER_CIRCUIT_SCENARIOS, ids=lambda s: s.label)
+    @pytest.mark.parametrize(
+        "scenario", SAMPLER_CIRCUIT_SCENARIOS, ids=lambda scenario: scenario.label
+    )
     def test_layer_tag_correspondence_twirling_modes(
         self,
         enable_gates: bool,
@@ -770,7 +772,9 @@ class TestPrepareLayerTagCorrespondence:
     @pytest.mark.parametrize(
         "twirling_strategy", ["active", "active-accum", "active-circuit", "all"]
     )
-    @pytest.mark.parametrize("scenario", SAMPLER_CIRCUIT_SCENARIOS, ids=lambda s: s.label)
+    @pytest.mark.parametrize(
+        "scenario", SAMPLER_CIRCUIT_SCENARIOS, ids=lambda scenario: scenario.label
+    )
     def test_layer_tag_correspondence_strategies(
         self,
         twirling_strategy: Literal["active", "active-accum", "active-circuit", "all"],
