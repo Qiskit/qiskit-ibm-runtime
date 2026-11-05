@@ -52,8 +52,12 @@ def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     url = os.getenv("QISKIT_IBM_URL")
     instance = os.getenv("QISKIT_IBM_INSTANCE")
 
-    if not token or not url or not instance:
-        raise RuntimeError("No integration test credentials available.")
+    if not token:
+        raise RuntimeError("QISKIT_IBM_TOKEN is not set.")
+    if not url:
+        raise RuntimeError("QISKIT_IBM_URL is not set.")
+    if not instance:
+        raise RuntimeError("QISKIT_IBM_INSTANCE is not set.")
 
     service = (
         QiskitRuntimeService(channel=channel, token=token, url=url, instance=instance)
