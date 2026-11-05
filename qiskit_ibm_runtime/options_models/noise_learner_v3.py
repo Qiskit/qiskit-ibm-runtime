@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""NoiseLearnerV3Options options."""
+"""Options for Noise Learner V3."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from .simulator import SimulatorOptions
 
 
 class NoiseLearnerV3Options(BaseOptionsModel):
-    """Options for :class:`.NoiseLearnerV3`."""
+    """Options for Noise Learner V3."""
 
     shots_per_randomization: Annotated[int, Field(ge=1)] = 128
     """The total number of shots to use per randomized learning circuit."""

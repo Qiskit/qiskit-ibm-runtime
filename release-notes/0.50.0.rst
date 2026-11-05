@@ -148,7 +148,7 @@ New Features
   * ``qiskit_ibm_runtime.results.QuantumProgramItemResult``
 
   (`3290 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3290>`__)
-- :class:`~.Executor` and :class:`~.NoiseLearnerV3` now have a ``mode`` property that returns the
+- :class:`~.Executor` and :class:`~qiskit_ibm_runtime.noise_learner.NoiseLearnerV3` now have a ``mode`` property that returns the
   execution mode used by those primitives. (`3333 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3333>`__)
 
 
