@@ -1,0 +1,3 @@
+Added a new experimental :class:`.Calibrator` program, which allows users to request that a backend be
+recalibrated. A calibrator can be initialized only inside a session. Its
+:meth:`.Calibrator.run` method submits a calibration request for a backend.
