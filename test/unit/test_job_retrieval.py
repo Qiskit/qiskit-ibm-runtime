@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# Modified in 2026 to cover exhausted jobs pagination.
 
 """Tests for runtime job retrieval."""
 
@@ -22,11 +23,27 @@ import pytest
 from qiskit_ibm_runtime.ibm_backend import IBMBackend, IBMRetiredBackend
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 
-from ..registries import Backend, Job, OneInstanceNoBackendsRegistry
+from ..registries import Backend, DefaultRegistry, Job, OneInstanceNoBackendsRegistry
 
 if TYPE_CHECKING:
+    from requests import PreparedRequest
+
     from ..registries.base import BaseRegistry
     from ..registries.entities import JobStatus
+
+
+class BoundedJobsRegistry(DefaultRegistry):
+    """Fail instead of hanging if the client repeatedly requests an exhausted page."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.jobs_requests = 0
+
+    def callback_jobs_get(self, request: PreparedRequest) -> tuple[int, dict[str, str], str]:
+        """Serve real registry pages with a bound on repeated requests."""
+        self.jobs_requests += 1
+        assert self.jobs_requests <= 2, "retried an exhausted jobs page"
+        return super().callback_jobs_get(request)
 
 
 def populate_jobs(registry: BaseRegistry) -> tuple[int, int]:
@@ -93,6 +110,20 @@ class TestRetrieveJobs:
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(skip=4)
         assert 1 == len(jobs)
+
+    @pytest.mark.registry(registry_class=BoundedJobsRegistry)
+    @pytest.mark.parametrize("count", [0, 2, 3])
+    @pytest.mark.parametrize("limit", [None, 10])
+    def test_jobs_skip_exhausted(
+        self, count: int, limit: int | None, registry: BoundedJobsRegistry
+    ) -> None:
+        """Return an empty page when skip reaches or passes the filtered count."""
+        for i in range(count):
+            registry.add_job(Job(str(i), "common_backend"), "a")
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+        assert service.jobs(skip=3, limit=limit) == []
+        assert registry.jobs_requests == 1
 
     def test_backend_instance_warnings(
         self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
