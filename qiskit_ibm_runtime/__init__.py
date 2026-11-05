@@ -221,14 +221,12 @@ from .executor_sampler import SamplerV2, SamplerV2 as Sampler
 from .noise_learner import NoiseLearner, NoiseLearner as NoiseLearnerV2
 from .noise_learner_v3 import NoiseLearnerV3
 from .calibrator import Calibrator
-from .options import (
+from .options_models import (
     EstimatorOptions,
-    NoiseLearnerOptions,
+    ExecutorOptions,
+    NoiseLearnerV3Options,
     SamplerOptions,
-    OptionsV2,
-    OptionsV2 as Options,
 )
-from .options_models import ExecutorOptions, NoiseLearnerV3Options
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
