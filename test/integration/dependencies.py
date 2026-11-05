@@ -18,8 +18,6 @@ import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import pytest
-
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 if TYPE_CHECKING:
@@ -54,8 +52,8 @@ def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     url = os.getenv("QISKIT_IBM_URL")
     instance = os.getenv("QISKIT_IBM_INSTANCE")
 
-    if not token or not url:
-        pytest.skip("No integration test credentials available.")
+    if not token or not url or not instance:
+        raise RuntimeError("No integration test credentials available.")
 
     service = (
         QiskitRuntimeService(channel=channel, token=token, url=url, instance=instance)

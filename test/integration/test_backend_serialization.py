@@ -31,10 +31,7 @@ if TYPE_CHECKING:
 
 def backend_names() -> list[str]:
     """Return the names of the backends to be tested."""
-    try:
-        dependencies = integration_test_dependencies()
-    except pytest.skip.Exception:
-        return []
+    dependencies = integration_test_dependencies()
 
     return [
         backend.name
