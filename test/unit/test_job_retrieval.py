@@ -66,6 +66,22 @@ class TestRetrieveJobs:
         assert job.job_id() == "my_job"
         assert job.primitive_id == "sampler"
 
+    def test_retrieve_jobs_with_calibration_id(self, registry: BaseRegistry) -> None:
+        """Test retrieving jobs with calibration IDs."""
+        registry.add_job(Job("job_1", "common_backend"), "a")
+        registry.add_job(
+            Job("job_2", "common_backend", calibration_id="job_2_calibration"),
+            "a",
+        )
+
+        service = QiskitRuntimeService(token="my_token", instance="a")
+        jobs = {job.job_id(): job for job in service.jobs()}
+
+        assert jobs["job_1"].calibration_id is None
+        assert jobs["job_2"].calibration_id == "job_2_calibration"
+        assert service.job("job_1").calibration_id is None
+        assert service.job("job_2").calibration_id == "job_2_calibration"
+
     def test_jobs_no_limit(self, registry: BaseRegistry) -> None:
         """Test retrieving jobs without limit."""
         for i in range(25):
