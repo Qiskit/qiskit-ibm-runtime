@@ -89,33 +89,30 @@ class ConvertToMidCircuitResetAndMeasure(TransformationPass):
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         """Run the pass on a dag."""
-        if self.mcm_name != "measure":
-            final_measure_nodes = set(calc_final_ops(dag, {"measure"}))
-            for node in dag.op_nodes(Measure):
-                if node not in final_measure_nodes:
-                    node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
-                    if self.target.instruction_supported(self.mcm_name, node_indices):
-                        mid_circ_measure = self.target.operation_from_name(self.mcm_name)
-                        dag.substitute_node(node, mid_circ_measure, inplace=True)
-                    else:
-                        warnings.warn(
-                            f"'{self.mcm_name}' with qubits {node_indices} is not supported "
-                            f"by the given target."
-                        )
-
-        if self.mcr_name != "reset":
-            final_reset_nodes = set(calc_final_ops(dag, {"reset"}))
-            for node in dag.op_nodes(Reset):
-                if node not in final_reset_nodes:
-                    node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
-                    if self.target.instruction_supported(self.mcr_name, node_indices):
-                        mid_circ_reset = self.target.operation_from_name(self.mcr_name)
-                        dag.substitute_node(node, mid_circ_reset, inplace=True)
-                    else:
-                        warnings.warn(
-                            f"{self.mcr_name} with qubits {node_indices} is not supported "
-                            f"by the given target."
-                        )
+        if self.mcm_name != "measure" or self.mcr_name != "reset":
+            final_nodes = set(calc_final_ops(dag, {"measure", "reset"}))
+            for node in dag.op_nodes([Measure, Reset]):
+                if node not in final_nodes:
+                    if isinstance(node.op, Measure):
+                        node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+                        if self.target.instruction_supported(self.mcm_name, node_indices):
+                            mid_circ_measure = self.target.operation_from_name(self.mcm_name)
+                            dag.substitute_node(node, mid_circ_measure, inplace=True)
+                        else:
+                            warnings.warn(
+                                f"'{self.mcm_name}' with qubits {node_indices} is not supported "
+                                f"by the given target."
+                            )
+                    else:  # isinstance(node.op, Reset)
+                        node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+                        if self.target.instruction_supported(self.mcr_name, node_indices):
+                            mid_circ_reset = self.target.operation_from_name(self.mcr_name)
+                            dag.substitute_node(node, mid_circ_reset, inplace=True)
+                        else:
+                            warnings.warn(
+                                f"{self.mcr_name} with qubits {node_indices} is not supported "
+                                f"by the given target."
+                            )
 
         return dag
 
