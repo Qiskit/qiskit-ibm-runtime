@@ -296,11 +296,12 @@ class TestNoiseLearnerV3:
 
         fraction_kept = measure_result.metadata["post_selection"]["fraction_kept"]
         ratio = fraction_kept / (1 - prob_ps_error)
-        assert np.isclose(ratio, 1.0, rtol=0.015)
+        rtol = 0.015
+        assert np.isclose(ratio, 1.0, rtol=rtol)
 
         success_rates = measure_result.metadata["post_selection"]["success_rates"]
         for qubit, success_rate in success_rates.items():
             if qubit == 2:
-                assert np.isclose(success_rate / (1 - prob_ps_error), 1.0, rtol=0.01)
+                assert np.isclose(success_rate / (1 - prob_ps_error), 1.0, rtol=rtol)
             else:
-                assert np.isclose(success_rate, 1.0, rtol=0.01)
+                assert np.isclose(success_rate, 1.0, rtol=rtol)

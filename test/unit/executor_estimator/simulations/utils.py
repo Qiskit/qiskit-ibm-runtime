@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from qiskit.circuit import Parameter
+from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
@@ -33,6 +33,36 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
     from qiskit.providers import BackendV2
     from qiskit.transpiler.passmanager import StagedPassManager
+
+
+def widen_circuit(pub: EstimatorPubLike, target_width: int) -> EstimatorPubLike:
+    """Pad the circuit in a pub with idle qubits to reach ``target_width``.
+
+    The active qubits are placed on the low-index qubits (0 .. circuit.num_qubits-1);
+    the remaining qubits are left idle.  The observables are re-mapped to the wider
+    circuit so their qubit indices stay consistent.
+
+    Args:
+        pub: An estimator pub whose first element is the (already transpiled / ISA) circuit.
+            May be a 2- or 3-tuple of (circuit, observables[, parameters]).
+        target_width: Total number of qubits in the returned circuit.
+            Must be strictly greater than the circuit's current ``num_qubits``.
+
+    Returns:
+        A pub tuple with the widened circuit and re-mapped observables.
+    """
+    circuit, observables, *rest = pub
+    if target_width <= circuit.num_qubits:
+        raise ValueError(
+            f"target_width ({target_width}) must be greater than "
+            f"circuit.num_qubits ({circuit.num_qubits})."
+        )
+    wide = QuantumCircuit(target_width)
+    wide.compose(circuit, qubits=list(range(circuit.num_qubits)), inplace=True)
+    wide_observables = ObservablesArray.coerce(observables).apply_layout(
+        circuit.layout, num_qubits=target_width
+    )
+    return (wide, wide_observables, *rest)
 
 
 def create_estimator_test_data(

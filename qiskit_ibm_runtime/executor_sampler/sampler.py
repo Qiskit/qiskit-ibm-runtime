@@ -161,8 +161,6 @@ class Sampler(BaseSamplerV2):
         layers = find_unique_layers(
             pubs=coerced_pubs,
             twirling_options=options.twirling,
-            measure_noise_learning=None,
-            inject_noise=False,
             add_tags=True,
         )
         box_types = get_args(BoxType) if types == "all" else ("gates",)
