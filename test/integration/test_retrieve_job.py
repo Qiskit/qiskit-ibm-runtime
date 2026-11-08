@@ -121,7 +121,7 @@ class TestIntegrationRetrieveJob:
         for _ in range(3):
             jobs.append(submit_bell_job())
 
-        rjobs = service.jobs(limit=2, program_id="sampler")
+        rjobs = service.jobs(limit=2, program_id="executor")
         assert len(rjobs) == 2
 
     def test_retrieve_pending_jobs(
