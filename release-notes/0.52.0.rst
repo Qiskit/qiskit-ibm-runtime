@@ -1,0 +1,65 @@
+0.52.0 (2026-11-09)
+===================
+
+Upgrade Notes
+-------------
+
+- The top-level imports:
+  * ``from qiskit-ibm-runtime import Sampler``
+  * ``from qiskit-ibm-runtime import Estimator``
+
+  as well as their ``V2`` aliases and their respective options (``SamplerOptions``,
+  ``EstimatorOptions``) now import the client-side versions of the primitives and their options that
+  were introduced in ``v0.50.0``. The client-side primitives are implementations that perform
+  pre- and post-processing on the client side and delegate execution to the
+  :class:`qiskit_ibm_runtime.Executor`. Running on the client side provides greater transparency,
+  faster debugging feedback, and finer control.
+
+  The server-side implementations of the primitives are still available in the new
+  ``qiskit_ibm_runtime.server_side`` package, importable via
+  ``from qiskit-ibm-runtime.server_side.Sampler`` and
+  ``from qiskit-ibm-runtime.server_side.Estimator``, with their options available in the
+  ``qiskit_ibm_runtime.options`` package. (`3538 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3538>`__)
+- The ``qiskit_ibm_runtime.utils`` modules:
+  * ``estimator_pub_result``
+  * ``json``
+  * ``noise_learner_result``
+
+  which were previously deprecated and moved to other modules, have been removed. (`3516 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3516>`__)
+- The ability to run a :class:`~qiskit_ibm_runtime.SamplerV2` job with different ``pub.shots`` values across PUBs, which was previously deprecated, has been removed.
+  Similarly, running an  :class:`~qiskit_ibm_runtime.EstimatorV2` job with different ``pub.precision`` values across PUBs is no longer possible. (`3529 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3529>`__)
+- Setting the `MeasureNoiseLearningOptions.shots_per_randomization` to an integer, which was previously deprecated, is not no longer possible. (`3533 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3533>`__)
+- The usage of stdlib ``asdict`` with option classes from the :mod:`options_models` package,
+  which was previously deprecated, is now removed. (`3535 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3535>`__)
+
+
+Deprecation Notes
+-----------------
+
+- Manually setting the `shots_per_randomization` field of `MeasureNoiseLearningOptions` is deprecated. (`3533 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3533>`__)
+
+
+New Features
+------------
+
+- :meth:`.RuntimeJobV2.usage`, :meth:`.Session.usage` and :meth:`.Batch.usage` now support a
+  ``resource_units`` parameter for returning usage based on resource units, as opposed to seconds.
+  :meth:`.QiskitRuntimeService.usage` now also returns keys specific to resource
+  units in the dictionary: ``usage_consumed_ru``, ``usage_limit_ru``, ``usage_allocation_ru`` and ``usage_limit_ru``. (`3522 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3522>`__)
+- Added a "client-side" implementation of :class:`qiskit_ibm_runtime.executor_noise_learner.NoiseLearnerV3`.
+
+  Unlike the legacy, server-side :class:`qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3`
+  class, it performs pre- and post-processing on the client side and delegate execution to the
+  :class:`qiskit_ibm_runtime.Executor`. Running on the client side provides greater transparency, faster
+  debugging feedback, and finer control. (`3548 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3548>`__)
+- Added a new experimental :class:`.Calibrator` class, which allows users to request that a backend be
+  recalibrated. A calibrator can be initialized only inside a session. Its
+  :meth:`.Calibrator.run` method submits a calibration request for a backend.  (`3490 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3490>`__)
+
+
+Bug Fixes
+---------
+
+- In local testing mode, ``job.status()`` now returns the same values as jobs run on IBM Quantum Platform
+  (``"DONE"``, ``"ERROR"``, ``"CANCELLED"``, ...) instead of a :class:`~qiskit.providers.JobStatus`, and
+  jobs now have the ``errored()`` and ``wait_for_final_state()`` methods. (`3498 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3498>`__)
