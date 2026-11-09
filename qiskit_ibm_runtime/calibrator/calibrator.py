@@ -51,6 +51,9 @@ class Calibrator:
             calibrator = Calibrator(session)
             calibrator.run()
 
+    .. note::
+        This feature is experimental and subject to change without notice.
+
     Args:
         mode: The execution mode used to make the primitive query. It can be:
 
