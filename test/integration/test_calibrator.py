@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from .dependencies import Dependencies
 
 
-@pytest.mark.skip(reason="This feature is not yet supported.")
 class TestCalibrator:
     """Test Calibrator."""
 
