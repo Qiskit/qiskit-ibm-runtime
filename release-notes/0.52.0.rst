@@ -4,17 +4,6 @@
 Upgrade Notes
 -------------
 
-- The ``qiskit_ibm_runtime.utils`` modules:
-  * ``estimator_pub_result``
-  * ``json``
-  * ``noise_learner_result``
-
-  which were previously deprecated and moved to other modules, have been removed. (`3516 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3516>`__)
-- The ability to run a :class:`~qiskit_ibm_runtime.SamplerV2` job with different ``pub.shots`` values across PUBs is deprecated, which was previously deprecated, has been removed.
-  Similarly, running an  :class:`~qiskit_ibm_runtime.EstimatorV2` job with different ``pub.precision`` values across PUBs is no longer possible. (`3529 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3529>`__)
-- Setting the `MeasureNoiseLearningOptions.shots_per_randomization` to an integer, which was previously deprecated, is not no longer possible. (`3533 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3533>`__)
-- The usage of stdlib ``asdict`` with option classes from the :mod:`options_models` package,
-  which was previously deprecated, is now removed. (`3535 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3535>`__)
 - The top-level imports:
   * ``from qiskit-ibm-runtime import Sampler``
   * ``from qiskit-ibm-runtime import Estimator``
@@ -31,6 +20,17 @@ Upgrade Notes
   ``from qiskit-ibm-runtime.server_side.Sampler`` and
   ``from qiskit-ibm-runtime.server_side.Estimator``, with their options available in the
   ``qiskit_ibm_runtime.options`` package. (`3538 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3538>`__)
+- The ``qiskit_ibm_runtime.utils`` modules:
+  * ``estimator_pub_result``
+  * ``json``
+  * ``noise_learner_result``
+
+  which were previously deprecated and moved to other modules, have been removed. (`3516 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3516>`__)
+- The ability to run a :class:`~qiskit_ibm_runtime.SamplerV2` job with different ``pub.shots`` values across PUBs is deprecated, which was previously deprecated, has been removed.
+  Similarly, running an  :class:`~qiskit_ibm_runtime.EstimatorV2` job with different ``pub.precision`` values across PUBs is no longer possible. (`3529 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3529>`__)
+- Setting the `MeasureNoiseLearningOptions.shots_per_randomization` to an integer, which was previously deprecated, is not no longer possible. (`3533 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3533>`__)
+- The usage of stdlib ``asdict`` with option classes from the :mod:`options_models` package,
+  which was previously deprecated, is now removed. (`3535 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3535>`__)
 
 
 Deprecation Notes
