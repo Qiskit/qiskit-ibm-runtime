@@ -52,7 +52,7 @@ New Features
   class, it performs pre- and post-processing on the client side and delegate execution to the
   :class:`qiskit_ibm_runtime.Executor`. Running on the client side provides greater transparency, faster
   debugging feedback, and finer control. (`3548 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3548>`__)
-- Added a new experimental :class:`.Calibrator` program, which allows users to request that a backend be
+- Added a new experimental :class:`.Calibrator` class, which allows users to request that a backend be
   recalibrated. A calibrator can be initialized only inside a session. Its
   :meth:`.Calibrator.run` method submits a calibration request for a backend.  (`3490 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3490>`__)
 
