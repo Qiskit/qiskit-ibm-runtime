@@ -312,7 +312,7 @@ class TestSamplerV2:
             with pytest.raises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @pytest.mark.parametrize("angle", [-1, 1, 2])
+    @pytest.mark.parametrize("angle", [-1, 1, 2, float("nan")])
     def test_rzz_fixed_angle_validation(self, angle: float) -> None:
         """Test exception when rzz gate is used with an angle outside the range [0, pi/2]."""
         backend = FakeFractionalBackend()
@@ -327,7 +327,7 @@ class TestSamplerV2:
             with pytest.raises(IBMInputValueError, match=f"{angle}"):
                 SamplerV2(backend).run(pubs=[circ])
 
-    @pytest.mark.parametrize("angle", [-1, 1, 2])
+    @pytest.mark.parametrize("angle", [-1, 1, 2, float("nan")])
     def test_rzz_parametrized_angle_validation(self, angle: float) -> None:
         """Test rzz gate with parameter outside range.
 
