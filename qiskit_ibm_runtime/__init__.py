@@ -188,6 +188,7 @@ Classes
 
    QiskitRuntimeService
    Executor
+   Calibrator
    Session
    Batch
    IBMBackend
