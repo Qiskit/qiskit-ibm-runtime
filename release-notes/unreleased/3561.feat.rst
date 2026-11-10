@@ -1,0 +1,1 @@
+New fake backends, :class:`.FakeChicago` and :class:`.FakePhoenix`, have been added.
