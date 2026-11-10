@@ -69,3 +69,16 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
     @abstractmethod
     def prepare(self, **kwargs: InputT) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map this program's inputs to the inputs of Executor."""
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
+    @property
+    def mode(self) -> Session | Batch | None:
+        """Return the execution mode used by this primitive.
+
+        Returns:
+            Mode used by this primitive, or ``None`` if an execution mode is not used.
+        """
+        return self._mode

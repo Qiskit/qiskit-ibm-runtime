@@ -28,13 +28,10 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from qiskit.circuit import CircuitInstruction
-    from qiskit.providers import BackendV2
 
-    from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..options_models import ExecutorOptions
     from ..runtime_job_v2 import RuntimeJobV2
-    from ..session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -93,19 +90,6 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
     def _get_default_options(self) -> NoiseLearnerV3Options:
         """The default options of all :class:`~.NoiseLearnerV3` objects."""
         return NoiseLearnerV3Options()
-
-    def backend(self) -> BackendV2:
-        """Return the backend the primitive query will be run on."""
-        return self._backend
-
-    @property
-    def mode(self) -> Session | Batch | None:
-        """Return the execution mode used by this primitive.
-
-        Returns:
-            Mode used by this primitive, or ``None`` if an execution mode is not used.
-        """
-        return self._mode
 
     def prepare(self, **kwargs: NoiseLearnerV3Inputs) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map the inputs of NoiseLearnerV3 to the inputs of Executor."""

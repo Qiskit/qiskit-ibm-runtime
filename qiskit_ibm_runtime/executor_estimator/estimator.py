@@ -34,14 +34,11 @@ if TYPE_CHECKING:
 
     from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
-    from qiskit.providers import BackendV2
 
-    from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..options_models import ExecutorOptions
     from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
-    from ..session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -122,19 +119,6 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
     def _get_default_options(self) -> EstimatorOptions:
         """The default options of all :class:`~.Estimator` objects."""
         return EstimatorOptions()
-
-    def backend(self) -> BackendV2:
-        """Return the backend the primitive query will be run on."""
-        return self._backend
-
-    @property
-    def mode(self) -> Session | Batch | None:
-        """Return the execution mode used by this primitive.
-
-        Returns:
-            Mode used by this primitive, or ``None`` if an execution mode is not used.
-        """
-        return self._mode
 
     def find_unique_layers(
         self, pubs: Iterable[EstimatorPubLike], types: Literal["gates", "all"] = "gates"
