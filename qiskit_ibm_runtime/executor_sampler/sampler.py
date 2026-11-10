@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 class SamplerInputs:
     """The inputs of Sampler."""
 
-    pubs: SamplerPubLike
+    pubs: Iterable[SamplerPubLike]
 
     shots: int | None = None
 
@@ -102,6 +102,8 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
             for all available options.
     """
+
+    semantic_role = "sampler_v2"
 
     def _get_default_options(self) -> SamplerOptions:
         """The default options of all :class:`~.Sampler` objects."""
@@ -200,7 +202,7 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         )
 
         # Set semantic role for post-processing dispatch
-        quantum_program._semantic_role = "sampler_v2"
+        quantum_program._semantic_role = self.semantic_role
 
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 from .base_primitive import get_mode_service_backend
 
@@ -51,6 +51,8 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
 
     options: OptionsT
     """The options of this program."""
+
+    semantic_role: Literal["sampler_v2", "noise_learner_v3", "estimator_v2"]
 
     def __init__(
         self,

@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 class EstimatorInputs:
     """The inputs of Estimator."""
 
-    pubs: EstimatorPubLike
+    pubs: Iterable[EstimatorPubLike]
 
     precision: float | None = None
 
@@ -100,6 +100,8 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
             See :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`
             for all available options.
     """
+
+    semantic_role = "estimator_v2"
 
     def _get_default_options(self) -> EstimatorOptions:
         """The default options of all :class:`~.Estimator` objects."""
@@ -247,7 +249,7 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
         )
 
         # Set semantic role for post-processing dispatch
-        quantum_program._semantic_role = "estimator_v2"
+        quantum_program._semantic_role = self.semantic_role
 
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 

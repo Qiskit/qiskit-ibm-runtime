@@ -73,6 +73,8 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
+    semantic_role = "noise_learner_v3"
+
     def _get_default_options(self) -> NoiseLearnerV3Options:
         """The default options of all :class:`~.NoiseLearnerV3` objects."""
         return NoiseLearnerV3Options()
@@ -116,7 +118,7 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
 
         # Set semantic role for post-processing dispatch
         quantum_program = QuantumProgram.from_(quantum_program)
-        quantum_program._semantic_role = "noise_learner_v3"
+        quantum_program._semantic_role = self.semantic_role
 
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
