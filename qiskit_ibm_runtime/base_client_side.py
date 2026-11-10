@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from .base_primitive import get_mode_service_backend
 
@@ -61,6 +61,24 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
 
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         self.options = options if options is not None else self._get_default_options()  # type: ignore[assignment]
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to an ``OptionsT`` instance.
+        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
+        autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                options = self._get_default_options()
+                options.update(**value)
+                value = options
+            elif not isinstance(value, type(self._get_default_options())):
+                name = self._get_default_options().__class__.__name__
+                raise TypeError(f"Expected {name} or dict, got {type(value)}")
+
+        super().__setattr__(name, value)
 
     @abstractmethod
     def _get_default_options(self) -> OptionsT:

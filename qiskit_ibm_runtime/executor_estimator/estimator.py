@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -100,21 +100,6 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
             See :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`
             for all available options.
     """
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set attribute ``name`` to ``value``.
-
-        Handle ``options`` as a special case, ensuring it is set to an ``EstimatorOptions``
-        instance. This is an alternative to using ``@setter``, as the setter causes issues in
-        ``ipython`` autocomplete features.
-        """
-        if name == "options":
-            if isinstance(value, dict):
-                value = EstimatorOptions(**value)
-            elif not isinstance(value, EstimatorOptions):
-                raise TypeError(f"Expected EstimatorOptions or dict, got {type(value)}")
-
-        super().__setattr__(name, value)
 
     def _get_default_options(self) -> EstimatorOptions:
         """The default options of all :class:`~.Estimator` objects."""

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ..base_client_side import BaseClientSide
 from ..executor import Executor
@@ -72,20 +72,6 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
            Nature Physics volume 19, pages 1116–1121 (2023).
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set attribute ``name`` to ``value``.
-
-        Handle ``options`` as a special case, ensuring it is set to a ``NoiseLearnerV3Options``
-        instance. This is an alternative to using ``@setter``, as the setter causes issues in
-        ``ipython`` autocomplete features.
-        """
-        if name == "options":
-            if isinstance(value, dict):
-                value = NoiseLearnerV3Options(**value)
-            elif not isinstance(value, NoiseLearnerV3Options):
-                raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
-        super().__setattr__(name, value)
 
     def _get_default_options(self) -> NoiseLearnerV3Options:
         """The default options of all :class:`~.NoiseLearnerV3` objects."""

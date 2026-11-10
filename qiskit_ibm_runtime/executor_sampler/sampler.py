@@ -30,7 +30,6 @@ from .utils import BoxType, find_box_type, find_unique_layers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Any
 
     from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
@@ -103,21 +102,6 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
             for all available options.
     """
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set attribute ``name`` to ``value``.
-
-        Handle ``options`` as a special case, ensuring it is set to an ``SamplerOptions`` instance.
-        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
-        autocomplete features.
-        """
-        if name == "options":
-            if isinstance(value, dict):
-                value = SamplerOptions(**value)
-            elif not isinstance(value, SamplerOptions):
-                raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
-
-        super().__setattr__(name, value)
 
     def _get_default_options(self) -> SamplerOptions:
         """The default options of all :class:`~.Sampler` objects."""
