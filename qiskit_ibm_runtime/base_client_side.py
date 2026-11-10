@@ -86,7 +86,12 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
 
     @abstractmethod
     def prepare(self, **kwargs: InputT) -> tuple[QuantumProgram, ExecutorOptions]:
-        """The function used to map this program's inputs to the inputs of Executor."""
+        """The function used to map this program's inputs to the inputs of Executor.
+
+        Returns:
+            A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+                :class:`~.ExecutorOptions`.
+        """
 
     def backend(self) -> BackendV2:
         """Return the backend the primitive query will be run on."""

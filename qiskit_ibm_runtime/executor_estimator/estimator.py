@@ -186,7 +186,12 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
         return finalize_estimator_options(self.options)
 
     def prepare(self, **kwargs: EstimatorInputs) -> tuple[QuantumProgram, ExecutorOptions]:
-        """The function used to map the inputs of Estimator to the inputs of Executor."""
+        """The function used to map the inputs of Estimator to the inputs of Executor.
+
+        Returns:
+            A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+                :class:`~.ExecutorOptions`.
+        """
         return prepare(
             pubs=kwargs["pubs"],  # type: ignore[arg-type]
             options=self.options,

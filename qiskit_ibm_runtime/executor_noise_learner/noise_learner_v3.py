@@ -78,7 +78,12 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
         return NoiseLearnerV3Options()
 
     def prepare(self, **kwargs: NoiseLearnerV3Inputs) -> tuple[QuantumProgram, ExecutorOptions]:
-        """The function used to map the inputs of NoiseLearnerV3 to the inputs of Executor."""
+        """The function used to map the inputs of NoiseLearnerV3 to the inputs of Executor.
+
+        Returns:
+            A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+                :class:`~.ExecutorOptions`.
+        """
         return prepare(
             instructions=kwargs["instructions"],  # type: ignore[arg-type]
             options=self.options,

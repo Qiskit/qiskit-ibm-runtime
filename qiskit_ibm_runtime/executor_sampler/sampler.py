@@ -148,7 +148,12 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         return finalize_sampler_options(self.options)
 
     def prepare(self, **kwargs: SamplerInputs) -> tuple[QuantumProgram, ExecutorOptions]:
-        """The function used to map the inputs of Sampler to the inputs of Executor."""
+        """The function used to map the inputs of Sampler to the inputs of Executor.
+
+        Returns:
+            A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+                :class:`~.ExecutorOptions`.
+        """
         return prepare(
             pubs=kwargs["pubs"],  # type: ignore[arg-type]
             options=self.options,
