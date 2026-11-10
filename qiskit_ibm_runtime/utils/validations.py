@@ -111,9 +111,9 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
                 message
                 + " Circuits that do not match the target hardware definition are no longer "
                 "supported after March 4, 2024. See the transpilation documentation "
-                "(https://quantum.cloud.ibm.com/docs/guides/transpile) for instructions "
+                "(https://quantum.cloud.ibm.com/docs/qiskit/transpile) for instructions "
                 "to transform circuits and the primitive examples "
-                "(https://quantum.cloud.ibm.com/docs/guides/primitives-examples) to see "
+                "(https://quantum.cloud.ibm.com/docs/qiskit/primitives-examples) to see "
                 "this coupled with operator transformations."
             )
 

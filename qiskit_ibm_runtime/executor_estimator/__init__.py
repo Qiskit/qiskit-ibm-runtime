@@ -147,7 +147,7 @@ for more information on Estimator inputs and outputs.
 
 Elements from observables and parameter values are combined by following NumPy broadcasting rules
 as described in
-`Primitive inputs and outputs <https://quantum.cloud.ibm.com/docs/guides/primitive-input-output>`_.
+`Primitive inputs and outputs <https://quantum.cloud.ibm.com/docs/qiskit/primitive-input-output>`_.
 
 
 Options
