@@ -19,9 +19,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ..base_client_side import BaseClientSide
-from ..executor import Executor
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
-from ..quantum_program import QuantumProgram
 from .prepare import prepare
 
 if TYPE_CHECKING:
@@ -31,6 +29,7 @@ if TYPE_CHECKING:
 
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..options_models import ExecutorOptions
+    from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
 
 logger = logging.getLogger(__name__)
@@ -79,15 +78,18 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
         """The default options of all :class:`~.NoiseLearnerV3` objects."""
         return NoiseLearnerV3Options()
 
-    def prepare(self, **kwargs: NoiseLearnerV3Inputs) -> tuple[QuantumProgram, ExecutorOptions]:
+    def prepare(self, inputs: NoiseLearnerV3Inputs) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map the inputs of NoiseLearnerV3 to the inputs of Executor.
+
+        Args:
+            inputs: The inputs of this program.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
         return prepare(
-            instructions=kwargs["instructions"],  # type: ignore[arg-type]
+            instructions=inputs.instructions,
             options=self.options,
             backend=self._backend,
         )
@@ -109,24 +111,4 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
         Returns:
             The submitted job.
         """
-        logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(
-            instructions=instructions,
-            options=self.options,
-            backend=self._backend,
-        )
-
-        # Set semantic role for post-processing dispatch
-        quantum_program = QuantumProgram.from_(quantum_program)
-        quantum_program._semantic_role = self.semantic_role
-
-        executor = Executor(mode=self._mode or self._backend, options=executor_options)
-
-        logger.info(
-            "Submitting %d item%s to executor with %d total shots",
-            len(quantum_program.items),
-            "s" if len(quantum_program.items) > 1 else "",
-            quantum_program.shots * sum(item.size() for item in quantum_program.items),
-        )
-
-        return executor.run(quantum_program, dry_run=dry_run)
+        return self._run(NoiseLearnerV3Inputs(instructions=instructions), dry_run=dry_run)

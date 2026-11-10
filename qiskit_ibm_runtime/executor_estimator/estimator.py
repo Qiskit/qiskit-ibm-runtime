@@ -23,7 +23,6 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
 from ..base_client_side import BaseClientSide
-from ..executor import Executor
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
 from .prepare import choose_task_class, prepare
@@ -187,17 +186,20 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
         """
         return finalize_estimator_options(self.options)
 
-    def prepare(self, **kwargs: EstimatorInputs) -> tuple[QuantumProgram, ExecutorOptions]:
+    def prepare(self, inputs: EstimatorInputs) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map the inputs of Estimator to the inputs of Executor.
+
+        Args:
+            inputs: The inputs of this program.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
         return prepare(
-            pubs=kwargs["pubs"],  # type: ignore[arg-type]
+            pubs=inputs.pubs,
             options=self.options,
-            precision=kwargs["precision"],  # type: ignore[arg-type]
+            precision=inputs.precision,
             add_tags=self._service.is_local,
             backend=self._backend,
         )
@@ -238,26 +240,4 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
             IBMInputValueError: If no pubs are provided, if precision is not properly
                 specified, or if unsupported options are detected.
         """
-        # Pre-process: Convert Estimator input into a QuantumProgram
-        logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(
-            pubs,
-            self.options,
-            precision,
-            add_tags=self._service.is_local,
-            backend=self._backend,
-        )
-
-        # Set semantic role for post-processing dispatch
-        quantum_program._semantic_role = self.semantic_role
-
-        executor = Executor(mode=self._mode or self._backend, options=executor_options)
-
-        logger.info(
-            "Submitting %d pub%s to executor with %d total shots",
-            len(quantum_program.items),
-            "s" if len(quantum_program.items) > 1 else "",
-            quantum_program.shots * sum(item.size() for item in quantum_program.items),
-        )
-
-        return executor.run(quantum_program, dry_run=dry_run)
+        return self._run(EstimatorInputs(pubs=pubs, precision=precision), dry_run=dry_run)

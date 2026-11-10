@@ -22,7 +22,6 @@ from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_client_side import BaseClientSide
-from ..executor import Executor
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options
 from .prepare import prepare
@@ -149,17 +148,20 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         """
         return finalize_sampler_options(self.options)
 
-    def prepare(self, **kwargs: SamplerInputs) -> tuple[QuantumProgram, ExecutorOptions]:
+    def prepare(self, inputs: SamplerInputs) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map the inputs of Sampler to the inputs of Executor.
+
+        Args:
+            inputs: The inputs of this program.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
         return prepare(
-            pubs=kwargs["pubs"],  # type: ignore[arg-type]
+            pubs=inputs.pubs,
             options=self.options,
-            shots=kwargs["shots"],  # type: ignore[arg-type]
+            shots=inputs.shots,
             add_tags=self._service.is_local,
             backend=self._backend,
         )
@@ -191,26 +193,4 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         Returns:
             The submitted job.
         """
-        # Pre-process: Convert Sampler input into a QuantumProgram
-        logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(
-            pubs,
-            self.options,
-            shots,
-            add_tags=self._service.is_local,
-            backend=self._backend,
-        )
-
-        # Set semantic role for post-processing dispatch
-        quantum_program._semantic_role = self.semantic_role
-
-        executor = Executor(mode=self._mode or self._backend, options=executor_options)
-
-        logger.info(
-            "Submitting %d pub%s to executor with %d shots",
-            len(quantum_program.items),
-            "s" if len(quantum_program.items) > 1 else "",
-            quantum_program.shots,
-        )
-
-        return executor.run(quantum_program, dry_run=dry_run)
+        return self._run(SamplerInputs(pubs=pubs, shots=shots), dry_run=dry_run)
