@@ -233,12 +233,10 @@ class TestIntegrationRetrieveJob:
         assert [rjob.job_id() for rjob in rjobs] == [job_2.job_id(), job.job_id()]
         assert [rjob.job_id() for rjob in rjobs_ascending] == [job.job_id(), job_2.job_id()]
 
-    def test_retrieve_jobs_backend(
-        self, backend_test: IBMBackend | None, dependencies: Dependencies
-    ) -> None:
+    def test_retrieve_jobs_backend(self, dependencies: Dependencies) -> None:
         """Test retrieving jobs with backend filter."""
         service = dependencies.service
-        backend_name = backend_test.name
+        backend_name = dependencies.qpu
         jobs = service.jobs(backend_name=backend_name)
         for job in jobs:
             assert backend_name == job.backend().name

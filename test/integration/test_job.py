@@ -32,7 +32,7 @@ from .utils import cancel_job_safe, wait_for_status
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
+    from qiskit_ibm_runtime import RuntimeJobV2
 
     from .dependencies import Dependencies
 
@@ -143,11 +143,11 @@ class TestIntegrationJob:
         assert job.status()
 
     def test_job_backend(
-        self, submit_bell_job: Callable[..., RuntimeJobV2], backend_test: IBMBackend | None
+        self, submit_bell_job: Callable[..., RuntimeJobV2], dependencies: Dependencies
     ) -> None:
         """Test job backend."""
         job = submit_bell_job()
-        assert backend_test.name == job.backend().name
+        assert dependencies.qpu == job.backend().name
 
     def test_job_program_id(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test job program ID."""
