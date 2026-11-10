@@ -15,11 +15,13 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, get_args
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
+from ..base_client_side import BaseClientSide
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.sampler import SamplerOptions
@@ -37,6 +39,8 @@ if TYPE_CHECKING:
 
     from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
+    from ..options_models import ExecutorOptions
+    from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -44,7 +48,16 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class Sampler(BaseSamplerV2):
+@dataclass(frozen=True)
+class SamplerInputs:
+    """The inputs of Sampler."""
+
+    pubs: SamplerPubLike
+
+    shots: int | None = None
+
+
+class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
     """Client-side Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of Sampler built on top of the Executor primitive,
@@ -178,6 +191,16 @@ class Sampler(BaseSamplerV2):
             The finalized :class:`~qiskit_ibm_runtime.options_models.SamplerOptions` object.
         """
         return finalize_sampler_options(self.options)
+
+    def prepare(self, **kwargs: SamplerInputs) -> tuple[QuantumProgram, ExecutorOptions]:
+        """The function used to map the inputs of Sampler to the inputs of Executor."""
+        return prepare(
+            pubs=kwargs["pubs"],  # type: ignore[arg-type]
+            options=self.options,
+            shots=kwargs["shots"],  # type: ignore[arg-type]
+            add_tags=self._service.is_local,
+            backend=self._backend,
+        )
 
     def run(
         self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None, dry_run: bool = False

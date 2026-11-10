@@ -15,8 +15,10 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from ..base_client_side import BaseClientSide
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
@@ -31,13 +33,21 @@ if TYPE_CHECKING:
 
     from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
+    from ..options_models import ExecutorOptions
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
 logger = logging.getLogger(__name__)
 
 
-class NoiseLearnerV3:
+@dataclass(frozen=True)
+class NoiseLearnerV3Inputs:
+    """The inputs of NoiseLearnerV3."""
+
+    instructions: Iterable[CircuitInstruction]
+
+
+class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]):
     """Class for executing noise learning experiments.
 
     The noise learner allows characterizing the noise processes affecting target instructions, based
@@ -106,6 +116,14 @@ class NoiseLearnerV3:
             Mode used by this primitive, or ``None`` if an execution mode is not used.
         """
         return self._mode
+
+    def prepare(self, **kwargs: NoiseLearnerV3Inputs) -> tuple[QuantumProgram, ExecutorOptions]:
+        """The function used to map the inputs of NoiseLearnerV3 to the inputs of Executor."""
+        return prepare(
+            instructions=kwargs["instructions"],  # type: ignore[arg-type]
+            options=self.options,
+            backend=self._backend,
+        )
 
     def run(
         self, instructions: Iterable[CircuitInstruction], dry_run: bool = False

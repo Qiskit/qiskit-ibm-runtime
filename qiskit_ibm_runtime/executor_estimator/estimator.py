@@ -15,12 +15,14 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
+from ..base_client_side import BaseClientSide
 from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.estimator import EstimatorOptions
@@ -37,13 +39,24 @@ if TYPE_CHECKING:
 
     from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
+    from ..options_models import ExecutorOptions
+    from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
 logger = logging.getLogger(__name__)
 
 
-class Estimator(BaseEstimatorV2):
+@dataclass(frozen=True)
+class EstimatorInputs:
+    """The inputs of Estimator."""
+
+    pubs: EstimatorPubLike
+
+    precision: float | None = None
+
+
+class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimatorV2):
     """Client-side Estimator primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of Estimator built on top of the Executor primitive,
@@ -215,6 +228,16 @@ class Estimator(BaseEstimatorV2):
             The finalized :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions` object.
         """
         return finalize_estimator_options(self.options)
+
+    def prepare(self, **kwargs: EstimatorInputs) -> tuple[QuantumProgram, ExecutorOptions]:
+        """The function used to map the inputs of Estimator to the inputs of Executor."""
+        return prepare(
+            pubs=kwargs["pubs"],  # type: ignore[arg-type]
+            options=self.options,
+            precision=kwargs["precision"],  # type: ignore[arg-type]
+            add_tags=self._service.is_local,
+            backend=self._backend,
+        )
 
     def run(
         self,
