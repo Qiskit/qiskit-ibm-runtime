@@ -135,7 +135,8 @@ class QiskitRuntimeService:
             If ``local`` is selected, the local testing mode will be used, and
             primitive queries will run on a local simulator. For more details, check the
             `IBM Quantum Compute local testing mode
-            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/local-testing-mode>`_  documentation.
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/local-testing-mode>`_
+            documentation.
             For non-local modes, the channel is used to resolve the default API URL value.
             ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
             its URL will be redirected to the new ``ibm_quantum_platform`` address.
