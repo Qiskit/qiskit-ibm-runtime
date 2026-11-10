@@ -19,7 +19,6 @@ import time
 from typing import TYPE_CHECKING
 
 import pytest
-from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime.exceptions import (
     IBMRuntimeError,
@@ -121,12 +120,8 @@ class TestIntegrationJob:
     ) -> None:
         """Test deleting a queued job."""
         service = dependencies.service
-        try:
-            real_device_name = service.least_busy(simulator=False).name
-        except QiskitBackendNotFoundError:
-            pytest.skip("No real device found in the instance")
-        _ = submit_bell_job(backend_name=real_device_name)
-        job = submit_bell_job(backend_name=real_device_name)
+        _ = submit_bell_job()
+        job = submit_bell_job()
         wait_for_status(job, "QUEUED")
         try:
             service.delete_job(job.job_id())
