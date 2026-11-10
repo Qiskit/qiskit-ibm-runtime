@@ -66,7 +66,7 @@ class Executor:
 
             Refer to the
             `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/execution-modes>`_
             for more information about the ``Execution modes``.
 
         options: Executor options, see :class:`ExecutorOptions` for detailed description.
