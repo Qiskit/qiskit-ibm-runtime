@@ -1037,7 +1037,7 @@ class QiskitRuntimeService:
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://quantum.cloud.ibm.com/docs/guides/qpu-information#view-your-resources"
+                    "https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/qpu-information#view-your-resources"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
 
