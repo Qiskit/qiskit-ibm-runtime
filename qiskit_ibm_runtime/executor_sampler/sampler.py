@@ -22,7 +22,6 @@ from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ..base_client_side import BaseClientSide
-from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options
@@ -108,22 +107,6 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
             for all available options.
     """
 
-    options: SamplerOptions
-    """The options of this Sampler."""
-
-    def __init__(
-        self,
-        mode: BackendV2 | Session | Batch | None = None,
-        options: SamplerOptions | dict | None = None,
-    ):
-        super().__init__()
-
-        # Store mode, service, and backend for simulator detection
-        self._mode, self._service, self._backend = get_mode_service_backend(mode)
-
-        # Coerced to `SamplerOptions` via `__setattr__()`.
-        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
-
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
 
@@ -138,6 +121,10 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
                 raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def _get_default_options(self) -> SamplerOptions:
+        """The default options of all :class:`~.Sampler` objects."""
+        return SamplerOptions()
 
     def backend(self) -> BackendV2:
         """Return the backend the primitive query will be run on."""

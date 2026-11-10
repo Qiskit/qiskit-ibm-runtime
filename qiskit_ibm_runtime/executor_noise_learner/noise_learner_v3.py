@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from ..base_client_side import BaseClientSide
-from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
 from ..quantum_program import QuantumProgram
@@ -77,19 +76,6 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
-    options: NoiseLearnerV3Options
-    """The options in this noise learner."""
-
-    def __init__(
-        self,
-        mode: BackendV2 | Session | Batch | None = None,
-        options: NoiseLearnerV3Options | dict | None = None,
-    ):
-        # Coerced to `NoiseLearnerV3Options` via `__setattr__()`.
-        self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
-
-        self._mode, self._service, self._backend = get_mode_service_backend(mode)
-
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
 
@@ -103,6 +89,10 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
             elif not isinstance(value, NoiseLearnerV3Options):
                 raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
         super().__setattr__(name, value)
+
+    def _get_default_options(self) -> NoiseLearnerV3Options:
+        """The default options of all :class:`~.NoiseLearnerV3` objects."""
+        return NoiseLearnerV3Options()
 
     def backend(self) -> BackendV2:
         """Return the backend the primitive query will be run on."""

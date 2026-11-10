@@ -18,10 +18,16 @@ import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar
 
+from .base_primitive import get_mode_service_backend
+
 if TYPE_CHECKING:
+    from qiskit.providers import BackendV2
+
+    from .batch import Batch
     from .options_models import ExecutorOptions
     from .options_models.base import BaseOptionsModel
     from .quantum_program import QuantumProgram
+    from .session import Session
 
 InputT = TypeVar("InputT")
 OptionsT = TypeVar("OptionsT", bound="BaseOptionsModel")
@@ -42,6 +48,23 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
             for more information about execution modes.
         options: The options of this program.
     """
+
+    options: OptionsT
+    """The options of this program."""
+
+    def __init__(
+        self,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: OptionsT | dict | None = None,
+    ):
+        super().__init__()
+
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
+        self.options = options if options is not None else self._get_default_options()  # type: ignore[assignment]
+
+    @abstractmethod
+    def _get_default_options(self) -> OptionsT:
+        """The default options of this program."""
 
     @abstractmethod
     def prepare(self, **kwargs: InputT) -> tuple[QuantumProgram, ExecutorOptions]:

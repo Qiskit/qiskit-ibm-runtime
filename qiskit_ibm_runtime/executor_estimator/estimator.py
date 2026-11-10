@@ -23,7 +23,6 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 
 from ..base_client_side import BaseClientSide
-from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
@@ -105,22 +104,6 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
             for all available options.
     """
 
-    options: EstimatorOptions
-    """The options of this Estimator."""
-
-    def __init__(
-        self,
-        mode: BackendV2 | Session | Batch | None = None,
-        options: EstimatorOptions | dict | None = None,
-    ):
-        super().__init__()
-
-        # Store mode, service, and backend for simulator detection
-        self._mode, self._service, self._backend = get_mode_service_backend(mode)
-
-        # Coerced to `EstimatorOptions` via `__setattr__()`.
-        self.options = options if options is not None else EstimatorOptions()  # type: ignore[assignment]
-
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
 
@@ -135,6 +118,10 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
                 raise TypeError(f"Expected EstimatorOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def _get_default_options(self) -> EstimatorOptions:
+        """The default options of all :class:`~.Estimator` objects."""
+        return EstimatorOptions()
 
     def backend(self) -> BackendV2:
         """Return the backend the primitive query will be run on."""
