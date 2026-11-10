@@ -40,9 +40,9 @@ class Neat:
     """A class to help understand the expected performance of estimator jobs.
 
     The "Noisy Estimator Analyzer Tool" (or "NEAT") is a convenience tool that users of the
-    :class:`~.Estimator` primitive can employ to analyze and predict the performance of
-    their queries. Its simulate method uses ``qiskit-aer`` to simulate the estimation task
-    classically efficiently, either in ideal conditions or in the presence of noise. The
+    :class:`~.qiskit_ibm_runtime.Estimator` primitive can employ to analyze and predict the
+    performance of their queries. Its simulate method uses ``qiskit-aer`` to simulate the estimation
+    task classically efficiently, either in ideal conditions or in the presence of noise. The
     simulations' results can be compared with other simulation results or with primitive results
     results to draw custom figures of merit.
 

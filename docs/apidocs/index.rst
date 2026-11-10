@@ -10,6 +10,9 @@
    runtime_service
    executor_sampler
    executor_estimator
+   executor_noise_learner
+   sampler
+   estimator
    quantum_program
    noise_learner
    noise_learner_v3

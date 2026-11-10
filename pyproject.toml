@@ -46,7 +46,7 @@ zip-safe = false
 root = "."
 version_file = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.50.0"
+fallback_version = "0.52.0"
 
 [tool.mypy]
 python_version = "3.10"
@@ -76,6 +76,7 @@ module = [
     "qiskit_aer.*",
     "qiskit.*",
     "qiskit_mitigation.*",
+    "qiskit_noise_learning.*",
     "requests_ntlm.*",
     "samplomatic.*",
     "scipy.*",
@@ -91,6 +92,7 @@ addopts = "--strict-markers"
 markers = [
     "production: only run the test when the service is a production one.",
     "registry: the `responses` registry class to use, as `registry_class=...`.",
+    "server_side_primitives: the test consciously uses the deprecated server-side primitives.",
 ]
 
 [tool.ruff]
@@ -191,12 +193,12 @@ dependencies = [
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas>=0.12.20260921,<1",
+    "ibm-quantum-schemas>=0.13.20261016,<1",
     "pydantic>=2.13.0",
     "qiskit>=2.3.0,<3",
     "pybase64>=1.4.0",
     "samplomatic>=0.21.0",
-    "qiskit-mitigation>=0.1.1",
+    "qiskit-mitigation>=0.2.0",
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
@@ -222,6 +224,10 @@ performance = [
     "qiskit-aer>=0.17.0",
 ]
 
+noise-learning = [
+    "qiskit-noise-learning>=0.2.0",
+]
+
 # Developer extras.
 
 style = [
@@ -240,7 +246,7 @@ test = [
     "mitmproxy==11.0.2; python_version >= '3.11'",
     "pytest>=9.1",
     "coverage>=7.13.5",
-    "pytest-benchmark==5.2.3",
+    "pytest-benchmark==5.3.1",
     "responses>=0.26.2",
 ]
 

@@ -135,7 +135,8 @@ class QiskitRuntimeService:
             If ``local`` is selected, the local testing mode will be used, and
             primitive queries will run on a local simulator. For more details, check the
             `IBM Quantum Compute local testing mode
-            <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/local-testing-mode>`_
+            documentation.
             For non-local modes, the channel is used to resolve the default API URL value.
             ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
             its URL will be redirected to the new ``ibm_quantum_platform`` address.
@@ -1012,7 +1013,7 @@ class QiskitRuntimeService:
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. See
                 `When not to use fractional gates
-                <https://quantum.cloud.ibm.com/docs/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/fractional-gates#when-not-to-use-fractional-gates>`_
                 for limitations.
             calibration_id: The calibration id used for instantiating the backend.
 
@@ -1036,7 +1037,7 @@ class QiskitRuntimeService:
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://quantum.cloud.ibm.com/docs/guides/qpu-information#view-your-resources"
+                    "https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/qpu-information#view-your-resources"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
 
@@ -1102,8 +1103,8 @@ class QiskitRuntimeService:
         if isinstance(backend, str):
             backend = self.backend(name=qrt_options.get_backend_name())
 
-        # Take into account `dry_run`, replacing the backend with its mock counterpart.
-        if dry_run:
+        # Take into account `dry_run`, replacing the backend with its mock counterpart if needed.
+        if dry_run and not backend.name.startswith("mock_"):
             backend_name = re.sub(r"^[^_]+", "mock", backend.name)
 
             try:
@@ -1333,6 +1334,14 @@ class QiskitRuntimeService:
                 0,
             )
             usage_dict["usage_remaining_seconds"] = usage_remaining
+        if usage_dict.get("usage_limit_ru") or usage_dict.get("usage_allocation_ru"):
+            usage_remaining = max(
+                usage_dict.get("usage_limit_ru", usage_dict.get("usage_allocation_ru"))
+                - usage_dict.get("usage_consumed_ru", 0),
+                0,
+            )
+            usage_dict["usage_remaining_ru"] = usage_remaining
+
         return usage_dict
 
     def _check_instance_usage(self) -> None:
@@ -1433,7 +1442,7 @@ class QiskitRuntimeService:
                 fractional gates are considered, and fractional gates are included
                 in the returned backend. See
                 `When not to use fractional gates
-                <https://quantum.cloud.ibm.com/docs/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/fractional-gates#when-not-to-use-fractional-gates>`_
                 for limitations.
             kwargs: Additional arguments passed to the backend query.
 
@@ -1465,7 +1474,7 @@ class QiskitRuntimeService:
 
         candidates = []
         for backend in all_backends:
-            if backend["status"]["name"] == "online":
+            if backend["status"]["name"] == "online" and backend.get("class", None) != "mock":
                 candidates.append(backend)
 
         if filters or kwargs:

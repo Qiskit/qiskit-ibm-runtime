@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""NoiseLearnerV3Options options."""
+"""Options for Noise Learner V3."""
 
 from __future__ import annotations
 
@@ -22,10 +22,11 @@ from .base import BaseOptionsModel
 from .bit_flip_checks import BitFlipChecksOptions
 from .environment import EnvironmentOptions
 from .execution import ExecutionOptions
+from .simulator import SimulatorOptions
 
 
 class NoiseLearnerV3Options(BaseOptionsModel):
-    """Options for :class:`.NoiseLearnerV3`."""
+    """Options for Noise Learner V3."""
 
     shots_per_randomization: Annotated[int, Field(ge=1)] = 128
     """The total number of shots to use per randomized learning circuit."""
@@ -56,6 +57,9 @@ class NoiseLearnerV3Options(BaseOptionsModel):
 
     bit_flip_checks: BitFlipChecksOptions = BitFlipChecksOptions()
     """Options to apply bit-flip checks to the results of noise learning circuits."""
+
+    simulator: SimulatorOptions = SimulatorOptions()
+    """Options related to local mode simulations."""
 
     experimental: dict = {}
     """Experimental options.

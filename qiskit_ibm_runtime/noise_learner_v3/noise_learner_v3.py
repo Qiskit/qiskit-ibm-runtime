@@ -55,7 +55,7 @@ class NoiseLearnerV3:
 
             Refer to the
             `IBM Quantum Compute (formerly Qiskit Runtime) documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/execution-modes>`__
             for more information about the execution modes.
 
         options: The desired options.

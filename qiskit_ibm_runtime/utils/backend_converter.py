@@ -19,7 +19,6 @@ import math
 import warnings
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
 from qiskit.circuit import Instruction, Qubit
 from qiskit.circuit.controlflow import (
     CONTROL_FLOW_OP_NAMES,
@@ -36,6 +35,7 @@ from qiskit.transpiler.passes.utils.wrap_angles import WrapAngles
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from ..models.exceptions import BackendPropertyError
+from ..transpiler.passes.basis.utils import fold_rzz_angle
 from ..utils.utils import is_fractional_gate
 
 if TYPE_CHECKING:
@@ -56,23 +56,9 @@ are supported by a given backend, one can inspect ``backend.supported_operations
 
 def rzz_wrapper(angles: list[float], qubits: list[Qubit]) -> DAGCircuit:
     """A wrapper to instruct the transpiler how to fold out-of-bounds Rzz angles."""
-    from ..transpiler.passes.basis.fold_rzz_angle import FoldRzzAngle
-
     angle = float(angles[0])
-    wrap_angle = np.angle(np.exp(1j * angle))
     fresh_qubits = (Qubit(), Qubit())
-    if 0 <= wrap_angle <= math.pi / 2:
-        dag = FoldRzzAngle._quad1(wrap_angle, fresh_qubits)
-    elif math.pi / 2 < wrap_angle <= math.pi:
-        dag = FoldRzzAngle._quad2(wrap_angle, fresh_qubits)
-    elif -math.pi <= wrap_angle <= -math.pi / 2:
-        dag = FoldRzzAngle._quad3(wrap_angle, fresh_qubits)
-    else:
-        dag = FoldRzzAngle._quad4(wrap_angle, fresh_qubits)
-    windings = round((angle - wrap_angle) / (2 * math.pi))
-    if windings % 2:
-        dag.global_phase += math.pi
-    return dag
+    return fold_rzz_angle(angle, fresh_qubits)
 
 
 wrap_angles_registry = WrapAngles.DEFAULT_REGISTRY

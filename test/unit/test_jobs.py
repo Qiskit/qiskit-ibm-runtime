@@ -380,6 +380,26 @@ class TestRuntimeJob:
         float_usage = job.usage(partial=True)
         assert float_usage == 123
 
+    def test_usage_resource_unit(self, registry: BaseRegistry) -> None:
+        """usage() should always return `qpu_charge_time_seconds` regardless of status."""
+        usage = {"qpu_charge_time_seconds": 123, "status": "complete", "value": 1.1}
+        registry.add_job(Job("my_job", "common_backend", usage=usage), "a")
+        service = QiskitRuntimeService(token="my_token")
+
+        job = service.job("my_job")
+        float_usage = job.usage(resource_units=True)
+        assert float_usage == 1.1
+
+    def test_metrics(self, registry: BaseRegistry) -> None:
+        """`metrics()` method should return the `usage` dict verbatim."""
+        usage = {"qpu_charge_time_seconds": 123, "status": "complete", "value": 1.1}
+        registry.add_job(Job("my_job", "common_backend", usage=usage), "a")
+        service = QiskitRuntimeService(token="my_token")
+
+        job = service.job("my_job")
+        metrics = job.metrics()
+        assert metrics["usage"] == usage
+
     @pytest.mark.parametrize("decoders", [None, ToIntDecoder, [ToIntDecoder, MultiplierDecoder]])
     def test_result_decoders_is_always_sequence(
         self, decoders: None | ResultDecoder | list[ResultDecoder], registry: BaseRegistry

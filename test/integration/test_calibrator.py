@@ -16,16 +16,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.calibrator import Calibrator
+from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
+from qiskit_ibm_runtime.results import CalibratorResult
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
 
 
-@pytest.mark.skip(reason="This feature is not yet supported.")
 class TestCalibrator:
     """Test Calibrator."""
 
@@ -35,6 +34,14 @@ class TestCalibrator:
 
         with Session(backend=backend) as session:
             calibrator = Calibrator(session)
+            calibrator.options.experimental = {"foo": "bar"}
             job = calibrator.run()
             result = job.result()
-            assert "calibration_result" in result
+
+        inputs = job.inputs
+        assert inputs["schema_version"] == "v0.1"
+        assert isinstance(inputs["options"], CalibratorOptions)
+        assert inputs["options"].experimental == calibrator.options.experimental
+
+        assert isinstance(result, CalibratorResult)
+        assert result.start < result.stop

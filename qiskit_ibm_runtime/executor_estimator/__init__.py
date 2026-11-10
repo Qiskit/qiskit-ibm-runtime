@@ -65,7 +65,7 @@ Basic usage
     from qiskit.quantum_info import SparsePauliOp
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
     from qiskit_ibm_runtime import QiskitRuntimeService
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
 
     # Select a backend.
     service = QiskitRuntimeService()
@@ -142,12 +142,12 @@ is in this format::
     (<single circuit>, <one or more observables>, <optional parameter values>, <optional precision>)
 
 See `Estimator inputs and outputs
-<https://quantum.cloud.ibm.com/docs/guides/estimator-input-output>`_
+<https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/estimator-input-output>`_
 for more information on Estimator inputs and outputs.
 
 Elements from observables and parameter values are combined by following NumPy broadcasting rules
 as described in
-`Primitive inputs and outputs <https://quantum.cloud.ibm.com/docs/guides/primitive-input-output>`_.
+`Primitive inputs and outputs <https://quantum.cloud.ibm.com/docs/qiskit/primitive-input-output>`_.
 
 
 Options
@@ -161,11 +161,11 @@ grouped into categories, such as ``execution``. Specify the options in this form
 ``options.dynamical_decoupling.enable = True``.
 
 See `Introduction to options
-<https://quantum.cloud.ibm.com/docs/guides/runtime-options-overview>`_
+<https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/runtime-options-overview>`_
 for an overview on specifying primitive options.
-See `Specify Estimator options <https://quantum.cloud.ibm.com/docs/guides/estimator-options>`_
+See `Specify Estimator options <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/estimator-options>`_
 and `Configure noise management with Estimator
-<https://quantum.cloud.ibm.com/docs/guides/estimator-noise-management>`_
+<https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/estimator-noise-management>`_
 for more information about Estimator options.
 
 Outputs
@@ -301,7 +301,7 @@ behavioral changes:
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
     from qiskit_ibm_runtime.options_models import EstimatorOptions
 
 **Step 2 — Perform noise learning explicitly (if using PEC or PEA).**
@@ -325,7 +325,7 @@ you need to perform noise learning explicitly by using ``NoiseLearnerV3``.
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
     from qiskit_ibm_runtime import NoiseLearnerV3
 
     pubs = [...]  # Your PUBs
@@ -374,7 +374,7 @@ the groups still run together.
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime.executor_estimator import Estimator
+    from qiskit_ibm_runtime import Estimator
     from qiskit_ibm_runtime import Batch
 
     # Group the PUBs by precision, one group per job.

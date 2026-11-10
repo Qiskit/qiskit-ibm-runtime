@@ -56,7 +56,7 @@ class Estimator(BaseEstimatorV2):
             from qiskit import QuantumCircuit
             from qiskit.quantum_info import SparsePauliOp
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor_estimator import Estimator
+            from qiskit_ibm_runtime import Estimator
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)
@@ -84,7 +84,7 @@ class Estimator(BaseEstimatorV2):
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
             Refer to the `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/execution-modes>`__
             for more information about execution modes.
 
         options: Estimator options.
@@ -178,11 +178,17 @@ class Estimator(BaseEstimatorV2):
             add_tags=True,
         )
         box_types_arg = "all" if types == "all" else "gates"
+        measure_mitigation = bool(options.resilience.measure_mitigation)
         return find_combined_unique_layers(
             circuits=[pub.circuit for pub in coerced_pubs],
             mitigation_types=[task_class() for _ in coerced_pubs],
             custom_boxing_options=boxing_opts,
             box_types=box_types_arg,
+            observables=[pub.observables for pub in coerced_pubs],
+            trex=measure_mitigation,
+            trex_custom_boxing_options={"add_tags": boxing_opts["add_tags"]}
+            if measure_mitigation
+            else None,
         )
 
     def finalize_options(self) -> EstimatorOptions:

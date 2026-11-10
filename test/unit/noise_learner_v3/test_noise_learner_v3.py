@@ -30,7 +30,6 @@ from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.session import Session
 
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend
 
 if TYPE_CHECKING:
     from ...registries import BaseRegistry
@@ -39,14 +38,18 @@ if TYPE_CHECKING:
 class TestNoiseLearnerV3Options:
     """Tests option setting on the ``NoiseLearnerV3`` class."""
 
-    def test_default_options(self) -> None:
+    def test_default_options(self, registry: BaseRegistry) -> None:
         """Test that default options are set when none are provided."""
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        nlv3 = NoiseLearnerV3(mode=backend)
         assert isinstance(nlv3.options, NoiseLearnerV3Options)
         assert nlv3.options == NoiseLearnerV3Options()
 
-    def test_options_from_instance(self) -> None:
+    def test_options_from_instance(self, registry: BaseRegistry) -> None:
         """Test constructing with an NoiseLearnerV3Options instance."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         opts_dict = {
             "bit_flip_checks": {
                 "pre_circuit": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"}
@@ -55,7 +58,7 @@ class TestNoiseLearnerV3Options:
             "execution": {"rep_delay": 42},
         }
         options = NoiseLearnerV3Options(**opts_dict)  # type: ignore[arg-type]
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=options)
+        nlv3 = NoiseLearnerV3(mode=backend, options=options)
         assert nlv3.options.bit_flip_checks.pre_circuit.enable
         assert nlv3.options.bit_flip_checks.pre_circuit.x_pulse_type == "rx"
         assert nlv3.options.bit_flip_checks.pre_circuit.strategy == "edge"
@@ -67,8 +70,10 @@ class TestNoiseLearnerV3Options:
         assert isinstance(nlv3.options.environment, EnvironmentOptions)
         assert isinstance(nlv3.options.execution, ExecutionOptions)
 
-    def test_options_from_dict(self) -> None:
+    def test_options_from_dict(self, registry: BaseRegistry) -> None:
         """Test constructing with a nested dict."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         opts_dict = {
             "bit_flip_checks": {
                 "pre_circuit": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"}
@@ -76,7 +81,7 @@ class TestNoiseLearnerV3Options:
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"], "image": "my:image"},
             "execution": {"rep_delay": 42},
         }
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts_dict)
+        nlv3 = NoiseLearnerV3(mode=backend, options=opts_dict)
         assert nlv3.options.bit_flip_checks.pre_circuit.enable
         assert nlv3.options.bit_flip_checks.pre_circuit.x_pulse_type == "rx"
         assert nlv3.options.bit_flip_checks.pre_circuit.strategy == "edge"
@@ -88,11 +93,12 @@ class TestNoiseLearnerV3Options:
         assert isinstance(nlv3.options.environment, EnvironmentOptions)
         assert isinstance(nlv3.options.execution, ExecutionOptions)
 
-    def test_options_from_partial_dict(self) -> None:
+    def test_options_from_partial_dict(self, registry: BaseRegistry) -> None:
         """Test constructing with a nested dict when only specifying some of the options."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         nlv3 = NoiseLearnerV3(
-            mode=get_mocked_backend(),
-            options={"bit_flip_checks": {"pre_circuit": {"strategy": "edge"}}},
+            mode=backend, options={"bit_flip_checks": {"pre_circuit": {"strategy": "edge"}}}
         )
         assert not nlv3.options.bit_flip_checks.pre_circuit.enable
         assert nlv3.options.bit_flip_checks.pre_circuit.x_pulse_type == "xslow"
@@ -103,50 +109,62 @@ class TestNoiseLearnerV3Options:
         assert isinstance(nlv3.options.environment, EnvironmentOptions)
         assert isinstance(nlv3.options.execution, ExecutionOptions)
 
-    def test_options_constructor_invalid_type(self) -> None:
+    def test_options_constructor_invalid_type(self, registry: BaseRegistry) -> None:
         """Test that an invalid options type raises TypeError."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with pytest.raises(TypeError, match="Expected NoiseLearnerV3Options or dict"):
-            NoiseLearnerV3(mode=get_mocked_backend(), options="invalid")  # type: ignore[arg-type]
+            NoiseLearnerV3(mode=backend, options="invalid")  # type: ignore[arg-type]
 
-    def test_setter_with_dict(self) -> None:
+    def test_setter_with_dict(self, registry: BaseRegistry) -> None:
         """Test setting options via the setter with a dict."""
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        nlv3 = NoiseLearnerV3(mode=backend)
         nlv3.options = {"layer_pair_depths": [1, 2]}  # type: ignore[assignment]
         assert isinstance(nlv3.options, NoiseLearnerV3Options)
         assert nlv3.options.layer_pair_depths == [1, 2]
 
-    def test_setter_invalid_type(self) -> None:
+    def test_setter_invalid_type(self, registry: BaseRegistry) -> None:
         """Test that setting options with an invalid type raises TypeError."""
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        nlv3 = NoiseLearnerV3(mode=backend)
         with pytest.raises(TypeError, match="Expected NoiseLearnerV3Options or dict"):
             nlv3.options = 42  # type: ignore[assignment]
 
-    def test_setter_replaces_options(self) -> None:
+    def test_setter_replaces_options(self, registry: BaseRegistry) -> None:
         """Test that the setter replaces (not updates) the options."""
-        nlv3 = NoiseLearnerV3(
-            mode=get_mocked_backend(), options={"environment": {"log_level": "DEBUG"}}
-        )
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        nlv3 = NoiseLearnerV3(mode=backend, options={"environment": {"log_level": "DEBUG"}})
         nlv3.options = {"layer_pair_depths": [1, 2]}  # type: ignore[assignment]
         # environment should be back to defaults since we replaced, not updated
         assert nlv3.options.environment.log_level == "WARNING"
         assert nlv3.options.layer_pair_depths == [1, 2]
 
-    def test_experimental_options_default_empty(self) -> None:
+    def test_experimental_options_default_empty(self, registry: BaseRegistry) -> None:
         """Test that experimental options default to empty dict."""
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
+        nlv3 = NoiseLearnerV3(mode=backend)
         assert nlv3.options.experimental == {}
 
-    def test_experimental_options_from_dict(self) -> None:
+    def test_experimental_options_from_dict(self, registry: BaseRegistry) -> None:
         """Test constructing with experimental options in dict."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts_dict)
+        nlv3 = NoiseLearnerV3(mode=backend, options=opts_dict)
         assert nlv3.options.experimental == opts_dict["experimental"]
 
-    def test_experimental_options_from_instance(self) -> None:
+    def test_experimental_options_from_instance(self, registry: BaseRegistry) -> None:
         """Test constructing with an NoiseLearnerV3Options instance with experimental options."""
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
         opts = NoiseLearnerV3Options(**opts_dict)  # type: ignore[arg-type]
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts)
+        nlv3 = NoiseLearnerV3(mode=backend, options=opts)
         assert nlv3.options.experimental == opts_dict["experimental"]
 
     def test_validation_on_mutation(self) -> None:

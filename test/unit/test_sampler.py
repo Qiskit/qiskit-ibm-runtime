@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -28,23 +27,25 @@ from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
 
-from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Session
-from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
+from qiskit_ibm_runtime import IBMInputValueError, Session
+from qiskit_ibm_runtime.fake_provider import (
+    FakeCusco,
+    FakeFractionalBackend,
+    FakeSherbrooke,
+    FakeVigoV2,
+)
+from qiskit_ibm_runtime.options import SamplerOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.server_side import SamplerV2
 
-from ..asserts import assert_dict_partially_equal, assert_warns_strict
-from ..registries import Backend, OneInstanceDryRunRegistry
-from ..utils import get_mocked_backend, transpile_pubs
+from ..asserts import assert_dict_partially_equal
+from ..registries import Backend, OneInstanceDryRunRegistry, get_submitted_jobs
+from ..utils import transpile_pubs
 
 if TYPE_CHECKING:
+    from responses import RequestsMock
+
     from ..registries import BaseRegistry
-
-
-class MockSession(Session):
-    """Mock for session class."""
-
-    _circuits_map: dict[str, QuantumCircuit] = {}
-    _instance = None
 
 
 def measured(n: int) -> QuantumCircuit:
@@ -61,6 +62,7 @@ def real_amplitudes_measured(num_qubits: int, reps: int) -> QuantumCircuit:
     return qc
 
 
+@pytest.mark.server_side_primitives
 class TestSamplerV2:
     """Class for testing the Sampler class."""
 
@@ -72,15 +74,18 @@ class TestSamplerV2:
             [(real_amplitudes_measured(num_qubits=1, reps=1), [1, 2]), (measured(3),)],
         ],
     )
-    def test_run_program_inputs(self, in_pubs: list) -> None:
+    def test_run_program_inputs(
+        self, in_pubs: list, registry: BaseRegistry, responses: RequestsMock
+    ) -> None:
         """Verify program inputs are correct."""
-        backend: MagicMock = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         t_pubs = transpile_pubs(in_pubs, backend, "sampler")
         inst = SamplerV2(mode=backend)
         inst.run(t_pubs)
-        input_params = backend.service._run.call_args.kwargs["inputs"]
+        input_params = get_submitted_jobs(responses)[0]["params"]
         assert "pubs" in input_params
-        pubs_param = input_params["pubs"]
+        pubs_param = [SamplerPub.coerce(pub) for pub in input_params["pubs"]]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
             assert isinstance(a_pub_param, SamplerPub)
             # Check circuit
@@ -99,9 +104,12 @@ class TestSamplerV2:
             {"execution": {"meas_type": "unclassified"}},
         ],
     )
-    def test_unsupported_values_for_sampler_options(self, opt: dict) -> None:
+    def test_unsupported_values_for_sampler_options(
+        self, opt: dict, registry: BaseRegistry
+    ) -> None:
         """Test exception when options levels are not supported."""
-        backend = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with Session(
             backend=backend,
         ) as session:
@@ -120,8 +128,7 @@ class TestSamplerV2:
         )
 
         in_pubs = [(dynamic_circuit,)]
-        backend = get_mocked_backend()
-        inst = SamplerV2(mode=backend)
+        inst = SamplerV2(mode=FakeVigoV2())
         inst.options.dynamical_decoupling.enable = True  # type: ignore[union-attr]
         with pytest.raises(
             IBMInputValueError,
@@ -150,19 +157,28 @@ class TestSamplerV2:
             ),
         ],
     )
-    def test_run_default_options(self, options: dict, expected_options: dict) -> None:
+    def test_run_default_options(
+        self,
+        options: dict,
+        expected_options: dict,
+        registry: BaseRegistry,
+        responses: RequestsMock,
+    ) -> None:
         """Test run using default options."""
-        session = MagicMock(spec=MockSession, _backend="common_backend")
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
 
-        inst = SamplerV2(mode=session, options=options)
-        inst.run((QuantumCircuit(1, 1),))
+        with Session(backend=backend) as session:
+            inst = SamplerV2(mode=session, options=options)
+            inst.run((QuantumCircuit(1, 1),))
 
-        run_options = session._run.call_args.kwargs["inputs"]["options"]
+        run_options = get_submitted_jobs(responses)[0]["params"]["options"]
         assert_dict_partially_equal(run_options, expected_options)
 
-    def test_sampler_validations(self) -> None:
+    def test_sampler_validations(self, registry: BaseRegistry) -> None:
         """Test exceptions when failing client-side validations."""
-        backend = get_mocked_backend()
+        service = QiskitRuntimeService(token="my_token")
+        backend = service.backend("common_backend")
         with Session(
             backend=backend,
         ) as session:
@@ -526,34 +542,37 @@ class TestSamplerV2:
             assert np.array_equal(result[0].data.c, np.zeros((1,)))
 
     @pytest.mark.parametrize(
-        ("pub_shots", "run_shots", "num_appearances"),
+        ("pub_shots", "shots", "should_raise"),
         [
-            ([None, None], 100, 0),
-            ([100, 100], 100, 0),
-            ([20, 20], 100, 0),
-            ([20, None], 20, 0),
-            ([20, None], 100, 1),
-            ([100, 20, 34], 50, 1),
+            ([None, None], 100, False),
+            ([100, 100], 100, False),
+            ([20, 20], 100, False),
+            ([20, None], 20, False),
+            ([20, None], 100, True),
+            ([100, 20, 34], 50, True),
         ],
     )
-    def test_deprecate_pub_level_shots(
-        self, pub_shots: int | None, run_shots: int | None, num_appearances: int
+    def test_pub_level_shots_raises(
+        self, pub_shots: int | None, shots: int | None, should_raise: bool
     ) -> None:
-        """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
-        backend = get_mocked_backend()
+        """Conflicting pub-level shots raises; matching shots do not."""
+        backend = FakeVigoV2()
         circ = QuantumCircuit(1, 1)
         circ.measure(0, 0)
         t_circ = transpile(circ, backend=backend)
-        inst = SamplerV2(mode=backend)
+        sampler = SamplerV2(mode=backend)
 
-        warning_msg = "Specifying different 'shots' across pubs is deprecated"
         pubs = [
             (t_circ, None, shots) if shots is not None else SamplerPub(t_circ)
             for shots in pub_shots  # type: ignore[union-attr]
         ]
 
-        with assert_warns_strict(DeprecationWarning, warning_msg, num_appearances):
-            inst.run(pubs, shots=run_shots)
+        if should_raise:
+            warning_msg = "Specifying different 'shots' across pubs is not supported"
+            with pytest.raises(ValueError, match=warning_msg):
+                sampler.run(pubs, shots=shots)
+        else:
+            sampler.run(pubs, shots=shots)
 
     @pytest.mark.registry(registry_class=OneInstanceDryRunRegistry)
     def test_run_dry_run(self, registry: BaseRegistry) -> None:

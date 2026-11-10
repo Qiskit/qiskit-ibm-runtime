@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Any, BinaryIO, get_args
 import dateutil.parser
 import numpy as np
 
+from .calibrator.params_converters import CALIBRATOR_PARAMS_CONVERTERS
 from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 
 try:
@@ -492,10 +493,22 @@ class RuntimeDecoder(json.JSONDecoder):
                 # `decoded` represents the input to an executor program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
-                    converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
-                    quantum_program, options = converter.decoder(converter.model(**params))
+                    executor_converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
+                    executor_model = executor_converter.model(**params)
+                    quantum_program, executor_options = executor_converter.decoder(executor_model)
                     decoded["params"]["quantum_program"] = quantum_program
-                    decoded["params"]["options"] = options
+                    decoded["params"]["options"] = executor_options
+                except Exception as exception:
+                    warnings.warn(
+                        "Unable to convert executor 'params' to a pair of quantum program and "
+                        f"options due to the following exception: {exception}"
+                    )
+            elif program_id == "calibrate" and params:
+                try:
+                    calibrator_converter = CALIBRATOR_PARAMS_CONVERTERS[params["schema_version"]]
+                    calibrator_model = calibrator_converter.model(**params)
+                    calibrator_options = calibrator_converter.decoder(calibrator_model)
+                    decoded["params"]["options"] = calibrator_options  # type: ignore[assignment]
                 except Exception as exception:
                     warnings.warn(
                         "Unable to convert executor 'params' to a pair of quantum program and "
@@ -511,10 +524,11 @@ class RuntimeDecoder(json.JSONDecoder):
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
 
-                    converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]  # type: ignore[assignment]
-                    instructions, options = converter.decoder(converter.model(**params))  # type: ignore[assignment]
+                    nlv3_converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
+                    nlv3_model = nlv3_converter.model(**params)
+                    instructions, nlv3_options = nlv3_converter.decoder(nlv3_model)
                     decoded["params"]["instructions"] = instructions
-                    decoded["params"]["options"] = options
+                    decoded["params"]["options"] = nlv3_options
                 except Exception as exception:
                     warnings.warn(
                         "Unable to convert NLV3 'params' to a pair of instructions and "

@@ -65,7 +65,7 @@ class TestIntegrationRetrieveJob:
         wait_for_status(job, "QUEUED")
         rjob = service.job(job.job_id())
         assert job.job_id() == rjob.job_id()
-        assert "sampler" == rjob.primitive_id
+        assert "executor" == rjob.primitive_id
 
     def test_retrieve_job_running(
         self,
@@ -78,7 +78,7 @@ class TestIntegrationRetrieveJob:
         wait_for_status(job, "RUNNING")
         rjob = service.job(job.job_id())
         assert job.job_id() == rjob.job_id()
-        assert "sampler" == rjob.primitive_id
+        assert "executor" == rjob.primitive_id
 
     def test_retrieve_job_done(
         self,
@@ -91,7 +91,7 @@ class TestIntegrationRetrieveJob:
         job.wait_for_final_state()
         rjob = service.job(job.job_id())
         assert job.job_id() == rjob.job_id()
-        assert "sampler" == rjob.primitive_id
+        assert "executor" == rjob.primitive_id
 
     def test_retrieve_all_jobs(
         self,
@@ -121,7 +121,7 @@ class TestIntegrationRetrieveJob:
         for _ in range(3):
             jobs.append(submit_bell_job())
 
-        rjobs = service.jobs(limit=2, program_id="sampler")
+        rjobs = service.jobs(limit=2, program_id="executor")
         assert len(rjobs) == 2
 
     def test_retrieve_pending_jobs(

@@ -23,6 +23,7 @@ from samplomatic.quantum_program import QuantumProgram as SamplomaticQuantumProg
 
 from qiskit_ibm_runtime.batch import Batch
 from qiskit_ibm_runtime.executor import Executor
+from qiskit_ibm_runtime.fake_provider import FakeArmonkV2
 from qiskit_ibm_runtime.options_models.environment import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
@@ -31,7 +32,6 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.session import Session
 
 from ...registries import OneInstanceDryRunRegistry
-from ...utils import get_mocked_backend
 
 if TYPE_CHECKING:
     from ...registries import BaseRegistry
@@ -50,14 +50,14 @@ class TestExecutorOptions:
 
     def test_default_options(self) -> None:
         """Test that default options are set when none are provided."""
-        executor = Executor(mode=get_mocked_backend())
+        executor = Executor(mode=FakeArmonkV2())
         assert isinstance(executor.options, ExecutorOptions)
         assert executor.options == ExecutorOptions()
 
     def test_options_from_instance(self) -> None:
         """Test constructing with an ExecutorOptions instance."""
         opts = ExecutorOptions(execution=ExecutionOptions(init_qubits=False))
-        executor = Executor(mode=get_mocked_backend(), options=opts)
+        executor = Executor(mode=FakeArmonkV2(), options=opts)
         assert executor.options is opts
         assert not executor.options.execution.init_qubits
 
@@ -67,7 +67,7 @@ class TestExecutorOptions:
             "execution": {"init_qubits": False, "rep_delay": 0.5},
             "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
         }
-        executor = Executor(mode=get_mocked_backend(), options=opts_dict)
+        executor = Executor(mode=FakeArmonkV2(), options=opts_dict)
         assert not executor.options.execution.init_qubits
         assert executor.options.execution.rep_delay == 0.5
         assert executor.options.environment.log_level == "DEBUG"
@@ -75,9 +75,7 @@ class TestExecutorOptions:
 
     def test_options_from_partial_dict(self) -> None:
         """Test constructing with a nested dict when only specifying some of the options."""
-        executor = Executor(
-            mode=get_mocked_backend(), options={"execution": {"init_qubits": False}}
-        )
+        executor = Executor(mode=FakeArmonkV2(), options={"execution": {"init_qubits": False}})
         assert not executor.options.execution.init_qubits
         assert executor.options.execution.rep_delay is None
         assert executor.options.environment == EnvironmentOptions()
@@ -85,33 +83,31 @@ class TestExecutorOptions:
     def test_options_constructor_invalid_type(self) -> None:
         """Test that an invalid options type raises TypeError."""
         with pytest.raises(TypeError, match="Expected ExecutorOptions or dict"):
-            Executor(mode=get_mocked_backend(), options="invalid")  # type: ignore[arg-type]
+            Executor(mode=FakeArmonkV2(), options="invalid")  # type: ignore[arg-type]
 
     def test_setter_with_instance(self) -> None:
         """Test setting options via the setter with an ExecutorOptions instance."""
-        executor = Executor(mode=get_mocked_backend())
+        executor = Executor(mode=FakeArmonkV2())
         new_opts = ExecutorOptions(execution=ExecutionOptions(init_qubits=False))
         executor.options = new_opts
         assert executor.options is new_opts
 
     def test_setter_with_dict(self) -> None:
         """Test setting options via the setter with a dict."""
-        executor = Executor(mode=get_mocked_backend())
+        executor = Executor(mode=FakeArmonkV2())
         executor.options = {"execution": {"init_qubits": False}}  # type: ignore[assignment]
         assert isinstance(executor.options, ExecutorOptions)
         assert not executor.options.execution.init_qubits
 
     def test_setter_invalid_type(self) -> None:
         """Test that setting options with an invalid type raises TypeError."""
-        executor = Executor(mode=get_mocked_backend())
+        executor = Executor(mode=FakeArmonkV2())
         with pytest.raises(TypeError, match="Expected ExecutorOptions or dict"):
             executor.options = 42  # type: ignore[assignment]
 
     def test_setter_replaces_options(self) -> None:
         """Test that the setter replaces (not updates) the options."""
-        executor = Executor(
-            mode=get_mocked_backend(), options={"environment": {"log_level": "DEBUG"}}
-        )
+        executor = Executor(mode=FakeArmonkV2(), options={"environment": {"log_level": "DEBUG"}})
         executor.options = {"execution": {"init_qubits": False}}  # type: ignore[assignment]
         # environment should be back to defaults since we replaced, not updated
         assert executor.options.environment.log_level == "WARNING"
@@ -119,24 +115,24 @@ class TestExecutorOptions:
 
     def test_experimental_options_default_empty(self) -> None:
         """Test that experimental options default to empty dict."""
-        executor = Executor(mode=get_mocked_backend())
+        executor = Executor(mode=FakeArmonkV2())
         assert executor.options.experimental == {}
 
     def test_experimental_options_from_dict(self) -> None:
         """Test constructing with experimental options in dict."""
         opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
-        executor = Executor(mode=get_mocked_backend(), options=opts_dict)
+        executor = Executor(mode=FakeArmonkV2(), options=opts_dict)
         assert executor.options.experimental == {"foo": "bar", "baz": 123}
 
     def test_experimental_options_from_instance(self) -> None:
         """Test constructing with an ExecutorOptions instance with experimental options."""
         opts = ExecutorOptions(experimental={"custom_key": "custom_value"})
-        executor = Executor(mode=get_mocked_backend(), options=opts)
+        executor = Executor(mode=FakeArmonkV2(), options=opts)
         assert executor.options.experimental == {"custom_key": "custom_value"}
 
     def test_experimental_options_setter(self) -> None:
         """Test setting experimental options via the setter."""
-        executor = Executor(mode=get_mocked_backend())
+        executor = Executor(mode=FakeArmonkV2())
         executor.options = {"experimental": {"test": "value"}}  # type: ignore[assignment]
         assert executor.options.experimental == {"test": "value"}
 
