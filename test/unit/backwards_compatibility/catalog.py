@@ -65,3 +65,5 @@ SAMPLER_JOBS = {
         "dbq77gtt7fqc738afafg",
     ],
 }
+
+NOISE_LEARNER_JOBS = {"0.51": ["dbq776dt7fqc738af9r0"]}
