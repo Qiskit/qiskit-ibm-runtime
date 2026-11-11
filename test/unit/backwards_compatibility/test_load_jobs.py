@@ -21,6 +21,7 @@ from qiskit_ibm_runtime.fake_provider import FakeFez
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
+from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 from ...registries import Backend, Job, OneInstanceNoBackendsRegistry
 from .catalog import ESTIMATOR_JOBS, EXECUTOR_JOBS, NOISE_LEARNER_JOBS, SAMPLER_JOBS
@@ -102,6 +103,7 @@ class TestStoredJobs:
         # Result should be loaded correctly.
         assert isinstance(result, PrimitiveResult)
 
+    @pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     @pytest.mark.parametrize("job_id", NOISE_LEARNER_JOBS["0.51"] + NOISE_LEARNER_JOBS["0.52"])
     def test_noise_learner_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
