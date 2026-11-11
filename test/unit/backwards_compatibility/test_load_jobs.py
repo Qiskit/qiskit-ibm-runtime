@@ -52,7 +52,7 @@ class TestStoredJobs:
         assert isinstance(result, QuantumProgramResult)
 
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
-    @pytest.mark.parametrize("job_id", ESTIMATOR_JOBS["0.50"])
+    @pytest.mark.parametrize("job_id", ESTIMATOR_JOBS["0.50"] + ESTIMATOR_JOBS["0.51"])
     def test_estimator_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Estimator jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
@@ -75,7 +75,7 @@ class TestStoredJobs:
         assert isinstance(result, PrimitiveResult)
 
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
-    @pytest.mark.parametrize("job_id", SAMPLER_JOBS["0.49"])
+    @pytest.mark.parametrize("job_id", SAMPLER_JOBS["0.49"] + SAMPLER_JOBS["0.51"])
     def test_sampler_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Sampler jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
