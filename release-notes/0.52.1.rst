@@ -1,0 +1,7 @@
+0.52.1 (2026-11-11)
+===================
+
+Bug Fixes
+---------
+
+- Updated the qiskit-mitigation dependency constraint to ``==0.1.1`` to ensure stability and prevent breaking changes. (`3499 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3499>`__)
