@@ -178,17 +178,11 @@ class Estimator(BaseEstimatorV2):
             add_tags=True,
         )
         box_types_arg = "all" if types == "all" else "gates"
-        measure_mitigation = bool(options.resilience.measure_mitigation)
         return find_combined_unique_layers(
             circuits=[pub.circuit for pub in coerced_pubs],
             mitigation_types=[task_class() for _ in coerced_pubs],
             custom_boxing_options=boxing_opts,
             box_types=box_types_arg,
-            observables=[pub.observables for pub in coerced_pubs],
-            trex=measure_mitigation,
-            trex_custom_boxing_options={"add_tags": boxing_opts["add_tags"]}
-            if measure_mitigation
-            else None,
         )
 
     def finalize_options(self) -> EstimatorOptions:
