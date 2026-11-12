@@ -33,13 +33,13 @@ List of stored jobs:
 | dbq776dt7fqc738af9r0 | 0.51 | 08f8f61 | ibm_fez | test/integration/test_executor_noise_learner.py::TestNoiseLearnerV3::test_noise_learner_v3 |
 | dbq77dk4148s739vl7jg | 0.51 | 08f8f61 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[True] |
 | dbq77gtt7fqc738afafg | 0.51 | 08f8f61 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[False] |
-| dbq7938ou4as73cumr2g | 0.52 | 48d888a | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_vanilla_estimator |
-| dbq7975t7fqc738afdrg | 0.52 | 48d888a | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_pec_estimator |
-| dbq79b44148s739vlbh0 | 0.52 | 48d888a | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[gate_folding] |
-| dbq79ioou4as73cums40 | 0.52 | 48d888a | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[pea] |
-| dbq79r8ou4as73cumsmg | 0.52 | 48d888a | ibm_fez | test/integration/test_executor_noise_learner.py::TestNoiseLearnerV3::test_noise_learner_v3 |
-| dbq7a28ou4as73cumt7g | 0.52 | 48d888a | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[True] |
-| dbq7a5s4148s739vld8g | 0.52 | 48d888a | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[False] |
+| dbqq24pabdes73fon030 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_vanilla_estimator |
+| dbqq29ejjaos73ahntr0 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_pec_estimator |
+| dbqq2e7v5hds73dggkc0 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[gate_folding] |
+| dbqq2n9abdes73fon0ng | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[pea] |
+| dbqq38mjjaos73ahnusg | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_noise_learner.py::TestNoiseLearnerV3::test_noise_learner_v3 |
+| dbqq3fmjjaos73ahnv60 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[True] |
+| dbqq3j7v5hds73dggljg | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[False] |
 """  # noqa: E501
 
 ESTIMATOR_JOBS = {
@@ -56,10 +56,10 @@ ESTIMATOR_JOBS = {
         "dbq76soou4as73cumn4g",
     ],
     "0.52": [
-        "dbq7938ou4as73cumr2g",
-        "dbq7975t7fqc738afdrg",
-        "dbq79b44148s739vlbh0",
-        "dbq79ioou4as73cums40",
+        "dbqq24pabdes73fon030",
+        "dbqq29ejjaos73ahntr0",
+        "dbqq2e7v5hds73dggkc0",
+        "dbqq2n9abdes73fon0ng",
     ],
 }
 
@@ -78,9 +78,9 @@ SAMPLER_JOBS = {
         "dbq77gtt7fqc738afafg",
     ],
     "0.52": [
-        "dbq7a28ou4as73cumt7g",
-        "dbq7a5s4148s739vld8g",
+        "dbqq3fmjjaos73ahnv60",
+        "dbqq3j7v5hds73dggljg",
     ],
 }
 
-NOISE_LEARNER_JOBS = {"0.51": ["dbq776dt7fqc738af9r0"], "0.52": ["dbq79r8ou4as73cumsmg"]}
+NOISE_LEARNER_JOBS = {"0.51": ["dbq776dt7fqc738af9r0"], "0.52": ["dbqq38mjjaos73ahnusg"]}
