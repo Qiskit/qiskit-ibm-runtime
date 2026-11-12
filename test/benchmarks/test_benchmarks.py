@@ -39,7 +39,7 @@ def test_import_qiskit_ibm_runtime(benchmark):
 
 
 def test_instantiate_qiskit_runtime_service(benchmark):
-    """Benchmark the instantating of `QiskitRuntimeService`."""
+    """Benchmark the instantiation of `QiskitRuntimeService`."""
     dependencies = integration_test_dependencies(init_service=False)
 
     benchmark(
