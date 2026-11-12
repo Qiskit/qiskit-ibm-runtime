@@ -265,6 +265,10 @@ QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value 
 QISKIT_IBM_QPU=...                                              # The Quantum Processing Unit to use
 ```
 
+If the configuration is missing, the tests that require it are skipped. When the `CI`
+environment variable is set (as it is in GitHub Actions), they fail instead, so that tests are
+not silently skipped in CI.
+
 To enable test cases against external system in your private fork, make sure to set above values as
 [encrypted environment secrets]. The names of the environments must match the ones that the
 [CI workflow](.github/workflows/ci.yml) relies upon.

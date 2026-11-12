@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 @pytest.fixture(scope="class")
 def dependencies() -> Dependencies:
     """Return the dependencies of a smoke test, from the environment configuration."""
-    return integration_test_dependencies(skip_if_missing=True)
+    return integration_test_dependencies()
 
 
 @pytest.fixture(scope="class")
