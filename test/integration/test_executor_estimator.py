@@ -16,44 +16,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-import numpy as np
 import pytest
 from qiskit.primitives import PrimitiveResult
-from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 
-from ..utils import make_mirror_circuit_with_phases
+from .utils import estimator_pubs
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import IBMBackend
-
     from .dependencies import Dependencies
-
-
-def estimator_pubs(backend: IBMBackend) -> list[tuple]:
-    """Return two pubs for `backend`, differing only in how they broadcast.
-
-    PUB 0 - all-to-all broadcasting, with resulting shape (2,2).
-    PUB 1 - one-to-one broadcasting, with resulting shape (2,).
-    """
-    pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-    isa_circuit = pass_manager.run(make_mirror_circuit_with_phases(backend))
-
-    zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
-        isa_circuit.layout
-    )
-    xx_with_offset = SparsePauliOp.from_list([("XX", 1.0), ("II", 3.0)]).apply_layout(
-        isa_circuit.layout
-    )
-    parameter_sets = [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]]
-
-    return [
-        (isa_circuit, [[zz_with_offset], [xx_with_offset]], parameter_sets),
-        (isa_circuit, [zz_with_offset, xx_with_offset], parameter_sets),
-    ]
 
 
 class TestEstimator:
