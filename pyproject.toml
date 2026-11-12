@@ -225,7 +225,7 @@ performance = [
 ]
 
 noise-learning = [
-    "qiskit-noise-learning>=0.2.0",
+    "qiskit-noise-learning>=0.2.0; python_version >= '3.11'",
 ]
 
 # Developer extras.
