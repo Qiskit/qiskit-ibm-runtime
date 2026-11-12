@@ -1169,6 +1169,7 @@ class QiskitRuntimeService:
             service=self,
             version=version,
             private=qrt_options.private,
+            calibration_id=response.get("calibration_id"),
         )
 
     def job(self, job_id: str) -> RuntimeJobV2:
@@ -1418,6 +1419,7 @@ class QiskitRuntimeService:
             session_id=raw_data.get("session_id"),
             tags=raw_data.get("tags"),
             private=raw_data.get("private", False),
+            calibration_id=raw_data.get("calibration_id"),
         )
 
     def least_busy(

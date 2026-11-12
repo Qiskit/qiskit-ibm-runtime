@@ -472,6 +472,9 @@ class BaseRegistry(FirstMatchRegistry):
                 "state": {"status": job.status.capitalize()},
                 "program": {"id": job.program},
                 "usage": job.usage,
+                **(
+                    {"calibration_id": job.calibration_id} if job.calibration_id is not None else {}
+                ),
             }
             for job in jobs
             if job.status in statuses
@@ -523,6 +526,11 @@ class BaseRegistry(FirstMatchRegistry):
                     "state": state,
                     "program": {"id": job.program},
                     "usage": job.usage,
+                    **(
+                        {"calibration_id": job.calibration_id}
+                        if job.calibration_id is not None
+                        else {}
+                    ),
                 }
             )
 
