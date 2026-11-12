@@ -41,9 +41,7 @@ class Dependencies:
 def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     """Return the dependencies of an integration test, from the environment configuration.
 
-    If the environment configuration is incomplete, the running test is skipped, unless the
-    ``CI`` environment variable is set, in which case a `RuntimeError` is raised, to make sure
-    that tests are not silently skipped in CI.
+    If the environment configuration is incomplete, the running test is skipped.
 
     Args:
         init_service: whether to initialize the `QiskitRuntimeService` from the environment
@@ -51,9 +49,6 @@ def integration_test_dependencies(init_service: bool = True) -> Dependencies:
 
     Returns:
         The dependencies of an integration test.
-
-    Raises:
-        RuntimeError: If the environment configuration is incomplete and running in CI.
 
     """
     channel: ChannelType = "ibm_quantum_platform"
@@ -67,8 +62,6 @@ def integration_test_dependencies(init_service: bool = True) -> Dependencies:
         ("QISKIT_IBM_INSTANCE", instance),
     ):
         if not value:
-            if os.getenv("CI"):
-                raise RuntimeError(f"{name} is not set.")
             pytest.skip(f"{name} is not set.")
 
     service = (

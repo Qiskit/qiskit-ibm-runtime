@@ -266,8 +266,7 @@ QISKIT_IBM_QPU=...                                              # The Quantum Pr
 ```
 
 If any of `QISKIT_IBM_TOKEN`, `QISKIT_IBM_URL` or `QISKIT_IBM_INSTANCE` is not set, the tests that
-need them are skipped. When the `CI` environment variable is set (as it is in GitHub Actions), such
-tests fail instead, so that they are not silently skipped in CI. `QISKIT_IBM_QPU` is not checked.
+need them are skipped. `QISKIT_IBM_QPU` is not checked.
 
 To enable test cases against external system in your private fork, make sure to set above values as
 [encrypted environment secrets]. The names of the environments must match the ones that the
