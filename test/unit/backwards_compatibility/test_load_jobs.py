@@ -19,10 +19,12 @@ from qiskit.primitives import PrimitiveResult
 
 from qiskit_ibm_runtime.fake_provider import FakeFez
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
+from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 from ...registries import Backend, Job, OneInstanceNoBackendsRegistry
-from .catalog import ESTIMATOR_JOBS, EXECUTOR_JOBS, SAMPLER_JOBS
+from .catalog import ESTIMATOR_JOBS, EXECUTOR_JOBS, NOISE_LEARNER_JOBS, SAMPLER_JOBS
 
 
 class TestStoredJobs:
@@ -52,7 +54,9 @@ class TestStoredJobs:
         assert isinstance(result, QuantumProgramResult)
 
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
-    @pytest.mark.parametrize("job_id", ESTIMATOR_JOBS["0.50"])
+    @pytest.mark.parametrize(
+        "job_id", ESTIMATOR_JOBS["0.50"] + ESTIMATOR_JOBS["0.51"] + ESTIMATOR_JOBS["0.52"]
+    )
     def test_estimator_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Estimator jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
@@ -75,7 +79,9 @@ class TestStoredJobs:
         assert isinstance(result, PrimitiveResult)
 
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
-    @pytest.mark.parametrize("job_id", SAMPLER_JOBS["0.49"])
+    @pytest.mark.parametrize(
+        "job_id", SAMPLER_JOBS["0.49"] + SAMPLER_JOBS["0.51"] + SAMPLER_JOBS["0.52"]
+    )
     def test_sampler_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Sampler jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
@@ -96,3 +102,27 @@ class TestStoredJobs:
         assert job.primitive_id == "executor"
         # Result should be loaded correctly.
         assert isinstance(result, PrimitiveResult)
+
+    @pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
+    @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
+    @pytest.mark.parametrize("job_id", NOISE_LEARNER_JOBS["0.52"])
+    def test_noise_learner_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
+        """Test stored client-side Noise Learner jobs."""
+        resources_path = Path(__file__).resolve().parent / "resources"
+        job_details = (resources_path / f"{job_id}_details.json").read_text(encoding="utf-8")
+        job_results = (resources_path / f"{job_id}_results.json").read_text(encoding="utf-8")
+
+        # Prepare the contents of the registry.
+        registry.add_backend(Backend.from_(FakeFez))
+        registry.add_job(
+            Job(job_id, "ibm_fez", raw_details=job_details, raw_results=job_results), "a"
+        )
+
+        service = QiskitRuntimeService(token="my_token")
+        job = service.job(job_id)
+        result = job.result()
+
+        # Job should be an executor job.
+        assert job.primitive_id == "executor"
+        # Result should be loaded correctly.
+        assert isinstance(result, NoiseLearnerV3Results)

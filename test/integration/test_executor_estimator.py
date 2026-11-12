@@ -43,7 +43,8 @@ class TestEstimator:
         pubs = estimator_pubs(backend)
 
         estimator = Estimator(backend)
-        results = estimator.run(pubs).result()
+        job = estimator.run(pubs)
+        results = job.result()
 
         # Expect one result per pub:
         assert len(results) == 2
@@ -73,7 +74,8 @@ class TestEstimator:
             for layer in layers
         ]
 
-        results = estimator.run(pubs).result()
+        job = estimator.run(pubs)
+        results = job.result()
 
         # Expect one result per pub:
         assert len(results) == 2
@@ -121,7 +123,8 @@ class TestEstimator:
         expected_num_extrapolated = expected_num_noise_factors + 1
         expected_num_extrapolators = len(estimator.options.resilience.zne.extrapolator)
 
-        results = estimator.run(pubs).result()
+        job = estimator.run(pubs)
+        results = job.result()
 
         # Expect one result per pub:
         assert isinstance(results, PrimitiveResult)
