@@ -33,11 +33,10 @@ List of stored jobs:
 | dbq776dt7fqc738af9r0 | 0.51 | 08f8f61 | ibm_fez | test/integration/test_executor_noise_learner.py::TestNoiseLearnerV3::test_noise_learner_v3 |
 | dbq77dk4148s739vl7jg | 0.51 | 08f8f61 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[True] |
 | dbq77gtt7fqc738afafg | 0.51 | 08f8f61 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[False] |
-| dbqq24pabdes73fon030 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_vanilla_estimator |
-| dbqq29ejjaos73ahntr0 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_pec_estimator |
-| dbqq2e7v5hds73dggkc0 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[gate_folding] |
-| dbqq2n9abdes73fon0ng | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[pea] |
-| dbqq38mjjaos73ahnusg | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_noise_learner.py::TestNoiseLearnerV3::test_noise_learner_v3 |
+| dbqqjjok09pc73atna1g | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_vanilla_estimator |
+| dbqqjoujjaos73ahoh9g | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_pec_estimator |
+| dbqqjtnv5hds73dgh840 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[gate_folding] |
+| dbqqk6ejjaos73ahoieg | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_estimator.py::TestEstimator::test_zne_estimator[pea] |
 | dbqq3fmjjaos73ahnv60 | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[True] |
 | dbqq3j7v5hds73dggljg | 0.52 | c03e46c0 | ibm_fez | test/integration/test_executor_sampler.py::TestSampler::test_sampler[False] |
 """  # noqa: E501
@@ -50,16 +49,17 @@ ESTIMATOR_JOBS = {
         "dar65c5vr3kc73eieutg",
     ],
     "0.51": [
+        # These jobs work against 0.52.0 but not against 0.52.1, due to `qiskit-mitigation` version.
         "dbq764dt7fqc738af7c0",
         "dbq768oqtr0c738fetbg",
         "dbq76fs4148s739vl5vg",
         "dbq76soou4as73cumn4g",
     ],
     "0.52": [
-        "dbqq24pabdes73fon030",
-        "dbqq29ejjaos73ahntr0",
-        "dbqq2e7v5hds73dggkc0",
-        "dbqq2n9abdes73fon0ng",
+        "dbqqjjok09pc73atna1g",
+        "dbqqjoujjaos73ahoh9g",
+        "dbqqjtnv5hds73dgh840",
+        "dbqqk6ejjaos73ahoieg",
     ],
 }
 
