@@ -19,6 +19,7 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
    :toctree: ../stubs/
    :nosignatures:
 
+   CalibratorResult
    EstimatorPubResult
    LayerError
    PauliLindbladError

@@ -82,7 +82,7 @@ class Batch(Session):
                 jobs.append(job)
 
     For more details, check the "`Run jobs in a batch
-    <https://quantum.cloud.ibm.com/docs/guides/run-jobs-batch>`_" page.
+    <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/run-jobs-batch>`_" page.
 
     Args:
         backend: Instance of ``Backend`` class.
@@ -92,7 +92,7 @@ class Batch(Session):
             forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
             This value must be less than the
             `system imposed maximum
-            <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/run-jobs-max-execution-time>`_.
         create_new: If True, the POST session API endpoint will be called to create a new
             session. Prevents creating a new session when ``from_id()`` is called.
 
