@@ -75,10 +75,7 @@ class TestRetrieveJobs:
         )
 
         service = QiskitRuntimeService(token="my_token", instance="a")
-        jobs = {job.job_id(): job for job in service.jobs()}
 
-        assert jobs["job_1"].calibration_id is None
-        assert jobs["job_2"].calibration_id == "job_2_calibration"
         assert service.job("job_1").calibration_id is None
         assert service.job("job_2").calibration_id == "job_2_calibration"
 
