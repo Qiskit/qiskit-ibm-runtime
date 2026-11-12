@@ -1168,6 +1168,7 @@ class QiskitRuntimeService:
             service=self,
             version=version,
             private=qrt_options.private,
+            calibration_id=response.get("calibration_id"),
         )
 
     def job(self, job_id: str) -> RuntimeJobV2:
