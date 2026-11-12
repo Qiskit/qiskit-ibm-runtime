@@ -13,5 +13,5 @@ Upgrade Notes
 -------------
 
 - The V1 Primitives ``SamplerV1`` and ``EstimatorV1`` have been completely removed. See the
-  `Introduction to primitives <https://quantum.cloud.ibm.com/docs/guides/primitives>`__ to learn how to use the V2 Primitives. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
+  `Introduction to primitives <https://quantum.cloud.ibm.com/docs/qiskit/primitives>`__ to learn how to use the V2 Primitives. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
 - The ``service`` parameter is now required in ``Session.from_id()``. (`1868 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1868>`__)

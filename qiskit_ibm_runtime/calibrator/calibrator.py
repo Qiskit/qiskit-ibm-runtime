@@ -51,6 +51,9 @@ class Calibrator:
             calibrator = Calibrator(session)
             calibrator.run()
 
+    .. note::
+        This feature is experimental and subject to change without notice.
+
     Args:
         mode: The execution mode used to make the primitive query. It can be:
 
@@ -60,7 +63,7 @@ class Calibrator:
 
             Refer to the
             `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/execution-modes>`_
             for more information about the ``Execution modes``.
 
         options: Calibrator options, see
