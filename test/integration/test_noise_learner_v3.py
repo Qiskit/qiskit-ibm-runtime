@@ -26,7 +26,7 @@ from qiskit_ibm_runtime import NoiseLearnerV3
 from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 
-from .test_executor_estimator import estimator_pubs
+from .utils import estimator_pubs
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
