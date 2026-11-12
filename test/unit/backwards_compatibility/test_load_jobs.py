@@ -54,7 +54,9 @@ class TestStoredJobs:
         assert isinstance(result, QuantumProgramResult)
 
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
-    @pytest.mark.parametrize("job_id", ESTIMATOR_JOBS["0.50"] + ESTIMATOR_JOBS["0.52"])
+    @pytest.mark.parametrize(
+        "job_id", ESTIMATOR_JOBS["0.50"] + ESTIMATOR_JOBS["0.51"] + ESTIMATOR_JOBS["0.52"]
+    )
     def test_estimator_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Estimator jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
@@ -103,7 +105,7 @@ class TestStoredJobs:
 
     @pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
-    @pytest.mark.parametrize("job_id", NOISE_LEARNER_JOBS["0.51"] + NOISE_LEARNER_JOBS["0.52"])
+    @pytest.mark.parametrize("job_id", NOISE_LEARNER_JOBS["0.52"])
     def test_noise_learner_jobs(self, job_id: str, registry: OneInstanceNoBackendsRegistry) -> None:
         """Test stored client-side Noise Learner jobs."""
         resources_path = Path(__file__).resolve().parent / "resources"
