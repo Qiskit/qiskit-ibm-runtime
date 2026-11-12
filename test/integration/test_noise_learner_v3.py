@@ -14,15 +14,19 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
+import pytest
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime import NoiseLearnerV3
+from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
+
+from .test_executor_estimator import estimator_pubs
 
 if TYPE_CHECKING:
     from .dependencies import Dependencies
@@ -88,3 +92,57 @@ class TestNoiseLearnerV3:
         assert metadata["learning_protocol"] == "trex"
         assert result[2].to_pauli_lindblad_map().num_qubits == len(instructions[2].qubits)
         assert result[2].to_pauli_lindblad_map().num_terms == len(instructions[2].qubits)
+
+    @pytest.mark.parametrize("mitigation", ["pec", "pea"])
+    def test_noise_learner_v3_with_estimator_layers(
+        self, mitigation: Literal["pec", "pea"], dependencies: Dependencies
+    ) -> None:
+        """Test server-side NLV3 with unique layers from Estimator with PEC/PEA and TREX enabled."""
+        backend = dependencies.service.backend(dependencies.qpu)
+        pubs = estimator_pubs(backend)
+
+        estimator = Estimator(backend)
+        if mitigation == "pec":
+            estimator.options.resilience.pec_mitigation = True
+        else:
+            estimator.options.resilience.zne_mitigation = True
+            estimator.options.resilience.zne.amplifier = "pea"
+        estimator.options.resilience.measure_mitigation = True
+
+        layers = estimator.find_unique_layers(pubs, types="all")
+        assert len(layers) > 0
+
+        learner = NoiseLearnerV3(backend)
+        learner.options.layer_pair_depths = [0, 2, 4]
+        learner.options.num_randomizations = 10
+        learner.options.shots_per_randomization = 100
+
+        job = learner.run(layers)
+
+        params = job.inputs
+        params["options"].experimental = {}
+
+        assert params["instructions"] == layers
+        assert params["options"] == learner.options
+
+        result = job.result()
+        assert isinstance(result, NoiseLearnerV3Results)
+        assert len(result) == len(layers)
+        assert all(isinstance(datum, NoiseLearnerV3Result) for datum in result.data)
+
+        has_trex = False
+        has_lindblad = False
+        for layer, datum in zip(layers, result.data):
+            metadata = datum.metadata
+            assert isinstance(metadata, dict)
+            protocol = metadata["learning_protocol"]
+            if protocol == "trex":
+                has_trex = True
+                assert datum.to_pauli_lindblad_map().num_qubits == len(layer.qubits)
+                assert datum.to_pauli_lindblad_map().num_terms == len(layer.qubits)
+            elif protocol == "lindblad":
+                has_lindblad = True
+                assert datum.to_pauli_lindblad_map().num_qubits == len(layer.qubits)
+
+        assert has_trex
+        assert has_lindblad
