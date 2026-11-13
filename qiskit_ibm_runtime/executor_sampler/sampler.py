@@ -15,13 +15,13 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, get_args
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-from ..base_primitive import get_mode_service_backend
-from ..executor import Executor
+from ..base_client_side import BaseClientSide
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options
 from .prepare import prepare
@@ -29,22 +29,29 @@ from .utils import BoxType, find_box_type, find_unique_layers
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Any
 
     from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
-    from qiskit.providers import BackendV2
 
-    from ..batch import Batch
     from ..fake_provider.local_runtime_job import LocalRuntimeJob
+    from ..options_models import ExecutorOptions
+    from ..quantum_program import QuantumProgram
     from ..runtime_job_v2 import RuntimeJobV2
-    from ..session import Session
 
 
 logger = logging.getLogger(__name__)
 
 
-class Sampler(BaseSamplerV2):
+@dataclass(frozen=True)
+class SamplerInputs:
+    """The inputs of Sampler."""
+
+    pubs: Iterable[SamplerPubLike]
+
+    shots: int | None = None
+
+
+class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
     """Client-side Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of Sampler built on top of the Executor primitive,
@@ -95,49 +102,11 @@ class Sampler(BaseSamplerV2):
             for all available options.
     """
 
-    options: SamplerOptions
-    """The options of this Sampler."""
+    semantic_role = "sampler_v2"
 
-    def __init__(
-        self,
-        mode: BackendV2 | Session | Batch | None = None,
-        options: SamplerOptions | dict | None = None,
-    ):
-        super().__init__()
-
-        # Store mode, service, and backend for simulator detection
-        self._mode, self._service, self._backend = get_mode_service_backend(mode)
-
-        # Coerced to `SamplerOptions` via `__setattr__()`.
-        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set attribute ``name`` to ``value``.
-
-        Handle ``options`` as a special case, ensuring it is set to an ``SamplerOptions`` instance.
-        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
-        autocomplete features.
-        """
-        if name == "options":
-            if isinstance(value, dict):
-                value = SamplerOptions(**value)
-            elif not isinstance(value, SamplerOptions):
-                raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
-
-        super().__setattr__(name, value)
-
-    def backend(self) -> BackendV2:
-        """Return the backend the primitive query will be run on."""
-        return self._backend
-
-    @property
-    def mode(self) -> Session | Batch | None:
-        """Return the execution mode used by this primitive.
-
-        Returns:
-            Mode used by this primitive, or ``None`` if an execution mode is not used.
-        """
-        return self._mode
+    def _get_default_options(self) -> SamplerOptions:
+        """The default options of all :class:`~.Sampler` objects."""
+        return SamplerOptions()
 
     def find_unique_layers(
         self, pubs: Iterable[SamplerPubLike], types: Literal["gates", "all"] = "gates"
@@ -179,6 +148,24 @@ class Sampler(BaseSamplerV2):
         """
         return finalize_sampler_options(self.options)
 
+    def prepare(self, inputs: SamplerInputs) -> tuple[QuantumProgram, ExecutorOptions]:
+        """The function used to map the inputs of Sampler to the inputs of Executor.
+
+        Args:
+            inputs: The inputs of this program.
+
+        Returns:
+            A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+                :class:`~.ExecutorOptions`.
+        """
+        return prepare(
+            pubs=inputs.pubs,
+            options=self.options,
+            shots=inputs.shots,
+            add_tags=self._service.is_local,
+            backend=self._backend,
+        )
+
     def run(
         self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None, dry_run: bool = False
     ) -> RuntimeJobV2 | LocalRuntimeJob:
@@ -206,26 +193,4 @@ class Sampler(BaseSamplerV2):
         Returns:
             The submitted job.
         """
-        # Pre-process: Convert Sampler input into a QuantumProgram
-        logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(
-            pubs,
-            self.options,
-            shots,
-            add_tags=self._service.is_local,
-            backend=self._backend,
-        )
-
-        # Set semantic role for post-processing dispatch
-        quantum_program._semantic_role = "sampler_v2"
-
-        executor = Executor(mode=self._mode or self._backend, options=executor_options)
-
-        logger.info(
-            "Submitting %d pub%s to executor with %d shots",
-            len(quantum_program.items),
-            "s" if len(quantum_program.items) > 1 else "",
-            quantum_program.shots,
-        )
-
-        return executor.run(quantum_program, dry_run=dry_run)
+        return self._run(SamplerInputs(pubs=pubs, shots=shots), dry_run=dry_run)
