@@ -14,14 +14,17 @@
 
 from __future__ import annotations
 
+import asyncio
 import socket
-import subprocess
-import urllib
+import threading
 from contextlib import contextmanager
-from time import sleep
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 import pytest
+from mitmproxy import ctx
+from mitmproxy.options import Options
+from mitmproxy.tools.dump import DumpMaster
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
@@ -34,20 +37,62 @@ from .dependencies import integration_test_dependencies
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from mitmproxy import http
+    from mitmproxy.master import Master
+
 ADDRESS = "127.0.0.1"
-PORT = 8085
-VALID_PROXIES = {"https": f"http://{ADDRESS}:{PORT}"}
-INVALID_PORT_PROXIES = {"https": "http://{}:{}".format(ADDRESS, "6666")}
-INVALID_ADDRESS_PROXIES = {"https": "http://{}:{}".format("invalid", PORT)}
+STARTUP_TIMEOUT = 10
+
+
+class RequestRecorder:
+    """A mitmproxy addon that records the host and port of every proxied request."""
+
+    def __init__(self) -> None:
+        self.requests: list[tuple[str, int]] = []
+        self.started = threading.Event()
+        self.master: Master | None = None
+        self.address: tuple[str, int] | None = None
+        self.url: str | None = None
+
+    def running(self) -> None:
+        """Called by mitmproxy once the server has finished starting up."""
+        self.master = ctx.master
+        proxyserver = self.master.addons.get("proxyserver")  # type: ignore[no-untyped-call]
+        host, port = proxyserver.listen_addrs()[0]
+        self.address = (host, port)
+        self.url = f"http://{host}:{port}"
+        self.started.set()
+
+    def request(self, flow: http.HTTPFlow) -> None:
+        """Called by mitmproxy for each request it proxies."""
+        self.requests.append((flow.request.pretty_host, flow.request.port))
+
+
+async def serve(recorder: RequestRecorder) -> None:
+    """Run a mitmproxy server on an OS-chosen local port, with ``recorder`` as its addon."""
+    options = Options(listen_host=ADDRESS, listen_port=0)
+    master = DumpMaster(options, with_termlog=False, with_dumper=False)
+    master.addons.add(recorder)  # type: ignore[no-untyped-call]
+    await master.run()
 
 
 @contextmanager
-def blocked_network() -> Iterator[None]:
-    """Block the network traffic that is not routed to the proxy, restoring it on exit."""
+def blocked_network(
+    *, allowed_address: tuple[str, int], exempt_thread_ident: int
+) -> Iterator[None]:
+    """Block the network traffic that is not routed to the proxy, restoring it on exit.
+
+    Args:
+        allowed_address: the only (host, port) the current thread may connect to directly.
+        exempt_thread_ident: thread allowed to bypass the block entirely. The in-process
+            mitmproxy server runs on its own thread in this same process, so without this
+            exemption its own upstream connections would be blocked too, since the patch
+            below is process-wide rather than scoped to the test's client code.
+    """
     original_connect = socket.socket.connect
 
     def blocking_connect(sock: socket.socket, address: tuple) -> None:
-        if address != (ADDRESS, PORT):
+        if address != allowed_address and threading.current_thread().ident != exempt_thread_ident:
             raise RuntimeError(f"Blocked network access to {address}")
         return original_connect(sock, address)
 
@@ -56,78 +101,73 @@ def blocked_network() -> Iterator[None]:
         yield
 
 
-@contextmanager
-def proxy_server() -> Iterator[subprocess.Popen]:
-    """Run a `pproxy` server, blocking the network traffic that is not routed to it.
+@pytest.fixture
+def proxy_server() -> Iterator[RequestRecorder]:
+    """Run an in-process mitmproxy server, blocking network traffic that is not routed to it.
+
+    The listen port is chosen by the OS rather than fixed, so that repeated invocations
+    within the same test run never race against the previous instance's port still being
+    held by the kernel.
 
     Yields:
-        The process running the server. A test can terminate it early to read its output.
+        The recorder of the running proxy, exposing its URL and the requests it proxied.
     """
-    command = ["pproxy", "-v", "-l", f"http://{ADDRESS}:{PORT}"]
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)  # noqa: S603
-    sleep(2)  # give the server time to start
+    recorder = RequestRecorder()
+    thread = threading.Thread(target=asyncio.run, args=(serve(recorder),), daemon=True)
+    thread.start()
+    if not recorder.started.wait(timeout=STARTUP_TIMEOUT):
+        raise RuntimeError(f"mitmproxy did not start within {STARTUP_TIMEOUT} seconds")
 
     try:
-        with blocked_network():
-            yield process
+        with blocked_network(allowed_address=recorder.address, exempt_thread_ident=thread.ident):
+            yield recorder
     finally:
-        if process.returncode is None:
-            process.stdout.close()  # close the IO buffer
-            process.terminate()
-            process.wait()
+        recorder.master.shutdown()  # type: ignore[no-untyped-call]
+        thread.join()
 
 
 class TestProxies:
     """Tests for proxy capabilities."""
 
-    def test_proxies_cloud_runtime_client(self) -> None:
+    def test_proxies_cloud_runtime_client(self, proxy_server: RequestRecorder) -> None:
         """Should reach the proxy using RuntimeClient."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server() as process:
-            params = ClientParameters(
-                instance=dependencies.instance,
-                token=dependencies.token,
-                channel=dependencies.channel,
-                verify=False,
-                proxies=ProxyConfiguration(urls=VALID_PROXIES),
-                url=dependencies.url,
-            )
-            client = RuntimeClient(params)
-            client.jobs_get(limit=1)
+        params = ClientParameters(
+            instance=dependencies.instance,
+            token=dependencies.token,
+            channel=dependencies.channel,
+            verify=False,
+            proxies=ProxyConfiguration(urls={"https": proxy_server.url}),
+            url=dependencies.url,
+        )
+        client = RuntimeClient(params)
+        client.jobs_get(limit=1)
 
-            api_line = pproxy_desired_access_log_line(params.url)
-            process.terminate()  # kill to be able of reading the output
-            proxy_output = process.stdout.read().decode("utf-8")
+        assert proxied_request_matches_domain(proxy_server.requests, params.url)
 
-        assert api_line in proxy_output
-
-    def test_proxies_qiskit_runtime_service(self) -> None:
+    def test_proxies_qiskit_runtime_service(self, proxy_server: RequestRecorder) -> None:
         """Should reach the proxy using QiskitRuntimeService."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server() as process:
-            service = QiskitRuntimeService(
-                instance=dependencies.instance,
-                token=dependencies.token,
-                channel=dependencies.channel,
-                verify=False,
-                proxies={"urls": VALID_PROXIES},
-                url=dependencies.url,
-            )
-            service.jobs(limit=1)
+        service = QiskitRuntimeService(
+            instance=dependencies.instance,
+            token=dependencies.token,
+            channel=dependencies.channel,
+            verify=False,
+            proxies={"urls": {"https": proxy_server.url}},
+            url=dependencies.url,
+        )
+        service.jobs(limit=1)
 
-            api_line = pproxy_desired_access_log_line(dependencies.url)
-            process.terminate()  # kill to be able of reading the output
-            proxy_output = process.stdout.read().decode("utf-8")
+        assert proxied_request_matches_domain(proxy_server.requests, dependencies.url)
 
-        assert api_line in proxy_output
-
+    @pytest.mark.usefixtures("proxy_server")
     def test_no_proxy_raises_exception(self) -> None:
         """Should raise an exception when no proxy is specified."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server(), pytest.raises(InvalidAccountError):
+        with pytest.raises(InvalidAccountError):
             service = QiskitRuntimeService(
                 instance=dependencies.instance,
                 token=dependencies.token,
@@ -136,8 +176,9 @@ class TestProxies:
             service.jobs(limit=1)
 
 
-def pproxy_desired_access_log_line(url: str) -> str:
-    """Return a desired pproxy log entry given a url."""
-    qe_url_parts = urllib.parse.urlparse(url)
-    protocol_port = "443" if qe_url_parts.scheme == "https" else "80"
-    return f"{qe_url_parts.hostname}:{protocol_port}"
+def proxied_request_matches_domain(requests: list[tuple[str, int]], url: str | None) -> bool:
+    """Check that at least one proxied request was made under `url`'s domain."""
+    domain = urlparse(url).hostname if url else None
+    return domain is not None and any(
+        host == domain or host.endswith(f".{domain}") for host, _ in requests
+    )
