@@ -80,6 +80,7 @@ def proxy_server() -> Iterator[subprocess.Popen]:
 class TestProxies:
     """Tests for proxy capabilities."""
 
+    @pytest.mark.filterwarnings("ignore::urllib3.exceptions.InsecureRequestWarning")
     def test_proxies_cloud_runtime_client(self) -> None:
         """Should reach the proxy using RuntimeClient."""
         dependencies = integration_test_dependencies(init_service=False)
@@ -102,6 +103,7 @@ class TestProxies:
 
         assert api_line in proxy_output
 
+    @pytest.mark.filterwarnings("ignore::urllib3.exceptions.InsecureRequestWarning")
     def test_proxies_qiskit_runtime_service(self) -> None:
         """Should reach the proxy using QiskitRuntimeService."""
         dependencies = integration_test_dependencies(init_service=False)

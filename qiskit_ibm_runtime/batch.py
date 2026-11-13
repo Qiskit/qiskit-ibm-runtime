@@ -49,7 +49,7 @@ class Batch(Session):
     For example::
 
         import numpy as np
-        from qiskit.circuit.library import IQP
+        from qiskit.circuit.library import iqp
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
         from qiskit.quantum_info import random_hermitian
         from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler, Batch
@@ -61,7 +61,7 @@ class Batch(Session):
 
         rng = np.random.default_rng()
         mats = [np.real(random_hermitian(n_qubits, seed=rng)) for _ in range(30)]
-        circuits = [IQP(mat) for mat in mats]
+        circuits = [iqp(mat) for mat in mats]
         for circuit in circuits:
             circuit.measure_all()
 

@@ -127,6 +127,7 @@ jobs:
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
       PYTEST_ADDOPTS: |
         --durations=10
+        -W 'ignore:Trying to add QuantumRegister to a QuantumCircuit having a layout:UserWarning'
     steps:
       - uses: actions/checkout@v6
         with:

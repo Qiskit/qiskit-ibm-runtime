@@ -86,6 +86,9 @@ class TestEstimator:
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
+    @pytest.mark.filterwarnings(
+        "ignore:No positive, finite standard errors were found:UserWarning:qiskit_mitigation"
+    )
     @pytest.mark.parametrize("amplifier", ["gate_folding", "pea"])
     def test_zne_estimator(
         self, amplifier: Literal["gate_folding", "pea"], dependencies: Dependencies

@@ -53,6 +53,9 @@ class TestStoredJobs:
         # Result should be loaded correctly.
         assert isinstance(result, QuantumProgramResult)
 
+    @pytest.mark.filterwarnings(
+        "ignore:No positive, finite standard errors were found:UserWarning:qiskit_mitigation"
+    )
     @pytest.mark.registry(registry_class=OneInstanceNoBackendsRegistry)
     @pytest.mark.parametrize(
         "job_id", ESTIMATOR_JOBS["0.50"] + ESTIMATOR_JOBS["0.51"] + ESTIMATOR_JOBS["0.52"]
