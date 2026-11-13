@@ -101,7 +101,7 @@ def blocked_network(
         yield
 
 
-@contextmanager
+@pytest.fixture
 def proxy_server() -> Iterator[RequestRecorder]:
     """Run an in-process mitmproxy server, blocking network traffic that is not routed to it.
 
@@ -129,47 +129,45 @@ def proxy_server() -> Iterator[RequestRecorder]:
 class TestProxies:
     """Tests for proxy capabilities."""
 
-    def test_proxies_cloud_runtime_client(self) -> None:
+    def test_proxies_cloud_runtime_client(self, proxy_server: RequestRecorder) -> None:
         """Should reach the proxy using RuntimeClient."""
         dependencies = integration_test_dependencies(init_service=False)
-        assert dependencies.channel is not None
 
-        with proxy_server() as proxy:
-            params = ClientParameters(
-                instance=dependencies.instance,
-                token=dependencies.token,
-                channel=dependencies.channel,
-                verify=False,
-                proxies=ProxyConfiguration(urls={"https": proxy.url}),
-                url=dependencies.url,
-            )
-            client = RuntimeClient(params)
-            client.jobs_get(limit=1)
+        params = ClientParameters(
+            instance=dependencies.instance,
+            token=dependencies.token,
+            channel=dependencies.channel,
+            verify=False,
+            proxies=ProxyConfiguration(urls={"https": proxy_server.url}),
+            url=dependencies.url,
+        )
+        client = RuntimeClient(params)
+        client.jobs_get(limit=1)
 
-        assert proxied_request_matches_domain(proxy.requests, params.url)
+        assert proxied_request_matches_domain(proxy_server.requests, params.url)
 
-    def test_proxies_qiskit_runtime_service(self) -> None:
+    def test_proxies_qiskit_runtime_service(self, proxy_server: RequestRecorder) -> None:
         """Should reach the proxy using QiskitRuntimeService."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server() as proxy:
-            service = QiskitRuntimeService(
-                instance=dependencies.instance,
-                token=dependencies.token,
-                channel=dependencies.channel,
-                verify=False,
-                proxies={"urls": {"https": proxy.url}},
-                url=dependencies.url,
-            )
-            service.jobs(limit=1)
+        service = QiskitRuntimeService(
+            instance=dependencies.instance,
+            token=dependencies.token,
+            channel=dependencies.channel,
+            verify=False,
+            proxies={"urls": {"https": proxy_server.url}},
+            url=dependencies.url,
+        )
+        service.jobs(limit=1)
 
-        assert proxied_request_matches_domain(proxy.requests, dependencies.url)
+        assert proxied_request_matches_domain(proxy_server.requests, dependencies.url)
 
+    @pytest.mark.usefixtures("proxy_server")
     def test_no_proxy_raises_exception(self) -> None:
         """Should raise an exception when no proxy is specified."""
         dependencies = integration_test_dependencies(init_service=False)
 
-        with proxy_server(), pytest.raises(InvalidAccountError):
+        with pytest.raises(InvalidAccountError):
             service = QiskitRuntimeService(
                 instance=dependencies.instance,
                 token=dependencies.token,
