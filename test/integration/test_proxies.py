@@ -177,14 +177,7 @@ class TestProxies:
 
 
 def proxied_request_matches_domain(requests: list[tuple[str, int]], url: str | None) -> bool:
-    """Check that at least one proxied request was made under `url`'s domain.
-
-    The `ibm_quantum_platform` channel never requests `url` itself: it fans out across
-    several subdomains (IAM auth, the quantum runtime API, global catalog/search for CRN
-    resolution), all living under `url`'s own domain. That shared domain is the strongest
-    invariant available, since the exact subdomain touched can change as the SDK's internal
-    request flow evolves.
-    """
+    """Check that at least one proxied request was made under `url`'s domain."""
     domain = urlparse(url).hostname if url else None
     return domain is not None and any(
         host == domain or host.endswith(f".{domain}") for host, _ in requests
