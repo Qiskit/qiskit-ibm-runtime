@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# Modified in 2026 to stop jobs pagination on exhausted pages.
 
 """Qiskit runtime service."""
 
@@ -1224,7 +1225,8 @@ class QiskitRuntimeService:
 
         Args:
             limit: Number of jobs to retrieve. ``None`` means no limit.
-            skip: Starting index for the job retrieval.
+            skip: Starting index for the job retrieval. Returns an empty list if this is at or
+                beyond the number of matching jobs.
             backend_name: Name of the backend to retrieve jobs from.
             pending: Filter by job pending state. If ``True``, 'QUEUED' and 'RUNNING'
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
@@ -1286,8 +1288,8 @@ class QiskitRuntimeService:
 
             job_responses += job_page
 
-            if len(job_responses) == count - skip:
-                # Stop if there are no more jobs returned by the server.
+            if not job_page or len(job_responses) >= count - skip:
+                # Stop when the page is empty or all available jobs have been returned.
                 break
 
             if limit:
