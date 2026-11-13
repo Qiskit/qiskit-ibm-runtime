@@ -31,15 +31,15 @@ from ..utils import bell
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import RuntimeJobV2
-    from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
     from .dependencies import Dependencies
 
 
 @pytest.fixture(scope="class")
-def job_test_backend(backend_test: IBMBackend | None) -> RuntimeJobV2:
-    """Return the job used by the tests in the class, submitted to the test backend."""
-    return Sampler(mode=backend_test).run([transpile(bell(), backend_test)])
+def job_test_backend(dependencies: Dependencies) -> RuntimeJobV2:
+    """Return the job used by the tests in the class, submitted to the configured QPU."""
+    backend = dependencies.service.backend(dependencies.qpu)
+    return Sampler(mode=backend).run([transpile(bell(), backend)])
 
 
 class TestIBMJobAttributes:
@@ -54,10 +54,10 @@ class TestIBMJobAttributes:
         assert dependencies.instance == job_test_backend.instance
 
     def test_get_backend_name(
-        self, job_test_backend: RuntimeJobV2, backend_test: IBMBackend | None
+        self, job_test_backend: RuntimeJobV2, dependencies: Dependencies
     ) -> None:
         """Test getting a backend name."""
-        assert job_test_backend.backend().name == backend_test.name
+        assert job_test_backend.backend().name == dependencies.qpu
 
     def test_cost_estimation(self, job_test_backend: RuntimeJobV2) -> None:
         """Test cost estimation is returned correctly."""
@@ -68,21 +68,23 @@ class TestIBMJobAttributes:
 class TestIBMJobSubmission:
     """Test the attributes of jobs submitted with different options."""
 
-    def test_job_creation_date(self, backend_test: IBMBackend | None) -> None:
+    def test_job_creation_date(self, dependencies: Dependencies) -> None:
         """Test retrieving creation date, while ensuring it is in local time."""
+        backend = dependencies.service.backend(dependencies.qpu)
         # datetime, before running the job, in local time.
         start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(minutes=1)
-        sampler = Sampler(mode=backend_test)
-        job = sampler.run([transpile(bell(), backend_test)])
+        sampler = Sampler(mode=backend)
+        job = sampler.run([transpile(bell(), backend)])
         job.result()
         # datetime, after the job is done running, in local time.
         end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(minutes=1)
 
         assert start_datetime <= job.creation_date <= end_datetime
 
-    def test_job_tags(self, backend_test: IBMBackend | None, dependencies: Dependencies) -> None:
+    def test_job_tags(self, dependencies: Dependencies) -> None:
         """Test using job tags."""
         service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         last_week = datetime.now() - timedelta(days=7)
         # Use a unique tag.
         job_tags = [
@@ -90,9 +92,9 @@ class TestIBMJobSubmission:
             uuid.uuid4().hex[0:16],
             uuid.uuid4().hex[0:16],
         ]
-        sampler = Sampler(mode=backend_test)
+        sampler = Sampler(mode=backend)
         sampler.options.environment.job_tags = job_tags  # type: ignore[union-attr]
-        job = sampler.run([transpile(bell(), backend_test)])
+        job = sampler.run([transpile(bell(), backend)])
         assert job.tags
 
         non_matching_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
@@ -107,12 +109,13 @@ class TestIBMJobSubmission:
             assert found_jobs[0].job_id() == job.job_id()
             assert set(found_jobs[0].tags) == set(job_tags)
 
-    def test_job_tags_replace(self, backend_test: IBMBackend | None) -> None:
+    def test_job_tags_replace(self, dependencies: Dependencies) -> None:
         """Test updating job tags by replacing a job's existing tags."""
+        backend = dependencies.service.backend(dependencies.qpu)
         initial_job_tags = [uuid.uuid4().hex[:16]]
-        sampler = Sampler(mode=backend_test)
+        sampler = Sampler(mode=backend)
         sampler.options.environment.job_tags = initial_job_tags  # type: ignore[union-attr]
-        job = sampler.run([transpile(bell(), backend_test)])
+        job = sampler.run([transpile(bell(), backend)])
 
         new_tags_cases = [
             [],  # empty tags.
@@ -127,13 +130,12 @@ class TestIBMJobSubmission:
             time.sleep(2)
             assert set(new_tags) == set(job.tags)
 
-    def test_invalid_job_tags(
-        self, backend_test: IBMBackend | None, dependencies: Dependencies
-    ) -> None:
+    def test_invalid_job_tags(self, dependencies: Dependencies) -> None:
         """Test using job tags with an and operator."""
         service = dependencies.service
+        backend = service.backend(dependencies.qpu)
         with pytest.raises(ValidationError):
-            sampler = Sampler(mode=backend_test)
+            sampler = Sampler(mode=backend)
             sampler.options.environment.job_tags = "foo"  # type: ignore[assignment]
 
         with pytest.raises(IBMInputValueError):
