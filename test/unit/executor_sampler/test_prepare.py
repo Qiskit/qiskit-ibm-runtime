@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -27,10 +27,17 @@ from samplomatic.quantum_program import CircuitItem, SamplexItem
 from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.executor_sampler import Sampler
 from qiskit_ibm_runtime.executor_sampler.prepare import prepare
+from qiskit_ibm_runtime.executor_sampler.utils import find_box_type, find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
+
+from .utils import SAMPLER_CIRCUIT_SCENARIOS, extract_layer_tags, extract_program_barrier_tags
+
+if TYPE_CHECKING:
+    from .utils import SamplerCircuitScenario
 
 
 class TestPrepare:
@@ -716,3 +723,124 @@ class TestPrepareDynamicalDecoupling:
             match="A backend must be provided when dynamical decoupling is enabled",
         ):
             prepare(pubs, options, shots=100)
+
+
+class TestPrepareLayerTagCorrespondence:
+    """Tests verifying the correspondence between unique layers and prepared circuit tags."""
+
+    @pytest.mark.parametrize(
+        "enable_gates, enable_measure", [(True, True), (True, False), (False, True)]
+    )
+    @pytest.mark.parametrize(
+        "scenario", SAMPLER_CIRCUIT_SCENARIOS, ids=lambda scenario: scenario.label
+    )
+    def test_layer_tag_correspondence_twirling_modes(
+        self,
+        enable_gates: bool,
+        enable_measure: bool,
+        scenario: SamplerCircuitScenario,
+    ) -> None:
+        """Test that barrier tags in prepared circuits match find_unique_layers exactly."""
+        options = SamplerOptions()
+        options.twirling.enable_gates = enable_gates
+        options.twirling.enable_measure = enable_measure
+
+        program, _ = prepare([scenario.pub], options, add_tags=True)
+        program_tags = extract_program_barrier_tags(program)
+
+        # Layers via module-level utility
+        unique_layers = find_unique_layers([scenario.pub], options.twirling, add_tags=True)
+        unique_layer_tags = extract_layer_tags(unique_layers)
+
+        # Tags in program must match unique layers from find_unique_layers exactly
+        assert program_tags == unique_layer_tags
+        assert len(program_tags) > 0
+
+        # Sampler class API find_unique_layers
+        sampler = Sampler(mode=FakeManilaV2(), options=options)
+        all_layers = sampler.find_unique_layers([scenario.pub], types="all")
+        gate_layers = sampler.find_unique_layers([scenario.pub], types="gates")
+
+        all_layer_tags = extract_layer_tags(all_layers)
+        gate_layer_tags = extract_layer_tags(gate_layers)
+
+        assert program_tags == all_layer_tags
+        assert gate_layer_tags.issubset(program_tags)
+        if not enable_measure:
+            assert program_tags == gate_layer_tags
+
+    @pytest.mark.parametrize(
+        "twirling_strategy", ["active", "active-accum", "active-circuit", "all"]
+    )
+    @pytest.mark.parametrize(
+        "scenario", SAMPLER_CIRCUIT_SCENARIOS, ids=lambda scenario: scenario.label
+    )
+    def test_layer_tag_correspondence_strategies(
+        self,
+        twirling_strategy: Literal["active", "active-accum", "active-circuit", "all"],
+        scenario: SamplerCircuitScenario,
+    ) -> None:
+        """Test layer and tag correspondence across twirling strategies."""
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.twirling.enable_measure = True
+        options.twirling.strategy = twirling_strategy
+
+        program, _ = prepare([scenario.pub], options, add_tags=True)
+        program_tags = extract_program_barrier_tags(program)
+
+        sampler = Sampler(mode=FakeManilaV2(), options=options)
+        all_layers = sampler.find_unique_layers([scenario.pub], types="all")
+        all_layer_tags = extract_layer_tags(all_layers)
+
+        assert program_tags == all_layer_tags
+        assert len(program_tags) > 0
+
+    def test_layer_tag_correspondence_multi_pub_deduplication(self) -> None:
+        """Test layer and tag correspondence with multiple PUBs sharing identical layers."""
+        pubs = [scenario.pub for scenario in SAMPLER_CIRCUIT_SCENARIOS]
+
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.twirling.enable_measure = True
+
+        program, _ = prepare(pubs, options, add_tags=True)
+        program_tags = extract_program_barrier_tags(program)
+
+        sampler = Sampler(mode=FakeManilaV2(), options=options)
+        all_layers = sampler.find_unique_layers(pubs, types="all")
+        all_layer_tags = extract_layer_tags(all_layers)
+
+        assert program_tags == all_layer_tags
+        assert len(program_tags) > 0
+
+    def test_no_tags_when_add_tags_is_false(self) -> None:
+        """Test that no tags are emitted when add_tags=False."""
+        scenario = SAMPLER_CIRCUIT_SCENARIOS[0]
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.twirling.enable_measure = True
+
+        program, _ = prepare([scenario.pub], options, add_tags=False)
+        program_tags = extract_program_barrier_tags(program)
+        assert len(program_tags) == 0
+
+        unique_layers = find_unique_layers([scenario.pub], options.twirling, add_tags=False)
+        unique_layer_tags = extract_layer_tags(unique_layers)
+        assert len(unique_layer_tags) == 0
+
+    def test_sampler_find_unique_layers_types_filtering(self) -> None:
+        """Test that find_unique_layers correctly filters box types by 'gates' vs 'all'."""
+        pubs = [scenario.pub for scenario in SAMPLER_CIRCUIT_SCENARIOS]
+
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.twirling.enable_measure = True
+
+        sampler = Sampler(mode=FakeManilaV2(), options=options)
+        gate_layers = sampler.find_unique_layers(pubs, types="gates")
+        all_layers = sampler.find_unique_layers(pubs, types="all")
+
+        assert all(find_box_type(layer) == "gates" for layer in gate_layers)
+        assert all(find_box_type(layer) in ("gates", "measurement") for layer in all_layers)
+        assert len(all_layers) > len(gate_layers)

@@ -1,0 +1,4 @@
+The :class:`.RuntimeJobV2` class now exposes the ``calibration_id`` property
+specified for a job. The property is available on jobs returned by
+:meth:`.QiskitRuntimeService.job` and :meth:`.QiskitRuntimeService.jobs`.
+It returns ``None`` when no ``calibration_id`` was specified for the job.

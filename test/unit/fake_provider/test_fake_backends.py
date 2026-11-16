@@ -302,10 +302,12 @@ class TestFakeBackends:
             "fake_aachen",
             "fake_berlin",
             "fake_boston",
+            "fake_chicago",
             "fake_fez",
             "fake_kingston",
             "fake_marrakesh",
             "fake_miami",
+            "fake_phoenix",
             "fake_pittsburgh",
         ]
 

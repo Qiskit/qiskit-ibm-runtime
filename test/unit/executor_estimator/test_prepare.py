@@ -29,9 +29,8 @@ from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.calculate_twirling_shots import calculate_twirling_shots
-from qiskit_ibm_runtime.executor_estimator.estimator import Estimator
+from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-from qiskit_ibm_runtime.executor_sampler.utils import find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 from qiskit_ibm_runtime.options_models.executor import ExecutorOptions
@@ -53,6 +52,7 @@ from .utils import (
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
 
     from .utils import (
@@ -226,6 +226,25 @@ def prepare_vanilla(
     options.default_shots = shots
     quantum_program, _ = prepare(pubs, options, precision=None, add_tags=add_tags)
     return quantum_program
+
+
+def find_unique_layers(
+    pubs: Iterable[EstimatorPubLike],
+    twirling_options: TwirlingOptions,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    inject_noise: bool = False,
+    types: Literal["gates", "all"] = "all",
+) -> list[CircuitInstruction]:
+    """Helper to find unique layers using Estimator instance."""
+    options = EstimatorOptions()
+    options.twirling = twirling_options
+    if inject_noise:
+        options.resilience.pec_mitigation = True
+    if measure_noise_learning is not None:
+        options.resilience.measure_mitigation = True
+        options.resilience.measure_noise_learning = measure_noise_learning
+    estimator = Estimator(mode=FakeManilaV2(), options=options)
+    return estimator.find_unique_layers(pubs, types=types)
 
 
 def prepare_pec(

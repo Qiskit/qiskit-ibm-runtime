@@ -32,6 +32,7 @@ from .burlington import FakeBurlingtonV2
 from .cairo import FakeCairoV2
 from .cambridge import FakeCambridgeV2
 from .casablanca import FakeCasablancaV2
+from .chicago import FakeChicago
 from .cusco import FakeCusco
 from .essex import FakeEssexV2
 from .fez import FakeFez
@@ -64,6 +65,7 @@ from .ourense import FakeOurenseV2
 from .paris import FakeParisV2
 from .peekskill import FakePeekskill
 from .perth import FakePerth
+from .phoenix import FakePhoenix
 from .pittsburgh import FakePittsburgh
 from .poughkeepsie import FakePoughkeepsieV2
 from .prague import FakePrague

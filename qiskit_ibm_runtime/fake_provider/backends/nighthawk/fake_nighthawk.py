@@ -15,15 +15,12 @@
 from __future__ import annotations
 
 import os
-import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ...fake_backend import FakeBackendV2
 
 if TYPE_CHECKING:
     from ....qiskit_runtime_service import QiskitRuntimeService
-
-DISPLAY_WARNING = True
 
 
 class FakeNighthawk(FakeBackendV2):
@@ -64,24 +61,16 @@ class FakeNighthawk(FakeBackendV2):
     job = sampler.run([isa_circuit])
     result = job.result()
     ```
+
+    .. warning::
+        Properties of ``fake_nighthawk`` are not intended to represent typical nighthawk error
+        values.
     """
 
     dirname = os.path.dirname(__file__)
     conf_filename = "conf_nighthawk.json"
     props_filename = "props_nighthawk.json"
     backend_name = "fake_nighthawk"
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        # Only display the warning statement once
-        global DISPLAY_WARNING
-        if DISPLAY_WARNING:
-            warnings.warn(
-                "Properties of fake_nighthawk are not intended to represent "
-                "typical nighthawk error values."
-            )
-            DISPLAY_WARNING = False
-
-        super().__init__(*args, **kwargs)
 
     def refresh(
         self,

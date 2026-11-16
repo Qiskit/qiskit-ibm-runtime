@@ -12,7 +12,7 @@
 
 """
 ============================================================================
-Client-side noise learner (:mod:`qiskit_ibm_runtime.executor_noise_learner`)
+Client-side Noise Learner (:mod:`qiskit_ibm_runtime.executor_noise_learner`)
 ============================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.executor_noise_learner
@@ -22,9 +22,9 @@ quantum circuits.
 
 Classes
 =======
-
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    NoiseLearnerV3
 
