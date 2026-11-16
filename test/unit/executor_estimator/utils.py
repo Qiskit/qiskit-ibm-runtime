@@ -32,6 +32,9 @@ if TYPE_CHECKING:
 
     from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
+TAG_REGEX = re.compile(r"tag=(?P<tag>[^@\s]+)")
+"""Matches the tag in a barrier label."""
+
 
 @dataclass(frozen=True)
 class ParamBasisScenario:
@@ -433,15 +436,13 @@ All use shots=1024 with pre-computed expected_num_randomizations and
 expected_shots_per_randomization.
 """
 
-TAG_REGEX = re.compile(r"tag=(?P<tag>[^@\s]+)")
-
 
 def extract_barrier_tags(circuit: QuantumCircuit) -> set[str]:
     """Extract all tag strings from barrier labels in a QuantumCircuit."""
     tags = set()
-    for instr in circuit.data:
-        if instr.operation.name == "barrier" and instr.operation._label:
-            if match := TAG_REGEX.search(instr.operation._label):
+    for instruction in circuit.data:
+        if instruction.operation.name == "barrier" and instruction.operation._label:
+            if match := TAG_REGEX.search(instruction.operation._label):
                 tags.add(match.group("tag"))
     return tags
 
