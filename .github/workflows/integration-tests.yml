@@ -51,6 +51,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e '.[test,performance]'
       - name: Run integration tests
+        timeout-minutes: 60
         run: make integration-test
   benchmarks:
     if: github.event_name == 'workflow_dispatch' || github.repository_owner == 'Qiskit'
