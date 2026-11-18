@@ -19,19 +19,25 @@ configuration and properties for one or more backends, and writes the following 
 
 - ``conf_<backend_city>.json``
 - ``props_<backend_city>.json``
+
+If the backend is new, i.e. its directory does not exist yet, the script also writes the following
+files in the same directory:
+
 - ``__init__.py``
 - ``fake_<backend_city>.py``
 
-The backend is also registered (in alphabetical position) in:
+registers the backend (in alphabetical position) in:
 
 - ``qiskit_ibm_runtime/fake_provider/backends/__init__.py``
 - ``qiskit_ibm_runtime/fake_provider/__init__.py`` (documentation list)
 - ``qiskit_ibm_runtime/fake_provider/fake_provider.py``
 - ``test/unit/fake_provider/test_fake_backends.py`` (``physical_qubits`` list)
 
-and, if the backend is new, a release note is added under ``release-notes/unreleased/``.
+and adds a ``feat`` release note under ``release-notes/unreleased/``.
 
-Registration is idempotent, so the script can be re-run to refresh existing backends.
+If the backend directory already exists, a warning is printed and only the two JSON files are
+overwritten, and an ``other`` release note about the refreshed data is added. The Python files and
+the registration are left untouched.
 
 Usage examples:
 
@@ -86,7 +92,7 @@ parser.add_argument(
     "--pr",
     required=False,
     action="store",
-    help="pull request number (optional), used to name the release note of new backends. If not \
+    help="pull request number (optional), used to name the release notes. If not \
                     provided, the release note file has to be renamed manually.",
 )
 parser.add_argument(
@@ -230,15 +236,37 @@ def _register_backend(city: str, class_name: str, physical_qubits: int | None) -
         )
 
 
-def _write_release_note(new_backends: list[str], pr: str | None) -> None:
-    """Write a release note announcing newly added fake backends."""
-    names = [f"``{class_name}``" for class_name in new_backends]
-    if len(names) == 1:
-        text = f"A new fake backend, {names[0]}, has been added.\n"
-    else:
-        text = f"New fake backends, {', '.join(names[:-1])} and {names[-1]}, have been added.\n"
+def _write_release_note(class_names: list[str], pr: str | None, refreshed: bool) -> None:
+    """Write a release note for added or refreshed fake backends.
 
-    fragment = f"{pr}.feat.rst" if pr else f"+{new_backends[0].lower()}.feat.rst"
+    Args:
+        class_names: Names of the fake backend classes.
+        pr: Pull request number, used to name the release note file.
+        refreshed: Whether the backends already existed and their data was refreshed (``other``
+            note), as opposed to being newly added (``feat`` note).
+    """
+    names = [f"``{class_name}``" for class_name in class_names]
+    if refreshed:
+        kind = "other"
+        if len(names) == 1:
+            text = (
+                f"The data of the fake backend {names[0]} has been updated to reflect the latest "
+                "configuration and properties of the corresponding real backend.\n"
+            )
+        else:
+            text = (
+                f"The data of the fake backends {', '.join(names[:-1])} and {names[-1]} has been "
+                "updated to reflect the latest configuration and properties of the corresponding "
+                "real backends.\n"
+            )
+    else:
+        kind = "feat"
+        if len(names) == 1:
+            text = f"A new fake backend, {names[0]}, has been added.\n"
+        else:
+            text = f"New fake backends, {', '.join(names[:-1])} and {names[-1]}, have been added.\n"
+
+    fragment = f"{pr}.{kind}.rst" if pr else f"+{class_names[0].lower()}.{kind}.rst"
     release_notes_dir.mkdir(parents=True, exist_ok=True)
     (release_notes_dir / fragment).write_text(text, encoding="utf-8")
 
@@ -246,7 +274,7 @@ def _write_release_note(new_backends: list[str], pr: str | None) -> None:
     if not pr:
         print(
             "ACTION REQUIRED: no pull request number was given (--pr). Once the pull request is "
-            "created, rename the release note file to '<pr number>.feat.rst'."
+            f"created, rename the release note file to '<pr number>.{kind}.rst'."
         )
 
 
@@ -254,9 +282,12 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
     """Retrieves latest configuration and properties from a backend.
 
     The configuration and properties and then saved as valid JSON files in the backends directory.
-    The backends are also registered in the package, and a release note is added for new ones.
+    For new backends, the Python files are also written, the backend is registered in the package,
+    and a release note is added. For existing backends, only a release note about the refreshed
+    data is added.
     """
     new_backends: list[str] = []
+    refreshed_backends: list[str] = []
 
     if verbose:
         print("Initializing IBM service")
@@ -293,6 +324,11 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
 
         out_dir = backends_dir / backend_city
         is_new = not out_dir.exists()
+        if not is_new:
+            print(
+                f"WARNING: a fake backend for '{backend_name}' already exists in {out_dir}. "
+                "Only its JSON files will be overwritten."
+            )
         Path.mkdir(out_dir, exist_ok=True)
 
         if not configuration:
@@ -319,6 +355,14 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
         with open(props_path, "w", encoding="utf-8") as fd:
             fd.write(json.dumps(properties, cls=BackendEncoder))
 
+        class_name = f"Fake{_to_pascal_case(backend_city)}"
+
+        if not is_new:
+            refreshed_backends.append(class_name)
+            if verbose:
+                print(f"Backend '{backend_name}' done")
+            continue
+
         n_qubits = configuration.get("n_qubits", "unknown")
         physical_qubits = getattr(backend, "physical_qubits", None)
         if physical_qubits is None:
@@ -327,7 +371,6 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
                 "'_physical_qubits' in the fake backend class and the physical_qubits list in "
                 "test_fake_backends.py. Add them manually if needed."
             )
-        class_name = f"Fake{_to_pascal_case(backend_city)}"
 
         init_path = out_dir / "__init__.py"
         fake_backend_path = out_dir / f"fake_{backend_city}.py"
@@ -345,16 +388,16 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
             print("Registering backend")
         _register_backend(backend_city, class_name, physical_qubits)
 
-        if is_new:
-            new_backends.append(class_name)
+        new_backends.append(class_name)
 
         if verbose:
             print(f"Backend '{backend_name}' done")
 
-    if new_backends:
-        if verbose:
-            print("Writing release note")
-        _write_release_note(new_backends, pr)
+    for class_names, refreshed in ((new_backends, False), (refreshed_backends, True)):
+        if class_names:
+            if verbose:
+                print("Writing release note")
+            _write_release_note(class_names, pr, refreshed)
 
 
 if __name__ == "__main__":
