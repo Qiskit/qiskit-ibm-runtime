@@ -36,8 +36,8 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture(scope="class")
-def job_test_backend(dependencies: Dependencies) -> RuntimeJobV2:
-    """Return the job used by the tests in the class, submitted to the configured QPU."""
+def job_used_in_tests(dependencies: Dependencies) -> RuntimeJobV2:
+    """Return the job used by the tests in the class."""
     backend = dependencies.service.backend(dependencies.qpu)
     return Sampler(mode=backend).run([transpile(bell(), backend)])
 
@@ -45,24 +45,26 @@ def job_test_backend(dependencies: Dependencies) -> RuntimeJobV2:
 class TestIBMJobAttributes:
     """Test the attributes of a submitted IBMJob."""
 
-    def test_job_id(self, job_test_backend: RuntimeJobV2) -> None:
+    def test_job_id(self, job_used_in_tests: RuntimeJobV2) -> None:
         """Test getting a job ID."""
-        assert job_test_backend.job_id() is not None
+        assert job_used_in_tests.job_id() is not None
 
-    def test_job_instance(self, job_test_backend: RuntimeJobV2, dependencies: Dependencies) -> None:
+    def test_job_instance(
+        self, job_used_in_tests: RuntimeJobV2, dependencies: Dependencies
+    ) -> None:
         """Test getting job instance."""
-        assert dependencies.instance == job_test_backend.instance
+        assert dependencies.instance == job_used_in_tests.instance
 
     def test_get_backend_name(
-        self, job_test_backend: RuntimeJobV2, dependencies: Dependencies
+        self, job_used_in_tests: RuntimeJobV2, dependencies: Dependencies
     ) -> None:
         """Test getting a backend name."""
-        assert job_test_backend.backend().name == dependencies.qpu
+        assert job_used_in_tests.backend().name == dependencies.qpu
 
-    def test_cost_estimation(self, job_test_backend: RuntimeJobV2) -> None:
+    def test_cost_estimation(self, job_used_in_tests: RuntimeJobV2) -> None:
         """Test cost estimation is returned correctly."""
-        assert job_test_backend.usage_estimation
-        assert "quantum_seconds" in job_test_backend.usage_estimation
+        assert job_used_in_tests.usage_estimation
+        assert "quantum_seconds" in job_used_in_tests.usage_estimation
 
 
 class TestIBMJobSubmission:
