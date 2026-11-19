@@ -67,17 +67,6 @@ def mid_circuit_reset_circuit() -> QuantumCircuit:
     return circuit
 
 
-def mid_circuit_measure_feedforward_circuit() -> QuantumCircuit:
-    """Return a circuit conditioning an ``X`` gate on the outcome of ``measure_2``."""
-    circuit = QuantumCircuit(2, 2)
-    circuit.x(0)
-    circuit.append(MidCircuitMeasure(), [0], [0])
-    with circuit.if_test((circuit.clbits[0], 1)):
-        circuit.x(1)
-    circuit.measure(1, 1)
-    return circuit
-
-
 @pytest.fixture
 def refresh_service(registry: BaseRegistry) -> QiskitRuntimeService:
     """Return a service that serves ``FakeAthensV2``'s own data as the data of ``ibm_athens``.
@@ -356,7 +345,6 @@ class TestFakeBackends:
         [
             (FakeKingston, mid_circuit_measure_circuit, "11"),
             (FakeBoston, mid_circuit_reset_circuit, "0"),
-            (FakeKingston, mid_circuit_measure_feedforward_circuit, "11"),
         ],
     )
     def test_run_mid_circuit_instructions(

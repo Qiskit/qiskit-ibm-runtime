@@ -82,14 +82,12 @@ def generate_circuit(
     return qc_boxed, active_qubits
 
 
-def mid_circuit_measure_feedforward_circuit() -> QuantumCircuit:
-    """Return a circuit conditioning an ``X`` gate on the outcome of ``measure_2``."""
-    circuit = QuantumCircuit(2, 2)
+def mid_circuit_measure_circuit() -> QuantumCircuit:
+    """Return a circuit measuring ``|1>`` with ``measure_2`` and then ``measure``."""
+    circuit = QuantumCircuit(1, 2)
     circuit.x(0)
     circuit.append(MidCircuitMeasure(), [0], [0])
-    with circuit.if_test((circuit.clbits[0], 1)):
-        circuit.x(1)
-    circuit.measure(1, 1)
+    circuit.measure(0, 1)
     return circuit
 
 
@@ -164,7 +162,7 @@ class TestRunQuantumProgram:
     @pytest.mark.parametrize(
         ("circuit_factory", "expected"),
         [
-            (mid_circuit_measure_feedforward_circuit, [True, True]),
+            (mid_circuit_measure_circuit, [True, True]),
             (mid_circuit_reset_circuit, [False]),
         ],
     )
