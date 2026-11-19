@@ -26,18 +26,20 @@ files in the same directory:
 - ``__init__.py``
 - ``fake_<backend_city>.py``
 
-registers the backend (in alphabetical position) in:
-
-- ``qiskit_ibm_runtime/fake_provider/backends/__init__.py``
-- ``qiskit_ibm_runtime/fake_provider/__init__.py`` (documentation list)
-- ``qiskit_ibm_runtime/fake_provider/fake_provider.py``
-- ``test/unit/fake_provider/test_fake_backends.py`` (``physical_qubits`` list)
-
 and adds a ``feat`` release note under ``release-notes/unreleased/``.
 
+The script does not register a new backend. The following files have to be updated manually, adding
+the backend in alphabetical position (the script prints this list when it finishes):
+
+- ``qiskit_ibm_runtime/fake_provider/backends/__init__.py``: import the backend class.
+- ``qiskit_ibm_runtime/fake_provider/__init__.py``: add the backend class to the documentation list.
+- ``qiskit_ibm_runtime/fake_provider/fake_provider.py``: add the backend to the list of backends.
+- ``test/unit/fake_provider/test_fake_backends.py``: add ``fake_<backend_city>`` to the
+  ``backends_with_physical_qubits`` list, if the backend reports ``physical_qubits``.
+
 If the backend directory already exists, a warning is printed and only the two JSON files are
-overwritten, and an ``other`` release note about the refreshed data is added. The Python files and
-the registration are left untouched.
+overwritten, and an ``other`` release note about the refreshed data is added. The Python files are
+left untouched and nothing needs to be registered.
 
 Usage examples:
 
@@ -66,10 +68,8 @@ from qiskit_ibm_runtime.fake_provider.backend_encoder import BackendEncoder
 
 tools_dir = Path(__file__).parent
 repo_dir = tools_dir.parent
-fake_provider_dir = repo_dir / "qiskit_ibm_runtime" / "fake_provider"
-backends_dir = fake_provider_dir / "backends"
+backends_dir = repo_dir / "qiskit_ibm_runtime" / "fake_provider" / "backends"
 release_notes_dir = repo_dir / "release-notes" / "unreleased"
-test_fake_backends_path = repo_dir / "test" / "unit" / "fake_provider" / "test_fake_backends.py"
 
 parser = argparse.ArgumentParser(description="Retrieve latest config and properties from a backend")
 parser.add_argument(
@@ -153,87 +153,22 @@ def _build_fake_backend_file(
     return content
 
 
-def _insert_sorted(
-    path: Path,
-    line_pattern: str,
-    new_line: str,
-    block_start: str | None = None,
-    block_end: str | None = None,
-) -> None:
-    """Insert ``new_line`` into ``path``, next to the lines matching ``line_pattern``.
-
-    The new line is placed before the first matching line whose name (the first capture group of
-    ``line_pattern``) is alphabetically greater, or after the last matching line otherwise. Nothing
-    is done if the line already exists.
-
-    Args:
-        path: File to modify.
-        line_pattern: Regex matching the sorted lines. Its first group is the sorting key.
-        new_line: The line to insert (without a trailing newline).
-        block_start: If given, only lines after the first line containing this text are considered.
-        block_end: If given, lines from the first line (after the block start) containing this
-            text are not considered.
-    """
-    lines = path.read_text(encoding="utf-8").splitlines()
-    if new_line in lines:
-        return
-
-    regex = re.compile(line_pattern)
-    new_key = regex.match(new_line).group(1).lower()  # type: ignore[union-attr]
-
-    in_block = block_start is None
-    last_match = None
-    insert_at = None
-    for idx, line in enumerate(lines):
-        if not in_block:
-            in_block = block_start in line  # type: ignore[operator]
-            continue
-        if block_end is not None and block_end in line:
-            break
-        match = regex.match(line)
-        if not match:
-            continue
-        last_match = idx
-        if match.group(1).lower() > new_key:
-            insert_at = idx
-            break
-
-    if insert_at is None:
-        if last_match is None:
-            raise RuntimeError(f"Could not find where to register '{new_line}' in {path}")
-        insert_at = last_match + 1
-
-    lines.insert(insert_at, new_line)
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
-def _register_backend(city: str, class_name: str, physical_qubits: int | None) -> None:
-    """Register a fake backend in the package, the documentation and the tests."""
-    _insert_sorted(
-        backends_dir / "__init__.py",
-        r"^from \.(\w+) import \w+$",
-        f"from .{city} import {class_name}",
-    )
-    _insert_sorted(
-        fake_provider_dir / "__init__.py",
-        r"^    (Fake\w+)$",
-        f"    {class_name}",
-        block_start="Fake V2 Backends",
-        block_end='"""',
-    )
-    _insert_sorted(
-        fake_provider_dir / "fake_provider.py",
-        r"^            (Fake\w+)\(\),$",
-        f"            {class_name}(),",
-    )
+def _manual_steps(city: str, class_name: str, physical_qubits: int | None) -> list[str]:
+    """List the files that have to be updated manually to register a new fake backend."""
+    steps = [
+        "qiskit_ibm_runtime/fake_provider/backends/__init__.py: add "
+        f"'from .{city} import {class_name}'",
+        f"qiskit_ibm_runtime/fake_provider/__init__.py: add '{class_name}' to the documentation "
+        "list",
+        f"qiskit_ibm_runtime/fake_provider/fake_provider.py: add '{class_name}()' to the list of "
+        "backends",
+    ]
     if physical_qubits is not None:
-        _insert_sorted(
-            test_fake_backends_path,
-            r'^            "fake_(\w+)",$',
-            f'            "fake_{city}",',
-            block_start="backends_with_physical_qubits = [",
-            block_end="]",
+        steps.append(
+            f"test/unit/fake_provider/test_fake_backends.py: add 'fake_{city}' to the "
+            "backends_with_physical_qubits list"
         )
+    return steps
 
 
 def _write_release_note(class_names: list[str], pr: str | None, refreshed: bool) -> None:
@@ -282,12 +217,13 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
     """Retrieves latest configuration and properties from a backend.
 
     The configuration and properties and then saved as valid JSON files in the backends directory.
-    For new backends, the Python files are also written, the backend is registered in the package,
-    and a release note is added. For existing backends, only a release note about the refreshed
-    data is added.
+    For new backends, the Python files are also written and a release note is added, and the files
+    that have to be updated manually to register the backend are printed. For existing backends,
+    only a release note about the refreshed data is added.
     """
     new_backends: list[str] = []
     refreshed_backends: list[str] = []
+    manual_steps: list[str] = []
 
     if verbose:
         print("Initializing IBM service")
@@ -368,8 +304,9 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
         if physical_qubits is None:
             print(
                 f"WARNING: '{backend_name}' did not report physical_qubits. Skipping "
-                "'_physical_qubits' in the fake backend class and the physical_qubits list in "
-                "test_fake_backends.py. Add them manually if needed."
+                "'_physical_qubits' in the fake backend class and the "
+                "backends_with_physical_qubits list in test_fake_backends.py. Add them manually if "
+                "needed."
             )
 
         init_path = out_dir / "__init__.py"
@@ -384,11 +321,8 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
         with open(fake_backend_path, "w", encoding="utf-8") as fd:
             fd.write(_build_fake_backend_file(backend_city, class_name, n_qubits, physical_qubits))
 
-        if verbose:
-            print("Registering backend")
-        _register_backend(backend_city, class_name, physical_qubits)
-
         new_backends.append(class_name)
+        manual_steps += _manual_steps(backend_city, class_name, physical_qubits)
 
         if verbose:
             print(f"Backend '{backend_name}' done")
@@ -398,6 +332,11 @@ def main(backend_list: list[str], account: str, pr: str | None, verbose: bool) -
             if verbose:
                 print("Writing release note")
             _write_release_note(class_names, pr, refreshed)
+
+    if manual_steps:
+        print("ACTION REQUIRED: register the new backend(s) manually, in alphabetical position:")
+        for step in manual_steps:
+            print(f"  - {step}")
 
 
 if __name__ == "__main__":
