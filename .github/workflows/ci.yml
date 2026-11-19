@@ -198,7 +198,6 @@ jobs:
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
       PYTEST_ADDOPTS: |
         --durations=10
-        --timeout=120
     steps:
       - uses: actions/checkout@v6
         with:

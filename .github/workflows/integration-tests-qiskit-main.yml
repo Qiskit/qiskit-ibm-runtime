@@ -39,6 +39,7 @@ jobs:
       PYTEST_ADDOPTS: |
         --durations=10
         --timeout=120
+        --verbose
     steps:
       - uses: actions/checkout@v6
         with:
