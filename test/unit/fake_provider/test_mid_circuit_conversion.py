@@ -19,13 +19,10 @@ from typing import TYPE_CHECKING
 import pytest
 from qiskit.circuit import Instruction, QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
-from qiskit.transpiler import PassManager, generate_preset_pass_manager
+from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.circuit import MeasureReset, MidCircuitMeasure, MidCircuitReset
-from qiskit_ibm_runtime.fake_provider.mid_circuit_conversion import (
-    ConvertMidCircuitToStandard,
-    convert_mid_circuit_instructions,
-)
+from qiskit_ibm_runtime.fake_provider.mid_circuit_conversion import convert_mid_circuit_instructions
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -65,8 +62,8 @@ def add_standard_operations(circuit: QuantumCircuit) -> None:
     circuit.reset(0)
 
 
-class TestConvertMidCircuitToStandard:
-    """Test the ConvertMidCircuitToStandard pass."""
+class TestConvertMidCircuitInstructions:
+    """Test the convert_mid_circuit_instructions function."""
 
     @pytest.mark.parametrize(
         ("instruction", "add_expected"),
@@ -84,7 +81,7 @@ class TestConvertMidCircuitToStandard:
         circuit = QuantumCircuit(1, 1)
         circuit.append(instruction, [0], [0] if instruction.num_clbits else [])
 
-        converted = PassManager([ConvertMidCircuitToStandard()]).run(circuit)
+        converted = convert_mid_circuit_instructions(circuit)
 
         assert converted == build_circuit(add_expected)
 
@@ -93,7 +90,7 @@ class TestConvertMidCircuitToStandard:
         """Test that mid-circuit instructions inside control-flow blocks are replaced."""
         circuit = build_circuit(add_mid_circuit_operations, control_flow)
 
-        converted = PassManager([ConvertMidCircuitToStandard()]).run(circuit)
+        converted = convert_mid_circuit_instructions(circuit)
 
         assert converted == build_circuit(add_standard_operations, control_flow)
 
@@ -115,13 +112,9 @@ class TestConvertMidCircuitToStandard:
         circuit = QuantumCircuit(2, 2)
         circuit.append(instruction, range(instruction.num_qubits), range(instruction.num_clbits))
 
-        converted = PassManager([ConvertMidCircuitToStandard()]).run(circuit)
+        converted = convert_mid_circuit_instructions(circuit)
 
         assert converted == circuit
-
-
-class TestConvertMidCircuitInstructions:
-    """Test the convert_mid_circuit_instructions function."""
 
     @pytest.mark.parametrize("control_flow", [None, "if_test"])
     def test_converts_without_modifying_input(self, control_flow: str | None) -> None:

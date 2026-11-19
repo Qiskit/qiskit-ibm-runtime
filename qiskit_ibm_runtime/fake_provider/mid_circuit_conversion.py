@@ -10,21 +10,17 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Pass to replace mid-circuit instructions with their standard counterparts for simulation."""
+"""Replace mid-circuit instructions with their standard counterparts for simulation."""
 
 from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import Measure, Reset
-from qiskit.converters import circuit_to_dag, dag_to_circuit
-from qiskit.transpiler import TransformationPass
-from qiskit.transpiler.passes.utils.control_flow import trivial_recurse
+from qiskit.circuit import ControlFlowOp, Measure, Reset
 
 if TYPE_CHECKING:
     from qiskit.circuit import Instruction, Operation, QuantumCircuit
-    from qiskit.dagcircuit import DAGCircuit
 
 _MID_CIRCUIT_NAME = re.compile(r"(measure|reset)_\d+")
 
@@ -40,30 +36,17 @@ def _standard_replacement(operation: Operation) -> Instruction | None:
     return None
 
 
-class ConvertMidCircuitToStandard(TransformationPass):
-    """Transpiler pass replacing mid-circuit measure and reset instructions for simulation.
+def convert_mid_circuit_instructions(circuit: QuantumCircuit) -> QuantumCircuit:
+    """Replace the mid-circuit instructions in ``circuit`` so it can be simulated.
 
     Simulators such as Aer do not support the mid-circuit instructions advertised by some
-    backends. This pass replaces every single-qubit ``measure_<n>`` instruction (e.g.
+    backends. This function replaces every single-qubit ``measure_<n>`` instruction (e.g.
     ``measure_2``) with a :class:`~qiskit.circuit.Measure`, and every single-qubit ``reset_<n>``
     instruction (e.g. ``reset_2``) with a :class:`~qiskit.circuit.Reset`, where ``<n>`` is an
     integer, including inside control-flow blocks. Instructions are matched by name, as backend
     targets define them as generic instructions.
 
     Other instructions, such as ``measure_reset``, are left unchanged.
-    """
-
-    @trivial_recurse
-    def run(self, dag: DAGCircuit) -> DAGCircuit:
-        """Run the pass on a dag."""
-        for node in dag.op_nodes():
-            if (replacement := _standard_replacement(node.op)) is not None:
-                dag.substitute_node(node, replacement, inplace=True)
-        return dag
-
-
-def convert_mid_circuit_instructions(circuit: QuantumCircuit) -> QuantumCircuit:
-    """Replace the mid-circuit instructions in ``circuit`` so it can be simulated.
 
     Args:
         circuit: The circuit to convert. It is not modified.
@@ -71,9 +54,14 @@ def convert_mid_circuit_instructions(circuit: QuantumCircuit) -> QuantumCircuit:
     Returns:
         A converted copy of ``circuit``.
     """
-    converted_dag = ConvertMidCircuitToStandard().run(circuit_to_dag(circuit))
-    converted = dag_to_circuit(converted_dag, copy_operations=False)
-    # The layout is not part of the DAG. Qiskit's PassManager also restores it via ``_layout``,
-    # as ``QuantumCircuit.layout`` has no setter.
-    converted._layout = circuit._layout
+    # Starting from an empty copy keeps everything else in the circuit as it is.
+    converted = circuit.copy_empty_like()
+    for instruction in circuit.data:
+        operation = instruction.operation
+        if (replacement := _standard_replacement(operation)) is not None:
+            instruction = instruction.replace(operation=replacement)
+        elif isinstance(operation, ControlFlowOp):
+            blocks = [convert_mid_circuit_instructions(block) for block in operation.blocks]
+            instruction = instruction.replace(operation=operation.replace_blocks(blocks))
+        converted.append(instruction)
     return converted
