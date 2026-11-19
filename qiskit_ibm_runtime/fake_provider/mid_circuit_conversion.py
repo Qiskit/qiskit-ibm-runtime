@@ -17,8 +17,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import ControlFlowOp, Measure, Reset
-from qiskit.circuit.controlflow import CONTROL_FLOW_OP_NAMES
+from qiskit.circuit import Measure, Reset
 from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.transpiler import TransformationPass
 from qiskit.transpiler.passes.utils.control_flow import trivial_recurse
@@ -63,24 +62,6 @@ class ConvertMidCircuitToStandard(TransformationPass):
         return dag
 
 
-def _has_mid_circuit_instructions(circuit: QuantumCircuit) -> bool:
-    """Return whether ``circuit`` contains instructions replaced by the conversion pass."""
-    op_names = circuit.count_ops().keys()
-    if CONTROL_FLOW_OP_NAMES.isdisjoint(op_names) and not any(
-        _MID_CIRCUIT_NAME.fullmatch(name) for name in op_names
-    ):
-        return False
-    for instruction in circuit.data:
-        operation = instruction.operation
-        if _standard_replacement(operation) is not None:
-            return True
-        if isinstance(operation, ControlFlowOp) and any(
-            _has_mid_circuit_instructions(block) for block in operation.blocks
-        ):
-            return True
-    return False
-
-
 def convert_mid_circuit_instructions(circuit: QuantumCircuit) -> QuantumCircuit:
     """Replace the mid-circuit instructions in ``circuit`` so it can be simulated.
 
@@ -88,11 +69,8 @@ def convert_mid_circuit_instructions(circuit: QuantumCircuit) -> QuantumCircuit:
         circuit: The circuit to convert. It is not modified.
 
     Returns:
-        A converted copy of ``circuit``, or ``circuit`` itself if it contains no mid-circuit
-        instructions.
+        A converted copy of ``circuit``.
     """
-    if not _has_mid_circuit_instructions(circuit):
-        return circuit
     converted_dag = ConvertMidCircuitToStandard().run(circuit_to_dag(circuit))
     converted = dag_to_circuit(converted_dag, copy_operations=False)
     # The layout is not part of the DAG. Qiskit's PassManager also restores it via ``_layout``,

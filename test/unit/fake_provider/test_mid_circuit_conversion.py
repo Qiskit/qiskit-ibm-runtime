@@ -123,23 +123,6 @@ class TestConvertMidCircuitToStandard:
 class TestConvertMidCircuitInstructions:
     """Test the convert_mid_circuit_instructions function."""
 
-    @pytest.mark.parametrize(
-        "add_operations",
-        [
-            add_standard_operations,
-            lambda circuit: circuit.append(MeasureReset(), [0], [0]),
-            lambda circuit: circuit.append(MidCircuitMeasure("measure_custom"), [0], [0]),
-            lambda circuit: circuit.append(Instruction("measure_2", 1, 0, []), [0]),
-        ],
-    )
-    def test_returns_same_circuit_without_mid_circuit_instructions(
-        self, add_operations: Callable[[QuantumCircuit], object]
-    ) -> None:
-        """Test that circuits without instructions to convert are returned as they are."""
-        circuit = build_circuit(add_operations)
-
-        assert convert_mid_circuit_instructions(circuit) is circuit
-
     @pytest.mark.parametrize("control_flow", [None, "if_test"])
     def test_converts_without_modifying_input(self, control_flow: str | None) -> None:
         """Test that the converted circuit is a copy and the input circuit is unchanged."""
