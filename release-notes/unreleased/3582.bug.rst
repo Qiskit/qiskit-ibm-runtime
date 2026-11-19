@@ -1,0 +1,1 @@
+Fixed a possible infinite loop in :meth:`.QiskitRuntimeService.jobs` caused by inconsistent responses from the server.

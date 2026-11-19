@@ -1286,7 +1286,7 @@ class QiskitRuntimeService:
 
             job_responses += job_page
 
-            if not job_page or len(job_responses) == count - skip:
+            if not job_page or len(job_responses) >= count - skip:
                 # Stop if there are no more jobs returned by the server.
                 break
 
