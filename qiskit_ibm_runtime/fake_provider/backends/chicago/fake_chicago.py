@@ -24,4 +24,4 @@ class FakeChicago(FakeBackendV2):
     conf_filename = "conf_chicago.json"
     props_filename = "props_chicago.json"
     backend_name = "fake_chicago"
-    _physical_qubits = 338
+    _physical_qubits = 458

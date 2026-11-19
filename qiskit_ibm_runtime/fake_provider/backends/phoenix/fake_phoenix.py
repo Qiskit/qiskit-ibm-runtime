@@ -24,4 +24,4 @@ class FakePhoenix(FakeBackendV2):
     conf_filename = "conf_phoenix.json"
     props_filename = "props_phoenix.json"
     backend_name = "fake_phoenix"
-    _physical_qubits = 338
+    _physical_qubits = 458
