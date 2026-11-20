@@ -17,7 +17,7 @@ from qiskit import QuantumCircuit
 from samplomatic import Twirl
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers
+from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers, FakeFractionalBackend
 from qiskit_ibm_runtime.noise_learner_v3.validation import validate_instruction
 
 
@@ -95,4 +95,15 @@ class TestValidation:
             circuit.cx(0, 1)
 
         with pytest.raises(IBMInputValueError, match="Every qubit must be part of QuantumRegister"):
+            validate_instruction(circuit.data[0], target)
+
+    @pytest.mark.parametrize("angle", [-1.0, 2.0, float("nan")])
+    def test_validate_instruction_rzz_angle(self, angle: float) -> None:
+        """Test validation raises when an rzz angle is outside the range [0, pi/2]."""
+        target = FakeFractionalBackend().target
+        circuit = QuantumCircuit(target.num_qubits)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rzz(angle, 0, 1)
+
+        with pytest.raises(IBMInputValueError, match=rf"angle \({angle}\) outside"):
             validate_instruction(circuit.data[0], target)
