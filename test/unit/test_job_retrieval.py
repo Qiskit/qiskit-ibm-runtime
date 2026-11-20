@@ -149,14 +149,15 @@ class TestRetrieveJobs:
         # `limit=None` forces pagination to happen in chunks of 20 jobs.
         assert len(service.jobs(limit=None)) == expected_jobs
 
-    def test_jobs_skip(self, registry: BaseRegistry) -> None:
+    @pytest.mark.parametrize("job_count", [0, 5])
+    def test_jobs_skip(self, job_count: int, registry: BaseRegistry) -> None:
         """Test retrieving jobs with skip."""
-        for i in range(5):
+        for i in range(job_count):
             registry.add_job(Job(str(i), "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(skip=4)
-        assert 1 == len(jobs)
+        assert max(job_count - 4, 0) == len(jobs)
 
     def test_backend_instance_warnings(
         self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
