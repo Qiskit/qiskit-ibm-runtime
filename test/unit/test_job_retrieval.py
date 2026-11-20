@@ -149,9 +149,13 @@ class TestRetrieveJobs:
         # `limit=None` forces pagination to happen in chunks of 20 jobs.
         assert len(service.jobs(limit=None)) == expected_jobs
 
-    @pytest.mark.parametrize("job_count", [0, 5])
+    @pytest.mark.parametrize("job_count", [3, 5])
     def test_jobs_skip(self, job_count: int, registry: BaseRegistry) -> None:
-        """Test retrieving jobs with skip."""
+        """Test retrieving jobs with skip.
+
+        Exercises the regular case (enough jobs to skip) and the edge case of not having enough
+        jobs that can be skipped.
+        """
         for i in range(job_count):
             registry.add_job(Job(str(i), "common_backend"), "a")
 
