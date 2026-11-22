@@ -1,0 +1,1 @@
+The data of the fake backend ``FakePhoenix`` has been updated to reflect the latest configuration and properties of the corresponding real backend. In particular, a new instruction `measure_terminal` has been added.
