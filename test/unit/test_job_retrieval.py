@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import TYPE_CHECKING, cast
 
@@ -32,20 +31,26 @@ if TYPE_CHECKING:
     from ..registries.entities import JobStatus
 
 
-class InconsistentCountRegistry(DefaultRegistry):
-    """Registry whose ``/jobs`` endpoint reports ``self.count`` instead of the real job count."""
+class DynamicJobsRegistry(DefaultRegistry):
+    """Registry that modifies its jobs dynamically after the `/jobs` endpoint is hit."""
 
-    count: int
-    max_requests = 10
-    requests = 0
+    count: int = 25
+    """The number of jobs the registry will contain after the next hit to `/jobs`."""
+    instance: str = "a"
 
     def callback_jobs_get(self, request: PreparedRequest) -> CallbackResult:
-        """Return the regular ``/jobs`` response, overriding its ``count``."""
-        self.requests += 1
-        if self.requests > self.max_requests:
-            pytest.fail("`jobs()` kept paginating; it should have stopped.")
-        status, headers, body = super().callback_jobs_get(request)
-        return status, headers, json.dumps({**json.loads(body), "count": self.count})
+        """Return the regular `/jobs` response, and add/remove jobs for subsequent requests."""
+        response = super().callback_jobs_get(request)
+
+        # Add or remove jobs to the registry, depending on `self.count`.
+        current_count = len(self.jobs[self.instance])
+        if self.count <= current_count:
+            self.jobs[self.instance] = dict(list(self.jobs[self.instance].items())[: self.count])
+        else:
+            for i in range(self.count - current_count):
+                self.add_job(Job(f"extra_job_{i}", "common_backend"), "a")
+
+        return response
 
 
 def populate_jobs(registry: BaseRegistry) -> tuple[int, int]:
@@ -117,34 +122,46 @@ class TestRetrieveJobs:
         jobs = service.jobs(limit=limit)
         assert min(limit, 25) == len(jobs)
 
-    @pytest.mark.registry(registry_class=InconsistentCountRegistry)
+    @pytest.mark.registry(registry_class=DynamicJobsRegistry)
     @pytest.mark.parametrize(
         "count, expected_jobs",
         [
-            (10, 20),  # count below the first page: stop after it.
-            (25, 25),  # consistent count.
-            (30, 25),  # count above the available jobs: stop on the empty page.
+            (10, 20),  # Exercises removing jobs after the first pagination.
+            (25, 25),  # Regular case, no change in jobs.
+            (30, 30),  # Exercises adding jobs after the first pagination.
         ],
     )
-    def test_jobs_inconsistent_count(
-        self, count: int, expected_jobs: int, registry: InconsistentCountRegistry
+    def test_jobs_dynamic_job_count(
+        self, count: int, expected_jobs: int, registry: DynamicJobsRegistry
     ) -> None:
-        """Test retrieving jobs when the server reports an inconsistent ``count``."""
+        """Test retrieving jobs when the service contains different jobs during pagination.
+
+        Args:
+            count: the number of jobs the service contains after the first pagination.
+            expected_jobs: the number of jobs expected to be returned by `service.jobs()`.
+            registry: the registry for this test, with the ability of dynamically updating its jobs.
+        """
         for i in range(25):
             registry.add_job(Job(str(i), "common_backend"), "a")
         registry.count = count
 
         service = QiskitRuntimeService(token="my_token", instance="a")
+        # `limit=None` forces pagination to happen in chunks of 20 jobs.
         assert len(service.jobs(limit=None)) == expected_jobs
 
-    def test_jobs_skip(self, registry: BaseRegistry) -> None:
-        """Test retrieving jobs with skip."""
-        for i in range(5):
+    @pytest.mark.parametrize("job_count", [3, 5])
+    def test_jobs_skip(self, job_count: int, registry: BaseRegistry) -> None:
+        """Test retrieving jobs with skip.
+
+        Exercises the regular case (enough jobs to skip) and the edge case of not having enough
+        jobs that can be skipped.
+        """
+        for i in range(job_count):
             registry.add_job(Job(str(i), "common_backend"), "a")
 
         service = QiskitRuntimeService(token="my_token", instance="a")
         jobs = service.jobs(skip=4)
-        assert 1 == len(jobs)
+        assert max(job_count - 4, 0) == len(jobs)
 
     def test_backend_instance_warnings(
         self, registry: BaseRegistry, caplog: pytest.LogCaptureFixture
