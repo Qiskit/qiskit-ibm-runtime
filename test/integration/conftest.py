@@ -15,7 +15,9 @@
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import suppress
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -98,3 +100,28 @@ def skip_if_not_production(request: pytest.FixtureRequest) -> None:
     dependencies = request.getfixturevalue("dependencies")
     if "dev" in dependencies.url or "test" in dependencies.url:
         pytest.skip("Skipping integration test. Not supported on staging.")
+
+
+@pytest.fixture
+def integration_job_tags(request: pytest.FixtureRequest) -> list[str]:
+    """Return the tags to assign to the jobs submitted by an integration test.
+
+    Returns the following tags:
+    * `case:file.class`
+    * `test:test`
+    * `ci_run:run_id` (if inside CI)
+    * `hash:commit_sha` (if inside CI)
+    """
+    file_path, *identifier = request.node.nodeid.split("::")
+    *class_name, test_name = identifier
+
+    tags = [
+        f"case:{'.'.join([Path(file_path).stem, *class_name])}",
+        f"test:{test_name}",
+    ]
+
+    for prefix, variable in (("ci_run", "GITHUB_RUN_ID"), ("hash", "GITHUB_SHA")):
+        if value := os.getenv(variable):
+            tags.append(f"{prefix}:{value}")
+
+    return [tag[:86] for tag in tags]
