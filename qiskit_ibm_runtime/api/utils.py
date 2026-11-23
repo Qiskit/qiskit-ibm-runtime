@@ -16,13 +16,17 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 from urllib.parse import urlparse
 
 from ..utils.utils import is_crn
 
 
-def filter_data(data: dict[str, Any]) -> dict[str, Any]:
+def filter_data(data: Any) -> Any:
     """Return the data with certain fields filtered.
 
     Data to be filtered out includes hub/group/project information.
@@ -34,15 +38,15 @@ def filter_data(data: dict[str, Any]) -> dict[str, Any]:
         Filtered data.
     """
     if not isinstance(data, dict):
-        return data  # type: ignore[unreachable]
+        return data
 
     data_to_filter = copy.deepcopy(data)
     keys_to_filter = ["hubInfo"]
-    _filter_value(data_to_filter, keys_to_filter)  # type: ignore[arg-type]
+    _filter_value(data_to_filter, keys_to_filter)
     return data_to_filter
 
 
-def _filter_value(data: dict[str, Any], filter_keys: list[str | tuple[str, str]]) -> None:
+def _filter_value(data: dict[str, Any], filter_keys: Sequence[str | tuple[str, str]]) -> None:
     """Recursive function to filter out the values of the input keys.
 
     Args:

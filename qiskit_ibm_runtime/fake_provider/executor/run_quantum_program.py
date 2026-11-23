@@ -151,7 +151,7 @@ def run_quantum_program(
                         circuit=circuit,
                         parameter_values=bindings_array,
                         shots=program.shots,
-                    )  # type: ignore
+                    )
                 ]
             ).result()
             bit_array = sampler_res[0].data
@@ -178,7 +178,7 @@ def run_quantum_program(
                         circuit=circuit,
                         parameter_values=bindings_array,
                         shots=program.shots,
-                    )  # type: ignore
+                    )
                 ]
             ).result()
             bit_array = sampler_res[0].data
