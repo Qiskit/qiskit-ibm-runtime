@@ -26,8 +26,11 @@ from qiskit.circuit.library import CZGate, ECRGate
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2, fake_provider
+from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.fake_provider import (
     FakeAthensV2,
+    FakeBoston,
+    FakeKingston,
     FakeMumbaiV2,
     FakePerth,
     FakePrague,
@@ -39,9 +42,29 @@ from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 from ...registries import Backend, OneInstanceNoBackendsRegistry
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ...registries import BaseRegistry
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
+
+
+def mid_circuit_measure_circuit() -> QuantumCircuit:
+    """Return a circuit measuring ``|1>`` with ``measure_2`` and then ``measure``."""
+    circuit = QuantumCircuit(1, 2)
+    circuit.x(0)
+    circuit.append(MidCircuitMeasure(), [0], [0])
+    circuit.measure(0, 1)
+    return circuit
+
+
+def mid_circuit_reset_circuit() -> QuantumCircuit:
+    """Return a circuit resetting ``|1>`` with ``reset_2`` and then measuring."""
+    circuit = QuantumCircuit(1, 1)
+    circuit.x(0)
+    circuit.append(MidCircuitReset(), [0])
+    circuit.measure(0, 0)
+    return circuit
 
 
 @pytest.fixture
@@ -315,3 +338,39 @@ class TestFakeBackends:
             assert isinstance(backend.physical_qubits, int)
         else:
             assert backend.physical_qubits is None
+
+    @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+    @pytest.mark.parametrize(
+        ("backend_cls", "circuit_factory", "expected"),
+        [
+            (FakeKingston, mid_circuit_measure_circuit, "11"),
+            (FakeBoston, mid_circuit_reset_circuit, "0"),
+        ],
+    )
+    def test_run_mid_circuit_instructions(
+        self,
+        backend_cls: type[FakeBackendV2],
+        circuit_factory: Callable[[], QuantumCircuit],
+        expected: str,
+    ) -> None:
+        """Test running circuits with mid-circuit instructions on fake backends."""
+        shots = 100
+        circuit = circuit_factory()
+
+        # ``FakeBackendV2.run`` annotates its options as ``dict``, although it takes any value.
+        job = backend_cls().run(circuit, shots=shots, noise_model=None)  # type: ignore[arg-type]
+        counts = job.result().get_counts()
+
+        assert counts == {expected: shots}
+
+    @pytest.mark.skipif(not optionals.HAS_AER, reason="qiskit-aer is required to run this test")
+    def test_sampler_mid_circuit_measure(self) -> None:
+        """Test running a circuit with ``measure_2`` through ``SamplerV2`` on a fake backend."""
+        shots = 1000
+        circuit = mid_circuit_measure_circuit()
+
+        sampler = SamplerV2(FakeKingston(), options={"simulator": {"seed_simulator": 42}})
+        counts = sampler.run([circuit], shots=shots).result()[0].data.c.get_counts()
+
+        # Noise from the fake backend makes a small fraction of shots differ from ``11``.
+        assert counts["11"] > 0.9 * shots
