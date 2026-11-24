@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import copy
 import importlib.metadata
 import inspect
 import logging
@@ -21,7 +22,7 @@ import os
 import re
 import sys
 from pathlib import PurePath
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from requests import RequestException, Session
 from requests.adapters import HTTPAdapter
@@ -35,6 +36,7 @@ from .utils import filter_data
 if TYPE_CHECKING:
     from requests import Response
     from requests.auth import AuthBase
+    from typing_extensions import Self
 
 STATUS_FORCELIST = (
     500,  # General server error
@@ -118,7 +120,7 @@ class PostForcelistRetry(Retry):
         error: Exception | None = None,
         _pool: Any | None = None,
         _stacktrace: Any | None = None,
-    ) -> Retry:
+    ) -> Self:
         """Overwrites parent class increment method for logging."""
         if logger.getEffectiveLevel() is logging.DEBUG:
             status = data = headers = None
@@ -135,13 +137,16 @@ class PostForcelistRetry(Retry):
                 data,
                 headers,
             )
-        return super().increment(
-            method=method,
-            url=url,
-            response=response,
-            error=error,
-            _pool=_pool,
-            _stacktrace=_stacktrace,
+        return cast(
+            "Self",
+            super().increment(
+                method=method,
+                url=url,
+                response=response,
+                error=error,
+                _pool=_pool,
+                _stacktrace=_stacktrace,
+            ),
         )
 
     def is_retry(self, method: str, status_code: int, has_retry_after: bool = False) -> bool:
@@ -287,7 +292,7 @@ class RetrySession(Session):
         if not self.proxies and "timeout" not in kwargs:
             kwargs.update({"timeout": self._timeout})
 
-        headers = dict(self.headers)
+        headers = copy.copy(self.headers)
         headers.update(kwargs.pop("headers", {}))
 
         # Set default caller
@@ -452,7 +457,7 @@ class RetrySession(Session):
 
     def _set_custom_header(self) -> None:
         """Set custom header."""
-        headers = dict(self.headers)
+        headers = copy.copy(self.headers)
         if self.custom_header:
             raw_current = headers.get("X-Qx-Client-Application", "")
             current = raw_current.decode() if isinstance(raw_current, bytes) else str(raw_current)
@@ -462,7 +467,6 @@ class RetrySession(Session):
 
     def __getstate__(self) -> dict:
         """Overwrite Session's getstate to include all attributes."""
-        getstate = getattr(super(), "__getstate__", None)
-        state = getstate() if callable(getstate) else {}
+        state = cast("dict", super().__getstate__())
         state.update(self.__dict__)
         return state

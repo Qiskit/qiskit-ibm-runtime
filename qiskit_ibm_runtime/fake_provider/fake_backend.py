@@ -19,7 +19,7 @@ import logging
 import os
 import tempfile
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
@@ -313,11 +313,9 @@ class FakeBackendV2(BackendV2):
         """
         if self.sim is None:
             self._setup_sim()
-        if self.sim is None:
-            raise RuntimeError("Simulator could not be initialized.")
-        sim: Any = self.sim
-        sim._options = self._options
-        job = sim.run(run_input, **options)
+        self.sim = cast("BackendV2", self.sim)
+        self.sim._options = self._options
+        job = self.sim.run(run_input, **options)
         return job
 
     def _get_noise_model_from_backend_v2(
