@@ -64,15 +64,15 @@ class LocalRuntimeJob(PrimitiveJob):
 
     JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
         function: Callable,
         backend: FakeBackendV2,
         primitive: Literal["sampler", "estimator", "executor"],
         inputs: dict | QuantumProgram,
         future: Future | None = None,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         if primitive == "executor":
             # Pass extra arguments for the function used for executor jobs.

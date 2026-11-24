@@ -19,7 +19,7 @@ import logging
 import os
 import tempfile
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
@@ -107,7 +107,7 @@ class FakeBackendV2(BackendV2):
 
             self.sim = AerSimulator()
             if self.target and self._props_dict:
-                noise_model = self._get_noise_model_from_backend_v2()  # type: ignore
+                noise_model = self._get_noise_model_from_backend_v2()
                 self.sim.set_options(noise_model=noise_model)
                 # Update fake backend default too to avoid overwriting
                 # it when run() is called
@@ -221,7 +221,7 @@ class FakeBackendV2(BackendV2):
             conf = BackendConfiguration.from_dict(self._conf_dict)
             props = None
             if self._props_dict is not None:
-                props = BackendProperties.from_dict(self._props_dict)  # type: ignore
+                props = BackendProperties.from_dict(self._props_dict)
 
             self._target = convert_to_target(
                 configuration=conf,
@@ -313,19 +313,20 @@ class FakeBackendV2(BackendV2):
         """
         if self.sim is None:
             self._setup_sim()
-        self.sim._options = self._options  # type: ignore[attr-defined]
-        job = self.sim.run(run_input, **options)  # type: ignore[attr-defined]
+        self.sim = cast("BackendV2", self.sim)
+        self.sim._options = self._options
+        job = self.sim.run(run_input, **options)
         return job
 
-    def _get_noise_model_from_backend_v2(  # type: ignore
+    def _get_noise_model_from_backend_v2(
         self,
-        gate_error=True,
-        readout_error=True,
-        thermal_relaxation=True,
-        temperature=0,
-        gate_lengths=None,
-        gate_length_units="ns",
-    ):
+        gate_error: bool = True,
+        readout_error: bool = True,
+        thermal_relaxation: bool = True,
+        temperature: float = 0,
+        gate_lengths: list | None = None,
+        gate_length_units: str = "ns",
+    ) -> Any:
         """Build noise model from BackendV2.
 
         This is a temporary fix until qiskit-aer supports building noise model
@@ -483,7 +484,7 @@ class FakeBackendV2(BackendV2):
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
-            self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
+            self._conf_dict = self._get_conf_dict_from_json()
             self._set_props_dict_from_json()
 
             updated_configuration = BackendConfiguration.from_dict(self._conf_dict)

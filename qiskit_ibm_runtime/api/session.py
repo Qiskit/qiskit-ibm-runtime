@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import copy
 import importlib.metadata
 import inspect
 import logging
@@ -21,7 +22,7 @@ import os
 import re
 import sys
 from pathlib import PurePath
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from requests import RequestException, Session
 from requests.adapters import HTTPAdapter
@@ -35,6 +36,7 @@ from .utils import filter_data
 if TYPE_CHECKING:
     from requests import Response
     from requests.auth import AuthBase
+    from typing_extensions import Self
 
 STATUS_FORCELIST = (
     500,  # General server error
@@ -110,15 +112,15 @@ class PostForcelistRetry(Retry):
     the IBM Quantum API guarantees that retrying on specific 5xx errors is safe.
     """
 
-    def increment(  # type: ignore[no-untyped-def]
+    def increment(
         self,
-        method=None,
-        url=None,
-        response=None,
-        error=None,
-        _pool=None,
-        _stacktrace=None,
-    ):
+        method: str | None = None,
+        url: str | None = None,
+        response: Any | None = None,
+        error: Exception | None = None,
+        _pool: Any | None = None,
+        _stacktrace: Any | None = None,
+    ) -> Self:
         """Overwrites parent class increment method for logging."""
         if logger.getEffectiveLevel() is logging.DEBUG:
             status = data = headers = None
@@ -135,13 +137,16 @@ class PostForcelistRetry(Retry):
                 data,
                 headers,
             )
-        return super().increment(
-            method=method,
-            url=url,
-            response=response,
-            error=error,
-            _pool=_pool,
-            _stacktrace=_stacktrace,
+        return cast(
+            "Self",
+            super().increment(
+                method=method,
+                url=url,
+                response=response,
+                error=error,
+                _pool=_pool,
+                _stacktrace=_stacktrace,
+            ),
         )
 
     def is_retry(self, method: str, status_code: int, has_retry_after: bool = False) -> bool:
@@ -244,8 +249,13 @@ class RetrySession(Session):
         self.proxies = proxies or {}
         self.verify = verify
 
-    def request(  # type: ignore[override]
-        self, method: str, url: str, bare: bool = False, **kwargs: Any
+    def request(
+        self,
+        method: str | bytes,
+        url: str | bytes,
+        *args: Any,
+        bare: bool = False,
+        **kwargs: Any,
     ) -> Response:
         """Construct, prepare, and send a ``Request``.
 
@@ -255,6 +265,7 @@ class RetrySession(Session):
         Args:
             method: Method for the new request (e.g. ``POST``).
             url: URL for the new request.
+            *args: Additional positional arguments for the request.
             bare: If ``True``, do not send IBM Quantum specific information
                 (such as access token) in the request or modify the input `url`.
             **kwargs: Additional arguments for the request.
@@ -266,20 +277,22 @@ class RetrySession(Session):
             RequestsApiError: If the request failed.
             IBMNotAuthorizedError: If the auth token is invalid.
         """
+        url_str = url.decode() if isinstance(url, bytes) else url
+        method_str = method.decode() if isinstance(method, bytes) else method
         if bare:
-            final_url = url
+            final_url = url_str
             # Explicitly pass `None` as the `access_token` param, disabling it.
             params = kwargs.get("params", {})
             params.update({"access_token": None})
             kwargs.update({"params": params})
         else:
-            final_url = self.base_url + url
+            final_url = self.base_url + url_str
 
         # Add a timeout to the connection for non-proxy connections.
         if not self.proxies and "timeout" not in kwargs:
             kwargs.update({"timeout": self._timeout})
 
-        headers = self.headers.copy()  # type: ignore
+        headers = copy.copy(self.headers)
         headers.update(kwargs.pop("headers", {}))
 
         # Set default caller
@@ -339,8 +352,9 @@ class RetrySession(Session):
         self._set_custom_header()
 
         try:
-            self._log_request_info(final_url, method, kwargs)
-            response = super().request(method, final_url, headers=headers, **kwargs)
+            self._log_request_info(final_url, method_str, kwargs)
+            kwargs["headers"] = headers
+            response = super().request(method_str, final_url, *args, **kwargs)
             response.raise_for_status()
         except RequestException as ex:
             # Wrap the requests exceptions into a IBM Q custom one, for
@@ -443,15 +457,16 @@ class RetrySession(Session):
 
     def _set_custom_header(self) -> None:
         """Set custom header."""
-        headers = self.headers.copy()  # type: ignore
+        headers = copy.copy(self.headers)
         if self.custom_header:
-            current = headers["X-Qx-Client-Application"]
+            raw_current = headers.get("X-Qx-Client-Application", "")
+            current = raw_current.decode() if isinstance(raw_current, bytes) else str(raw_current)
             if self.custom_header not in current:
                 headers.update({"X-Qx-Client-Application": f"{current}/{self.custom_header}"})
-                self.headers = headers
+                self.headers.update(headers)
 
     def __getstate__(self) -> dict:
         """Overwrite Session's getstate to include all attributes."""
-        state = super().__getstate__()  # type: ignore
+        state = cast("dict", super().__getstate__())
         state.update(self.__dict__)
         return state
