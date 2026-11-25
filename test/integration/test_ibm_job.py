@@ -31,19 +31,11 @@ from ..utils import bell
 from .utils import cancel_job_safe, submit_and_cancel
 
 if TYPE_CHECKING:
-    from qiskit import QuantumCircuit
+    from collections.abc import Callable
 
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
 
     from .dependencies import Dependencies
-
-
-def run_bell_job(backend: IBMBackend) -> tuple[QuantumCircuit, RuntimeJobV2]:
-    """Run a bell circuit for `backend`, returning the circuit and the job."""
-    pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=1)
-    isa_circuit = pass_manager.run(bell())
-
-    return isa_circuit, Sampler(mode=backend).run([isa_circuit])
 
 
 def last_month() -> datetime:
@@ -124,15 +116,16 @@ class TestIBMJob:
         for job in pending_job_list:
             assert job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.RUNNING]
 
-    def test_retrieve_job(self, dependencies: Dependencies) -> None:
+    def test_retrieve_job(
+        self, dependencies: Dependencies, submit_bell_job: Callable[..., RuntimeJobV2]
+    ) -> None:
         """Test retrieving a single job."""
         service = dependencies.service
-        backend = service.backend(dependencies.qpu)
-        _, sim_job = run_bell_job(backend)
+        job = submit_bell_job()
 
-        retrieved_job = service.job(sim_job.job_id())
-        assert sim_job.job_id() == retrieved_job.job_id()
-        assert sim_job.result().metadata == retrieved_job.result().metadata
+        retrieved_job = service.job(job.job_id())
+        assert job.job_id() == retrieved_job.job_id()
+        assert job.result().metadata == retrieved_job.result().metadata
 
     def test_retrieve_job_error(self, dependencies: Dependencies) -> None:
         """Test retrieving an invalid job."""
@@ -222,11 +215,12 @@ class TestIBMJob:
         for job in job_list:
             assert past_one_month_tz_aware <= job.creation_date <= today_tz_aware
 
-    def test_retrieve_jobs_order(self, dependencies: Dependencies) -> None:
+    def test_retrieve_jobs_order(
+        self, dependencies: Dependencies, submit_bell_job: Callable[..., RuntimeJobV2]
+    ) -> None:
         """Test retrieving jobs with different orders."""
         service = dependencies.service
-        backend = service.backend(dependencies.qpu)
-        _, job = run_bell_job(backend)
+        job = submit_bell_job()
         job.wait_for_final_state()
 
         newest_jobs = service.jobs(
@@ -245,12 +239,10 @@ class TestIBMJob:
         )
         assert job.job_id() not in [rjob.job_id() for rjob in oldest_jobs]
 
-    def test_refresh_job_result(self, dependencies: Dependencies) -> None:
+    def test_refresh_job_result(self, submit_bell_job: Callable[..., RuntimeJobV2]) -> None:
         """Test re-retrieving job result."""
-        service = dependencies.service
-        backend = service.backend(dependencies.qpu)
-        _, sim_job = run_bell_job(backend)
-        result = sim_job.result()
+        job = submit_bell_job()
+        result = job.result()
 
         # Save original cached results.
         cached_result = copy.deepcopy(result.metadata)
@@ -262,7 +254,7 @@ class TestIBMJob:
         assert result.metadata["test"] == "modified_result"
 
         # Re-retrieve result.
-        result = sim_job.result()
+        result = job.result()
         assert cached_result == result.metadata
         assert "test" not in result.metadata
 
@@ -277,9 +269,16 @@ class TestIBMJob:
             job.wait_for_final_state(timeout=0.1)
         cancel_job_safe(job)
 
-    def test_job_circuits(self, dependencies: Dependencies) -> None:
+    def test_job_circuits(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test job circuits."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
-        circuit, sim_job = run_bell_job(backend)
-        assert circuit == sim_job.inputs["pubs"][0][0]
+
+        pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        circuit = pass_manager.run(bell())
+
+        job = Sampler(mode=backend, options=options).run([circuit])
+        submitted_jobs.append(job)
+        assert circuit == job.inputs["pubs"][0][0]
