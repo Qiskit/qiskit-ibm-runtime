@@ -261,15 +261,21 @@ class TestIBMBackend:
         with pytest.raises(QiskitBackendNotFoundError):
             service.backend("nonexistent_backend")
 
-    def test_too_many_qubits_in_circuit(self, backend: IBMBackend) -> None:
+    def test_too_many_qubits_in_circuit(
+        self,
+        backend: IBMBackend,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
+    ) -> None:
         """Check error message if circuit contains more qubits than supported on the backend."""
         num = len(backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
         with pytest.raises(IBMInputValueError) as err:
-            sampler = Sampler(mode=backend)
+            sampler = Sampler(mode=backend, options=options)
             job = sampler.run([circuit])
-            job.cancel()
+            submitted_jobs.append(job)
+
         assert f"circuit has {num_qubits} qubits but the target system requires {num}" in str(
             err.value
         )

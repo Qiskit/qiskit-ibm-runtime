@@ -63,10 +63,10 @@ def cancel_job_safe(job: RuntimeJobV2) -> bool:
         raise
 
 
-def submit_and_cancel(backend: IBMBackend) -> RuntimeJobV2:
+def submit_and_cancel(backend: IBMBackend, options: dict) -> RuntimeJobV2:
     """Submit a bell job to `backend` and cancel it, returning the cancelled job."""
     circuit = transpile(bell(), backend=backend)
-    sampler = SamplerV2(backend)
+    sampler = SamplerV2(backend, options=options)
     job = sampler.run([circuit])
     cancel_job_safe(job)
 

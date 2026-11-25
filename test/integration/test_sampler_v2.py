@@ -537,8 +537,10 @@ class TestSampler:
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session)
-            result = sampler.run([SamplerPub(isa_bell, shots=shots)]).result()
+            sampler = Sampler(mode=session, options=options)
+            job = sampler.run([SamplerPub(isa_bell, shots=shots)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert result[0].data.meas.num_shots == shots
         assert sum(result[0].data.meas.get_counts().values()) == shots

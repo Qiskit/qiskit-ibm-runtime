@@ -45,12 +45,13 @@ def dependencies() -> Dependencies:
 
 
 @pytest.fixture
-def submit_bell_job(dependencies: Dependencies) -> Iterator[Callable[..., RuntimeJobV2]]:
+def submit_bell_job(
+    dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+) -> Iterator[Callable[..., RuntimeJobV2]]:
     """Return a function that submits a sampler job running a bell circuit.
 
     The jobs submitted through the returned function are cancelled when the test finishes.
     """
-    submitted: list[RuntimeJobV2] = []
 
     def _submit(backend_name: str | None = None, job_tags: list[str] | None = None) -> RuntimeJobV2:
         """Submit a sampler job running a bell circuit.
@@ -69,22 +70,17 @@ def submit_bell_job(dependencies: Dependencies) -> Iterator[Callable[..., Runtim
         backend = service.backend(backend_name or dependencies.qpu)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
-        sampler = SamplerV2(mode=backend)
+        sampler = SamplerV2(mode=backend, options=options)
         if job_tags:
-            sampler.options.environment.job_tags = job_tags  # type: ignore[union-attr]
+            sampler.options.environment.job_tags += job_tags
         job = sampler.run([pm.run(bell())])
 
         logger.info("Runtime job %s submitted.", job.job_id())
-        submitted.append(job)
+        submitted_jobs.append(job)
 
         return job
 
     yield _submit
-
-    # Cancel submitted jobs.
-    for job in submitted:
-        with suppress(Exception):
-            job.cancel()
 
 
 @pytest.fixture(autouse=True)

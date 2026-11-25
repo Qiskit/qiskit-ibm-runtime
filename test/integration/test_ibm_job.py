@@ -73,9 +73,9 @@ def most_busy_backend(dependencies: Dependencies) -> IBMBackend:
 class TestIBMJob:
     """Test ibm_job module."""
 
-    def test_cancel(self, most_busy_backend: IBMBackend) -> None:
+    def test_cancel(self, most_busy_backend: IBMBackend, options: dict) -> None:
         """Test job cancellation."""
-        submit_and_cancel(most_busy_backend)
+        submit_and_cancel(most_busy_backend, options)
 
     def test_retrieve_jobs(self, dependencies: Dependencies) -> None:
         """Test retrieving jobs."""
@@ -266,10 +266,13 @@ class TestIBMJob:
         assert cached_result == result.metadata
         assert "test" not in result.metadata
 
-    def test_wait_for_final_state_timeout(self, most_busy_backend: IBMBackend) -> None:
+    def test_wait_for_final_state_timeout(
+        self, most_busy_backend: IBMBackend, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test waiting for job to reach final state times out."""
-        sampler = Sampler(mode=most_busy_backend)
+        sampler = Sampler(mode=most_busy_backend, options=options)
         job = sampler.run([transpile(bell(), backend=most_busy_backend)])
+        submitted_jobs.append(job)
         with pytest.raises(RuntimeJobTimeoutError):
             job.wait_for_final_state(timeout=0.1)
         cancel_job_safe(job)

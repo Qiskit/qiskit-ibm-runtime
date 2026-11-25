@@ -183,7 +183,7 @@ class TestIntegrationNoiseLearner:
         pubs = [(circuit, "Z" * circuit.num_qubits)]
 
         with Session(backend) as session:
-            learner = NoiseLearner(mode=session, options=options)
+            learner = NoiseLearner(mode=session, options=estimator_options)
             try:
                 learner_job = learner.run(ecr_circuits())
                 submitted_jobs.append(learner_job)
