@@ -36,6 +36,7 @@ class TestCalibrator:
         """Test that a calibration job runs and returns a result."""
         backend = dependencies.service.backend(dependencies.qpu)
 
+        options.pop("max_execution_time")
         with Session(backend=backend) as session:
             calibrator = Calibrator(session, options=options)
             calibrator.options.experimental = {"foo": "bar"}

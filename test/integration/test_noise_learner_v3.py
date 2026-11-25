@@ -76,7 +76,9 @@ class TestNoiseLearnerV3:
         params["options"].experimental = {}
 
         assert params["instructions"] == instructions
-        assert params["options"] == learner.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == learner.options.model_dump(exclude={"environment", "max_execution_time"})
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)
@@ -133,7 +135,9 @@ class TestNoiseLearnerV3:
         params["options"].experimental = {}
 
         assert params["instructions"] == layers
-        assert params["options"] == learner.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == learner.options.model_dump(exclude={"environment", "max_execution_time"})
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)

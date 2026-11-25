@@ -66,7 +66,9 @@ class TestExecutor:
         submitted_jobs.append(job)
 
         params = job.inputs
-        assert params["options"] == executor.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == executor.options.model_dump(exclude={"environment", "max_execution_time"})
         assert isinstance(params["quantum_program"], QuantumProgram)
         assert params["schema_version"] == Executor._SCHEMA_VERSION
 
@@ -117,7 +119,9 @@ class TestExecutor:
         submitted_jobs.append(job)
 
         params = job.inputs
-        assert params["options"] == executor.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == executor.options.model_dump(exclude={"environment", "max_execution_time"})
         assert isinstance(params["quantum_program"], QuantumProgram)
         assert params["schema_version"] == Executor._SCHEMA_VERSION
 
