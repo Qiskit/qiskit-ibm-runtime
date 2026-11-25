@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# Disable typing errors due to usage of server-side options.
 # mypy: disable-error-code="union-attr"
 
 """Integration tests for Estimator V2."""
