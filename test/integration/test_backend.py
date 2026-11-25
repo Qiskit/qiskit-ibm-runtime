@@ -34,6 +34,7 @@ from ..utils import bell
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
     from .dependencies import Dependencies
 
@@ -223,14 +224,19 @@ class TestIBMBackend:
         for i in qubits:
             assert isinstance(qubit_properties[i], QubitProperties)
 
-    def test_sim_backend_options(self, backend: IBMBackend) -> None:
+    def test_sim_backend_options(
+        self, backend: IBMBackend, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test simulator backend options."""
         backend.options.shots = 2048
         backend.set_options(memory=True)
-        sampler = Sampler(mode=backend)
         isa_circuit = transpile(bell(), backend)
-        inputs = sampler.run([isa_circuit], shots=1).inputs
-        assert inputs["pubs"][0][2] == 1
+
+        sampler = Sampler(mode=backend, options=options)
+        job = sampler.run([isa_circuit], shots=1)
+        submitted_jobs.append(job)
+
+        assert job.inputs["pubs"][0][2] == 1
 
     @pytest.mark.production
     def test_paused_backend_warning(

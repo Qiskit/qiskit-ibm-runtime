@@ -103,25 +103,42 @@ def skip_if_not_production(request: pytest.FixtureRequest) -> None:
 
 
 @pytest.fixture
-def integration_job_tags(request: pytest.FixtureRequest) -> list[str]:
-    """Return the tags to assign to the jobs submitted by an integration test.
+def options(request: pytest.FixtureRequest) -> dict:
+    """Return the options for a program used by an integration tests.
 
-    Returns the following tags:
-    * `case:file.class`
-    * `test:test`
-    * `ci_run:run_id` (if inside CI)
-    * `hash:commit_sha` (if inside CI)
+    The option contains custom job tags (`case:`, `test:`, `run:`, `hash:`) that help debugging,
+    and also set the `maximum_execution_time` when run in CI.
     """
     file_path, *identifier = request.node.nodeid.split("::")
     *class_name, test_name = identifier
 
+    # Prepare the tags.
     tags = [
         f"case:{'.'.join([Path(file_path).stem, *class_name])}",
         f"test:{test_name}",
     ]
+    if run := os.getenv("GITHUB_RUN_ID"):
+        tags.append(f"run:{run}")
+    if hash := os.getenv("GITHUB_SHA"):
+        tags.append(f"hash:{hash}")
+    tags = [tag[:86] for tag in tags]
 
-    for prefix, variable in (("ci_run", "GITHUB_RUN_ID"), ("hash", "GITHUB_SHA")):
-        if value := os.getenv(variable):
-            tags.append(f"{prefix}:{value}")
+    # Create the options based on tags.
+    options: dict = {"environment": {"job_tags": tags}}
+    if run:
+        options["max_execution_time"] = 10 * 60
 
-    return [tag[:86] for tag in tags]
+    return options
+
+
+@pytest.fixture
+def submitted_jobs():
+    """Register submitted jobs by a test, so they are cancelled during shutdown."""
+    jobs: list[RuntimeJobV2] = []
+    yield jobs
+
+    # Cancel submitted jobs.
+    for job in jobs:
+        if job.status() in ("INITIALIZING", "QUEUED", "RUNNING"):
+            with suppress(Exception):
+                job.cancel()
