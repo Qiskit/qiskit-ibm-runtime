@@ -240,7 +240,11 @@ class TestIBMBackend:
 
     @pytest.mark.production
     def test_paused_backend_warning(
-        self, backend: IBMBackend, monkeypatch: pytest.MonkeyPatch
+        self,
+        backend: IBMBackend,
+        monkeypatch: pytest.MonkeyPatch,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test that a warning is given when running jobs on a paused backend."""
         paused_status = backend.status()
@@ -248,8 +252,8 @@ class TestIBMBackend:
         monkeypatch.setattr(backend, "status", lambda: paused_status)
         isa_circuit = transpile(bell(), backend)
         with pytest.warns(Warning):
-            sampler = Sampler(mode=backend)
-            sampler.run([isa_circuit])
+            sampler = Sampler(mode=backend, options=options)
+            submitted_jobs.append(sampler.run([isa_circuit]))
 
     def test_retrieve_backend_not_exist(self, dependencies: Dependencies) -> None:
         """Test that an error is raised when retrieving a backend that does not exist."""
@@ -350,7 +354,9 @@ class TestIBMBackend:
 
         assert calibration_id in caplog.text
 
-    def test_run_dry_run(self, dependencies: Dependencies) -> None:
+    def test_run_dry_run(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test `run` using the `dry_run` flag.
 
         This test does not use ``dependencies.qpu``, but instead attempts to find a backend that
@@ -360,6 +366,8 @@ class TestIBMBackend:
         backend, dry_run_backend = get_mock_backend_pair(service)
 
         isa_circuit = transpile(bell(), backend)
-        sampler = Sampler(mode=backend)
+        sampler = Sampler(mode=backend, options=options)
         job = sampler.run([isa_circuit], dry_run=True)
+        submitted_jobs.append(job)
+
         assert job.backend().name == dry_run_backend.name

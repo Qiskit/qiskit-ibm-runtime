@@ -10,11 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# mypy: disable-error-code="union-attr"
+
 """Integration tests for Estimator V2."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import pytest
 from qiskit.circuit.library import iqp, real_amplitudes
@@ -27,17 +29,7 @@ from qiskit_ibm_runtime.fake_provider import FakeAuckland
 from qiskit_ibm_runtime.server_side import EstimatorV2
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime.options import (
-        EnvironmentOptions,
-        ExecutionOptionsV2,
-        LayerNoiseLearningOptions,
-        MeasureNoiseLearningOptions,
-        PecOptions,
-        ResilienceOptionsV2,
-        SimulatorOptions,
-        TwirlingOptions,
-        ZneOptions,
-    )
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
     from .dependencies import Dependencies
 
@@ -58,7 +50,9 @@ def assert_result_type(result: PrimitiveResult, num_pubs: int, shapes: list) -> 
 class TestEstimatorV2:
     """Integration tests for Estimator V2 Primitive."""
 
-    def test_estimator_v2_session(self, dependencies: Dependencies) -> None:
+    def test_estimator_v2_session(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Verify correct results are returned."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
@@ -75,22 +69,28 @@ class TestEstimatorV2:
         theta3 = [1, 2, 3, 4, 5, 6]
 
         with Session(backend) as session:
-            estimator = EstimatorV2(mode=session)
+            estimator = EstimatorV2(mode=session, options=options)
 
             job = estimator.run([(psi1, H1, [theta1])])
+            submitted_jobs.append(job)
             result = job.result()
             assert_result_type(result, num_pubs=1, shapes=[(1,)])
 
             job2 = estimator.run([(psi1, [H1, H3], [theta1, theta3]), (psi2, H2, theta2)])
+            submitted_jobs.append(job2)
             result2 = job2.result()
             assert_result_type(result2, num_pubs=2, shapes=[(2,), ()])
 
             job3 = estimator.run([(psi1, H1, theta1), (psi2, H2, theta2), (psi1, H3, theta3)])
+            submitted_jobs.append(job3)
             result3 = job3.result()
             assert_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
     def test_estimator_v2_options(
-        self, dependencies: Dependencies, request: pytest.FixtureRequest
+        self,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test V2 Estimator with different options."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -99,65 +99,58 @@ class TestEstimatorV2:
         circuit = pass_mgr.run(iqp([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(mode=backend)
+        estimator = EstimatorV2(mode=backend, options=options)
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
         estimator.options.seed_estimator = 42
-        resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
-        zne = cast("ZneOptions", resilience.zne)
-        layer_noise_learning = cast("LayerNoiseLearningOptions", resilience.layer_noise_learning)
-        measure_noise_learning = cast(
-            "MeasureNoiseLearningOptions", resilience.measure_noise_learning
-        )
-        execution = cast("ExecutionOptionsV2", estimator.options.execution)
-        twirling = cast("TwirlingOptions", estimator.options.twirling)
-        resilience.measure_mitigation = True
-        resilience.zne_mitigation = True
-        zne.amplifier = "gate_folding_back"
-        zne.noise_factors = [3, 5]
-        zne.extrapolator = "linear"
-        resilience.pec_mitigation = False
-        layer_noise_learning.max_layers_to_learn = 10
-        layer_noise_learning.shots_per_randomization = 64
-        layer_noise_learning.num_randomizations = 16
-        layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
-        measure_noise_learning.num_randomizations = 32
-        execution.init_qubits = True
-        execution.rep_delay = 0.00025
-        twirling.enable_gates = True
-        twirling.enable_measure = True
-        twirling.strategy = "active"
-        twirling.num_randomizations = 16
-        twirling.shots_per_randomization = 100
-        environment = cast("EnvironmentOptions", estimator.options.environment)
-        environment.job_tags = [".".join(request.node.nodeid.split("::")[-2:])]
+        estimator.options.resilience.measure_mitigation = True
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.zne.amplifier = "gate_folding_back"
+        estimator.options.resilience.zne.noise_factors = [3, 5]
+        estimator.options.resilience.zne.extrapolator = "linear"
+        estimator.options.resilience.pec_mitigation = False
+        estimator.options.resilience.layer_noise_learning.max_layers_to_learn = 10
+        estimator.options.resilience.layer_noise_learning.shots_per_randomization = 64
+        estimator.options.resilience.layer_noise_learning.num_randomizations = 16
+        estimator.options.resilience.layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
+        estimator.options.resilience.measure_noise_learning.num_randomizations = 32
+        estimator.options.execution.init_qubits = True
+        estimator.options.execution.rep_delay = 0.00025
+        estimator.options.twirling.enable_gates = True
+        estimator.options.twirling.enable_measure = True
+        estimator.options.twirling.strategy = "active"
+        estimator.options.twirling.num_randomizations = 16
+        estimator.options.twirling.shots_per_randomization = 100
 
         job = estimator.run([(circuit, observable)])
+        submitted_jobs.append(job)
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[()])
         assert result[0].metadata["shots"] == 1600
 
     @pytest.mark.skip(reason="Skip until simulator options are accepted by server.")
-    def test_pec(self, dependencies: Dependencies, request: pytest.FixtureRequest) -> None:
+    def test_pec(
+        self,
+        dependencies: Dependencies,
+        request: pytest.FixtureRequest,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
+    ) -> None:
         """Test running with PEC."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
         circuit = pass_mgr.run(iqp([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(mode=backend)
+        estimator = EstimatorV2(mode=backend, options=options)
         estimator.options.resilience_level = 0
-        resilience = cast("ResilienceOptionsV2", estimator.options.resilience)
-        pec = cast("PecOptions", resilience.pec)
-        simulator = cast("SimulatorOptions", estimator.options.simulator)
-        environment = cast("EnvironmentOptions", estimator.options.environment)
-        resilience.pec_mitigation = True
-        pec.max_overhead = 200
-        simulator.set_backend(FakeAuckland())
-        environment.job_tags = [".".join(request.node.nodeid.split("::")[-2:])]
+        estimator.options.resilience.pec_mitigation = True
+        estimator.options.resilience.pec.max_overhead = 200
+        estimator.options.simulator.set_backend(FakeAuckland())
 
         job = estimator.run([(circuit, observables)])
+        submitted_jobs.append(job)
         result = job.result()
         assert_result_type(result, num_pubs=1, shapes=[(1,)])
         assert "sampling_overhead" in result[0].metadata["resilience"]
