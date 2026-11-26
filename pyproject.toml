@@ -93,7 +93,7 @@ markers = [
     "production: only run the test when the service is a production one.",
     "registry: the `responses` registry class to use, as `registry_class=...`.",
     "server_side_primitives: the test consciously uses the deprecated server-side primitives.",
-    "slow: test that takes relatively large time",
+    "slow: test that takes relatively large time.",
 ]
 
 [tool.ruff]
