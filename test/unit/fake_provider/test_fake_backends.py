@@ -29,7 +29,6 @@ from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2, fake_provider
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.fake_provider import (
     FakeAthensV2,
-    FakeBoston,
     FakeKingston,
     FakeMumbaiV2,
     FakePerth,
@@ -344,7 +343,7 @@ class TestFakeBackends:
         ("backend_cls", "circuit_factory", "expected"),
         [
             (FakeKingston, mid_circuit_measure_circuit, "11"),
-            (FakeBoston, mid_circuit_reset_circuit, "0"),
+            (FakeAthensV2, mid_circuit_reset_circuit, "0"),
         ],
     )
     def test_run_mid_circuit_instructions(
@@ -369,7 +368,7 @@ class TestFakeBackends:
         shots = 1000
         circuit = mid_circuit_measure_circuit()
 
-        sampler = SamplerV2(FakeKingston(), options={"simulator": {"seed_simulator": 42}})
+        sampler = SamplerV2(FakeAthensV2(), options={"simulator": {"seed_simulator": 42}})
         counts = sampler.run([circuit], shots=shots).result()[0].data.c.get_counts()
 
         # Noise from the fake backend makes a small fraction of shots differ from ``11``.

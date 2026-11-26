@@ -516,6 +516,7 @@ class TestDataSerialization:
             assert decoded["fidelity"] is None
             assert len(warn_cm) == 1
 
+    @pytest.mark.slow
     @pytest.mark.parametrize(
         "object_",
         [
