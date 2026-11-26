@@ -129,6 +129,7 @@ class BaseClientSide(ABC, Generic[OptionsT]):
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
+        logger.info("Starting pre-processing")
         quantum_program, executor_options = prepare_fn(**kwargs)
         quantum_program._semantic_role = self.semantic_role
         return quantum_program, executor_options
@@ -149,7 +150,6 @@ class BaseClientSide(ABC, Generic[OptionsT]):
         Returns:
             The submitted job.
         """
-        logger.info("Starting pre-processing")
         quantum_program, executor_options = self.prepare(**kwargs)
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
