@@ -24,7 +24,8 @@ from qiskit_mitigation import PEA, PEC, find_combined_unique_layers
 from ..base_client_side import BaseClientSide
 from ..options_models.estimator import EstimatorOptions
 from .finalize_options import finalize_estimator_options
-from .prepare import choose_task_class, prepare
+from .prepare import choose_task_class
+from .prepare import prepare as prepare_estimator
 from .utils import estimator_options_to_boxing_options
 
 if TYPE_CHECKING:
@@ -89,6 +90,8 @@ class Estimator(BaseClientSide[EstimatorOptions], BaseEstimatorV2):
             See :class:`~qiskit_ibm_runtime.options_models.EstimatorOptions`
             for all available options.
     """
+
+    semantic_role = "estimator_v2"
 
     def _get_default_options(self) -> EstimatorOptions:
         """The default options of all :class:`~.Estimator` objects."""
@@ -187,15 +190,14 @@ class Estimator(BaseClientSide[EstimatorOptions], BaseEstimatorV2):
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
-        quantum_program, executor_options = prepare(
+        return self._prepare(
+            prepare_fn=prepare_estimator,
             pubs=pubs,
             options=self.options,
             precision=precision,
             add_tags=self._service.is_local,
             backend=self._backend,
         )
-        quantum_program._semantic_role = "estimator_v2"
-        return quantum_program, executor_options
 
     def run(
         self,

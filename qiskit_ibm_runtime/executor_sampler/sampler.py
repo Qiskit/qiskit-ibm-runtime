@@ -23,7 +23,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from ..base_client_side import BaseClientSide
 from ..options_models.sampler import SamplerOptions
 from .finalize_options import finalize_sampler_options
-from .prepare import prepare
+from .prepare import prepare as prepare_sampler
 from .utils import BoxType, find_box_type, find_unique_layers
 
 if TYPE_CHECKING:
@@ -92,6 +92,8 @@ class Sampler(BaseClientSide[SamplerOptions], BaseSamplerV2):
             for all available options.
     """
 
+    semantic_role = "sampler_v2"
+
     def _get_default_options(self) -> SamplerOptions:
         """The default options of all :class:`~.Sampler` objects."""
         return SamplerOptions()
@@ -152,15 +154,14 @@ class Sampler(BaseClientSide[SamplerOptions], BaseSamplerV2):
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
-        quantum_program, executor_options = prepare(
+        return self._prepare(
+            prepare_fn=prepare_sampler,
             pubs=pubs,
             options=self.options,
             shots=shots,
             add_tags=self._service.is_local,
             backend=self._backend,
         )
-        quantum_program._semantic_role = "sampler_v2"
-        return quantum_program, executor_options
 
     def run(
         self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None, dry_run: bool = False

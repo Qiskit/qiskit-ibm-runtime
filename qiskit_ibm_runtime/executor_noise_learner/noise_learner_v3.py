@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 from ..base_client_side import BaseClientSide
 from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
-from .prepare import prepare
+from .prepare import prepare as prepare_nlv3
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -64,6 +64,8 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Options]):
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
+    semantic_role = "noise_learner_v3"
+
     def _get_default_options(self) -> NoiseLearnerV3Options:
         """The default options of all :class:`~.NoiseLearnerV3` objects."""
         return NoiseLearnerV3Options()
@@ -80,13 +82,12 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Options]):
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
-        quantum_program, executor_options = prepare(
+        return self._prepare(
+            prepare_fn=prepare_nlv3,
             instructions=instructions,
             options=self.options,
             backend=self._backend,
         )
-        quantum_program._semantic_role = "noise_learner_v3"
-        return quantum_program, executor_options
 
     def run(
         self, instructions: Iterable[CircuitInstruction], dry_run: bool = False

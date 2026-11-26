@@ -16,12 +16,14 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 from .base_primitive import get_mode_service_backend
 from .executor import Executor
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from qiskit.providers import BackendV2
 
     from .batch import Batch
@@ -53,6 +55,9 @@ class BaseClientSide(ABC, Generic[OptionsT]):
 
     options: OptionsT
     """The options of this program."""
+
+    semantic_role: Literal["sampler_v2", "noise_learner_v3", "estimator_v2"]
+    """The semantic role of the execution model."""
 
     def __init__(
         self,
@@ -88,11 +93,11 @@ class BaseClientSide(ABC, Generic[OptionsT]):
 
     @abstractmethod
     def prepare(self, *args: Any, **kwargs: Any) -> tuple[QuantumProgram, ExecutorOptions]:
-        """The function used to map this program's inputs to the inputs of Executor.
+        """The function used to map a program's inputs to the inputs of Executor.
 
         Args:
-            *args: The positional inputs of this program.
-            **kwargs: The keyword inputs of this program.
+            *args: The positional inputs of a program.
+            **kwargs: The keyword inputs of a program.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
@@ -101,15 +106,32 @@ class BaseClientSide(ABC, Generic[OptionsT]):
 
     @abstractmethod
     def run(self, *args: Any, **kwargs: Any) -> RuntimeJobV2 | LocalRuntimeJob:
-        """Submit a request to the executor.
+        """Submit a request to the :class:`~.Executor`.
 
         Args:
-            *args: The positional inputs of this program.
-            **kwargs: The keyword inputs of this program.
+            *args: The positional inputs of a program.
+            **kwargs: The keyword inputs of a program.
 
         Returns:
             The submitted job.
         """
+
+    def _prepare(
+        self, prepare_fn: Callable, **kwargs: Any
+    ) -> tuple[QuantumProgram, ExecutorOptions]:
+        """Prepare a program's inputs and add a semantic role.
+
+        Args:
+            prepare_fn: The callable used to prepare the program's inputs.
+            **kwargs: The keyword arguments for `prepare_fn`.
+
+        Returns:
+            A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+                :class:`~.ExecutorOptions`.
+        """
+        quantum_program, executor_options = prepare_fn(**kwargs)
+        quantum_program._semantic_role = self.semantic_role
+        return quantum_program, executor_options
 
     def _run(self, dry_run: bool = False, **kwargs: Any) -> RuntimeJobV2 | LocalRuntimeJob:
         """Prepare this program's inputs and submit the resulting quantum program to the executor.
