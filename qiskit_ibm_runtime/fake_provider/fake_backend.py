@@ -21,6 +21,7 @@ import tempfile
 import warnings
 from typing import TYPE_CHECKING, Any
 
+from qiskit import QuantumCircuit
 from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
 from qiskit.utils import optionals as _optionals
@@ -34,9 +35,9 @@ from ..utils.backend_decoder import (
     properties_from_server_data,
 )
 from .backend_encoder import BackendEncoder
+from .mid_circuit_conversion import convert_mid_circuit_instructions
 
 if TYPE_CHECKING:
-    from qiskit import QuantumCircuit
     from qiskit.providers import Job, Options
     from qiskit.transpiler import Target
 
@@ -300,6 +301,14 @@ class FakeBackendV2(BackendV2):
         Currently noisy simulation of a pulse job is not supported yet in
         FakeBackendV2.
 
+        Mid-circuit instructions, such as :class:`.MidCircuitMeasure` (``measure_2``) and
+        :class:`.MidCircuitReset` (``reset_2``), are simulated as a standard
+        :class:`~qiskit.circuit.Measure` and :class:`~qiskit.circuit.Reset`, respectively. As a
+        result, they use the error rates and durations of ``measure`` and ``reset`` from the
+        backend's noise model, rather than their own, so fake backends cannot be used to compare
+        the noise of ``measure`` and ``measure_2``. Readout errors are defined per qubit and apply
+        to all measurements.
+
         Args:
             run_input: An individual or a list of :class:`~qiskit.circuit.QuantumCircuit`
             options: Any kwarg options to pass to the backend for running the
@@ -313,6 +322,10 @@ class FakeBackendV2(BackendV2):
         """
         if self.sim is None:
             self._setup_sim()
+        if isinstance(run_input, QuantumCircuit):
+            run_input = convert_mid_circuit_instructions(run_input)
+        else:
+            run_input = [convert_mid_circuit_instructions(circuit) for circuit in run_input]
         self.sim._options = self._options  # type: ignore[attr-defined]
         job = self.sim.run(run_input, **options)  # type: ignore[attr-defined]
         return job
