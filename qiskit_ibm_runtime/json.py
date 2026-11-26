@@ -139,7 +139,7 @@ def _load_qpy(file_obj: BinaryIO) -> list[Any]:
         file_obj: Binary stream containing QPY data.
 
     Returns:
-        The programs deserialized from the QPY payload.
+        The programs deserialized from the QPY payload (with no ``metadata_deserializer`` applied).
     """
     qpy_version = get_qpy_version(file_obj)
     if qpy_version > QISKIT_QPY_VERSION:
