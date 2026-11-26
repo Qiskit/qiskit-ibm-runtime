@@ -92,8 +92,6 @@ class Sampler(BaseClientSide[SamplerOptions], BaseSamplerV2):
             for all available options.
     """
 
-    semantic_role = "sampler_v2"
-
     def _get_default_options(self) -> SamplerOptions:
         """The default options of all :class:`~.Sampler` objects."""
         return SamplerOptions()
@@ -161,7 +159,7 @@ class Sampler(BaseClientSide[SamplerOptions], BaseSamplerV2):
             add_tags=self._service.is_local,
             backend=self._backend,
         )
-        quantum_program._semantic_role = self.semantic_role
+        quantum_program._semantic_role = "sampler_v2"
         return quantum_program, executor_options
 
     def run(

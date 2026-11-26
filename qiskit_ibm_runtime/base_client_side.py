@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from .base_primitive import get_mode_service_backend
 from .executor import Executor
@@ -53,8 +53,6 @@ class BaseClientSide(ABC, Generic[OptionsT]):
 
     options: OptionsT
     """The options of this program."""
-
-    semantic_role: Literal["sampler_v2", "noise_learner_v3", "estimator_v2"]
 
     def __init__(
         self,
@@ -99,6 +97,18 @@ class BaseClientSide(ABC, Generic[OptionsT]):
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
+        """
+
+    @abstractmethod
+    def run(self, *args: Any, **kwargs: Any) -> RuntimeJobV2 | LocalRuntimeJob:
+        """Submit a request to the executor.
+
+        Args:
+            *args: The positional inputs of this program.
+            **kwargs: The keyword inputs of this program.
+
+        Returns:
+            The submitted job.
         """
 
     def _run(self, dry_run: bool = False, **kwargs: Any) -> RuntimeJobV2 | LocalRuntimeJob:
