@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 from .base_primitive import get_mode_service_backend
 from .executor import Executor
-from .quantum_program import QuantumProgram
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
@@ -29,6 +28,7 @@ if TYPE_CHECKING:
     from .fake_provider.local_runtime_job import LocalRuntimeJob
     from .options_models import ExecutorOptions
     from .options_models.base import BaseOptionsModel
+    from .quantum_program import QuantumProgram
     from .runtime_job_v2 import RuntimeJobV2
     from .session import Session
 
@@ -119,12 +119,6 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
         """
         logger.info("Starting pre-processing")
         quantum_program, executor_options = self.prepare(inputs)
-
-        # Some `prepare` implementations return a `samplomatic.QuantumProgram` rather than the
-        # `QuantumProgram` subclass, so normalize before tagging the semantic role.
-        quantum_program = QuantumProgram.from_(quantum_program)
-        quantum_program._semantic_role = self.semantic_role
-
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
         logger.info(

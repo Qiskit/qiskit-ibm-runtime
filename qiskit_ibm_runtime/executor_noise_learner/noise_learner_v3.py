@@ -88,11 +88,13 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
-        return prepare(
+        quantum_program, executor_options = prepare(
             instructions=inputs.instructions,
             options=self.options,
             backend=self._backend,
         )
+        quantum_program._semantic_role = self.semantic_role
+        return quantum_program, executor_options
 
     def run(
         self, instructions: Iterable[CircuitInstruction], dry_run: bool = False

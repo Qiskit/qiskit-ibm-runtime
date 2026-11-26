@@ -190,13 +190,15 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
-        return prepare(
+        quantum_program, executor_options = prepare(
             pubs=inputs.pubs,
             options=self.options,
             precision=inputs.precision,
             add_tags=self._service.is_local,
             backend=self._backend,
         )
+        quantum_program._semantic_role = self.semantic_role
+        return quantum_program, executor_options
 
     def run(
         self,
