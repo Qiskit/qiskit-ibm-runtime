@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, get_args
 
 from qiskit.primitives.base import BaseSamplerV2
@@ -42,16 +41,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class SamplerInputs:
-    """The inputs of Sampler."""
-
-    pubs: Iterable[SamplerPubLike]
-
-    shots: int | None = None
-
-
-class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
+class Sampler(BaseClientSide[SamplerOptions], BaseSamplerV2):
     """Client-side Sampler primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of Sampler built on top of the Executor primitive,
@@ -148,20 +138,26 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         """
         return finalize_sampler_options(self.options)
 
-    def prepare(self, inputs: SamplerInputs) -> tuple[QuantumProgram, ExecutorOptions]:
+    def prepare(
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
+    ) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map the inputs of Sampler to the inputs of Executor.
 
         Args:
-            inputs: The inputs of this program.
+            pubs: An iterable of pub-like objects. For example, a list of circuits
+                  or tuples ``(circuit, parameter_values)``.
+            shots: The total number of shots to sample for each sampler pub that does
+                   not specify its own shots. If ``None``, the value from
+                   ``options.default_shots`` will be used.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
         quantum_program, executor_options = prepare(
-            pubs=inputs.pubs,
+            pubs=pubs,
             options=self.options,
-            shots=inputs.shots,
+            shots=shots,
             add_tags=self._service.is_local,
             backend=self._backend,
         )
@@ -195,4 +191,4 @@ class Sampler(BaseClientSide[SamplerInputs, SamplerOptions], BaseSamplerV2):
         Returns:
             The submitted job.
         """
-        return self._run(SamplerInputs(pubs=pubs, shots=shots), dry_run=dry_run)
+        return self._run(pubs=pubs, shots=shots, dry_run=dry_run)

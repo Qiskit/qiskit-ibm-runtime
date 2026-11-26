@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ..base_client_side import BaseClientSide
@@ -35,14 +34,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class NoiseLearnerV3Inputs:
-    """The inputs of NoiseLearnerV3."""
-
-    instructions: Iterable[CircuitInstruction]
-
-
-class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]):
+class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Options]):
     """Class for executing noise learning experiments.
 
     The noise learner allows characterizing the noise processes affecting target instructions, based
@@ -78,18 +70,20 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
         """The default options of all :class:`~.NoiseLearnerV3` objects."""
         return NoiseLearnerV3Options()
 
-    def prepare(self, inputs: NoiseLearnerV3Inputs) -> tuple[QuantumProgram, ExecutorOptions]:
+    def prepare(
+        self, instructions: Iterable[CircuitInstruction]
+    ) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map the inputs of NoiseLearnerV3 to the inputs of Executor.
 
         Args:
-            inputs: The inputs of this program.
+            instructions: The instructions to learn the noise of.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
         quantum_program, executor_options = prepare(
-            instructions=inputs.instructions,
+            instructions=instructions,
             options=self.options,
             backend=self._backend,
         )
@@ -113,4 +107,4 @@ class NoiseLearnerV3(BaseClientSide[NoiseLearnerV3Inputs, NoiseLearnerV3Options]
         Returns:
             The submitted job.
         """
-        return self._run(NoiseLearnerV3Inputs(instructions=instructions), dry_run=dry_run)
+        return self._run(dry_run=dry_run, instructions=instructions)

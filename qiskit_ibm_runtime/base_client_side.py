@@ -32,13 +32,12 @@ if TYPE_CHECKING:
     from .runtime_job_v2 import RuntimeJobV2
     from .session import Session
 
-InputT = TypeVar("InputT")
 OptionsT = TypeVar("OptionsT", bound="BaseOptionsModel")
 
 logger = logging.getLogger(__name__)
 
 
-class BaseClientSide(ABC, Generic[InputT, OptionsT]):
+class BaseClientSide(ABC, Generic[OptionsT]):
     """Base class for all client-side execution models.
 
     Args:
@@ -90,22 +89,22 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
         """The default options of this program."""
 
     @abstractmethod
-    def prepare(self, inputs: InputT) -> tuple[QuantumProgram, ExecutorOptions]:
+    def prepare(self, *args: Any, **kwargs: Any) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map this program's inputs to the inputs of Executor.
 
         Args:
-            inputs: The inputs of this program.
+            *args: The positional inputs of this program.
+            **kwargs: The keyword inputs of this program.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
 
-    def _run(self, inputs: InputT, dry_run: bool = False) -> RuntimeJobV2 | LocalRuntimeJob:
+    def _run(self, dry_run: bool = False, **kwargs: Any) -> RuntimeJobV2 | LocalRuntimeJob:
         """Prepare this program's inputs and submit the resulting quantum program to the executor.
 
         Args:
-            inputs: The inputs of this program, forwarded to :meth:`prepare`.
             dry_run: If ``True``, performs a dry run without executing the job on a QPU. This
                 mode can be used to validate the job, estimate usage consumption, and retrieve
                 circuit timing metadata. Returned results preserve the expected schema but
@@ -113,12 +112,13 @@ class BaseClientSide(ABC, Generic[InputT, OptionsT]):
                 results. Unlike the fake backends, the processing of this dry run happens on the
                 server-side, so the job may not finish immediately and access to this feature
                 may be restricted.
+            **kwargs: The inputs of this program, forwarded to :meth:`prepare`.
 
         Returns:
             The submitted job.
         """
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = self.prepare(inputs)
+        quantum_program, executor_options = self.prepare(**kwargs)
         executor = Executor(mode=self._mode or self._backend, options=executor_options)
 
         logger.info(

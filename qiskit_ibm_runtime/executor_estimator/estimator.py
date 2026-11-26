@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 from qiskit.primitives.base import BaseEstimatorV2
@@ -42,16 +41,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class EstimatorInputs:
-    """The inputs of Estimator."""
-
-    pubs: Iterable[EstimatorPubLike]
-
-    precision: float | None = None
-
-
-class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimatorV2):
+class Estimator(BaseClientSide[EstimatorOptions], BaseEstimatorV2):
     """Client-side Estimator primitive for IBM Quantum Compute (formerly Qiskit Runtime).
 
     This is an implementation of Estimator built on top of the Executor primitive,
@@ -180,20 +170,29 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
         """
         return finalize_estimator_options(self.options)
 
-    def prepare(self, inputs: EstimatorInputs) -> tuple[QuantumProgram, ExecutorOptions]:
+    def prepare(
+        self,
+        pubs: Iterable[EstimatorPubLike],
+        *,
+        precision: float | None = None,
+    ) -> tuple[QuantumProgram, ExecutorOptions]:
         """The function used to map the inputs of Estimator to the inputs of Executor.
 
         Args:
-            inputs: The inputs of this program.
+            pubs: An iterable of pub-like objects. For example, a list of circuits
+                and observables or tuples ``(circuit, observables, parameter_values)``.
+            precision: The target precision for expectation value estimates of each
+                estimator pub that does not specify its own precision. If ``None``,
+                the value from ``options.default_precision`` will be used.
 
         Returns:
             A :class:`~.QuantumProgram` suitable for execution, along with the corresponding
                 :class:`~.ExecutorOptions`.
         """
         quantum_program, executor_options = prepare(
-            pubs=inputs.pubs,
+            pubs=pubs,
             options=self.options,
-            precision=inputs.precision,
+            precision=precision,
             add_tags=self._service.is_local,
             backend=self._backend,
         )
@@ -236,4 +235,4 @@ class Estimator(BaseClientSide[EstimatorInputs, EstimatorOptions], BaseEstimator
             IBMInputValueError: If no pubs are provided, if precision is not properly
                 specified, or if unsupported options are detected.
         """
-        return self._run(EstimatorInputs(pubs=pubs, precision=precision), dry_run=dry_run)
+        return self._run(pubs=pubs, precision=precision, dry_run=dry_run)
