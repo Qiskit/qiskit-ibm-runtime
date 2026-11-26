@@ -27,13 +27,17 @@ from qiskit_ibm_runtime.results import QuantumProgramItemResult, QuantumProgramR
 from ..utils import make_mirror_circuit_with_phases
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
     from .dependencies import Dependencies
 
 
 class TestExecutor:
     """Test Executor."""
 
-    def test_executor_with_circuit_item(self, dependencies: Dependencies) -> None:
+    def test_executor_with_circuit_item(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test sampler with a single circuit item."""
         backend = dependencies.service.backend(dependencies.qpu)
         circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
@@ -57,11 +61,14 @@ class TestExecutor:
         program = QuantumProgram(shots := 123, passthrough_data=passthrough_data)
         program.append_circuit_item(isa_circuit, circuit_arguments=circuit_arguments)
 
-        executor = Executor(backend)
+        executor = Executor(backend, options=options)
         job = executor.run(program)
+        submitted_jobs.append(job)
 
         params = job.inputs
-        assert params["options"] == executor.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == executor.options.model_dump(exclude={"environment", "max_execution_time"})
         assert isinstance(params["quantum_program"], QuantumProgram)
         assert params["schema_version"] == Executor._SCHEMA_VERSION
 
@@ -81,7 +88,9 @@ class TestExecutor:
         assert isinstance(results.passthrough_data["array"], np.ndarray)
         np.testing.assert_array_equal(passthrough_data["array"], results.passthrough_data["array"])
 
-    def test_executor_with_samplex_item(self, dependencies: Dependencies) -> None:
+    def test_executor_with_samplex_item(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test sampler with a single samplex item."""
         backend = dependencies.service.backend(dependencies.qpu)
         circuit = make_mirror_circuit_with_phases(backend, num_qubits=3)
@@ -105,11 +114,14 @@ class TestExecutor:
             isa_template, samplex=samplex, samplex_arguments={"parameter_values": parameter_values}
         )
 
-        executor = Executor(backend)
+        executor = Executor(backend, options=options)
         job = executor.run(program)
+        submitted_jobs.append(job)
 
         params = job.inputs
-        assert params["options"] == executor.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == executor.options.model_dump(exclude={"environment", "max_execution_time"})
         assert isinstance(params["quantum_program"], QuantumProgram)
         assert params["schema_version"] == Executor._SCHEMA_VERSION
 

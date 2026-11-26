@@ -226,6 +226,20 @@ To execute all unit tests, run:
 make unit-test
 ```
 
+When adding or updating integration tests that submit a job, make use of the `options` and
+`submitted_jobs` fixtures such as:
+
+```python
+def test_foo(self, options, submitted_jobs):
+    primitive = Primitive(backend, options=options)
+    job = primitive.run(...)
+    submitted_jobs.append(job)
+```
+
+This ensures that the generated jobs contain tags that correlate them to the tests, and that the
+job is automatically cancelled when the test finishes. When the integration tests are executed in
+our CI, they also have a timeout per job and `max_execution_time` set.
+
 #### 2. Integration tests
 
 The integration tests are executed against an external system which is configured via environment

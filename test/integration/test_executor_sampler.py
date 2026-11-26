@@ -22,11 +22,12 @@ from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_sampler import Sampler
-from qiskit_ibm_runtime.options_models import SamplerOptions
 
 from ..utils import make_mirror_circuit_with_phases
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
     from .dependencies import Dependencies
 
 
@@ -34,7 +35,13 @@ class TestSampler:
     """Test client-side Sampler."""
 
     @pytest.mark.parametrize("twirling", [True, False])
-    def test_sampler(self, twirling: bool, dependencies: Dependencies) -> None:
+    def test_sampler(
+        self,
+        twirling: bool,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
+    ) -> None:
         """Test sampler by submitting a couple of parametric circuits."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -51,13 +58,11 @@ class TestSampler:
         pubs[0][0].metadata = {"list": [1, 2, 3]}
         pubs[1][0].metadata = {"tuple": (1, 2, 3)}  # the tuple will be converted to a list
 
-        options = SamplerOptions()
-        options.twirling.enable_gates = twirling
-        options.default_shots = 1000
-
-        sampler = Sampler(backend, options)
+        sampler = Sampler(backend, options=options)
+        sampler.options.twirling.enable_gates = twirling
+        sampler.options.default_shots = 1000
         job = sampler.run(pubs)
-
+        submitted_jobs.append(job)
         results = job.result()
 
         assert isinstance(results, PrimitiveResult)

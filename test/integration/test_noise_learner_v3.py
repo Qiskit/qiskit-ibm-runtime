@@ -29,13 +29,17 @@ from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Resul
 from .utils import estimator_pubs
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
     from .dependencies import Dependencies
 
 
 class TestNoiseLearnerV3:
     """Test NLV3."""
 
-    def test_noise_learner_v3(self, dependencies: Dependencies) -> None:
+    def test_noise_learner_v3(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test NLV3 with basic options."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -59,19 +63,22 @@ class TestNoiseLearnerV3:
         instructions = find_unique_box_instructions(boxed_circuit)
         assert len(instructions) == 3  # 2 with gates, 1 with measurements
 
-        learner = NoiseLearnerV3(backend)
+        learner = NoiseLearnerV3(backend, options=options)
         learner.options.layer_pair_depths = [0, 2, 4]
         learner.options.num_randomizations = 10
         learner.options.shots_per_randomization = 100
 
         job = learner.run(instructions)
+        submitted_jobs.append(job)
 
         params = job.inputs
         # default option of experimental is Unset, and is then converted to {}
         params["options"].experimental = {}
 
         assert params["instructions"] == instructions
-        assert params["options"] == learner.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == learner.options.model_dump(exclude={"environment", "max_execution_time"})
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)
@@ -95,13 +102,17 @@ class TestNoiseLearnerV3:
 
     @pytest.mark.parametrize("mitigation", ["pec", "pea"])
     def test_noise_learner_v3_with_estimator_layers(
-        self, mitigation: Literal["pec", "pea"], dependencies: Dependencies
+        self,
+        mitigation: Literal["pec", "pea"],
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test server-side NLV3 with unique layers from Estimator with PEC/PEA and TREX enabled."""
         backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
-        estimator = Estimator(backend)
+        estimator = Estimator(backend, options=options)
         if mitigation == "pec":
             estimator.options.resilience.pec_mitigation = True
         else:
@@ -112,18 +123,21 @@ class TestNoiseLearnerV3:
         layers = estimator.find_unique_layers(pubs, types="all")
         assert len(layers) > 0
 
-        learner = NoiseLearnerV3(backend)
+        learner = NoiseLearnerV3(backend, options=options)
         learner.options.layer_pair_depths = [0, 2, 4]
         learner.options.num_randomizations = 10
         learner.options.shots_per_randomization = 100
 
         job = learner.run(layers)
+        submitted_jobs.append(job)
 
         params = job.inputs
         params["options"].experimental = {}
 
         assert params["instructions"] == layers
-        assert params["options"] == learner.options
+        assert params["options"].model_dump(
+            exclude={"environment", "max_execution_time"}
+        ) == learner.options.model_dump(exclude={"environment", "max_execution_time"})
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)

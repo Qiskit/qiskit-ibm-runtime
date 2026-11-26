@@ -10,11 +10,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# Disable typing errors due to usage of server-side options.
+# mypy: disable-error-code="union-attr"
+
 """Tests for Sampler V2."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -33,8 +36,7 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.server_side import SamplerV2 as Sampler
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import IBMBackend
-    from qiskit_ibm_runtime.options import DynamicalDecouplingOptions, SamplerExecutionOptionsV2
+    from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
 
     from .dependencies import Dependencies
 
@@ -171,7 +173,11 @@ class TestSampler:
         ],
     )
     def test_sampler_run(
-        self, parameter_values: tuple | list | None, dependencies: Dependencies
+        self,
+        parameter_values: tuple | list | None,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test Sampler.run()."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -180,24 +186,31 @@ class TestSampler:
         pub = isa_bell if parameter_values is None else (isa_bell, parameter_values)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
+            sampler = Sampler(mode=session, options=options | OPTIONS)
             job = sampler.run([pub])
+            submitted_jobs.append(job)
             result = job.result()
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_sample_run_multiple_circuits(self, dependencies: Dependencies) -> None:
+    def test_sample_run_multiple_circuits(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test Sampler.run() with multiple circuits."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
         _, _, target = cases[1]
-        sampler = Sampler(mode=backend, options=OPTIONS)
-        result = sampler.run([isa_bell, isa_bell, isa_bell]).result()
+        sampler = Sampler(mode=backend, options=options | OPTIONS)
+        job = sampler.run([isa_bell, isa_bell, isa_bell])
+        submitted_jobs.append(job)
+        result = job.result()
         assert_result_type(result, num_pubs=3, targets=[np.array(target)] * 3)
 
-    def test_sampler_run_with_parameterized_circuits(self):
+    def test_sampler_run_with_parameterized_circuits(
+        self, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test Sampler.run() with parameterized circuits."""
         cases = sampler_cases()
 
@@ -205,13 +218,17 @@ class TestSampler:
         pqc2, param2, target2 = cases[5]
         pqc3, param3, target3 = cases[6]
 
-        sampler = Sampler(mode=FakeManilaV2(), options=OPTIONS)
-        result = sampler.run([(pqc1, param1), (pqc2, param2), (pqc3, param3)]).result()
+        sampler = Sampler(mode=FakeManilaV2(), options=options | OPTIONS)
+        job = sampler.run([(pqc1, param1), (pqc2, param2), (pqc3, param3)])
+        submitted_jobs.append(job)
+        result = job.result()
         assert_result_type(
             result, num_pubs=3, targets=[np.array(target1), np.array(target2), np.array(target3)]
         )
 
-    def test_run_1qubit(self, dependencies: Dependencies) -> None:
+    def test_run_1qubit(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test for 1-qubit cases."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -221,11 +238,15 @@ class TestSampler:
         qc2.x(0)
         qc2.measure_all()
 
-        sampler = Sampler(mode=backend, options=OPTIONS)
-        result = sampler.run([qc, qc2]).result()
+        sampler = Sampler(mode=backend, options=options | OPTIONS)
+        job = sampler.run([qc, qc2])
+        submitted_jobs.append(job)
+        result = job.result()
         assert_result_type(result, num_pubs=2)
 
-    def test_run_2qubit(self, dependencies: Dependencies) -> None:
+    def test_run_2qubit(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test for 2-qubit cases."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -241,8 +262,10 @@ class TestSampler:
         qc3.x([0, 1])
         qc3.measure_all()
 
-        sampler = Sampler(mode=backend, options=OPTIONS)
-        result = sampler.run([qc0, qc1, qc2, qc3]).result()
+        sampler = Sampler(mode=backend, options=options | OPTIONS)
+        job = sampler.run([qc0, qc1, qc2, qc3])
+        submitted_jobs.append(job)
+        result = job.result()
         assert_result_type(result, num_pubs=4)
 
     @pytest.mark.parametrize(
@@ -264,6 +287,8 @@ class TestSampler:
         self,
         parameter_values: tuple | list | np.ndarray | None,
         dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test for single circuit case, for a circuit without parameters."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -271,8 +296,10 @@ class TestSampler:
         _, _, target = sampler_cases()[1]
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
-            result = sampler.run([(isa_bell, parameter_values)]).result()
+            sampler = Sampler(mode=session, options=options | OPTIONS)
+            job = sampler.run([(isa_bell, parameter_values)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
@@ -289,7 +316,11 @@ class TestSampler:
         ],
     )
     def test_run_single_circuit_one_parameter(
-        self, parameter_values: tuple | list | np.ndarray, dependencies: Dependencies
+        self,
+        parameter_values: tuple | list | np.ndarray,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test for single circuit case, for a circuit with a single parameter."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -300,8 +331,10 @@ class TestSampler:
         circuit.measure(0, 0)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
-            result = sampler.run([(pass_manager.run(circuit), parameter_values)]).result()
+            sampler = Sampler(mode=session, options=options | OPTIONS)
+            job = sampler.run([(pass_manager.run(circuit), parameter_values)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert_result_type(result, num_pubs=1)
 
@@ -319,7 +352,11 @@ class TestSampler:
         ],
     )
     def test_run_single_circuit_more_than_one_parameter(
-        self, parameter_values: tuple | list | np.ndarray, dependencies: Dependencies
+        self,
+        parameter_values: tuple | list | np.ndarray,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test for single circuit case, for a circuit with more than one parameter."""
         backend = dependencies.service.backend(dependencies.qpu)
@@ -327,12 +364,16 @@ class TestSampler:
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
-            result = sampler.run([(pass_manager.run(circuit), parameter_values)]).result()
+            sampler = Sampler(mode=session, options=options | OPTIONS)
+            job = sampler.run([(pass_manager.run(circuit), parameter_values)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_run_reverse_meas_order(self, dependencies: Dependencies) -> None:
+    def test_run_reverse_meas_order(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test for sampler with reverse measurement order."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -348,12 +389,20 @@ class TestSampler:
         qc.measure(2, 0)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
-        sampler = Sampler(mode=backend, options=OPTIONS)
-        result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
+        sampler = Sampler(mode=backend, options=options | OPTIONS)
+        job = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])])
+        submitted_jobs.append(job)
+        result = job.result()
         assert_result_type(result, num_pubs=2)
 
     @pytest.mark.parametrize("num_circuits", [1, 2])
-    def test_run_empty_parameter(self, num_circuits: int, dependencies: Dependencies) -> None:
+    def test_run_empty_parameter(
+        self,
+        num_circuits: int,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
+    ) -> None:
         """Test for empty parameter."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -362,13 +411,21 @@ class TestSampler:
         qc.measure(range(n - 1), range(n - 1))
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
-            result = sampler.run([qc] * num_circuits).result()
+            sampler = Sampler(mode=session, options=options | OPTIONS)
+            job = sampler.run([qc] * num_circuits)
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert_result_type(result, num_pubs=num_circuits)
 
     @pytest.mark.parametrize("params_type", ["ndarray", "list"])
-    def test_run_numpy_params(self, params_type: str, dependencies: Dependencies) -> None:
+    def test_run_numpy_params(
+        self,
+        params_type: str,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
+    ) -> None:
         """Test for numpy array as parameter values."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -380,90 +437,118 @@ class TestSampler:
         params_list = params_array.tolist()
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
-            target = sampler.run([(qc, params_list)]).result()
+            sampler = Sampler(mode=session, options=options | OPTIONS)
+            target_job = sampler.run([(qc, params_list)])
+            submitted_jobs.append(target_job)
+            target = target_job.result()
 
             if params_type == "ndarray":
-                result = sampler.run([(qc, params_array)]).result()
+                job = sampler.run([(qc, params_array)])
+                submitted_jobs.append(job)
+                result = job.result()
                 num_pubs = 1
             else:
-                result = sampler.run([(qc, params) for params in params_list]).result()
+                job = sampler.run([(qc, params) for params in params_list])
+                submitted_jobs.append(job)
+                result = job.result()
                 num_pubs = len(params_list)
 
         assert_result_type(result, num_pubs=num_pubs, targets=[np.array(target)])
 
-    def test_run_with_shots_option_init_option(self, dependencies: Dependencies) -> None:
+    def test_run_with_shots_option_init_option(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test with the number of shots set in the options the sampler is created with."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options={"default_shots": shots})
-            result = sampler.run([isa_bell]).result()
+            sampler = Sampler(mode=session, options=options | {"default_shots": shots})
+            job = sampler.run([isa_bell])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert result[0].data.meas.num_shots == shots
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_update_option(self, dependencies: Dependencies) -> None:
+    def test_run_with_shots_option_update_option(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test with the number of shots set in the options of an existing sampler."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session)
+            sampler = Sampler(mode=session, options=options)
             sampler.options.default_shots = shots
-            result = sampler.run([isa_bell]).result()
+            job = sampler.run([isa_bell])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert result[0].data.meas.num_shots == shots
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_run_arg(self, dependencies: Dependencies) -> None:
+    def test_run_with_shots_option_run_arg(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test with the number of shots set as an argument of `Sampler.run()`."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session)
-            result = sampler.run(pubs=[isa_bell], shots=shots).result()
+            sampler = Sampler(mode=session, options=options)
+            job = sampler.run(pubs=[isa_bell], shots=shots)
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert result[0].data.meas.num_shots == shots
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_pub_like(self, dependencies: Dependencies) -> None:
+    def test_run_with_shots_option_pub_like(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test with the number of shots set in a pub-like tuple."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session)
-            result = sampler.run([(isa_bell, None, shots)]).result()
+            sampler = Sampler(mode=session, options=options)
+            job = sampler.run([(isa_bell, None, shots)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert result[0].data.meas.num_shots == shots
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_with_shots_option_pub(self, dependencies: Dependencies) -> None:
+    def test_run_with_shots_option_pub(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test with the number of shots set in a `SamplerPub`."""
         shots = 100
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session)
-            result = sampler.run([SamplerPub(isa_bell, shots=shots)]).result()
+            sampler = Sampler(mode=session, options=options)
+            job = sampler.run([SamplerPub(isa_bell, shots=shots)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert result[0].data.meas.num_shots == shots
         assert sum(result[0].data.meas.get_counts().values()) == shots
         assert_result_type(result, num_pubs=1)
 
-    def test_run_shots_result_size(self, dependencies: Dependencies) -> None:
+    def test_run_shots_result_size(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test with shots option to validate the result size."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -472,19 +557,24 @@ class TestSampler:
         qc.h(range(n))
         qc.measure_all()
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        sampler = Sampler(mode=backend, options=OPTIONS)
-        result = sampler.run([pm.run(qc)]).result()
+        sampler = Sampler(mode=backend, options=options | OPTIONS)
+        job = sampler.run([pm.run(qc)])
+        submitted_jobs.append(job)
+        result = job.result()
         assert result[0].data.meas.num_shots <= SHOTS
         assert sum(result[0].data.meas.get_counts().values()) == SHOTS
         assert_result_type(result, num_pubs=1)
 
-    def test_primitive_job_status_done(self, dependencies: Dependencies) -> None:
+    def test_primitive_job_status_done(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test primitive job's status."""
         backend = dependencies.service.backend(dependencies.qpu)
         isa_bell = isa_bell_circuit(backend)
 
-        sampler = Sampler(mode=backend, options=OPTIONS)
+        sampler = Sampler(mode=backend, options=options | OPTIONS)
         job = sampler.run([isa_bell])
+        submitted_jobs.append(job)
         _ = job.result()
         assert job.status() == "DONE"
 
@@ -495,7 +585,13 @@ class TestSampler:
             pytest.param(UnitaryGate([[0, 1], [1, 0]]), id="X"),
         ],
     )
-    def test_circuit_with_unitary(self, gate: UnitaryGate, dependencies: Dependencies) -> None:
+    def test_circuit_with_unitary(
+        self,
+        gate: UnitaryGate,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
+    ) -> None:
         """Test for circuit with unitary gate."""
         backend = dependencies.service.backend(dependencies.qpu)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
@@ -505,20 +601,26 @@ class TestSampler:
         circuit.measure_all()
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
-            result = sampler.run([pm.run(circuit)]).result()
+            sampler = Sampler(mode=session, options=options | OPTIONS)
+            job = sampler.run([pm.run(circuit)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert_result_type(result, num_pubs=1)
 
-    def test_metadata(self, dependencies: Dependencies) -> None:
+    def test_metadata(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test for metatdata."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         qc, _, _ = cases[1]
-        sampler = Sampler(mode=backend, options=OPTIONS)
-        result = sampler.run([pm.run(qc)]).result()
+        sampler = Sampler(mode=backend, options=options | OPTIONS)
+        job = sampler.run([pm.run(qc)])
+        submitted_jobs.append(job)
+        result = job.result()
         assert result[0].data.meas.num_shots == SHOTS
         assert_result_type(result, num_pubs=1)
 
@@ -530,53 +632,62 @@ class TestSampler:
         ],
     )
     def test_circuit_with_multiple_cregs(
-        self, circuit: QuantumCircuit, target: dict, dependencies: Dependencies
+        self,
+        circuit: QuantumCircuit,
+        target: dict,
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test for circuit with multiple classical registers."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(backend) as session:
-            sampler = Sampler(mode=session, options=OPTIONS)
-            result = sampler.run([pass_manager.run(circuit)]).result()
+            sampler = Sampler(mode=session, options=options | OPTIONS)
+            job = sampler.run([pass_manager.run(circuit)])
+            submitted_jobs.append(job)
+            result = job.result()
 
         assert len(result[0].data) == len(target)
         assert_result_type(result, num_pubs=1)
 
-    def test_sampler_v2_options(self, dependencies: Dependencies) -> None:
+    def test_sampler_v2_options(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test SamplerV2 options."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
         isa_bell = isa_bell_circuit(backend)
 
-        sampler = Sampler(mode=backend)
+        sampler = Sampler(mode=backend, options=options)
         sampler.options.default_shots = 4096
-        execution = cast("SamplerExecutionOptionsV2", sampler.options.execution)
-        execution.init_qubits = True
-        execution.rep_delay = 0.00025
+        sampler.options.execution.init_qubits = True
+        sampler.options.execution.rep_delay = 0.00025
 
         _, _, target = cases[1]
         job = sampler.run([isa_bell])
+        submitted_jobs.append(job)
         result = job.result()
         assert_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    def test_sampler_v2_dd(self, dependencies: Dependencies) -> None:
+    def test_sampler_v2_dd(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test SamplerV2 DD options."""
         backend = dependencies.service.backend(dependencies.qpu)
         cases = sampler_cases()
 
-        sampler = Sampler(mode=backend)
-        dynamical_decoupling = cast(
-            "DynamicalDecouplingOptions", sampler.options.dynamical_decoupling
-        )
-        dynamical_decoupling.enable = True
-        dynamical_decoupling.sequence_type = "XX"
-        dynamical_decoupling.extra_slack_distribution = "middle"
-        dynamical_decoupling.scheduling_method = "asap"
-        dynamical_decoupling.skip_reset_qubits = True
+        sampler = Sampler(mode=backend, options=options)
+        sampler.options.dynamical_decoupling.enable = True
+        sampler.options.dynamical_decoupling.sequence_type = "XX"
+        sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"
+        sampler.options.dynamical_decoupling.scheduling_method = "asap"
+        sampler.options.dynamical_decoupling.skip_reset_qubits = True
         bell, _, _ = cases[1]
         bell = transpile(bell, backend)
         job = sampler.run([bell])
+        submitted_jobs.append(job)
         try:
             result = job.result()
         except RuntimeJobFailureError as ex:

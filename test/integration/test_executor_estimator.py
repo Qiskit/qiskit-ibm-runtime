@@ -26,13 +26,17 @@ from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 from .utils import estimator_pubs
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
     from .dependencies import Dependencies
 
 
 class TestEstimator:
     """An integration test, testing Estimator implemented through Executor."""
 
-    def test_vanilla_estimator(self, dependencies: Dependencies) -> None:
+    def test_vanilla_estimator(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test the "vanilla" path (no mitigation) for estimator.
 
         Tests
@@ -42,8 +46,9 @@ class TestEstimator:
         backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
-        estimator = Estimator(backend)
+        estimator = Estimator(backend, options=options)
         job = estimator.run(pubs)
+        submitted_jobs.append(job)
         results = job.result()
 
         # Expect one result per pub:
@@ -55,7 +60,9 @@ class TestEstimator:
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
-    def test_pec_estimator(self, dependencies: Dependencies) -> None:
+    def test_pec_estimator(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test the PEC path for estimator.
 
         Tests
@@ -65,7 +72,7 @@ class TestEstimator:
         backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
-        estimator = Estimator(backend)
+        estimator = Estimator(backend, options=options)
         estimator.options.resilience.pec_mitigation = True
 
         layers = estimator.find_unique_layers(pubs, types="gates")
@@ -75,6 +82,7 @@ class TestEstimator:
         ]
 
         job = estimator.run(pubs)
+        submitted_jobs.append(job)
         results = job.result()
 
         # Expect one result per pub:
@@ -91,7 +99,11 @@ class TestEstimator:
     )
     @pytest.mark.parametrize("amplifier", ["gate_folding", "pea"])
     def test_zne_estimator(
-        self, amplifier: Literal["gate_folding", "pea"], dependencies: Dependencies
+        self,
+        amplifier: Literal["gate_folding", "pea"],
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test the ZNE path for estimator, parameterized over the noise amplifier.
 
@@ -110,7 +122,7 @@ class TestEstimator:
         backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
-        estimator = Estimator(backend)
+        estimator = Estimator(backend, options=options)
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.amplifier = amplifier
 
@@ -127,6 +139,7 @@ class TestEstimator:
         expected_num_extrapolators = len(estimator.options.resilience.zne.extrapolator)
 
         job = estimator.run(pubs)
+        submitted_jobs.append(job)
         results = job.result()
 
         # Expect one result per pub:

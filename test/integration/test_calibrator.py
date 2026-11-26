@@ -22,20 +22,26 @@ from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
 from qiskit_ibm_runtime.results import CalibratorResult
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
     from .dependencies import Dependencies
 
 
 class TestCalibrator:
     """Test Calibrator."""
 
-    def test_calibrator(self, dependencies: Dependencies) -> None:
+    def test_calibrator(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test that a calibration job runs and returns a result."""
         backend = dependencies.service.backend(dependencies.qpu)
 
+        options.pop("max_execution_time")
         with Session(backend=backend) as session:
-            calibrator = Calibrator(session)
+            calibrator = Calibrator(session, options=options)
             calibrator.options.experimental = {"foo": "bar"}
             job = calibrator.run()
+            submitted_jobs.append(job)
             result = job.result()
 
         inputs = job.inputs

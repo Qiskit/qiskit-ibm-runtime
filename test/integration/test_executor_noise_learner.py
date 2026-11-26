@@ -27,6 +27,8 @@ from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Resul
 from qiskit_ibm_runtime.utils.utils import HAS_QNL
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
     from .dependencies import Dependencies
 
 
@@ -34,7 +36,9 @@ if TYPE_CHECKING:
 class TestNoiseLearnerV3:
     """Test client-side NLV3."""
 
-    def test_noise_learner_v3(self, dependencies: Dependencies) -> None:
+    def test_noise_learner_v3(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test NLV3 with basic options."""
         backend = dependencies.service.backend(dependencies.qpu)
 
@@ -58,12 +62,13 @@ class TestNoiseLearnerV3:
         instructions = find_unique_box_instructions(boxed_circuit)
         assert len(instructions) == 3  # 2 with gates, 1 with measurements
 
-        learner = NoiseLearnerV3(backend)
+        learner = NoiseLearnerV3(backend, options=options)
         learner.options.layer_pair_depths = [0, 2, 4]
         learner.options.num_randomizations = 10
         learner.options.shots_per_randomization = 100
 
         job = learner.run(instructions)
+        submitted_jobs.append(job)
 
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)
