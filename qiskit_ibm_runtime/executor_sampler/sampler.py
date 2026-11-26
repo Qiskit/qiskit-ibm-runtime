@@ -88,7 +88,7 @@ class Sampler(BaseSamplerV2):
             * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
             Refer to the `IBM Quantum Compute documentation
-            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
+            <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/execution-modes>`__
             for more information about execution modes.
 
         options: Sampler options. See :class:`~qiskit_ibm_runtime.options_models.SamplerOptions`
@@ -161,8 +161,6 @@ class Sampler(BaseSamplerV2):
         layers = find_unique_layers(
             pubs=coerced_pubs,
             twirling_options=options.twirling,
-            measure_noise_learning=None,
-            inject_noise=False,
             add_tags=True,
         )
         box_types = get_args(BoxType) if types == "all" else ("gates",)

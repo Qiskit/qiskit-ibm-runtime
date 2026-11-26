@@ -16,50 +16,27 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-import numpy as np
 import pytest
 from qiskit.primitives import PrimitiveResult
-from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.options_models.zne import DEFAULT_NOISE_FACTORS
 
-from ..utils import make_mirror_circuit_with_phases
+from .utils import estimator_pubs
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime import IBMBackend
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
     from .dependencies import Dependencies
-
-
-def estimator_pubs(backend: IBMBackend) -> list[tuple]:
-    """Return two pubs for `backend`, differing only in how they broadcast.
-
-    PUB 0 - all-to-all broadcasting, with resulting shape (2,2).
-    PUB 1 - one-to-one broadcasting, with resulting shape (2,).
-    """
-    pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-    isa_circuit = pass_manager.run(make_mirror_circuit_with_phases(backend))
-
-    zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
-        isa_circuit.layout
-    )
-    xx_with_offset = SparsePauliOp.from_list([("XX", 1.0), ("II", 3.0)]).apply_layout(
-        isa_circuit.layout
-    )
-    parameter_sets = [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]]
-
-    return [
-        (isa_circuit, [[zz_with_offset], [xx_with_offset]], parameter_sets),
-        (isa_circuit, [zz_with_offset, xx_with_offset], parameter_sets),
-    ]
 
 
 class TestEstimator:
     """An integration test, testing Estimator implemented through Executor."""
 
-    def test_vanilla_estimator(self, dependencies: Dependencies) -> None:
+    def test_vanilla_estimator(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test the "vanilla" path (no mitigation) for estimator.
 
         Tests
@@ -69,8 +46,10 @@ class TestEstimator:
         backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
-        estimator = Estimator(backend)
-        results = estimator.run(pubs).result()
+        estimator = Estimator(backend, options=options)
+        job = estimator.run(pubs)
+        submitted_jobs.append(job)
+        results = job.result()
 
         # Expect one result per pub:
         assert len(results) == 2
@@ -81,7 +60,9 @@ class TestEstimator:
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
-    def test_pec_estimator(self, dependencies: Dependencies) -> None:
+    def test_pec_estimator(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test the PEC path for estimator.
 
         Tests
@@ -91,7 +72,7 @@ class TestEstimator:
         backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
-        estimator = Estimator(backend)
+        estimator = Estimator(backend, options=options)
         estimator.options.resilience.pec_mitigation = True
 
         layers = estimator.find_unique_layers(pubs, types="gates")
@@ -100,7 +81,9 @@ class TestEstimator:
             for layer in layers
         ]
 
-        results = estimator.run(pubs).result()
+        job = estimator.run(pubs)
+        submitted_jobs.append(job)
+        results = job.result()
 
         # Expect one result per pub:
         assert len(results) == 2
@@ -111,9 +94,16 @@ class TestEstimator:
         # 2 Expectation values should have been calculated for 1 to 1 parameter mapping:
         assert results[1].data.evs.shape == (2,)
 
+    @pytest.mark.filterwarnings(
+        "ignore:No positive, finite standard errors were found:UserWarning:qiskit_mitigation"
+    )
     @pytest.mark.parametrize("amplifier", ["gate_folding", "pea"])
     def test_zne_estimator(
-        self, amplifier: Literal["gate_folding", "pea"], dependencies: Dependencies
+        self,
+        amplifier: Literal["gate_folding", "pea"],
+        dependencies: Dependencies,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test the ZNE path for estimator, parameterized over the noise amplifier.
 
@@ -132,7 +122,7 @@ class TestEstimator:
         backend = dependencies.service.backend(dependencies.qpu)
         pubs = estimator_pubs(backend)
 
-        estimator = Estimator(backend)
+        estimator = Estimator(backend, options=options)
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.amplifier = amplifier
 
@@ -148,7 +138,9 @@ class TestEstimator:
         expected_num_extrapolated = expected_num_noise_factors + 1
         expected_num_extrapolators = len(estimator.options.resilience.zne.extrapolator)
 
-        results = estimator.run(pubs).result()
+        job = estimator.run(pubs)
+        submitted_jobs.append(job)
+        results = job.result()
 
         # Expect one result per pub:
         assert isinstance(results, PrimitiveResult)

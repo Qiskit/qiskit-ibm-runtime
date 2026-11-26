@@ -41,6 +41,8 @@ class Dependencies:
 def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     """Return the dependencies of an integration test, from the environment configuration.
 
+    If the environment configuration is incomplete, the running test is skipped.
+
     Args:
         init_service: whether to initialize the `QiskitRuntimeService` from the environment
             configuration. When `False`, the returned dependencies have no service.
@@ -54,8 +56,13 @@ def integration_test_dependencies(init_service: bool = True) -> Dependencies:
     url = os.getenv("QISKIT_IBM_URL")
     instance = os.getenv("QISKIT_IBM_INSTANCE")
 
-    if not token or not url:
-        pytest.skip("No integration test credentials available.")
+    for name, value in (
+        ("QISKIT_IBM_TOKEN", token),
+        ("QISKIT_IBM_URL", url),
+        ("QISKIT_IBM_INSTANCE", instance),
+    ):
+        if not value:
+            pytest.skip(f"{name} is not set.")
 
     service = (
         QiskitRuntimeService(channel=channel, token=token, url=url, instance=instance)

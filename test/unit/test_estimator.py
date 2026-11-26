@@ -23,8 +23,9 @@ from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import EstimatorOptions, IBMInputValueError, Session
+from qiskit_ibm_runtime import IBMInputValueError, Session
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke, FakeVigoV2
+from qiskit_ibm_runtime.options import EstimatorOptions
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from qiskit_ibm_runtime.server_side import EstimatorV2
 

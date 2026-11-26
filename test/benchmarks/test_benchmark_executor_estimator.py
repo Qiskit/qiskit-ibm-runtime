@@ -30,9 +30,8 @@ from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.decoders.executor_estimator.decoder import ClientSideEstimatorDecoder
-from qiskit_ibm_runtime.executor_estimator.finalize_options import finalize_estimator_options
+from qiskit_ibm_runtime.executor_estimator import Estimator
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-from qiskit_ibm_runtime.executor_sampler.utils import find_unique_layers
 from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
 from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
 
@@ -185,18 +184,8 @@ def create_noise_model(
     pubs: Iterable[EstimatorPubLike], options: EstimatorOptions
 ) -> list[tuple[CircuitInstruction, PauliLindbladMap]]:
     """Build a simple Pauli-Lindblad noise model."""
-    from qiskit.primitives.containers.estimator_pub import EstimatorPub
-
-    coerced_pubs = [EstimatorPub.coerce(pub) for pub in pubs]
-    finalized_options = finalize_estimator_options(options)
-    layers = find_unique_layers(
-        coerced_pubs,
-        twirling_options=finalized_options.twirling,
-        measure_noise_learning=finalized_options.resilience.measure_noise_learning
-        if finalized_options.resilience.measure_mitigation
-        else None,
-        inject_noise=True,
-    )
+    estimator = Estimator(mode=FakeMarrakesh(), options=options)
+    layers = estimator.find_unique_layers(pubs, types="gates")
     noise_model = []
     for layer in layers:
         if get_annotation(layer.operation, InjectNoise) is not None:

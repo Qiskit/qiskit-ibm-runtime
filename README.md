@@ -406,4 +406,4 @@ If you use Qiskit, please cite as per the included [BibTeX file](https://github.
 [BibTeX file]: https://github.com/Qiskit/qiskit/blob/master/Qiskit.bib
 [Apache License 2.0]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/LICENSE.txt
 [tutorials]: https://learning.quantum.ibm.com/catalog/tutorials
-[Introduction to primitives]: (https://quantum.cloud.ibm.com/docs/en/guides/qiskit-runtime-primitives)
+[Introduction to primitives]: (https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/qiskit-runtime-primitives)

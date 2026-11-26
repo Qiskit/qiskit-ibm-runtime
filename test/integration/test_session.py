@@ -31,6 +31,8 @@ from ..utils import bell
 from .test_account import _get_service_instance_name_for_crn
 
 if TYPE_CHECKING:
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
     from .dependencies import Dependencies
 
 
@@ -38,7 +40,9 @@ if TYPE_CHECKING:
 class TestIntegrationSession:
     """Integration tests for Session."""
 
-    def test_estimator_sampler(self, dependencies: Dependencies) -> None:
+    def test_estimator_sampler(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test calling both estimator and sampler."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
@@ -50,24 +54,36 @@ class TestIntegrationSession:
         theta1 = [0, 1, 1, 2, 3, 5]
 
         with Session(backend=backend) as session:
-            estimator = EstimatorV2(mode=session)
-            result = estimator.run([(psi1, H1, [theta1])]).result()
+            estimator = EstimatorV2(mode=session, options=options)
+            job = estimator.run([(psi1, H1, [theta1])])
+            submitted_jobs.append(job)
+            result = job.result()
             assert isinstance(result, PrimitiveResult)
 
-            sampler = SamplerV2(mode=session)
-            result = sampler.run([pm.run(bell())]).result()
+            sampler = SamplerV2(mode=session, options=options)
+            job = sampler.run([pm.run(bell())])
+            submitted_jobs.append(job)
+            result = job.result()
             assert isinstance(result, PrimitiveResult)
 
-            result = estimator.run([(psi1, H1, [theta1])]).result()
+            job = estimator.run([(psi1, H1, [theta1])])
+            submitted_jobs.append(job)
+            result = job.result()
             assert isinstance(result, PrimitiveResult)
             assert result[0].metadata["shots"] == 4096
 
-            result = sampler.run([pm.run(bell())]).result()
+            job = sampler.run([pm.run(bell())])
+            submitted_jobs.append(job)
+            result = job.result()
             assert isinstance(result, PrimitiveResult)
             session.close()
 
     def test_session_from_id(
-        self, dependencies: Dependencies, monkeypatch: pytest.MonkeyPatch
+        self,
+        dependencies: Dependencies,
+        monkeypatch: pytest.MonkeyPatch,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test creating a session from a given id."""
         service = dependencies.service
@@ -77,8 +93,9 @@ class TestIntegrationSession:
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run([bell()])
         with Session(backend=backend) as session:
-            sampler = SamplerV2(mode=session)
+            sampler = SamplerV2(mode=session, options=options)
             job = sampler.run(isa_circuit)
+            submitted_jobs.append(job)
             job.result()
 
         create_session_called = False
@@ -113,7 +130,9 @@ class TestIntegrationSession:
             with pytest.raises(IBMRuntimeError):
                 Session.from_id(session_id=session._session_id, service=service)
 
-    def test_session_backend(self, dependencies: Dependencies) -> None:
+    def test_session_backend(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test session backend is the correct backend."""
         service = dependencies.service
         backend = service.backend(dependencies.qpu)
@@ -123,12 +142,14 @@ class TestIntegrationSession:
         backend.target.add_instruction(IfElseOp, name=instruction_name)
 
         with Session(backend=backend) as session:
-            sampler = SamplerV2(mode=session)
+            sampler = SamplerV2(mode=session, options=options)
             job = sampler.run([pm.run(bell())])
+            submitted_jobs.append(job)
             assert instruction_name in job.backend().target.operation_names
 
-            sampler2 = SamplerV2()
+            sampler2 = SamplerV2(options=options)
             job2 = sampler2.run([pm.run(bell())])
+            submitted_jobs.append(job2)
             assert instruction_name in job2.backend().target.operation_names
 
     def test_session_instance_logic(self, dependencies: Dependencies) -> None:

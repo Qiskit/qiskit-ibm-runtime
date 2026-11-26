@@ -18,13 +18,16 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
 from qiskit.compiler import transpile
+from qiskit.quantum_info import SparsePauliOp
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
-from ..utils import bell
+from ..utils import bell, make_mirror_circuit_with_phases
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime import IBMBackend
@@ -60,11 +63,34 @@ def cancel_job_safe(job: RuntimeJobV2) -> bool:
         raise
 
 
-def submit_and_cancel(backend: IBMBackend) -> RuntimeJobV2:
+def submit_and_cancel(backend: IBMBackend, options: dict) -> RuntimeJobV2:
     """Submit a bell job to `backend` and cancel it, returning the cancelled job."""
     circuit = transpile(bell(), backend=backend)
-    sampler = SamplerV2(backend)
+    sampler = SamplerV2(backend, options=options)
     job = sampler.run([circuit])
     cancel_job_safe(job)
 
     return job
+
+
+def estimator_pubs(backend: IBMBackend) -> list[tuple]:
+    """Return two pubs for `backend`, differing only in how they broadcast.
+
+    PUB 0 - all-to-all broadcasting, with resulting shape (2,2).
+    PUB 1 - one-to-one broadcasting, with resulting shape (2,).
+    """
+    pass_manager = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+    isa_circuit = pass_manager.run(make_mirror_circuit_with_phases(backend))
+
+    zz_with_offset = SparsePauliOp.from_list([("ZZ", 1.0), ("II", 9.0)]).apply_layout(
+        isa_circuit.layout
+    )
+    xx_with_offset = SparsePauliOp.from_list([("XX", 1.0), ("II", 3.0)]).apply_layout(
+        isa_circuit.layout
+    )
+    parameter_sets = [[0, np.pi / 4], [np.pi, 5 * np.pi / 4]]
+
+    return [
+        (isa_circuit, [[zz_with_offset], [xx_with_offset]], parameter_sets),
+        (isa_circuit, [zz_with_offset, xx_with_offset], parameter_sets),
+    ]

@@ -28,10 +28,8 @@ if TYPE_CHECKING:
 
     from qiskit import QuantumCircuit
     from qiskit.circuit import CircuitInstruction
-    from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-    from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
     from ..options_models.twirling import TwirlingOptions
 
 
@@ -177,17 +175,12 @@ def box_circuit(
 
 def options_to_boxing_pm_kwargs(
     twirling_options: TwirlingOptions,
-    measure_noise_learning: MeasureNoiseLearningOptions | None,
-    inject_noise: bool,
     add_tags: bool = False,
 ) -> dict[str, Any]:
     """A helper to map options to kwargs for the boxing passmanager.
 
     Args:
         twirling_options: Twirling options.
-        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
-            Error eXtinction (TREX) mitigation method will be accounted for in boxing.
-        inject_noise: Whether to inject noise.
         add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
             (will pass the "none" value to the relevant attribute), while ``True`` will cause tags
             with the twirled boxes hash to be added (using the "unique_box" value of the relevant
@@ -197,22 +190,18 @@ def options_to_boxing_pm_kwargs(
         Options to the boxing passmanager.
     """
     return {
-        "enable_gates": twirling_options.enable_gates or inject_noise,
-        "measure_annotations": "all"
-        if twirling_options.enable_measure or (measure_noise_learning is not None)
-        else "change_basis",
+        "enable_gates": twirling_options.enable_gates,
+        "enable_measures": twirling_options.enable_measure,
+        "measure_annotations": "twirl",
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
         "twirling_group": twirling_options.group,
-        "inject_noise": inject_noise,
         "add_tags": "unique_box" if add_tags else "none",
     }
 
 
 def find_unique_layers(
-    pubs: Iterable[EstimatorPub | SamplerPub],
+    pubs: Iterable[SamplerPub],
     twirling_options: TwirlingOptions,
-    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
-    inject_noise: bool = False,
     add_tags: bool = False,
 ) -> list[CircuitInstruction]:
     """Return the unique boxed layers found across the given PUBs.
@@ -220,22 +209,14 @@ def find_unique_layers(
     Args:
         pubs: The list of PUBs to return a list of unique boxes for.
         twirling_options: Twirling options.
-        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
-            Error eXtinction (TREX) mitigation method will be accounted for in boxing.
-        inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
-            of gates.
         add_tags: Whether to include tags for the boxes.
 
     Returns:
         Unique boxed layers found across the given PUBs.
     """
-    pm_kwargs = options_to_boxing_pm_kwargs(
-        twirling_options,
-        measure_noise_learning,
-        inject_noise,
-        add_tags=add_tags,
-    )
-    boxed_circuits = (box_circuit(circuit=pub.circuit, **pm_kwargs) for pub in pubs)
+    pm_kwargs = options_to_boxing_pm_kwargs(twirling_options, add_tags=add_tags)
+    boxing_pm = generate_boxing_pass_manager(**pm_kwargs)
+    boxed_circuits = (boxing_pm.run(pub.circuit) for pub in pubs)
     instructions = (box for boxed_circuit in boxed_circuits for box in boxed_circuit)
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True

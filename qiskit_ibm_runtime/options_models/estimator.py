@@ -89,8 +89,8 @@ class EstimatorOptions(BaseOptionsModel):
 
     Refer to the
     `Configure error mitigation for IBM Quantum Compute (formerly Qiskit Runtime)
-    <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide for more
-    information about the error mitigation methods used at each level.
+    <https://quantum.cloud.ibm.com/docs/guides/error-mitigation-and-suppression-techniques>`_ guide
+    for more information about the error mitigation methods used at each level.
     """
 
     max_execution_time: int | None = None

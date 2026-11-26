@@ -34,6 +34,7 @@ from ..utils import bell
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.ibm_backend import IBMBackend
+    from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
     from .dependencies import Dependencies
 
@@ -223,18 +224,27 @@ class TestIBMBackend:
         for i in qubits:
             assert isinstance(qubit_properties[i], QubitProperties)
 
-    def test_sim_backend_options(self, backend: IBMBackend) -> None:
+    def test_sim_backend_options(
+        self, backend: IBMBackend, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test simulator backend options."""
         backend.options.shots = 2048
         backend.set_options(memory=True)
-        sampler = Sampler(mode=backend)
         isa_circuit = transpile(bell(), backend)
-        inputs = sampler.run([isa_circuit], shots=1).inputs
-        assert inputs["pubs"][0][2] == 1
+
+        sampler = Sampler(mode=backend, options=options)
+        job = sampler.run([isa_circuit], shots=1)
+        submitted_jobs.append(job)
+
+        assert job.inputs["pubs"][0][2] == 1
 
     @pytest.mark.production
     def test_paused_backend_warning(
-        self, backend: IBMBackend, monkeypatch: pytest.MonkeyPatch
+        self,
+        backend: IBMBackend,
+        monkeypatch: pytest.MonkeyPatch,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
     ) -> None:
         """Test that a warning is given when running jobs on a paused backend."""
         paused_status = backend.status()
@@ -242,8 +252,8 @@ class TestIBMBackend:
         monkeypatch.setattr(backend, "status", lambda: paused_status)
         isa_circuit = transpile(bell(), backend)
         with pytest.warns(Warning):
-            sampler = Sampler(mode=backend)
-            sampler.run([isa_circuit])
+            sampler = Sampler(mode=backend, options=options)
+            submitted_jobs.append(sampler.run([isa_circuit]))
 
     def test_retrieve_backend_not_exist(self, dependencies: Dependencies) -> None:
         """Test that an error is raised when retrieving a backend that does not exist."""
@@ -251,15 +261,21 @@ class TestIBMBackend:
         with pytest.raises(QiskitBackendNotFoundError):
             service.backend("nonexistent_backend")
 
-    def test_too_many_qubits_in_circuit(self, backend: IBMBackend) -> None:
+    def test_too_many_qubits_in_circuit(
+        self,
+        backend: IBMBackend,
+        options: dict,
+        submitted_jobs: list[RuntimeJobV2],
+    ) -> None:
         """Check error message if circuit contains more qubits than supported on the backend."""
         num = len(backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
         with pytest.raises(IBMInputValueError) as err:
-            sampler = Sampler(mode=backend)
+            sampler = Sampler(mode=backend, options=options)
             job = sampler.run([circuit])
-            job.cancel()
+            submitted_jobs.append(job)
+
         assert f"circuit has {num_qubits} qubits but the target system requires {num}" in str(
             err.value
         )
@@ -344,7 +360,9 @@ class TestIBMBackend:
 
         assert calibration_id in caplog.text
 
-    def test_run_dry_run(self, dependencies: Dependencies) -> None:
+    def test_run_dry_run(
+        self, dependencies: Dependencies, options: dict, submitted_jobs: list[RuntimeJobV2]
+    ) -> None:
         """Test `run` using the `dry_run` flag.
 
         This test does not use ``dependencies.qpu``, but instead attempts to find a backend that
@@ -354,6 +372,8 @@ class TestIBMBackend:
         backend, dry_run_backend = get_mock_backend_pair(service)
 
         isa_circuit = transpile(bell(), backend)
-        sampler = Sampler(mode=backend)
+        sampler = Sampler(mode=backend, options=options)
         job = sampler.run([isa_circuit], dry_run=True)
+        submitted_jobs.append(job)
+
         assert job.backend().name == dry_run_backend.name
