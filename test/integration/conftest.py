@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from qiskit_ibm_runtime import RuntimeJobV2
-    from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
     from .dependencies import Dependencies
 
@@ -43,20 +42,8 @@ def dependencies() -> Dependencies:
     return integration_test_dependencies()
 
 
-@pytest.fixture(scope="class")
-def backend_test(dependencies: Dependencies) -> IBMBackend | None:
-    """Return the test backend used by the tests in the class, from the environment config."""
-    for backend in dependencies.service.backends():
-        if backend.name.startswith("test_eagle"):
-            return backend
-
-    return None
-
-
 @pytest.fixture
-def submit_bell_job(
-    dependencies: Dependencies, backend_test: IBMBackend | None
-) -> Iterator[Callable[..., RuntimeJobV2]]:
+def submit_bell_job(dependencies: Dependencies) -> Iterator[Callable[..., RuntimeJobV2]]:
     """Return a function that submits a sampler job running a bell circuit.
 
     The jobs submitted through the returned function are cancelled when the test finishes.
@@ -67,7 +54,8 @@ def submit_bell_job(
         """Submit a sampler job running a bell circuit.
 
         Args:
-            backend_name: the name of the backend to use. Defaults to the test backend.
+            backend_name: the name of the backend to use. Defaults to the QPU configured in the
+                environment.
             job_tags: optional tags to set on the job.
 
         Returns:
@@ -76,7 +64,7 @@ def submit_bell_job(
         service = dependencies.service
 
         logger.debug("Submitting bell job on %s", service.channel)
-        backend = service.backend(backend_name) if backend_name else backend_test
+        backend = service.backend(backend_name or dependencies.qpu)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         sampler = SamplerV2(mode=backend)

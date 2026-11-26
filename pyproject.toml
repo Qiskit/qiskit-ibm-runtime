@@ -198,7 +198,7 @@ dependencies = [
     "qiskit>=2.3.0,<3",
     "pybase64>=1.4.0",
     "samplomatic>=0.21.0",
-    "qiskit-mitigation>=0.2.0",
+    "qiskit-mitigation==0.1.1",
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
@@ -225,7 +225,7 @@ performance = [
 ]
 
 noise-learning = [
-    "qiskit-noise-learning>=0.2.0",
+    "qiskit-noise-learning>=0.2.0; python_version >= '3.11'",
 ]
 
 # Developer extras.
@@ -245,6 +245,7 @@ test = [
     "pproxy==2.7.8",
     "coverage>=7.13.5",
     "pytest-benchmark==5.3.1",
+    "pytest-timeout==2.4.0",
     "responses>=0.26.2",
 ]
 

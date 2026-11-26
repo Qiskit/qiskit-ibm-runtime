@@ -107,7 +107,7 @@ class NoiseLearner:
             * A :class:`Batch` if you are using batch execution mode.
 
             Refer to the
-            `Qiskit Runtime documentation <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
+            `Qiskit Runtime documentation <https://quantum.cloud.ibm.com/docs/ibm-quantum-compute/execution-modes>`__
             for more information about the execution modes.
 
         options: :class:`NoiseLearnerOptions`. Alternatively,

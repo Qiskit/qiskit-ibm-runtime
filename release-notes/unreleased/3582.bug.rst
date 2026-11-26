@@ -1,0 +1,3 @@
+Fixed a pagination issue in :meth:`.QiskitRuntimeService.jobs` that caused the method not be able
+to return when the ``skip`` argument was higher than the amount of jobs requested, or when the
+amount of jobs requested decreased during its invocation at the pagination limits.

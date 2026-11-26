@@ -1,0 +1,2 @@
+Two new fake backends, ``FakeChicago`` and ``FakePhoenix``, have been added. These are
+120-qubit Nighthawk devices.

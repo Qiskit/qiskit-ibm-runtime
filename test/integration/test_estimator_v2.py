@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import pytest
-from qiskit.circuit.library import IQP, real_amplitudes
+from qiskit.circuit.library import iqp, real_amplitudes
 from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -96,7 +96,7 @@ class TestEstimatorV2:
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
-        circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
+        circuit = pass_mgr.run(iqp([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
         estimator = EstimatorV2(mode=backend)
@@ -143,7 +143,7 @@ class TestEstimatorV2:
         """Test running with PEC."""
         backend = dependencies.service.backend(dependencies.qpu)
         pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
-        circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
+        circuit = pass_mgr.run(iqp([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)
 
         estimator = EstimatorV2(mode=backend)

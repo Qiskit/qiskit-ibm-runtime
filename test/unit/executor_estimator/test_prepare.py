@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import numpy as np
 import pytest
@@ -45,6 +45,8 @@ from .utils import (
     SAMPLEX_CIRCUIT_SCENARIOS,
     TEMPLATE_CIRCUIT_SCENARIO,
     TWIRLING_SHAPE_SCENARIOS,
+    extract_program_barrier_tags,
+    extract_samplex_noise_refs,
 )
 
 if TYPE_CHECKING:
@@ -59,6 +61,54 @@ if TYPE_CHECKING:
         TemplateCircuitScenario,
         TwirlingShapeScenario,
     )
+
+_TWIRLING_OPTIONS = {"enable_gates": True, "enable_measure": True}
+
+NOISE_INJECTING_PATHWAY_OPTIONS = [
+    pytest.param(
+        {
+            "twirling": _TWIRLING_OPTIONS,
+            "resilience": {"pec_mitigation": True, "measure_mitigation": True},
+        },
+        id="pec",
+    ),
+    pytest.param(
+        {
+            "twirling": _TWIRLING_OPTIONS,
+            "resilience": {
+                "zne_mitigation": True,
+                "zne": {"amplifier": "pea"},
+                "measure_mitigation": True,
+            },
+        },
+        id="pea",
+    ),
+]
+"""Options of the pathways that inject noise (PEC and PEA), all with twirling and TREX."""
+
+PATHWAY_OPTIONS = [
+    pytest.param(
+        {"twirling": _TWIRLING_OPTIONS, "resilience": {"measure_mitigation": False}},
+        id="vanilla",
+    ),
+    pytest.param(
+        {"twirling": _TWIRLING_OPTIONS, "resilience": {"measure_mitigation": True}},
+        id="trex",
+    ),
+    *NOISE_INJECTING_PATHWAY_OPTIONS,
+    pytest.param(
+        {
+            "twirling": _TWIRLING_OPTIONS,
+            "resilience": {
+                "zne_mitigation": True,
+                "zne": {"amplifier": "gate_folding_front"},
+                "measure_mitigation": True,
+            },
+        },
+        id="zne_gate_folding",
+    ),
+]
+"""Options of all the pathways verified for layer/tag correspondence, all with twirling."""
 
 
 def assert_samplex_arguments_are_correct(
@@ -743,7 +793,7 @@ class TestPrepareVanilla:
         twirling_options.enable_gates = enable_gates
         twirling_options.enable_measure = enable_measure
         twirling_options.num_randomizations = 7
-        twirling_options.strategy = "active-circuit"
+        twirling_options.strategy = "all"
         program = prepare_vanilla(pubs=[pub], twirling_options=twirling_options, shots=1024)
 
         assert len(program.items) == 1
@@ -2006,3 +2056,148 @@ class TestPreparePea:
         assert item.shape[0] == len(noise_factors)
         assert item.shape[1] == scenario.expected_num_randomizations
         assert program.shots == scenario.expected_shots_per_randomization
+
+
+class TestPrepareLayerTagCorrespondence:
+    """Tests verifying correspondence between find_unique_layers and prepare tags for Estimator.
+
+    The two paths don't share all of the code, so it's important to make nothing diverges.
+    """
+
+    @pytest.mark.parametrize(
+        "scenario", SAMPLEX_CIRCUIT_SCENARIOS, ids=lambda scenario: scenario.label
+    )
+    @pytest.mark.parametrize("options_dict", PATHWAY_OPTIONS)
+    def test_tags_match_all_scenarios_and_pathways(
+        self, scenario: SamplexCircuitScenario, options_dict: dict[str, Any]
+    ) -> None:
+        """Verify that barrier tags in prepare match Tag annotations from find_unique_layers."""
+        pub = scenario.pub
+        estimator = Estimator(mode=FakeManilaV2())
+        estimator.options.update(**options_dict)
+
+        if estimator.options.resilience.pec_mitigation or (
+            estimator.options.resilience.zne_mitigation
+            and estimator.options.resilience.zne.amplifier == "pea"
+        ):
+            gate_layers = estimator.find_unique_layers([pub], types="gates")
+            estimator.options.resilience.layer_noise_model = [
+                (layer, PauliLindbladMap.identity(num_qubits=layer.operation.num_qubits))
+                for layer in gate_layers
+            ]
+
+        program, _ = prepare([pub], estimator.options, precision=0.1, add_tags=True)
+        program_tags = extract_program_barrier_tags(program)
+
+        all_layers = estimator.find_unique_layers([pub], types="all")
+        expected_tags = {
+            annotation.ref
+            for layer in all_layers
+            if (annotation := get_annotation(layer.operation, Tag)) is not None
+        }
+
+        assert len(program_tags) > 0
+        assert program_tags == expected_tags
+
+    @pytest.mark.parametrize(
+        "scenario", SAMPLEX_CIRCUIT_SCENARIOS, ids=lambda scenario: scenario.label
+    )
+    @pytest.mark.parametrize("options_dict", NOISE_INJECTING_PATHWAY_OPTIONS)
+    def test_noise_models_match_samplex_arguments(
+        self, scenario: SamplexCircuitScenario, options_dict: dict[str, Any]
+    ) -> None:
+        """Verify that samplex noise references match InjectNoise.ref from find_unique_layers."""
+        pub = scenario.pub
+        estimator = Estimator(mode=FakeManilaV2())
+        estimator.options.update(**options_dict)
+
+        gate_layers = estimator.find_unique_layers([pub], types="gates")
+        estimator.options.resilience.layer_noise_model = [
+            (layer, PauliLindbladMap.identity(num_qubits=layer.operation.num_qubits))
+            for layer in gate_layers
+        ]
+
+        program, _ = prepare([pub], estimator.options, precision=0.1, add_tags=True)
+        samplex_noise_refs = extract_samplex_noise_refs(program)
+
+        expected_noise_refs = {
+            annotation.ref
+            for layer in gate_layers
+            if (annotation := get_annotation(layer.operation, InjectNoise)) is not None
+        }
+
+        assert samplex_noise_refs == expected_noise_refs
+        assert len(samplex_noise_refs) == scenario.num_noise_maps
+
+    @pytest.mark.parametrize("options_dict", PATHWAY_OPTIONS)
+    def test_template_circuit_scenario_tags_match(self, options_dict: dict[str, Any]) -> None:
+        """Verify tag correspondence using TEMPLATE_CIRCUIT_SCENARIO."""
+        pub = TEMPLATE_CIRCUIT_SCENARIO.pub
+        estimator = Estimator(mode=FakeManilaV2())
+        estimator.options.update(**options_dict)
+
+        if estimator.options.resilience.pec_mitigation or (
+            estimator.options.resilience.zne_mitigation
+            and estimator.options.resilience.zne.amplifier == "pea"
+        ):
+            gate_layers = estimator.find_unique_layers([pub], types="gates")
+            estimator.options.resilience.layer_noise_model = [
+                (layer, PauliLindbladMap.identity(num_qubits=layer.operation.num_qubits))
+                for layer in gate_layers
+            ]
+
+        program, _ = prepare([pub], estimator.options, precision=0.1, add_tags=True)
+        program_tags = extract_program_barrier_tags(program)
+
+        all_layers = estimator.find_unique_layers([pub], types="all")
+        expected_tags = {
+            annotation.ref
+            for layer in all_layers
+            if (annotation := get_annotation(layer.operation, Tag)) is not None
+        }
+
+        assert len(program_tags) > 0
+        assert program_tags == expected_tags
+
+    @pytest.mark.parametrize("options_dict", PATHWAY_OPTIONS)
+    def test_multi_pub_deduplication_tags_match(self, options_dict: dict[str, Any]) -> None:
+        """Verify tag and noise-reference deduplication across a batch of multiple PUBs."""
+        all_pubs = [s.pub for s in SAMPLEX_CIRCUIT_SCENARIOS]
+        estimator = Estimator(mode=FakeManilaV2())
+        estimator.options.update(**options_dict)
+
+        if estimator.options.resilience.pec_mitigation or (
+            estimator.options.resilience.zne_mitigation
+            and estimator.options.resilience.zne.amplifier == "pea"
+        ):
+            gate_layers = estimator.find_unique_layers(all_pubs, types="gates")
+            estimator.options.resilience.layer_noise_model = [
+                (layer, PauliLindbladMap.identity(num_qubits=layer.operation.num_qubits))
+                for layer in gate_layers
+            ]
+
+        program, _ = prepare(all_pubs, estimator.options, precision=0.1, add_tags=True)
+        program_tags = extract_program_barrier_tags(program)
+
+        all_layers = estimator.find_unique_layers(all_pubs, types="all")
+        expected_tags = {
+            annotation.ref
+            for layer in all_layers
+            if (annotation := get_annotation(layer.operation, Tag)) is not None
+        }
+
+        assert len(program_tags) > 0
+        assert program_tags == expected_tags
+
+        if estimator.options.resilience.pec_mitigation or (
+            estimator.options.resilience.zne_mitigation
+            and estimator.options.resilience.zne.amplifier == "pea"
+        ):
+            program_noise_refs = extract_samplex_noise_refs(program)
+            gate_layers = estimator.find_unique_layers(all_pubs, types="gates")
+            expected_noise_refs = {
+                annotation.ref
+                for layer in gate_layers
+                if (annotation := get_annotation(layer.operation, InjectNoise)) is not None
+            }
+            assert program_noise_refs == expected_noise_refs
