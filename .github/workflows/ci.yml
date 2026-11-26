@@ -86,6 +86,7 @@ jobs:
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
       PYTEST_ADDOPTS: |
         --durations=10
+        ${{ matrix.os != 'ubuntu-latest' && '-m "not slow"' || ''}}
     steps:
       - uses: actions/checkout@v6
         with:
