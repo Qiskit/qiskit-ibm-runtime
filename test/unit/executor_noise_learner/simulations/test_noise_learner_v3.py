@@ -83,6 +83,7 @@ def generate_random_pauli_lindblad_map(
 
 
 @pytest.mark.skipif(not HAS_QNL, reason="qiskit-noise-learning is required to run this test")
+@pytest.mark.slow
 class TestNoiseLearnerV3:
     """Tests client-side noise learner using simulator with noise through local mode."""
 

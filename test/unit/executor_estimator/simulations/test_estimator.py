@@ -74,6 +74,7 @@ TWIRLING_TREX = {
 }
 
 
+@pytest.mark.slow
 class TestEstimatorWithNoise:
     """Tests client-side Estimator using simulator with noise through local mode."""
 
@@ -235,6 +236,7 @@ class TestEstimatorWithNoise:
         np.testing.assert_array_less(unmitigated_evs, mitigated_evs)
 
 
+@pytest.mark.slow
 class TestEstimatorWithoutNoise:
     """Tests client-side Estimator using noise-less simulator through local mode."""
 
