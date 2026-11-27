@@ -95,10 +95,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12', '3.13', '3.14', '3.15']
+        # scipy 1.14.x does not provide >cp313 wheels.
+        python-version: ['3.11', '3.12', '3.13']
         os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
         exclude:
-            # numpy 1.26.x does not provide cp313 wheels, and mingw-w64 compiled numpy raises
+            # numpy 1.26.x does not provide >cp313 wheels, and mingw-w64 compiled numpy raises
             # RuntimeWarning at test/unit/test_data_serialization::TestDataSerialization
           - os: "windows-latest"
             python-version: '3.13'
