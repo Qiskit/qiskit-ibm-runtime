@@ -25,6 +25,7 @@ from qiskit_mitigation.postselection.passes import (
 )
 
 from ..options_models.converters import noise_learner_options_to_executor_options
+from ..quantum_program import QuantumProgram
 from ..utils.utils import HAS_QNL
 
 if TYPE_CHECKING:
@@ -35,7 +36,6 @@ if TYPE_CHECKING:
 
     from ..options_models.executor import ExecutorOptions
     from ..options_models.noise_learner_v3 import NoiseLearnerV3Options
-    from ..quantum_program import QuantumProgram
 
 if HAS_QNL:
     from qiskit_noise_learning.protocols import prepare_vanilla_program
@@ -93,6 +93,7 @@ def prepare(
         local_clifford_ref_prefix="c",
         pass_manager=pass_manager,
     )
+    quantum_program = QuantumProgram.from_(quantum_program)
     quantum_program.passthrough_data["post_processor"] = {  # type: ignore[index]
         "version": "v0.1",
         "options": options.model_dump(),
