@@ -111,11 +111,16 @@ jobs:
     needs: [ "code-quality" , "documentation" ]
     runs-on: ${{ matrix.os }}
     strategy:
+      # TODO: temporarily run in all combinations in CI.
       fail-fast: false
       matrix:
-        # Limit the combinations to the minimal Python version supported and linux.
-        python-version: [ '3.11' ]
-        os: [ "ubuntu-latest" ]
+        python-version: ['3.11', '3.12', '3.13', '3.14', '3.15']
+        os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
+        exclude:
+            # numpy 1.26.x does not provide cp313 wheels, and mingw-w64 compiled numpy raises
+            # RuntimeWarning at test/unit/test_data_serialization::TestDataSerialization
+          - os: "windows-latest"
+            python-version: '3.13'
     env:
       QISKIT_IN_PARALLEL: True
       QISKIT_IBM_RUNTIME_LOG_LEVEL: DEBUG
