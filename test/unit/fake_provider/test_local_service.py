@@ -45,6 +45,7 @@ class TestQiskitRuntimeLocalService:
         assert len(backends) == 1
         assert isinstance(backends[0], FakeTorino)
 
+    @pytest.mark.slow
     def test_backends_min_num_qubits_filter(self) -> None:
         """Tests the ``min_num_qubits`` filter of the ``backends`` method.
 
